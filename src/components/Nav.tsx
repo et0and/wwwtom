@@ -1,21 +1,17 @@
-import { useLocation } from "@solidjs/router";
-
 export default function Nav() {
-	const location = useLocation();
-	const active = (path: string) =>
-		path == location.pathname
-			? "border-sky-600"
-			: "border-transparent hover:border-sky-600";
 	return (
-		<nav class="bg-sky-800">
-			<ul class="container flex items-center p-3 text-gray-200 justify-between">
-				<li class={`${active("/")} mx-1.5 sm:mx-6`}>
-					<a href="/">Tom Hackshaw</a>
-				</li>
-				<li class={`border-b-2 ${active("/about")} mx-1.5 sm:mx-6`}>
-					<a href="/about">About</a>
-				</li>
-			</ul>
+		<nav class="flex items-center tracking-tighter justify-between h-16 px-6 py-4 flex-shrink-0">
+			<a class="text-lg font-medium" href="/">
+				<h1 class="md:block hidden">Tom Hackshaw</h1>
+				<div class="md:hidden block transition-colors duration-100 w-7 h-7 bg-black rounded-full">
+					<h1 class="sr-only">Tom Hackshaw</h1>
+				</div>
+			</a>
+			<div class="flex md:items-center space-x-4 text-lg">
+				<a href="/about">About</a>
+				<a href="/work">Work</a>
+				<a href="/posts">Writing</a>
+			</div>
 		</nav>
 	);
 }

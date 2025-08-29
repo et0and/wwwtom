@@ -12,16 +12,17 @@
 		"write": "bunx --bun biome format --write"
 	},
 	"dependencies": {
+		"@semantic-release/changelog": "^6.0.3",
+		"@semantic-release/commit-analyzer": "^13.0.1",
+		"@semantic-release/git": "^10.0.1",
+		"@semantic-release/github": "^11.0.3",
+		"@semantic-release/release-notes-generator": "^14.0.3",
+		"@solidjs/meta": "^0.29.4",
 		"@solidjs/router": "^0.15.0",
 		"@solidjs/start": "^1.1.0",
+		"semantic-release": "^24.2.6",
 		"solid-js": "^1.9.5",
-		"vinxi": "^0.5.7",
-		"@semantic-release/commit-analyzer": "^13.0.1",
-		"@semantic-release/release-notes-generator": "^14.0.3",
-		"@semantic-release/changelog": "^6.0.3",
-		"@semantic-release/github": "^11.0.3",
-		"@semantic-release/git": "^10.0.1",
-		"semantic-release": "^24.2.6"
+		"vinxi": "^0.5.7"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.2.2",
