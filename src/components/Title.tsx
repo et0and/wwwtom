@@ -1,5 +1,5 @@
 import { Title } from "@solidjs/meta";
-import { JSX } from "solid-js";
+import type { JSX } from "solid-js";
 
 interface SiteTitleProps {
 	children: JSX.Element | string | number;
