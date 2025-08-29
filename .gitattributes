@@ -1,0 +1,1 @@
+public/**/*.ico filter=lfs diff=lfs merge=lfs -text
