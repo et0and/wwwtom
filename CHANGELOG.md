@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/et0and/wwwtom/compare/v1.0.0...v1.1.0) (2025-08-29)
+
+
+### Bug Fixes
+
+* add proper formatter and writer ([8393fb2](https://github.com/et0and/wwwtom/commit/8393fb247dd75fcf2037e3beaf5e009b695f1f15))
+
+
+### Features
+
+* **components, routes:** cosmetic changes to port styling ([96bd6d4](https://github.com/et0and/wwwtom/commit/96bd6d4ee71d59109744f43678d5d25547d5f598))
+
 # 1.0.0 (2025-08-29)
 
 
