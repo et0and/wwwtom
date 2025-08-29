@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/et0and/wwwtom/compare/v1.1.0...v1.2.0) (2025-08-29)
+
+
+### Features
+
+* init sst ([86e5459](https://github.com/et0and/wwwtom/commit/86e545997d7637c86f1cab02e94102b1b8c78e6c))
+
 # [1.1.0](https://github.com/et0and/wwwtom/compare/v1.0.0...v1.1.0) (2025-08-29)
 
 
