@@ -1,4 +1,5 @@
 # SolidStart
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/et0and/wwwtom/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/et0and/wwwtom/tree/main)
 
 Everything you need to build a Solid project, powered by [`solid-start`](https://start.solidjs.com);
 

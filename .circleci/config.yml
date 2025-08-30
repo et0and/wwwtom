@@ -20,7 +20,6 @@ jobs:
           command: |
             curl -fsSL https://bun.sh/install | bash
             echo 'export PATH="$HOME/.bun/bin:$PATH"' >> $BASH_ENV
-            source $BASH_ENV
 
       # Cache dependencies
       - restore_cache:
@@ -30,7 +29,9 @@ jobs:
 
       - run:
           name: Install dependencies
-          command: bun install
+          command: |
+            source $BASH_ENV
+            bun install
 
       - save_cache:
           key: bun-deps-v1-{{ checksum "bun.lockb" }}
@@ -40,15 +41,21 @@ jobs:
 
       - run:
           name: Lint
-          command: bun run lint
+          command: |
+            source $BASH_ENV
+            bun run lint
 
       - run:
           name: Build
-          command: bun run build
+          command: |
+            source $BASH_ENV
+            bun run build
 
       - run:
           name: Check formatting
-          command: bun run format
+          command: |
+            source $BASH_ENV
+            bun run format
 
   release:
     docker:
@@ -63,7 +70,6 @@ jobs:
           command: |
             curl -fsSL https://bun.sh/install | bash
             echo 'export PATH="$HOME/.bun/bin:$PATH"' >> $BASH_ENV
-            source $BASH_ENV
 
       # Cache dependencies
       - restore_cache:
@@ -73,7 +79,9 @@ jobs:
 
       - run:
           name: Install dependencies
-          command: bun install
+          command: |
+            source $BASH_ENV
+            bun install
 
       - save_cache:
           key: bun-deps-v1-{{ checksum "bun.lockb" }}
@@ -83,15 +91,19 @@ jobs:
 
       - run:
           name: Lint
-          command: bun run lint
+          command: |
+            source $BASH_ENV
+            bun run lint
 
       - run:
           name: Build
-          command: bun run build
+          command: |
+            source $BASH_ENV
+            bun run build
 
       - run:
           name: Release
-          command: bunx semantic-release
+          command: npx semantic-release
           environment:
             GITHUB_TOKEN: $CIRCLE_TOKEN
 
