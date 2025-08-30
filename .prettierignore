@@ -1,0 +1,27 @@
+# Build directories
+.output
+.vinxi
+.wrangler
+dist
+build
+
+# Dependencies
+node_modules
+
+# Cache and temp files
+.cache
+.temp
+*.log
+
+# Generated files
+*.min.js
+*.min.css
+
+# Lock files
+bun.lock
+package-lock.json
+yarn.lock
+
+# OS files
+.DS_Store
+Thumbs.db

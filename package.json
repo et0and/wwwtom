@@ -6,10 +6,10 @@
 	"scripts": {
 		"build": "vinxi build",
 		"dev": "vinxi dev",
-		"format": "bunx --bun biome format",
+		"format": "prettier --check .",
 		"lint": "oxlint",
 		"start": "vinxi start",
-		"write": "bunx --bun biome format --write",
+		"write": "prettier --write .",
 		"deploy": "wrangler deploy",
 		"deploy:preview": "wrangler deploy --env preview",
 		"cf:dev": "wrangler dev",
@@ -30,9 +30,9 @@
 		"vinxi": "^0.5.7"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.2.2",
 		"@tailwindcss/vite": "^4.0.7",
 		"oxlint": "^1.13.0",
+		"prettier": "^3.6.2",
 		"tailwindcss": "^4.0.7"
 	},
 	"engines": {
