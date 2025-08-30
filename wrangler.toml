@@ -9,6 +9,9 @@ main = ".output/server/index.mjs"
 [build]
 command = "bun run build"
 
+[observability.logs]
+enabled = true
+
 # Static assets configuration for Git LFS files
 # This will serve your public/ directory files including those managed by Git LFS
 [assets]
