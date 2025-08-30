@@ -42,9 +42,3 @@ compatibility_flags = ["nodejs_compat"]
 
 [env.production.vars]
 NODE_ENV = "production"
-
-# Wrangler dev server configuration
-[dev]
-compatibility_date = "2024-12-01"
-compatibility_flags = ["nodejs_compat"]
-port = 8788
