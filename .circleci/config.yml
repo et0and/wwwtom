@@ -8,9 +8,8 @@ orbs:
 # Define jobs
 jobs:
   ci:
-    # Use Ubuntu machine executor for compatibility with Bun
-    machine:
-      image: ubuntu-2204:2023.10.1
+    docker:
+      - image: cimg/node:24.7.0
 
     steps:
       - checkout
@@ -52,8 +51,8 @@ jobs:
           command: bun run format
 
   release:
-    machine:
-      image: ubuntu-2204:2023.10.1
+    docker:
+      - image: cimg/node:24.7.0
 
     steps:
       - checkout
