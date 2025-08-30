@@ -3,6 +3,7 @@ import { FileRoutes } from "@solidjs/start/router";
 import { Suspense } from "solid-js";
 import { MetaProvider } from "@solidjs/meta";
 import Nav from "~/components/Nav";
+import { SkipLink } from "~/components/SkipLink";
 import Footer from "~/components/Footer";
 import "./app.css";
 
@@ -12,11 +13,12 @@ export default function App() {
 			<Router
 				root={(props) => (
 					<div class="min-h-screen flex flex-col">
+						<SkipLink />
 						<Nav />
 
-						<main class="flex-1">
+						<div class="flex-1">
 							<Suspense>{props.children}</Suspense>
-						</main>
+						</div>
 						<Footer />
 					</div>
 				)}
