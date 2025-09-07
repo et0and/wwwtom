@@ -15,6 +15,12 @@ export default $config({
 
 		new sst.aws.Service("TomService", {
 			cluster,
+			scaling: {
+				min: 2,
+				max: 4, // Maximum number of instances
+				cpuUtilization: 80,
+			},
+			capacity: $app.stage === "production" ? undefined : "spot",
 			loadBalancer: {
 				ports: [{ listen: "80/http", forward: "3000/http" }],
 			},

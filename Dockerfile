@@ -7,5 +7,7 @@ RUN bun install --frozen-lockfile
 
 COPY . .
 
+RUN bun run build
+
 EXPOSE 3000
-CMD ["bun", "index.ts"]
+CMD ["bun", "start"]
