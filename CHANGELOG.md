@@ -1,3 +1,15 @@
+# [1.4.0](https://github.com/et0and/wwwtom/compare/v1.3.0...v1.4.0) (2025-09-07)
+
+
+### Bug Fixes
+
+* sst config, dockerfile, prettier, scaling rules ([3022d5a](https://github.com/et0and/wwwtom/commit/3022d5af48653e06e6e5d17e57f77f7ba7668871))
+
+
+### Features
+
+* add agents file ([806ba0a](https://github.com/et0and/wwwtom/commit/806ba0ae5b361e50b8debee0df62594b21af13b6))
+
 # [1.3.0](https://github.com/et0and/wwwtom/compare/v1.2.0...v1.3.0) (2025-09-07)
 
 ### Bug Fixes
