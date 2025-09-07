@@ -9,3 +9,6 @@ Dockerfile*
 .releaserc.json
 wrangler.toml
 .vinxi
+
+# sst
+.sst

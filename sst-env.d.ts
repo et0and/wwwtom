@@ -4,19 +4,9 @@
 /* deno-fmt-ignore-file */
 
 declare module "sst" {
-  export interface Resource {
-    "TomService": {
-      "service": string
-      "type": "sst.aws.Service"
-      "url": string
-    }
-    "TomVpc": {
-      "bastion": string
-      "type": "sst.aws.Vpc"
-    }
-  }
+	export interface Resource {}
 }
 /// <reference path="sst-env.d.ts" />
 
-import "sst"
-export {}
+import "sst";
+export {};

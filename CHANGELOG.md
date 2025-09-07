@@ -1,26 +1,24 @@
 # [1.3.0](https://github.com/et0and/wwwtom/compare/v1.2.0...v1.3.0) (2025-09-07)
 
-
 ### Bug Fixes
 
-* add back gh action for now ([ee3d41d](https://github.com/et0and/wwwtom/commit/ee3d41d8ed89601e868c905155d3fd744f89b351))
-* add proper formatter and writer ([8e9020e](https://github.com/et0and/wwwtom/commit/8e9020e31955bfaf5958fba06b22d4e4c3fee7b8))
-* ci pipeline ([b59e6dd](https://github.com/et0and/wwwtom/commit/b59e6dd384ea929269981fb8d35815c4866bacd3))
-* rem sst, formatting ([09f006e](https://github.com/et0and/wwwtom/commit/09f006e05df8429ef7173a0343a3e92345e9979e))
-* spelling mistake in formatting action ([76b6677](https://github.com/et0and/wwwtom/commit/76b6677110d032ad6d17ed0483229ca7096c6fbc))
-
+- add back gh action for now ([ee3d41d](https://github.com/et0and/wwwtom/commit/ee3d41d8ed89601e868c905155d3fd744f89b351))
+- add proper formatter and writer ([8e9020e](https://github.com/et0and/wwwtom/commit/8e9020e31955bfaf5958fba06b22d4e4c3fee7b8))
+- ci pipeline ([b59e6dd](https://github.com/et0and/wwwtom/commit/b59e6dd384ea929269981fb8d35815c4866bacd3))
+- rem sst, formatting ([09f006e](https://github.com/et0and/wwwtom/commit/09f006e05df8429ef7173a0343a3e92345e9979e))
+- spelling mistake in formatting action ([76b6677](https://github.com/et0and/wwwtom/commit/76b6677110d032ad6d17ed0483229ca7096c6fbc))
 
 ### Features
 
-* add mdx support, type safety script gen, begin migration ([df4e69a](https://github.com/et0and/wwwtom/commit/df4e69a48f42875a19442bf843a4a21d9be2a372))
-* **ci:** use circleci docker images ([4db94cf](https://github.com/et0and/wwwtom/commit/4db94cfd2a3ff100e96854146cdcad2086f7247d))
-* **components, routes:** cosmetic changes to port styling ([d2e555f](https://github.com/et0and/wwwtom/commit/d2e555fa265efcd4b49c86e970206ec430c8e005))
-* init solid start ([ad6afad](https://github.com/et0and/wwwtom/commit/ad6afadb32087830da34a76fc7e3877619acb15a))
-* init sst ([3f0feb3](https://github.com/et0and/wwwtom/commit/3f0feb31c142cde34b222b0eadd2c0a0d18eea7d))
-* migrate to circleci ([885fb45](https://github.com/et0and/wwwtom/commit/885fb45b8f689d70805909a63fb3ec64ae45fdb0))
-* release, ci, scripts, formatting set up ([701fd0a](https://github.com/et0and/wwwtom/commit/701fd0a569a198d408995dc842180c0ec6f55c19))
-* sst infra ([0c0f7cc](https://github.com/et0and/wwwtom/commit/0c0f7ccc93b6b4c29f641e2ef56b7819ebed6062))
-* use prettier instead of biome ([1697bf3](https://github.com/et0and/wwwtom/commit/1697bf39f022b67de136c1fa2d969128df73a70d))
+- add mdx support, type safety script gen, begin migration ([df4e69a](https://github.com/et0and/wwwtom/commit/df4e69a48f42875a19442bf843a4a21d9be2a372))
+- **ci:** use circleci docker images ([4db94cf](https://github.com/et0and/wwwtom/commit/4db94cfd2a3ff100e96854146cdcad2086f7247d))
+- **components, routes:** cosmetic changes to port styling ([d2e555f](https://github.com/et0and/wwwtom/commit/d2e555fa265efcd4b49c86e970206ec430c8e005))
+- init solid start ([ad6afad](https://github.com/et0and/wwwtom/commit/ad6afadb32087830da34a76fc7e3877619acb15a))
+- init sst ([3f0feb3](https://github.com/et0and/wwwtom/commit/3f0feb31c142cde34b222b0eadd2c0a0d18eea7d))
+- migrate to circleci ([885fb45](https://github.com/et0and/wwwtom/commit/885fb45b8f689d70805909a63fb3ec64ae45fdb0))
+- release, ci, scripts, formatting set up ([701fd0a](https://github.com/et0and/wwwtom/commit/701fd0a569a198d408995dc842180c0ec6f55c19))
+- sst infra ([0c0f7cc](https://github.com/et0and/wwwtom/commit/0c0f7ccc93b6b4c29f641e2ef56b7819ebed6062))
+- use prettier instead of biome ([1697bf3](https://github.com/et0and/wwwtom/commit/1697bf39f022b67de136c1fa2d969128df73a70d))
 
 # [1.2.0](https://github.com/et0and/wwwtom/compare/v1.1.0...v1.2.0) (2025-08-29)
 

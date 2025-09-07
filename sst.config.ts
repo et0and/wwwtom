@@ -6,7 +6,7 @@ export default $config({
 			name: "wwwtom",
 			removal: input?.stage === "production" ? "retain" : "remove",
 			home: "aws",
-			region: "ap-southeast-6",
+			region: "ap-southeast-2",
 		};
 	},
 	async run() {
