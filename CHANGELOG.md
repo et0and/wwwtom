@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/et0and/wwwtom/compare/v1.4.0...v1.5.0) (2025-09-07)
+
+
+### Features
+
+* sst config set up ([7766ccf](https://github.com/et0and/wwwtom/commit/7766ccf76c1a0275984c5d25c9199bc1182a1986))
+
 # [1.4.0](https://github.com/et0and/wwwtom/compare/v1.3.0...v1.4.0) (2025-09-07)
 
 ### Bug Fixes
