@@ -1,13 +1,23 @@
-FROM oven/bun
+FROM node:lts AS base
 
-COPY bun.lock .
-COPY package.json .
+WORKDIR /src
 
-RUN bun install --frozen-lockfile
+# Build
+FROM base as build
 
-COPY . .
+COPY --link package.json package-lock.json ./
+RUN npm install
 
-RUN bun run build
+COPY --link . .
 
-EXPOSE 3000
-CMD ["bun", "start"]
+RUN npm run build
+
+# Run
+FROM base
+
+ENV PORT=3000
+ENV NODE_ENV=production
+
+COPY --from=build /src/.output /src/.output
+
+CMD [ "node", ".output/server/index.mjs" ]
