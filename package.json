@@ -1,47 +1,48 @@
 {
-	"name": "wwwtom",
-	"author": "Tom Hackshaw",
-	"type": "module",
-	"description": "A website of my very own",
-	"scripts": {
-		"build": "vinxi build",
-		"dev": "vinxi dev",
-		"format": "prettier --check .",
-		"lint": "oxlint",
-		"start": "vinxi start",
-		"write": "prettier --write .",
-		"deploy": "wrangler deploy",
-		"deploy:preview": "wrangler deploy --env preview",
-		"cf:dev": "wrangler dev",
-		"cf:tail": "wrangler tail",
-		"cf:secret": "wrangler secret put"
-	},
-	"dependencies": {
-		"@mdx-js/mdx": "^2.3.0",
-		"@semantic-release/changelog": "^6.0.3",
-		"@semantic-release/commit-analyzer": "^13.0.1",
-		"@semantic-release/git": "^10.0.1",
-		"@semantic-release/github": "^11.0.3",
-		"@semantic-release/release-notes-generator": "^14.0.3",
-		"@solidjs/meta": "^0.29.4",
-		"@solidjs/router": "^0.15.0",
-		"@solidjs/start": "^1.1.0",
-		"solid-mdx": "^0.0.7",
-		"@vinxi/plugin-mdx": "^3.7.2",
-		"semantic-release": "^24.2.6",
-		"solid-js": "^1.9.5",
-		"vinxi": "^0.5.7"
-	},
-	"devDependencies": {
-		"@tailwindcss/vite": "^4.0.7",
-		"oxlint": "^1.13.0",
-		"prettier": "^3.6.2",
-		"tailwindcss": "^4.0.7"
-	},
-	"engines": {
-		"node": ">=22"
-	},
-	"overrides": {
-		"nitropack": "npm:nitropack-nightly@latest"
-	}
+  "name": "wwwtom",
+  "author": "Tom Hackshaw",
+  "type": "module",
+  "description": "A website of my very own",
+  "scripts": {
+    "build": "vinxi build",
+    "cf:dev": "wrangler dev",
+    "cf:secret": "wrangler secret put",
+    "cf:tail": "wrangler tail",
+    "deploy": "wrangler deploy",
+    "deploy:preview": "wrangler deploy --env preview",
+    "dev": "vinxi dev",
+    "format": "prettier --check .",
+    "lint": "oxlint",
+    "start": "vinxi start",
+    "write": "prettier --write ."
+  },
+  "dependencies": {
+    "@mdx-js/mdx": "^2.3.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/commit-analyzer": "^13.0.1",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^11.0.3",
+    "@semantic-release/release-notes-generator": "^14.0.3",
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "^0.15.0",
+    "@solidjs/start": "^1.1.0",
+    "@vinxi/plugin-mdx": "^3.7.2",
+    "semantic-release": "^24.2.6",
+    "solid-js": "^1.9.5",
+    "solid-mdx": "^0.0.7",
+    "sst": "3.17.12",
+    "vinxi": "^0.5.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.7",
+    "oxlint": "^1.13.0",
+    "prettier": "^3.6.2",
+    "tailwindcss": "^4.0.7"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "overrides": {
+    "nitropack": "npm:nitropack-nightly@latest"
+  }
 }
