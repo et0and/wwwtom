@@ -5,7 +5,7 @@ export default $config({
 			name: "wwwtom",
 			removal: input?.stage === "production" ? "retain" : "remove",
 			home: "aws",
-			region: "ap-southeast-2",
+			region: "ap-southeast-6",
 			providers: { cloudflare: "6.8.0" },
 		};
 	},
@@ -21,9 +21,17 @@ export default $config({
 			},
 			capacity: $app.stage === "production" ? undefined : "spot",
 			loadBalancer: {
-				ports: [{ listen: "80/http", forward: "3000/http" }],
+				ports: [
+					{ listen: "80/http", forward: "3000/http" },
+					{ listen: "443/https", forward: "3000/http" },
+				],
 				domain: {
-					name: "hackshaw-dev.tom.so",
+					name:
+						$app.stage === "production"
+							? "prod.tom.so"
+							: $app.stage === "staging"
+								? "staging.tom.so"
+								: "dev.tom.so",
 					dns: sst.cloudflare.dns({
 						zone: "d431d14124866e4d3fff6cdd5b727926",
 					}),
