@@ -31,8 +31,10 @@ export default $config({
 							? "prod.tom.so"
 							: $app.stage === "staging"
 								? "staging.tom.so"
-								: "dev.tom.so",
-					dns: sst.cloudflare.dns(),
+								: "development.tom.so",
+					dns: sst.cloudflare.dns({
+						zone: "d431d14124866e4d3fff6cdd5b727926",
+					}),
 				},
 			},
 			dev: {
