@@ -1,5 +1,5 @@
 {
-	"branches": ["main"],
+	"branches": ["dev"],
 	"repositoryUrl": "https://github.com/et0and/wwwtom",
 	"plugins": [
 		"@semantic-release/commit-analyzer",
