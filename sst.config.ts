@@ -22,7 +22,7 @@ export default $config({
 			capacity: $app.stage === "production" ? undefined : "spot",
 			loadBalancer: {
 				ports: [
-					{ listen: "80/http", forward: "3000/http" },
+					{ listen: "80/http", redirect: "443/https" },
 					{ listen: "443/https", forward: "3000/http" },
 				],
 				domain: {
@@ -32,9 +32,7 @@ export default $config({
 							: $app.stage === "staging"
 								? "staging.tom.so"
 								: "dev.tom.so",
-					dns: sst.cloudflare.dns({
-						zone: "d431d14124866e4d3fff6cdd5b727926",
-					}),
+					dns: sst.cloudflare.dns(),
 				},
 			},
 			dev: {
