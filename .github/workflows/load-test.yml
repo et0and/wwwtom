@@ -10,7 +10,7 @@ on:
       - "*/*"
 
 jobs:
-  LoadTest:
+  Load test:
     runs-on: ubuntu-latest
 
     steps:
@@ -36,4 +36,4 @@ jobs:
         run: sleep 10
 
       - name: Run load test
-        run: npx autocannon http://localhost:3000
+        run: npx autocannon -d 30 -c 10000 http://localhost:3000
