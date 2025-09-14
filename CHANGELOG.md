@@ -1,6 +1,19 @@
 # [1.5.0](https://github.com/et0and/wwwtom/compare/v1.4.0...v1.5.0) (2025-09-14)
 
 
+### Bug Fixes
+
+* **ci:** load test name bunged ([caf48a3](https://github.com/et0and/wwwtom/commit/caf48a387e55a78cdecc2a0c56615ed9d0875d3b))
+
+
+### Features
+
+* add oxc support to prettier ([7e0cec4](https://github.com/et0and/wwwtom/commit/7e0cec43ac02b75dddd256ac6ce9e54a7693aadb))
+* loadtest in ci, precommit, nvm ([563726e](https://github.com/et0and/wwwtom/commit/563726e3b3186d1cb5326f292f3f0c7038d10852))
+
+# [1.5.0](https://github.com/et0and/wwwtom/compare/v1.4.0...v1.5.0) (2025-09-14)
+
+
 ### Features
 
 * add oxc support to prettier ([7e0cec4](https://github.com/et0and/wwwtom/commit/7e0cec43ac02b75dddd256ac6ce9e54a7693aadb))
