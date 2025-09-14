@@ -10,7 +10,7 @@ on:
       - "*/*"
 
 jobs:
-  Load test:
+  Load-test:
     runs-on: ubuntu-latest
 
     steps:
