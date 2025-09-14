@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/et0and/wwwtom/compare/v1.4.0...v1.5.0) (2025-09-14)
+
+
+### Features
+
+* add oxc support to prettier ([7e0cec4](https://github.com/et0and/wwwtom/commit/7e0cec43ac02b75dddd256ac6ce9e54a7693aadb))
+
 # [1.4.0](https://github.com/et0and/wwwtom/compare/v1.3.0...v1.4.0) (2025-09-14)
 
 ### Bug Fixes
