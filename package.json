@@ -1,15 +1,10 @@
 {
-	"name": "wwwtom",
+	"name": "tom-web",
 	"author": "Tom Hackshaw",
 	"type": "module",
 	"description": "A website of my very own",
 	"scripts": {
 		"build": "vinxi build",
-		"cf:dev": "wrangler dev",
-		"cf:secret": "wrangler secret put",
-		"cf:tail": "wrangler tail",
-		"deploy": "wrangler deploy",
-		"deploy:preview": "wrangler deploy --env preview",
 		"dev": "vinxi dev",
 		"format": "prettier --check .",
 		"lint": "oxlint",
@@ -18,6 +13,7 @@
 	},
 	"dependencies": {
 		"@mdx-js/mdx": "^2.3.0",
+		"@prettier/plugin-oxc": "^0.0.4",
 		"@semantic-release/changelog": "^6.0.3",
 		"@semantic-release/commit-analyzer": "^13.0.1",
 		"@semantic-release/git": "^10.0.1",

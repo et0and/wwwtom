@@ -10,5 +10,6 @@
 	"quoteProps": "as-needed",
 	"semi": true,
 	"singleQuote": false,
-	"trailingComma": "all"
+	"trailingComma": "all",
+	"plugins": ["@prettier/plugin-oxc"]
 }
