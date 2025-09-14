@@ -1,24 +1,22 @@
 # [1.4.0](https://github.com/et0and/wwwtom/compare/v1.3.0...v1.4.0) (2025-09-14)
 
-
 ### Bug Fixes
 
-* **ci:** bad actions syntax for branch matching ([0600c9b](https://github.com/et0and/wwwtom/commit/0600c9b8c2076ad7afe95131aa3e9ebc2125e795))
-* sst config, dockerfile, prettier, scaling rules ([18eb604](https://github.com/et0and/wwwtom/commit/18eb604b32fbc3cc66f5221af0b2a364c13cb0c0))
-* sst config, dockerfile, prettier, scaling rules ([6b42a9d](https://github.com/et0and/wwwtom/commit/6b42a9d2248a56cb3f53a20c35d320ead9f94c33))
-* **work:** add titles to posts ([493c5a8](https://github.com/et0and/wwwtom/commit/493c5a86bb47cb95c5cb19e885b7e0242ac49743))
-
+- **ci:** bad actions syntax for branch matching ([0600c9b](https://github.com/et0and/wwwtom/commit/0600c9b8c2076ad7afe95131aa3e9ebc2125e795))
+- sst config, dockerfile, prettier, scaling rules ([18eb604](https://github.com/et0and/wwwtom/commit/18eb604b32fbc3cc66f5221af0b2a364c13cb0c0))
+- sst config, dockerfile, prettier, scaling rules ([6b42a9d](https://github.com/et0and/wwwtom/commit/6b42a9d2248a56cb3f53a20c35d320ead9f94c33))
+- **work:** add titles to posts ([493c5a8](https://github.com/et0and/wwwtom/commit/493c5a86bb47cb95c5cb19e885b7e0242ac49743))
 
 ### Features
 
-* add agents file ([e671263](https://github.com/et0and/wwwtom/commit/e671263c867366c3fa6e7d322867e562e92d4061))
-* add cloudflare dns support ([03a8520](https://github.com/et0and/wwwtom/commit/03a852025f48b2add9e3e3816686a3b94d966e8a))
-* configure dns ([c80f0a5](https://github.com/et0and/wwwtom/commit/c80f0a5e717ba0038f0a26d59a112c148135079a))
-* huge mahi around content migration, pages first ([25fa02e](https://github.com/et0and/wwwtom/commit/25fa02e43f73003a1c5de57052e1f3dfed4f8a8f))
-* init stages and domains for sst, release to srht ([d145d24](https://github.com/et0and/wwwtom/commit/d145d24ae1e374f1a8b94ae3e68ffc8227150b7b))
-* sst config set up ([b35825c](https://github.com/et0and/wwwtom/commit/b35825c746c35fa1347789ae68fb6a34671c36b6))
-* sst config set up ([9d4c6b3](https://github.com/et0and/wwwtom/commit/9d4c6b3b20d840e09b0d54aaf7e51b2ea7fdc882))
-* updated release action, upgrade TLS connection in SST ([d4e113a](https://github.com/et0and/wwwtom/commit/d4e113a4d48cfd426dac59f84bdeba991b05f47c))
+- add agents file ([e671263](https://github.com/et0and/wwwtom/commit/e671263c867366c3fa6e7d322867e562e92d4061))
+- add cloudflare dns support ([03a8520](https://github.com/et0and/wwwtom/commit/03a852025f48b2add9e3e3816686a3b94d966e8a))
+- configure dns ([c80f0a5](https://github.com/et0and/wwwtom/commit/c80f0a5e717ba0038f0a26d59a112c148135079a))
+- huge mahi around content migration, pages first ([25fa02e](https://github.com/et0and/wwwtom/commit/25fa02e43f73003a1c5de57052e1f3dfed4f8a8f))
+- init stages and domains for sst, release to srht ([d145d24](https://github.com/et0and/wwwtom/commit/d145d24ae1e374f1a8b94ae3e68ffc8227150b7b))
+- sst config set up ([b35825c](https://github.com/et0and/wwwtom/commit/b35825c746c35fa1347789ae68fb6a34671c36b6))
+- sst config set up ([9d4c6b3](https://github.com/et0and/wwwtom/commit/9d4c6b3b20d840e09b0d54aaf7e51b2ea7fdc882))
+- updated release action, upgrade TLS connection in SST ([d4e113a](https://github.com/et0and/wwwtom/commit/d4e113a4d48cfd426dac59f84bdeba991b05f47c))
 
 # [1.4.0](https://github.com/et0and/wwwtom/compare/v1.3.0...v1.4.0) (2025-09-14)
 
@@ -44,24 +42,22 @@
 
 # [1.4.0](https://github.com/et0and/wwwtom/compare/v1.3.0...v1.4.0) (2025-09-08)
 
-
 ### Bug Fixes
 
-* **ci:** bad actions syntax for branch matching ([0600c9b](https://github.com/et0and/wwwtom/commit/0600c9b8c2076ad7afe95131aa3e9ebc2125e795))
-* sst config, dockerfile, prettier, scaling rules ([18eb604](https://github.com/et0and/wwwtom/commit/18eb604b32fbc3cc66f5221af0b2a364c13cb0c0))
-* sst config, dockerfile, prettier, scaling rules ([6b42a9d](https://github.com/et0and/wwwtom/commit/6b42a9d2248a56cb3f53a20c35d320ead9f94c33))
-
+- **ci:** bad actions syntax for branch matching ([0600c9b](https://github.com/et0and/wwwtom/commit/0600c9b8c2076ad7afe95131aa3e9ebc2125e795))
+- sst config, dockerfile, prettier, scaling rules ([18eb604](https://github.com/et0and/wwwtom/commit/18eb604b32fbc3cc66f5221af0b2a364c13cb0c0))
+- sst config, dockerfile, prettier, scaling rules ([6b42a9d](https://github.com/et0and/wwwtom/commit/6b42a9d2248a56cb3f53a20c35d320ead9f94c33))
 
 ### Features
 
-* add agents file ([e671263](https://github.com/et0and/wwwtom/commit/e671263c867366c3fa6e7d322867e562e92d4061))
-* add cloudflare dns support ([03a8520](https://github.com/et0and/wwwtom/commit/03a852025f48b2add9e3e3816686a3b94d966e8a))
-* configure dns ([c80f0a5](https://github.com/et0and/wwwtom/commit/c80f0a5e717ba0038f0a26d59a112c148135079a))
-* huge mahi around content migration, pages first ([25fa02e](https://github.com/et0and/wwwtom/commit/25fa02e43f73003a1c5de57052e1f3dfed4f8a8f))
-* init stages and domains for sst, release to srht ([d145d24](https://github.com/et0and/wwwtom/commit/d145d24ae1e374f1a8b94ae3e68ffc8227150b7b))
-* sst config set up ([b35825c](https://github.com/et0and/wwwtom/commit/b35825c746c35fa1347789ae68fb6a34671c36b6))
-* sst config set up ([9d4c6b3](https://github.com/et0and/wwwtom/commit/9d4c6b3b20d840e09b0d54aaf7e51b2ea7fdc882))
-* updated release action, upgrade TLS connection in SST ([d4e113a](https://github.com/et0and/wwwtom/commit/d4e113a4d48cfd426dac59f84bdeba991b05f47c))
+- add agents file ([e671263](https://github.com/et0and/wwwtom/commit/e671263c867366c3fa6e7d322867e562e92d4061))
+- add cloudflare dns support ([03a8520](https://github.com/et0and/wwwtom/commit/03a852025f48b2add9e3e3816686a3b94d966e8a))
+- configure dns ([c80f0a5](https://github.com/et0and/wwwtom/commit/c80f0a5e717ba0038f0a26d59a112c148135079a))
+- huge mahi around content migration, pages first ([25fa02e](https://github.com/et0and/wwwtom/commit/25fa02e43f73003a1c5de57052e1f3dfed4f8a8f))
+- init stages and domains for sst, release to srht ([d145d24](https://github.com/et0and/wwwtom/commit/d145d24ae1e374f1a8b94ae3e68ffc8227150b7b))
+- sst config set up ([b35825c](https://github.com/et0and/wwwtom/commit/b35825c746c35fa1347789ae68fb6a34671c36b6))
+- sst config set up ([9d4c6b3](https://github.com/et0and/wwwtom/commit/9d4c6b3b20d840e09b0d54aaf7e51b2ea7fdc882))
+- updated release action, upgrade TLS connection in SST ([d4e113a](https://github.com/et0and/wwwtom/commit/d4e113a4d48cfd426dac59f84bdeba991b05f47c))
 
 # [1.5.0](https://github.com/et0and/wwwtom/compare/v1.4.0...v1.5.0) (2025-09-07)
 
