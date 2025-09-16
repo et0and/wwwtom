@@ -1,3 +1,11 @@
+## [1.5.2](https://github.com/et0and/wwwtom/compare/v1.5.1...v1.5.2) (2025-09-16)
+
+
+### Bug Fixes
+
+* **ci:** forgot node vers here too ([3205a28](https://github.com/et0and/wwwtom/commit/3205a289f0385afe987068619673d70f1356715c))
+* node and npm bad versions ([a2e712f](https://github.com/et0and/wwwtom/commit/a2e712ff3702825afa86992eff451f50c065532c))
+
 ## [1.5.1](https://github.com/et0and/wwwtom/compare/v1.5.0...v1.5.1) (2025-09-16)
 
 
