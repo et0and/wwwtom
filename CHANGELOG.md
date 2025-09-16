@@ -1,3 +1,10 @@
+## [1.7.4](https://github.com/et0and/wwwtom/compare/v1.7.3...v1.7.4) (2025-09-16)
+
+
+### Bug Fixes
+
+* add dev env to deploy-dev.yml ([ed192f0](https://github.com/et0and/wwwtom/commit/ed192f06fdfc9602756e4bb6460bad26b9c28392))
+
 ## [1.7.3](https://github.com/et0and/wwwtom/compare/v1.7.2...v1.7.3) (2025-09-16)
 
 
