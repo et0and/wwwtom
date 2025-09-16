@@ -13,15 +13,20 @@ jobs:
       startsWith(github.event.comment.body, '/opencode')
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       id-token: write
+      pull-requests: write
+      issues: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Run opencode
-        uses: sst/opencode/github@latest
+        uses: sst/opencode@latest
         env:
           CEREBRAS_API_KEY: ${{ secrets.CEREBRAS_API_KEY }}
         with:
           model: cerebras/qwen-3-coder-480b
+          github_token: ${{ secrets.GITHUB_TOKEN }}
