@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/et0and/wwwtom/compare/v1.6.0...v1.7.0) (2025-09-16)
+
+
+### Features
+
+* **ci:** add deployment workflow ([a43328e](https://github.com/et0and/wwwtom/commit/a43328e35db1073916030b48fe129c7b7b8cf59c))
+
 # [1.6.0](https://github.com/et0and/wwwtom/compare/v1.5.3...v1.6.0) (2025-09-16)
 
 
