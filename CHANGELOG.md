@@ -1,3 +1,10 @@
+## [1.7.1](https://github.com/et0and/wwwtom/compare/v1.7.0...v1.7.1) (2025-09-16)
+
+
+### Bug Fixes
+
+* env vars ([127e8e4](https://github.com/et0and/wwwtom/commit/127e8e42cc680a6682c3539e87b22b255d4b76b2))
+
 # [1.7.0](https://github.com/et0and/wwwtom/compare/v1.6.0...v1.7.0) (2025-09-16)
 
 
