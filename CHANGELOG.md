@@ -1,3 +1,10 @@
+## [1.5.1](https://github.com/et0and/wwwtom/compare/v1.5.0...v1.5.1) (2025-09-16)
+
+
+### Bug Fixes
+
+* update Dockerfile to use correct node image ([eb19aee](https://github.com/et0and/wwwtom/commit/eb19aee3d81275b602bd2b73ae8421221217cf1d))
+
 # [1.5.0](https://github.com/et0and/wwwtom/compare/v1.4.0...v1.5.0) (2025-09-14)
 
 
