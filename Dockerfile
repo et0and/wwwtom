@@ -6,6 +6,7 @@ WORKDIR /src
 FROM base as build
 
 COPY --link package.json package-lock.json ./
+RUN npm install -g npm@11.5.1
 RUN npm install
 
 COPY --link . .
