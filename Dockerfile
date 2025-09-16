@@ -1,4 +1,4 @@
-FROM node:lts AS base
+FROM node:22.19.0 AS base
 
 WORKDIR /src
 
