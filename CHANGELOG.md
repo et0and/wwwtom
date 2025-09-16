@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/et0and/wwwtom/compare/v1.5.3...v1.6.0) (2025-09-16)
+
+
+### Features
+
+* **components:** add basic vitest scaffold ([a0b11af](https://github.com/et0and/wwwtom/commit/a0b11aff26a9fd6a2a9a20ec83a094fb6280f350))
+
 ## [1.5.3](https://github.com/et0and/wwwtom/compare/v1.5.2...v1.5.3) (2025-09-16)
 
 
