@@ -4,8 +4,8 @@
 	"type": "module",
 	"description": "A website of my very own",
 	"engines": {
-		"node": "22.19.0",
-		"npm": "10.9.3"
+		"node": "24.7.0",
+		"npm": "11.5.1"
 	},
 	"scripts": {
 		"build": "vinxi build",
