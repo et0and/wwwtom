@@ -1,3 +1,10 @@
+## [1.7.3](https://github.com/et0and/wwwtom/compare/v1.7.2...v1.7.3) (2025-09-16)
+
+
+### Bug Fixes
+
+* **deploy:** Claude can be stupid huh ([466f9f0](https://github.com/et0and/wwwtom/commit/466f9f0a7e921cf561d9805a0b33988f1287cc35))
+
 ## [1.7.2](https://github.com/et0and/wwwtom/compare/v1.7.1...v1.7.2) (2025-09-16)
 
 
