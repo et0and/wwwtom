@@ -1,4 +1,4 @@
-FROM node:22.19.0 AS base
+FROM node:24.7.0-bullseye@sha256:1684133274a44010e6d6011d6eec100cf756309678c77700779ac44a5ac36715 AS base
 
 WORKDIR /src
 
