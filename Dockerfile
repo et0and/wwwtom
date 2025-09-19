@@ -5,8 +5,6 @@ WORKDIR /src
 # Build
 FROM base as build
 
-RUN apk add --no-cache git
-
 COPY --link package.json package-lock.json ./
 RUN npm install
 

@@ -1,20 +1,20 @@
-import childProcess from "node:child_process";
+// For development/staging, we can use environment variables or GitHub API
+// For production, we don't show version info
+const getDeploymentInfo = () => {
+	// Use environment variables if available (set by CI/CD)
+	const envBranch = process.env.GIT_BRANCH;
+	const envCommit = process.env.GIT_COMMIT;
+	const envVersion = process.env.GIT_TAG;
 
-// obtain GitHub release version and branch
-const version = childProcess
-	.execSync("git describe --tags --abbrev=0")
-	.toString()
-	.trim();
+	// Fallback values for local development
+	return {
+		branch: envBranch ?? "dev",
+		hash: envCommit?.substring(0, 7) ?? "local",
+		version: envVersion ?? "dev",
+	};
+};
 
-const hash = childProcess
-	.execSync("git rev-parse --short HEAD")
-	.toString()
-	.trim();
-
-const branch = childProcess
-	.execSync("git rev-parse --abbrev-ref HEAD")
-	.toString()
-	.trim();
+const { branch, hash, version } = getDeploymentInfo();
 
 // determine background and text colors based on branch
 const branchClass =

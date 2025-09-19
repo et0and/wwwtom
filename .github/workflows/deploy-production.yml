@@ -36,6 +36,10 @@ jobs:
       - name: Build application
         if: steps.skip_check.outputs.skip != 'true'
         run: npm run build
+        env:
+          GIT_BRANCH: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_TAG: ${{ github.ref_name }}
 
       - name: Configure AWS credentials
         if: steps.skip_check.outputs.skip != 'true'

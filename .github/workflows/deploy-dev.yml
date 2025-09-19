@@ -45,6 +45,10 @@ jobs:
       - name: Build first
         if: steps.skip_check.outputs.skip != 'true'
         run: npm run build
+        env:
+          GIT_BRANCH: ${{ github.ref_name }}
+          GIT_COMMIT: ${{ github.sha }}
+          GIT_TAG: ${{ github.ref_name }}
 
       - name: Deploy to development
         if: steps.skip_check.outputs.skip != 'true'
