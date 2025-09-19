@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/et0and/wwwtom/compare/v1.9.0...v1.9.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* deploy regions ([a178e87](https://github.com/et0and/wwwtom/commit/a178e872bda4cff16b83cde886b8884af69c0c64))
+
 # [1.9.0](https://github.com/et0and/wwwtom/compare/v1.8.1...v1.9.0) (2025-09-19)
 
 
