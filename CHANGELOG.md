@@ -1,3 +1,16 @@
+# [1.9.0](https://github.com/et0and/wwwtom/compare/v1.8.1...v1.9.0) (2025-09-19)
+
+
+### Bug Fixes
+
+* bad workflow envs ([7872990](https://github.com/et0and/wwwtom/commit/7872990b703a8fa79fe995eddb13bf65465c7344))
+* pass git info in ci ([308b61d](https://github.com/et0and/wwwtom/commit/308b61da1d8dd806d690565c38eb46144f14c82b))
+
+
+### Features
+
+* **routes, services:** github api for version info, tidy up for public ([8fb4c08](https://github.com/et0and/wwwtom/commit/8fb4c08c21a4dbdd93c3e6e9d946193e648436a4))
+
 ## [1.8.2](https://github.com/et0and/wwwtom/compare/v1.8.1...v1.8.2) (2025-09-19)
 
 
