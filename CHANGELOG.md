@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/et0and/wwwtom/compare/v1.7.4...v1.8.0) (2025-09-19)
+
+
+### Features
+
+* **about, work:** design improvements to footer, add version info and commit hash, work index structure ([e011ff8](https://github.com/et0and/wwwtom/commit/e011ff8ef464acb4eaf8134a68c3d371944d2540))
+
 ## [1.7.4](https://github.com/et0and/wwwtom/compare/v1.7.3...v1.7.4) (2025-09-16)
 
 
