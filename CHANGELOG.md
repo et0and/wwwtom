@@ -1,3 +1,10 @@
+## [1.8.1](https://github.com/et0and/wwwtom/compare/v1.8.0...v1.8.1) (2025-09-19)
+
+
+### Bug Fixes
+
+* **docker:** add git to alpine image ([f59c86f](https://github.com/et0and/wwwtom/commit/f59c86f05b48993c575fea4d23ef005fe1250a61))
+
 # [1.8.0](https://github.com/et0and/wwwtom/compare/v1.7.4...v1.8.0) (2025-09-19)
 
 
