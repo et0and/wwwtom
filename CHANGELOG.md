@@ -1,3 +1,10 @@
+## [1.8.2](https://github.com/et0and/wwwtom/compare/v1.8.1...v1.8.2) (2025-09-19)
+
+
+### Bug Fixes
+
+* pass git info in ci ([308b61d](https://github.com/et0and/wwwtom/commit/308b61da1d8dd806d690565c38eb46144f14c82b))
+
 ## [1.8.1](https://github.com/et0and/wwwtom/compare/v1.8.0...v1.8.1) (2025-09-19)
 
 
