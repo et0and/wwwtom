@@ -8,9 +8,9 @@ export default function WorkHome() {
 				<h1>Work</h1>
 				<ul>
 					{workPages.map((page) => (
-						<li>
+						<h2>
 							<a href={page.href}>{page.text}</a>
-						</li>
+						</h2>
 					))}
 				</ul>
 			</PageLayout>
