@@ -1,3 +1,10 @@
+## [1.10.1](https://github.com/et0and/wwwtom/compare/v1.10.0...v1.10.1) (2025-09-23)
+
+
+### Bug Fixes
+
+* **infra:** sst cost savings ([62b981b](https://github.com/et0and/wwwtom/commit/62b981b20fa0b5ea5d689b79724e0a54b34ade7b))
+
 # [1.10.0](https://github.com/et0and/wwwtom/compare/v1.9.1...v1.10.0) (2025-09-19)
 
 
