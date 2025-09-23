@@ -5,21 +5,21 @@ export default $config({
 			name: "wwwtom",
 			removal: input?.stage === "production" ? "retain" : "remove",
 			home: "aws",
-			region: "ap-southeast-6",
+			region: "ap-southeast-2",
 			providers: { cloudflare: "6.8.0" },
 		};
 	},
 	async run() {
-		const vpc = new sst.aws.Vpc("TomVpc", { bastion: true });
+		const vpc = new sst.aws.Vpc("TomVpc", { bastion: false, nat: "instance" });
 		const cluster = new sst.aws.Cluster("TomCluster", { vpc });
 		new sst.aws.Service("TomService", {
 			cluster,
 			scaling: {
-				min: 2,
-				max: 4, // Maximum number of instances
-				cpuUtilization: 80,
+				min: 1,
+				max: 2, // Maximum number of instances
+				cpuUtilization: 100,
 			},
-			capacity: $app.stage === "production" ? undefined : "spot",
+			capacity: "spot",
 			loadBalancer: {
 				ports: [
 					{ listen: "80/http", redirect: "443/https" },
