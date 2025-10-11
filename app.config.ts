@@ -8,6 +8,9 @@ export default defineConfig({
 	extensions: ["mdx", "md"],
 	server: {
 		preset: "cloudflare-module",
+		rollupConfig: {
+			external: ["@cf-wasm/photon"],
+		},
 	},
 	vite: {
 		plugins: [
@@ -18,5 +21,11 @@ export default defineConfig({
 				providerImportSource: "solid-mdx",
 			}),
 		],
+		optimizeDeps: {
+			exclude: ["@cf-wasm/photon"],
+		},
+		ssr: {
+			external: ["@cf-wasm/photon"],
+		},
 	},
 });

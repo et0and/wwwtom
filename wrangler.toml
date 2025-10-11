@@ -5,6 +5,12 @@ compatibility_flags = ["nodejs_compat"]
 # Main worker script
 main = ".output/server/index.mjs"
 
+# WASM bindings
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+fallthrough = true
+
 # Build configuration
 [build]
 command = "bun run build"
