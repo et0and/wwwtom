@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/et0and/wwwtom/compare/v1.11.1...v1.12.0) (2025-10-11)
+
+
+### Features
+
+* image api route, wasm compression ([5a72435](https://github.com/et0and/wwwtom/commit/5a72435d97e3f0dd03708ffc0b8dd634ef74c116))
+
 ## [1.11.1](https://github.com/et0and/wwwtom/compare/v1.11.0...v1.11.1) (2025-10-11)
 
 
