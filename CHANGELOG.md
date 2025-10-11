@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/et0and/wwwtom/compare/v1.11.0...v1.11.1) (2025-10-11)
+
+
+### Bug Fixes
+
+* **posts:** bad image ref ([384916c](https://github.com/et0and/wwwtom/commit/384916ccf8dee47454f10086fb440a15c339de21))
+
 # [1.11.0](https://github.com/et0and/wwwtom/compare/v1.10.1...v1.11.0) (2025-10-11)
 
 
