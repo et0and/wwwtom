@@ -7,21 +7,18 @@ This is still very much a work in progress and has some rough edges.
 ## Developing
 
 ```bash
-- `npm ci` - Clean install dependencies
-- `npm run dev` - Start development server
-- `npm run build` - Production build
-- `npm run lint` - Run oxlint
-- `npm run format` - Check formatting with Prettier
-- `npm run write` - Format files with Prettier
+- `bnu run dev` - Start development server
+- `bun run build` - Production build
+- `bun run lint` - Run oxlint
+- `bun run format` - Check formatting with Prettier
+- `bun run write` - Format files with Prettier
 ```
 
 ## Deployment
 
-This site is pretty cheap and bare bones. It uses [SST](https://sst.dev) to define infrastructure as code, deploying to AWS using ECS with Fargate. DNS is using Cloudflare (also defined in my SST config), which gives me a CDN for free.
+This site is pretty cheap and bare bones. It uses Cloudflare Workers and Wrangler to build and deploy. All static media assets like images are hosted on a separate CDN to keep things lightweight and fast.
 
-I have a `dev`, `staging` and `production` branch with associated GitHub Actions to automatically build and deploy on merges/commits. Releases are currently tied to the `dev` branch, but in the future I will probably transfer this to `main` once things are a bit more stable.
-
-You could quite easily deploy this using something like Vercel or even in a Lambda if you're still using AWS.
+Previously this site used SST and AWS ECS with Fargate for deployment. While SST was lovely to use, the billing with AWS was a bloody nightmare so I abandoned it (even with spot instances it could quite easily get out of control).
 
 ## License
 
