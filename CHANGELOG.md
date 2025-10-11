@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/et0and/wwwtom/compare/v1.10.1...v1.11.0) (2025-10-11)
+
+
+### Features
+
+* wrangler and workers ([f033596](https://github.com/et0and/wwwtom/commit/f0335968726f783649a55ea2d138bb06ad30cb99))
+
 ## [1.10.1](https://github.com/et0and/wwwtom/compare/v1.10.0...v1.10.1) (2025-09-23)
 
 
