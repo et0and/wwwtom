@@ -22,25 +22,21 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version-file: ".nvmrc"
+      - uses: oven-sh/setup-bun@v2
 
-      - name: Check Node.js and npm versions
-        run: |
-          echo "Node.js version: $(node -v)"
-          echo "npm version: $(npm -v)"
+      - name: Check Bun version
+        run: bun --version
 
       - name: Install dependencies
-        run: npm ci
+        run: bun install
 
       - name: Lint
-        run: npm run lint
+        run: bun run lint
 
       - name: Build
-        run: npm run build
+        run: bun run build
 
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx semantic-release
+        run: bunx semantic-release

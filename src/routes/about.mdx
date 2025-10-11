@@ -1,6 +1,12 @@
 import PageLayout from "~/components/PageLayout";
 
-<PageLayout title="About" description="About my background">
+export const frontmatter = {
+	title: "About",
+	summary: "About my background",
+	publishedAt: "",
+};
+
+<PageLayout frontmatter={frontmatter}>
 # About
 
 Hi, I'm Tom,

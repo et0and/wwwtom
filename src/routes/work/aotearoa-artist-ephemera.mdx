@@ -1,6 +1,12 @@
 import PageLayout from "~/components/PageLayout";
 
-<PageLayout title="Aotearoa artist ephemera" description="An archive of artist and gallery materials">
+export const frontmatter = {
+	title: "Aotearoa artist ephemera",
+	summary: "An archive of artist and gallery materials",
+	publishedAt: "2019-04-05",
+};
+
+<PageLayout frontmatter={frontmatter}>
 
 # Aotearoa artist ephemera
 

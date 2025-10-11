@@ -1,6 +1,12 @@
 import PageLayout from "~/components/PageLayout";
 
-<PageLayout title="An idea for a performance" description="A web experiment">
+export const frontmatter = {
+	title: "An idea for a performance",
+	summary: "A tool for generating performance ideas",
+	publishedAt: "2020-04-05",
+};
+
+<PageLayout frontmatter={frontmatter}>
 
 # An idea for a performance
 

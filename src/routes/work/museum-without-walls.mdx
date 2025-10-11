@@ -1,6 +1,12 @@
 import PageLayout from "~/components/PageLayout";
 
-<PageLayout title="The museum without walls" description="A game made for Macintosh Plus">
+export const frontmatter = {
+	title: "The museum without walls",
+	summary: "A game made for Macintosh Plus",
+	publishedAt: "2020-04-03",
+};
+
+<PageLayout frontmatter={frontmatter}>
 
 # The museum without walls
 

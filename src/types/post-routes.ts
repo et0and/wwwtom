@@ -3,8 +3,8 @@
 
 export type PostRoute =
 	| "/posts/a-long-year"
-	| "/posts/and-we-are-off"
 	| "/posts/a-new-chapter"
+	| "/posts/and-we-are-off"
 	| "/posts/another-update"
 	| "/posts/back-at-it"
 	| "/posts/bullish-on-better-auth"
@@ -40,7 +40,8 @@ export type PostRoute =
 	| "/posts/technology-i-am-excited-by"
 	| "/posts/vs-code-in-the-browser"
 	| "/posts/wee-tour-of-poneke"
-	| "/posts/windy-road";
+	| "/posts/windy-road"
+	| "/posts/2023-highlights";
 
 export interface PostPage {
 	href: PostRoute;
@@ -55,20 +56,23 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/a-long-year",
 			title: "A long year + some ideas for the future",
-			summary: "	summary:",
+			summary:
+				"While it has not been an easy one, there have been some fantastic things in 2021 that I am grateful for.",
 			publishedAt: "2021-12-30",
-		},
-		{
-			href: "/posts/and-we-are-off",
-			title: "And we are off!",
-			summary: "	summary:",
-			publishedAt: "2020-04-23",
 		},
 		{
 			href: "/posts/a-new-chapter",
 			title: "A new chapter",
-			summary: "	summary:",
+			summary:
+				"Several months ago now, I taught my last class and resigned from teaching after having done it for the past three years.",
 			publishedAt: "2023-09-08",
+		},
+		{
+			href: "/posts/and-we-are-off",
+			title: "And we are off!",
+			summary:
+				"I had no idea the true power and depth of CSS until today - the possibilities seem endless!",
+			publishedAt: "2020-04-23",
 		},
 		{
 			href: "/posts/another-update",
@@ -80,7 +84,8 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/back-at-it",
 			title: "Back at it",
-			summary: "	summary:",
+			summary:
+				"I went back to work this week, and it has been absolutely hectic so far.",
 			publishedAt: "2020-05-14",
 		},
 		{
@@ -98,25 +103,29 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/design-work",
 			title: "Touching up on design",
-			summary: "	summary:",
+			summary:
+				"Recently I have been working more on my own design work. While I have always had a basic understanding of using design tools such as Inkscape, Figma etc, I have never really had the time to push myself to learn more until now.",
 			publishedAt: "2021-04-20",
 		},
 		{
 			href: "/posts/elmet-brae",
 			title: "Elmet Brae",
-			summary: "	summary:",
+			summary:
+				"Some of us from Merveilles recently released a compilation of music inspired by the idea of the land",
 			publishedAt: "2023-12-07",
 		},
 		{
 			href: "/posts/future-content-improvements",
 			title: "Future content improvements",
-			summary: "	summary:",
+			summary:
+				"I used to think that alt text on images basically covered all that you needed to worry about for web a11y, but it wasn't until I began actively testing with a variety of different tools that I found there is much more to it than this.",
 			publishedAt: "2023-10-23",
 		},
 		{
 			href: "/posts/goodbye-2021",
 			title: "See you later 2021",
-			summary: "	summary:",
+			summary:
+				"This is just going to be a short post so I don't overthink it. I would like to follow up another time though and go over the highlights of this year.",
 			publishedAt: "2021-12-29",
 		},
 		{
@@ -128,31 +137,36 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/isolation",
 			title: "Isolation",
-			summary: "	summary:",
+			summary:
+				"Spending this week in isolation due to being classified as a household contact",
 			publishedAt: "2022-03-16",
 		},
 		{
 			href: "/posts/learning-about-data-structures-and-algorithms",
 			title: "Learning about data structures and algorithms",
-			summary: "	summary:",
+			summary:
+				"Getting to grips with fundamentals so that I can become a better developer",
 			publishedAt: "2024-08-23",
 		},
 		{
 			href: "/posts/microsoft-stack",
 			title: "Using a fully Office 365 stack - my thoughts",
-			summary: "	summary:",
+			summary:
+				"Having avoided Microsoft products for the past few years, going back to using them for work has been an interesting experience",
 			publishedAt: "2020-08-09",
 		},
 		{
 			href: "/posts/mid-year-update",
 			title: "Mid-year update",
-			summary: "	summary:",
+			summary:
+				"Been many months since I had time and space in my mind to be able to write anything",
 			publishedAt: "2021-07-14",
 		},
 		{
 			href: "/posts/moving-into-level-two-my-thoughts",
 			title: "Moving into Level 2 - my thoughts",
-			summary: "	summary:",
+			summary:
+				"For the past month I’ve been staying indoors like many others, and have really enjoyed the stillness",
 			publishedAt: "2020-05-11",
 		},
 		{
@@ -164,13 +178,15 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/my-first-developer-job",
 			title: "My first developer job",
-			summary: "	summary:",
+			summary:
+				"For the past two months, I’ve been working full time as a developer.",
 			publishedAt: "2025-04-05",
 		},
 		{
 			href: "/posts/new-lockdown",
 			title: "Another lockdown",
-			summary: "	summary:",
+			summary:
+				"Yesterday evening the government announced a new lockdown for those living in Auckland",
 			publishedAt: "2021-02-28",
 		},
 		{
@@ -182,37 +198,43 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/new-role",
 			title: "A new role",
-			summary: "	summary:",
+			summary:
+				"I am due to begin a new role as a highschool teacher in a few weeks time",
 			publishedAt: "2020-07-08",
 		},
 		{
 			href: "/posts/new-stack",
 			title: "New stack",
-			summary: "	summary:",
+			summary:
+				"Over the past few days I've completely rewritten my website and have switched to Eleventy",
 			publishedAt: "2020-04-29",
 		},
 		{
 			href: "/posts/notion-supercharged",
 			title: "Notion, supercharged",
-			summary: "	summary:",
+			summary:
+				"I spent the day today creating a database of designers from around the world on Notion",
 			publishedAt: "2020-07-14",
 		},
 		{
 			href: "/posts/obsidian-an-external-brain",
 			title: "Obsidian - an external rhizomatic brain",
-			summary: "	summary:",
+			summary:
+				"Earlier this week I started using Obsidian, an offline tool similar to Roam that links and networks ideas",
 			publishedAt: "2020-06-23",
 		},
 		{
 			href: "/posts/on-accessibility",
 			title: "On accessibility",
-			summary: "	summary:",
+			summary:
+				"As it turns out, accessibility on the web means much more than simply adding alt text to things",
 			publishedAt: "2020-04-25",
 		},
 		{
 			href: "/posts/on-ai-in-art",
 			title: "On generative art",
-			summary: "	summary:",
+			summary:
+				"As an art teacher, I have seen firsthand the incredible impact that artificial intelligence (AI) has had on the world of art making",
 			publishedAt: "2022-12-21",
 		},
 		{
@@ -224,13 +246,15 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/progression",
 			title: "Progression",
-			summary: "	summary:",
+			summary:
+				"I have gained a very rough knowledge of HTML, CSS and JS over the years through tinkering, but have never learnt the fundamental concepts and terms associated with these technologies",
 			publishedAt: "2020-04-22",
 		},
 		{
 			href: "/posts/remote-teaching",
 			title: "Remote teaching - one week update",
-			summary: "	summary:",
+			summary:
+				"It has been approximately a week since Auckland, New Zealand went back into Level 3 lock-down over the Covid-19 pandemic",
 			publishedAt: "2020-08-19",
 		},
 		{
@@ -242,13 +266,15 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/slow-and-steady",
 			title: "The snail goes back to making",
-			summary: "	summary:",
+			summary:
+				"I am always looking for new and different ways of improving my life, both the quality of it and how to better myself in terms of character and skill for the future",
 			publishedAt: "2020-06-03",
 		},
 		{
 			href: "/posts/something-for-november",
 			title: "Something for November",
-			summary: "	summary:",
+			summary:
+				"The past few months have been great. Things have been moving at a slower pace, allowing me to be more reflective about my actions.",
 			publishedAt: "2023-11-09",
 		},
 		{
@@ -260,32 +286,43 @@ export const postPages: PostPage[] = (
 		{
 			href: "/posts/status-update",
 			title: "Status update",
-			summary: "	summary:",
+			summary:
+				"Yesterday I had the opportunity to speak with Piper Haywood, a designer and front-end developer based in the UK",
 			publishedAt: "2020-04-21",
 		},
 		{
 			href: "/posts/technology-i-am-excited-by",
 			title: "Technology I am excited about",
-			summary: "	summary:",
+			summary:
+				"here are some new emerging technologies that I have come across the past few weeks which excite me both as a teacher and researcher",
 			publishedAt: "2021-01-07",
 		},
 		{
 			href: "/posts/vs-code-in-the-browser",
 			title: "Use VS Code anywhere",
-			summary: "	summary:",
+			summary:
+				"Last night I stumbled upon code-server, a program that allows one to run Visual Studio code on any device via a browser",
 			publishedAt: "2020-07-27",
 		},
 		{
 			href: "/posts/wee-tour-of-poneke",
 			title: "Wee tour of Pōneke",
-			summary: "	summary:",
+			summary:
+				"Myself and a few others who are new to our company were given a tour of some significant sites around Wellington/Pōneke recently",
 			publishedAt: "2023-10-28",
 		},
 		{
 			href: "/posts/windy-road",
 			title: "Bits and pieces",
-			summary: "	summary:",
+			summary:
+				"Quite a bit had happened in the last few weeks but I haven't had the time to properly reflect on it all",
 			publishedAt: "2020-08-07",
+		},
+		{
+			href: "/posts/2023-highlights",
+			title: "2023 highlights",
+			summary: "A reflection on 2023",
+			publishedAt: "2023-12-31",
 		},
 	] as PostPage[]
 ).sort(

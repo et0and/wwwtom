@@ -6,6 +6,9 @@ import tailwindcss from "@tailwindcss/vite";
 const { default: mdx } = pkg;
 export default defineConfig({
 	extensions: ["mdx", "md"],
+	server: {
+		preset: "cloudflare-module",
+	},
 	vite: {
 		plugins: [
 			tailwindcss(),
