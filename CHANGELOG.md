@@ -1,3 +1,10 @@
+# [1.15.0](https://github.com/et0and/wwwtom/compare/v1.14.0...v1.15.0) (2025-10-12)
+
+
+### Features
+
+* add favicon ([7205fe4](https://github.com/et0and/wwwtom/commit/7205fe46875dc2daff3cffaa6143d9cee5303381))
+
 # [1.14.0](https://github.com/et0and/wwwtom/compare/v1.13.1...v1.14.0) (2025-10-12)
 
 
