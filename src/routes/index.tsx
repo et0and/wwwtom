@@ -10,7 +10,7 @@ export default function Home() {
 			/>
 			<main class="text-center mx-auto p-4">
 				<img
-					src="https://cdn.tom.so/scribs.svg"
+					src="/api/image?url=https://cdn.tom.so/scribs.svg&width=450"
 					class="w-full max-w-[500px] mx-auto"
 				/>
 			</main>
