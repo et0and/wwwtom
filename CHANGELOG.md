@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/et0and/wwwtom/compare/v1.13.1...v1.14.0) (2025-10-12)
+
+
+### Features
+
+* **mdx:** remove static mdx files, prefer cms load content, fallback spinner ([802f808](https://github.com/et0and/wwwtom/commit/802f80881501ca05175a4f78540e88c590a1a1ec))
+
 ## [1.13.1](https://github.com/et0and/wwwtom/compare/v1.13.0...v1.13.1) (2025-10-12)
 
 
