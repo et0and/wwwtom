@@ -1,3 +1,17 @@
+# [1.16.0](https://github.com/et0and/wwwtom/compare/v1.15.1...v1.16.0) (2025-10-12)
+
+
+### Bug Fixes
+
+* exclude resvg wasm from vite op ([dd24177](https://github.com/et0and/wwwtom/commit/dd24177d46366fd5ac7ac9c5e8d72076589ba0aa))
+* forgot to install satori oops ([d0c2315](https://github.com/et0and/wwwtom/commit/d0c2315637c62a2177df5b7227d6377179e0202c))
+* rollup is a pain ([d97c5a9](https://github.com/et0and/wwwtom/commit/d97c5a9864ff55aa322aee6a883a23b057bf8d9c))
+
+
+### Features
+
+* og image gen ([04e2613](https://github.com/et0and/wwwtom/commit/04e26133d18d321f521cec6ad4bfab915854fa9d))
+
 ## [1.15.1](https://github.com/et0and/wwwtom/compare/v1.15.0...v1.15.1) (2025-10-12)
 
 
