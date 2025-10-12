@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/et0and/wwwtom/compare/v1.13.0...v1.13.1) (2025-10-12)
+
+
+### Bug Fixes
+
+* **posts:** dates ([2a489d8](https://github.com/et0and/wwwtom/commit/2a489d8ab8746bae1282d4d391060cf371e50292))
+
 # [1.13.0](https://github.com/et0and/wwwtom/compare/v1.12.0...v1.13.0) (2025-10-12)
 
 
