@@ -27,5 +27,10 @@ export default defineConfig({
 		ssr: {
 			external: ["@cf-wasm/photon", "@resvg/resvg-js"],
 		},
+		build: {
+			rollupOptions: {
+				external: ["@cf-wasm/photon", "@resvg/resvg-js"],
+			},
+		},
 	},
 });
