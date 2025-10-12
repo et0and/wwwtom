@@ -1,3 +1,10 @@
+## [1.15.1](https://github.com/et0and/wwwtom/compare/v1.15.0...v1.15.1) (2025-10-12)
+
+
+### Bug Fixes
+
+* svgs not handled by image transform ([2186449](https://github.com/et0and/wwwtom/commit/2186449ea3548a425e635f498a40e03fd47b989a))
+
 # [1.15.0](https://github.com/et0and/wwwtom/compare/v1.14.0...v1.15.0) (2025-10-12)
 
 
