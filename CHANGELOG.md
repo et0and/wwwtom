@@ -1,3 +1,10 @@
+# [1.13.0](https://github.com/et0and/wwwtom/compare/v1.12.0...v1.13.0) (2025-10-12)
+
+
+### Features
+
+* **work, posts:** support Strapi cms ([44d4b71](https://github.com/et0and/wwwtom/commit/44d4b716058b76d1f50cea4c8493e000ac542023))
+
 # [1.12.0](https://github.com/et0and/wwwtom/compare/v1.11.1...v1.12.0) (2025-10-11)
 
 
