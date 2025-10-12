@@ -1,6 +1,8 @@
 import type { APIEvent } from "@solidjs/start/server";
 import satori from "satori";
-import { Resvg } from "@resvg/resvg-js";
+import { initWasm, Resvg } from "@resvg/resvg-wasm";
+
+let wasmInitialized = false;
 
 const libreCaslonRegular = fetch(
 	"https://cdn.tom.so/LibreCaslonCondensed-Regular.woff2",
@@ -11,6 +13,12 @@ const libreCaslonMedium = fetch(
 ).then((res) => res.arrayBuffer());
 
 export async function GET({ request }: APIEvent) {
+	if (!wasmInitialized) {
+		const wasmUrl = new URL("/resvg.wasm", request.url).href;
+		await initWasm(fetch(wasmUrl));
+		wasmInitialized = true;
+	}
+
 	const { searchParams } = new URL(request.url);
 	const title = searchParams.get("title");
 
