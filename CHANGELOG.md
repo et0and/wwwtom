@@ -1,3 +1,10 @@
+## [1.16.1](https://github.com/et0and/wwwtom/compare/v1.16.0...v1.16.1) (2025-10-12)
+
+
+### Bug Fixes
+
+* workers gotchas ([17dd8b4](https://github.com/et0and/wwwtom/commit/17dd8b4fa91bb55e313bb8de8cd019ec27a11a70))
+
 # [1.16.0](https://github.com/et0and/wwwtom/compare/v1.15.1...v1.16.0) (2025-10-12)
 
 
