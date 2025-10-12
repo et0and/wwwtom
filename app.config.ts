@@ -9,7 +9,7 @@ export default defineConfig({
 	server: {
 		preset: "cloudflare-module",
 		rollupConfig: {
-			external: ["@cf-wasm/photon"],
+			external: ["@cf-wasm/photon", "@resvg/resvg-js"],
 		},
 	},
 	vite: {
@@ -22,10 +22,10 @@ export default defineConfig({
 			}),
 		],
 		optimizeDeps: {
-			exclude: ["@cf-wasm/photon"],
+			exclude: ["@cf-wasm/photon", "@resvg/resvg-js"],
 		},
 		ssr: {
-			external: ["@cf-wasm/photon"],
+			external: ["@cf-wasm/photon", "@resvg/resvg-js"],
 		},
 	},
 });
