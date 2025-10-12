@@ -8,13 +8,22 @@ export default function PostsHome() {
 	return (
 		<PageLayout title="Writing" description="Some of my writing">
 			<h1>Writing</h1>
+			<p>Some of my writing.</p>
 
 			{posts() ? (
 				posts()!.map((post) => (
 					<a href={`/posts/${post.slug}`}>
 						<div>
 							<h2>{post.title}</h2>
-							<time>{new Date(post.publishedAt).toLocaleDateString()}</time>
+							<time>
+								{new Date(
+									post.publicationDate || post.publishedAt,
+								).toLocaleDateString("en-NZ", {
+									year: "numeric",
+									month: "long",
+									day: "numeric",
+								})}
+							</time>
 							<p>{post.summary}</p>
 						</div>
 					</a>

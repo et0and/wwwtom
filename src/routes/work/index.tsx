@@ -8,6 +8,7 @@ export default function WorkHome() {
 	return (
 		<PageLayout title="Work" description="Some work that I have made">
 			<h1>Work</h1>
+			<p>Some work that I have made.</p>
 
 			{works() ? (
 				works()!.map((work) => (
