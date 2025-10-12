@@ -20,6 +20,7 @@
 		"@cf-wasm/photon": "^0.1.31",
 		"@mdx-js/mdx": "^2.3.0",
 		"@prettier/plugin-oxc": "^0.0.4",
+		"@resvg/resvg-wasm": "^2.6.2",
 		"@semantic-release/changelog": "^6.0.3",
 		"@semantic-release/commit-analyzer": "^13.0.1",
 		"@semantic-release/git": "^10.0.1",
