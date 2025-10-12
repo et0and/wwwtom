@@ -1,23 +1,25 @@
+import { createAsync } from "@solidjs/router";
+import { getWorks } from "~/lib/strapi";
 import PageLayout from "~/components/PageLayout";
-import { workPages } from "~/types/work-routes";
 
 export default function WorkHome() {
-	const sortedWork = [...workPages].sort((a, b) =>
-		a.title.localeCompare(b.title),
-	);
+	const works = createAsync(() => getWorks());
 
 	return (
-		<>
-			<PageLayout title="Work" description="Some work that I have made">
-				<h1>Work</h1>
-				<ul>
-					{sortedWork.map((page) => (
-						<h2>
-							<a href={page.href}>{page.title}</a>
-						</h2>
-					))}
-				</ul>
-			</PageLayout>
-		</>
+		<PageLayout title="Work" description="Some work that I have made">
+			<h1>Work</h1>
+
+			{works() ? (
+				works()!.map((work) => (
+					<a href={`/work/${work.slug}`}>
+						<div>
+							<h2>{work.title}</h2>
+						</div>
+					</a>
+				))
+			) : (
+				<p>Loading...</p>
+			)}
+		</PageLayout>
 	);
 }

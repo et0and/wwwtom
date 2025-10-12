@@ -13,7 +13,8 @@
 		"test": "vitest",
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest --coverage",
-		"generate:routes": "bun scripts/generate-routes.ts"
+		"generate:routes": "bun scripts/generate-routes.ts",
+		"migrate:strapi": "bun scripts/migrate-to-strapi.ts"
 	},
 	"dependencies": {
 		"@cf-wasm/photon": "^0.1.31",
@@ -31,6 +32,7 @@
 		"alchemy": "^0.72.0",
 		"h3": "^1.12.0",
 		"husky": "^9.1.6",
+		"marked": "^16.4.0",
 		"semantic-release": "^24.2.6",
 		"solid-js": "^1.9.5",
 		"solid-mdx": "^0.0.7",

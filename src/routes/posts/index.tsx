@@ -1,21 +1,27 @@
+import { createAsync } from "@solidjs/router";
+import { getPosts } from "~/lib/strapi";
 import PageLayout from "~/components/PageLayout";
-import { postPages } from "~/types/post-routes";
 
 export default function PostsHome() {
-	return (
-		<>
-			<PageLayout title="Writing" description="Some of my writing">
-				<h1>Writing</h1>
+	const posts = createAsync(() => getPosts());
 
-				{postPages.map((post) => (
-					<a href={post.href}>
+	return (
+		<PageLayout title="Writing" description="Some of my writing">
+			<h1>Writing</h1>
+
+			{posts() ? (
+				posts()!.map((post) => (
+					<a href={`/posts/${post.slug}`}>
 						<div>
 							<h2>{post.title}</h2>
-							<time>{post.publishedAt}</time>
+							<time>{new Date(post.publishedAt).toLocaleDateString()}</time>
+							<p>{post.summary}</p>
 						</div>
 					</a>
-				))}
-			</PageLayout>
-		</>
+				))
+			) : (
+				<p>Loading...</p>
+			)}
+		</PageLayout>
 	);
 }
