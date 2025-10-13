@@ -1,3 +1,10 @@
+## [1.16.2](https://github.com/et0and/wwwtom/compare/v1.16.1...v1.16.2) (2025-10-13)
+
+
+### Bug Fixes
+
+* no wasm, separate og image service ([385ecc5](https://github.com/et0and/wwwtom/commit/385ecc5d4a0ff60fcc34fac5e9ec535e1a9e222e))
+
 ## [1.16.1](https://github.com/et0and/wwwtom/compare/v1.16.0...v1.16.1) (2025-10-12)
 
 
