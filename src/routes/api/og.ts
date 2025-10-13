@@ -1,146 +1,52 @@
 import type { APIEvent } from "@solidjs/start/server";
-import satori from "satori";
-import { initWasm, Resvg } from "@resvg/resvg-wasm";
-
-let wasmInitialized = false;
-
-const libreCaslonRegular = fetch(
-	"https://cdn.tom.so/LibreCaslonCondensed-Regular.woff2",
-).then((res) => res.arrayBuffer());
-
-const libreCaslonMedium = fetch(
-	"https://cdn.tom.so/LibreCaslonCondensed-Medium.woff2",
-).then((res) => res.arrayBuffer());
+import { getRequestEvent } from "solid-js/web";
 
 export async function GET({ request }: APIEvent) {
-	if (!wasmInitialized) {
-		const wasmUrl = new URL("/resvg.wasm", request.url).href;
-		await initWasm(fetch(wasmUrl));
-		wasmInitialized = true;
+	const url = new URL(request.url);
+	const title = url.searchParams.get("title");
+	const summary = url.searchParams.get("summary");
+
+	const event = getRequestEvent();
+	const env = event?.nativeEvent.context.cloudflare?.env as
+		| { OG_SERVICE_URL?: string }
+		| undefined;
+
+	const upstreamUrl = env?.OG_SERVICE_URL;
+
+	if (!upstreamUrl) {
+		return new Response("OG service not configured", { status: 500 });
 	}
 
-	const { searchParams } = new URL(request.url);
-	const title = searchParams.get("title");
+	const params = new URLSearchParams();
+	if (title) params.set("title", title);
+	if (summary) params.set("summary", summary);
 
-	const [libreCaslonRegularData, libreCaslonMediumData] = await Promise.all([
-		libreCaslonRegular,
-		libreCaslonMedium,
-	]);
+	const targetUrl = `${upstreamUrl}/og/?${params.toString()}`;
 
-	const svg = await satori(
-		{
-			type: "div",
-			props: {
-				style: {
-					height: "100%",
-					width: "100%",
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					justifyContent: "center",
-					backgroundColor: "white",
-				},
-				children: {
-					type: "div",
-					props: {
-						style: {
-							height: "100%",
-							width: "100%",
-							display: "flex",
-							flexDirection: "column",
-							alignItems: "center",
-							justifyContent: "center",
-							backgroundColor: "white",
-						},
-						children: {
-							type: "div",
-							props: {
-								style: {
-									display: "flex",
-									paddingLeft: "2rem",
-								},
-								children: {
-									type: "div",
-									props: {
-										style: {
-											display: "flex",
-											flexDirection: "column",
-											width: "100%",
-											paddingTop: "3rem",
-											paddingBottom: "3rem",
-											paddingLeft: "1rem",
-											paddingRight: "1rem",
-											justifyContent: "space-between",
-											padding: "2rem",
-										},
-										children: {
-											type: "h2",
-											props: {
-												style: {
-													display: "flex",
-													flexDirection: "column",
-													fontSize: "2.25rem",
-													fontWeight: 500,
-													letterSpacing: "-0.025em",
-													color: "#111827",
-													textAlign: "left",
-												},
-												children: [
-													{
-														type: "span",
-														props: {
-															children: title,
-														},
-													},
-													{
-														type: "span",
-														props: {
-															style: {
-																color: "#4B5563",
-																fontSize: "1.125rem",
-															},
-															children: "Tom Hackshaw",
-														},
-													},
-												],
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
+	try {
+		const response = await fetch(targetUrl, {
+			cf: {
+				cacheTtl: 31536000,
+				cacheEverything: true,
 			},
-		},
-		{
-			width: 1200,
-			height: 630,
-			fonts: [
-				{
-					name: "Libre Caslon Condensed",
-					data: libreCaslonRegularData,
-					style: "normal",
-					weight: 400,
-				},
-				{
-					name: "Libre Caslon Condensed",
-					data: libreCaslonMediumData,
-					style: "normal",
-					weight: 500,
-				},
-			],
-		},
-	);
+		} as RequestInit);
 
-	const resvg = new Resvg(svg);
-	const pngData = resvg.render();
-	const pngBuffer = pngData.asPng();
+		if (!response.ok) {
+			return new Response("Failed to generate OG image", { status: 500 });
+		}
 
-	return new Response(new Uint8Array(pngBuffer), {
-		headers: {
-			"Content-Type": "image/png",
-			"Cache-Control": "public, max-age=31536000, immutable",
-		},
-	});
+		const imageBuffer = await response.arrayBuffer();
+
+		return new Response(imageBuffer, {
+			headers: {
+				"Content-Type": "image/png",
+				"Cache-Control": "public, max-age=31536000, immutable",
+				"CDN-Cache-Control": "public, max-age=31536000",
+				"Cloudflare-CDN-Cache-Control": "public, max-age=31536000",
+			},
+		});
+	} catch (error) {
+		console.error("OG image proxy error:", error);
+		return new Response("Failed to fetch OG image", { status: 500 });
+	}
 }
