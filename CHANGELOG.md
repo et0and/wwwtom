@@ -1,3 +1,10 @@
+## [1.16.3](https://github.com/et0and/wwwtom/compare/v1.16.2...v1.16.3) (2025-10-14)
+
+
+### Bug Fixes
+
+* make OG image URLs absolute for social media crawlers ([3d63ab5](https://github.com/et0and/wwwtom/commit/3d63ab510c2e23eaf85ac95a4e44d8a9fa239e37))
+
 ## [1.16.2](https://github.com/et0and/wwwtom/compare/v1.16.1...v1.16.2) (2025-10-13)
 
 
