@@ -1,3 +1,10 @@
+# [1.17.0](https://github.com/et0and/wwwtom/compare/v1.16.5...v1.17.0) (2025-10-14)
+
+
+### Features
+
+* pagination to posts ([4366c6a](https://github.com/et0and/wwwtom/commit/4366c6ac109527cf40d05dd18648b3378c90c4f2))
+
 ## [1.16.5](https://github.com/et0and/wwwtom/compare/v1.16.4...v1.16.5) (2025-10-14)
 
 
