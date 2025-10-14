@@ -1,3 +1,10 @@
+## [1.16.4](https://github.com/et0and/wwwtom/compare/v1.16.3...v1.16.4) (2025-10-14)
+
+
+### Bug Fixes
+
+* metadata during ssr ([f542cbe](https://github.com/et0and/wwwtom/commit/f542cbe97b5bfb4050435f11dcec39ad627ae253))
+
 ## [1.16.3](https://github.com/et0and/wwwtom/compare/v1.16.2...v1.16.3) (2025-10-14)
 
 
