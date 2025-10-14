@@ -1,3 +1,10 @@
+## [1.16.5](https://github.com/et0and/wwwtom/compare/v1.16.4...v1.16.5) (2025-10-14)
+
+
+### Bug Fixes
+
+* title metadata ([ad33e36](https://github.com/et0and/wwwtom/commit/ad33e36aa0917505a2713a2728ddab4457128d31))
+
 ## [1.16.4](https://github.com/et0and/wwwtom/compare/v1.16.3...v1.16.4) (2025-10-14)
 
 
