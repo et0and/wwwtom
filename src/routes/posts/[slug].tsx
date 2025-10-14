@@ -20,10 +20,9 @@ export default function PostPage() {
 
 	return (
 		<>
-			<Meta title={title()} metaType="description" metaContent={summary()} />
 			<Show when={post()} fallback={<p>Loading...</p>}>
 				{(data) => (
-					<PageLayout>
+					<PageLayout title={data().title} description={data().summary}>
 						<article>
 							<h1>{data().title}</h1>
 							<time>
