@@ -3,6 +3,7 @@ import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getWorkBySlug } from "~/lib/strapi";
 import PageLayout from "~/components/PageLayout";
+import Meta from "~/components/Meta";
 
 export const route = {
 	preload: ({ params }) => getWorkBySlug(params.slug),
@@ -10,28 +11,36 @@ export const route = {
 
 export default function WorkPage() {
 	const params = useParams();
-	const work = createAsync(() => getWorkBySlug(params.slug));
+	const work = createAsync(() => getWorkBySlug(params.slug), {
+		deferStream: true,
+	});
+
+	const title = () => work()?.title || "";
+	const summary = () => work()?.summary || "";
 
 	return (
-		<Show when={work()} fallback={<p>Loading...</p>}>
-			{(data) => (
-				<PageLayout title={data().title} description={data().summary}>
-					<article>
-						<h1>{data().title}</h1>
-						<time>
-							{new Date(
-								data().publicationDate || data().publishedAt,
-							).toLocaleDateString("en-NZ", {
-								year: "numeric",
-								month: "long",
-								day: "numeric",
-							})}
-						</time>
-						<p>{data().summary}</p>
-						<div innerHTML={data().content} />
-					</article>
-				</PageLayout>
-			)}
-		</Show>
+		<>
+			<Meta title={title()} metaType="description" metaContent={summary()} />
+			<Show when={work()} fallback={<p>Loading...</p>}>
+				{(data) => (
+					<PageLayout>
+						<article>
+							<h1>{data().title}</h1>
+							<time>
+								{new Date(
+									data().publicationDate || data().publishedAt,
+								).toLocaleDateString("en-NZ", {
+									year: "numeric",
+									month: "long",
+									day: "numeric",
+								})}
+							</time>
+							<p>{data().summary}</p>
+							<div innerHTML={data().content} />
+						</article>
+					</PageLayout>
+				)}
+			</Show>
+		</>
 	);
 }
