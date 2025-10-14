@@ -12,6 +12,7 @@ export default function Home() {
 				<img
 					src="https://cdn.tom.so/scribs.svg"
 					class="w-full max-w-[500px] mx-auto"
+					alt=""
 				/>
 			</main>
 		</>

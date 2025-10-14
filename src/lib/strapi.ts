@@ -74,12 +74,12 @@ async function fetchStrapi<T>(
 	return response.json();
 }
 
-export const getPosts = query(async () => {
+export const getPosts = query(async (page = 1, pageSize = 5) => {
 	"use server";
 	const response = await fetchStrapi<StrapiResponse<StrapiPost[]>>(
-		"/posts?sort=publicationDate:desc&populate=*",
+		`/posts?sort=publicationDate:desc&populate=*&pagination[page]=${page}&pagination[pageSize]=${pageSize}`,
 	);
-	return response.data;
+	return response;
 }, "posts");
 
 export const getPostBySlug = query(async (slug: string) => {

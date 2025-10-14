@@ -1,11 +1,13 @@
-import { createAsync } from "@solidjs/router";
+import { createAsync, useSearchParams, A } from "@solidjs/router";
 import { getPosts } from "~/lib/strapi";
 import PageLayout from "~/components/PageLayout";
-import { Suspense } from "solid-js";
+import { Suspense, Show } from "solid-js";
 import Spinner from "~/components/Spinner";
 
 export default function PostsHome() {
-	const posts = createAsync(() => getPosts());
+	const [searchParams] = useSearchParams();
+	const currentPage = () => Number(searchParams.page) || 1;
+	const posts = createAsync(() => getPosts(currentPage()));
 
 	return (
 		<PageLayout title="Writing" description="Some of my writing">
@@ -13,23 +15,42 @@ export default function PostsHome() {
 			<p>Some of my writing.</p>
 			<Suspense fallback={<Spinner color="grey" />}>
 				{posts() ? (
-					posts()!.map((post) => (
-						<a href={`/posts/${post.slug}`}>
-							<div>
-								<h2>{post.title}</h2>
-								<time>
-									{new Date(
-										post.publicationDate || post.publishedAt,
-									).toLocaleDateString("en-NZ", {
-										year: "numeric",
-										month: "long",
-										day: "numeric",
-									})}
-								</time>
-								<p>{post.summary}</p>
-							</div>
-						</a>
-					))
+					<>
+						{posts()!.data.map((post) => (
+							<a href={`/posts/${post.slug}`}>
+								<div>
+									<h2>{post.title}</h2>
+									<time>
+										{new Date(
+											post.publicationDate || post.publishedAt,
+										).toLocaleDateString("en-NZ", {
+											year: "numeric",
+											month: "long",
+											day: "numeric",
+										})}
+									</time>
+									<p>{post.summary}</p>
+								</div>
+							</a>
+						))}
+						<Show when={posts()?.meta.pagination}>
+							{(pagination) => (
+								<div class="justify-between flex item-center">
+									<Show when={pagination().page > 1}>
+										<A href={`/posts?page=${pagination().page - 1}`}>
+											Previous
+										</A>
+									</Show>
+									{/* <p>
+										Page {pagination().page} of {pagination().pageCount}
+									</p> */}
+									<Show when={pagination().page < pagination().pageCount}>
+										<A href={`/posts?page=${pagination().page + 1}`}>Next</A>
+									</Show>
+								</div>
+							)}
+						</Show>
+					</>
 				) : (
 					<p>Loading...</p>
 				)}
