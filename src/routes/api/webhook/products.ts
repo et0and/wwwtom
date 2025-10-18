@@ -1,6 +1,7 @@
 import { json } from "solid-start/api";
 import { Polar } from "@polar-sh/sdk";
 import { getDb } from "~/lib/db";
+import { dynamicProductCreateSchema, apiResponseSchema } from "~/lib/schemas";
 
 const polar = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -15,21 +16,17 @@ export async function POST({ request }: { request: Request }) {
 
   try {
     const body = await request.json();
-    const { name, description, price, currency = "usd" } = body;
 
-    // Input validation
-    if (!name || typeof name !== "string" || name.length > 255) {
-      return json({ error: "Invalid or missing name" }, { status: 400 });
+    // Validate input with Zod
+    const validationResult = dynamicProductCreateSchema.safeParse(body);
+    if (!validationResult.success) {
+      return json({
+        error: "Validation failed",
+        details: validationResult.error.issues
+      }, { status: 400 });
     }
-    if (!price || typeof price !== "number" || price <= 0 || price > 100000000) { // Max $1M
-      return json({ error: "Invalid price" }, { status: 400 });
-    }
-    if (description && (typeof description !== "string" || description.length > 1000)) {
-      return json({ error: "Invalid description" }, { status: 400 });
-    }
-    if (!["usd", "eur", "gbp"].includes(currency.toLowerCase())) {
-      return json({ error: "Unsupported currency" }, { status: 400 });
-    }
+
+    const { name, description, price, currency } = validationResult.data;
 
     // Create product in Polar
     const product = await polar.products.create({
@@ -46,11 +43,17 @@ export async function POST({ request }: { request: Request }) {
       name,
       description,
       price: Math.round(price),
-      currency: currency.toLowerCase(),
+      currency,
       polarId: product.id,
     });
 
-    return json({ success: true, productId: product.id });
+    // Validate response
+    const response = apiResponseSchema.parse({
+      success: true,
+      productId: product.id
+    });
+
+    return json(response);
   } catch (error) {
     console.error("Webhook error:", error);
     return json({ error: "Internal server error" }, { status: 500 });

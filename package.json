@@ -19,6 +19,7 @@
 	"dependencies": {
 		"@cf-wasm/photon": "^0.1.31",
 		"@mdx-js/mdx": "^2.3.0",
+		"@polar-sh/sdk": "^0.37.0",
 		"@prettier/plugin-oxc": "^0.0.4",
 		"@resvg/resvg-wasm": "^2.6.2",
 		"@semantic-release/changelog": "^6.0.3",
@@ -40,7 +41,8 @@
 		"solid-js": "^1.9.5",
 		"solid-mdx": "^0.0.7",
 		"sst": "3.17.12",
-		"vinxi": "^0.5.7"
+		"vinxi": "^0.5.7",
+		"zod": "^4.1.12"
 	},
 	"devDependencies": {
 		"@solidjs/testing-library": "^0.8.10",

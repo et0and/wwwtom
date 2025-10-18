@@ -9,11 +9,11 @@ In this approach, product configurations are primarily defined in static files (
 3. Set up Cloudflare D1 database with migrations for dynamic products persistence.
 4. At application startup or when needed, use the Polar SDK to create products from these configs if they don't exist in Polar (e.g., check by name or external ID).
 5. Create a webhook API endpoint (e.g., `/api/webhook/products`) with API key authentication to accept dynamic product creation requests with fields like name, description, and price.
-6. Upon receiving a webhook request, validate the data, create a product in Polar using the SDK, and persist to D1 database.
+6. Upon receiving a webhook request, validate the data using Zod schemas, create a product in Polar using the SDK, and persist to D1 database.
 7. The generic checkout component reads both static configs and dynamic products from D1 to populate available products.
-8. For checkout, use Polar SDK's checkout links with customer details collected from mandatory form fields (first name, last name, email, phone).
+8. For checkout, validate customer form data and product selection with Zod schemas, then use Polar SDK's checkout links with validated customer details.
 9. All products are one-off fixed price purchases (recurringInterval: null).
-10. Implement security best practices: HTTPS, input validation, rate limiting, error handling, and PCI compliance by not storing payment data.
+10. Implement security best practices: HTTPS, Zod schema validation, rate limiting, error handling, and PCI compliance by not storing payment data.
 
 ## Pros
 - Simple setup with D1 for persistence.
@@ -21,8 +21,9 @@ In this approach, product configurations are primarily defined in static files (
 - Fast loading for static products; dynamic products add flexibility with database persistence.
 - Easy to maintain static products; webhook enables secure external integration.
 - Supports mandatory customer form fields for all checkouts.
-- Production-ready with authentication, validation, and error handling.
+- Production-ready with authentication, Zod schema validation, and error handling.
 - PCI compliant as payment data is not stored locally.
+- Type-safe validation with Zod for runtime security.
 
 ## Cons
 - Requires Cloudflare D1 setup and migrations.
@@ -65,6 +66,35 @@ CREATE TABLE dynamic_products (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+// src/lib/schemas.ts
+import { z } from "zod";
+
+const supportedCurrencies = z.enum(["usd", "eur", "gbp"]);
+
+export const dynamicProductCreateSchema = z.object({
+  name: z.string().min(1).max(255).trim(),
+  description: z.string().max(1000).trim().optional(),
+  price: z.number().positive().max(100000000),
+  currency: supportedCurrencies.default("usd"),
+});
+
+export const customerFormSchema = z.object({
+  firstName: z.string().min(1).max(100).trim(),
+  lastName: z.string().min(1).max(100).trim(),
+  email: z.string().email().max(254),
+  phone: z.string().regex(/^[0-9+\-\s\(\)]+$/).min(7).max(20),
+});
+
+export const productSelectionSchema = z.object({
+  productId: z.string().uuid(),
+});
+
+export const apiResponseSchema = z.object({
+  success: z.boolean(),
+  productId: z.string().uuid().optional(),
+  error: z.string().optional(),
+});
+
 // src/lib/db.ts
 import { drizzle } from "drizzle-orm/d1";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
@@ -84,6 +114,7 @@ export const getDb = (d1: D1Database) => drizzle(d1, { schema: { dynamicProducts
 import { json } from "solid-start/api";
 import { Polar } from "@polar-sh/sdk";
 import { getDb } from "~/lib/db";
+import { dynamicProductCreateSchema, apiResponseSchema } from "~/lib/schemas";
 
 const polar = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
@@ -98,21 +129,17 @@ export async function POST({ request }: { request: Request }) {
 
   try {
     const body = await request.json();
-    const { name, description, price, currency = "usd" } = body;
 
-    // Input validation
-    if (!name || typeof name !== "string" || name.length > 255) {
-      return json({ error: "Invalid or missing name" }, { status: 400 });
+    // Validate input with Zod
+    const validationResult = dynamicProductCreateSchema.safeParse(body);
+    if (!validationResult.success) {
+      return json({
+        error: "Validation failed",
+        details: validationResult.error.issues
+      }, { status: 400 });
     }
-    if (!price || typeof price !== "number" || price <= 0 || price > 100000000) {
-      return json({ error: "Invalid price" }, { status: 400 });
-    }
-    if (description && (typeof description !== "string" || description.length > 1000)) {
-      return json({ error: "Invalid description" }, { status: 400 });
-    }
-    if (!["usd", "eur", "gbp"].includes(currency.toLowerCase())) {
-      return json({ error: "Unsupported currency" }, { status: 400 });
-    }
+
+    const { name, description, price, currency } = validationResult.data;
 
     // Create product in Polar
     const product = await polar.products.create({
@@ -129,11 +156,17 @@ export async function POST({ request }: { request: Request }) {
       name,
       description,
       price: Math.round(price),
-      currency: currency.toLowerCase(),
+      currency,
       polarId: product.id,
     });
 
-    return json({ success: true, productId: product.id });
+    // Validate response
+    const response = apiResponseSchema.parse({
+      success: true,
+      productId: product.id
+    });
+
+    return json(response);
   } catch (error) {
     console.error("Webhook error:", error);
     return json({ error: "Internal server error" }, { status: 500 });
@@ -158,17 +191,11 @@ export async function GET({ request }: { request: Request }) {
 import { createSignal, For, createResource } from "solid-js";
 import { staticProducts } from "~/products";
 import { Polar } from "@polar-sh/sdk";
+import { customerFormSchema, productSelectionSchema, type CustomerForm } from "~/lib/schemas";
 
 const polar = new Polar({
   accessToken: process.env.POLAR_ACCESS_TOKEN!,
 });
-
-interface CustomerForm {
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-}
 
 export default function Checkout() {
   const [selectedProduct, setSelectedProduct] = createSignal<string | null>(null);
