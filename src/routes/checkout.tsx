@@ -1,5 +1,5 @@
-import { createSignal, For } from "solid-js";
-import { staticProducts, dynamicProducts } from "~/products";
+import { createSignal, For, createResource } from "solid-js";
+import { staticProducts } from "~/products";
 import { Polar } from "@polar-sh/sdk";
 
 const polar = new Polar({
@@ -22,7 +22,9 @@ export default function Checkout() {
     phone: "",
   });
 
-  const allProducts = () => [...staticProducts, ...dynamicProducts];
+  const [dynamicProducts] = createResource(() => fetch("/api/products/dynamic").then(r => r.json()));
+
+  const allProducts = () => [...staticProducts, ...(dynamicProducts() || [])];
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
