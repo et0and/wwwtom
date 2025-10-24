@@ -1,18 +1,17 @@
 import { onMount, createSignal } from "solid-js";
-import * as v2 from "../lib/vec2.js";
+import * as v2 from "../lib/vec";
 
-// Constants from slime_dish.js
 const WIDTH = 400;
 const HEIGHT = 400;
-const NUM_AGENTS = 2500;
-const DECAY = 0.9;
+const NUM_AGENTS = 500;
+const DECAY = 0.5;
 const MIN_CHEM = 0.0001;
 const SENS_ANGLE = (45 * Math.PI) / 180;
 const SENS_DIST = 5;
-const AGT_SPEED = 4;
+const AGT_SPEED = 3;
 const AGT_ANGLE = (45 * Math.PI) / 180;
 const DEPOSIT = 5;
-const TEXTURE = ["  ``^@", " ..„vworld"];
+const TEXTURE = ["  ``^@", " ..„v0ah"];
 const OOB = "";
 
 interface Vec2 {
@@ -310,9 +309,9 @@ const SlimeDish = () => {
 			aria-hidden="true"
 			style={{
 				"font-family": "monospace",
-				"font-size": "5px",
-				"line-height": "3px",
-				color: "blue",
+				"font-size": "10px",
+				"line-height": "6px",
+				color: "black",
 				"white-space": "pre",
 				display: "inline-block",
 				"text-align": "center",

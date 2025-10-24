@@ -41,12 +41,9 @@ async function fetchStrapi<T>(
 		| { STRAPI_URL?: string; STRAPI_API_TOKEN?: string }
 		| undefined;
 
-	const STRAPI_URL =
-		env?.STRAPI_URL || process.env.STRAPI_URL || import.meta.env.STRAPI_URL;
+	const STRAPI_URL = env?.STRAPI_URL || import.meta.env.STRAPI_URL;
 	const STRAPI_API_TOKEN =
-		env?.STRAPI_API_TOKEN ||
-		process.env.STRAPI_API_TOKEN ||
-		import.meta.env.STRAPI_API_TOKEN;
+		env?.STRAPI_API_TOKEN || import.meta.env.STRAPI_API_TOKEN;
 
 	if (!STRAPI_URL) {
 		throw new Error("STRAPI_URL environment variable is not set");
