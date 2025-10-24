@@ -1,3 +1,10 @@
+# [1.19.0](https://github.com/et0and/wwwtom/compare/v1.18.7...v1.19.0) (2025-10-24)
+
+
+### Features
+
+* add payload cms ([1a19884](https://github.com/et0and/wwwtom/commit/1a19884ced047b8093ddd5c1d105dee5b8ce3855))
+
 ## [1.18.7](https://github.com/et0and/wwwtom/compare/v1.18.6...v1.18.7) (2025-10-24)
 
 
