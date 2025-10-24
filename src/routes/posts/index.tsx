@@ -7,7 +7,7 @@ import Spinner from "~/components/Spinner";
 export default function PostsHome() {
 	const [searchParams] = useSearchParams();
 	const currentPage = () => Number(searchParams.page) || 1;
-	const posts = createAsync(() => getPosts(currentPage(), 5));
+	const posts = createAsync(() => getPosts(currentPage()));
 
 	return (
 		<PageLayout title="Writing" description="Some of my writing">
