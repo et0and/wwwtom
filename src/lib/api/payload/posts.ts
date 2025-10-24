@@ -49,7 +49,7 @@ export const getPosts = query(
 export const getPostBySlug = query(async (slug: string) => {
 	"use server";
 	const response = await fetchPayload<PayloadResponse<PayloadPost[]>>(
-		`/posts?where[slug][equals]=${slug}&limit=1&depth=3`,
+		`/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
 	);
 	const post = response.docs[0];
 	if (!post) return null;
@@ -68,15 +68,18 @@ export const getPostBySlug = query(async (slug: string) => {
 
 			// Handle paragraphs
 			if (node.type === "paragraph" && node.children) {
-				const text = node.children
-					.map((child: any) => {
-						if (child.type === "text") {
-							return child.text || "";
-						}
-						return convertNode(child);
-					})
-					.join("");
+				const text = node.children.map(convertNode).join("");
 				return `<p>${text}</p>`;
+			}
+
+			// Handle links
+			if (node.type === "link" && node.children) {
+				const text = node.children.map(convertNode).join("");
+				const url = node.fields?.url || "#";
+				const target = node.fields?.newTab
+					? ' target="_blank" rel="noopener noreferrer"'
+					: "";
+				return `<a href="${url}"${target}>${text}</a>`;
 			}
 
 			// Handle headings

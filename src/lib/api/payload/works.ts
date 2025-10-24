@@ -33,7 +33,7 @@ export const getWorks = query(async () => {
 export const getWorkBySlug = query(async (slug: string) => {
 	"use server";
 	const response = await fetchPayload<PayloadResponse<PayloadPost[]>>(
-		`/works?where[slug][equals]=${slug}&limit=1&depth=3`,
+		`/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
 	);
 	const work = response.docs[0];
 	if (!work) return null;
