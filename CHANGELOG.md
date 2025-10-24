@@ -1,3 +1,10 @@
+# [1.18.0](https://github.com/et0and/wwwtom/compare/v1.17.0...v1.18.0) (2025-10-23)
+
+
+### Features
+
+* add ascii animation ([bfe2cd6](https://github.com/et0and/wwwtom/commit/bfe2cd631097623d17a953a7ebf1f99902000a64))
+
 # [1.17.0](https://github.com/et0and/wwwtom/compare/v1.16.5...v1.17.0) (2025-10-14)
 
 
