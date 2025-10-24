@@ -1,3 +1,10 @@
+## [1.18.7](https://github.com/et0and/wwwtom/compare/v1.18.6...v1.18.7) (2025-10-24)
+
+
+### Bug Fixes
+
+* fix about page link, add spinner fallback to slug pages ([dc8cb0c](https://github.com/et0and/wwwtom/commit/dc8cb0ce450a6194f54a5f4d3b6759286e884d42))
+
 ## [1.18.6](https://github.com/et0and/wwwtom/compare/v1.18.5...v1.18.6) (2025-10-24)
 
 
