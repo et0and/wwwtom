@@ -1,3 +1,10 @@
+## [1.18.1](https://github.com/et0and/wwwtom/compare/v1.18.0...v1.18.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* **strapi, components:** type error in strapi lib, vec lib ts port ([4a9cf1d](https://github.com/et0and/wwwtom/commit/4a9cf1d5111b7a99952d67e2dc9a09e1a9ebaae5))
+
 # [1.18.0](https://github.com/et0and/wwwtom/compare/v1.17.0...v1.18.0) (2025-10-23)
 
 
