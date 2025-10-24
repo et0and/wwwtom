@@ -1,3 +1,10 @@
+# [1.20.0](https://github.com/et0and/wwwtom/compare/v1.19.1...v1.20.0) (2025-10-24)
+
+
+### Features
+
+* nuke strapi ([10bcf68](https://github.com/et0and/wwwtom/commit/10bcf68ff0bcaf5ab5a7b738c136c37422ade79f))
+
 ## [1.19.1](https://github.com/et0and/wwwtom/compare/v1.19.0...v1.19.1) (2025-10-24)
 
 
