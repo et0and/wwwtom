@@ -1,5 +1,5 @@
 import { createAsync, useSearchParams, A } from "@solidjs/router";
-import { getPosts } from "~/lib/api/strapi";
+import { getPosts } from "~/lib/api/payload";
 import PageLayout from "~/components/PageLayout";
 import { Suspense, Show } from "solid-js";
 import Spinner from "~/components/Spinner";
@@ -22,15 +22,13 @@ export default function PostsHome() {
 									<div>
 										<h2>{post.title}</h2>
 										<time>
-											{new Date(
-												post.publicationDate || post.publishedAt,
-											).toLocaleDateString("en-NZ", {
+											{new Date(post.publishedAt).toLocaleDateString("en-NZ", {
 												year: "numeric",
 												month: "long",
 												day: "numeric",
 											})}
 										</time>
-										<p>{post.summary}</p>
+										<p>{post.summary || post.meta?.description}</p>
 									</div>
 								</A>
 							))}

@@ -16,15 +16,11 @@ export default function WorkPage() {
 		deferStream: true,
 	});
 
-	const title = () => work()?.title || "";
-	const summary = () => work()?.summary || "";
-
 	return (
 		<>
-			<Meta title={title()} metaType="description" metaContent={summary()} />
 			<Show when={work()} fallback={<Spinner color="grey" />}>
 				{(data) => (
-					<PageLayout>
+					<PageLayout title={data().title} description={data().summary}>
 						<article>
 							<h1>{data().title}</h1>
 							<time>
