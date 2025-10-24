@@ -309,8 +309,8 @@ const SlimeDish = () => {
 			aria-hidden="true"
 			style={{
 				"font-family": "monospace",
-				"font-size": "10px",
-				"line-height": "6px",
+				"font-size": "8px",
+				"line-height": "5px",
 				color: "black",
 				"white-space": "pre",
 				display: "inline-block",
