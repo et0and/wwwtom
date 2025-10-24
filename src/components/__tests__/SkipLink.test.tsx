@@ -1,8 +1,13 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import { SkipLink } from "~/components/SkipLink";
+import { SkipLink } from "../SkipLink";
 
 describe("SkipLink", () => {
+	it("matches the snapshot", () => {
+		const { container } = render(() => <SkipLink />);
+		expect(container).toMatchSnapshot();
+	});
+
 	it("renders skip link with correct text", () => {
 		render(() => <SkipLink />);
 

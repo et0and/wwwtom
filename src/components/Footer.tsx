@@ -1,4 +1,4 @@
-export default function Footer() {
+export function Footer() {
 	const currentYear = new Date().getFullYear();
 	return (
 		<footer class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 text-sm flex-shrink-0">

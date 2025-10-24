@@ -1,4 +1,5 @@
 import Meta from "~/components/Meta";
+import SlimeDish from "~/components/SlimeDish";
 
 export default function Home() {
 	return (
@@ -8,12 +9,8 @@ export default function Home() {
 				metaType="description"
 				metaContent="Tom Hackshaw is a design engineer from Aotearoa, New Zealand"
 			/>
-			<main class="text-center mx-auto p-4">
-				<img
-					src="https://cdn.tom.so/scribs.svg"
-					class="w-full max-w-[500px] mx-auto"
-					alt=""
-				/>
+			<main class="flex flex-col items-center justify-center p-8">
+				<SlimeDish />
 			</main>
 		</>
 	);

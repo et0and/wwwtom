@@ -1,5 +1,5 @@
 import { createAsync, useSearchParams, A } from "@solidjs/router";
-import { getPosts } from "~/lib/strapi";
+import { getPosts } from "~/lib/api/strapi";
 import PageLayout from "~/components/PageLayout";
 import { Suspense, Show } from "solid-js";
 import Spinner from "~/components/Spinner";
@@ -18,7 +18,7 @@ export default function PostsHome() {
 					{(postsData) => (
 						<>
 							{postsData().data.map((post) => (
-								<a href={`/posts/${post.slug}`}>
+								<A href={`/posts/${post.slug}`}>
 									<div>
 										<h2>{post.title}</h2>
 										<time>
@@ -32,19 +32,14 @@ export default function PostsHome() {
 										</time>
 										<p>{post.summary}</p>
 									</div>
-								</a>
+								</A>
 							))}
 							<Show when={postsData().meta.pagination}>
 								{(pagination) => (
 									<div class="justify-between flex item-center">
 										<Show when={pagination().page > 1}>
-											<A href={`/posts?page=${pagination().page - 1}`}>
-												Previous
-											</A>
+											<A href={`/posts?page=${pagination().page - 1}`}>Previous</A>
 										</Show>
-										{/* <p>
-											Page {pagination().page} of {pagination().pageCount}
-										</p> */}
 										<Show when={pagination().page < pagination().pageCount}>
 											<A href={`/posts?page=${pagination().page + 1}`}>Next</A>
 										</Show>

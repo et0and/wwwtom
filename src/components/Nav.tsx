@@ -2,7 +2,7 @@ export default function Nav() {
 	return (
 		<nav class="flex items-center tracking-tighter justify-between h-16 px-6 py-4 flex-shrink-0">
 			<a class="text-lg font-medium" href="/">
-				<p class="md:block hidden">Tom Hackshaw</p>
+				<h1 class="md:block hidden !text-lg">Tom Hackshaw</h1>
 				<div class="md:hidden block transition-colors duration-100 w-7 h-7 bg-black rounded-full">
 					<p class="sr-only">Tom Hackshaw</p>
 				</div>

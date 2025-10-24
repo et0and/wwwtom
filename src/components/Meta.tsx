@@ -1,6 +1,4 @@
 import { Title, Meta } from "@solidjs/meta";
-import { isServer } from "solid-js/web";
-import { getRequestEvent } from "solid-js/web";
 
 interface MetaProps {
 	title: string | number;

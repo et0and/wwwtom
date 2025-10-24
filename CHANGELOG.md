@@ -1,3 +1,38 @@
+## [1.18.4](https://github.com/et0and/wwwtom/compare/v1.18.3...v1.18.4) (2025-10-24)
+
+
+### Bug Fixes
+
+* bad pagination? ([cb7974f](https://github.com/et0and/wwwtom/commit/cb7974fe8f2fc70ac2804c853421a6e64eaae0b0))
+
+## [1.18.3](https://github.com/et0and/wwwtom/compare/v1.18.2...v1.18.3) (2025-10-24)
+
+
+### Bug Fixes
+
+* cleanup, add snapshot tests, css clean ([4131b7b](https://github.com/et0and/wwwtom/commit/4131b7b46a2180b417facc2c9b356bcdfcbf97b0))
+
+## [1.18.2](https://github.com/et0and/wwwtom/compare/v1.18.1...v1.18.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* sizing on mobile ([590a37d](https://github.com/et0and/wwwtom/commit/590a37d388cabf75c5e0ed65f19064f906364840))
+
+## [1.18.1](https://github.com/et0and/wwwtom/compare/v1.18.0...v1.18.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* **strapi, components:** type error in strapi lib, vec lib ts port ([4a9cf1d](https://github.com/et0and/wwwtom/commit/4a9cf1d5111b7a99952d67e2dc9a09e1a9ebaae5))
+
+# [1.18.0](https://github.com/et0and/wwwtom/compare/v1.17.0...v1.18.0) (2025-10-23)
+
+
+### Features
+
+* add ascii animation ([bfe2cd6](https://github.com/et0and/wwwtom/commit/bfe2cd631097623d17a953a7ebf1f99902000a64))
+
 # [1.17.0](https://github.com/et0and/wwwtom/compare/v1.16.5...v1.17.0) (2025-10-14)
 
 

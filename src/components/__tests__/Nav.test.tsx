@@ -1,8 +1,13 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import Nav from "~/components/Nav";
+import Nav from "../Nav";
 
 describe("Nav", () => {
+	it("matches the snapshot", () => {
+		const { container } = render(() => <Nav />);
+		expect(container).toMatchSnapshot();
+	});
+
 	it("renders main navigation links", () => {
 		render(() => <Nav />);
 
