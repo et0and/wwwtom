@@ -1,3 +1,10 @@
+## [1.19.1](https://github.com/et0and/wwwtom/compare/v1.19.0...v1.19.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* date not needed for work posts ([0d3bec7](https://github.com/et0and/wwwtom/commit/0d3bec747838488d3268637f588d98104d8233e3))
+
 # [1.19.0](https://github.com/et0and/wwwtom/compare/v1.18.7...v1.19.0) (2025-10-24)
 
 
