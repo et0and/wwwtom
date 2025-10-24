@@ -23,15 +23,6 @@ export default function WorkPage() {
 					<PageLayout title={data().title} description={data().summary}>
 						<article>
 							<h1>{data().title}</h1>
-							<time>
-								{new Date(
-									data().publicationDate || data().publishedAt,
-								).toLocaleDateString("en-NZ", {
-									year: "numeric",
-									month: "long",
-									day: "numeric",
-								})}
-							</time>
 							<p>{data().summary}</p>
 							<div innerHTML={data().content} />
 						</article>
