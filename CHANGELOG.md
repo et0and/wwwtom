@@ -1,3 +1,10 @@
+## [1.18.4](https://github.com/et0and/wwwtom/compare/v1.18.3...v1.18.4) (2025-10-24)
+
+
+### Bug Fixes
+
+* bad pagination? ([cb7974f](https://github.com/et0and/wwwtom/commit/cb7974fe8f2fc70ac2804c853421a6e64eaae0b0))
+
 ## [1.18.3](https://github.com/et0and/wwwtom/compare/v1.18.2...v1.18.3) (2025-10-24)
 
 
