@@ -1,3 +1,10 @@
+## [1.20.2](https://github.com/et0and/wwwtom/compare/v1.20.1...v1.20.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* hyperdrive ([a4f7754](https://github.com/et0and/wwwtom/commit/a4f77543a4157212d21f52876fdc2ff55c068d17))
+
 ## [1.20.1](https://github.com/et0and/wwwtom/compare/v1.20.0...v1.20.1) (2025-10-24)
 
 
