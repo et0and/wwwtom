@@ -54,14 +54,14 @@ a:focus-visible {
 }
 
 *::selection {
-  background: #cc0081;
-  color: #ffffff;
+	background: #cc0081;
+	color: #ffffff;
 }
 *::-moz-selection {
-  background: #cc0081;
-  color: #ffffff;
+	background: #cc0081;
+	color: #ffffff;
 }
 *::-webkit-selection {
-  background: #cc0081;
-  color: #ffffff;
+	background: #cc0081;
+	color: #ffffff;
 }

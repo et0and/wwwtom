@@ -14,7 +14,7 @@ export default function PostsHome() {
 			<h1>Writing</h1>
 			<p>Some of my writing.</p>
 			<Suspense fallback={<Spinner color="grey" />}>
-				<Show when={posts() && posts().data}>
+				<Show when={posts()}>
 					{(postsData) => (
 						<>
 							{postsData().data.map((post) => (
@@ -38,7 +38,9 @@ export default function PostsHome() {
 								{(pagination) => (
 									<div class="justify-between flex item-center">
 										<Show when={pagination().page > 1}>
-											<A href={`/posts?page=${pagination().page - 1}`}>Previous</A>
+											<A href={`/posts?page=${pagination().page - 1}`}>
+												Previous
+											</A>
 										</Show>
 										<Show when={pagination().page < pagination().pageCount}>
 											<A href={`/posts?page=${pagination().page + 1}`}>Next</A>
