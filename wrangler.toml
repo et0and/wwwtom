@@ -2,6 +2,11 @@ name = "wwwtom"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Hyperdrive binding
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "4721f0b0dc98471080accb2bf29f8edf"
+      
 # Main worker script
 main = ".output/server/index.mjs"
 
@@ -26,5 +31,3 @@ directory = ".output/public"
 # Environment variables
 [vars]
 NODE_ENV = "production"
-
-
