@@ -1,3 +1,10 @@
+## [1.18.5](https://github.com/et0and/wwwtom/compare/v1.18.4...v1.18.5) (2025-10-24)
+
+
+### Bug Fixes
+
+* handle undefined data in posts page to prevent TypeError ([f72aebe](https://github.com/et0and/wwwtom/commit/f72aebe55893cbd054b5d59784c99aea93f3e16b))
+
 ## [1.18.4](https://github.com/et0and/wwwtom/compare/v1.18.3...v1.18.4) (2025-10-24)
 
 
