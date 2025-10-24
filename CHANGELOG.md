@@ -1,3 +1,10 @@
+## [1.18.2](https://github.com/et0and/wwwtom/compare/v1.18.1...v1.18.2) (2025-10-24)
+
+
+### Bug Fixes
+
+* sizing on mobile ([590a37d](https://github.com/et0and/wwwtom/commit/590a37d388cabf75c5e0ed65f19064f906364840))
+
 ## [1.18.1](https://github.com/et0and/wwwtom/compare/v1.18.0...v1.18.1) (2025-10-24)
 
 
