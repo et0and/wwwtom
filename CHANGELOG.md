@@ -1,3 +1,10 @@
+## [1.20.1](https://github.com/et0and/wwwtom/compare/v1.20.0...v1.20.1) (2025-10-24)
+
+
+### Bug Fixes
+
+* preload works ([95890c6](https://github.com/et0and/wwwtom/commit/95890c6dd3a7785c3674426cf55b1665e2049afe))
+
 # [1.20.0](https://github.com/et0and/wwwtom/compare/v1.19.1...v1.20.0) (2025-10-24)
 
 
