@@ -1,3 +1,10 @@
+## [1.18.6](https://github.com/et0and/wwwtom/compare/v1.18.5...v1.18.6) (2025-10-24)
+
+
+### Bug Fixes
+
+* simplify when condition ([abd73f4](https://github.com/et0and/wwwtom/commit/abd73f4003fa284e335254de8bc462f0c8351a39))
+
 ## [1.18.5](https://github.com/et0and/wwwtom/compare/v1.18.4...v1.18.5) (2025-10-24)
 
 
