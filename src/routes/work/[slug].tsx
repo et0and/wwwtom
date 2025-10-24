@@ -4,6 +4,7 @@ import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getWorkBySlug } from "~/lib/api/strapi";
 import PageLayout from "~/components/PageLayout";
 import Meta from "~/components/Meta";
+import Spinner from "~/components/Spinner";
 
 export const route = {
 	preload: ({ params }) => getWorkBySlug(params.slug),
@@ -21,7 +22,7 @@ export default function WorkPage() {
 	return (
 		<>
 			<Meta title={title()} metaType="description" metaContent={summary()} />
-			<Show when={work()} fallback={<p>Loading...</p>}>
+			<Show when={work()} fallback={<Spinner color="grey" />}>
 				{(data) => (
 					<PageLayout>
 						<article>

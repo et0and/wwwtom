@@ -3,6 +3,7 @@ import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getPostBySlug } from "~/lib/api/strapi";
 import PageLayout from "~/components/PageLayout";
+import Spinner from "~/components/Spinner";
 
 export const route = {
 	preload: ({ params }) => getPostBySlug(params.slug),
@@ -16,7 +17,7 @@ export default function PostPage() {
 
 	return (
 		<>
-			<Show when={post()} fallback={<p>Loading...</p>}>
+			<Show when={post()} fallback={<Spinner color="grey" />}>
 				{(data) => (
 					<PageLayout title={data().title} description={data().summary}>
 						<article>
