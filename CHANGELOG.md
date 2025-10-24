@@ -1,3 +1,10 @@
+## [1.18.3](https://github.com/et0and/wwwtom/compare/v1.18.2...v1.18.3) (2025-10-24)
+
+
+### Bug Fixes
+
+* cleanup, add snapshot tests, css clean ([4131b7b](https://github.com/et0and/wwwtom/commit/4131b7b46a2180b417facc2c9b356bcdfcbf97b0))
+
 ## [1.18.2](https://github.com/et0and/wwwtom/compare/v1.18.1...v1.18.2) (2025-10-24)
 
 
