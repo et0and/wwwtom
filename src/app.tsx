@@ -4,7 +4,7 @@ import { Suspense } from "solid-js";
 import { MetaProvider } from "@solidjs/meta";
 import Nav from "~/components/Nav";
 import { SkipLink } from "~/components/SkipLink";
-import Footer from "~/components/Footer";
+import { Footer } from "~/components/Footer";
 import "./app.css";
 
 export default function App() {

@@ -1,22 +1,5 @@
 @import "tailwindcss";
 
-/* :root {
-  --background-rgb: 214, 219, 220;
-  --foreground-rgb: 0, 0, 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background-rgb: 0, 0, 0;
-    --foreground-rgb: 255, 255, 255;
-  }
-}
-
-body {
-  background: rgb(var(--background-rgb));
-  color: rgb(var(--foreground-rgb));
-} */
-
 p {
 	letter-spacing: -0.05em;
 	padding-bottom: 1rem;
@@ -52,16 +35,33 @@ footer {
 }
 
 a {
-	@apply cursor-pointer;
-	@apply outline-transparent;
-	@apply underline;
-	@apply transition-colors;
-	@apply duration-100;
-	@apply hover:text-blue-600;
-	@apply focus-visible:outline-offset-2;
-	@apply focus-visible:outline-blue-700;
-	@apply focus-visible:border-blue-700;
-	@apply border-transparent;
-	@apply border-2;
+	cursor: pointer;
+	outline-color: transparent;
+	text-decoration: underline;
+	transition: color 100ms ease-in-out;
+	border: 2px solid transparent;
 	letter-spacing: -0.05em;
+}
+
+a:hover {
+	color: #cc0081;
+}
+
+a:focus-visible {
+	outline-offset: 4px;
+	outline-color: #ad1174;
+	border-color: #ad1174;
+}
+
+*::selection {
+  background: #cc0081;
+  color: #ffffff;
+}
+*::-moz-selection {
+  background: #cc0081;
+  color: #ffffff;
+}
+*::-webkit-selection {
+  background: #cc0081;
+  color: #ffffff;
 }

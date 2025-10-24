@@ -1,8 +1,13 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import Footer from "~/components/Footer";
+import { Footer } from "../Footer";
 
 describe("Footer", () => {
+	it("matches the snapshot", () => {
+		const { container } = render(() => <Footer />);
+		expect(container).toMatchSnapshot();
+	});
+
 	it("renders with current year", () => {
 		const currentYear = new Date().getFullYear();
 		render(() => <Footer />);

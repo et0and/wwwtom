@@ -1,9 +1,8 @@
 import { Show } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { getPostBySlug } from "~/lib/strapi";
+import { getPostBySlug } from "~/lib/api/strapi";
 import PageLayout from "~/components/PageLayout";
-import Meta from "~/components/Meta";
 
 export const route = {
 	preload: ({ params }) => getPostBySlug(params.slug),
@@ -14,9 +13,6 @@ export default function PostPage() {
 	const post = createAsync(() => getPostBySlug(params.slug), {
 		deferStream: true,
 	});
-
-	const title = () => post()?.title || "";
-	const summary = () => post()?.summary || "";
 
 	return (
 		<>

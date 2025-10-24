@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SkipLink > matches the snapshot 1`] = `
+<div>
+  <a
+    class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-1/2 focus:transform focus:-translate-x-1/2 focus:z-50 focus:px-4 focus:py-2 focus:bg-black focus:text-white focus:underline focus:outline-none"
+    href="#main"
+  >
+    Skip to main content
+  </a>
+</div>
+`;

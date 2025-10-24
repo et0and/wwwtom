@@ -1,4 +1,3 @@
-import { query } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 
 export interface StrapiPost {
@@ -31,7 +30,7 @@ export interface StrapiResponse<T> {
 	};
 }
 
-async function fetchStrapi<T>(
+export async function fetchStrapi<T>(
 	endpoint: string,
 	options?: RequestInit,
 ): Promise<T> {
@@ -70,47 +69,3 @@ async function fetchStrapi<T>(
 
 	return response.json();
 }
-
-export const getPosts = query(async (page = 1, pageSize = 5) => {
-	"use server";
-	const response = await fetchStrapi<StrapiResponse<StrapiPost[]>>(
-		`/posts?sort=publicationDate:desc&populate=*&pagination[page]=${page}&pagination[pageSize]=${pageSize}`,
-	);
-	return response;
-}, "posts");
-
-export const getPostBySlug = query(async (slug: string) => {
-	"use server";
-	const { marked } = await import("marked");
-	const response = await fetchStrapi<StrapiResponse<StrapiPost[]>>(
-		`/posts?filters[slug][$eq]=${slug}&populate=*`,
-	);
-	const post = response.data[0];
-	if (!post) return null;
-	return {
-		...post,
-		content: await marked.parse(post.content),
-	};
-}, "post");
-
-export const getWorks = query(async () => {
-	"use server";
-	const response = await fetchStrapi<StrapiResponse<StrapiPost[]>>(
-		"/works?sort=title:asc&populate=*",
-	);
-	return response.data;
-}, "works");
-
-export const getWorkBySlug = query(async (slug: string) => {
-	"use server";
-	const { marked } = await import("marked");
-	const response = await fetchStrapi<StrapiResponse<StrapiPost[]>>(
-		`/works?filters[slug][$eq]=${slug}&populate=*`,
-	);
-	const work = response.data[0];
-	if (!work) return null;
-	return {
-		...work,
-		content: await marked.parse(work.content),
-	};
-}, "work");
