@@ -1,3 +1,10 @@
+## [1.20.4](https://github.com/et0and/wwwtom/compare/v1.20.3...v1.20.4) (2025-10-30)
+
+
+### Bug Fixes
+
+* docs clean up ([0e44a33](https://github.com/et0and/wwwtom/commit/0e44a33f86c6684c4b4343783a693ca979040f5d))
+
 ## [1.20.3](https://github.com/et0and/wwwtom/compare/v1.20.2...v1.20.3) (2025-10-30)
 
 
