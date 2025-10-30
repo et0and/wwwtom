@@ -54,8 +54,3 @@ class MemoryCache {
 
 // Global cache instance
 export const cache = new MemoryCache();
-
-// Auto-cleanup every 10 minutes
-if (typeof globalThis !== "undefined") {
-	setInterval(() => cache.cleanup(), 10 * 60 * 1000);
-}
