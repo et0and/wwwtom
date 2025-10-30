@@ -1,6 +1,8 @@
 name = "wwwtom"
 compatibility_date = "2024-12-01"
 compatibility_flags = ["nodejs_compat"]
+# Main worker script
+main = ".output/server/index.mjs"
 
 # Hyperdrive binding
 [[hyperdrive]]
@@ -11,9 +13,6 @@ id = "4721f0b0dc98471080accb2bf29f8edf"
 binding = "TOM_RATE_LIMIT_KV"
 id = "b3800e793bb94ddab775776d600e1c64"
 preview_id = "bb85565a5ea045e2aa00fbdc5b3153b4"
-
-# Main worker script
-main = ".output/server/index.mjs"
 
 # WASM bindings
 [[rules]]
