@@ -26,6 +26,40 @@ li {
 	letter-spacing: -0.05em;
 }
 
+figcaption {
+	font-size: 0.875rem;
+	letter-spacing: -0.05em;
+	color: #6b7280;
+	margin-top: 0.5rem;
+	text-align: center;
+}
+
+.banner {
+	position: relative;
+	line-height: 1.5;
+	margin-top: 1rem;
+	width: 100%;
+	border-width: 0 0 1px 0;
+	border-style: solid;
+	padding-left: 0;
+	padding-right: 0;
+	padding-top: 1rem;
+	color: rgb(0 0 0);
+	border-color: rgb(209 213 219);
+	display: flex;
+	align-items: baseline;
+	gap: 0.5rem;
+}
+
+.banner-title {
+	font-size: 0.875rem;
+	font-weight: 600;
+	letter-spacing: -0.05em;
+	background-color: rgb(230, 216, 226);
+	padding: 0.25rem 0.5rem;
+	flex-shrink: 0;
+}
+
 .posts-lists {
 	list-style-position: inside;
 }

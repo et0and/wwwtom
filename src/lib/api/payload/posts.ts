@@ -1,5 +1,6 @@
 import { query } from "@solidjs/router";
 import { fetchPayload, type PayloadPost, type PayloadResponse } from "./client";
+import { convertLexicalToHTML } from "./content-converter";
 
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
@@ -56,70 +57,8 @@ export const getPostBySlug = query(async (slug: string) => {
 
 	let content = "<p>No content available</p>";
 
-	if (post.content && typeof post.content === "object") {
-		// Simple recursive converter for Payload lexical content
-		const convertNode = (node: any): string => {
-			if (!node) return "";
-
-			// Handle root node
-			if (node.type === "root" && node.children) {
-				return node.children.map(convertNode).join("");
-			}
-
-			// Handle paragraphs
-			if (node.type === "paragraph" && node.children) {
-				const text = node.children.map(convertNode).join("");
-				return `<p>${text}</p>`;
-			}
-
-			// Handle links
-			if (node.type === "link" && node.children) {
-				const text = node.children.map(convertNode).join("");
-				const url = node.fields?.url || "#";
-				const target = node.fields?.newTab
-					? ' target="_blank" rel="noopener noreferrer"'
-					: "";
-				return `<a href="${url}"${target}>${text}</a>`;
-			}
-
-			// Handle headings
-			if (node.type === "heading" && node.children) {
-				const text = node.children
-					.map((child: any) => {
-						if (child.type === "text") {
-							return child.text || "";
-						}
-						return convertNode(child);
-					})
-					.join("");
-				const level = node.tag || "h2";
-				return `<${level}>${text}</${level}>`;
-			}
-
-			// Handle text nodes
-			if (node.type === "text") {
-				return node.text || "";
-			}
-
-			// Handle blocks (banners, media, etc.)
-			if (node.type === "block" && node.fields) {
-				if (node.fields.blockType === "banner" && node.fields.content) {
-					const bannerContent = convertNode(node.fields.content);
-					return `<div class="banner">${bannerContent}</div>`;
-				}
-
-				if (node.fields.blockType === "mediaBlock" && node.fields.media) {
-					const media = node.fields.media;
-					return `<figure class="media-block">
-						<img src="${media.url}" alt="${media.alt || ""}" />
-					</figure>`;
-				}
-			}
-
-			return "";
-		};
-
-		content = convertNode(post.content.root);
+	if (post.content && typeof post.content === "object" && post.content.root) {
+		content = convertLexicalToHTML(post.content.root);
 	} else if (typeof post.content === "string") {
 		content = post.content;
 	}

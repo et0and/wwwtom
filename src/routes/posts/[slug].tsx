@@ -19,7 +19,10 @@ export default function PostPage() {
 		<>
 			<Show when={post()} fallback={<Spinner color="grey" />}>
 				{(data) => (
-					<PageLayout title={data().title} description={data().summary}>
+					<PageLayout
+						title={data().title}
+						description={data().summary || data().meta?.description}
+					>
 						<article>
 							<h1>{data().title}</h1>
 							<time>

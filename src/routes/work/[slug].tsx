@@ -20,7 +20,10 @@ export default function WorkPage() {
 		<>
 			<Show when={work()} fallback={<Spinner color="grey" />}>
 				{(data) => (
-					<PageLayout title={data().title} description={data().summary}>
+					<PageLayout
+						title={data().title}
+						description={data().summary || data().meta?.description}
+					>
 						<article>
 							<h1>{data().title}</h1>
 							<p>{data().summary}</p>
