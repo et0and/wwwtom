@@ -1,3 +1,10 @@
+## [1.20.3](https://github.com/et0and/wwwtom/compare/v1.20.2...v1.20.3) (2025-10-30)
+
+
+### Bug Fixes
+
+* types for payload, caching strat, fix desc meta ([64e772c](https://github.com/et0and/wwwtom/commit/64e772cfce9871055b6a54f4fb9ba8a9ad728f9f))
+
 ## [1.20.2](https://github.com/et0and/wwwtom/compare/v1.20.1...v1.20.2) (2025-10-24)
 
 
