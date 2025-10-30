@@ -12,9 +12,7 @@
 		"write": "prettier --write .",
 		"test": "vitest",
 		"test:ui": "vitest --ui",
-		"test:coverage": "vitest --coverage",
-		"migrate:strapi": "bun scripts/migrate-to-strapi.ts",
-		"knip": "knip"
+		"test:coverage": "vitest --coverage"
 	},
 	"dependencies": {
 		"@cf-wasm/photon": "^0.1.31",
@@ -44,7 +42,6 @@
 		"@testing-library/user-event": "^14.6.1",
 		"@types/node": "^24.9.1",
 		"jsdom": "^27.0.0",
-		"knip": "^5.66.2",
 		"oxlint": "^1.13.0",
 		"prettier": "^3.6.2",
 		"tailwindcss": "^4.0.7",

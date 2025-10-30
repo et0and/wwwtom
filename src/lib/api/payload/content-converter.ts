@@ -1,8 +1,4 @@
-import type {
-	PayloadContentNode,
-	PayloadMedia,
-	PayloadRichContent,
-} from "./types";
+import type { PayloadContentNode, PayloadMedia } from "./types";
 
 export function convertLexicalToHTML(node: PayloadContentNode): string {
 	if (!node) return "";
