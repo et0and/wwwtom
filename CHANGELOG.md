@@ -1,3 +1,10 @@
+# [1.22.0](https://github.com/et0and/wwwtom/compare/v1.21.1...v1.22.0) (2025-10-31)
+
+
+### Features
+
+* mobile menu ([8299d27](https://github.com/et0and/wwwtom/commit/8299d27bc22cd1c587225484b6bbe01f816b6205))
+
 ## [1.21.1](https://github.com/et0and/wwwtom/compare/v1.21.0...v1.21.1) (2025-10-31)
 
 
