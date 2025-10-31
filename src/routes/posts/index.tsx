@@ -18,7 +18,7 @@ export default function PostsHome() {
 					{(postsData) => (
 						<>
 							{postsData().data.map((post) => (
-								<A href={`/posts/${post.slug}`}>
+								<A preload={true} href={`/posts/${post.slug}`}>
 									<div>
 										<h2>{post.title}</h2>
 										<time>
@@ -36,7 +36,10 @@ export default function PostsHome() {
 								{(pagination) => (
 									<div class="justify-between flex item-center">
 										<Show when={pagination().page > 1}>
-											<A href={`/posts?page=${pagination().page - 1}`}>
+											<A
+												preload={true}
+												href={`/posts?page=${pagination().page - 1}`}
+											>
 												Previous
 											</A>
 										</Show>

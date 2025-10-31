@@ -1,17 +1,72 @@
+import { A } from "@solidjs/router";
+import { createSignal, Show } from "solid-js";
+
 export default function Nav() {
+	const [isOpen, setIsOpen] = createSignal(false);
+
+	const navItems = [
+		{ href: "/about", label: "About" },
+		{ href: "/work", label: "Work" },
+		{ href: "/posts", label: "Writing" },
+		{ href: "/search", label: "Search" },
+	];
+
 	return (
-		<nav class="flex items-center tracking-tighter justify-between h-16 px-6 py-4 flex-shrink-0">
-			<a class="text-lg font-medium" href="/">
-				<h1 class="md:block hidden !text-lg">Tom Hackshaw</h1>
-				<div class="md:hidden block transition-colors duration-100 w-7 h-7 bg-black rounded-full">
-					<p class="sr-only">Tom Hackshaw</p>
+		<nav class="relative tracking-tighter px-6 py-4 flex-shrink-0">
+			<div class="flex items-center justify-between h-16">
+				<a class="font-medium" href="/">
+					<h1 class="!text-lg">Tom Hackshaw</h1>
+				</a>
+				<div class="hidden md:flex md:items-center space-x-4 text-lg">
+					{navItems.map((item) => (
+						<A preload={true} href={item.href}>
+							{item.label}
+						</A>
+					))}
 				</div>
-			</a>
-			<div class="flex md:items-center space-x-4 text-lg">
-				<a href="/about">About</a>
-				<a href="/work">Work</a>
-				<a href="/posts">Writing</a>
+				<button
+					class="md:hidden p-2"
+					onClick={() => setIsOpen(!isOpen())}
+					aria-label="Toggle menu"
+				>
+					<svg
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+					>
+						{isOpen() ? (
+							<>
+								<line x1="18" y1="6" x2="6" y2="18"></line>
+								<line x1="6" y1="6" x2="18" y2="18"></line>
+							</>
+						) : (
+							<>
+								<line x1="3" y1="6" x2="21" y2="6"></line>
+								<line x1="3" y1="12" x2="21" y2="12"></line>
+								<line x1="3" y1="18" x2="21" y2="18"></line>
+							</>
+						)}
+					</svg>
+				</button>
 			</div>
+			<Show when={isOpen()}>
+				<div class="absolute top-full left-0 right-0 z-50 md:hidden bg-white shadow-xl">
+					<div class="flex flex-col py-4 px-6 text-lg">
+						{navItems.map((item) => (
+							<A
+								preload={true}
+								href={item.href}
+								onClick={() => setIsOpen(false)}
+							>
+								{item.label}
+							</A>
+						))}
+					</div>
+				</div>
+			</Show>
 		</nav>
 	);
 }

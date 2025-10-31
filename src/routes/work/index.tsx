@@ -1,4 +1,4 @@
-import { createAsync } from "@solidjs/router";
+import { A, createAsync } from "@solidjs/router";
 import { getWorks } from "~/lib/api/payload";
 import PageLayout from "~/components/PageLayout";
 import { Suspense } from "solid-js";
@@ -18,10 +18,10 @@ export default function WorkHome() {
 			<Suspense fallback={<Spinner color="grey" />}>
 				{works() ? (
 					works()!.map((work) => (
-						<a href={`/work/${work.slug}`}>
+						<A preload={true} href={`/work/${work.slug}`}>
 							<h2>{work.title}</h2>
 							<p>{work.summary}</p>
-						</a>
+						</A>
 					))
 				) : (
 					<p>Loading...</p>
