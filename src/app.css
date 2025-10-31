@@ -2,7 +2,7 @@
 
 p {
 	letter-spacing: -0.05em;
-	padding-bottom: 1rem;
+	padding-bottom: 0.25rem;
 }
 
 h1 {
@@ -60,6 +60,37 @@ figcaption {
 	flex-shrink: 0;
 }
 
+.search-category {
+	font-size: 0.875rem;
+	font-weight: 600;
+	text-decoration: none;
+	letter-spacing: -0.05em;
+	background-color: rgb(230, 216, 226);
+	padding: 0.25rem 0.5rem;
+	flex-shrink: 0;
+	text-decoration: none !important;
+}
+.search-category {
+	font-size: 0.875rem;
+	font-weight: 600;
+	background-color: rgb(230, 216, 226);
+	padding: 0.25rem 0.5rem;
+	flex-shrink: 0;
+	text-decoration: none !important;
+}
+
+a .search-category,
+a:visited .search-category {
+	text-decoration: none !important;
+}
+
+.search-category.work {
+	background-color: #d1e7dd;
+}
+.search-category.post {
+	background-color: #f8d7da;
+}
+
 .posts-lists {
 	list-style-position: inside;
 }
@@ -81,6 +112,7 @@ a:hover {
 	color: #cc0081;
 }
 
+input:focus-visible,
 a:focus-visible {
 	outline-offset: 4px;
 	outline-color: #ad1174;
