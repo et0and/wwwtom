@@ -11,7 +11,7 @@ export interface SearchDocument {
 	title: string;
 	slug?: string;
 	content?: string;
-	category: "Work" | "Post";
+	category: "Work" | "Posts";
 	summary?: string;
 }
 

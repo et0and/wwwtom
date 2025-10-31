@@ -74,7 +74,7 @@ export default function Search() {
 		switch (doc.category) {
 			case "Work":
 				return `/work/${slug}`;
-			case "Post":
+			case "Posts":
 				return `/posts/${slug}`;
 			default:
 				return `/${slug}`;
@@ -82,7 +82,7 @@ export default function Search() {
 	};
 
 	const getCategoryClass = (category: SearchDocument["category"]): string => {
-		return category === "Work" ? "work" : category === "Post" ? "post" : "";
+		return category === "Work" ? "work" : category === "Posts" ? "post" : "";
 	};
 
 	const truncateContent = (content: string, maxLength = 50): string => {
