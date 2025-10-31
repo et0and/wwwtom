@@ -1,3 +1,10 @@
+## [1.21.1](https://github.com/et0and/wwwtom/compare/v1.21.0...v1.21.1) (2025-10-31)
+
+
+### Bug Fixes
+
+* spelling ([cd0564f](https://github.com/et0and/wwwtom/commit/cd0564ff222593563cc18ce85777469548163157))
+
 # [1.21.0](https://github.com/et0and/wwwtom/compare/v1.20.4...v1.21.0) (2025-10-31)
 
 
