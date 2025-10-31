@@ -1,3 +1,10 @@
+# [1.21.0](https://github.com/et0and/wwwtom/compare/v1.20.4...v1.21.0) (2025-10-31)
+
+
+### Features
+
+* orama search ([903054e](https://github.com/et0and/wwwtom/commit/903054e6f51037083ac015983aa805a8065a8760))
+
 ## [1.20.4](https://github.com/et0and/wwwtom/compare/v1.20.3...v1.20.4) (2025-10-30)
 
 
