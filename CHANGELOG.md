@@ -1,3 +1,10 @@
+## [1.23.1](https://github.com/et0and/wwwtom/compare/v1.23.0...v1.23.1) (2025-11-02)
+
+
+### Bug Fixes
+
+* tests ([f207413](https://github.com/et0and/wwwtom/commit/f2074130e78bcc8199ab48d82fac6aec2c0f164e))
+
 # [1.23.0](https://github.com/et0and/wwwtom/compare/v1.22.0...v1.23.0) (2025-11-02)
 
 
