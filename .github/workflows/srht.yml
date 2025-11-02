@@ -24,5 +24,6 @@ jobs:
       - name: Mirror to SourceHut
         run: |
           git remote add sourcehut git@git.sr.ht:~tomupom/wwwtom
+          git push sourcehut dev --force
           git push sourcehut --all --force
           git push sourcehut --tags --force
