@@ -1,3 +1,15 @@
+# [1.23.0](https://github.com/et0and/wwwtom/compare/v1.22.0...v1.23.0) (2025-11-02)
+
+
+### Bug Fixes
+
+* remove unnecessary cache strat ([fb8d287](https://github.com/et0and/wwwtom/commit/fb8d28726668b9225b9870d51c7311416dc7f43a))
+
+
+### Features
+
+* add srht action ([ef12188](https://github.com/et0and/wwwtom/commit/ef12188233528b5c0a3fd0c083f340a17abb4cc0))
+
 # [1.22.0](https://github.com/et0and/wwwtom/compare/v1.21.1...v1.22.0) (2025-10-31)
 
 
