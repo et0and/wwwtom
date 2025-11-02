@@ -131,3 +131,63 @@ a:focus-visible {
 	background: #cc0081;
 	color: #ffffff;
 }
+
+/* Dark mode styles */
+@media (prefers-color-scheme: dark) {
+	body {
+		background-color: #111827;
+		color: #f9fafb;
+	}
+
+	.banner {
+		color: #f9fafb;
+		border-color: #374151;
+	}
+
+	.banner-title {
+		background-color: #374151;
+		color: #f9fafb;
+	}
+
+	.search-category {
+		background-color: #374151;
+		color: #f9fafb;
+	}
+
+	.search-category.work {
+		background-color: #065f46;
+		color: #f9fafb;
+	}
+
+	.search-category.post {
+		background-color: #7f1d1d;
+		color: #f9fafb;
+	}
+
+	figcaption {
+		color: #9ca3af;
+	}
+
+	a:hover {
+		color: #ff40a0;
+	}
+
+	input:focus-visible,
+	a:focus-visible {
+		outline-color: #ff40a0;
+		border-color: #ff40a0;
+	}
+
+	*::selection {
+		background: #ff40a0;
+		color: #ffffff;
+	}
+	*::-moz-selection {
+		background: #ff40a0;
+		color: #ffffff;
+	}
+	*::-webkit-selection {
+		background: #ff40a0;
+		color: #ffffff;
+	}
+}
