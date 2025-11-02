@@ -1,3 +1,10 @@
+## [1.23.2](https://github.com/et0and/wwwtom/compare/v1.23.1...v1.23.2) (2025-11-02)
+
+
+### Bug Fixes
+
+* no lfs for srht support ([da82785](https://github.com/et0and/wwwtom/commit/da8278507499b74e1c811dc075a7dbf19c73a585))
+
 ## [1.23.1](https://github.com/et0and/wwwtom/compare/v1.23.0...v1.23.1) (2025-11-02)
 
 
