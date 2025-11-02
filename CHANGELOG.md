@@ -1,3 +1,10 @@
+## [1.23.3](https://github.com/et0and/wwwtom/compare/v1.23.2...v1.23.3) (2025-11-02)
+
+
+### Bug Fixes
+
+* srht dev branch ([1d620bf](https://github.com/et0and/wwwtom/commit/1d620bf8db43cb5bb14883b0ed10bce36228d877))
+
 ## [1.23.2](https://github.com/et0and/wwwtom/compare/v1.23.1...v1.23.2) (2025-11-02)
 
 
