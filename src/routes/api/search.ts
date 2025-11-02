@@ -12,7 +12,6 @@ export async function POST({ request, nativeEvent }: APIEvent) {
 			);
 		}
 
-		// Access Cloudflare env directly from nativeEvent
 		const env = nativeEvent.context.cloudflare?.env as
 			| { ORAMA_API_KEY?: string; ORAMA_ENDPOINT?: string }
 			| undefined;

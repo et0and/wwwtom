@@ -40,3 +40,12 @@ jobs:
 
       - name: Check formatting
         run: bun run format
+
+      - name: Start server
+        run: bun run start &
+
+      - name: Wait for server to be ready
+        run: sleep 10
+
+      - name: Run load test
+        run: bunx autocannon -d 30 -c 10000 http://localhost:3000
