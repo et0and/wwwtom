@@ -3,46 +3,91 @@
 exports[`Nav > matches the snapshot 1`] = `
 <div>
   <nav
-    class="flex items-center tracking-tighter justify-between h-16 px-6 py-4 flex-shrink-0"
+    class="relative tracking-tighter px-6 py-4 flex-shrink-0"
   >
-    <a
-      class="text-lg font-medium"
-      href="/"
+    <div
+      class="flex items-center justify-between h-16"
     >
-      <h1
-        class="md:block hidden !text-lg"
+      <a
+        class="font-medium"
+        href="/"
       >
-        Tom Hackshaw
-      </h1>
-      <div
-        class="md:hidden block transition-colors duration-100 w-7 h-7 bg-black rounded-full"
-      >
-        <p
-          class="sr-only"
+        <h1
+          class="!text-lg"
         >
           Tom Hackshaw
-        </p>
+        </h1>
+      </a>
+      <div
+        class="hidden md:flex md:items-center space-x-4 text-lg"
+      >
+        <a
+          class="inactive"
+          href="/about"
+          link=""
+          preload="true"
+        >
+          About
+        </a>
+        <a
+          class="inactive"
+          href="/work"
+          link=""
+          preload="true"
+        >
+          Work
+        </a>
+        <a
+          class="inactive"
+          href="/posts"
+          link=""
+          preload="true"
+        >
+          Writing
+        </a>
+        <a
+          class="inactive"
+          href="/search"
+          link=""
+          preload="true"
+        >
+          Search
+        </a>
       </div>
-    </a>
-    <div
-      class="flex md:items-center space-x-4 text-lg"
-    >
-      <a
-        href="/about"
+      <button
+        aria-label="Toggle menu"
+        class="md:hidden p-2"
       >
-        About
-      </a>
-      <a
-        href="/work"
-      >
-        Work
-      </a>
-      <a
-        href="/posts"
-      >
-        Writing
-      </a>
+        <svg
+          fill="none"
+          height="24"
+          stroke="currentColor"
+          stroke-width="2"
+          viewBox="0 0 24 24"
+          width="24"
+        >
+          <line
+            x1="3"
+            x2="21"
+            y1="6"
+            y2="6"
+          />
+          <line
+            x1="3"
+            x2="21"
+            y1="12"
+            y2="12"
+          />
+          <line
+            x1="3"
+            x2="21"
+            y1="18"
+            y2="18"
+          />
+        </svg>
+      </button>
     </div>
+    
   </nav>
 </div>
 `;
