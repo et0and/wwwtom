@@ -190,4 +190,9 @@ a:focus-visible {
 		background: #ff40a0;
 		color: #ffffff;
 	}
+
+	/* SlimeDish component dark mode */
+	[aria-hidden="true"][style*="font-family: monospace"] {
+		color: #ffffff !important;
+	}
 }
