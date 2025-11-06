@@ -1,3 +1,10 @@
+## [1.23.4](https://github.com/et0and/wwwtom/compare/v1.23.3...v1.23.4) (2025-11-06)
+
+
+### Bug Fixes
+
+* spelling mistake ([904ca13](https://github.com/et0and/wwwtom/commit/904ca13eb684f8ebee03f9bd94a59dfda6f596e8))
+
 ## [1.23.3](https://github.com/et0and/wwwtom/compare/v1.23.2...v1.23.3) (2025-11-02)
 
 
