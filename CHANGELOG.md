@@ -1,3 +1,18 @@
+# [1.24.0](https://github.com/et0and/wwwtom/compare/v1.23.4...v1.24.0) (2025-11-06)
+
+
+### Bug Fixes
+
+* no random linting needed in a release workflow lol ([12a0463](https://github.com/et0and/wwwtom/commit/12a0463467671236ea33c92c638e4b95ea6f3e52))
+* release ([32881bf](https://github.com/et0and/wwwtom/commit/32881bf9630620cb3ad9ec673a70ab5908b53358))
+* revert ([70cc402](https://github.com/et0and/wwwtom/commit/70cc4020514827ff0e1e637170589bcab6323ee7))
+* yaml bleh ([86801c8](https://github.com/et0and/wwwtom/commit/86801c8ea5a1b04ede8f77fa904b96c58fc3ef75))
+
+
+### Features
+
+* add agents file, pr template, fix version api route ([d8427c4](https://github.com/et0and/wwwtom/commit/d8427c4c182d2ad5b45615d053477d9fd2da54e7))
+
 ## [1.23.4](https://github.com/et0and/wwwtom/compare/v1.23.3...v1.23.4) (2025-11-06)
 
 
