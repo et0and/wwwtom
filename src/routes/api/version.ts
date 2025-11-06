@@ -2,16 +2,16 @@ import type { APIEvent } from "@solidjs/start/server";
 
 export async function GET({ _request }: APIEvent) {
 	try {
-		// Get current commit hash
-		const commitHash = await getCurrentCommitHash();
-		
-		// Get version from package.json or environment
+		// Get version from package.json
 		const version = getVersion();
-		
+
+		// Get latest commit hash from GitHub API
+		const commitHash = await getLatestCommitHash();
+
 		// Format: version-commitHash (short hash)
 		const shortHash = commitHash.substring(0, 7);
 		const versionString = `${version}-${shortHash}`;
-		
+
 		return new Response(versionString, {
 			headers: {
 				"Content-Type": "text/plain",
@@ -27,22 +27,38 @@ export async function GET({ _request }: APIEvent) {
 	}
 }
 
-async function getCurrentCommitHash(): Promise<string> {
+async function getLatestCommitHash(): Promise<string> {
 	try {
-		// Try to get commit hash from git
-		const { execSync } = await import("child_process");
-		const hash = execSync("git rev-parse HEAD", { encoding: "utf8" }).trim();
-		return hash;
-	} catch {
-		// Fallback for production environments where git might not be available
+		// Get the latest commit from the dev branch via GitHub API
+		const response = await fetch(
+			"https://api.github.com/repos/et0and/wwwtom/commits/dev",
+			{
+				headers: {
+					Accept: "application/vnd.github.v3+json",
+					"User-Agent": "wwwtom-version-endpoint",
+				},
+			},
+		);
+
+		if (!response.ok) {
+			throw new Error(`GitHub API error: ${response.status}`);
+		}
+
+		const data = await response.json();
+		return data.sha || "unknown";
+	} catch (error) {
+		console.error("Failed to fetch commit from GitHub API:", error);
 		return "unknown";
 	}
 }
 
 function getVersion(): string {
 	try {
-		// Try to get version from package.json
-		const packageJson = require("../../../../package.json");
+		// Read package.json using Bun.file API
+		const packageJsonText = Bun.file(
+			`${import.meta.dir}/../../../../package.json`,
+		).text();
+		const packageJson = JSON.parse(packageJsonText);
 		return packageJson.version || "0.0.0";
 	} catch {
 		// Fallback version
