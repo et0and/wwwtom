@@ -1,4 +1,4 @@
-name: CI
+name: Autocannon performance stress test
 
 on:
   push:
@@ -29,23 +29,20 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Lint
-        run: bun run lint
-
-      - name: Unit tests
-        run: bun run test
-
       - name: Build
         run: bun run build
-
-      - name: Check formatting
-        run: bun run format
 
       - name: Start server
         run: bun run start &
 
       - name: Wait for server to be ready
-        run: sleep 10
+        run: sleep 5
 
-      - name: Run load test
-        run: bunx autocannon -d 30 -c 10000 http://localhost:3000
+      - name: Run load test on home
+        run: bunx autocannon -d 10 -c 10000 http://localhost:3000
+
+      - name: Run load test on works directory
+        run: bunx autocannon -d 10 -c 10000 http://localhost:3000/works
+
+      - name: Run load test on blog posts
+        run: bunx autocannon -d 10 -c 10000 http://localhost:3000/posts
