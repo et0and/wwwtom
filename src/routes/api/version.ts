@@ -2,8 +2,8 @@ import type { APIEvent } from "@solidjs/start/server";
 
 export async function GET({ _request }: APIEvent) {
 	try {
-		// Get version from package.json
-		const version = getVersion();
+		// Get version from GitHub API tags
+		const version = await getLatestVersion();
 
 		// Get latest commit hash from GitHub API
 		const commitHash = await getLatestCommitHash();
@@ -52,16 +52,34 @@ async function getLatestCommitHash(): Promise<string> {
 	}
 }
 
-function getVersion(): string {
+async function getLatestVersion(): Promise<string> {
 	try {
-		// Read package.json using Bun.file API
-		const packageJsonText = Bun.file(
-			`${import.meta.dir}/../../../../package.json`,
-		).text();
-		const packageJson = JSON.parse(packageJsonText);
-		return packageJson.version || "0.0.0";
-	} catch {
-		// Fallback version
+		// Get the latest tag from GitHub API
+		const response = await fetch(
+			"https://api.github.com/repos/et0and/wwwtom/tags",
+			{
+				headers: {
+					Accept: "application/vnd.github.v3+json",
+					"User-Agent": "wwwtom-version-endpoint",
+				},
+			},
+		);
+
+		if (!response.ok) {
+			throw new Error(`GitHub API error: ${response.status}`);
+		}
+
+		const data = await response.json();
+		// Get the first tag (most recent)
+		const latestTag = data[0];
+		if (!latestTag || !latestTag.name) {
+			return "0.0.0";
+		}
+		
+		// Remove 'v' prefix if present
+		return latestTag.name.replace(/^v/, '');
+	} catch (error) {
+		console.error("Failed to fetch version from GitHub API:", error);
 		return "0.0.0";
 	}
 }
