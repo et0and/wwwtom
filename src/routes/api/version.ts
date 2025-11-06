@@ -1,6 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-export async function GET({ _request }: APIEvent) {
+export async function GET({}: APIEvent) {
 	try {
 		// Get version from GitHub API tags
 		const version = await getLatestVersion();
@@ -45,7 +45,7 @@ async function getLatestCommitHash(): Promise<string> {
 		}
 
 		const data = await response.json();
-		return data.sha || "unknown";
+		return data.sha ?? "unknown";
 	} catch (error) {
 		console.error("Failed to fetch commit from GitHub API:", error);
 		return "unknown";
@@ -75,9 +75,9 @@ async function getLatestVersion(): Promise<string> {
 		if (!latestTag || !latestTag.name) {
 			return "0.0.0";
 		}
-		
+
 		// Remove 'v' prefix if present
-		return latestTag.name.replace(/^v/, '');
+		return latestTag.name.replace(/^v/, "");
 	} catch (error) {
 		console.error("Failed to fetch version from GitHub API:", error);
 		return "0.0.0";
