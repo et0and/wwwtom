@@ -1,6 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 
-export async function GET({}: APIEvent) {
+export async function GET(_event: APIEvent) {
 	try {
 		// Get version from GitHub API tags
 		const version = await getLatestVersion();
