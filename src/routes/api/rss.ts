@@ -7,11 +7,11 @@ import {
 
 export async function GET() {
 	const feed = new RSS({
-		title: "wwwtom blog",
-		description: "Latest blog posts from wwwtom",
-		feed_url: "https://www.tom.so/api/rss",
-		site_url: "https://www.tom.so",
-		language: "en",
+		title: "Tom Hackshaw",
+		description: "Latest blog posts from Tom Hackshaw",
+		feed_url: "https://tom.so/api/rss",
+		site_url: "https://tom.so",
+		language: "en_NZ",
 		pubDate: new Date(),
 	});
 
@@ -21,7 +21,7 @@ export async function GET() {
 		);
 
 		for (const post of response.docs) {
-			const content = post.summary || "";
+			const content = post.summary || post.meta?.description || "";
 			const postUrl = `https://www.tom.so/posts/${post.slug}`;
 
 			feed.item({
@@ -30,7 +30,7 @@ export async function GET() {
 				url: postUrl,
 				guid: post.id,
 				date: new Date(post.publishedAt),
-				author: "wwwtom",
+				author: "Tom Hackshaw",
 			});
 		}
 
