@@ -32,7 +32,6 @@ export async function checkRateLimit(
 		}
 
 		const now = Date.now();
-		const windowStart = now - config.windowMs;
 
 		// Get current counter from KV
 		const counterData = await kv.get(key, "json");
