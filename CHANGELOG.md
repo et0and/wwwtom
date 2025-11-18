@@ -1,3 +1,10 @@
+# [1.25.0](https://github.com/et0and/wwwtom/compare/v1.24.0...v1.25.0) (2025-11-18)
+
+
+### Features
+
+* update agent guidelines ([216f962](https://github.com/et0and/wwwtom/commit/216f96220c230dc16bf071c1313eec66594c24cd))
+
 # [1.24.0](https://github.com/et0and/wwwtom/compare/v1.23.4...v1.24.0) (2025-11-06)
 
 
