@@ -1,3 +1,15 @@
+# [1.26.0](https://github.com/et0and/wwwtom/compare/v1.25.0...v1.26.0) (2025-11-18)
+
+
+### Bug Fixes
+
+* rss description of posts ([9e00450](https://github.com/et0and/wwwtom/commit/9e004508804fbd6ce6499d1b92257f6bf24d86cc))
+
+
+### Features
+
+* add updated bun lockfile ([917db85](https://github.com/et0and/wwwtom/commit/917db85f0fe765d21ddcffd524d8ba47fdfd9cf2))
+
 # [1.25.0](https://github.com/et0and/wwwtom/compare/v1.24.0...v1.25.0) (2025-11-18)
 
 
