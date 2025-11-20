@@ -1,6 +1,7 @@
 import { query } from "@solidjs/router";
-import { fetchPayload, type PayloadPost, type PayloadResponse } from "./client";
+import { type PayloadPost, type PayloadResponse } from "./types";
 import { convertLexicalToHTML } from "./content-converter";
+import { fetchPayload } from "./client";
 
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
@@ -17,20 +18,24 @@ import { convertLexicalToHTML } from "./content-converter";
 export const getPosts = query(
 	async (page: number = 1, pageSize: number = 5) => {
 		"use server";
-		const response = await fetchPayload<PayloadResponse<PayloadPost[]>>(
+		return fetchPayload<PayloadResponse<PayloadPost[]>>(
 			`/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
-		);
-		return {
-			data: response.docs,
-			meta: {
-				pagination: {
-					page: response.page,
-					pageSize: response.limit,
-					pageCount: response.totalPages,
-					total: response.totalDocs,
+		).match(
+			(response) => ({
+				data: response.docs,
+				meta: {
+					pagination: {
+						page: response.page,
+						pageSize: response.limit,
+						pageCount: response.totalPages,
+						total: response.totalDocs,
+					},
 				},
+			}),
+			(error) => {
+				throw error;
 			},
-		};
+		);
 	},
 	"posts",
 );
@@ -49,22 +54,34 @@ export const getPosts = query(
  */
 export const getPostBySlug = query(async (slug: string) => {
 	"use server";
-	const response = await fetchPayload<PayloadResponse<PayloadPost[]>>(
+	return fetchPayload<PayloadResponse<PayloadPost[]>>(
 		`/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-	);
-	const post = response.docs[0];
-	if (!post) return null;
+	)
+		.map((response) => {
+			const post = response.docs[0];
+			if (!post) return null;
 
-	let content = "<p>No content available</p>";
+			let content = "<p>No content available</p>";
 
-	if (post.content && typeof post.content === "object" && post.content.root) {
-		content = convertLexicalToHTML(post.content.root);
-	} else if (typeof post.content === "string") {
-		content = post.content;
-	}
+			if (
+				post.content &&
+				typeof post.content === "object" &&
+				post.content.root
+			) {
+				content = convertLexicalToHTML(post.content.root);
+			} else if (typeof post.content === "string") {
+				content = post.content;
+			}
 
-	return {
-		...post,
-		content,
-	};
+			return {
+				...post,
+				content,
+			};
+		})
+		.match(
+			(post) => post,
+			(error) => {
+				throw error;
+			},
+		);
 }, "post");

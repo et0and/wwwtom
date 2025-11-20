@@ -1,6 +1,7 @@
 import { query } from "@solidjs/router";
-import { fetchPayload, type PayloadPost, type PayloadResponse } from "./client";
+import { type PayloadPost, type PayloadResponse } from "./types";
 import { convertLexicalToHTML } from "./content-converter";
+import { fetchPayload } from "./client";
 
 /**
  * Creates a query using the Payload fetch client to return a list of works from Payload organised by title.
@@ -14,9 +15,14 @@ import { convertLexicalToHTML } from "./content-converter";
  */
 export const getWorks = query(async () => {
 	"use server";
-	const response =
-		await fetchPayload<PayloadResponse<PayloadPost[]>>("/works?sort=title");
-	return response.docs;
+	return fetchPayload<PayloadResponse<PayloadPost[]>>(
+		"/works?sort=title",
+	).match(
+		(response) => response.docs,
+		(error) => {
+			throw error;
+		},
+	);
 }, "works");
 
 /**
@@ -33,22 +39,34 @@ export const getWorks = query(async () => {
  */
 export const getWorkBySlug = query(async (slug: string) => {
 	"use server";
-	const response = await fetchPayload<PayloadResponse<PayloadPost[]>>(
+	return fetchPayload<PayloadResponse<PayloadPost[]>>(
 		`/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-	);
-	const work = response.docs[0];
-	if (!work) return null;
+	)
+		.map((response) => {
+			const work = response.docs[0];
+			if (!work) return null;
 
-	let content = "<p>No content available</p>";
+			let content = "<p>No content available</p>";
 
-	if (work.content && typeof work.content === "object" && work.content.root) {
-		content = convertLexicalToHTML(work.content.root);
-	} else if (typeof work.content === "string") {
-		content = work.content;
-	}
+			if (
+				work.content &&
+				typeof work.content === "object" &&
+				work.content.root
+			) {
+				content = convertLexicalToHTML(work.content.root);
+			} else if (typeof work.content === "string") {
+				content = work.content;
+			}
 
-	return {
-		...work,
-		content,
-	};
+			return {
+				...work,
+				content,
+			};
+		})
+		.match(
+			(work) => work,
+			(error) => {
+				throw error;
+			},
+		);
 }, "work");

@@ -1,3 +1,33 @@
+export interface PayloadPost {
+	id: string;
+	title: string;
+	summary?: string;
+	publishedAt: string;
+	slug: string;
+	content?: string | PayloadRichContent;
+	heroImage?: {
+		url: string;
+		alt?: string;
+	};
+	createdAt: string;
+	updatedAt: string;
+	meta?: {
+		title?: string;
+		description?: string;
+		image?: string;
+	};
+}
+
+export interface PayloadResponse<T> {
+	docs: T;
+	totalDocs: number;
+	limit: number;
+	page: number;
+	totalPages: number;
+	hasNextPage: boolean;
+	hasPrevPage: boolean;
+}
+
 export interface PayloadMedia {
 	id: number;
 	alt: string | null;

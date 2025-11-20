@@ -34,9 +34,10 @@
 
 ## Runtime
 - This project runs on Cloudflare Workers.
+- Production domain for this project is https://tom.so
 
 ## Commits & PRs
-- Use conventional commits for commit messages and PR titles (e.g., `feat:`, `fix:`, `chore:`).
+- Use scoped conventional commits for commit messages and PR titles (e.g., `feat(components):`, `fix(sources):`, `chore:`).
 
 ## TypeScript & SolidJS
 - Use SolidJS patterns: signals, createSignal, Show, For
@@ -61,6 +62,7 @@
 - Global test setup in `src/test/setup.ts`
 
 ## Error Handling
+- Use Neverthrow for error handling where possible. Refer to the Neverthrow git subtree in this repository for context
 - Throw descriptive errors with context
 - Use proper TypeScript interfaces for API responses
 - Server functions marked with `"use server"`
