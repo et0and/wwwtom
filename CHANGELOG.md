@@ -1,3 +1,10 @@
+# [1.29.0](https://github.com/et0and/wwwtom/compare/v1.28.1...v1.29.0) (2025-11-20)
+
+
+### Features
+
+* **refactor:** lib structure ([f86dd70](https://github.com/et0and/wwwtom/commit/f86dd70be8edd70c67f6309f96a762be78088977))
+
 ## [1.28.1](https://github.com/et0and/wwwtom/compare/v1.28.0...v1.28.1) (2025-11-20)
 
 
