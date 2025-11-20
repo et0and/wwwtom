@@ -1,3 +1,10 @@
+# [1.33.0](https://github.com/et0and/wwwtom/compare/v1.32.0...v1.33.0) (2025-11-20)
+
+
+### Features
+
+* **ci:** use bombardier ([27e53cc](https://github.com/et0and/wwwtom/commit/27e53cc4807e54831c4e0a32d3949a57e0fd88f5))
+
 # [1.32.0](https://github.com/et0and/wwwtom/compare/v1.31.0...v1.32.0) (2025-11-20)
 
 
