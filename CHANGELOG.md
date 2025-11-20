@@ -1,3 +1,10 @@
+# [1.30.0](https://github.com/et0and/wwwtom/compare/v1.29.1...v1.30.0) (2025-11-20)
+
+
+### Features
+
+* **libs, routes:** more patterns and docs ([654ef80](https://github.com/et0and/wwwtom/commit/654ef80b75976e829ac991d984de3e0576ad29a2))
+
 ## [1.29.1](https://github.com/et0and/wwwtom/compare/v1.29.0...v1.29.1) (2025-11-20)
 
 
