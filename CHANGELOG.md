@@ -1,3 +1,10 @@
+## [1.26.2](https://github.com/et0and/wwwtom/compare/v1.26.1...v1.26.2) (2025-11-20)
+
+
+### Bug Fixes
+
+* update .gitignore ([e440e69](https://github.com/et0and/wwwtom/commit/e440e692a9171a447779c5d3d21c4e80ceba0caf))
+
 ## [1.26.1](https://github.com/et0and/wwwtom/compare/v1.26.0...v1.26.1) (2025-11-20)
 
 
