@@ -1,3 +1,10 @@
+# [1.32.0](https://github.com/et0and/wwwtom/compare/v1.31.0...v1.32.0) (2025-11-20)
+
+
+### Features
+
+* **routes:** improve search handling ([175e03c](https://github.com/et0and/wwwtom/commit/175e03c68c853e4145783c602e062943faccc7d5))
+
 # [1.31.0](https://github.com/et0and/wwwtom/compare/v1.30.0...v1.31.0) (2025-11-20)
 
 
