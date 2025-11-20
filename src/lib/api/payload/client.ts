@@ -1,4 +1,5 @@
 import { getRequestEvent } from "solid-js/web";
+import type { PayloadRichContent } from "./types";
 
 export interface PayloadPost {
 	id: string;
@@ -6,7 +7,7 @@ export interface PayloadPost {
 	summary?: string;
 	publishedAt: string;
 	slug: string;
-	content?: string;
+	content?: string | PayloadRichContent;
 	heroImage?: {
 		url: string;
 		alt?: string;
