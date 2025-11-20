@@ -24,7 +24,7 @@ jobs:
           cache: true
 
       - name: Install bombardier
-        run: go install github.com/codesenberg/bombardier/
+        run: go install github.com/codesenberg/bombardier/@latest
 
       - name: Run load test on home
         run: bombardier -c 20000 -d 10s https://tom.so
