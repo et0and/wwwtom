@@ -1,3 +1,10 @@
+# [1.27.0](https://github.com/et0and/wwwtom/compare/v1.26.2...v1.27.0) (2025-11-20)
+
+
+### Features
+
+* **lib:** add neverthrow, better err handling for payload, update docs ([03a31b3](https://github.com/et0and/wwwtom/commit/03a31b39d02f2514fa7bcd8208639b3de7f36a04))
+
 ## [1.26.2](https://github.com/et0and/wwwtom/compare/v1.26.1...v1.26.2) (2025-11-20)
 
 
