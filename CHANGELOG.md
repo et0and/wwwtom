@@ -1,3 +1,10 @@
+## [1.28.1](https://github.com/et0and/wwwtom/compare/v1.28.0...v1.28.1) (2025-11-20)
+
+
+### Bug Fixes
+
+* rem redundant package ([e621563](https://github.com/et0and/wwwtom/commit/e621563d2b96432b8699c616c199676756bfe953))
+
 # [1.28.0](https://github.com/et0and/wwwtom/compare/v1.27.0...v1.28.0) (2025-11-20)
 
 
