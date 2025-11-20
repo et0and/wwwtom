@@ -11,5 +11,5 @@
 	"semi": true,
 	"singleQuote": false,
 	"trailingComma": "all",
-	"plugins": ["@prettier/plugin-oxc"]
+	"plugins": ["@prettier/plugin-oxc", "prettier-oxc-parser"]
 }
