@@ -1,3 +1,10 @@
+## [1.29.1](https://github.com/et0and/wwwtom/compare/v1.29.0...v1.29.1) (2025-11-20)
+
+
+### Bug Fixes
+
+* type error ([73a6d3c](https://github.com/et0and/wwwtom/commit/73a6d3c6b35e36d69846420a5a5c92ee2c418d44))
+
 # [1.29.0](https://github.com/et0and/wwwtom/compare/v1.28.1...v1.29.0) (2025-11-20)
 
 
