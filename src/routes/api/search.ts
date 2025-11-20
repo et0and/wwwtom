@@ -1,53 +1,73 @@
 import { OramaClient } from "@oramacloud/client";
 import { APIEvent } from "@solidjs/start/server";
+import { err, fromPromise, ok } from "neverthrow";
+import { logger, runServerEffect } from "~/libs/utils/logger";
+import { SearchBody } from "~/libs/types/search";
 
-export async function POST({ request, nativeEvent }: APIEvent) {
-	try {
-		const { term, limit = 3, mode = "hybrid" } = await request.json();
+interface Env {
+	ORAMA_API_KEY?: string;
+	ORAMA_ENDPOINT?: string;
+}
 
-		if (!term) {
-			return new Response(
-				JSON.stringify({ error: "Search term is required" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } },
-			);
-		}
+export function POST({ request, nativeEvent }: APIEvent) {
+	return fromPromise(request.json() as Promise<SearchBody>, (e) => ({
+		status: 400,
+		message: "Invalid JSON",
+		error: e,
+	}))
+		.andThen((body) => {
+			const { term, limit = 3, mode = "hybrid" } = body;
 
-		const env = nativeEvent.context.cloudflare?.env as
-			| { ORAMA_API_KEY?: string; ORAMA_ENDPOINT?: string }
-			| undefined;
+			if (!term) {
+				return err({
+					status: 400,
+					message: "Search term is required",
+				});
+			}
 
-		const endpoint = env?.ORAMA_ENDPOINT;
-		const api_key = env?.ORAMA_API_KEY;
+			return ok({ term, limit, mode });
+		})
+		.andThen((params) => {
+			const env = nativeEvent.context.cloudflare?.env as Env | undefined;
+			const endpoint = env?.ORAMA_ENDPOINT;
+			const api_key = env?.ORAMA_API_KEY;
 
-		if (!endpoint || !api_key) {
-			console.error("Missing Orama configuration");
-			return new Response(
-				JSON.stringify({
-					error: "Search service is not properly configured",
+			if (!endpoint || !api_key) {
+				return err({
+					status: 503,
+					message: "Search service is not properly configured",
+					log: "Missing Orama configuration",
+				});
+			}
+
+			return ok({
+				client: new OramaClient({ endpoint, api_key }),
+				params,
+			});
+		})
+		.andThen(({ client, params }) =>
+			fromPromise(client.search(params), (e) => ({
+				status: 500,
+				message: "Search failed",
+				error: e,
+				log: "Search error",
+			})),
+		)
+		.match(
+			(results) =>
+				new Response(JSON.stringify(results), {
+					headers: { "Content-Type": "application/json" },
 				}),
-				{ status: 503, headers: { "Content-Type": "application/json" } },
-			);
-		}
+			async (error) => {
+				if ("log" in error && error.log) {
+					const args = "error" in error ? [error.error] : [];
+					await runServerEffect(logger.error(error.log, ...args));
+				}
 
-		const client = new OramaClient({
-			endpoint,
-			api_key,
-		});
-
-		const results = await client.search({
-			term,
-			limit,
-			mode,
-		});
-
-		return new Response(JSON.stringify(results), {
-			headers: { "Content-Type": "application/json" },
-		});
-	} catch (error) {
-		console.error("Search error:", error);
-		return new Response(JSON.stringify({ error: "Search failed" }), {
-			status: 500,
-			headers: { "Content-Type": "application/json" },
-		});
-	}
+				return new Response(JSON.stringify({ error: error.message }), {
+					status: error.status,
+					headers: { "Content-Type": "application/json" },
+				});
+			},
+		);
 }

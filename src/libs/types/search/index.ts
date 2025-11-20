@@ -23,3 +23,9 @@ export interface SearchResult {
 	count: number;
 	elapsed: number;
 }
+
+export interface SearchBody {
+	term?: string;
+	limit?: number;
+	mode?: "hybrid" | "vector" | "fulltext";
+}
