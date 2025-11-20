@@ -1,3 +1,10 @@
+## [1.26.1](https://github.com/et0and/wwwtom/compare/v1.26.0...v1.26.1) (2025-11-20)
+
+
+### Bug Fixes
+
+* **lib:** type error ([370c4a9](https://github.com/et0and/wwwtom/commit/370c4a97c978c4d76f504c5f169baed3f1619cba))
+
 # [1.26.0](https://github.com/et0and/wwwtom/compare/v1.25.0...v1.26.0) (2025-11-18)
 
 
