@@ -1,3 +1,10 @@
+## [1.33.3](https://github.com/et0and/wwwtom/compare/v1.33.2...v1.33.3) (2025-11-20)
+
+
+### Bug Fixes
+
+* bad path ([46ad2ec](https://github.com/et0and/wwwtom/commit/46ad2ec73e8e21d5f237faa15cf8062c998c4dc9))
+
 ## [1.33.2](https://github.com/et0and/wwwtom/compare/v1.33.1...v1.33.2) (2025-11-20)
 
 
