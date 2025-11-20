@@ -1,3 +1,10 @@
+# [1.31.0](https://github.com/et0and/wwwtom/compare/v1.30.0...v1.31.0) (2025-11-20)
+
+
+### Features
+
+* **routes:** improve og image route error handling ([e26ea82](https://github.com/et0and/wwwtom/commit/e26ea825df0b66bcb9ab13a897a40cc9d5a491a4))
+
 # [1.30.0](https://github.com/et0and/wwwtom/compare/v1.29.1...v1.30.0) (2025-11-20)
 
 
