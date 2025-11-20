@@ -1,4 +1,4 @@
-name: Autocannon performance stress test
+name: Bombardier performance stress test
 
 on:
   push:
@@ -18,22 +18,18 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
+      - uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c
         with:
-          bun-version: latest
+          go-version: "1.23"
 
-      - name: Check Bun version
-        run: |
-          echo "Bun version: $(bun -v)"
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - name: Install bombardier
+        run: go install github.com/codesenberg/bombardier@v2.0.2
 
       - name: Run load test on home
-        run: bunx autocannon -d 10 -c 10000 https://tom.so
+        run: bombardier -c 20000 -d 10s https://tom.so
 
       - name: Run load test on works directory
-        run: bunx autocannon -d 10 -c 10000 https://tom.so/works
+        run: bombardier -c 20000 -d 10s https://tom.so/works
 
       - name: Run load test on blog posts
-        run: bunx autocannon -d 10 -c 10000 https://tom.so/posts
+        run: bombardier -c 20000 -d 10s https://tom.so/posts
