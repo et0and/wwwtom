@@ -1,3 +1,10 @@
+## [1.33.2](https://github.com/et0and/wwwtom/compare/v1.33.1...v1.33.2) (2025-11-20)
+
+
+### Bug Fixes
+
+* update bombardier installation to use latest version ([4b590a4](https://github.com/et0and/wwwtom/commit/4b590a4139e8568b99a0f1c14b06b47f8ca038fa))
+
 ## [1.33.1](https://github.com/et0and/wwwtom/compare/v1.33.0...v1.33.1) (2025-11-20)
 
 
