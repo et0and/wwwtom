@@ -1,3 +1,10 @@
+# [1.34.0](https://github.com/et0and/wwwtom/compare/v1.33.3...v1.34.0) (2025-11-20)
+
+
+### Features
+
+* **svc:** scaffold arena service ([d4f3d3e](https://github.com/et0and/wwwtom/commit/d4f3d3e8d0d15859c242c7c2cf328eb6c6bc9638))
+
 ## [1.33.3](https://github.com/et0and/wwwtom/compare/v1.33.2...v1.33.3) (2025-11-20)
 
 
