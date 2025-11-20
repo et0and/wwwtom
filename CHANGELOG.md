@@ -1,3 +1,10 @@
+# [1.28.0](https://github.com/et0and/wwwtom/compare/v1.27.0...v1.28.0) (2025-11-20)
+
+
+### Features
+
+* add oxc parser for prettier ([3b08305](https://github.com/et0and/wwwtom/commit/3b08305595d760626dfa1df8e7e879734c9bea11))
+
 # [1.27.0](https://github.com/et0and/wwwtom/compare/v1.26.2...v1.27.0) (2025-11-20)
 
 
