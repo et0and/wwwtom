@@ -3,7 +3,7 @@ import {
 	fetchPayload,
 	type PayloadResponse,
 	type PayloadPost,
-} from "~/lib/api/payload/client";
+} from "~/libs/actions/payload/client";
 
 export async function GET() {
 	const feed = new RSS({

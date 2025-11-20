@@ -1,5 +1,5 @@
 import { query } from "@solidjs/router";
-import { type PayloadPost, type PayloadResponse } from "./types";
+import { type PayloadPost, type PayloadResponse } from "../../types/payload";
 import { convertLexicalToHTML } from "./content-converter";
 import { fetchPayload } from "./client";
 

@@ -1,5 +1,5 @@
 import { onMount, createSignal } from "solid-js";
-import * as v2 from "../lib/vec";
+import * as v2 from "../libs/utils/vec";
 
 const WIDTH = 400;
 const HEIGHT = 400;

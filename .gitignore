@@ -5,7 +5,10 @@ dist
 .netlify
 .vinxi
 app.config.timestamp_*.js
+
+# Our git subtrees
 /neverthrow
+/effect
 
 # Environment
 .env

@@ -1,6 +1,6 @@
 import { createSignal, For, onCleanup, Show } from "solid-js";
 import { A } from "@solidjs/router";
-import { createSearch, SearchDocument, SearchHit } from "~/lib/search";
+import { createSearch, SearchDocument, SearchHit } from "~/libs/utils/search";
 
 export default function Search() {
 	const [query, setQuery] = createSignal("");

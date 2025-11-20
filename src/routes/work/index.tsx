@@ -1,5 +1,5 @@
 import { A, createAsync } from "@solidjs/router";
-import { getWorks } from "~/lib/api/payload";
+import { getWorks } from "~/libs/actions/payload";
 import PageLayout from "~/components/PageLayout";
 import { Suspense } from "solid-js";
 import Spinner from "~/components/Spinner";

@@ -36,6 +36,9 @@
 - This project runs on Cloudflare Workers.
 - Production domain for this project is https://tom.so
 
+## Logging
+- This project uses Effect's logging utilities. For context/reference, refer to the Effect git subtree in this repository..
+
 ## Commits & PRs
 - Use scoped conventional commits for commit messages and PR titles (e.g., `feat(components):`, `fix(sources):`, `chore:`).
 

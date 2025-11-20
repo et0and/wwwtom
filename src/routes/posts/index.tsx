@@ -1,5 +1,5 @@
 import { createAsync, useSearchParams, A } from "@solidjs/router";
-import { getPosts } from "~/lib/api/payload";
+import { getPosts } from "~/libs/actions/payload";
 import PageLayout from "~/components/PageLayout";
 import { Suspense, Show } from "solid-js";
 import Spinner from "~/components/Spinner";

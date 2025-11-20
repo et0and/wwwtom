@@ -1,7 +1,7 @@
 import { Show } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { getWorkBySlug } from "~/lib/api/payload";
+import { getWorkBySlug } from "~/libs/actions/payload";
 import PageLayout from "~/components/PageLayout";
 
 import Spinner from "~/components/Spinner";
