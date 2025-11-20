@@ -1,3 +1,10 @@
+## [1.33.1](https://github.com/et0and/wwwtom/compare/v1.33.0...v1.33.1) (2025-11-20)
+
+
+### Bug Fixes
+
+* bad version ([7973f87](https://github.com/et0and/wwwtom/commit/7973f870908f6f2c10112144c2499805a25d318b))
+
 # [1.33.0](https://github.com/et0and/wwwtom/compare/v1.32.0...v1.33.0) (2025-11-20)
 
 
