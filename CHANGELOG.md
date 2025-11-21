@@ -1,3 +1,10 @@
+# [1.36.0](https://github.com/et0and/wwwtom/compare/v1.35.0...v1.36.0) (2025-11-21)
+
+
+### Features
+
+* arena user integration test, fix other integration tests ([68c70d5](https://github.com/et0and/wwwtom/commit/68c70d5daf6a7c462ee486fbaeeb519b4685a54b))
+
 # [1.35.0](https://github.com/et0and/wwwtom/compare/v1.34.0...v1.35.0) (2025-11-21)
 
 
