@@ -1,3 +1,10 @@
+# [1.35.0](https://github.com/et0and/wwwtom/compare/v1.34.0...v1.35.0) (2025-11-21)
+
+
+### Features
+
+* create integration tests for arena service ([571afde](https://github.com/et0and/wwwtom/commit/571afde71df22aceb137a28abfed56b71fcb4af5))
+
 # [1.34.0](https://github.com/et0and/wwwtom/compare/v1.33.3...v1.34.0) (2025-11-20)
 
 
