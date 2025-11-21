@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { fetchArena } from "~/libs/actions/arena/client";
+import { logger } from "~/libs/utils/logger";
 
 describe("Are.na channel integration", () => {
 	describe("getChannelContents", () => {
@@ -14,7 +15,7 @@ describe("Are.na channel integration", () => {
 					expect(response).toBeDefined();
 					expect(response).toHaveProperty("contents");
 					expect(Array.isArray(response.contents)).toBe(true);
-					console.log("Fetched contents:", response.contents);
+					logger.debug("Fetched contents:", response.contents);
 				},
 				(error) => {
 					throw error;
@@ -35,6 +36,7 @@ describe("Are.na channel integration", () => {
 					expect(channel).toBeDefined();
 					expect(channel).toHaveProperty("slug");
 					expect(channel.slug).toBe("imaginary-museum");
+					logger.debug("Fetched channel:", channel);
 				},
 				(error) => {
 					throw error;
