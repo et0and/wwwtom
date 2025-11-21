@@ -20,11 +20,12 @@ export function getArenaClient(): ResultAsync<ArenaClient, Error> {
 		(typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
 		import.meta.env.ARENA_TOKEN;
 
+	/* TODO @et0and get a token for this
 	if (!ARENA_TOKEN) {
 		const error = new Error("ARENA_TOKEN environment variable is not set");
 		runServerEffect(logger.error("Configuration error", error));
 		return errAsync(error);
-	}
+	} */
 
 	runServerEffect(logger.debug("Initializing Arena client"));
 
