@@ -32,7 +32,7 @@ export function getArenaClient(): Effect.Effect<ArenaClient, Error> {
 			(typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
 			import.meta.env.ARENA_TOKEN;
 
-		// Ensure we have a token
+		// Ensure we have a token. This is needed for anything to do with users and comments in are.na.
 		if (!ARENA_TOKEN) {
 			const error = new Error("ARENA_TOKEN environment variable is not set");
 			yield* Effect.sync(() =>
@@ -51,13 +51,7 @@ export function getArenaClient(): Effect.Effect<ArenaClient, Error> {
 }
 
 /**
- * Generic wrapper for Arena API calls with error handling and logging.
- *
- * This function provides a consistent interface for all Arena API operations by:
- * 1. Creating an ArenaClient instance using getArenaClient()
- * 2. Logging the operation start for debugging
- * 3. Executing the provided operation with proper error handling
- * 4. Logging any failures with context
+ * Generic fetch wrapper for Are.na API calls with error handling and logging.
  *
  * @template T - The return type of the operation
  * @param operation - A function that takes an ArenaClient and returns a Promise of type T
