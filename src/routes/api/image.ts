@@ -1,8 +1,7 @@
 import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import type { APIEvent } from "@solidjs/start/server";
-import { err, ok, Result, ResultAsync } from "neverthrow";
+import { Effect, pipe } from "effect";
 import { logger, runServerEffect } from "~/libs/utils/logger";
-import { ImageError } from "~/libs/types/errors/ImageError";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -13,47 +12,50 @@ export async function GET({ request }: APIEvent) {
 	const quality = parseInt(url.searchParams.get("quality") || "85");
 	const requestedFormat = url.searchParams.get("format");
 
-	const validateUrl = (urlStr: string | null): Result<URL, ImageError> => {
-		if (!urlStr) {
-			return err({
+	const validateUrl = (urlStr: string | null) =>
+		pipe(
+			Effect.fromNullable(urlStr),
+			Effect.mapError(() => ({
 				response: new Response("Missing url parameter", { status: 400 }),
-			});
-		}
-		return Result.fromThrowable(
-			() => new URL(urlStr),
-			() => ({ response: new Response("Invalid URL", { status: 400 }) }),
-		)().andThen((parsed) => {
-			if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
-				return err({
-					response: new Response("Domain not allowed", { status: 403 }),
-				});
-			}
-			return ok(parsed);
-		});
-	};
+			})),
+			Effect.flatMap((url) =>
+				Effect.try({
+					try: () => new URL(url),
+					catch: () => ({
+						response: new Response("Invalid URL", { status: 400 }),
+					}),
+				}),
+			),
+			Effect.flatMap((parsed) =>
+				ALLOWED_DOMAINS.includes(parsed.hostname)
+					? Effect.succeed(parsed)
+					: Effect.fail({
+							response: new Response("Domain not allowed", { status: 403 }),
+						}),
+			),
+		);
 
-	const fetchImage = (validUrl: URL): ResultAsync<Response, ImageError> => {
-		return ResultAsync.fromPromise(fetch(validUrl), (cause) => ({
-			response: new Response("Failed to fetch image", { status: 500 }),
-			cause,
-		})).andThen((res) => {
-			if (!res.ok) {
-				return err({
+	const fetchImage = (validUrl: URL) =>
+		pipe(
+			Effect.tryPromise({
+				try: () => fetch(validUrl),
+				catch: (cause) => ({
 					response: new Response("Failed to fetch image", { status: 500 }),
-				});
-			}
-			return ok(res);
-		});
-	};
+					cause,
+				}),
+			}),
+			Effect.flatMap((res) =>
+				res.ok
+					? Effect.succeed(res)
+					: Effect.fail({
+							response: new Response("Failed to fetch image", { status: 500 }),
+						}),
+			),
+		);
 
-	const processImage = (
-		response: Response,
-	): ResultAsync<
-		{ outputBuffer: Uint8Array; contentType: string },
-		ImageError
-	> => {
-		return ResultAsync.fromPromise(
-			(async () => {
+	const processImage = (response: Response) =>
+		Effect.tryPromise({
+			try: async () => {
 				const buffer = await response.arrayBuffer();
 				const originalFormat = response.headers.get("content-type");
 				const photonImage = PhotonImage.new_from_byteslice(
@@ -89,27 +91,36 @@ export async function GET({ request }: APIEvent) {
 						contentType = "image/jpeg";
 				}
 				return { outputBuffer, contentType };
-			})(),
-			(cause) => ({
+			},
+			catch: (cause) => ({
 				response: new Response("Failed to process image", { status: 500 }),
 				cause,
 			}),
-		);
-	};
+		});
 
-	const result = await validateUrl(imageUrl)
-		.asyncAndThen(fetchImage)
-		.andThen(processImage);
+	const program = pipe(
+		validateUrl(imageUrl),
+		Effect.flatMap(fetchImage),
+		Effect.flatMap(processImage),
+		Effect.catchAll((error) =>
+			Effect.sync(() => {
+				if ("cause" in error) {
+					runServerEffect(
+						logger.error("Image optimization error:", error.cause),
+					);
+				}
+				return error.response;
+			}),
+		),
+	);
 
-	if (result.isErr()) {
-		const { response, cause } = result.error;
-		if (cause) {
-			await runServerEffect(logger.error("Image optimization error:", cause));
-		}
-		return response;
+	const result = await runServerEffect(program);
+
+	if (result instanceof Response) {
+		return result;
 	}
 
-	const { outputBuffer, contentType } = result.value;
+	const { outputBuffer, contentType } = result;
 
 	return new Response(new Uint8Array(outputBuffer), {
 		headers: {

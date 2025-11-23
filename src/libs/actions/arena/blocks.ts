@@ -1,5 +1,6 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
+import { runServerEffect } from "~/libs/utils/logger";
 import type { PaginationAttributes } from "~/libs/types/arena";
 
 /**
@@ -15,14 +16,8 @@ import type { PaginationAttributes } from "~/libs/types/arena";
  */
 export const getBlock = query(async (id: number) => {
 	"use server";
-	return fetchArena(
-		(client) => client.block(id).get(),
-		`getBlock(${id})`,
-	).match(
-		(data) => data,
-		(error) => {
-			throw error;
-		},
+	return runServerEffect(
+		fetchArena((client) => client.block(id).get(), `getBlock(${id})`),
 	);
 }, "arena-block");
 
@@ -41,14 +36,11 @@ export const getBlock = query(async (id: number) => {
 export const getBlockChannels = query(
 	async (id: number, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.block(id).channels(options),
-			`getBlockChannels(${id})`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.block(id).channels(options),
+				`getBlockChannels(${id})`,
+			),
 		);
 	},
 	"arena-block-channels",
@@ -69,14 +61,11 @@ export const getBlockChannels = query(
 export const getBlockComments = query(
 	async (id: number, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.block(id).comments(options),
-			`getBlockComments(${id})`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.block(id).comments(options),
+				`getBlockComments(${id})`,
+			),
 		);
 	},
 	"arena-block-comments",

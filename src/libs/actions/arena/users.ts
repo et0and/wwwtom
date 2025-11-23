@@ -1,5 +1,6 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
+import { runServerEffect } from "~/libs/utils/logger";
 import type { PaginationAttributes } from "~/libs/types/arena";
 
 /**
@@ -15,11 +16,8 @@ import type { PaginationAttributes } from "~/libs/types/arena";
  */
 export const getUser = query(async (id: number | string) => {
 	"use server";
-	return fetchArena((client) => client.user(id).get(), `getUser(${id})`).match(
-		(data) => data,
-		(error) => {
-			throw error;
-		},
+	return runServerEffect(
+		fetchArena((client) => client.user(id).get(), `getUser(${id})`),
 	);
 }, "arena-user");
 
@@ -38,14 +36,11 @@ export const getUser = query(async (id: number | string) => {
 export const getUserChannels = query(
 	async (id: number | string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.user(id).channels(options),
-			`getUserChannels(${id})`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.user(id).channels(options),
+				`getUserChannels(${id})`,
+			),
 		);
 	},
 	"arena-user-channels",
@@ -64,14 +59,11 @@ export const getUserChannels = query(
  */
 export const getUserFollowing = query(async (id: number | string) => {
 	"use server";
-	return fetchArena(
-		(client) => client.user(id).following(),
-		`getUserFollowing(${id})`,
-	).match(
-		(data) => data,
-		(error) => {
-			throw error;
-		},
+	return runServerEffect(
+		fetchArena(
+			(client) => client.user(id).following(),
+			`getUserFollowing(${id})`,
+		),
 	);
 }, "arena-user-following");
 
@@ -88,13 +80,10 @@ export const getUserFollowing = query(async (id: number | string) => {
  */
 export const getUserFollowers = query(async (id: number | string) => {
 	"use server";
-	return fetchArena(
-		(client) => client.user(id).followers(),
-		`getUserFollowers(${id})`,
-	).match(
-		(data) => data,
-		(error) => {
-			throw error;
-		},
+	return runServerEffect(
+		fetchArena(
+			(client) => client.user(id).followers(),
+			`getUserFollowers(${id})`,
+		),
 	);
 }, "arena-user-followers");

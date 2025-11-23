@@ -65,7 +65,7 @@
 - Global test setup in `src/test/setup.ts`
 
 ## Error Handling
-- Use Neverthrow for error handling where possible. Refer to the Neverthrow git subtree in this repository for context
+- Use Effect for error handling and control flow where possible. Refer to the Effect git subtree in this repository for context (/effect)
 - Throw descriptive errors with context
 - Use proper TypeScript interfaces for API responses
 - Server functions marked with `"use server"`

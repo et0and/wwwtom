@@ -1,5 +1,6 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
+import { runServerEffect } from "~/libs/utils/logger";
 import type { PaginationAttributes } from "~/libs/types/arena";
 
 /**
@@ -17,14 +18,11 @@ import type { PaginationAttributes } from "~/libs/types/arena";
 export const searchEverything = query(
 	async (searchQuery: string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.search.everything(searchQuery, options),
-			`searchEverything("${searchQuery}")`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.search.everything(searchQuery, options),
+				`searchEverything("${searchQuery}")`,
+			),
 		);
 	},
 	"arena-search-everything",
@@ -45,14 +43,11 @@ export const searchEverything = query(
 export const searchChannels = query(
 	async (searchQuery: string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.search.channels(searchQuery, options),
-			`searchChannels("${searchQuery}")`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.search.channels(searchQuery, options),
+				`searchChannels("${searchQuery}")`,
+			),
 		);
 	},
 	"arena-search-channels",
@@ -73,14 +68,11 @@ export const searchChannels = query(
 export const searchBlocks = query(
 	async (searchQuery: string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.search.blocks(searchQuery, options),
-			`searchBlocks("${searchQuery}")`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.search.blocks(searchQuery, options),
+				`searchBlocks("${searchQuery}")`,
+			),
 		);
 	},
 	"arena-search-blocks",
@@ -101,14 +93,11 @@ export const searchBlocks = query(
 export const searchUsers = query(
 	async (searchQuery: string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.search.users(searchQuery, options),
-			`searchUsers("${searchQuery}")`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.search.users(searchQuery, options),
+				`searchUsers("${searchQuery}")`,
+			),
 		);
 	},
 	"arena-search-users",

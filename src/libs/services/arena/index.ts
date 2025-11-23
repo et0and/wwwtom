@@ -1,3 +1,5 @@
+// This was taken from https://github.com/e-e-e/arena-ts
+
 import {
 	GetChannelsApiResponse,
 	GetConnectionsApiResponse,

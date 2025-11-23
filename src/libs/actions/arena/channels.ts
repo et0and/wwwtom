@@ -1,5 +1,6 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
+import { runServerEffect } from "~/libs/utils/logger";
 import type { PaginationAttributes } from "~/libs/types/arena";
 
 /**
@@ -17,14 +18,11 @@ import type { PaginationAttributes } from "~/libs/types/arena";
 export const getChannel = query(
 	async (slug: string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.channel(slug).get(options),
-			`getChannel(${slug})`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.channel(slug).get(options),
+				`getChannel(${slug})`,
+			),
 		);
 	},
 	"arena-channel",
@@ -45,14 +43,11 @@ export const getChannel = query(
 export const getChannelContents = query(
 	async (slug: string, options?: PaginationAttributes) => {
 		"use server";
-		return fetchArena(
-			(client) => client.channel(slug).contents(options),
-			`getChannelContents(${slug})`,
-		).match(
-			(data) => data,
-			(error) => {
-				throw error;
-			},
+		return runServerEffect(
+			fetchArena(
+				(client) => client.channel(slug).contents(options),
+				`getChannelContents(${slug})`,
+			),
 		);
 	},
 	"arena-channel-contents",
@@ -71,14 +66,11 @@ export const getChannelContents = query(
  */
 export const getChannelThumb = query(async (slug: string) => {
 	"use server";
-	return fetchArena(
-		(client) => client.channel(slug).thumb(),
-		`getChannelThumb(${slug})`,
-	).match(
-		(data) => data,
-		(error) => {
-			throw error;
-		},
+	return runServerEffect(
+		fetchArena(
+			(client) => client.channel(slug).thumb(),
+			`getChannelThumb(${slug})`,
+		),
 	);
 }, "arena-channel-thumb");
 
@@ -95,13 +87,7 @@ export const getChannelThumb = query(async (slug: string) => {
  */
 export const getChannels = query(async (options?: PaginationAttributes) => {
 	"use server";
-	return fetchArena(
-		(client) => client.channels(options),
-		"getChannels()",
-	).match(
-		(data) => data,
-		(error) => {
-			throw error;
-		},
+	return runServerEffect(
+		fetchArena((client) => client.channels(options), "getChannels()"),
 	);
 }, "arena-channels");
