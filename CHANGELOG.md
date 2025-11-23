@@ -1,3 +1,11 @@
+# [1.37.0](https://github.com/et0and/wwwtom/compare/v1.36.0...v1.37.0) (2025-11-23)
+
+
+### Features
+
+* begin the great effect migration ([7d53e71](https://github.com/et0and/wwwtom/commit/7d53e715966e621ecaa8ae1b298b0ea89c0ef0de))
+* tsx for about page ([38586a4](https://github.com/et0and/wwwtom/commit/38586a4d3d8e154d9ab8b7e66fd0082d5c5b378f))
+
 # [1.36.0](https://github.com/et0and/wwwtom/compare/v1.35.0...v1.36.0) (2025-11-21)
 
 
