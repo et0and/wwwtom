@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
 import { type PayloadPost, type PayloadResponse } from "../../types/payload";
-import { convertLexicalToHTML } from "./content-converter";
+import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
 
 /**
@@ -62,12 +62,14 @@ export const getPostBySlug = query(async (slug: string) => {
 			if (!post) return null;
 
 			let content = "<p>No content available</p>";
+			let arenaBlocks: ReturnType<typeof extractArenaBlocks> = [];
 
 			if (
 				post.content &&
 				typeof post.content === "object" &&
 				post.content.root
 			) {
+				arenaBlocks = extractArenaBlocks(post.content.root);
 				content = convertLexicalToHTML(post.content.root);
 			} else if (typeof post.content === "string") {
 				content = post.content;
@@ -76,6 +78,7 @@ export const getPostBySlug = query(async (slug: string) => {
 			return {
 				...post,
 				content,
+				arenaBlocks,
 			};
 		})
 		.match(

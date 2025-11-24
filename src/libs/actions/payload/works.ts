@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
 import { type PayloadPost, type PayloadResponse } from "../../types/payload";
-import { convertLexicalToHTML } from "./content-converter";
+import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
 
 /**
@@ -47,13 +47,15 @@ export const getWorkBySlug = query(async (slug: string) => {
 			if (!work) return null;
 
 			let content = "<p>No content available</p>";
+			let arenaBlocks: ReturnType<typeof extractArenaBlocks> = [];
 
 			if (
 				work.content &&
 				typeof work.content === "object" &&
 				work.content.root
 			) {
-				content = convertLexicalToHTML(work.content.root);
+				arenaBlocks = extractArenaBlocks(work.content.root);
+				content = convertLexicalToHTML(work.content.root, true);
 			} else if (typeof work.content === "string") {
 				content = work.content;
 			}
@@ -61,6 +63,7 @@ export const getWorkBySlug = query(async (slug: string) => {
 			return {
 				...work,
 				content,
+				arenaBlocks,
 			};
 		})
 		.match(

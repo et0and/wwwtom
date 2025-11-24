@@ -1,10 +1,63 @@
 import type { PayloadContentNode, PayloadMedia } from "../../types/payload";
+import type { ArenaBlockData } from "../../types/arena";
 
-export function convertLexicalToHTML(node: PayloadContentNode): string {
+function extractTextFromLexical(node: PayloadContentNode): string {
 	if (!node) return "";
 
 	if (node.type === "root" && node.children) {
-		return node.children.map(convertLexicalToHTML).join("");
+		return node.children.map(extractTextFromLexical).join("");
+	}
+
+	if (node.type === "paragraph" && node.children) {
+		return node.children.map(extractTextFromLexical).join("");
+	}
+
+	if (node.type === "heading" && node.children) {
+		return node.children.map(extractTextFromLexical).join("");
+	}
+
+	if (node.type === "text") {
+		return node.text || "";
+	}
+
+	return "";
+}
+
+export function extractArenaBlocks(node: PayloadContentNode): ArenaBlockData[] {
+	const blocks: ArenaBlockData[] = [];
+
+	function traverse(n: PayloadContentNode) {
+		if (!n) return;
+
+		if (
+			n.type === "block" &&
+			n.fields?.blockType === "arena" &&
+			n.fields.content
+		) {
+			const slug = extractTextFromLexical(n.fields.content.root);
+			const title = extractTextFromLexical(n.fields.content.root);
+			blocks.push({ slug, title });
+		}
+
+		if (n.children) {
+			n.children.forEach(traverse);
+		}
+	}
+
+	traverse(node);
+	return blocks;
+}
+
+export function convertLexicalToHTML(
+	node: PayloadContentNode,
+	skipArena = false,
+): string {
+	if (!node) return "";
+
+	if (node.type === "root" && node.children) {
+		return node.children
+			.map((child) => convertLexicalToHTML(child, skipArena))
+			.join("");
 	}
 
 	if (node.type === "paragraph" && node.children) {
@@ -15,7 +68,7 @@ export function convertLexicalToHTML(node: PayloadContentNode): string {
 				} else if (child.type === "link" && child.fields && child.children) {
 					return convertLink(child);
 				}
-				return convertLexicalToHTML(child);
+				return convertLexicalToHTML(child, skipArena);
 			})
 			.join("");
 		return `<p>${text}</p>`;
@@ -27,7 +80,7 @@ export function convertLexicalToHTML(node: PayloadContentNode): string {
 				if (child.type === "text") {
 					return formatText(child);
 				}
-				return convertLexicalToHTML(child);
+				return convertLexicalToHTML(child, skipArena);
 			})
 			.join("");
 		const level = node.tag || "h2";
@@ -35,7 +88,7 @@ export function convertLexicalToHTML(node: PayloadContentNode): string {
 	}
 
 	if (node.type === "block" && node.fields) {
-		return convertBlock(node);
+		return convertBlock(node, skipArena);
 	}
 
 	if (node.type === "text") {
@@ -63,12 +116,22 @@ function convertLink(node: PayloadContentNode): string {
 	return `<a href="${url}"${newTab}>${linkText}</a>`;
 }
 
-function convertBlock(node: PayloadContentNode): string {
+function convertBlock(node: PayloadContentNode, skipArena = false): string {
 	if (!node.fields) return "";
 
 	if (node.fields.blockType === "banner" && node.fields.content) {
-		const bannerContent = convertLexicalToHTML(node.fields.content.root);
+		const bannerContent = convertLexicalToHTML(
+			node.fields.content.root,
+			skipArena,
+		);
 		return `<div role="region" class="banner"><p class="banner-title">Note</p>${bannerContent}</div>`;
+	}
+
+	if (node.fields.blockType === "arena" && node.fields.content) {
+		if (skipArena) return "";
+		const arenaSlug = extractTextFromLexical(node.fields.content.root);
+		const arenaTitle = extractTextFromLexical(node.fields.content.root);
+		return `<ArenaCarousel slug="${arenaSlug}" title="${arenaTitle}" />`;
 	}
 
 	if (node.fields.blockType === "mediaBlock" && node.fields.media) {

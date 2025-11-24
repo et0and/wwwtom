@@ -1,4 +1,9 @@
-// Yoinked from https://github.com/e-e-e/arena-ts
+// Yoinked from https://github.com/e-e-e/arena-ts with a few modifications
+
+export interface ArenaBlockData {
+	slug: string;
+	title?: string;
+}
 
 export type ArenaUser = {
 	/** The internal ID of the user */
@@ -83,7 +88,7 @@ export type ArenaAttachment = {
 
 export type ArenaEmbed = {
 	author_name: string | null;
-	author_url: string | null; // https://soundcloud.com/dkmntl"
+	author_url: string | null;
 	height: number;
 	html: string | null;
 	source_url: string | null;

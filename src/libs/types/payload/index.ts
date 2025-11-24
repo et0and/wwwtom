@@ -9,6 +9,8 @@ export interface PayloadPost {
 		url: string;
 		alt?: string;
 	};
+	arenaSlug?: string;
+	arenaTitle?: string;
 	createdAt: string;
 	updatedAt: string;
 	meta?: {
