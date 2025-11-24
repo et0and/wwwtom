@@ -1,3 +1,10 @@
+# [1.38.0](https://github.com/et0and/wwwtom/compare/v1.37.0...v1.38.0) (2025-11-24)
+
+
+### Features
+
+* add arena frontend client ([6c462cc](https://github.com/et0and/wwwtom/commit/6c462cc0df5ad5436a69d3e9c137a9870306e7c0))
+
 # [1.37.0](https://github.com/et0and/wwwtom/compare/v1.36.0...v1.37.0) (2025-11-23)
 
 
