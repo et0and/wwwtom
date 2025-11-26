@@ -2,13 +2,13 @@ import RSS from "rss";
 import { Effect } from "effect";
 import { fetchPayload } from "~/libs/actions/payload/client";
 import type { PayloadPost, PayloadResponse } from "~/libs/types/payload";
-import { logger, runServerEffect } from "~/libs/utils/logger";
+import { logger } from "~/libs/utils/logger";
 
 export async function GET() {
 	const feed = new RSS({
 		title: "Tom Hackshaw",
 		description: "Latest blog posts from Tom Hackshaw",
-		feed_url: "https://tom.so/api/rss",
+		feed_url: "https://tom.so/feed.xml",
 		site_url: "https://tom.so",
 		language: "en_NZ",
 	});
