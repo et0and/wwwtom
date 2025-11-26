@@ -1,3 +1,10 @@
+## [1.39.1](https://github.com/et0and/wwwtom/compare/v1.39.0...v1.39.1) (2025-11-26)
+
+
+### Bug Fixes
+
+* rss feed ([a83d44c](https://github.com/et0and/wwwtom/commit/a83d44c04f9e147bf7f7c6d02f339b825c435e84))
+
 # [1.39.0](https://github.com/et0and/wwwtom/compare/v1.38.0...v1.39.0) (2025-11-26)
 
 
