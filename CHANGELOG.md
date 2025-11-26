@@ -1,3 +1,10 @@
+# [1.39.0](https://github.com/et0and/wwwtom/compare/v1.38.0...v1.39.0) (2025-11-26)
+
+
+### Features
+
+* more effect migration, stricter types ([b43be07](https://github.com/et0and/wwwtom/commit/b43be079dc0a28a8e96b6d2d33f011f1a03e10e0))
+
 # [1.38.0](https://github.com/et0and/wwwtom/compare/v1.37.0...v1.38.0) (2025-11-24)
 
 
