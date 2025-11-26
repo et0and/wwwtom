@@ -9,7 +9,7 @@ describe("Are.na user lookup", () => {
 			import.meta.env.ARENA_TOKEN
 		);
 		if (!hasToken) {
-			console.warn("ARENA_TOKEN not found, skipping integration tests");
+			logger.warn("ARENA_TOKEN not found, skipping integration tests");
 		}
 	});
 
@@ -21,7 +21,7 @@ describe("Are.na user lookup", () => {
 					: undefined) || import.meta.env.ARENA_TOKEN
 			);
 			if (!hasToken) {
-				console.warn("Skipping test: ARENA_TOKEN not available");
+				logger.warn("Skipping test: ARENA_TOKEN not available");
 				return;
 			}
 			const result = await runServerEffect(
@@ -41,7 +41,7 @@ describe("Are.na user lookup", () => {
 					: undefined) || import.meta.env.ARENA_TOKEN
 			);
 			if (!hasToken) {
-				console.warn("Skipping test: ARENA_TOKEN not available");
+				logger.warn("Skipping test: ARENA_TOKEN not available");
 				return;
 			}
 			const result = await runServerEffect(

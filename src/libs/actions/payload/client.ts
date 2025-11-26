@@ -1,65 +1,72 @@
 import { getRequestEvent } from "solid-js/web";
-import { ResultAsync, errAsync } from "neverthrow";
-import { logger, runServerEffect } from "~/libs/utils/logger";
+import { Effect } from "effect";
+import { logger } from "~/libs/utils/logger";
 
 /**
  * Basic client for interacting with my Payload CMS instance.
  */
 export function fetchPayload<T>(
-	endpoint: string,
-	options?: RequestInit & { cache?: boolean; cacheTTL?: number },
-): ResultAsync<T, Error> {
+	endpoint: string, // can be replaced with your specific endpoint, assuming it exposes the default Payload RESTful API
+	options?: RequestInit & { cache?: boolean; cacheTTL?: number }, // optional fetch options including setting cache for Payload connection
+): Effect.Effect<T, Error> {
 	"use server";
 
-	const event = getRequestEvent();
-	const env = event?.nativeEvent.context.cloudflare?.env as
-		| { PAYLOAD_URL?: string }
-		| undefined;
+	return Effect.gen(function* () {
+		const event = getRequestEvent();
+		const env = event?.nativeEvent.context.cloudflare?.env as
+			| { PAYLOAD_URL?: string }
+			| undefined;
 
-	const PAYLOAD_URL: string =
-		env?.PAYLOAD_URL ||
-		(typeof process !== "undefined" ? process.env?.PAYLOAD_URL : undefined) ||
-		import.meta.env.PAYLOAD_URL;
+		const PAYLOAD_URL: string =
+			env?.PAYLOAD_URL ||
+			(typeof process !== "undefined" ? process.env?.PAYLOAD_URL : undefined) ||
+			import.meta.env.PAYLOAD_URL;
 
-	if (!PAYLOAD_URL) {
-		const error = new Error("PAYLOAD_URL environment variable is not set");
-		runServerEffect(logger.error("Configuration error", error));
-		return errAsync(error);
-	}
+		if (!PAYLOAD_URL) {
+			const error = new Error("PAYLOAD_URL environment variable is not set");
+			yield* Effect.sync(() => logger.error("Configuration error", error));
+			return yield* Effect.fail(error);
+		}
 
-	const url = `${PAYLOAD_URL}/api${endpoint}`;
+		const url = `${PAYLOAD_URL}/api${endpoint}`;
 
-	const headers: HeadersInit = {
-		"Content-Type": "application/json",
-		Origin: PAYLOAD_URL?.replace("/api", "") || "http://localhost:3000",
-		Referer: PAYLOAD_URL?.replace("/api", "") || "http://localhost:3000",
-		...options?.headers,
-	};
+		const headers: HeadersInit = {
+			"Content-Type": "application/json",
+			Origin: PAYLOAD_URL?.replace("/api", "") || "http://localhost:3000",
+			Referer: PAYLOAD_URL?.replace("/api", "") || "http://localhost:3000",
+			...options?.headers,
+		};
 
-	runServerEffect(logger.debug(`Fetching Payload: ${url}`));
+		yield* Effect.sync(() => logger.debug(`Fetching Payload: ${url}`));
 
-	return ResultAsync.fromPromise(
-		fetch(url, {
-			...options,
-			headers,
-		}),
-		(e) => (e instanceof Error ? e : new Error("Unknown fetch error")),
-	)
-		.andThen((response) => {
-			if (!response.ok) {
-				return errAsync(
-					new Error(
-						`Payload API error: ${response.status} ${response.statusText}`,
-					),
-				);
-			}
-
-			return ResultAsync.fromPromise(response.json(), (e) =>
-				e instanceof Error ? e : new Error("JSON parse error"),
-			).map((data) => data as T);
-		})
-		.mapErr((error) => {
-			runServerEffect(logger.error(`Payload fetch error: ${url}`, error));
-			return error;
+		const response = yield* Effect.tryPromise({
+			try: () =>
+				fetch(url, {
+					...options,
+					headers,
+				}),
+			catch: (e) => (e instanceof Error ? e : new Error("Unknown fetch error")),
 		});
+
+		if (!response.ok) {
+			return yield* Effect.fail(
+				new Error(
+					`Payload API error: ${response.status} ${response.statusText}`,
+				),
+			);
+		}
+
+		const data = yield* Effect.tryPromise({
+			try: () => response.json(),
+			catch: (e) => (e instanceof Error ? e : new Error("JSON parse error")),
+		});
+
+		return data as T;
+	}).pipe(
+		Effect.mapError((error: Error) => {
+			const url = `${import.meta.env.PAYLOAD_URL || ""}/api${endpoint}`;
+			logger.error(`Payload fetch error: ${url}`, error);
+			return error;
+		}),
+	);
 }

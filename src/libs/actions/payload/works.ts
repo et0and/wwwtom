@@ -1,4 +1,5 @@
 import { query } from "@solidjs/router";
+import { Effect } from "effect";
 import { type PayloadPost, type PayloadResponse } from "../../types/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
@@ -15,14 +16,10 @@ import { fetchPayload } from "./client";
  */
 export const getWorks = query(async () => {
 	"use server";
-	return fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 		"/works?sort=title",
-	).match(
-		(response) => response.docs,
-		(error) => {
-			throw error;
-		},
-	);
+	).pipe(Effect.map((response) => response.docs));
+	return Effect.runPromise(effect);
 }, "works");
 
 /**
@@ -39,10 +36,10 @@ export const getWorks = query(async () => {
  */
 export const getWorkBySlug = query(async (slug: string) => {
 	"use server";
-	return fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 		`/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-	)
-		.map((response) => {
+	).pipe(
+		Effect.map((response) => {
 			const work = response.docs[0];
 			if (!work) return null;
 
@@ -65,11 +62,7 @@ export const getWorkBySlug = query(async (slug: string) => {
 				content,
 				arenaBlocks,
 			};
-		})
-		.match(
-			(work) => work,
-			(error) => {
-				throw error;
-			},
-		);
+		}),
+	);
+	return Effect.runPromise(effect);
 }, "work");

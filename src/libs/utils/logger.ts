@@ -55,14 +55,20 @@ export const runServerEffect = <A, E>(effect: Effect.Effect<A, E>) => {
  * Logging utilities
  */
 export const logger = {
-	info: (message: string, ...args: unknown[]) =>
-		Effect.logInfo(message, ...args),
-	debug: (message: string, ...args: unknown[]) =>
-		Effect.logDebug(message, ...args),
-	warn: (message: string, ...args: unknown[]) =>
-		Effect.logWarning(message, ...args),
-	error: (message: string, ...args: unknown[]) =>
-		Effect.logError(message, ...args),
+	info: (message: string, ...args: unknown[]) => {
+		Effect.runPromise(Effect.logInfo(message, ...args));
+	},
+	debug: (message: string, ...args: unknown[]) => {
+		Effect.runPromise(Effect.logDebug(message, ...args));
+	},
+	warn: (message: string, ...args: unknown[]) => {
+		Effect.runPromise(Effect.logWarning(message, ...args));
+	},
+	error: (message: string, ...args: unknown[]) => {
+		Effect.runPromise(Effect.logError(message, ...args));
+	},
 	// Generic log
-	log: (message: string, ...args: unknown[]) => Effect.log(message, ...args),
+	log: (message: string, ...args: unknown[]) => {
+		Effect.runPromise(Effect.log(message, ...args));
+	},
 };

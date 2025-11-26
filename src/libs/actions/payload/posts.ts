@@ -1,4 +1,5 @@
 import { query } from "@solidjs/router";
+import { Effect } from "effect";
 import { type PayloadPost, type PayloadResponse } from "../../types/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
@@ -18,10 +19,10 @@ import { fetchPayload } from "./client";
 export const getPosts = query(
 	async (page: number = 1, pageSize: number = 5) => {
 		"use server";
-		return fetchPayload<PayloadResponse<PayloadPost[]>>(
+		const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 			`/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
-		).match(
-			(response) => ({
+		).pipe(
+			Effect.map((response) => ({
 				data: response.docs,
 				meta: {
 					pagination: {
@@ -31,11 +32,9 @@ export const getPosts = query(
 						total: response.totalDocs,
 					},
 				},
-			}),
-			(error) => {
-				throw error;
-			},
+			})),
 		);
+		return Effect.runPromise(effect);
 	},
 	"posts",
 );
@@ -54,10 +53,10 @@ export const getPosts = query(
  */
 export const getPostBySlug = query(async (slug: string) => {
 	"use server";
-	return fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 		`/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-	)
-		.map((response) => {
+	).pipe(
+		Effect.map((response) => {
 			const post = response.docs[0];
 			if (!post) return null;
 
@@ -80,11 +79,7 @@ export const getPostBySlug = query(async (slug: string) => {
 				content,
 				arenaBlocks,
 			};
-		})
-		.match(
-			(post) => post,
-			(error) => {
-				throw error;
-			},
-		);
+		}),
+	);
+	return Effect.runPromise(effect);
 }, "post");

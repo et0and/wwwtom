@@ -105,9 +105,7 @@ export async function GET({ request }: APIEvent) {
 		Effect.catchAll((error) =>
 			Effect.sync(() => {
 				if ("cause" in error) {
-					runServerEffect(
-						logger.error("Image optimization error:", error.cause),
-					);
+					logger.error("Image optimization error:", error.cause);
 				}
 				return error.response;
 			}),

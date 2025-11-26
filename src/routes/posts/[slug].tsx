@@ -10,14 +10,23 @@ const ArenaCarousel = lazy(() =>
 );
 
 export const route = {
-	preload: ({ params }) => getPostBySlug(params.slug),
+	preload: ({ params }) => {
+		if (!params.slug) return;
+		return getPostBySlug(params.slug);
+	},
 } satisfies RouteDefinition;
 
 export default function PostPage() {
 	const params = useParams();
-	const post = createAsync(() => getPostBySlug(params.slug), {
-		deferStream: true,
-	});
+	const post = createAsync(
+		() => {
+			if (!params.slug) return Promise.resolve(null);
+			return getPostBySlug(params.slug);
+		},
+		{
+			deferStream: true,
+		},
+	);
 
 	return (
 		<>
@@ -25,7 +34,7 @@ export default function PostPage() {
 				{(data) => (
 					<PageLayout
 						title={data().title}
-						description={data().summary || data().meta?.description}
+						description={data().summary || data().meta?.description || ""}
 					>
 						<article>
 							<h1>{data().title}</h1>
@@ -45,7 +54,10 @@ export default function PostPage() {
 							<Show when={data().arenaBlocks && data().arenaBlocks.length > 0}>
 								<For each={data().arenaBlocks}>
 									{(block) => (
-										<ArenaCarousel slug={block.slug} title={block.title} />
+										<ArenaCarousel
+											slug={block.slug}
+											{...(block.title ? { title: block.title } : {})}
+										/>
 									)}
 								</For>
 							</Show>

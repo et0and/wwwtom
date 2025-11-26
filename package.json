@@ -9,6 +9,7 @@
 		"format": "prettier --check .",
 		"lint": "oxlint",
 		"start": "vinxi start",
+		"typecheck": "tsc --noEmit",
 		"write": "prettier --write .",
 		"test": "vitest",
 		"test:ui": "vitest --ui",
@@ -32,7 +33,6 @@
 		"h3": "^1.12.0",
 		"husky": "^9.1.6",
 		"marked": "^16.4.0",
-		"neverthrow": "^8.2.0",
 		"prettier-oxc-parser": "^0.2.0",
 		"rss": "^1.2.2",
 		"semantic-release": "^24.2.6",
@@ -41,6 +41,7 @@
 		"vinxi": "^0.5.7"
 	},
 	"devDependencies": {
+		"@effect/language-service": "^0.56.0",
 		"@solidjs/testing-library": "^0.8.10",
 		"@tailwindcss/vite": "^4.0.7",
 		"@testing-library/jest-dom": "^6.8.0",

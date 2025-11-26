@@ -11,14 +11,23 @@ const ArenaCarousel = lazy(() =>
 );
 
 export const route = {
-	preload: ({ params }) => getWorkBySlug(params.slug),
+	preload: ({ params }) => {
+		if (!params.slug) return;
+		return getWorkBySlug(params.slug);
+	},
 } satisfies RouteDefinition;
 
 export default function WorkPage() {
 	const params = useParams();
-	const work = createAsync(() => getWorkBySlug(params.slug), {
-		deferStream: true,
-	});
+	const work = createAsync(
+		() => {
+			if (!params.slug) return Promise.resolve(null);
+			return getWorkBySlug(params.slug);
+		},
+		{
+			deferStream: true,
+		},
+	);
 
 	return (
 		<>
@@ -26,7 +35,7 @@ export default function WorkPage() {
 				{(data) => (
 					<PageLayout
 						title={data().title}
-						description={data().summary || data().meta?.description}
+						description={data().summary || data().meta?.description || ""}
 					>
 						<article>
 							<h1>{data().title}</h1>
@@ -35,7 +44,10 @@ export default function WorkPage() {
 							<Show when={data().arenaBlocks && data().arenaBlocks.length > 0}>
 								<For each={data().arenaBlocks}>
 									{(block) => (
-										<ArenaCarousel slug={block.slug} title={block.title} />
+										<ArenaCarousel
+											slug={block.slug}
+											{...(block.title ? { title: block.title } : {})}
+										/>
 									)}
 								</For>
 							</Show>

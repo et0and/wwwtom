@@ -10,12 +10,21 @@
 		"allowJs": true,
 		"noEmit": true,
 		"strict": true,
+		"exactOptionalPropertyTypes": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"noUncheckedIndexedAccess": true,
 		"types": [
 			"vinxi/types/client",
 			"vitest/globals",
 			"@testing-library/jest-dom"
 		],
 		"isolatedModules": true,
+		"plugins": [
+			{
+				"name": "@effect/language-service"
+			}
+		],
 		"paths": {
 			"~/*": ["./src/*"]
 		}

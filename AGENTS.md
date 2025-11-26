@@ -69,3 +69,17 @@
 - Throw descriptive errors with context
 - Use proper TypeScript interfaces for API responses
 - Server functions marked with `"use server"`
+
+<!-- effect-solutions:start -->
+## Effect Solutions Usage
+
+This project uses Effect TypeScript for error handling, logging, and control flow. Key patterns:
+
+- **Effect & Data**: Use `Effect.succeed`, `Effect.fail`, `Effect.try` for data operations
+- **Services & Context**: Use `Effect.service` for dependency injection
+- **Error Handling**: Prefer Effect's error handling over try/catch
+- **Logging**: Use the logger wrapper at `src/libs/utils/logger.ts`
+- **Async Operations**: Use Effect patterns for async/await replacement
+
+**Local Effect Source:** The Effect repository is cloned to `~/.local/share/effect-solutions/effect` for reference. Use this to explore APIs, find usage examples, and understand implementation details when the documentation isn't enough.
+<!-- effect-solutions:end -->

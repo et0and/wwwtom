@@ -1,6 +1,5 @@
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
-import { logger, runServerEffect } from "~/libs/utils/logger";
 import { ArenaClient } from "~/libs/services/arena";
 
 /**
@@ -18,7 +17,6 @@ import { ArenaClient } from "~/libs/services/arena";
 export function getArenaClient(): Effect.Effect<ArenaClient, Error> {
 	"use server";
 
-	// Effect.gen allows for imperative-style programming with Effect
 	return Effect.gen(function* () {
 		// Get the current SolidJS request event to access Cloudflare environment
 		const event = getRequestEvent();
@@ -32,18 +30,13 @@ export function getArenaClient(): Effect.Effect<ArenaClient, Error> {
 			(typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
 			import.meta.env.ARENA_TOKEN;
 
-		// Ensure we have a token. This is needed for anything to do with users and comments in are.na.
 		if (!ARENA_TOKEN) {
 			const error = new Error("ARENA_TOKEN environment variable is not set");
-			yield* Effect.sync(() =>
-				runServerEffect(logger.error("Configuration error", error)),
-			);
+			yield* Effect.logError("Configuration error", error);
 			return yield* Effect.fail(error);
 		}
 
-		yield* Effect.sync(() =>
-			runServerEffect(logger.debug("Initializing Arena client")),
-		);
+		yield* Effect.logDebug("Initializing Arena client");
 
 		// Create and return the ArenaClient instance
 		return new ArenaClient({ token: ARENA_TOKEN });
@@ -78,30 +71,28 @@ export function fetchArena<T>(
 	"use server";
 
 	// Effect.flatMap chains operations: first get client, then execute operation
-	return Effect.flatMap(getArenaClient(), (client) =>
-		Effect.gen(function* () {
-			// Log the start of the operation for debugging and monitoring
-			yield* Effect.sync(() =>
-				runServerEffect(logger.debug(`Arena operation: ${operationName}`)),
-			);
+	return getArenaClient().pipe(
+		Effect.flatMap((client) =>
+			Effect.gen(function* () {
+				// Log the start of the operation for debugging and monitoring
+				yield* Effect.logDebug(`Arena operation: ${operationName}`);
 
-			// Effect.tryPromise safely wraps Promise-based operations in Effect context
-			// Converts promise rejections to typed Error instances
-			return yield* Effect.tryPromise({
-				try: () => operation(client),
-				catch: (e) =>
-					e instanceof Error ? e : new Error("Unknown Arena API error"),
-			});
-		}),
-	).pipe(
+				// Effect.tryPromise safely wraps Promise-based operations in Effect context
+				// Converts promise rejections to typed Error instances
+				return yield* Effect.tryPromise({
+					try: () => operation(client),
+					catch: (e) =>
+						e instanceof Error ? e : new Error("Unknown Arena API error"),
+				});
+			}),
+		),
 		// Effect.catchAll handles all error cases from the operation
 		Effect.catchAll((error) =>
 			Effect.gen(function* () {
 				// Log the error with operation context for debugging
-				yield* Effect.sync(() =>
-					runServerEffect(
-						logger.error(`Arena operation failed: ${operationName}`, error),
-					),
+				yield* Effect.logError(
+					`Arena operation failed: ${operationName}`,
+					error,
 				);
 				// Propagate the error to the caller
 				return yield* Effect.fail(error);

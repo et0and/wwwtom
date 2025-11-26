@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { fetchArena } from "~/libs/actions/arena/client";
 import { logger, runServerEffect } from "~/libs/utils/logger";
+import { Effect } from "effect";
 
 describe("Are.na channel integration", () => {
 	beforeAll(() => {
@@ -9,7 +10,7 @@ describe("Are.na channel integration", () => {
 			import.meta.env.ARENA_TOKEN
 		);
 		if (!hasToken) {
-			console.warn("ARENA_TOKEN not found, skipping integration tests");
+			logger.warn("ARENA_TOKEN not found, skipping integration tests");
 		}
 	});
 
@@ -21,7 +22,7 @@ describe("Are.na channel integration", () => {
 					: undefined) || import.meta.env.ARENA_TOKEN
 			);
 			if (!hasToken) {
-				console.warn("Skipping test: ARENA_TOKEN not available");
+				logger.warn("Skipping test: ARENA_TOKEN not available");
 				return;
 			}
 			const result = await runServerEffect(
@@ -46,7 +47,7 @@ describe("Are.na channel integration", () => {
 					: undefined) || import.meta.env.ARENA_TOKEN
 			);
 			if (!hasToken) {
-				console.warn("Skipping test: ARENA_TOKEN not available");
+				logger.warn("Skipping test: ARENA_TOKEN not available");
 				return;
 			}
 			const result = await runServerEffect(

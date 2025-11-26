@@ -1,9 +1,10 @@
 import RSS from "rss";
+import { Effect } from "effect";
 import { fetchPayload } from "~/libs/actions/payload/client";
 import type { PayloadPost, PayloadResponse } from "~/libs/types/payload";
 import { logger, runServerEffect } from "~/libs/utils/logger";
 
-export function GET() {
+export async function GET() {
 	const feed = new RSS({
 		title: "Tom Hackshaw",
 		description: "Latest blog posts from Tom Hackshaw",
@@ -12,10 +13,10 @@ export function GET() {
 		language: "en_NZ",
 	});
 
-	return fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 		"/posts?sort=-publishedAt&limit=20&depth=1",
-	)
-		.map((response) => {
+	).pipe(
+		Effect.map((response) => {
 			for (const post of response.docs) {
 				const content = post.summary || post.meta?.description || "";
 				const postUrl = `https://www.tom.so/posts/${post.slug}`;
@@ -31,18 +32,21 @@ export function GET() {
 			}
 
 			return feed.xml({ indent: true });
-		})
-		.match(
-			(xml) =>
+		}),
+		Effect.match({
+			onSuccess: (xml) =>
 				new Response(xml, {
 					headers: {
 						"Content-Type": "application/rss+xml",
 						"Cache-Control": "public, max-age=3600",
 					},
 				}),
-			(error) => {
-				runServerEffect(logger.error("Error generating RSS feed:", error));
+			onFailure: (error) => {
+				logger.error("Error generating RSS feed:", error);
 				return new Response("Error generating RSS feed", { status: 500 });
 			},
-		);
+		}),
+	);
+
+	return Effect.runPromise(effect);
 }
