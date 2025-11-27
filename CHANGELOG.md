@@ -1,3 +1,10 @@
+# [1.41.0](https://github.com/et0and/wwwtom/compare/v1.40.0...v1.41.0) (2025-11-27)
+
+
+### Features
+
+* add kawara wwwork ([7998719](https://github.com/et0and/wwwtom/commit/7998719ea42f381116d868bd00928e81f1a04050))
+
 # [1.40.0](https://github.com/et0and/wwwtom/compare/v1.39.2...v1.40.0) (2025-11-27)
 
 
