@@ -18,7 +18,7 @@ export default function WorkHome() {
 			<Suspense fallback={<Spinner color="grey" />}>
 				{works() ? (
 					works()!.map((work) => (
-						<A preload={true} href={`/work/${work.slug}`}>
+						<A class="page" preload={true} href={`/work/${work.slug}`}>
 							<h2>{work.title}</h2>
 							<p>{work.summary}</p>
 						</A>

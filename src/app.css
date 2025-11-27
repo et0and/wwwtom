@@ -114,9 +114,19 @@ a:hover {
 
 input:focus-visible,
 a:focus-visible {
+	outline: 2px solid #ad1174;
 	outline-offset: 4px;
-	outline-color: #ad1174;
 	border-color: #ad1174;
+}
+
+a.page {
+	display: block;
+	text-decoration: none;
+}
+
+a.page:hover {
+	text-decoration: underline;
+	color: #cc0081;
 }
 
 *::selection {

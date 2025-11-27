@@ -178,7 +178,7 @@ export class ArenaClient implements ArenaApi {
 			"Content-Type": "application/json",
 			Authorization: config?.token ? `Bearer ${config.token}` : "",
 		};
-		this.fetch = config?.fetch || fetch;
+		this.fetch = config?.fetch || fetch.bind(globalThis);
 		this.date = config?.date || Date;
 	}
 
@@ -404,7 +404,7 @@ export class ArenaClient implements ArenaApi {
 		return this.fetch(`${this.domain}${endpoint}`, {
 			method: "PUT",
 			headers: this.headers,
-			body: data ? JSON.stringify(data) : undefined,
+			body: data ? JSON.stringify(data) : null,
 		}).then((res) => {
 			if (res.ok) {
 				return undefined;
@@ -417,7 +417,7 @@ export class ArenaClient implements ArenaApi {
 		return this.fetch(`${this.domain}${endpoint}`, {
 			method: "POST",
 			headers: this.headers,
-			body: data ? JSON.stringify(data) : undefined,
+			body: data ? JSON.stringify(data) : null,
 		}).then((res) => {
 			if (res.ok) {
 				return res.json();

@@ -18,7 +18,7 @@ export default function PostsHome() {
 					{(postsData) => (
 						<>
 							{postsData().data.map((post) => (
-								<A preload={true} href={`/posts/${post.slug}`}>
+								<A class="page" preload={true} href={`/posts/${post.slug}`}>
 									<div>
 										<h2>{post.title}</h2>
 										<time>
