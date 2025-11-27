@@ -1,3 +1,10 @@
+## [1.39.2](https://github.com/et0and/wwwtom/compare/v1.39.1...v1.39.2) (2025-11-27)
+
+
+### Bug Fixes
+
+* arena content structure ([0f66341](https://github.com/et0and/wwwtom/commit/0f66341bfa3b95e17fe2e2b4e4ff99ef589dfdee))
+
 ## [1.39.1](https://github.com/et0and/wwwtom/compare/v1.39.0...v1.39.1) (2025-11-26)
 
 
