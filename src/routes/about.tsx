@@ -1,3 +1,4 @@
+import { A } from "@solidjs/router";
 import PageLayout from "~/components/PageLayout";
 
 export default function About() {
@@ -42,6 +43,13 @@ export default function About() {
 				<p>
 					I have accounts on other popular social media sites, but rarely use
 					them.
+				</p>
+
+				<p>
+					See also:{" "}
+					<A href="/worktable">
+						what I am currently working on or interested in.
+					</A>
 				</p>
 
 				<h2>Acknowledgements</h2>

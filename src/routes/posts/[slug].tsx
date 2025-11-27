@@ -38,6 +38,7 @@ export default function PostPage() {
 					>
 						<article>
 							<h1>{data().title}</h1>
+							<h2>{data().meta?.description}</h2>
 							<time>
 								{new Date(data().publishedAt).toLocaleDateString("en-NZ", {
 									year: "numeric",
@@ -45,12 +46,7 @@ export default function PostPage() {
 									day: "numeric",
 								})}
 							</time>
-							{data().summary && (
-								<div class="post-summary">
-									<p>{data().summary}</p>
-								</div>
-							)}
-							<div innerHTML={data().content} />
+							<div class="pt-8" innerHTML={data().content} />
 							<Show when={data().arenaBlocks && data().arenaBlocks.length > 0}>
 								<For each={data().arenaBlocks}>
 									{(block) => (
