@@ -1,3 +1,10 @@
+## [1.42.2](https://github.com/et0and/wwwtom/compare/v1.42.1...v1.42.2) (2025-11-27)
+
+
+### Bug Fixes
+
+* index styling, worker type errors ([6b6512a](https://github.com/et0and/wwwtom/commit/6b6512aa336e703290bec092fe0fbdff435b87e1))
+
 ## [1.42.1](https://github.com/et0and/wwwtom/compare/v1.42.0...v1.42.1) (2025-11-27)
 
 
