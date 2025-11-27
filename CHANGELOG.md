@@ -1,3 +1,10 @@
+# [1.42.0](https://github.com/et0and/wwwtom/compare/v1.41.0...v1.42.0) (2025-11-27)
+
+
+### Features
+
+* hold work ([ea84de9](https://github.com/et0and/wwwtom/commit/ea84de9188416402910008d8e29a835f03473729))
+
 # [1.41.0](https://github.com/et0and/wwwtom/compare/v1.40.0...v1.41.0) (2025-11-27)
 
 
