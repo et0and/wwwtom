@@ -1,3 +1,10 @@
+## [1.42.1](https://github.com/et0and/wwwtom/compare/v1.42.0...v1.42.1) (2025-11-27)
+
+
+### Bug Fixes
+
+* title in 404 page ([97c13b2](https://github.com/et0and/wwwtom/commit/97c13b292f104eee546bf5526056632d8efeca2f))
+
 # [1.42.0](https://github.com/et0and/wwwtom/compare/v1.41.0...v1.42.0) (2025-11-27)
 
 
