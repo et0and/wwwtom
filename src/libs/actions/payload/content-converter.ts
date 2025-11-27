@@ -29,13 +29,9 @@ export function extractArenaBlocks(node: PayloadContentNode): ArenaBlockData[] {
 	function traverse(n: PayloadContentNode) {
 		if (!n) return;
 
-		if (
-			n.type === "block" &&
-			n.fields?.blockType === "arena" &&
-			n.fields.content
-		) {
-			const slug = extractTextFromLexical(n.fields.content.root);
-			const title = extractTextFromLexical(n.fields.content.root);
+		if (n.type === "block" && n.fields?.blockType === "arena") {
+			const slug = n.fields.arenaSlug || "";
+			const title = n.fields.arenaTitle || "";
 			blocks.push({ slug, title });
 		}
 
