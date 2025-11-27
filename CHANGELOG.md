@@ -1,3 +1,10 @@
+# [1.40.0](https://github.com/et0and/wwwtom/compare/v1.39.2...v1.40.0) (2025-11-27)
+
+
+### Features
+
+* better formatting ([3ee33e4](https://github.com/et0and/wwwtom/commit/3ee33e477eb634939d487071dc16d9b70e51ac08))
+
 ## [1.39.2](https://github.com/et0and/wwwtom/compare/v1.39.1...v1.39.2) (2025-11-27)
 
 
