@@ -1,3 +1,10 @@
+# [1.43.0](https://github.com/et0and/wwwtom/compare/v1.42.2...v1.43.0) (2025-12-01)
+
+
+### Features
+
+* **services:** add 24-hour caching for are.na API responses ([e2a0884](https://github.com/et0and/wwwtom/commit/e2a08846e1c17f4200dbe57292d1b00914ed1ea8))
+
 ## [1.42.2](https://github.com/et0and/wwwtom/compare/v1.42.1...v1.42.2) (2025-11-27)
 
 
