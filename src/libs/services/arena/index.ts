@@ -158,7 +158,10 @@ export interface ArenaApi {
 	readonly search: ArenaSearchApi;
 }
 
-export type Fetch = (url: RequestInfo, init?: RequestInit) => Promise<Response>;
+export type Fetch = (
+	url: RequestInfo,
+	init?: RequestInit & { cf?: { cacheTtl?: number; cacheKey?: string } },
+) => Promise<Response>;
 export type Date = { now(): number };
 
 export class ArenaClient implements ArenaApi {
@@ -389,9 +392,18 @@ export class ArenaClient implements ArenaApi {
 	}
 
 	private async getJson(endpoint: string) {
-		return this.fetch(`${this.domain}${endpoint}`, {
+		const cacheUrl = `${this.domain}${endpoint}`;
+
+		return this.fetch(cacheUrl, {
 			method: "GET",
-			headers: this.headers,
+			headers: {
+				...this.headers,
+				"Cache-Control": "public, max-age=86400", // 24 hours cache
+			},
+			cf: {
+				cacheTtl: 86400, // 24 hours in seconds
+				cacheKey: cacheUrl,
+			},
 		}).then((res: Response) => {
 			if (res.ok) {
 				return res.json();
@@ -403,8 +415,14 @@ export class ArenaClient implements ArenaApi {
 	private async putJson(endpoint: string, data?: unknown) {
 		return this.fetch(`${this.domain}${endpoint}`, {
 			method: "PUT",
-			headers: this.headers,
+			headers: {
+				...this.headers,
+				"Cache-Control": "no-cache",
+			},
 			body: data ? JSON.stringify(data) : null,
+			cf: {
+				cacheTtl: 0, // Bypass cache for write operations
+			},
 		}).then((res) => {
 			if (res.ok) {
 				return undefined;
@@ -416,8 +434,14 @@ export class ArenaClient implements ArenaApi {
 	private async postJson(endpoint: string, data?: unknown) {
 		return this.fetch(`${this.domain}${endpoint}`, {
 			method: "POST",
-			headers: this.headers,
+			headers: {
+				...this.headers,
+				"Cache-Control": "no-cache",
+			},
 			body: data ? JSON.stringify(data) : null,
+			cf: {
+				cacheTtl: 0, // Bypass cache for write operations
+			},
 		}).then((res) => {
 			if (res.ok) {
 				return res.json();
@@ -429,7 +453,13 @@ export class ArenaClient implements ArenaApi {
 	private async del(endpoint: string) {
 		return this.fetch(`${this.domain}${endpoint}`, {
 			method: "DELETE",
-			headers: this.headers,
+			headers: {
+				...this.headers,
+				"Cache-Control": "no-cache",
+			},
+			cf: {
+				cacheTtl: 0, // Bypass cache for delete operations
+			},
 		}).then((res) => {
 			if (res.ok) {
 				return undefined;
