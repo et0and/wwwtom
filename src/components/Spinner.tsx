@@ -5,7 +5,7 @@ type SpinnerProps = {
 	class?: string;
 };
 
-export default function Spinner(props: SpinnerProps) {
+export function Spinner(props: SpinnerProps) {
 	const color = () => props.color ?? "blue";
 
 	return (

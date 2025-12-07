@@ -2,7 +2,8 @@ import { createAsync, useSearchParams, A } from "@solidjs/router";
 import { getPosts } from "~/libs/actions/payload";
 import PageLayout from "~/components/PageLayout";
 import { Suspense, Show } from "solid-js";
-import Spinner from "~/components/Spinner";
+import { Spinner } from "~/components/Spinner";
+import { Link } from "~/components/Link";
 
 export default function PostsHome() {
 	const [searchParams] = useSearchParams();
@@ -18,7 +19,7 @@ export default function PostsHome() {
 					{(postsData) => (
 						<>
 							{postsData().data.map((post) => (
-								<A class="page" preload={true} href={`/posts/${post.slug}`}>
+								<Link class="page" preload={true} href={`/posts/${post.slug}`}>
 									<div>
 										<h2>{post.title}</h2>
 										<time>
@@ -30,21 +31,23 @@ export default function PostsHome() {
 										</time>
 										<p>{post.summary || post.meta?.description}</p>
 									</div>
-								</A>
+								</Link>
 							))}
 							<Show when={postsData().meta.pagination}>
 								{(pagination) => (
 									<div class="justify-between flex item-center">
 										<Show when={pagination().page > 1}>
-											<A
+											<Link
 												preload={true}
 												href={`/posts?page=${pagination().page - 1}`}
 											>
 												Previous
-											</A>
+											</Link>
 										</Show>
 										<Show when={pagination().page < pagination().pageCount}>
-											<A href={`/posts?page=${pagination().page + 1}`}>Next</A>
+											<Link href={`/posts?page=${pagination().page + 1}`}>
+												Next
+											</Link>
 										</Show>
 									</div>
 								)}

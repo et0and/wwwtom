@@ -97,6 +97,8 @@ export interface PayloadBlockFields {
 	style?: string;
 	url?: string;
 	newTab?: boolean;
+	arenaSlug?: string;
+	arenaTitle?: string;
 }
 
 export interface PayloadLinkFields {

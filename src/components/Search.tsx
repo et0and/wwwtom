@@ -1,7 +1,7 @@
 import { createSignal, For, onCleanup, Show } from "solid-js";
-import { A } from "@solidjs/router";
 import { createSearch } from "~/libs/utils/search";
 import type { SearchDocument, SearchHit } from "~/libs/types/search";
+import { Link } from "./Link";
 
 export default function Search() {
 	const [query, setQuery] = createSignal("");
@@ -117,7 +117,7 @@ export default function Search() {
 						return (
 							<Show when={link}>
 								{(validLink) => (
-									<A href={validLink()} class="search-result">
+									<Link href={validLink()} class="search-result">
 										<p class="font-medium text-lg">
 											{result.document.title}{" "}
 											<span
@@ -129,7 +129,7 @@ export default function Search() {
 										<Show when={result.document.content}>
 											{(content) => <p>{truncateContent(content())}</p>}
 										</Show>
-									</A>
+									</Link>
 								)}
 							</Show>
 						);

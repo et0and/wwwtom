@@ -1,6 +1,6 @@
 import { createSignal, onMount, onCleanup, Show, createEffect } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
-import Spinner from "~/components/Spinner";
+import { Spinner } from "~/components/Spinner";
 import { logger } from "~/libs/utils/logger";
 
 export default function Hold() {

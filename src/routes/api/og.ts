@@ -1,7 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
-import { logger, runServerEffect } from "~/libs/utils/logger";
+import { logger } from "~/libs/utils/logger";
 
 export function GET({ request }: APIEvent) {
 	const url = new URL(request.url);

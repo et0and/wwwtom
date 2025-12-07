@@ -3,7 +3,7 @@ import { Show, Index } from "solid-js";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "~/libs/types/arena";
 import { logger } from "~/libs/utils/logger";
-import Spinner from "./Spinner";
+import { Spinner } from "./Spinner";
 
 interface ArenaCarouselProps {
 	slug: string;

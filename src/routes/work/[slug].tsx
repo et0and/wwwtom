@@ -4,7 +4,7 @@ import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getWorkBySlug } from "~/libs/actions/payload";
 import PageLayout from "~/components/PageLayout";
 
-import Spinner from "~/components/Spinner";
+import { Spinner } from "~/components/Spinner";
 
 const ArenaCarousel = lazy(() =>
 	import("~/components/Arena").then((m) => ({ default: m.ArenaCarousel })),
