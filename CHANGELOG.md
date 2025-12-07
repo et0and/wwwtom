@@ -1,3 +1,10 @@
+# [1.44.0](https://github.com/et0and/wwwtom/compare/v1.43.0...v1.44.0) (2025-12-07)
+
+
+### Features
+
+* type fixes, spinner, progress loading ([ab632e1](https://github.com/et0and/wwwtom/commit/ab632e188468475f0edafa4a45b616271a1215cb))
+
 # [1.43.0](https://github.com/et0and/wwwtom/compare/v1.42.2...v1.43.0) (2025-12-01)
 
 
