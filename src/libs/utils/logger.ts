@@ -45,7 +45,9 @@ const getMinLogLevel = () => {
  * // Logs will be filtered based on the minimum log level from getMinLogLevel()
  * ```
  */
-export const runServerEffect = <A, E>(effect: Effect.Effect<A, E>) => {
+export const runServerEffect = <A, E>(
+	effect: Effect.Effect<A, E>,
+): Promise<A> => {
 	return Effect.runPromise(
 		effect.pipe(Logger.withMinimumLogLevel(getMinLogLevel())),
 	);

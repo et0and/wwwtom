@@ -29,7 +29,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
 						</>
 					}
 				>
-					<div class="arena-carousel overflow-x-auto whitespace-nowrap border border-black">
+					<div class="overflow-x-auto whitespace-nowrap border border-black">
 						<div class="carousel-container inline-flex gap-4 p-4">
 							<Index each={response().contents}>
 								{(item) => (

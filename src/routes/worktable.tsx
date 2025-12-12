@@ -11,6 +11,7 @@ export default function Worktable() {
 				<h1>Worktable</h1>
 				<h2>What I am currently working on or interested in</h2>
 				<ArenaCarousel slug="tom-s-worktable" title="Tom's worktable" />
+
 				<p>
 					At the moment I am focusing a lot on learning about data driven
 					applications, as well as learning more about functional programming
