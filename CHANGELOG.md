@@ -1,3 +1,10 @@
+# [1.45.0](https://github.com/et0and/wwwtom/compare/v1.44.0...v1.45.0) (2025-12-12)
+
+
+### Features
+
+* refactor arena client, effect patterns, add oxc plugin, add camera roll component, add museum page ([b1c4836](https://github.com/et0and/wwwtom/commit/b1c48363c68b0b1514cb22304028f89c5f6937b4))
+
 # [1.44.0](https://github.com/et0and/wwwtom/compare/v1.43.0...v1.44.0) (2025-12-07)
 
 
