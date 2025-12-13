@@ -1,3 +1,10 @@
+## [1.45.1](https://github.com/et0and/wwwtom/compare/v1.45.0...v1.45.1) (2025-12-13)
+
+
+### Bug Fixes
+
+* camera roll width render ([1be18b4](https://github.com/et0and/wwwtom/commit/1be18b4ecbf95ad0daf44234f89624661862f8f3))
+
 # [1.45.0](https://github.com/et0and/wwwtom/compare/v1.44.0...v1.45.0) (2025-12-12)
 
 
