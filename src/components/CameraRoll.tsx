@@ -28,8 +28,7 @@ function generateRandomLayout(
 	const seed = index * 9301 + 49297; // Simple seeding for consistency
 	const random = (n: number) => (Math.abs(Math.sin(seed + n)) * 10000) % 1;
 
-	// Responsive size variations based on container width
-	const scaleFactor = Math.min(containerWidth / 1200, 1); // Scale down on smaller screens
+	const scaleFactor = Math.min(containerWidth / 1200, 1);
 	const baseSizes = [
 		{ w: 200, h: 200 },
 		{ w: 250, h: 180 },
@@ -46,7 +45,6 @@ function generateRandomLayout(
 
 	const size = sizes[Math.floor(random(1) * sizes.length)]!;
 
-	// Position within a responsive grid
 	const gridSpacing = Math.round(280 * scaleFactor);
 	const rowHeight = Math.round(260 * scaleFactor);
 	const cols = Math.floor(containerWidth / gridSpacing);
@@ -58,10 +56,8 @@ function generateRandomLayout(
 	const yOffset =
 		random(3) * Math.round(30 * scaleFactor) - Math.round(15 * scaleFactor);
 
-	// Slight rotation for organic feel
 	const rotation = random(4) * 12 - 6;
 
-	// Z-index for overlapping
 	const zIndex = Math.floor(random(5) * 20) + 1;
 
 	return {
@@ -76,28 +72,14 @@ function generateRandomLayout(
 
 export function CameraRoll(props: CameraRollProps) {
 	const contents = createAsync(() =>
-		getChannelContents(props.slug, { per: 100 }),
+		getChannelContents(props.slug, { per: 20 }),
 	);
-
-	const [containerWidth, setContainerWidth] = createSignal(800);
-
-	onMount(() => {
-		const updateWidth = () => {
-			const width = window.innerWidth;
-			setContainerWidth(Math.min(width - 32, 1200)); // 32px padding, max 1200px
-		};
-
-		updateWidth();
-		window.addEventListener("resize", updateWidth);
-
-		return () => window.removeEventListener("resize", updateWidth);
-	});
 
 	const layouts = createMemo(() => {
 		const contentsData = contents();
 		if (!contentsData?.contents) return [];
 		return contentsData.contents.map((_, i) =>
-			generateRandomLayout(i, contentsData.contents.length, containerWidth()),
+			generateRandomLayout(i, contentsData.contents.length, 500),
 		);
 	});
 
@@ -108,7 +90,7 @@ export function CameraRoll(props: CameraRollProps) {
 		let maxWidth = 0;
 		let maxHeight = 0;
 
-		layoutsData.forEach((layout, index) => {
+		layoutsData.forEach((layout) => {
 			const width = parseInt(layout.width);
 			const height = parseInt(layout.height);
 			const left = parseInt(layout.left);
@@ -135,7 +117,7 @@ export function CameraRoll(props: CameraRollProps) {
 						</>
 					}
 				>
-					<div class="w-full">
+					<div class="">
 						<div
 							class="relative mx-auto"
 							style={{
@@ -160,7 +142,7 @@ export function CameraRoll(props: CameraRollProps) {
 												transform: `rotate(${layout.rotation}deg)`,
 											}}
 										>
-											<div class="w-full h-full bg-white shadow-lg border border-gray-200">
+											<div class="w-full h-full shadow-lg">
 												<ArenaItem item={item()} />
 											</div>
 										</div>
