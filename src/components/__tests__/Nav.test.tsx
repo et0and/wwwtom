@@ -26,7 +26,6 @@ describe("Nav", () => {
 		expect(screen.getByRole("link", { name: "About" })).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "Work" })).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "Writing" })).toBeInTheDocument();
-		expect(screen.getByRole("link", { name: "Search" })).toBeInTheDocument();
 		expect(screen.getByRole("link", { name: "Guestbook" })).toBeInTheDocument();
 	});
 
@@ -52,10 +51,6 @@ describe("Nav", () => {
 		expect(screen.getByRole("link", { name: "Writing" })).toHaveAttribute(
 			"href",
 			"/posts",
-		);
-		expect(screen.getByRole("link", { name: "Search" })).toHaveAttribute(
-			"href",
-			"/search",
 		);
 		expect(screen.getByRole("link", { name: "Guestbook" })).toHaveAttribute(
 			"href",

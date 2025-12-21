@@ -12,7 +12,7 @@ preview_id = "bb85565a5ea045e2aa00fbdc5b3153b4"
 
 [[hyperdrive]]
 binding = "HYPERDRIVE"
-id = "7bfec94f14834b6c81ce91c2c29a2963"
+id = "28cd876116cf4d599b68d6579c92d331"
 
 # WASM bindings
 [[rules]]

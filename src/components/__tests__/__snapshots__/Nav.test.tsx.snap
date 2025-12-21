@@ -47,14 +47,6 @@ exports[`Nav > matches the snapshot 1`] = `
         </a>
         <a
           class="inactive"
-          href="/search"
-          link=""
-          preload="true"
-        >
-          Search
-        </a>
-        <a
-          class="inactive"
           href="/guestbook"
           link=""
           preload="true"

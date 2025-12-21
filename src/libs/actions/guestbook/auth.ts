@@ -1,7 +1,7 @@
 import generator from "megalodon";
 import { Effect } from "effect";
 import { retryPolicy } from "~/libs/utils/retry";
-import * as db from "~/libs/pg/guestbook";
+import * as db from "~/libs/db/guestbook";
 import { detector } from "./detector";
 import { logger } from "~/libs/utils/logger";
 import {

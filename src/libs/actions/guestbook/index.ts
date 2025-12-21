@@ -1,6 +1,6 @@
 import { action, query, redirect } from "@solidjs/router";
 import { Effect } from "effect";
-import * as db from "~/libs/pg/guestbook";
+import * as db from "~/libs/db/guestbook";
 import * as auth from "~/libs/actions/guestbook/auth";
 import { checkProfanity } from "~/libs/utils/profanity";
 import { runServerEffect } from "~/libs/utils/logger";

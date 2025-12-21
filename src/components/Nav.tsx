@@ -8,7 +8,6 @@ export default function Nav() {
 		{ href: "/about", label: "About" },
 		{ href: "/work", label: "Work" },
 		{ href: "/posts", label: "Writing" },
-		{ href: "/search", label: "Search" },
 		{ href: "/guestbook", label: "Guestbook" },
 	];
 
