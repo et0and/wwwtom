@@ -1,3 +1,10 @@
+## [1.48.1](https://github.com/et0and/wwwtom/compare/v1.48.0...v1.48.1) (2025-12-21)
+
+
+### Bug Fixes
+
+* hyperdrive connection, use kysely ([96db5ee](https://github.com/et0and/wwwtom/commit/96db5eeb69388643343336e5a1a9d5cb0a803f86))
+
 # [1.48.0](https://github.com/et0and/wwwtom/compare/v1.47.0...v1.48.0) (2025-12-21)
 
 
