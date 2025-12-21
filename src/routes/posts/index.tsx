@@ -1,4 +1,4 @@
-import { createAsync, useSearchParams, A } from "@solidjs/router";
+import { createAsync, useSearchParams } from "@solidjs/router";
 import { getPosts } from "~/libs/actions/payload";
 import PageLayout from "~/components/PageLayout";
 import { Suspense, Show } from "solid-js";
@@ -18,21 +18,45 @@ export default function PostsHome() {
 				<Show when={posts()}>
 					{(postsData) => (
 						<>
-							{postsData().data.map((post) => (
-								<Link class="page" preload={true} href={`/posts/${post.slug}`}>
-									<div>
-										<h2>{post.title}</h2>
-										<time>
-											{new Date(post.publishedAt).toLocaleDateString("en-NZ", {
-												year: "numeric",
-												month: "long",
-												day: "numeric",
-											})}
-										</time>
-										<p>{post.summary || post.meta?.description}</p>
+							<Show when={(postsData() as any).error}>
+								{(error) => (
+									<div class="banner" role="alert">
+										<p class="banner-title">Error loading posts</p>
+										<p>{error()}</p>
 									</div>
-								</Link>
-							))}
+								)}
+							</Show>
+							<Show when={postsData().data.length > 0}>
+								{postsData().data.map((post) => (
+									<Link
+										class="page"
+										preload={true}
+										href={`/posts/${post.slug}`}
+									>
+										<div>
+											<h2>{post.title}</h2>
+											<time>
+												{new Date(post.publishedAt).toLocaleDateString(
+													"en-NZ",
+													{
+														year: "numeric",
+														month: "long",
+														day: "numeric",
+													},
+												)}
+											</time>
+											<p>{post.summary || post.meta?.description}</p>
+										</div>
+									</Link>
+								))}
+							</Show>
+							<Show
+								when={
+									postsData().data.length === 0 && !(postsData() as any).error
+								}
+							>
+								<p>No posts found.</p>
+							</Show>
 							<Show when={postsData().meta.pagination}>
 								{(pagination) => (
 									<div class="justify-between flex item-center">

@@ -1,8 +1,8 @@
 import { query } from "@solidjs/router";
-import { Effect, Schema } from "effect";
-import { PayloadPost, PayloadResponseSchema } from "../../schemas/payload";
+import type { PayloadPost, PayloadResponse } from "../../schemas/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
+import { Effect } from "effect";
 
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
@@ -19,16 +19,10 @@ import { fetchPayload } from "./client";
 export const getPosts = query(
 	async (page: number = 1, pageSize: number = 5) => {
 		"use server";
-		const PostsResponseSchema = PayloadResponseSchema(
-			Schema.Array(PayloadPost),
-		);
 
-		const effect = fetchPayload<unknown>(
+		const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 			`/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
 		).pipe(
-			Effect.flatMap((response) =>
-				Schema.decodeUnknown(PostsResponseSchema)(response),
-			),
 			Effect.map((response) => ({
 				data: response.docs,
 				meta: {
@@ -40,6 +34,15 @@ export const getPosts = query(
 					},
 				},
 			})),
+			Effect.catchAll((error) =>
+				Effect.succeed({
+					data: [],
+					meta: {
+						pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 },
+					},
+					error: error instanceof Error ? error.message : String(error),
+				}),
+			),
 		);
 		return Effect.runPromise(effect);
 	},
@@ -60,14 +63,10 @@ export const getPosts = query(
  */
 export const getPostBySlug = query(async (slug: string) => {
 	"use server";
-	const PostsResponseSchema = PayloadResponseSchema(Schema.Array(PayloadPost));
 
-	const effect = fetchPayload<unknown>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
 		`/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
 	).pipe(
-		Effect.flatMap((response) =>
-			Schema.decodeUnknown(PostsResponseSchema)(response),
-		),
 		Effect.map((response) => {
 			const post = response.docs[0];
 			if (!post) return null;
@@ -87,11 +86,22 @@ export const getPostBySlug = query(async (slug: string) => {
 			}
 
 			return {
-				...post,
+				id: String(post.id),
+				title: post.title,
+				summary: post.summary,
+				publishedAt: post.publishedAt,
+				slug: post.slug,
 				content,
 				arenaBlocks,
+				heroImage: post.heroImage,
+				arenaSlug: post.arenaSlug,
+				arenaTitle: post.arenaTitle,
+				createdAt: post.createdAt,
+				updatedAt: post.updatedAt,
+				meta: post.meta,
 			};
 		}),
+		Effect.catchAll(() => Effect.succeed(null)),
 	);
 	return Effect.runPromise(effect);
 }, "post");

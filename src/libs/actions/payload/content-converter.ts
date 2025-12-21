@@ -96,8 +96,9 @@ export function convertLexicalToHTML(
 
 function formatText(node: PayloadContentNode): string {
 	let text = node.text || "";
-	if ((node.format || 0) & 1) text = `<strong>${text}</strong>`;
-	if ((node.format || 0) & 2) text = `<em>${text}</em>`;
+	const format = typeof node.format === "number" ? node.format : 0;
+	if (format & 1) text = `<strong>${text}</strong>`;
+	if (format & 2) text = `<em>${text}</em>`;
 	return text;
 }
 

@@ -1,141 +1,93 @@
-import { Schema } from "effect";
+export type PayloadContentNode = {
+	type: string;
+	format?: number | string;
+	indent?: number | string;
+	version?: number;
+	children?: PayloadContentNode[];
+	direction?: string | null;
+	textStyle?: string;
+	textFormat?: number;
+	fields?: PayloadBlockFields;
+	tag?: string;
+	mode?: string;
+	text?: string;
+	style?: string;
+	detail?: number;
+	id?: string;
+};
 
-export class PayloadMediaSize extends Schema.Class<PayloadMediaSize>(
-	"PayloadMediaSize",
-)({
-	url: Schema.NullOr(Schema.String),
-	width: Schema.NullOr(Schema.Number),
-	height: Schema.NullOr(Schema.Number),
-	mimeType: Schema.NullOr(Schema.String),
-	filesize: Schema.NullOr(Schema.Number),
-	filename: Schema.NullOr(Schema.String),
-}) {}
+export type PayloadBlockFields = {
+	id?: string;
+	media?: PayloadMedia;
+	blockName?: string;
+	blockType?: string;
+	content?: PayloadRichContent;
+	style?: string;
+	url?: string;
+	newTab?: boolean;
+	arenaSlug?: string;
+	arenaTitle?: string;
+};
 
-export class PayloadMediaSizes extends Schema.Class<PayloadMediaSizes>(
-	"PayloadMediaSizes",
-)({
-	thumbnail: Schema.NullOr(PayloadMediaSize),
-	square: Schema.NullOr(PayloadMediaSize),
-	small: Schema.NullOr(PayloadMediaSize),
-	medium: Schema.NullOr(PayloadMediaSize),
-	large: Schema.NullOr(PayloadMediaSize),
-	xlarge: Schema.NullOr(PayloadMediaSize),
-	og: Schema.NullOr(PayloadMediaSize),
-}) {}
+export type PayloadRichContent = {
+	root: PayloadContentNode;
+};
 
-export class PayloadRichContent extends Schema.Class<PayloadRichContent>(
-	"PayloadRichContent",
-)({
-	root: Schema.suspend(
-		(): Schema.Schema<PayloadContentNode> => PayloadContentNode,
-	),
-}) {}
+export type PayloadMediaSize = {
+	url: string | null;
+	width: number | null;
+	height: number | null;
+	mimeType: string | null;
+	filesize: number | null;
+	filename: string | null;
+};
 
-export class PayloadBlockFields extends Schema.Class<PayloadBlockFields>(
-	"PayloadBlockFields",
-)({
-	id: Schema.optional(Schema.String),
-	media: Schema.optional(
-		Schema.suspend((): Schema.Schema<PayloadMedia> => PayloadMedia),
-	),
-	blockName: Schema.optional(Schema.String),
-	blockType: Schema.optional(Schema.String),
-	content: Schema.optional(PayloadRichContent),
-	style: Schema.optional(Schema.String),
-	url: Schema.optional(Schema.String),
-	newTab: Schema.optional(Schema.Boolean),
-	arenaSlug: Schema.optional(Schema.String),
-	arenaTitle: Schema.optional(Schema.String),
-}) {}
+export type PayloadMediaSizes = {
+	thumbnail: PayloadMediaSize | null;
+	square: PayloadMediaSize | null;
+	small: PayloadMediaSize | null;
+	medium: PayloadMediaSize | null;
+	large: PayloadMediaSize | null;
+	xlarge: PayloadMediaSize | null;
+	og: PayloadMediaSize | null;
+};
 
-export class PayloadContentNode extends Schema.Class<PayloadContentNode>(
-	"PayloadContentNode",
-)({
-	type: Schema.String,
-	format: Schema.optional(Schema.Number),
-	indent: Schema.optional(Schema.Number),
-	version: Schema.optional(Schema.Number),
-	children: Schema.optional(
-		Schema.Array(
-			Schema.suspend(
-				(): Schema.Schema<PayloadContentNode> => PayloadContentNode,
-			),
-		),
-	),
-	direction: Schema.optional(Schema.NullOr(Schema.String)),
-	textStyle: Schema.optional(Schema.String),
-	textFormat: Schema.optional(Schema.Number),
-	fields: Schema.optional(PayloadBlockFields),
-	tag: Schema.optional(Schema.String),
-	mode: Schema.optional(Schema.String),
-	text: Schema.optional(Schema.String),
-	style: Schema.optional(Schema.String),
-	detail: Schema.optional(Schema.Number),
-}) {}
+export type PayloadMedia = {
+	id: number;
+	alt: string | null;
+	caption: PayloadRichContent | null;
+	updatedAt: string;
+	createdAt: string;
+	url: string;
+	thumbnailURL: string;
+	filename: string;
+	mimeType: string;
+	filesize: number;
+	width: number;
+	height: number;
+	focalX: number;
+	focalY: number;
+	sizes: PayloadMediaSizes;
+};
 
-export class PayloadMedia extends Schema.Class<PayloadMedia>("PayloadMedia")({
-	id: Schema.Number,
-	alt: Schema.NullOr(Schema.String),
-	caption: Schema.NullOr(PayloadRichContent),
-	updatedAt: Schema.String,
-	createdAt: Schema.String,
-	url: Schema.String,
-	thumbnailURL: Schema.String,
-	filename: Schema.String,
-	mimeType: Schema.String,
-	filesize: Schema.Number,
-	width: Schema.Number,
-	height: Schema.Number,
-	focalX: Schema.Number,
-	focalY: Schema.Number,
-	sizes: PayloadMediaSizes,
-}) {}
-
-export class PayloadPost extends Schema.Class<PayloadPost>("PayloadPost")({
-	id: Schema.String,
-	title: Schema.String,
-	summary: Schema.optional(Schema.String),
-	publishedAt: Schema.String,
-	slug: Schema.String,
-	content: Schema.optional(Schema.Union(Schema.String, PayloadRichContent)),
-	heroImage: Schema.optional(
-		Schema.Struct({
-			url: Schema.String,
-			alt: Schema.optional(Schema.String),
-		}),
-	),
-	arenaSlug: Schema.optional(Schema.String),
-	arenaTitle: Schema.optional(Schema.String),
-	createdAt: Schema.String,
-	updatedAt: Schema.String,
-	meta: Schema.optional(
-		Schema.Struct({
-			title: Schema.optional(Schema.String),
-			description: Schema.optional(Schema.String),
-			image: Schema.optional(Schema.String),
-		}),
-	),
-}) {}
-
-export const PayloadResponseSchema = <A, I, R>(
-	schema: Schema.Schema<A, I, R>,
-) =>
-	Schema.Struct({
-		docs: schema,
-		totalDocs: Schema.Number,
-		limit: Schema.Number,
-		page: Schema.Number,
-		totalPages: Schema.Number,
-		hasNextPage: Schema.Boolean,
-		hasPrevPage: Schema.Boolean,
-	});
-
-export class PayloadLinkFields extends Schema.Class<PayloadLinkFields>(
-	"PayloadLinkFields",
-)({
-	url: Schema.String,
-	newTab: Schema.optional(Schema.Boolean),
-}) {}
+export type PayloadPost = {
+	id: number | string;
+	title: string;
+	summary?: string | null;
+	publishedAt: string;
+	slug: string;
+	content?: string | PayloadRichContent;
+	heroImage?: { url: string; alt?: string } | null;
+	arenaSlug?: string | null;
+	arenaTitle?: string | null;
+	createdAt: string;
+	updatedAt: string;
+	meta?: {
+		title?: string | null;
+		description?: string | null;
+		image?: string | null;
+	};
+};
 
 export type PayloadResponse<T> = {
 	docs: T;
