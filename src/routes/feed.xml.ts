@@ -13,7 +13,7 @@ export async function GET() {
 		language: "en_NZ",
 	});
 
-	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost>>(
 		"/posts?sort=-publishedAt&limit=20&depth=1",
 	).pipe(
 		Effect.map((response) => {
@@ -25,7 +25,7 @@ export async function GET() {
 					title: post.title,
 					description: content,
 					url: postUrl,
-					guid: post.id,
+					guid: String(post.id),
 					date: new Date(post.publishedAt),
 					author: "Tom Hackshaw",
 				});

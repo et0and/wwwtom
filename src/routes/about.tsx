@@ -1,5 +1,5 @@
 import { A } from "@solidjs/router";
-import PageLayout from "~/components/PageLayout";
+import { PageLayout } from "~/layouts";
 
 export default function About() {
 	return (

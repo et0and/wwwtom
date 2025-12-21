@@ -1,17 +1,18 @@
-import Meta from "~/components/Meta";
-import SlimeDish from "~/components/SlimeDish";
+import { ArenaCarousel } from "~/components";
+import { PageLayout } from "~/layouts";
 
 export default function Home() {
 	return (
 		<>
-			<Meta
+			<PageLayout
 				title="Home"
-				metaType="description"
-				metaContent="Tom Hackshaw is a design engineer from Aotearoa, New Zealand"
-			/>
-			<main class="flex flex-col items-center justify-center p-8">
-				<SlimeDish />
-			</main>
+				description="Tom Hackshaw is a design engineer from Aotearoa, New Zealand"
+			>
+				<ArenaCarousel
+					slug="i-could-go-anywhere-but-again-i-go-with-you-kg36margvic"
+					title="I could go anywhere but again I go with you"
+				/>
+			</PageLayout>
 		</>
 	);
 }

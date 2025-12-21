@@ -1,7 +1,7 @@
 import { A } from "@solidjs/router";
 import { createSignal, Show } from "solid-js";
 
-export default function Nav() {
+export function Nav() {
 	const [isOpen, setIsOpen] = createSignal(false);
 
 	const navItems = [

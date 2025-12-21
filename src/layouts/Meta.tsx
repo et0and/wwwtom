@@ -6,7 +6,7 @@ interface MetaProps {
 	metaContent: string;
 }
 
-export default function Metadata(props: MetaProps) {
+export function Metadata(props: MetaProps) {
 	const description =
 		props.metaContent ||
 		"Tom Hackshaw is a design engineer from Aotearoa New Zealand.";

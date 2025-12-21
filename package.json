@@ -41,6 +41,7 @@
 		"number-to-words": "^1.2.4",
 		"obscenity": "^0.4.5",
 		"postgres": "^3.4.7",
+		"prettier-oxc-parser": "^0.2.0",
 		"rss": "^1.2.2",
 		"semantic-release": "^24.2.6",
 		"solid-js": "^1.9.5",

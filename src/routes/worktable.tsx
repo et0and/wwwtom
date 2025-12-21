@@ -1,5 +1,5 @@
-import { ArenaCarousel } from "~/components/Arena";
-import PageLayout from "~/components/PageLayout";
+import { ArenaCarousel } from "~/components";
+import { PageLayout } from "~/layouts";
 
 export default function Worktable() {
 	return (

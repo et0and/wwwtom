@@ -16,7 +16,7 @@ import { fetchPayload } from "./client";
  */
 export const getWorks = query(async () => {
 	"use server";
-	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost>>(
 		"/works?sort=title",
 	).pipe(Effect.map((response) => response.docs));
 	return Effect.runPromise(effect);
@@ -36,7 +36,7 @@ export const getWorks = query(async () => {
  */
 export const getWorkBySlug = query(async (slug: string) => {
 	"use server";
-	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const effect = fetchPayload<PayloadResponse<PayloadPost>>(
 		`/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
 	).pipe(
 		Effect.map((response) => {
@@ -49,6 +49,7 @@ export const getWorkBySlug = query(async (slug: string) => {
 			if (
 				work.content &&
 				typeof work.content === "object" &&
+				"root" in work.content &&
 				work.content.root
 			) {
 				arenaBlocks = extractArenaBlocks(work.content.root);

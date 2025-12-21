@@ -1,7 +1,7 @@
 import { createAsync, useSubmission } from "@solidjs/router";
 import { For, Show, createSignal } from "solid-js";
-import PageLayout from "~/components/PageLayout";
-import { Spinner } from "~/components/Spinner";
+import { PageLayout } from "~/layouts";
+import { Spinner } from "~/components";
 import {
 	getEntries,
 	getCurrentUser,

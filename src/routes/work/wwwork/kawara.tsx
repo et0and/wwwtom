@@ -8,7 +8,7 @@ import {
 } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
-import { Spinner } from "~/components/Spinner";
+import { Spinner } from "~/components";
 
 const TOTAL_COUNT = 1000000;
 const ITEM_HEIGHT = 40;
