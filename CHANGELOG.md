@@ -1,3 +1,10 @@
+## [1.48.2](https://github.com/et0and/wwwtom/compare/v1.48.1...v1.48.2) (2025-12-21)
+
+
+### Bug Fixes
+
+* use kysely queries ([7f4166e](https://github.com/et0and/wwwtom/commit/7f4166e8a53b8977b10d18f4f4eff2fe43aafc4e))
+
 ## [1.48.1](https://github.com/et0and/wwwtom/compare/v1.48.0...v1.48.1) (2025-12-21)
 
 
