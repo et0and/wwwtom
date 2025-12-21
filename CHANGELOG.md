@@ -1,3 +1,10 @@
+# [1.46.0](https://github.com/et0and/wwwtom/compare/v1.45.1...v1.46.0) (2025-12-21)
+
+
+### Features
+
+* big effect schemas ([1d0e40d](https://github.com/et0and/wwwtom/commit/1d0e40dd4b160baa7fa51045d7f8dd2ea6a86d6d))
+
 ## [1.45.1](https://github.com/et0and/wwwtom/compare/v1.45.0...v1.45.1) (2025-12-13)
 
 
