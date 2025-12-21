@@ -1,3 +1,10 @@
+# [1.49.0](https://github.com/et0and/wwwtom/compare/v1.48.2...v1.49.0) (2025-12-21)
+
+
+### Features
+
+* payload schemas ([a2a4858](https://github.com/et0and/wwwtom/commit/a2a4858f075d45a49d67c82697ea355adc3349d0))
+
 ## [1.48.2](https://github.com/et0and/wwwtom/compare/v1.48.1...v1.48.2) (2025-12-21)
 
 
