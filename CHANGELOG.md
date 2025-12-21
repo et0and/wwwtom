@@ -1,3 +1,10 @@
+# [1.47.0](https://github.com/et0and/wwwtom/compare/v1.46.0...v1.47.0) (2025-12-21)
+
+
+### Features
+
+* add fedi guestbook ([f994d60](https://github.com/et0and/wwwtom/commit/f994d60ebf9c8874ee62a61ed0246fbb6b0c1693))
+
 # [1.46.0](https://github.com/et0and/wwwtom/compare/v1.45.1...v1.46.0) (2025-12-21)
 
 
