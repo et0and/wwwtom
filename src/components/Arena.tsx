@@ -1,7 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { Show, Index } from "solid-js";
 import { getChannelContents } from "~/libs/actions/arena/channels";
-import type { ArenaBlock, ArenaChannelContents } from "~/libs/types/arena";
+import type { ArenaBlock, ArenaChannelContents } from "~/libs/schemas/arena";
 import { logger } from "~/libs/utils/logger";
 import { Spinner } from "./Spinner";
 

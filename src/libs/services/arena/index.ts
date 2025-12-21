@@ -1,6 +1,6 @@
 // This was taken from https://github.com/e-e-e/arena-ts
 
-import { Data, Effect } from "effect";
+import { Effect } from "effect";
 import {
 	GetChannelsApiResponse,
 	GetConnectionsApiResponse,
@@ -23,15 +23,8 @@ import {
 	GetUserFollowingApiResponse,
 	GetBlockCommentApiResponse,
 	CreateBlockCommentApiResponse,
-} from "~/libs/types/arena";
-
-/**
- * Structured HTTP error using Effect's Data module for proper equality and pattern matching
- */
-export class HttpError extends Data.TaggedError("HttpError")<{
-	readonly message: string;
-	readonly status: number;
-}> {}
+} from "~/libs/schemas/arena";
+import { HttpError } from "~/libs/types/errors";
 
 export interface ArenaBlockApi {
 	get(): Effect.Effect<GetBlockApiResponse, HttpError>;

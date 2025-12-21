@@ -1,7 +1,7 @@
 import RSS from "rss";
 import { Effect } from "effect";
 import { fetchPayload } from "~/libs/actions/payload/client";
-import type { PayloadPost, PayloadResponse } from "~/libs/types/payload";
+import type { PayloadPost, PayloadResponse } from "~/libs/schemas/payload";
 import { logger } from "~/libs/utils/logger";
 
 export async function GET() {

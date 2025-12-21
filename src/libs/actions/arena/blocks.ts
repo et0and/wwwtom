@@ -1,7 +1,7 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
 import { runServerEffect } from "~/libs/utils/logger";
-import type { PaginationAttributes } from "~/libs/types/arena";
+import type { PaginationAttributes } from "~/libs/schemas/arena";
 
 /**
  * Fetches a block by ID including its connections to channels.

@@ -15,7 +15,6 @@ export default function App() {
 					<div class="min-h-screen flex flex-col">
 						<SkipLink />
 						<Nav />
-
 						<div class="flex-1">
 							<Suspense>{props.children}</Suspense>
 						</div>

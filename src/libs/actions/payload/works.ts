@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
-import { type PayloadPost, type PayloadResponse } from "../../types/payload";
+import { type PayloadPost, type PayloadResponse } from "../../schemas/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
 

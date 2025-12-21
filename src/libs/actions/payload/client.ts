@@ -1,13 +1,11 @@
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
 import { logger } from "~/libs/utils/logger";
+import { retryPolicy } from "~/libs/utils/retry";
 
-/**
- * Basic client for interacting with my Payload CMS instance.
- */
 export function fetchPayload<T>(
-	endpoint: string, // can be replaced with your specific endpoint, assuming it exposes the default Payload RESTful API
-	options?: RequestInit & { cache?: boolean; cacheTTL?: number }, // optional fetch options including setting cache for Payload connection
+	endpoint: string,
+	options?: RequestInit & { cache?: boolean; cacheTTL?: number },
 ): Effect.Effect<T, Error> {
 	"use server";
 
@@ -63,6 +61,7 @@ export function fetchPayload<T>(
 
 		return data as T;
 	}).pipe(
+		Effect.retry(retryPolicy),
 		Effect.mapError((error: Error) => {
 			const url = `${import.meta.env.PAYLOAD_URL || ""}/api${endpoint}`;
 			logger.error(`Payload fetch error: ${url}`, error);

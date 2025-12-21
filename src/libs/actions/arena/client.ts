@@ -1,20 +1,9 @@
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
-import { ArenaClient, HttpError } from "~/libs/services/arena";
-import { ArenaConfigError } from "~/libs/types/errors";
+import { ArenaClient } from "~/libs/services/arena";
+import { ArenaConfigError, HttpError } from "~/libs/types/errors";
+import { retryPolicy } from "~/libs/utils/retry";
 
-/**
- * Server-side Arena client wrapper that uses environment variables
- * and provides error handling via Effect.
- *
- * This function creates an ArenaClient instance by resolving the ARENA_TOKEN
- * from multiple possible sources in order of precedence:
- * 1. Cloudflare Workers environment variables
- * 2. Node.js process environment variables (for development)
- * 3. Vite import.meta.env (for local development)
- *
- * @returns Effect that either succeeds with an ArenaClient or fails with an ArenaConfigError
- */
 export function getArenaClient(): Effect.Effect<ArenaClient, ArenaConfigError> {
 	"use server";
 
@@ -43,24 +32,6 @@ export function getArenaClient(): Effect.Effect<ArenaClient, ArenaConfigError> {
 	});
 }
 
-/**
- * Generic wrapper for Are.na API calls with error handling and logging.
- *
- * @template T - The return type of the operation
- * @param operation - A function that takes an ArenaClient and returns an Effect
- * @param name - Human-readable name for logging purposes
- * @returns Effect that either succeeds with operation result or fails with an error
- *
- * @example
- * ```typescript
- * const channelsEffect = fetchArena(
- *   (client) => client.channel("my-channel").contents(),
- *   "get channel contents"
- * );
- *
- * const result = await runServerEffect(channelsEffect);
- * ```
- */
 export function fetchArena<T>(
 	operation: (client: ArenaClient) => Effect.Effect<T, HttpError>,
 	name: string,
@@ -71,12 +42,16 @@ export function fetchArena<T>(
 		Effect.flatMap((client) =>
 			Effect.gen(function* () {
 				yield* Effect.logDebug(`Arena operation: ${name}`);
-				return yield* operation(client);
+
+				return yield* operation(client).pipe(Effect.retry(retryPolicy));
 			}),
 		),
 		Effect.catchAll((error) =>
 			Effect.gen(function* () {
-				yield* Effect.logError(`Arena operation failed: ${name}`, error);
+				yield* Effect.logError(
+					`Arena operation failed after retries: ${name}`,
+					error,
+				);
 				return yield* Effect.fail(error);
 			}),
 		),

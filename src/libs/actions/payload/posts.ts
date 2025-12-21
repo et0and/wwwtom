@@ -1,6 +1,6 @@
 import { query } from "@solidjs/router";
-import { Effect } from "effect";
-import { type PayloadPost, type PayloadResponse } from "../../types/payload";
+import { Effect, Schema } from "effect";
+import { PayloadPost, PayloadResponseSchema } from "../../schemas/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
 
@@ -19,9 +19,16 @@ import { fetchPayload } from "./client";
 export const getPosts = query(
 	async (page: number = 1, pageSize: number = 5) => {
 		"use server";
-		const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
+		const PostsResponseSchema = PayloadResponseSchema(
+			Schema.Array(PayloadPost),
+		);
+
+		const effect = fetchPayload<unknown>(
 			`/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
 		).pipe(
+			Effect.flatMap((response) =>
+				Schema.decodeUnknown(PostsResponseSchema)(response),
+			),
 			Effect.map((response) => ({
 				data: response.docs,
 				meta: {
@@ -53,9 +60,14 @@ export const getPosts = query(
  */
 export const getPostBySlug = query(async (slug: string) => {
 	"use server";
-	const effect = fetchPayload<PayloadResponse<PayloadPost[]>>(
+	const PostsResponseSchema = PayloadResponseSchema(Schema.Array(PayloadPost));
+
+	const effect = fetchPayload<unknown>(
 		`/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
 	).pipe(
+		Effect.flatMap((response) =>
+			Schema.decodeUnknown(PostsResponseSchema)(response),
+		),
 		Effect.map((response) => {
 			const post = response.docs[0];
 			if (!post) return null;

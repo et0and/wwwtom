@@ -21,7 +21,10 @@ export interface SearchHit {
 export interface SearchResult {
 	hits: SearchHit[];
 	count: number;
-	elapsed: number;
+	elapsed: {
+		formatted: string;
+		raw: number;
+	};
 }
 
 export interface SearchBody {

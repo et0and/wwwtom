@@ -1,19 +1,34 @@
 import { createSignal, For, onCleanup, Show } from "solid-js";
-import { createSearch } from "~/libs/utils/search";
+import { Effect } from "effect";
+import { performSearch } from "~/libs/actions/search";
 import type { SearchDocument, SearchHit } from "~/libs/types/search";
 import { Link } from "./Link";
+import { logger } from "~/libs/utils/logger";
 
 export default function Search() {
 	const [query, setQuery] = createSignal("");
 	const [results, setResults] = createSignal<SearchHit[]>([]);
-	const { search, error } = createSearch();
+	const [error, setError] = createSignal<string | null>(null);
 	let debounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-	const performSearch = async (searchTerm: string): Promise<void> => {
-		const data = await search({ term: searchTerm, limit: 5 });
-		if (data) {
+	const performSearchAction = async (searchTerm: string): Promise<void> => {
+		setError(null);
+
+		const result = await Effect.runPromise(
+			performSearch({ term: searchTerm, limit: 5 }).pipe(
+				Effect.tapError((err) =>
+					Effect.sync(() => {
+						logger.error("Search failed", err.message);
+						setError(err.message);
+					}),
+				),
+				Effect.catchAll(() => Effect.succeed(null)),
+			),
+		);
+
+		if (result) {
 			const seen = new Set<string>();
-			const deduplicated = data.hits.filter((hit: SearchHit) => {
+			const deduplicated = result.hits.filter((hit: SearchHit) => {
 				const identifier = hit.document.title
 					.toLowerCase()
 					.replaceAll(/\s+/g, "-");
@@ -32,7 +47,7 @@ export default function Search() {
 		if (debounceTimer) {
 			clearTimeout(debounceTimer);
 		}
-		await performSearch(query());
+		await performSearchAction(query());
 	};
 
 	const handleInput = (e: Event): void => {
@@ -51,7 +66,7 @@ export default function Search() {
 
 		if (value.length >= 4) {
 			debounceTimer = setTimeout(() => {
-				performSearch(value);
+				performSearchAction(value);
 			}, 300);
 		}
 	};
