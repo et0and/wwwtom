@@ -12,6 +12,7 @@ app.config.timestamp_*.js
 /neverthrow
 /effect
 /megalodon
+/kysely
 
 # Environment
 .env

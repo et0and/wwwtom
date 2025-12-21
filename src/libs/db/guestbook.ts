@@ -1,5 +1,7 @@
 import { Effect } from "effect";
 import postgres from "postgres";
+import { Kysely } from "kysely";
+import { PostgresJSDialect } from "kysely-postgres-js";
 import { getRequestEvent } from "solid-js/web";
 import { retryPolicy } from "../utils/retry";
 import {
@@ -7,9 +9,9 @@ import {
 	GuestbookValidationError,
 	OAuthSessionError,
 } from "../types/errors";
-import { GuestbookEntry, OAuthSession } from "./types";
+import { Database } from "../types/db";
 
-const getConnection = () =>
+const getKyselyConnection = () =>
 	Effect.gen(function* () {
 		const event = getRequestEvent();
 		const env = event?.nativeEvent.context.cloudflare?.env as
@@ -41,7 +43,11 @@ const getConnection = () =>
 			);
 		}
 
-		return postgres(connectionString);
+		return new Kysely<Database>({
+			dialect: new PostgresJSDialect({
+				postgres: postgres(connectionString),
+			}),
+		});
 	});
 
 export const createGuestbookEntry = (params: {
@@ -52,34 +58,28 @@ export const createGuestbookEntry = (params: {
 	message: string;
 }) =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 
 		const result = yield* Effect.tryPromise({
 			try: async () =>
-				await sql<GuestbookEntry[]>`
-					INSERT INTO guestbook_entries (
-						fediverse_username,
-						fediverse_instance,
-						display_name,
-						avatar_url,
-						message
-					)
-					VALUES (
-						${params.fediverse_username},
-						${params.fediverse_instance},
-						${params.display_name},
-						${params.avatar_url},
-						${params.message}
-					)
-					RETURNING *
-				`,
+				await db
+					.insertInto("guestbook_entries")
+					.values({
+						fediverse_username: params.fediverse_username,
+						fediverse_instance: params.fediverse_instance,
+						display_name: params.display_name,
+						avatar_url: params.avatar_url,
+						message: params.message,
+					})
+					.returningAll()
+					.executeTakeFirstOrThrow(),
 			catch: (error) =>
 				new GuestbookValidationError({
 					message: `Failed to create guestbook entry: ${error}`,
 				}),
 		});
 
-		return result[0];
+		return result;
 	}).pipe(Effect.retry(retryPolicy));
 
 export const getGuestbookEntries = (params: {
@@ -87,7 +87,7 @@ export const getGuestbookEntries = (params: {
 	page_size?: number;
 }) =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 		const page = params.page ?? 1;
 		const pageSize = params.page_size ?? 100;
 		const offset = (page - 1) * pageSize;
@@ -95,13 +95,13 @@ export const getGuestbookEntries = (params: {
 		const [results, totalCountResult] = yield* Effect.all([
 			Effect.tryPromise({
 				try: async () =>
-					await sql<GuestbookEntry[]>`
-						SELECT *
-						FROM guestbook_entries
-						ORDER BY created_at DESC
-						LIMIT ${pageSize}
-						OFFSET ${offset}
-					`,
+					await db
+						.selectFrom("guestbook_entries")
+						.selectAll()
+						.orderBy("created_at", "desc")
+						.limit(pageSize)
+						.offset(offset)
+						.execute(),
 				catch: (error) =>
 					new GuestbookValidationError({
 						message: `Failed to get guestbook entries: ${error}`,
@@ -109,10 +109,10 @@ export const getGuestbookEntries = (params: {
 			}),
 			Effect.tryPromise({
 				try: async () =>
-					await sql<{ count: string }[]>`
-						SELECT COUNT(*) as count
-						FROM guestbook_entries
-					`,
+					await db
+						.selectFrom("guestbook_entries")
+						.select(({ fn }) => [fn.count("id").as("count")])
+						.executeTakeFirstOrThrow(),
 				catch: (error) =>
 					new GuestbookValidationError({
 						message: `Failed to get guestbook count: ${error}`,
@@ -124,28 +124,28 @@ export const getGuestbookEntries = (params: {
 			results,
 			page,
 			page_size: pageSize,
-			total_count: parseInt(totalCountResult[0]?.count || "0"),
+			total_count: Number(totalCountResult.count),
 		};
 	}).pipe(Effect.retry(retryPolicy));
 
 export const hasUserSigned = (fediverse_username: string) =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 
 		const result = yield* Effect.tryPromise({
 			try: async () =>
-				await sql<{ count: string }[]>`
-					SELECT COUNT(*) as count
-					FROM guestbook_entries
-					WHERE fediverse_username = ${fediverse_username}
-				`,
+				await db
+					.selectFrom("guestbook_entries")
+					.select(({ fn }) => [fn.count("id").as("count")])
+					.where("fediverse_username", "=", fediverse_username)
+					.executeTakeFirstOrThrow(),
 			catch: (error) =>
 				new GuestbookValidationError({
 					message: `Failed to check if user signed: ${error}`,
 				}),
 		});
 
-		return parseInt(result[0]?.count || "0") > 0;
+		return Number(result.count) > 0;
 	}).pipe(Effect.retry(retryPolicy));
 
 export const createOAuthSession = (params: {
@@ -158,31 +158,23 @@ export const createOAuthSession = (params: {
 	expires_at: Date;
 }) =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 
 		const result = yield* Effect.tryPromise({
 			try: async () =>
-				await sql<OAuthSession[]>`
-					INSERT INTO oauth_sessions (
-						session_token,
-						fediverse_instance,
-						client_id,
-						client_secret,
-						state,
-						code_verifier,
-						expires_at
-					)
-					VALUES (
-						${params.session_token},
-						${params.fediverse_instance},
-						${params.client_id},
-						${params.client_secret},
-						${params.state},
-						${params.code_verifier},
-						${params.expires_at}
-					)
-					RETURNING *
-				`,
+				await db
+					.insertInto("oauth_sessions")
+					.values({
+						session_token: params.session_token,
+						fediverse_instance: params.fediverse_instance,
+						client_id: params.client_id,
+						client_secret: params.client_secret,
+						state: params.state,
+						code_verifier: params.code_verifier,
+						expires_at: params.expires_at.toISOString(),
+					})
+					.returningAll()
+					.executeTakeFirstOrThrow(),
 			catch: (error) =>
 				new OAuthSessionError({
 					message: `Failed to create OAuth session: ${error}`,
@@ -190,22 +182,22 @@ export const createOAuthSession = (params: {
 				}),
 		});
 
-		return result[0];
+		return result;
 	}).pipe(Effect.retry(retryPolicy));
 
 export const getOAuthSession = (session_token: string) =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 
 		const result = yield* Effect.tryPromise({
 			try: async () =>
-				await sql<OAuthSession[]>`
-					SELECT *
-					FROM oauth_sessions
-					WHERE session_token = ${session_token}
-					AND expires_at > CURRENT_TIMESTAMP
-					LIMIT 1
-				`,
+				await db
+					.selectFrom("oauth_sessions")
+					.selectAll()
+					.where("session_token", "=", session_token)
+					.where("expires_at", ">", new Date())
+					.limit(1)
+					.executeTakeFirst(),
 			catch: (error) =>
 				new OAuthSessionError({
 					message: `Failed to get OAuth session: ${error}`,
@@ -213,21 +205,19 @@ export const getOAuthSession = (session_token: string) =>
 				}),
 		});
 
-		return result[0] || null;
+		return result || null;
 	}).pipe(Effect.retry(retryPolicy));
 
 export const deleteOAuthSession = (session_token: string) =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 
-		const deletedCount = yield* Effect.tryPromise({
-			try: async () => {
-				const result = await sql`
-					DELETE FROM oauth_sessions
-					WHERE session_token = ${session_token}
-				`;
-				return result.count;
-			},
+		const result = yield* Effect.tryPromise({
+			try: async () =>
+				await db
+					.deleteFrom("oauth_sessions")
+					.where("session_token", "=", session_token)
+					.executeTakeFirst(),
 			catch: (error) =>
 				new OAuthSessionError({
 					message: `Failed to delete OAuth session: ${error}`,
@@ -235,26 +225,24 @@ export const deleteOAuthSession = (session_token: string) =>
 				}),
 		});
 
-		return deletedCount;
+		return Number(result.numDeletedRows);
 	}).pipe(Effect.retry(retryPolicy));
 
 export const cleanupExpiredSessions = () =>
 	Effect.gen(function* () {
-		const sql = yield* getConnection();
+		const db = yield* getKyselyConnection();
 
-		const deletedCount = yield* Effect.tryPromise({
-			try: async () => {
-				const result = await sql`
-					DELETE FROM oauth_sessions
-					WHERE expires_at < CURRENT_TIMESTAMP
-				`;
-				return result.count;
-			},
+		const result = yield* Effect.tryPromise({
+			try: async () =>
+				await db
+					.deleteFrom("oauth_sessions")
+					.where("expires_at", "<", new Date())
+					.executeTakeFirst(),
 			catch: (error) =>
 				new OAuthSessionError({
 					message: `Failed to cleanup expired sessions: ${error}`,
 				}),
 		});
 
-		return deletedCount;
+		return Number(result.numDeletedRows);
 	}).pipe(Effect.retry(retryPolicy));

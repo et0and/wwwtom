@@ -23,7 +23,7 @@ export default function Guestbook() {
 		<PageLayout title="Guestbook" description="Sign my guestbook">
 			<h1>Guestbook</h1>
 
-			<div class="max-w-2xl mx-auto">
+			<div class="mx-auto">
 				<Show
 					when={currentUser()}
 					fallback={
@@ -34,8 +34,7 @@ export default function Guestbook() {
 							</p>
 							<p class="mb-3 text-sm">
 								Enter your full Fediverse handle (e.g., user@mastodon.social or
-								user@fosstodon.org). Certain instances and Mastodon forks like
-								Hometown don't work that well sorry :(
+								user@fosstodon.org).
 							</p>
 							<Show when={authSubmission.error}>
 								<div class="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm">

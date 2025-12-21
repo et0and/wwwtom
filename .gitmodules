@@ -1,0 +1,6 @@
+[submodule "megalodon"]
+	path = megalodon
+	url = https://github.com/h3poteto/megalodon
+[submodule "kysely"]
+	path = kysely
+	url = https://github.com/kysely-org/kysely

@@ -23,6 +23,3 @@ export interface Database {
 		expires_at: ColumnType<Date, string | undefined, never>;
 	};
 }
-
-export type GuestbookEntry = Database["guestbook_entries"];
-export type OAuthSession = Database["oauth_sessions"];
