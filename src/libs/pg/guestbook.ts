@@ -1,5 +1,6 @@
 import { Effect } from "effect";
 import postgres from "postgres";
+import { getRequestEvent } from "solid-js/web";
 import { retryPolicy } from "../utils/retry";
 import {
 	DatabaseConnectionError,
@@ -46,13 +47,24 @@ interface StoredProcedureResult<T> {
 const getConnection = () =>
 	Effect.try({
 		try: () => {
-			const databaseUrl = process.env.DATABASE_URL;
-			if (!databaseUrl) {
+			const event = getRequestEvent();
+			const env = event?.nativeEvent.context.cloudflare?.env as
+				| { HYPERDRIVE?: Hyperdrive }
+				| undefined;
+
+			const connectionString =
+				env?.HYPERDRIVE?.connectionString ||
+				(typeof process !== "undefined"
+					? process.env?.DATABASE_URL
+					: undefined);
+
+			if (!connectionString) {
 				throw new DatabaseConnectionError({
-					message: "DATABASE_URL environment variable not set",
+					message: "HYPERDRIVE binding not available and DATABASE_URL not set",
 				});
 			}
-			return postgres(databaseUrl);
+
+			return postgres(connectionString);
 		},
 		catch: (error) => {
 			if (error instanceof DatabaseConnectionError) return error;

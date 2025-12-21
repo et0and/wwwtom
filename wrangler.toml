@@ -10,6 +10,10 @@ binding = "TOM_RATE_LIMIT_KV"
 id = "b3800e793bb94ddab775776d600e1c64"
 preview_id = "bb85565a5ea045e2aa00fbdc5b3153b4"
 
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "7bfec94f14834b6c81ce91c2c29a2963"
+
 # WASM bindings
 [[rules]]
 type = "CompiledWasm"
