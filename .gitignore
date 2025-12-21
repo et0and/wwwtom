@@ -1,14 +1,17 @@
 dist
 .wrangler
+.gitmodules
 .output
 .vercel
 .netlify
 .vinxi
 app.config.timestamp_*.js
+/tasks
 
 # Our git subtrees
 /neverthrow
 /effect
+/megalodon
 
 # Environment
 .env

@@ -53,6 +53,14 @@ exports[`Nav > matches the snapshot 1`] = `
         >
           Search
         </a>
+        <a
+          class="inactive"
+          href="/guestbook"
+          link=""
+          preload="true"
+        >
+          Guestbook
+        </a>
       </div>
       <button
         aria-label="Toggle menu"

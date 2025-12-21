@@ -9,6 +9,7 @@ export default function Nav() {
 		{ href: "/work", label: "Work" },
 		{ href: "/posts", label: "Writing" },
 		{ href: "/search", label: "Search" },
+		{ href: "/guestbook", label: "Guestbook" },
 	];
 
 	return (

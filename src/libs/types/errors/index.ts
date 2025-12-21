@@ -17,3 +17,49 @@ export class HttpError extends Data.TaggedError("HttpError")<{
 	readonly message: string;
 	readonly status: number;
 }> {}
+
+export class DatabaseConnectionError extends Data.TaggedError(
+	"DatabaseConnectionError",
+)<{
+	readonly message: string;
+	readonly cause?: unknown;
+}> {}
+
+export class StoredProcedureError extends Data.TaggedError(
+	"StoredProcedureError",
+)<{
+	readonly procedure: string;
+	readonly message: string;
+	readonly cause?: unknown;
+}> {}
+
+export class GuestbookValidationError extends Data.TaggedError(
+	"GuestbookValidationError",
+)<{
+	readonly message: string;
+	readonly field?: string;
+}> {}
+
+export class OAuthSessionError extends Data.TaggedError("OAuthSessionError")<{
+	readonly message: string;
+	readonly sessionToken?: string;
+}> {}
+
+export class MissingFieldError extends Data.TaggedError("MissingFieldError")<{
+	readonly field: string;
+}> {}
+
+export class ProfanityError extends Data.TaggedError("ProfanityError")<{
+	readonly message: string;
+}> {}
+
+export class AuthenticationError extends Data.TaggedError(
+	"AuthenticationError",
+)<{
+	readonly message: string;
+}> {}
+
+export class NodeinfoError extends Data.TaggedError("NodeinfoError")<{
+	readonly message: string;
+	readonly cause?: unknown;
+}> {}
