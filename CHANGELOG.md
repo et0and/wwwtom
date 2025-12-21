@@ -1,3 +1,15 @@
+# [1.48.0](https://github.com/et0and/wwwtom/compare/v1.47.0...v1.48.0) (2025-12-21)
+
+
+### Bug Fixes
+
+* just use types ([f5e0c2b](https://github.com/et0and/wwwtom/commit/f5e0c2b04b7981e57f12b9be7b0c4866b46f3a53))
+
+
+### Features
+
+* add hyperdrive ([69f3af5](https://github.com/et0and/wwwtom/commit/69f3af550048ad08d1019c8fea0ff027f1b2b2e9))
+
 # [1.47.0](https://github.com/et0and/wwwtom/compare/v1.46.0...v1.47.0) (2025-12-21)
 
 
