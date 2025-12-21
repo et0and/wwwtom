@@ -1,5 +1,3 @@
-// This was taken from https://github.com/e-e-e/arena-ts
-
 import { Effect } from "effect";
 import {
 	GetChannelsApiResponse,
