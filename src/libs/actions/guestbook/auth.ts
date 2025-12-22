@@ -1,5 +1,5 @@
 import generator from "megalodon";
-import { Effect } from "effect";
+import { Effect, Redacted } from "effect";
 import { retryPolicy } from "~/libs/utils/retry";
 import * as db from "~/libs/db/guestbook";
 import { detector } from "./detector";
@@ -11,9 +11,11 @@ import {
 	HttpError,
 } from "~/libs/types/errors";
 
-const REDIRECT_URI = import.meta.env.PROD
-	? "https://tom.so/api/guestbook/callback"
-	: "http://localhost:3000/api/guestbook/callback";
+const REDIRECT_URI = Redacted.make(
+	import.meta.env.PROD
+		? "https://tom.so/api/guestbook/callback"
+		: "http://localhost:3000/api/guestbook/callback",
+);
 
 export interface FediverseUser {
 	username: string;
@@ -66,7 +68,7 @@ export const initiateAuth = (fediverseHandle: string) =>
 			try: async () => {
 				return await client.registerApp("Guestbook", {
 					scopes: ["read:accounts"],
-					redirect_uris: REDIRECT_URI,
+					redirect_uris: Redacted.value(REDIRECT_URI),
 				});
 			},
 			catch: (error) => {
@@ -184,7 +186,7 @@ export const handleCallback = (params: {
 					session.client_id,
 					session.client_secret,
 					params.code,
-					REDIRECT_URI,
+					Redacted.value(REDIRECT_URI),
 				),
 			catch: (error) =>
 				new AuthenticationError({

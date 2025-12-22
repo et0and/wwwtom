@@ -4,10 +4,10 @@ import { logger, runServerEffect } from "~/libs/utils/logger";
 
 describe("Are.na user lookup", () => {
 	beforeAll(() => {
-		const hasToken = !!(
+		const tokenValue =
 			(typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
-			import.meta.env.ARENA_TOKEN
-		);
+			import.meta.env.ARENA_TOKEN;
+		const hasToken = !!tokenValue;
 		if (!hasToken) {
 			logger.warn("ARENA_TOKEN not found, skipping integration tests");
 		}
@@ -15,11 +15,11 @@ describe("Are.na user lookup", () => {
 
 	describe("getUser", () => {
 		it("should fetch a user by ID", async () => {
-			const hasToken = !!(
+			const tokenValue =
 				(typeof process !== "undefined"
 					? process.env?.ARENA_TOKEN
-					: undefined) || import.meta.env.ARENA_TOKEN
-			);
+					: undefined) || import.meta.env.ARENA_TOKEN;
+			const hasToken = !!tokenValue;
 			if (!hasToken) {
 				logger.warn("Skipping test: ARENA_TOKEN not available");
 				return;

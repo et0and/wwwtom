@@ -1,14 +1,13 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { fetchArena } from "~/libs/actions/arena/client";
 import { logger, runServerEffect } from "~/libs/utils/logger";
-import { Effect } from "effect";
 
 describe("Are.na channel integration", () => {
 	beforeAll(() => {
-		const hasToken = !!(
+		const tokenValue =
 			(typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
-			import.meta.env.ARENA_TOKEN
-		);
+			import.meta.env.ARENA_TOKEN;
+		const hasToken = !!tokenValue;
 		if (!hasToken) {
 			logger.warn("ARENA_TOKEN not found, skipping integration tests");
 		}
@@ -16,11 +15,11 @@ describe("Are.na channel integration", () => {
 
 	describe("getChannelContents", () => {
 		it("should fetch channel contents with pagination", async () => {
-			const hasToken = !!(
+			const tokenValue =
 				(typeof process !== "undefined"
 					? process.env?.ARENA_TOKEN
-					: undefined) || import.meta.env.ARENA_TOKEN
-			);
+					: undefined) || import.meta.env.ARENA_TOKEN;
+			const hasToken = !!tokenValue;
 			if (!hasToken) {
 				logger.warn("Skipping test: ARENA_TOKEN not available");
 				return;

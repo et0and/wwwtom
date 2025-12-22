@@ -1,5 +1,5 @@
 import { getRequestEvent } from "solid-js/web";
-import { Effect } from "effect";
+import { Effect, Redacted } from "effect";
 import { logger } from "~/libs/utils/logger";
 import { retryPolicy } from "~/libs/utils/retry";
 
@@ -15,23 +15,28 @@ export function fetchPayload<T>(
 			| { PAYLOAD_URL?: string }
 			| undefined;
 
-		const PAYLOAD_URL: string =
+		const payloadUrlValue =
 			env?.PAYLOAD_URL ||
 			(typeof process !== "undefined" ? process.env?.PAYLOAD_URL : undefined) ||
 			import.meta.env.PAYLOAD_URL;
 
-		if (!PAYLOAD_URL) {
+		if (!payloadUrlValue) {
 			const error = new Error("PAYLOAD_URL environment variable is not set");
 			yield* Effect.sync(() => logger.error("Configuration error", error));
 			return yield* Effect.fail(error);
 		}
 
-		const url = `${PAYLOAD_URL}/api${endpoint}`;
+		const PAYLOAD_URL = Redacted.make(payloadUrlValue);
+		const url = `${Redacted.value(PAYLOAD_URL)}/api${endpoint}`;
 
 		const headers: HeadersInit = {
 			"Content-Type": "application/json",
-			Origin: PAYLOAD_URL?.replace("/api", "") || "http://localhost:3000",
-			Referer: PAYLOAD_URL?.replace("/api", "") || "http://localhost:3000",
+			Origin:
+				Redacted.value(PAYLOAD_URL)?.replace("/api", "") ||
+				"http://localhost:3000",
+			Referer:
+				Redacted.value(PAYLOAD_URL)?.replace("/api", "") ||
+				"http://localhost:3000",
 			...options?.headers,
 		};
 
@@ -63,7 +68,17 @@ export function fetchPayload<T>(
 	}).pipe(
 		Effect.retry(retryPolicy),
 		Effect.mapError((error: Error) => {
-			const url = `${import.meta.env.PAYLOAD_URL || ""}/api${endpoint}`;
+			const event = getRequestEvent();
+			const env = event?.nativeEvent.context.cloudflare?.env as
+				| { PAYLOAD_URL?: string }
+				| undefined;
+			const payloadUrlValue =
+				env?.PAYLOAD_URL ||
+				(typeof process !== "undefined"
+					? process.env?.PAYLOAD_URL
+					: undefined) ||
+				import.meta.env.PAYLOAD_URL;
+			const url = `${payloadUrlValue || ""}/api${endpoint}`;
 			logger.error(`Payload fetch error: ${url}`, error);
 			return error;
 		}),

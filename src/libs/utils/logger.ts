@@ -1,10 +1,11 @@
-import { Effect, Logger, LogLevel } from "effect";
+import { Effect, Logger, LogLevel, Redacted } from "effect";
 
 /**
  * Configuration for the logger
  */
 const getMinLogLevel = () => {
-	return import.meta.env.DEV ? LogLevel.Debug : LogLevel.Info;
+	const isDev = Redacted.make(import.meta.env.DEV.toString());
+	return Redacted.value(isDev) === "true" ? LogLevel.Debug : LogLevel.Info;
 };
 
 /**

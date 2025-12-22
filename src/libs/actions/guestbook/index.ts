@@ -1,5 +1,5 @@
 import { action, query, redirect } from "@solidjs/router";
-import { Effect } from "effect";
+import { Effect, Redacted } from "effect";
 import * as db from "~/libs/db/guestbook";
 import * as auth from "~/libs/actions/guestbook/auth";
 import { checkProfanity } from "~/libs/utils/profanity";
@@ -24,9 +24,10 @@ const getCookieValue = (cookieName: string) =>
 const setSessionCookie = (name: string, value: string, maxAge: number) =>
 	Effect.sync(() => {
 		const event = getEvent();
+		const isProd = Redacted.make(import.meta.env.PROD.toString());
 		setCookie(event, name, value, {
 			httpOnly: true,
-			secure: import.meta.env.PROD,
+			secure: Redacted.value(isProd) === "true",
 			sameSite: "lax",
 			maxAge,
 			path: "/",
