@@ -1,3 +1,10 @@
+## [1.50.1](https://github.com/et0and/wwwtom/compare/v1.50.0...v1.50.1) (2025-12-22)
+
+
+### Bug Fixes
+
+* fix tests, use redacted for handling secrets ([9723b65](https://github.com/et0and/wwwtom/commit/9723b65ad3c849b7a9d9d742a331d8cfb23ba702))
+
 # [1.50.0](https://github.com/et0and/wwwtom/compare/v1.49.0...v1.50.0) (2025-12-21)
 
 
