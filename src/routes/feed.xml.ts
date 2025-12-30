@@ -19,7 +19,7 @@ export async function GET() {
 		Effect.map((response) => {
 			for (const post of response.docs) {
 				const content = post.summary || post.meta?.description || "";
-				const postUrl = `https://www.tom.so/posts/${post.slug}`;
+				const postUrl = `https://tom.so/posts/${post.slug}`;
 
 				feed.item({
 					title: post.title,
