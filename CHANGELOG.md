@@ -1,3 +1,10 @@
+## [1.50.2](https://github.com/et0and/wwwtom/compare/v1.50.1...v1.50.2) (2025-12-30)
+
+
+### Bug Fixes
+
+* **rss:** use consistent non-www domain URLs to resolve SSL certificate issues ([f643a93](https://github.com/et0and/wwwtom/commit/f643a9315397cd3c8d3983fbd352cf7189c9a205))
+
 ## [1.50.1](https://github.com/et0and/wwwtom/compare/v1.50.0...v1.50.1) (2025-12-22)
 
 
