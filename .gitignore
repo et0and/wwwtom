@@ -13,6 +13,8 @@ app.config.timestamp_*.js
 /effect
 /megalodon
 /kysely
+/solid-start
+/tom-cms-payload
 
 # Environment
 .env
