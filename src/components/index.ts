@@ -6,4 +6,3 @@ export * from "./SkipLink";
 export * from "./Nav";
 export * from "./Footer";
 export * from "./Spinner";
-export * from "./Search";

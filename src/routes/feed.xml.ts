@@ -1,6 +1,7 @@
 import RSS from "rss";
 import { Effect } from "effect";
 import { fetchPayload } from "~/libs/actions/payload/client";
+import { convertLexicalToHTML } from "~/libs/actions/payload/content-converter";
 import type { PayloadPost, PayloadResponse } from "~/libs/schemas/payload";
 import { logger } from "~/libs/utils/logger";
 
@@ -14,20 +15,28 @@ export async function GET() {
   });
 
   const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-    "/posts?sort=-publishedAt&limit=20&depth=1",
+    "/posts?sort=-publishedAt&limit=20&depth=3",
   ).pipe(
     Effect.map((response) => {
       for (const post of response.docs) {
-        const content = post.summary || post.meta?.description || "";
         const postUrl = `https://tom.so/posts/${post.slug}`;
+
+        const summary = post.summary || post.meta?.description || "";
+        let content = "";
+        if (typeof post.content === "string") {
+          content = post.content;
+        } else if (post.content?.root) {
+          content = convertLexicalToHTML(post.content.root);
+        }
 
         feed.item({
           title: post.title,
-          description: content,
+          description: summary,
           url: postUrl,
           guid: String(post.id),
           date: new Date(post.publishedAt),
           author: "Tom Hackshaw",
+          custom_elements: [{ "content:encoded": content }],
         });
       }
 
