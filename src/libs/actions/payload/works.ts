@@ -15,11 +15,11 @@ import { fetchPayload } from "./client";
  * ```
  */
 export const getWorks = query(async () => {
-	"use server";
-	const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-		"/works?sort=title",
-	).pipe(Effect.map((response) => response.docs));
-	return Effect.runPromise(effect);
+  "use server";
+  const effect = fetchPayload<PayloadResponse<PayloadPost>>("/works?sort=title").pipe(
+    Effect.map((response) => response.docs),
+  );
+  return Effect.runPromise(effect);
 }, "works");
 
 /**
@@ -35,35 +35,35 @@ export const getWorks = query(async () => {
  * ```
  */
 export const getWorkBySlug = query(async (slug: string) => {
-	"use server";
-	const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-		`/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-	).pipe(
-		Effect.map((response) => {
-			const work = response.docs[0];
-			if (!work) return null;
+  "use server";
+  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
+    `/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+  ).pipe(
+    Effect.map((response) => {
+      const work = response.docs[0];
+      if (!work) return null;
 
-			let content = "<p>No content available</p>";
-			let arenaBlocks: ReturnType<typeof extractArenaBlocks> = [];
+      let content = "<p>No content available</p>";
+      let arenaBlocks: ReturnType<typeof extractArenaBlocks> = [];
 
-			if (
-				work.content &&
-				typeof work.content === "object" &&
-				"root" in work.content &&
-				work.content.root
-			) {
-				arenaBlocks = extractArenaBlocks(work.content.root);
-				content = convertLexicalToHTML(work.content.root, true);
-			} else if (typeof work.content === "string") {
-				content = work.content;
-			}
+      if (
+        work.content &&
+        typeof work.content === "object" &&
+        "root" in work.content &&
+        work.content.root
+      ) {
+        arenaBlocks = extractArenaBlocks(work.content.root);
+        content = convertLexicalToHTML(work.content.root, true);
+      } else if (typeof work.content === "string") {
+        content = work.content;
+      }
 
-			return {
-				...work,
-				content,
-				arenaBlocks,
-			};
-		}),
-	);
-	return Effect.runPromise(effect);
+      return {
+        ...work,
+        content,
+        arenaBlocks,
+      };
+    }),
+  );
+  return Effect.runPromise(effect);
 }, "work");

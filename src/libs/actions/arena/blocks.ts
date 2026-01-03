@@ -15,10 +15,8 @@ import type { PaginationAttributes } from "~/libs/schemas/arena";
  * ```
  */
 export const getBlock = query(async (id: number) => {
-	"use server";
-	return runServerEffect(
-		fetchArena((client) => client.block(id).get(), `getBlock(${id})`),
-	);
+  "use server";
+  return runServerEffect(fetchArena((client) => client.block(id).get(), `getBlock(${id})`));
 }, "arena-block");
 
 /**
@@ -33,18 +31,12 @@ export const getBlock = query(async (id: number) => {
  * const channels = createAsync(() => getBlockChannels(12345));
  * ```
  */
-export const getBlockChannels = query(
-	async (id: number, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.block(id).channels(options),
-				`getBlockChannels(${id})`,
-			),
-		);
-	},
-	"arena-block-channels",
-);
+export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.block(id).channels(options), `getBlockChannels(${id})`),
+  );
+}, "arena-block-channels");
 
 /**
  * Fetches comments for a block.
@@ -58,15 +50,9 @@ export const getBlockChannels = query(
  * const comments = createAsync(() => getBlockComments(12345));
  * ```
  */
-export const getBlockComments = query(
-	async (id: number, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.block(id).comments(options),
-				`getBlockComments(${id})`,
-			),
-		);
-	},
-	"arena-block-comments",
-);
+export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.block(id).comments(options), `getBlockComments(${id})`),
+  );
+}, "arena-block-comments");

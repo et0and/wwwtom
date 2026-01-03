@@ -15,10 +15,8 @@ import type { PaginationAttributes } from "~/libs/schemas/arena";
  * ```
  */
 export const getUser = query(async (id: number | string) => {
-	"use server";
-	return runServerEffect(
-		fetchArena((client) => client.user(id).get(), `getUser(${id})`),
-	);
+  "use server";
+  return runServerEffect(fetchArena((client) => client.user(id).get(), `getUser(${id})`));
 }, "arena-user");
 
 /**
@@ -34,16 +32,13 @@ export const getUser = query(async (id: number | string) => {
  * ```
  */
 export const getUserChannels = query(
-	async (id: number | string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.user(id).channels(options),
-				`getUserChannels(${id})`,
-			),
-		);
-	},
-	"arena-user-channels",
+  async (id: number | string, options?: PaginationAttributes) => {
+    "use server";
+    return runServerEffect(
+      fetchArena((client) => client.user(id).channels(options), `getUserChannels(${id})`),
+    );
+  },
+  "arena-user-channels",
 );
 
 /**
@@ -58,13 +53,10 @@ export const getUserChannels = query(
  * ```
  */
 export const getUserFollowing = query(async (id: number | string) => {
-	"use server";
-	return runServerEffect(
-		fetchArena(
-			(client) => client.user(id).following(),
-			`getUserFollowing(${id})`,
-		),
-	);
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.user(id).following(), `getUserFollowing(${id})`),
+  );
 }, "arena-user-following");
 
 /**
@@ -79,11 +71,8 @@ export const getUserFollowing = query(async (id: number | string) => {
  * ```
  */
 export const getUserFollowers = query(async (id: number | string) => {
-	"use server";
-	return runServerEffect(
-		fetchArena(
-			(client) => client.user(id).followers(),
-			`getUserFollowers(${id})`,
-		),
-	);
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.user(id).followers(), `getUserFollowers(${id})`),
+  );
 }, "arena-user-followers");

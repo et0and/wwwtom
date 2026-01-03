@@ -4,8 +4,8 @@ import { Effect, Logger, LogLevel, Redacted } from "effect";
  * Configuration for the logger
  */
 const getMinLogLevel = () => {
-	const isDev = Redacted.make(import.meta.env.DEV.toString());
-	return Redacted.value(isDev) === "true" ? LogLevel.Debug : LogLevel.Info;
+  const isDev = Redacted.make(import.meta.env.DEV.toString());
+  return Redacted.value(isDev) === "true" ? LogLevel.Debug : LogLevel.Info;
 };
 
 /**
@@ -46,32 +46,28 @@ const getMinLogLevel = () => {
  * // Logs will be filtered based on the minimum log level from getMinLogLevel()
  * ```
  */
-export const runServerEffect = <A, E>(
-	effect: Effect.Effect<A, E>,
-): Promise<A> => {
-	return Effect.runPromise(
-		effect.pipe(Logger.withMinimumLogLevel(getMinLogLevel())),
-	);
+export const runServerEffect = <A, E>(effect: Effect.Effect<A, E>): Promise<A> => {
+  return Effect.runPromise(effect.pipe(Logger.withMinimumLogLevel(getMinLogLevel())));
 };
 
 /**
  * Logging utilities
  */
 export const logger = {
-	info: (message: string, ...args: unknown[]) => {
-		Effect.runPromise(Effect.logInfo(message, ...args));
-	},
-	debug: (message: string, ...args: unknown[]) => {
-		Effect.runPromise(Effect.logDebug(message, ...args));
-	},
-	warn: (message: string, ...args: unknown[]) => {
-		Effect.runPromise(Effect.logWarning(message, ...args));
-	},
-	error: (message: string, ...args: unknown[]) => {
-		Effect.runPromise(Effect.logError(message, ...args));
-	},
-	// Generic log
-	log: (message: string, ...args: unknown[]) => {
-		Effect.runPromise(Effect.log(message, ...args));
-	},
+  info: (message: string, ...args: unknown[]) => {
+    Effect.runPromise(Effect.logInfo(message, ...args));
+  },
+  debug: (message: string, ...args: unknown[]) => {
+    Effect.runPromise(Effect.logDebug(message, ...args));
+  },
+  warn: (message: string, ...args: unknown[]) => {
+    Effect.runPromise(Effect.logWarning(message, ...args));
+  },
+  error: (message: string, ...args: unknown[]) => {
+    Effect.runPromise(Effect.logError(message, ...args));
+  },
+  // Generic log
+  log: (message: string, ...args: unknown[]) => {
+    Effect.runPromise(Effect.log(message, ...args));
+  },
 };

@@ -5,16 +5,16 @@ import { fetchPayload } from "./client";
 import { Effect } from "effect";
 
 export type PostsResponse = {
-	data: PayloadPost[];
-	meta: {
-		pagination: {
-			page: number;
-			pageSize: number;
-			pageCount: number;
-			total: number;
-		};
-	};
-	error?: string;
+  data: PayloadPost[];
+  meta: {
+    pagination: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+  error?: string;
 };
 
 /**
@@ -29,38 +29,35 @@ export type PostsResponse = {
  * const posts = createAsync(() => getPosts(currentPage()));
  * ```
  */
-export const getPosts = query(
-	async (page: number = 1, pageSize: number = 5) => {
-		"use server";
+export const getPosts = query(async (page: number = 1, pageSize: number = 5) => {
+  "use server";
 
-		const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-			`/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
-		).pipe(
-			Effect.map((response) => ({
-				data: response.docs,
-				meta: {
-					pagination: {
-						page: response.page,
-						pageSize: response.limit,
-						pageCount: response.totalPages,
-						total: response.totalDocs,
-					},
-				},
-			})),
-			Effect.catchAll((error) =>
-				Effect.succeed({
-					data: [],
-					meta: {
-						pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 },
-					},
-					error: error instanceof Error ? error.message : String(error),
-				}),
-			),
-		);
-		return Effect.runPromise(effect);
-	},
-	"posts",
-);
+  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
+    `/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
+  ).pipe(
+    Effect.map((response) => ({
+      data: response.docs,
+      meta: {
+        pagination: {
+          page: response.page,
+          pageSize: response.limit,
+          pageCount: response.totalPages,
+          total: response.totalDocs,
+        },
+      },
+    })),
+    Effect.catchAll((error) =>
+      Effect.succeed({
+        data: [],
+        meta: {
+          pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 },
+        },
+        error: error instanceof Error ? error.message : String(error),
+      }),
+    ),
+  );
+  return Effect.runPromise(effect);
+}, "posts");
 
 /**
  * Creates a query using the Payload fetch client to return a single post from Payload based on its slug.
@@ -75,47 +72,47 @@ export const getPosts = query(
  * ```
  */
 export const getPostBySlug = query(async (slug: string) => {
-	"use server";
+  "use server";
 
-	const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-		`/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-	).pipe(
-		Effect.map((response) => {
-			const post = response.docs[0];
-			if (!post) return null;
+  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
+    `/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+  ).pipe(
+    Effect.map((response) => {
+      const post = response.docs[0];
+      if (!post) return null;
 
-			let content = "<p>No content available</p>";
-			let arenaBlocks: ReturnType<typeof extractArenaBlocks> = [];
+      let content = "<p>No content available</p>";
+      let arenaBlocks: ReturnType<typeof extractArenaBlocks> = [];
 
-			if (
-				post.content &&
-				typeof post.content === "object" &&
-				"root" in post.content &&
-				post.content.root
-			) {
-				arenaBlocks = extractArenaBlocks(post.content.root);
-				content = convertLexicalToHTML(post.content.root);
-			} else if (typeof post.content === "string") {
-				content = post.content;
-			}
+      if (
+        post.content &&
+        typeof post.content === "object" &&
+        "root" in post.content &&
+        post.content.root
+      ) {
+        arenaBlocks = extractArenaBlocks(post.content.root);
+        content = convertLexicalToHTML(post.content.root);
+      } else if (typeof post.content === "string") {
+        content = post.content;
+      }
 
-			return {
-				id: String(post.id),
-				title: post.title,
-				summary: post.summary,
-				publishedAt: post.publishedAt,
-				slug: post.slug,
-				content,
-				arenaBlocks,
-				heroImage: post.heroImage,
-				arenaSlug: post.arenaSlug,
-				arenaTitle: post.arenaTitle,
-				createdAt: post.createdAt,
-				updatedAt: post.updatedAt,
-				meta: post.meta,
-			};
-		}),
-		Effect.catchAll(() => Effect.succeed(null)),
-	);
-	return Effect.runPromise(effect);
+      return {
+        id: String(post.id),
+        title: post.title,
+        summary: post.summary,
+        publishedAt: post.publishedAt,
+        slug: post.slug,
+        content,
+        arenaBlocks,
+        heroImage: post.heroImage,
+        arenaSlug: post.arenaSlug,
+        arenaTitle: post.arenaTitle,
+        createdAt: post.createdAt,
+        updatedAt: post.updatedAt,
+        meta: post.meta,
+      };
+    }),
+    Effect.catchAll(() => Effect.succeed(null)),
+  );
+  return Effect.runPromise(effect);
 }, "post");

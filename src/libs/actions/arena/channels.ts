@@ -15,18 +15,12 @@ import type { PaginationAttributes } from "~/libs/schemas/arena";
  * const channel = createAsync(() => getChannel("my-channel"));
  * ```
  */
-export const getChannel = query(
-	async (slug: string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.channel(slug).get(options),
-				`getChannel(${slug})`,
-			),
-		);
-	},
-	"arena-channel",
-);
+export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.channel(slug).get(options), `getChannel(${slug})`),
+  );
+}, "arena-channel");
 
 /**
  * Fetches channel contents (blocks and nested channels) with pagination.
@@ -40,18 +34,12 @@ export const getChannel = query(
  * const contents = createAsync(() => getChannelContents("my-channel", { per: 100 }));
  * ```
  */
-export const getChannelContents = query(
-	async (slug: string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.channel(slug).contents(options),
-				`getChannelContents(${slug})`,
-			),
-		);
-	},
-	"arena-channel-contents",
-);
+export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.channel(slug).contents(options), `getChannelContents(${slug})`),
+  );
+}, "arena-channel-contents");
 
 /**
  * Fetches the thumbnail representation of a channel (limited contents).
@@ -65,13 +53,10 @@ export const getChannelContents = query(
  * ```
  */
 export const getChannelThumb = query(async (slug: string) => {
-	"use server";
-	return runServerEffect(
-		fetchArena(
-			(client) => client.channel(slug).thumb(),
-			`getChannelThumb(${slug})`,
-		),
-	);
+  "use server";
+  return runServerEffect(
+    fetchArena((client) => client.channel(slug).thumb(), `getChannelThumb(${slug})`),
+  );
 }, "arena-channel-thumb");
 
 /**
@@ -86,8 +71,6 @@ export const getChannelThumb = query(async (slug: string) => {
  * ```
  */
 export const getChannels = query(async (options?: PaginationAttributes) => {
-	"use server";
-	return runServerEffect(
-		fetchArena((client) => client.channels(options), "getChannels()"),
-	);
+  "use server";
+  return runServerEffect(fetchArena((client) => client.channels(options), "getChannels()"));
 }, "arena-channels");

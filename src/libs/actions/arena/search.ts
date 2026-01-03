@@ -16,16 +16,16 @@ import type { PaginationAttributes } from "~/libs/schemas/arena";
  * ```
  */
 export const searchEverything = query(
-	async (searchQuery: string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.search.everything(searchQuery, options),
-				`searchEverything("${searchQuery}")`,
-			),
-		);
-	},
-	"arena-search-everything",
+  async (searchQuery: string, options?: PaginationAttributes) => {
+    "use server";
+    return runServerEffect(
+      fetchArena(
+        (client) => client.search.everything(searchQuery, options),
+        `searchEverything("${searchQuery}")`,
+      ),
+    );
+  },
+  "arena-search-everything",
 );
 
 /**
@@ -40,18 +40,15 @@ export const searchEverything = query(
  * const results = createAsync(() => searchChannels("typography"));
  * ```
  */
-export const searchChannels = query(
-	async (searchQuery: string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.search.channels(searchQuery, options),
-				`searchChannels("${searchQuery}")`,
-			),
-		);
-	},
-	"arena-search-channels",
-);
+export const searchChannels = query(async (searchQuery: string, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena(
+      (client) => client.search.channels(searchQuery, options),
+      `searchChannels("${searchQuery}")`,
+    ),
+  );
+}, "arena-search-channels");
 
 /**
  * Searches for blocks matching the query.
@@ -65,18 +62,15 @@ export const searchChannels = query(
  * const results = createAsync(() => searchBlocks("architecture"));
  * ```
  */
-export const searchBlocks = query(
-	async (searchQuery: string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.search.blocks(searchQuery, options),
-				`searchBlocks("${searchQuery}")`,
-			),
-		);
-	},
-	"arena-search-blocks",
-);
+export const searchBlocks = query(async (searchQuery: string, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena(
+      (client) => client.search.blocks(searchQuery, options),
+      `searchBlocks("${searchQuery}")`,
+    ),
+  );
+}, "arena-search-blocks");
 
 /**
  * Searches for users matching the query.
@@ -90,15 +84,12 @@ export const searchBlocks = query(
  * const results = createAsync(() => searchUsers("designer"));
  * ```
  */
-export const searchUsers = query(
-	async (searchQuery: string, options?: PaginationAttributes) => {
-		"use server";
-		return runServerEffect(
-			fetchArena(
-				(client) => client.search.users(searchQuery, options),
-				`searchUsers("${searchQuery}")`,
-			),
-		);
-	},
-	"arena-search-users",
-);
+export const searchUsers = query(async (searchQuery: string, options?: PaginationAttributes) => {
+  "use server";
+  return runServerEffect(
+    fetchArena(
+      (client) => client.search.users(searchQuery, options),
+      `searchUsers("${searchQuery}")`,
+    ),
+  );
+}, "arena-search-users");

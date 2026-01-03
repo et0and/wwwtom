@@ -1,2 +1,2 @@
 npm run lint --no-color --format unix --quiet
-npx cross-env NO_COLOR=true FORCE_COLOR=0 npx prettier -c "./**/*.{ts,tsx}"
+npx cross-env NO_COLOR=true FORCE_COLOR=0 npx oxfmt --check src

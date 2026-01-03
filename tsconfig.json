@@ -1,32 +1,28 @@
 {
-	"compilerOptions": {
-		"target": "ESNext",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"allowSyntheticDefaultImports": true,
-		"esModuleInterop": true,
-		"jsx": "preserve",
-		"jsxImportSource": "solid-js",
-		"allowJs": true,
-		"noEmit": true,
-		"strict": true,
-		"exactOptionalPropertyTypes": true,
-		"noImplicitReturns": true,
-		"noFallthroughCasesInSwitch": true,
-		"noUncheckedIndexedAccess": true,
-		"types": [
-			"vinxi/types/client",
-			"vitest/globals",
-			"@testing-library/jest-dom"
-		],
-		"isolatedModules": true,
-		"plugins": [
-			{
-				"name": "@effect/language-service"
-			}
-		],
-		"paths": {
-			"~/*": ["./src/*"]
-		}
-	}
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "allowJs": true,
+    "noEmit": true,
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true,
+    "types": ["vinxi/types/client", "vitest/globals", "@testing-library/jest-dom"],
+    "isolatedModules": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ],
+    "paths": {
+      "~/*": ["./src/*"]
+    }
+  }
 }

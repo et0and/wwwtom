@@ -1,0 +1,15 @@
+{
+	"$schema": "https://oxlint.io/schema.json",
+	"rules": {
+		"formatting": {
+			"indentWidth": 2,
+			"lineWidth": 80,
+			"quoteStyle": "double",
+			"semiColons": "always",
+			"arrowParentheses": "always",
+			"bracketSpacing": true,
+			"memberExpressionLayout": "off",
+			"trailingCommas": "always"
+		}
+	}
+}

@@ -1,11 +1,4 @@
-import {
-	createSignal,
-	onMount,
-	onCleanup,
-	Show,
-	For,
-	createEffect,
-} from "solid-js";
+import { createSignal, onMount, onCleanup, Show, For, createEffect } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
 import { Spinner } from "~/components";
@@ -14,88 +7,85 @@ const TOTAL_COUNT = 1000000;
 const ITEM_HEIGHT = 40;
 
 const NumberItem = (props: { index: number }) => (
-	<p class="mb-1" style={{ height: `${ITEM_HEIGHT}px` }}>
-		{numberToWords.toWords(props.index + 1)}
-	</p>
+  <p class="mb-1" style={{ height: `${ITEM_HEIGHT}px` }}>
+    {numberToWords.toWords(props.index + 1)}
+  </p>
 );
 
 export default function Kawara() {
-	const [windowHeight, setWindowHeight] = createSignal(0);
-	const [scrollTop, setScrollTop] = createSignal(0);
-	const [isClient, setIsClient] = createSignal(false);
-	let scrollContainer: HTMLDivElement | undefined;
+  const [windowHeight, setWindowHeight] = createSignal(0);
+  const [scrollTop, setScrollTop] = createSignal(0);
+  const [isClient, setIsClient] = createSignal(false);
+  let scrollContainer: HTMLDivElement | undefined;
 
-	onMount(() => {
-		setIsClient(true);
-		setWindowHeight(window.innerHeight);
+  onMount(() => {
+    setIsClient(true);
+    setWindowHeight(window.innerHeight);
 
-		const handleResize = () => setWindowHeight(window.innerHeight);
-		const handleScroll = () => {
-			if (scrollContainer) {
-				setScrollTop(scrollContainer.scrollTop);
-			}
-		};
+    const handleResize = () => setWindowHeight(window.innerHeight);
+    const handleScroll = () => {
+      if (scrollContainer) {
+        setScrollTop(scrollContainer.scrollTop);
+      }
+    };
 
-		window.addEventListener("resize", handleResize);
+    window.addEventListener("resize", handleResize);
 
-		setTimeout(() => {
-			if (scrollContainer) {
-				scrollContainer.addEventListener("scroll", handleScroll);
-			}
-		}, 0);
+    setTimeout(() => {
+      if (scrollContainer) {
+        scrollContainer.addEventListener("scroll", handleScroll);
+      }
+    }, 0);
 
-		onCleanup(() => {
-			window.removeEventListener("resize", handleResize);
-			if (scrollContainer) {
-				scrollContainer.removeEventListener("scroll", handleScroll);
-			}
-		});
-	});
+    onCleanup(() => {
+      window.removeEventListener("resize", handleResize);
+      if (scrollContainer) {
+        scrollContainer.removeEventListener("scroll", handleScroll);
+      }
+    });
+  });
 
-	const startIndex = () => Math.floor(scrollTop() / ITEM_HEIGHT);
-	const endIndex = () =>
-		Math.min(
-			startIndex() + Math.ceil(windowHeight() / ITEM_HEIGHT) + 5,
-			TOTAL_COUNT,
-		);
+  const startIndex = () => Math.floor(scrollTop() / ITEM_HEIGHT);
+  const endIndex = () =>
+    Math.min(startIndex() + Math.ceil(windowHeight() / ITEM_HEIGHT) + 5, TOTAL_COUNT);
 
-	const visibleItems = () => {
-		const items = [];
-		for (let i = startIndex(); i < endIndex(); i++) {
-			items.push(i);
-		}
-		return items;
-	};
+  const visibleItems = () => {
+    const items = [];
+    for (let i = startIndex(); i < endIndex(); i++) {
+      items.push(i);
+    }
+    return items;
+  };
 
-	// Ensure scroll listener is attached when container is ready
-	createEffect(() => {
-		if (scrollContainer && isClient()) {
-			const handleScroll = () => {
-				if (scrollContainer) {
-					setScrollTop(scrollContainer.scrollTop);
-				}
-			};
-			scrollContainer.addEventListener("scroll", handleScroll);
+  // Ensure scroll listener is attached when container is ready
+  createEffect(() => {
+    if (scrollContainer && isClient()) {
+      const handleScroll = () => {
+        if (scrollContainer) {
+          setScrollTop(scrollContainer.scrollTop);
+        }
+      };
+      scrollContainer.addEventListener("scroll", handleScroll);
 
-			return () => {
-				scrollContainer.removeEventListener("scroll", handleScroll);
-			};
-		}
-	});
+      return () => {
+        scrollContainer.removeEventListener("scroll", handleScroll);
+      };
+    }
+  });
 
-	return (
-		<>
-			<Title>Kawara | Tom Hackshaw</Title>
-			<Meta name="description" content="One million numbers." />
-			<Show
-				when={isClient()}
-				fallback={
-					<div class="flex justify-center items-center h-screen">
-						<Spinner />
-					</div>
-				}
-			>
-				<style>{`
+  return (
+    <>
+      <Title>Kawara | Tom Hackshaw</Title>
+      <Meta name="description" content="One million numbers." />
+      <Show
+        when={isClient()}
+        fallback={
+          <div class="flex justify-center items-center h-screen">
+            <Spinner />
+          </div>
+        }
+      >
+        <style>{`
 					html, body {
 						overflow: hidden;
 						height: 100vh;
@@ -116,49 +106,49 @@ export default function Kawara() {
 						display: none !important;
 					}
 				`}</style>
-				<div class="kawara-container bg-white">
-					<main class="kawara-main container mx-auto leading-10 text-center">
-						{windowHeight() === 0 ? (
-							<div>
-								<Spinner />
-							</div>
-						) : (
-							<div
-								ref={scrollContainer}
-								style={{
-									height: `${windowHeight() - 64}px`,
-									overflow: "auto",
-								}}
-							>
-								<div
-									style={{
-										height: `${TOTAL_COUNT * ITEM_HEIGHT}px`,
-										width: "100%",
-										position: "relative",
-									}}
-								>
-									<For each={visibleItems()}>
-										{(index) => (
-											<div
-												style={{
-													position: "absolute",
-													top: 0,
-													left: 0,
-													width: "100%",
-													height: `${ITEM_HEIGHT}px`,
-													transform: `translateY(${index * ITEM_HEIGHT}px)`,
-												}}
-											>
-												<NumberItem index={index} />
-											</div>
-										)}
-									</For>
-								</div>
-							</div>
-						)}
-					</main>
-				</div>
-			</Show>
-		</>
-	);
+        <div class="kawara-container bg-white">
+          <main class="kawara-main container mx-auto leading-10 text-center">
+            {windowHeight() === 0 ? (
+              <div>
+                <Spinner />
+              </div>
+            ) : (
+              <div
+                ref={scrollContainer}
+                style={{
+                  height: `${windowHeight() - 64}px`,
+                  overflow: "auto",
+                }}
+              >
+                <div
+                  style={{
+                    height: `${TOTAL_COUNT * ITEM_HEIGHT}px`,
+                    width: "100%",
+                    position: "relative",
+                  }}
+                >
+                  <For each={visibleItems()}>
+                    {(index) => (
+                      <div
+                        style={{
+                          position: "absolute",
+                          top: 0,
+                          left: 0,
+                          width: "100%",
+                          height: `${ITEM_HEIGHT}px`,
+                          transform: `translateY(${index * ITEM_HEIGHT}px)`,
+                        }}
+                      >
+                        <NumberItem index={index} />
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </div>
+            )}
+          </main>
+        </div>
+      </Show>
+    </>
+  );
 }
