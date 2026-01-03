@@ -1,3 +1,10 @@
+## [1.51.1](https://github.com/et0and/wwwtom/compare/v1.51.0...v1.51.1) (2026-01-03)
+
+
+### Bug Fixes
+
+* update snapshots ([81f8eaa](https://github.com/et0and/wwwtom/commit/81f8eaa6befd4f2e7139328ef7c0bf1513bc1069))
+
 # [1.51.0](https://github.com/et0and/wwwtom/compare/v1.50.2...v1.51.0) (2026-01-03)
 
 
