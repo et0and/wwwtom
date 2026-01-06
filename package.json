@@ -13,12 +13,16 @@
     "write": "oxfmt --write .",
     "typecheck": "turbo typecheck",
     "test": "turbo test",
-    "deploy": "turbo build --filter=@tom/web && cd apps/web && wrangler deploy"
+    "deploy": "turbo build --filter=@tom/web && cd apps/web && wrangler deploy",
+    "semantic-release": "semantic-release"
   },
   "devDependencies": {
     "@effect/language-service": "^0.56.0",
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "oxfmt": "^0.21.0",
     "oxlint": "^1.13.0",
+    "semantic-release": "^24.2.3",
     "turbo": "^2.5.4",
     "typescript": "^5.9.3"
   },
