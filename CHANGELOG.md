@@ -1,3 +1,10 @@
+# [1.54.0](https://github.com/et0and/wwwtom/compare/v1.53.0...v1.54.0) (2026-01-06)
+
+
+### Features
+
+* init scalar ui ([93c4fee](https://github.com/et0and/wwwtom/commit/93c4feed2a968bf57822b41d7fe7aabf81c58921))
+
 # [1.53.0](https://github.com/et0and/wwwtom/compare/v1.52.2...v1.53.0) (2026-01-06)
 
 ### Features
