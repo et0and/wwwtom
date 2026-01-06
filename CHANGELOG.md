@@ -1,23 +1,20 @@
 ## [1.51.1](https://github.com/et0and/wwwtom/compare/v1.51.0...v1.51.1) (2026-01-03)
 
-
 ### Bug Fixes
 
-* update snapshots ([81f8eaa](https://github.com/et0and/wwwtom/commit/81f8eaa6befd4f2e7139328ef7c0bf1513bc1069))
+- update snapshots ([81f8eaa](https://github.com/et0and/wwwtom/commit/81f8eaa6befd4f2e7139328ef7c0bf1513bc1069))
 
 # [1.51.0](https://github.com/et0and/wwwtom/compare/v1.50.2...v1.51.0) (2026-01-03)
 
-
 ### Bug Fixes
 
-* feed content, search components ([15cd35d](https://github.com/et0and/wwwtom/commit/15cd35d2c35a137f3b9818a56f6a43a3c23f1e35))
-* fix tests, release ([fe1a751](https://github.com/et0and/wwwtom/commit/fe1a751dd2f7471bf80ac79fd55696697ab0c4e2))
-* rem old search action ([fab9403](https://github.com/et0and/wwwtom/commit/fab9403c4353693b590f11ccef5c889b0b82c8d1))
-
+- feed content, search components ([15cd35d](https://github.com/et0and/wwwtom/commit/15cd35d2c35a137f3b9818a56f6a43a3c23f1e35))
+- fix tests, release ([fe1a751](https://github.com/et0and/wwwtom/commit/fe1a751dd2f7471bf80ac79fd55696697ab0c4e2))
+- rem old search action ([fab9403](https://github.com/et0and/wwwtom/commit/fab9403c4353693b590f11ccef5c889b0b82c8d1))
 
 ### Features
 
-* add oxfmt ([22c5537](https://github.com/et0and/wwwtom/commit/22c55371f878437ca7618dcffa7437743d17ef59))
+- add oxfmt ([22c5537](https://github.com/et0and/wwwtom/commit/22c55371f878437ca7618dcffa7437743d17ef59))
 
 ## [1.50.2](https://github.com/et0and/wwwtom/compare/v1.50.1...v1.50.2) (2025-12-30)
 

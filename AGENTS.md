@@ -1,163 +1,200 @@
-# IMPORTANT
+# Agent Guidelines
 
-- Try to keep things in one function unless composable or reusable
-- DO NOT do unnecessary destructuring of variables
-- DO NOT use `else` statements unless necessary
-- DO NOT use `try`/`catch` if it can be avoided
-- AVOID `try`/`catch` where possible
-- AVOID `else` statements
+## General Principles
+
+- Keep things in one function unless composable or reusable
+- AVOID unnecessary destructuring of variables
+- AVOID `else` statements unless necessary
+- AVOID `try`/`catch` - use Effect for error handling
 - AVOID using `any` type
-- AVOID `let` statements
+- AVOID `let` statements - prefer `const`
 - PREFER single word variable names where possible
-- Use as many Bun APIs as possible like Bun.file()
-- AVOID using Node specific APIs where possible as we run on Cloudflare Workers
+- AVOID Node-specific APIs - this runs on Cloudflare Workers
 
-# SolidJS Rules
+## Project Structure
 
-## Mental Model
+This is a Bun + Turborepo monorepo with:
 
-- MUST: Treat components as setup functions that run ONCE, not render functions.
-- MUST: Place reactive work in primitives (`createMemo`, `createEffect`, `<Show>`, `<For>`), not component body.
-- MUST: Access signals only inside reactive contexts (JSX expressions, effects, memos).
+- `apps/web` - SolidStart web app (Vinxi, deployed to Cloudflare Workers)
+- `packages/@tom/*` - Shared packages (arena, db, payload, types, ui, utils)
 
-## Reactivity
+Production domain: https://tom.so
 
-- MUST: Call signals as functions: `count()` not `count`.
-- MUST: Use functional updates when new state depends on old: `setCount((prev) => prev + 1)`.
-- MUST: Keep signals atomic (one per value) — one big state object loses granularity.
-- MUST: Use derived functions `() => count() * 2` for cheap/infrequent derivations.
-- MUST: Use `createMemo(() => ...)` for expensive/frequent derivations — caches result.
-- MUST: Use `createEffect` for side effects only (DOM, localStorage, subscriptions).
-- MUST: Call `onCleanup(() => ...)` inside effects for subscriptions/intervals/listeners.
-- MUST: Use path syntax for store updates: `setStore("users", 0, "name", "Jane")`.
-- MUST: Wrap store props in arrow for `on()`: `on(() => store.value, fn)` not `on(store.value, fn)`.
-- SHOULD: Use `{ equals: false }` for trigger signals that always notify.
-- SHOULD: Use `batch(() => { ... })` when updating multiple signals outside event handlers.
-- SHOULD: Use `on(dep, fn)` for explicit effect dependencies.
-- SHOULD: Use `untrack(() => value())` to read without subscribing.
-- SHOULD: Use `createStore({ ... })` for nested objects with fine-grained reactivity.
-- SHOULD: Use `produce(draft => { ... })` for complex store mutations.
-- NEVER: Derive state via `createEffect(() => setX(y()))` — use memo or derived function.
-- NEVER: Place side effects inside `createMemo` — causes infinite loops/crashes.
+## Development Commands
 
-## Props
+### Build & Development
 
-- MUST: Access props via `props.title`, not destructuring.
-- SHOULD: Wrap in getter if needed: `const title = () => props.title`.
-- SHOULD: Use `splitProps(props, ["keys"])` to separate local from pass-through props.
-- SHOULD: Use `mergeProps(defaults, props)` for default values.
-- SHOULD: Use `children(() => props.children)` only when transforming, otherwise `{props.children}`.
-- NEVER: Destructure props `({ title })` — breaks reactivity.
-
-## Control Flow
-
-- MUST: Use `<For each={items()}>` for object arrays — item is value, index is signal.
-- MUST: Use `<Index each={items()}>` for primitives/inputs — item is signal, index is number.
-- MUST: Use `<Suspense fallback={...}>` for async, not `<Show when={!loading}>`.
-- MUST: Access resource states via `data()`, `data.loading`, `data.error`, `data.latest`.
-- SHOULD: Use `<Show when={cond()} fallback={...}>` for conditionals.
-- SHOULD: Use `<Show when={val}>` callback for type narrowing: `{(v) => <div>{v().name}</div>}`.
-- SHOULD: Use `<Switch>/<Match>` for multiple conditions.
-- SHOULD: Use `createResource(source, fetcher)` for reactive async data.
-- SHOULD: Use `<ErrorBoundary fallback={(err, reset) => ...}>` for render errors.
-- NEVER: Use `.map()` in JSX — use `<For>` or `<Index>`.
-- NEVER: Rely on ErrorBoundary for event handler or setTimeout errors — use try/catch.
-
-## JSX & DOM
-
-- MUST: Use `class` not `className`.
-- MUST: Combine static `class="btn"` with reactive `classList={{ active: isActive() }}`.
-- MUST: Use `onClick` for delegated events; `on:click` for native (element-level).
-- MUST: Condition inside handler since events are not reactive: `onClick={() => props.onClick?.()}`.
-- MUST: Read refs in `onMount` or effects — refs connect after render.
-- MUST: Call `onCleanup` inside directives for cleanup.
-- SHOULD: Use `on:click` for `stopPropagation`, capture, passive, or custom events.
-- SHOULD: Use `style={{ color: color(), "--css-var": value() }}` for inline styles.
-- SHOULD: Type refs as `let el: HTMLElement | undefined` with guard.
-- SHOULD: Use `use:directiveName={accessor}` for reusable DOM behaviors.
-- NEVER: Mix reactive `class={x()}` with `classList`.
-
-# Development Commands
-
-## Build & Development
-
-- `bun dev` - Start development server
+- `bun dev` - Start dev server (via Turbo)
 - `bun build` - Build for production
-- `bun start` - Start production server
+- `bun deploy` - Build and deploy to Cloudflare
 
-## Code Quality
+### Code Quality
 
 - `bun lint` - Run oxlint linter
-- `bun format` - Check code formatting with Prettier
-- `bun write` - Format code with Prettier
+- `bun format` - Check formatting with oxfmt
+- `bun write` - Auto-format with oxfmt
+- `bun typecheck` - Run TypeScript type checking
 
-## Testing
+### Testing
 
-- `bun test` - Run all tests
+- `bun test` - Run all tests via Turbo
+- Run single test: `bun test -- Nav.test.tsx` (in apps/web)
 - `bun test:ui` - Run tests with UI
 - `bun test:coverage` - Run tests with coverage
-- Run single test: `bun test -- Nav.test.tsx`
 
-# Code Style Guidelines
+Test files live in `__tests__/*.test.tsx` directories alongside source.
 
-## Runtime
+## TypeScript Configuration
 
-- This project runs on Cloudflare Workers.
-- Production domain for this project is https://tom.so
+- Target: ESNext with bundler module resolution
+- Strict mode enabled with additional checks:
+  - `exactOptionalPropertyTypes`
+  - `noImplicitReturns`
+  - `noFallthroughCasesInSwitch`
+  - `noUncheckedIndexedAccess`
+- Effect language service plugin enabled
 
-## Logging
-
-- This project uses Effect's logging utilities using a logger wrapper called [logger.ts](src/libs/utils/logger.ts). For context/reference, refer to the Effect git subtree in this repository.
-
-## Commits & PRs
-
-- Use scoped conventional commits for commit messages and PR titles (e.g., `feat(components):`, `fix(sources):`, `chore:`).
-
-## TypeScript & SolidJS
-
-- Use SolidJS patterns: signals, createSignal, Show, For
-- Import SolidJS components: `import { createSignal } from "solid-js"`
-- Use `class` attribute (not `className`)
-- JSX preserve mode with solid-js import source
-
-## Imports & Aliases
-
-- Use `~/` prefix for src imports: `import { api } from "~/lib/api"`
-- Group imports: external libraries first, then internal modules
-
-## Formatting
+## Formatting Rules
 
 - Use tabs (2 spaces width)
 - 80 character line limit
 - Trailing commas always
 - Double quotes, semicolons required
 
-## Testing
+## Import Conventions
 
-- Use Vitest with @solidjs/testing-library
-- Test files: `__tests__/*.test.tsx`
-- Snapshot testing for components
-- Global test setup in `src/test/setup.ts`
+- Use `~/` path alias for src imports: `import { api } from "~/libs/api"`
+- Import order: external libraries first, then internal modules
+- Use workspace packages: `import { logger } from "@tom/utils"`
 
-## Error Handling
+## SolidJS Rules
 
-- Use Effect for error handling and control flow where possible. Refer to the Effect git subtree in this repository for context (/effect)
-- Throw descriptive errors with context
-- Use proper TypeScript interfaces for API responses
-- Server functions marked with `"use server"`
+### Mental Model
 
-<!-- effect-solutions:start -->
+- Components are setup functions that run ONCE, not render functions
+- Place reactive work in primitives (`createMemo`, `createEffect`, `<Show>`, `<For>`)
+- Access signals only inside reactive contexts (JSX, effects, memos)
 
-## Effect Solutions Usage
+### Reactivity
 
-This project uses Effect TypeScript for error handling, logging, and control flow. Key patterns:
+- Call signals as functions: `count()` not `count`
+- Use functional updates: `setCount((prev) => prev + 1)`
+- Use `createMemo` for expensive/frequent derivations
+- Use `createEffect` for side effects only
+- Call `onCleanup` inside effects for cleanup
+- NEVER derive state via `createEffect(() => setX(y()))` - use memo
 
-- **Effect & Data**: Use `Effect.succeed`, `Effect.fail`, `Effect.try` for data operations
-- **Services & Context**: Use `Effect.service` for dependency injection
-- **Error Handling**: Prefer Effect's error handling over try/catch
-- **Logging**: Use the logger wrapper at `src/libs/utils/logger.ts`
-- **Async Operations**: Use Effect patterns for async/await replacement
+### Props
 
-**Local Effect Source:** The Effect repository is cloned to `~/.local/share/effect-solutions/effect` for reference. Use this to explore APIs, find usage examples, and understand implementation details when the documentation isn't enough.
+- Access props via `props.title`, NEVER destructure `({ title })`
+- Use `splitProps` to separate local from pass-through props
+- Use `mergeProps` for default values
 
-<!-- effect-solutions:end -->
+### Control Flow
+
+- Use `<For each={items()}>` for object arrays
+- Use `<Index each={items()}>` for primitives
+- Use `<Show when={cond()} fallback={...}>` for conditionals
+- Use `<Suspense>` for async, not `<Show when={!loading}>`
+- NEVER use `.map()` in JSX - use `<For>` or `<Index>`
+
+### JSX & DOM
+
+- Use `class` not `className`
+- Use `classList={{ active: isActive() }}` for reactive classes
+- Use `onClick` for delegated events, `on:click` for native
+- Read refs in `onMount` or effects - refs connect after render
+
+## Error Handling with Effect
+
+This project uses Effect for error handling and control flow.
+
+### Server Actions Pattern
+
+```typescript
+import { Effect } from "effect";
+import { runServerEffect } from "@tom/utils";
+
+export const getData = query(async () => {
+  "use server";
+  return await runServerEffect(
+    Effect.gen(function* () {
+      const result = yield* someEffect();
+      return result;
+    })
+  );
+}, "cache-key");
+```
+
+### Custom Errors
+
+Define errors in `@tom/types`:
+
+```typescript
+import { MissingFieldError, AuthenticationError } from "@tom/types";
+yield* Effect.fail(new MissingFieldError({ field: "name" }));
+```
+
+### Logging
+
+Use the Effect-based logger from `@tom/utils`:
+
+```typescript
+import { logger } from "@tom/utils";
+logger.info("message");
+logger.error("error message");
+```
+
+## Testing Patterns
+
+Use Vitest with @solidjs/testing-library:
+
+```typescript
+import { render, screen } from "@solidjs/testing-library";
+import { describe, it, expect } from "vitest";
+import { Router, Route } from "@solidjs/router";
+
+describe("Component", () => {
+  it("renders correctly", () => {
+    const { container } = render(() => (
+      <Router>
+        <Route path="/" component={MyComponent} />
+      </Router>
+    ));
+    expect(container).toMatchSnapshot();
+  });
+});
+```
+
+## Server Functions
+
+Mark server-only code with `"use server"` directive:
+
+```typescript
+export function getClient(): Effect.Effect<Client, ConfigError> {
+  "use server";
+  return Effect.gen(function* () {
+    // server-only logic
+  });
+}
+```
+
+## Commits & PRs
+
+Use scoped conventional commits:
+
+- `feat(components):` - New feature
+- `fix(sources):` - Bug fix
+- `chore:` - Maintenance tasks
+- `refactor(ui):` - Code refactoring
+
+## Effect Reference
+
+The Effect repository is available at `/effect` in this repo for API reference. Key packages:
+
+- `effect` - Core library
+- `@effect/platform` - Platform-agnostic utilities
+- `@effect/cli` - CLI utilities
+
+Use `Effect.gen`, `Effect.succeed`, `Effect.fail`, `Effect.try` for operations.
+Use `Redacted.make()` for sensitive values like tokens.

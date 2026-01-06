@@ -2,7 +2,7 @@
 
 ![Screenshot my website](wwwtom.png)
 
-A website of my very own, and my first foray into [Solid Start](https://start.solidjs.com/).
+A website of my very own, and my first foray into [Solid Start](https://start.solidjs.com/) and Turborepo.
 
 This is still very much a work in progress and has some rough edges. I'm still fairly new to [Solid](https://solidjs.com) and am a recovering React user lol.
 
@@ -12,8 +12,8 @@ This is still very much a work in progress and has some rough edges. I'm still f
 bun run dev # Start development server
 bun run build # Production build
 bun run lint # Run oxlint
-bun run format # Check formatting with Prettier
-bun run write # Format files with Prettier
+bun run format # Check formatting with oxfmt
+bun run write # Format files with oxfmt
 ```
 
 External packages and dependencies have been deliberately kept small in order to keep the project lean.
