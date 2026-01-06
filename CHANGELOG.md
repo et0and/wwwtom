@@ -1,16 +1,14 @@
 # [1.53.0](https://github.com/et0and/wwwtom/compare/v1.52.2...v1.53.0) (2026-01-06)
 
-
 ### Features
 
-* add hono app ([a77bc1e](https://github.com/et0and/wwwtom/commit/a77bc1e60bf75c3f60a019214cd3db94063308db))
+- add hono app ([a77bc1e](https://github.com/et0and/wwwtom/commit/a77bc1e60bf75c3f60a019214cd3db94063308db))
 
 ## [1.52.2](https://github.com/et0and/wwwtom/compare/v1.52.1...v1.52.2) (2026-01-06)
 
-
 ### Bug Fixes
 
-* rem old ref ([871fbf5](https://github.com/et0and/wwwtom/commit/871fbf580d00363d1bc8a6a0d88b0a13a1ccfc86))
+- rem old ref ([871fbf5](https://github.com/et0and/wwwtom/commit/871fbf580d00363d1bc8a6a0d88b0a13a1ccfc86))
 
 ## [1.52.1](https://github.com/et0and/wwwtom/compare/v1.52.0...v1.52.1) (2026-01-06)
 
