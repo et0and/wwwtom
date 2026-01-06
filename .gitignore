@@ -7,6 +7,8 @@ dist
 .vinxi
 app.config.timestamp_*.js
 /tasks
+tsconfig.tsbuildinfo
+.turbo
 
 # Our git subtrees
 /neverthrow
