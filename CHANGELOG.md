@@ -1,3 +1,10 @@
+## [1.52.1](https://github.com/et0and/wwwtom/compare/v1.52.0...v1.52.1) (2026-01-06)
+
+
+### Bug Fixes
+
+* fix de tests ([8e72fd4](https://github.com/et0and/wwwtom/commit/8e72fd46647d7a0598ae16e9617b421758caee30))
+
 # [1.52.0](https://github.com/et0and/wwwtom/compare/v1.51.1...v1.52.0) (2026-01-06)
 
 
