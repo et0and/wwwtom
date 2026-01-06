@@ -6,14 +6,17 @@
     "packages/@tom/*"
   ],
   "scripts": {
-    "build": "turbo build",
-    "dev": "turbo dev",
-    "lint": "turbo lint",
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=@tom/web",
+    "dev:api": "turbo run dev --filter=@tom/api",
+    "lint": "turbo run lint",
     "format": "oxfmt --check .",
     "write": "oxfmt --write .",
-    "typecheck": "turbo typecheck",
-    "test": "turbo test",
-    "deploy": "turbo build --filter=@tom/web && cd apps/web && wrangler deploy",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "deploy": "turbo run build --filter=@tom/web && cd apps/web && wrangler deploy",
+    "deploy:api": "turbo run deploy --filter=@tom/api",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {

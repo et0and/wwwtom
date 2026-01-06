@@ -1,0 +1,12 @@
+name = "apitom"
+compatibility_date = "2026-01-06"
+
+# Main worker script
+main = "src/index.ts"
+
+[observability.logs]
+enabled = true
+
+# Environment variables
+[vars]
+NODE_ENV = "production"

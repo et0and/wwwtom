@@ -7,22 +7,19 @@
 
 ## [1.52.1](https://github.com/et0and/wwwtom/compare/v1.52.0...v1.52.1) (2026-01-06)
 
-
 ### Bug Fixes
 
-* fix de tests ([8e72fd4](https://github.com/et0and/wwwtom/commit/8e72fd46647d7a0598ae16e9617b421758caee30))
+- fix de tests ([8e72fd4](https://github.com/et0and/wwwtom/commit/8e72fd46647d7a0598ae16e9617b421758caee30))
 
 # [1.52.0](https://github.com/et0and/wwwtom/compare/v1.51.1...v1.52.0) (2026-01-06)
 
-
 ### Bug Fixes
 
-* releases for monorepo ([a72128a](https://github.com/et0and/wwwtom/commit/a72128a8321408fe1c8faee122f4bf770f1bd02c))
-
+- releases for monorepo ([a72128a](https://github.com/et0and/wwwtom/commit/a72128a8321408fe1c8faee122f4bf770f1bd02c))
 
 ### Features
 
-* init turborepo ([064f407](https://github.com/et0and/wwwtom/commit/064f407e0e51ce2b9d7d1650054d9ed90412cb52))
+- init turborepo ([064f407](https://github.com/et0and/wwwtom/commit/064f407e0e51ce2b9d7d1650054d9ed90412cb52))
 
 ## [1.51.1](https://github.com/et0and/wwwtom/compare/v1.51.0...v1.51.1) (2026-01-03)
 
