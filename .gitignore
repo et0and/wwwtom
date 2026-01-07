@@ -24,8 +24,7 @@ tsconfig.tsbuildinfo
 .dev.vars
 
 # dependencies
-/node_modules
-apps/web/node_modules
+node_modules
 
 # IDEs and editors
 /.idea

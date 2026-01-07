@@ -283,23 +283,41 @@ export const ConnectionDataSchema = Schema.Struct({
   connected_by_user_slug: Schema.optional(Schema.String),
 });
 
-export const ArenaChannelContentsSchema: Schema.Schema<any, any, never> = Schema.suspend(() =>
-  Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
-    Schema.extend(ConnectionDataSchema),
-  ),
-);
 
-export const ArenaChannelWithDetailsSchema = ArenaOwnerInfoSchema.pipe(
-  Schema.extend(ArenaChannelSchema),
-  Schema.extend(
-    Schema.Struct({
-      user: Schema.optional(ArenaUserWithDetailsSchema),
-      group: Schema.optional(ArenaGroupSchema),
-      follower_count: Schema.Number,
-      can_index: Schema.Boolean,
-      contents: Schema.NullOr(Schema.Array(ArenaChannelContentsSchema)),
-    }),
-  ),
+type ArenaChannelWithDetailsType = Schema.Schema.Type<typeof ArenaOwnerInfoSchema> &
+  Schema.Schema.Type<typeof ArenaChannelSchema> & {
+    readonly user?: Schema.Schema.Type<typeof ArenaUserWithDetailsSchema> | undefined;
+    readonly group?: Schema.Schema.Type<typeof ArenaGroupSchema> | undefined;
+    readonly follower_count: number;
+    readonly can_index: boolean;
+    readonly contents: ReadonlyArray<ArenaChannelContentsType> | null;
+  };
+
+type ArenaChannelContentsType =
+  | (Schema.Schema.Type<typeof ArenaBlockSchema> & Schema.Schema.Type<typeof ConnectionDataSchema>)
+  | (ArenaChannelWithDetailsType & Schema.Schema.Type<typeof ConnectionDataSchema>);
+
+export const ArenaChannelWithDetailsSchema: Schema.Schema<ArenaChannelWithDetailsType> =
+  ArenaOwnerInfoSchema.pipe(
+    Schema.extend(ArenaChannelSchema),
+    Schema.extend(
+      Schema.Struct({
+        user: Schema.optional(ArenaUserWithDetailsSchema),
+        group: Schema.optional(ArenaGroupSchema),
+        follower_count: Schema.Number,
+        can_index: Schema.Boolean,
+        contents: Schema.NullOr(
+          Schema.Array(Schema.suspend((): Schema.Schema<ArenaChannelContentsType> => ArenaChannelContentsSchema)),
+        ),
+      }),
+    ),
+  );
+
+export const ArenaChannelContentsSchema: Schema.Schema<ArenaChannelContentsType> = Schema.suspend(
+  (): Schema.Schema<ArenaChannelContentsType> =>
+    Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
+      Schema.extend(ConnectionDataSchema),
+    ) as Schema.Schema<ArenaChannelContentsType>,
 );
 
 export const MeApiResponseSchema = ArenaUserWithDetailsSchema.pipe(

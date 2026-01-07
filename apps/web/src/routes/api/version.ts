@@ -35,11 +35,10 @@ export async function GET(_event: APIEvent) {
   );
 }
 
-function getLatestCommitHash(): Effect.Effect<string, never> {
+function getLatestCommitHash(): Effect.Effect<string> {
   return Effect.gen(function* () {
     const result = yield* Effect.tryPromise({
       try: async () => {
-        // Get the latest commit from the dev branch via GitHub API
         const response = await fetch("https://api.github.com/repos/et0and/wwwtom/commits/dev", {
           headers: {
             Accept: "application/vnd.github.v3+json",
@@ -68,11 +67,10 @@ function getLatestCommitHash(): Effect.Effect<string, never> {
   );
 }
 
-function getLatestVersion(): Effect.Effect<string, never> {
+function getLatestVersion(): Effect.Effect<string> {
   return Effect.gen(function* () {
     const result = yield* Effect.tryPromise({
       try: async () => {
-        // Get the latest tag from GitHub API
         const response = await fetch("https://api.github.com/repos/et0and/wwwtom/tags", {
           headers: {
             Accept: "application/vnd.github.v3+json",
