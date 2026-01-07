@@ -246,6 +246,14 @@ app.get(
   }),
 );
 
-app.get("/", Scalar({ url: "/openapi", theme: "elysiajs", pageTitle: "Tom API", favicon: "https://tom-so.vercel.app/favicon.ico" }));
+app.get(
+  "/",
+  Scalar({
+    url: "/openapi",
+    theme: "elysiajs",
+    pageTitle: "Tom API",
+    favicon: "https://tom-so.vercel.app/favicon.ico",
+  }),
+);
 
 export default app;
