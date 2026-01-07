@@ -1,3 +1,10 @@
+# [1.55.0](https://github.com/et0and/wwwtom/compare/v1.54.1...v1.55.0) (2026-01-07)
+
+
+### Features
+
+* migrate og image service to mono ([3951eb2](https://github.com/et0and/wwwtom/commit/3951eb2d5bb398c27c1db36c8d0f2bcd589e06c4))
+
 ## [1.54.1](https://github.com/et0and/wwwtom/compare/v1.54.0...v1.54.1) (2026-01-07)
 
 ### Bug Fixes
