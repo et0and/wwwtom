@@ -1,3 +1,10 @@
+## [1.54.1](https://github.com/et0and/wwwtom/compare/v1.54.0...v1.54.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* type errors ([69c823f](https://github.com/et0and/wwwtom/commit/69c823f479d5ba507a3f78509e5b80e97ad35f18))
+
 # [1.54.0](https://github.com/et0and/wwwtom/compare/v1.53.0...v1.54.0) (2026-01-06)
 
 
