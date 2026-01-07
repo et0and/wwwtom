@@ -16,14 +16,14 @@ export const OgTemplates = {
     </div>
   `,
   minimal: (params: OgTemplateParams) => `
-    <div style="display: flex; align-items: center; justify-content: center; width: 1200px; height: 630px; background: #1a1a1a; color: white; font-family: system-ui, sans-serif;">
+    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 30px; width: 1200px; height: 630px; background: #1a1a1a; color: white; font-family: system-ui, sans-serif;">
       <h1 style="font-size: 64px; margin: 0;">${params.title}</h1>
+      <span style="font-size: 32px; opacity: 0.6;">|</span>
       <p style="font-size: 32px; margin: 0;">${params.summary}</p>
     </div>
   `,
   developer: (params: OgTemplateParams) => `
-    <div style="display: flex; flex-direction: column; width: 1200px; height: 630px; padding: 60px; background: #0d1117; color: #58a6ff; font-family: monospace;">
-      <div style="font-size: 28px; margin-bottom: 30px; color: #8b949e;">// Developer Profile</div>
+    <div style="display: flex; flex-direction: column; justify-content: center; width: 1200px; height: 630px; padding: 60px; background: #0d1117; color: #58a6ff; font-family: monospace;">
       <div style="font-size: 56px; margin-bottom: 20px; color: white;">${params.title}</div>
       <div style="font-size: 32px; color: #8b949e;">${params.summary}</div>
     </div>
