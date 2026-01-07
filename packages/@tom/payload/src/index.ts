@@ -1,3 +1,8 @@
-export * from "./schemas";
 export * from "./converter";
-export type { ArenaBlockData } from "@tom/arena";
+export type {
+  ArenaBlockData,
+  PayloadContentNode,
+  PayloadMedia,
+  PayloadPost,
+  PayloadResponse,
+} from "@tom/schemas";

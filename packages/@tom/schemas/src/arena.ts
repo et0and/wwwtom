@@ -283,7 +283,6 @@ export const ConnectionDataSchema = Schema.Struct({
   connected_by_user_slug: Schema.optional(Schema.String),
 });
 
-
 type ArenaChannelWithDetailsType = Schema.Schema.Type<typeof ArenaOwnerInfoSchema> &
   Schema.Schema.Type<typeof ArenaChannelSchema> & {
     readonly user?: Schema.Schema.Type<typeof ArenaUserWithDetailsSchema> | undefined;
@@ -307,7 +306,11 @@ export const ArenaChannelWithDetailsSchema: Schema.Schema<ArenaChannelWithDetail
         follower_count: Schema.Number,
         can_index: Schema.Boolean,
         contents: Schema.NullOr(
-          Schema.Array(Schema.suspend((): Schema.Schema<ArenaChannelContentsType> => ArenaChannelContentsSchema)),
+          Schema.Array(
+            Schema.suspend(
+              (): Schema.Schema<ArenaChannelContentsType> => ArenaChannelContentsSchema,
+            ),
+          ),
         ),
       }),
     ),

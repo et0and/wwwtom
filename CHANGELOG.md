@@ -1,16 +1,14 @@
 ## [1.54.1](https://github.com/et0and/wwwtom/compare/v1.54.0...v1.54.1) (2026-01-07)
 
-
 ### Bug Fixes
 
-* type errors ([69c823f](https://github.com/et0and/wwwtom/commit/69c823f479d5ba507a3f78509e5b80e97ad35f18))
+- type errors ([69c823f](https://github.com/et0and/wwwtom/commit/69c823f479d5ba507a3f78509e5b80e97ad35f18))
 
 # [1.54.0](https://github.com/et0and/wwwtom/compare/v1.53.0...v1.54.0) (2026-01-06)
 
-
 ### Features
 
-* init scalar ui ([93c4fee](https://github.com/et0and/wwwtom/commit/93c4feed2a968bf57822b41d7fe7aabf81c58921))
+- init scalar ui ([93c4fee](https://github.com/et0and/wwwtom/commit/93c4feed2a968bf57822b41d7fe7aabf81c58921))
 
 # [1.53.0](https://github.com/et0and/wwwtom/compare/v1.52.2...v1.53.0) (2026-01-06)
 

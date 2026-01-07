@@ -21,7 +21,7 @@ import type {
   GetUserFollowingApiResponse,
   GetBlockCommentApiResponse,
   CreateBlockCommentApiResponse,
-} from "./schemas";
+} from "@tom/schemas";
 import { HttpError } from "@tom/types/errors";
 
 export interface ArenaBlockApi {
@@ -244,22 +244,34 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search`, { q: query, ...options }),
+        this.getJsonWithSearchAndPaginationQuery(`/search`, {
+          q: query,
+          ...options,
+        }),
       blocks: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search/blocks`, { q: query, ...options }),
+        this.getJsonWithSearchAndPaginationQuery(`/search/blocks`, {
+          q: query,
+          ...options,
+        }),
       channels: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search/channels`, { q: query, ...options }),
+        this.getJsonWithSearchAndPaginationQuery(`/search/channels`, {
+          q: query,
+          ...options,
+        }),
       users: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search/users`, { q: query, ...options }),
+        this.getJsonWithSearchAndPaginationQuery(`/search/users`, {
+          q: query,
+          ...options,
+        }),
     };
   }
 
@@ -335,7 +347,11 @@ export class ArenaClient implements ArenaApi {
 
       const json = yield* Effect.tryPromise({
         try: () => response.json() as Promise<T>,
-        catch: () => new HttpError({ message: "Failed to parse JSON response", status: 500 }),
+        catch: () =>
+          new HttpError({
+            message: "Failed to parse JSON response",
+            status: 500,
+          }),
       });
 
       return json;
@@ -400,7 +416,11 @@ export class ArenaClient implements ArenaApi {
 
       const json = yield* Effect.tryPromise({
         try: () => response.json() as Promise<T>,
-        catch: () => new HttpError({ message: "Failed to parse JSON response", status: 500 }),
+        catch: () =>
+          new HttpError({
+            message: "Failed to parse JSON response",
+            status: 500,
+          }),
       });
 
       return json;
