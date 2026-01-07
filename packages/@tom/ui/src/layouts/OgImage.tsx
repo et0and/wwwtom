@@ -18,16 +18,14 @@ export const OgTemplates = {
   minimal: (params: OgTemplateParams) => `
     <div style="display: flex; align-items: center; justify-content: center; width: 1200px; height: 630px; background: #1a1a1a; color: white; font-family: system-ui, sans-serif;">
       <h1 style="font-size: 64px; margin: 0;">${params.title}</h1>
+      <p style="font-size: 32px; margin: 0;">${params.summary}</p>
     </div>
   `,
   developer: (params: OgTemplateParams) => `
-    <div style="display: flex; flex-direction: column; width: 1200px; height: 630px; padding: 60px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; font-family: 'Fira Code', monospace;">
-      <div style="font-size: 24px; opacity: 0.9; margin-bottom: 20px;">const developer = {</div>
-      <div style="padding-left: 40px;">
-        <div style="font-size: 48px; margin-bottom: 10px;">name: "${params.title}",</div>
-        <div style="font-size: 28px;">role: "${params.summary}"</div>
-      </div>
-      <div style="font-size: 24px; opacity: 0.9; margin-top: 20px;">};</div>
+    <div style="display: flex; flex-direction: column; width: 1200px; height: 630px; padding: 60px; background: #0d1117; color: #58a6ff; font-family: monospace;">
+      <div style="font-size: 28px; margin-bottom: 30px; color: #8b949e;">// Developer Profile</div>
+      <div style="font-size: 56px; margin-bottom: 20px; color: white;">${params.title}</div>
+      <div style="font-size: 32px; color: #8b949e;">${params.summary}</div>
     </div>
   `,
 };

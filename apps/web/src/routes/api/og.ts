@@ -21,7 +21,7 @@ export function GET({ request }: APIEvent) {
     if (title) params.set("title", title);
     if (summary) params.set("summary", summary);
 
-    const targetUrl = `${upstreamUrl}/og/?${params.toString()}`;
+    const targetUrl = `${upstreamUrl}/og?${params.toString()}&template=default`;
 
     const response = yield* Effect.tryPromise({
       try: () =>

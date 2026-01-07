@@ -1,5 +1,4 @@
 import { Hono } from "hono";
-import { cors } from "hono/cors";
 import { Scalar } from "@scalar/hono-api-reference";
 import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
 import { ValidationError, FontFetchError, ImageGenerationError } from "@tom/types/errors";
@@ -16,18 +15,7 @@ import { logger } from "@tom/utils";
 
 const app = new Hono();
 
-app.use(
-  "*",
-  cors({
-    origin: [
-      "https://tom.so",
-      "https://dev.tom.so",
-      "http://localhost:3000",
-      "http://localhost:8787",
-    ],
-  }),
-  requestId(),
-);
+app.use("*", requestId());
 
 const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 
@@ -41,7 +29,6 @@ const fontFetchEffect = Effect.gen(function* () {
   const data = yield* Effect.tryPromise({
     try: () =>
       fetch(FONT_URL).then((res) => {
-        if (!res.ok) throw new Error("Font fetch failed");
         return res.arrayBuffer();
       }),
     catch: (error) => {
@@ -60,7 +47,13 @@ const fontFetchEffect = Effect.gen(function* () {
   return data;
 });
 
-function getTemplate(requester: string): (params: OgTemplateParams) => string {
+function getTemplate(
+  requester: string,
+  templateParam?: string,
+): (params: OgTemplateParams) => string {
+  if (templateParam && templateParam in OgTemplates) {
+    return OgTemplates[templateParam as keyof typeof OgTemplates];
+  }
   switch (true) {
     case requester.includes("tom.so"):
       return OgTemplates.default;
@@ -71,10 +64,15 @@ function getTemplate(requester: string): (params: OgTemplateParams) => string {
   }
 }
 
-const generateOgImageEffect = (title: string, summary: string, requester: string) =>
+const generateOgImageEffect = (
+  title: string,
+  summary: string,
+  requester: string,
+  templateParam?: string,
+) =>
   Effect.gen(function* () {
     const fontData = yield* fontFetchEffect;
-    const template = getTemplate(requester);
+    const template = getTemplate(requester, templateParam);
 
     const html = template({ title, summary });
 
@@ -168,6 +166,19 @@ app.get(
         description: "Summary/description text for the OG image",
         example: "Design engineer from Aotearoa New Zealand",
       },
+      {
+        in: "query" as const,
+        name: "template",
+        required: false,
+        schema: {
+          type: "string",
+          enum: ["default", "minimal", "developer"],
+          default: "default",
+        },
+        description:
+          "OG image template to use. Defaults to automatic selection based on requester. Available templates: default, minimal, developer",
+        example: "default",
+      },
     ],
     responses: {
       200: {
@@ -187,6 +198,7 @@ app.get(
   async (c) => {
     const title = c.req.query("title") || "Tom Hackshaw";
     const summary = c.req.query("summary") || "Design engineer from Aotearoa New Zealand";
+    const template = c.req.query("template") || undefined;
     const referer = c.req.header("Referer") || "";
     const requester = referer || c.req.query("requester") || "unknown";
 
@@ -195,7 +207,7 @@ app.get(
     );
 
     const result = await runEffectWithErrorHandler(
-      generateOgImageEffect(title, summary, requester),
+      generateOgImageEffect(title, summary, requester, template),
       handleOgError,
     );
 
