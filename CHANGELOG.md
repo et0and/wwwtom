@@ -1,3 +1,11 @@
+# [1.56.0](https://github.com/et0and/wwwtom/compare/v1.55.1...v1.56.0) (2026-01-07)
+
+
+### Features
+
+* add favicons ([a916541](https://github.com/et0and/wwwtom/commit/a9165411e95d77e56f3ea0aaad5998bb29777432))
+* favicon ([9bdc723](https://github.com/et0and/wwwtom/commit/9bdc723f66fff03fffe4a3cb0f34efe47d73f05f))
+
 ## [1.55.1](https://github.com/et0and/wwwtom/compare/v1.55.0...v1.55.1) (2026-01-07)
 
 
