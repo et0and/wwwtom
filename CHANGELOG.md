@@ -1,3 +1,10 @@
+## [1.55.1](https://github.com/et0and/wwwtom/compare/v1.55.0...v1.55.1) (2026-01-07)
+
+
+### Bug Fixes
+
+* og image route mistake ([da6a700](https://github.com/et0and/wwwtom/commit/da6a700a17fc44b66fcaaf84e8dc1aa31f668746))
+
 # [1.55.0](https://github.com/et0and/wwwtom/compare/v1.54.1...v1.55.0) (2026-01-07)
 
 ### Features
