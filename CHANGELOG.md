@@ -1,3 +1,10 @@
+## [1.57.1](https://github.com/et0and/wwwtom/compare/v1.57.0...v1.57.1) (2026-01-08)
+
+
+### Bug Fixes
+
+* **api:** prod domain for favicon ([d9531c5](https://github.com/et0and/wwwtom/commit/d9531c5dda4a4d0370c2b55429ab16e0eb3bf95a))
+
 # [1.57.0](https://github.com/et0and/wwwtom/compare/v1.56.0...v1.57.0) (2026-01-08)
 
 
