@@ -1,3 +1,15 @@
+# [1.57.0](https://github.com/et0and/wwwtom/compare/v1.56.0...v1.57.0) (2026-01-08)
+
+
+### Bug Fixes
+
+* forgot dep ([94fa48e](https://github.com/et0and/wwwtom/commit/94fa48ef96d1719d13613e54846855b9b8415406))
+
+
+### Features
+
+* begin scaffolding checkout support with polar ([ff74d61](https://github.com/et0and/wwwtom/commit/ff74d61c68e349a15eba0d1faac5c839d547e8cf))
+
 # [1.56.0](https://github.com/et0and/wwwtom/compare/v1.55.1...v1.56.0) (2026-01-07)
 
 ### Features
