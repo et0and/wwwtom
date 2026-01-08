@@ -11,9 +11,15 @@ import {
 } from "@tom/schemas";
 import { OgTemplates, OgTemplateParams } from "@tom/ui";
 import { requestId } from "hono/request-id";
+import { Checkout, CustomerPortal } from "@polar-sh/hono";
 import { logger } from "@tom/utils";
 
-const app = new Hono();
+type Env = {
+  POLAR_ACCESS_TOKEN: string | undefined;
+  SUCCESS_URL: string | undefined;
+};
+
+const app = new Hono<{ Bindings: Env }>();
 
 app.use("*", requestId());
 
@@ -122,6 +128,86 @@ const handleOgError = (
     headers: { "Content-Type": "application/json" },
   });
 };
+
+app.get(
+  "/checkout",
+  describeRoute({
+    description: "Create a checkout session and redirect to Polar",
+    parameters: [
+      {
+        in: "query" as const,
+        name: "products",
+        required: true,
+        schema: { type: "string" },
+        description: "Product IDs to purchase (comma-separated)",
+      },
+      {
+        in: "query" as const,
+        name: "customerId",
+        required: true,
+        schema: { type: "string" },
+        description: "Existing customer ID",
+      },
+      {
+        in: "query" as const,
+        name: "customerEmail",
+        required: false,
+        schema: { type: "string" },
+        description: "Customer email address",
+      },
+    ],
+    responses: {
+      302: {
+        description: "Redirect to Polar checkout",
+      },
+      400: {
+        description: "Missing products and/or customerId parameter",
+      },
+      500: {
+        description: "Failed to create checkout",
+      },
+    },
+  }),
+  async (c) =>
+    Checkout({
+      accessToken: c.env.POLAR_ACCESS_TOKEN,
+      successUrl: c.env.SUCCESS_URL,
+      returnUrl: "https://tom.so/thanks",
+      server: "sandbox",
+      theme: "light",
+    })(c),
+);
+
+app.get(
+  "/portal",
+  describeRoute({
+    description: "Redirect to Polar customer portal",
+    parameters: [
+      {
+        in: "query" as const,
+        name: "customerId",
+        required: true,
+        schema: { type: "string", format: "uuid" },
+        description: "Polar customer ID (uuid)",
+      },
+    ],
+    responses: {
+      302: {
+        description: "Redirect to Polar customer portal",
+      },
+      400: {
+        description: "Missing customerId parameter",
+      },
+    },
+  }),
+  async (c) =>
+    CustomerPortal({
+      accessToken: c.env.POLAR_ACCESS_TOKEN,
+      getCustomerId: async () => c.req.query("customerId") ?? "",
+      returnUrl: "https://tom.so/support",
+      server: "sandbox",
+    })(c),
+);
 
 app.get(
   "/health",
