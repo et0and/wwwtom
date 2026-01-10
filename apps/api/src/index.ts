@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { Scalar } from "@scalar/hono-api-reference";
 import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
 import { ValidationError, FontFetchError, ImageGenerationError } from "@tom/types/errors";
@@ -22,6 +23,15 @@ type Env = {
 const app = new Hono<{ Bindings: Env }>();
 
 app.use("*", requestId());
+app.use(
+  "*",
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:3000", "https://tom.so"],
+    allowMethods: ["GET", "POST", "OPTIONS"],
+    allowHeaders: ["Content-Type"],
+    credentials: true,
+  }),
+);
 
 const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 
@@ -172,11 +182,128 @@ app.get(
     Checkout({
       accessToken: c.env.POLAR_ACCESS_TOKEN,
       successUrl: c.env.SUCCESS_URL,
-      returnUrl: "https://tom.so/thanks",
-      server: "sandbox",
+      server: "production",
       theme: "light",
     })(c),
 );
+
+app.get("/products", async (c) => {
+  try {
+    const response = await fetch("https://api.polar.sh/v1/products?is_archived=false", {
+      headers: {
+        Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      logger.error("Failed to fetch Polar products", {
+        status: response.status,
+      });
+      return c.json({ error: "Failed to fetch products" }, response.status as 400 | 500);
+    }
+
+    const data = (await response.json()) as { items: unknown[] };
+    return c.json(data.items);
+  } catch (error) {
+    logger.error("Error fetching Polar products", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.get("/products/:productId", async (c) => {
+  const productId = c.req.param("productId");
+
+  if (!productId) {
+    return c.json({ error: "Product ID is required" }, 400);
+  }
+
+  try {
+    const response = await fetch(`https://api.polar.sh/v1/products/${productId}`, {
+      headers: {
+        Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
+      },
+    });
+
+    if (!response.ok) {
+      logger.error("Failed to fetch Polar product", {
+        status: response.status,
+      });
+      return c.json({ error: "Failed to fetch product" }, response.status as 400 | 404 | 500);
+    }
+
+    const product = await response.json();
+    return c.json(product);
+  } catch (error) {
+    logger.error("Error fetching Polar product", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
+
+app.post("/customers", async (c) => {
+  const body = await c.req.json();
+  const { email, name, externalId } = body;
+
+  if (!email) {
+    return c.json({ error: "Email is required" }, 400);
+  }
+
+  try {
+    const response = await fetch("https://api.polar.sh/v1/customers/", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        name,
+        external_id: externalId,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+
+      if (response.status === 422 && errorData.includes("already exists")) {
+        const listResponse = await fetch(
+          `https://api.polar.sh/v1/customers?email=${encodeURIComponent(email)}`,
+          {
+            headers: {
+              Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
+            },
+          },
+        );
+
+        if (!listResponse.ok) {
+          logger.error("Failed to find existing Polar customer", {
+            status: listResponse.status,
+          });
+          return c.json({ error: "Failed to find existing customer" }, 500);
+        }
+
+        const listData = (await listResponse.json()) as { items: unknown[] };
+        if (listData.items && listData.items.length > 0) {
+          return c.json(listData.items[0], 200);
+        }
+      }
+
+      logger.error("Failed to create Polar customer", {
+        status: response.status,
+        error: errorData,
+      });
+      return c.json(
+        { error: "Failed to create customer", details: errorData },
+        response.status as 400 | 422 | 500,
+      );
+    }
+
+    const customer = await response.json();
+    return c.json(customer, 201);
+  } catch (error) {
+    logger.error("Error creating Polar customer", error);
+    return c.json({ error: "Internal server error" }, 500);
+  }
+});
 
 app.get(
   "/portal",
@@ -204,8 +331,8 @@ app.get(
     CustomerPortal({
       accessToken: c.env.POLAR_ACCESS_TOKEN,
       getCustomerId: async () => c.req.query("customerId") ?? "",
-      returnUrl: "https://tom.so/support",
-      server: "sandbox",
+      returnUrl: "https://tom.so/products",
+      server: "production",
     })(c),
 );
 

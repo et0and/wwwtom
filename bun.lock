@@ -149,6 +149,7 @@
       "name": "@tom/utils",
       "version": "0.0.1",
       "dependencies": {
+        "@tom/types": "workspace:*",
         "effect": "^3.19.5",
         "obscenity": "^0.4.5",
       },
