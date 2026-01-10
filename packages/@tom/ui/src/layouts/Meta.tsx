@@ -11,7 +11,9 @@ export function Metadata(props: MetaProps) {
   const description =
     props.metaContent || "Tom Hackshaw is a design engineer from Aotearoa New Zealand.";
 
-  const ogImageUrl = `/api/og?title=${encodeURIComponent(props.title.toString())}&summary=${encodeURIComponent(description)}`;
+  const ogImageUrl = `/api/og?title=${encodeURIComponent(
+    props.title.toString(),
+  )}&summary=${encodeURIComponent(description)}`;
 
   return (
     <>
@@ -25,6 +27,7 @@ export function Metadata(props: MetaProps) {
       <Meta name="twitter:image" content={ogImageUrl} />
       <Meta name="twitter:card" content="summary_large_image" />
       {props.canonical && <link rel="canonical" href={props.canonical} />}
+      <Meta name="msvalidate.01" content="6F8B9658A3BC5775E2F116162AF518EE" />
     </>
   );
 }
