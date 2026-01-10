@@ -1,6 +1,7 @@
-import { Show, lazy, For } from "solid-js";
+import { Show, lazy, For, createEffect } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
 import { getWorkBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 
@@ -29,6 +30,20 @@ export default function WorkPage() {
     },
   );
 
+  createEffect(() => {
+    const event = getRequestEvent();
+    if (event) {
+      event.response.headers.set(
+        "Cache-Control",
+        "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+      );
+      event.response.headers.set(
+        "CDN-Cache-Control",
+        "public, max-age=3600, stale-while-revalidate=86400",
+      );
+    }
+  });
+
   return (
     <>
       <Show when={work()} fallback={<Spinner color="grey" />}>
@@ -36,6 +51,15 @@ export default function WorkPage() {
           <PageLayout
             title={data().title}
             description={data().summary || data().meta?.description || ""}
+            canonical={`https://tom.so/work/${params.slug}`}
+            jsonLd={{
+              "@context": "https://schema.org",
+              "@type": "CreativeWork",
+              name: data().title,
+              description: data().summary || data().meta?.description || "",
+              url: `https://tom.so/work/${params.slug}`,
+              author: { "@type": "Person", name: "Tom Hackshaw" },
+            }}
           >
             <article>
               <h1>{data().title}</h1>

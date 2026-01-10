@@ -4,6 +4,7 @@ interface MetaProps {
   title: string | number;
   metaType: string;
   metaContent: string;
+  canonical?: string;
 }
 
 export function Metadata(props: MetaProps) {
@@ -23,6 +24,7 @@ export function Metadata(props: MetaProps) {
       <Meta name="twitter:description" content={description} />
       <Meta name="twitter:image" content={ogImageUrl} />
       <Meta name="twitter:card" content="summary_large_image" />
+      {props.canonical && <link rel="canonical" href={props.canonical} />}
     </>
   );
 }

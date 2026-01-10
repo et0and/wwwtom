@@ -1,6 +1,7 @@
-import { Show, lazy, For } from "solid-js";
+import { Show, lazy, For, createEffect } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
 import { getPostBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Spinner } from "~/components";
@@ -28,6 +29,20 @@ export default function PostPage() {
     },
   );
 
+  createEffect(() => {
+    const event = getRequestEvent();
+    if (event) {
+      event.response.headers.set(
+        "Cache-Control",
+        "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
+      );
+      event.response.headers.set(
+        "CDN-Cache-Control",
+        "public, max-age=3600, stale-while-revalidate=86400",
+      );
+    }
+  });
+
   return (
     <>
       <Show when={post()} fallback={<Spinner color="grey" />}>
@@ -35,6 +50,17 @@ export default function PostPage() {
           <PageLayout
             title={data().title}
             description={data().summary || data().meta?.description || ""}
+            canonical={`https://tom.so/posts/${params.slug}`}
+            jsonLd={{
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              headline: data().title,
+              description: data().summary || data().meta?.description || "",
+              datePublished: data().publishedAt,
+              dateModified: data().updatedAt,
+              url: `https://tom.so/posts/${params.slug}`,
+              author: { "@type": "Person", name: "Tom Hackshaw" },
+            }}
           >
             <article>
               <h1>{data().title}</h1>

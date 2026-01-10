@@ -1,4 +1,6 @@
 import { createAsync, useSearchParams } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
+import { createEffect } from "solid-js";
 import { getPosts } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, Show, For } from "solid-js";
@@ -9,8 +11,33 @@ export default function PostsHome() {
   const currentPage = () => Number(searchParams.page) || 1;
   const posts = createAsync(() => getPosts(currentPage()));
 
+  createEffect(() => {
+    const event = getRequestEvent();
+    if (event) {
+      event.response.headers.set(
+        "Cache-Control",
+        "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
+      );
+      event.response.headers.set(
+        "CDN-Cache-Control",
+        "public, max-age=600, stale-while-revalidate=86400",
+      );
+    }
+  });
+
   return (
-    <PageLayout title="Writing" description="Some of my writing">
+    <PageLayout
+      title="Writing"
+      description="Some of my writing"
+      canonical="https://tom.so/posts"
+      jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Writing",
+        description: "Some of my writing",
+        url: "https://tom.so/posts",
+      }}
+    >
       <h1>Writing</h1>
       <p>Some of my writing.</p>
       <Suspense fallback={<Spinner color="grey" />}>

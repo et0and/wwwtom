@@ -1,4 +1,6 @@
 import { createAsync } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
+import { createEffect } from "solid-js";
 import { getWorks } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, For, Show } from "solid-js";
@@ -11,8 +13,33 @@ export const route = {
 export default function WorkHome() {
   const works = createAsync(() => getWorks());
 
+  createEffect(() => {
+    const event = getRequestEvent();
+    if (event) {
+      event.response.headers.set(
+        "Cache-Control",
+        "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
+      );
+      event.response.headers.set(
+        "CDN-Cache-Control",
+        "public, max-age=600, stale-while-revalidate=86400",
+      );
+    }
+  });
+
   return (
-    <PageLayout title="Work" description="Some work that I have made">
+    <PageLayout
+      title="Work"
+      description="Some work that I have made"
+      canonical="https://tom.so/work"
+      jsonLd={{
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        name: "Work",
+        description: "Some work that I have made",
+        url: "https://tom.so/work",
+      }}
+    >
       <h1>Work</h1>
       <p>Some work that I have made.</p>
       <Suspense fallback={<Spinner color="grey" />}>
