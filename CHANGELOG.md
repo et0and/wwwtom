@@ -1,3 +1,10 @@
+## [1.58.1](https://github.com/et0and/wwwtom/compare/v1.58.0...v1.58.1) (2026-01-10)
+
+
+### Bug Fixes
+
+* account for free products ([dadd339](https://github.com/et0and/wwwtom/commit/dadd339bf3d91378510cf0451ae57a017cf12151))
+
 # [1.58.0](https://github.com/et0and/wwwtom/compare/v1.57.1...v1.58.0) (2026-01-10)
 
 ### Features
