@@ -1,3 +1,10 @@
+# [1.59.0](https://github.com/et0and/wwwtom/compare/v1.58.1...v1.59.0) (2026-01-10)
+
+
+### Features
+
+* **web:** seo improvements, add sitemap, json-ld, canonical urls ([1e1a31d](https://github.com/et0and/wwwtom/commit/1e1a31d609b28adb66ee966cae628426c5a3c433))
+
 ## [1.58.1](https://github.com/et0and/wwwtom/compare/v1.58.0...v1.58.1) (2026-01-10)
 
 ### Bug Fixes
