@@ -1,3 +1,10 @@
+# [1.60.0](https://github.com/et0and/wwwtom/compare/v1.59.0...v1.60.0) (2026-01-10)
+
+
+### Features
+
+* **web:** add ms validate ([15590ff](https://github.com/et0and/wwwtom/commit/15590fffe8af2e1505ff8bca7e25ca4fe3d428df))
+
 # [1.59.0](https://github.com/et0and/wwwtom/compare/v1.58.1...v1.59.0) (2026-01-10)
 
 ### Features
