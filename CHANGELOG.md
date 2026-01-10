@@ -1,3 +1,10 @@
+# [1.62.0](https://github.com/et0and/wwwtom/compare/v1.61.0...v1.62.0) (2026-01-10)
+
+
+### Features
+
+* **apps:** test wagtail cms ([34ebabf](https://github.com/et0and/wwwtom/commit/34ebabfd3b29c65fa3fab2956b7ea17a7507fba6))
+
 # [1.61.0](https://github.com/et0and/wwwtom/compare/v1.60.0...v1.61.0) (2026-01-10)
 
 ### Features
