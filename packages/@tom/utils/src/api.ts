@@ -7,7 +7,7 @@ export const getApiBase = (isDev: boolean): string =>
 
 export const formatPrice = (product: Product): string => {
   const amt = product.prices?.[0]?.price_amount;
-  return amt !== undefined && amt !== null ? `$${amt / 100}` : "";
+  return amt !== undefined && amt !== null ? `$${amt / 100}` : "Free";
 };
 
 export const fetchProducts = (isDev: boolean): Effect.Effect<Product[], HttpError> =>
