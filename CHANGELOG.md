@@ -1,3 +1,10 @@
+# [1.61.0](https://github.com/et0and/wwwtom/compare/v1.60.0...v1.61.0) (2026-01-10)
+
+
+### Features
+
+* **web:** add posthog ([7e18614](https://github.com/et0and/wwwtom/commit/7e18614cd3b75d5b127f48d5680886ee9dcd7e24))
+
 # [1.60.0](https://github.com/et0and/wwwtom/compare/v1.59.0...v1.60.0) (2026-01-10)
 
 ### Features
