@@ -16,6 +16,8 @@
 This is a Bun + Turborepo monorepo with:
 
 - `apps/web` - SolidStart web app (Vinxi, deployed to Cloudflare Workers)
+- `apps/cms` - Payload CMS for content management
+- `apps/api` - API endpoints
 - `packages/@tom/*` - Shared packages (arena, db, payload, types, ui, utils)
 
 Production domain: https://tom.so
@@ -25,8 +27,11 @@ Production domain: https://tom.so
 ### Build & Development
 
 - `bun dev` - Start dev server (via Turbo)
+- `bun dev:web` - Start only web app dev server
+- `bun dev:api` - Start only API dev server
 - `bun build` - Build for production
 - `bun deploy` - Build and deploy to Cloudflare
+- `bun deploy:api` - Deploy API only
 
 ### Code Quality
 
@@ -38,11 +43,11 @@ Production domain: https://tom.so
 ### Testing
 
 - `bun test` - Run all tests via Turbo
-- Run single test: `bun test -- Nav.test.tsx` (in apps/web)
+- `bun test -- Nav.test.tsx` - Run single test file (from repo root, filters to file)
 - `bun test:ui` - Run tests with UI
 - `bun test:coverage` - Run tests with coverage
 
-Test files live in `__tests__/*.test.tsx` directories alongside source.
+Test files live in `__tests__/*.test.tsx` directories alongside source. To run specific tests from within apps/web, use `npx vitest run Nav.test.tsx`.
 
 ## TypeScript Configuration
 
@@ -132,7 +137,7 @@ Define errors in `@tom/types`:
 
 ```typescript
 import { MissingFieldError, AuthenticationError } from "@tom/types";
-yield* Effect.fail(new MissingFieldError({ field: "name" }));
+yield * Effect.fail(new MissingFieldError({ field: "name" }));
 ```
 
 ### Logging
@@ -163,8 +168,19 @@ describe("Component", () => {
     ));
     expect(container).toMatchSnapshot();
   });
+
+  it("has correct navigation links", () => {
+    render(() => (
+      <Router>
+        <Route path="/" component={Nav} />
+      </Router>
+    ));
+    expect(screen.getByRole("link", { name: "About" })).toBeInTheDocument();
+  });
 });
 ```
+
+Test setup file `src/test/setup.ts` includes jest-dom matchers and `window.matchMedia` mock.
 
 ## Server Functions
 
@@ -198,3 +214,19 @@ The Effect repository is available at `/effect` in this repo for API reference. 
 
 Use `Effect.gen`, `Effect.succeed`, `Effect.fail`, `Effect.try` for operations.
 Use `Redacted.make()` for sensitive values like tokens.
+
+## Workspace Packages
+
+- `@tom/types` - Shared TypeScript types and custom error definitions
+- `@tom/utils` - Shared utilities including logger and Effect helpers
+- `@tom/ui` - Shared SolidJS UI components (Nav, Link, Spinner, Footer, etc.)
+- `@tom/db` - Database utilities and schemas
+- `@tom/arena` - Arena API integration
+- `@tom/payload` - Payload CMS integration helpers
+
+## Environment
+
+- Runtime: Cloudflare Workers (not Node.js)
+- Database: PostgreSQL
+- CMS: Payload CMS
+- Deployment: Cloudflare Workers for web and API, Fly.io for CMS
