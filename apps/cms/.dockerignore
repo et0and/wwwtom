@@ -1,0 +1,27 @@
+# flyctl launch added from .gitignore
+**/build
+**/dist / media
+**/node_modules
+**/.DS_Store
+**/.env
+**/.next
+**/.vercel
+**/AGENTS.md
+
+# Payload default media upload directory
+**/public/media
+
+**/public/robots.txt
+**/public/sitemap*.xml
+
+
+# Playwright
+**/node_modules
+test-results
+playwright-report
+blob-report
+playwright/.cache
+
+# flyctl launch added from node_modules/tailwindcss/stubs/.gitignore
+!node_modules/tailwindcss/stubs/**/*
+fly.toml
