@@ -1,3 +1,19 @@
+# [1.63.0](https://github.com/et0and/wwwtom/compare/v1.62.0...v1.63.0) (2026-01-11)
+
+
+### Bug Fixes
+
+* **cms:** no tests ([8ffc813](https://github.com/et0and/wwwtom/commit/8ffc8139ad7b3094e48dbdee4c5d0726192ce26e))
+* **cms:** rem tests ([6d214df](https://github.com/et0and/wwwtom/commit/6d214df0512388b8c46fc5d713d8ce81fc115f62))
+* **cms:** rem unneeded actions ([9201c6f](https://github.com/et0and/wwwtom/commit/9201c6f6804a53e14edc084de1ce5ad0e85c3fc1))
+* **web:** lockfile ([571be93](https://github.com/et0and/wwwtom/commit/571be9383ebadec6603dcee73b533fbfd6eabd8d))
+
+
+### Features
+
+* add wagtail to turbo parallel ([0c518f1](https://github.com/et0and/wwwtom/commit/0c518f1d70bba8c9d4db188a421c261309a8d701))
+* **cms:** rem wagtail, migrate payload ([49d38db](https://github.com/et0and/wwwtom/commit/49d38db4cd46e28d3a7f6fc313c4fb4940229d4a))
+
 # [1.62.0](https://github.com/et0and/wwwtom/compare/v1.61.0...v1.62.0) (2026-01-10)
 
 ### Features
