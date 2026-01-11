@@ -20,6 +20,8 @@ tsconfig.tsbuildinfo
 /solid-start
 /tom-cms-payload
 
+db.sqlite3
+
 *.py[cod]
 *.so
 

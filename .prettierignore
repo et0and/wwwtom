@@ -1,0 +1,3 @@
+apps/wagtail/**/*.html
+apps/wagtail/**/*.css
+apps/wagtail/**/*.js
