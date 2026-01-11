@@ -1,3 +1,10 @@
+# [1.64.0](https://github.com/et0and/wwwtom/compare/v1.63.0...v1.64.0) (2026-01-11)
+
+
+### Features
+
+* **web:** add payload response caching ([9e51a45](https://github.com/et0and/wwwtom/commit/9e51a45a88d24bdb33e6265cbc918d31d0c3e3cd))
+
 # [1.63.0](https://github.com/et0and/wwwtom/compare/v1.62.0...v1.63.0) (2026-01-11)
 
 ### Bug Fixes
