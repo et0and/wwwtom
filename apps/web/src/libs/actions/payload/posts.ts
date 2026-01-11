@@ -4,19 +4,6 @@ import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
 import { Effect } from "effect";
 
-export type PostsResponse = {
-  data: PayloadPost[];
-  meta: {
-    pagination: {
-      page: number;
-      pageSize: number;
-      pageCount: number;
-      total: number;
-    };
-  };
-  error?: string;
-};
-
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
  * @param page - The page number to retrieve (default is 1).
@@ -34,6 +21,7 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
 
   const effect = fetchPayload<PayloadResponse<PayloadPost>>(
     `/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
+    { useCache: true, cacheTTL: 3600 },
   ).pipe(
     Effect.map((response) => ({
       data: response.docs,
@@ -76,6 +64,7 @@ export const getPostBySlug = query(async (slug: string) => {
 
   const effect = fetchPayload<PayloadResponse<PayloadPost>>(
     `/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+    { useCache: true, cacheTTL: 3600 },
   ).pipe(
     Effect.map((response) => {
       const post = response.docs[0];

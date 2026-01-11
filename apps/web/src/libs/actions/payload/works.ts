@@ -16,9 +16,10 @@ import { fetchPayload } from "./client";
  */
 export const getWorks = query(async () => {
   "use server";
-  const effect = fetchPayload<PayloadResponse<PayloadPost>>("/works?sort=title").pipe(
-    Effect.map((response) => response.docs),
-  );
+  const effect = fetchPayload<PayloadResponse<PayloadPost>>("/works?sort=title", {
+    useCache: true,
+    cacheTTL: 3600,
+  }).pipe(Effect.map((response) => response.docs));
   return Effect.runPromise(effect);
 }, "works");
 
@@ -38,6 +39,7 @@ export const getWorkBySlug = query(async (slug: string) => {
   "use server";
   const effect = fetchPayload<PayloadResponse<PayloadPost>>(
     `/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+    { useCache: true, cacheTTL: 3600 },
   ).pipe(
     Effect.map((response) => {
       const work = response.docs[0];

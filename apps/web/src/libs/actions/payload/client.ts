@@ -4,7 +4,7 @@ import { logger, retryPolicy } from "@tom/utils";
 
 export function fetchPayload<T>(
   endpoint: string,
-  options?: RequestInit & { cache?: boolean; cacheTTL?: number },
+  options?: RequestInit & { useCache?: boolean; cacheTTL?: number },
 ): Effect.Effect<T, Error> {
   "use server";
 
@@ -35,14 +35,65 @@ export function fetchPayload<T>(
 
     yield* Effect.sync(() => logger.debug(`Fetching Payload: ${url}`));
 
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(url, {
-          ...options,
-          headers,
-        }),
-      catch: (e) => (e instanceof Error ? e : new Error("Unknown fetch error")),
-    });
+    let response: Response;
+    if (options?.useCache) {
+      const cacheResult = yield* Effect.tryPromise({
+        try: async () => (await caches.open("payload-cache")) as Cache | null,
+        catch: (e) => (e instanceof Error ? e : new Error("Cache access error")),
+      }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+
+      if (cacheResult) {
+        const cacheUrl = new Request(url);
+        const cachedResponse = yield* Effect.tryPromise({
+          try: async () => await cacheResult.match(cacheUrl),
+          catch: (e) => (e instanceof Error ? e : new Error("Cache error")),
+        }).pipe(Effect.catchAll(() => Effect.succeed(null as Response | null)));
+
+        if (cachedResponse) {
+          yield* Effect.sync(() => logger.debug(`Cache hit: ${url}`));
+          response = cachedResponse;
+        } else {
+          yield* Effect.sync(() => logger.debug(`Cache miss: ${url}`));
+          response = yield* Effect.tryPromise({
+            try: () =>
+              fetch(url, {
+                ...options,
+                headers,
+              }),
+            catch: (e) => (e instanceof Error ? e : new Error("Unknown fetch error")),
+          });
+
+          if (response.ok) {
+            const responseClone = response.clone();
+            yield* Effect.tryPromise({
+              try: async () => await cacheResult.put(cacheUrl, responseClone),
+              catch: (e) => {
+                logger.warn("Failed to cache response", e);
+                return null;
+              },
+            }).pipe(Effect.catchAll(() => Effect.succeed(void 0)));
+          }
+        }
+      } else {
+        response = yield* Effect.tryPromise({
+          try: () =>
+            fetch(url, {
+              ...options,
+              headers,
+            }),
+          catch: (e) => (e instanceof Error ? e : new Error("Unknown fetch error")),
+        });
+      }
+    } else {
+      response = yield* Effect.tryPromise({
+        try: () =>
+          fetch(url, {
+            ...options,
+            headers,
+          }),
+        catch: (e) => (e instanceof Error ? e : new Error("Unknown fetch error")),
+      });
+    }
 
     if (!response.ok) {
       return yield* Effect.fail(
