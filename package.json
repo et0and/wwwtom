@@ -15,6 +15,10 @@
     "write": "oxfmt --write .",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
+    "sst:dev": "sst dev",
+    "sst:deploy": "sst deploy",
+    "sst:deploy:prod": "sst deploy --stage production",
+    "sst:remove": "sst remove",
     "deploy": "turbo run build --filter=@tom/web && cd apps/web && wrangler deploy",
     "deploy:api": "turbo run deploy --filter=@tom/api",
     "semantic-release": "semantic-release"
@@ -26,6 +30,7 @@
     "oxfmt": "^0.21.0",
     "oxlint": "^1.13.0",
     "semantic-release": "^24.2.3",
+    "sst": "^3.17.25",
     "turbo": "^2.5.4",
     "typescript": "^5.9.3"
   },

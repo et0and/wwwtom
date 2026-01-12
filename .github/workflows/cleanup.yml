@@ -1,0 +1,35 @@
+name: Cleanup Preview
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - dev
+      - main
+
+env:
+  SST_STAGE: pr-${{ github.event.pull_request.number }}
+
+jobs:
+  remove:
+    name: Remove Preview
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Remove deployment
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bun run sst:remove --stage ${{ env.SST_STAGE }}
