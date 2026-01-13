@@ -1,12 +1,22 @@
 import { Effect } from "effect";
-import { RepositoryError } from "./errors";
+import { RepositoryError } from "@tom/types/errors";
 
 export interface Repository<A, Id> {
-  readonly findById: (id: Id) => Effect.Effect<A, RepositoryError>;
-  readonly findAll: () => Effect.Effect<ReadonlyArray<A>, RepositoryError>;
-  readonly create: (entity: Omit<A, "id" | "createdAt">) => Effect.Effect<A, RepositoryError>;
-  readonly update: (id: Id, updates: Partial<A>) => Effect.Effect<A, RepositoryError>;
-  readonly delete: (id: Id) => Effect.Effect<void, RepositoryError>;
+  readonly findById: (
+    id: Id,
+  ) => Effect.Effect<A, RepositoryError>;
+  readonly findAll: (
+  ) => Effect.Effect<ReadonlyArray<A>, RepositoryError>;
+  readonly create: (
+    entity: Omit<A, "id" | "createdAt">,
+  ) => Effect.Effect<A, RepositoryError>;
+  readonly update: (
+    id: Id,
+    updates: Partial<A>,
+  ) => Effect.Effect<A, RepositoryError>;
+  readonly delete: (
+    id: Id,
+  ) => Effect.Effect<void, RepositoryError>;
 }
 
 export interface PaginatedResult<A> {

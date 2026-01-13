@@ -73,3 +73,9 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
 export class ImageGenerationError extends Data.TaggedError("ImageGenerationError")<{
   readonly message: string;
 }> {}
+
+export class RepositoryError extends Data.TaggedError("RepositoryError")<{
+  readonly message: string;
+  readonly code: "NOT_FOUND" | "CONFLICT" | "VALIDATION_ERROR" | "DATABASE_ERROR";
+  readonly cause?: unknown;
+}> {}
