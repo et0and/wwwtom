@@ -11,6 +11,10 @@
     "@hono/standard-validator": "^0.2.1",
     "@polar-sh/hono": "^0.5.3",
     "@scalar/hono-api-reference": "^0.9.30",
+    "@tom/schemas": "workspace:*",
+    "@tom/types": "workspace:*",
+    "@tom/ui": "workspace:*",
+    "@tom/utils": "workspace:*",
     "hono": "^4.11.3",
     "hono-openapi": "^1.1.2",
     "workers-og": "^0.0.27"
