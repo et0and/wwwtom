@@ -1,4 +1,4 @@
-import { Show, lazy, For, createEffect } from "solid-js";
+import { Show, lazy, For, createEffect, createMemo } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
@@ -19,10 +19,12 @@ export const route = {
 
 export default function PostPage() {
   const params = useParams();
+  const slug = createMemo(() => params.slug);
   const post = createAsync(
     () => {
-      if (!params.slug) return Promise.resolve(null);
-      return getPostBySlug(params.slug);
+      const s = slug();
+      if (!s) return Promise.resolve(null);
+      return getPostBySlug(s);
     },
     {
       deferStream: true,
