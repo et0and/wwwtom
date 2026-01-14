@@ -1,3 +1,10 @@
+## [1.64.2](https://github.com/et0and/wwwtom/compare/v1.64.1...v1.64.2) (2026-01-14)
+
+
+### Bug Fixes
+
+* **web:** track post page params as dep ([b5942d3](https://github.com/et0and/wwwtom/commit/b5942d3b806073124bf4a7058eed20440af3979e))
+
 ## [1.64.1](https://github.com/et0and/wwwtom/compare/v1.64.0...v1.64.1) (2026-01-12)
 
 
