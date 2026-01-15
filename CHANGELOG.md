@@ -1,23 +1,20 @@
 ## [1.64.2](https://github.com/et0and/wwwtom/compare/v1.64.1...v1.64.2) (2026-01-14)
 
-
 ### Bug Fixes
 
-* **web:** track post page params as dep ([b5942d3](https://github.com/et0and/wwwtom/commit/b5942d3b806073124bf4a7058eed20440af3979e))
+- **web:** track post page params as dep ([b5942d3](https://github.com/et0and/wwwtom/commit/b5942d3b806073124bf4a7058eed20440af3979e))
 
 ## [1.64.1](https://github.com/et0and/wwwtom/compare/v1.64.0...v1.64.1) (2026-01-12)
 
-
 ### Bug Fixes
 
-* spelling ([9aeb456](https://github.com/et0and/wwwtom/commit/9aeb4562eaecd5ddf27d03150bf604d522bf052f))
+- spelling ([9aeb456](https://github.com/et0and/wwwtom/commit/9aeb4562eaecd5ddf27d03150bf604d522bf052f))
 
 # [1.64.0](https://github.com/et0and/wwwtom/compare/v1.63.0...v1.64.0) (2026-01-11)
 
-
 ### Features
 
-* **web:** add payload response caching ([9e51a45](https://github.com/et0and/wwwtom/commit/9e51a45a88d24bdb33e6265cbc918d31d0c3e3cd))
+- **web:** add payload response caching ([9e51a45](https://github.com/et0and/wwwtom/commit/9e51a45a88d24bdb33e6265cbc918d31d0c3e3cd))
 
 # [1.63.0](https://github.com/et0and/wwwtom/compare/v1.62.0...v1.63.0) (2026-01-11)
 

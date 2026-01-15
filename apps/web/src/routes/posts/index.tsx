@@ -42,59 +42,54 @@ export default function PostsHome() {
       <p>Some of my writing.</p>
       <Suspense fallback={<Spinner color="grey" />}>
         <Show when={posts()}>
-          {(postsData) => {
-            const data = postsData();
-            return (
-              <>
-                <Show when={"error" in data && data.error}>
-                  {(error) => (
-                    <div class="banner" role="alert">
-                      <p class="banner-title">Error loading posts</p>
-                      <p>{error()}</p>
-                    </div>
+          {(data) => (
+            <>
+              <Show when={"error" in data()}>
+                {(error) => (
+                  <div class="banner" role="alert">
+                    <p class="banner-title">Error loading posts</p>
+                    <p>{error()}</p>
+                  </div>
+                )}
+              </Show>
+              <Show when={data().data && data().data.length > 0}>
+                <For each={data().data}>
+                  {(post) => (
+                    <Link class="page" preload={true} href={`/posts/${post.slug}`}>
+                      <div>
+                        <h2>{post.title}</h2>
+                        <time>
+                          {new Date(post.publishedAt).toLocaleDateString("en-NZ", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </time>
+                        <p>{post.summary || post.meta?.description}</p>
+                      </div>
+                    </Link>
                   )}
-                </Show>
-                <Show when={data.data && data.data.length > 0}>
-                  <For each={data.data}>
-                    {(post) => (
-                      <Link class="page" preload={true} href={`/posts/${post.slug}`}>
-                        <div>
-                          <h2>{post.title}</h2>
-                          <time>
-                            {new Date(post.publishedAt).toLocaleDateString("en-NZ", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </time>
-                          <p>{post.summary || post.meta?.description}</p>
-                        </div>
+                </For>
+              </Show>
+              <Show when={(!data().data || data().data.length === 0) && !("error" in data())}>
+                <p>No posts found.</p>
+              </Show>
+              <Show when={data().meta?.pagination}>
+                {(pagination) => (
+                  <div class="justify-between flex item-center">
+                    <Show when={pagination().page > 1}>
+                      <Link preload={true} href={`/posts?page=${pagination().page - 1}`}>
+                        Previous
                       </Link>
-                    )}
-                  </For>
-                </Show>
-                <Show
-                  when={(!data.data || data.data.length === 0) && !("error" in data && data.error)}
-                >
-                  <p>No posts found.</p>
-                </Show>
-                <Show when={data.meta?.pagination}>
-                  {(pagination) => (
-                    <div class="justify-between flex item-center">
-                      <Show when={pagination().page > 1}>
-                        <Link preload={true} href={`/posts?page=${pagination().page - 1}`}>
-                          Previous
-                        </Link>
-                      </Show>
-                      <Show when={pagination().page < pagination().pageCount}>
-                        <Link href={`/posts?page=${pagination().page + 1}`}>Next</Link>
-                      </Show>
-                    </div>
-                  )}
-                </Show>
-              </>
-            );
-          }}
+                    </Show>
+                    <Show when={pagination().page < pagination().pageCount}>
+                      <Link href={`/posts?page=${pagination().page + 1}`}>Next</Link>
+                    </Show>
+                  </div>
+                )}
+              </Show>
+            </>
+          )}
         </Show>
       </Suspense>
     </PageLayout>
