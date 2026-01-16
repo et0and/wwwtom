@@ -1,3 +1,10 @@
+## [1.64.4](https://github.com/et0and/wwwtom/compare/v1.64.3...v1.64.4) (2026-01-16)
+
+
+### Bug Fixes
+
+* **api:** type errors ([06f7828](https://github.com/et0and/wwwtom/commit/06f78284af0cb935d1313b69f4b26742a13f347d))
+
 ## [1.64.3](https://github.com/et0and/wwwtom/compare/v1.64.2...v1.64.3) (2026-01-15)
 
 ### Bug Fixes
