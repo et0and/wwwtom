@@ -1,3 +1,10 @@
+# [1.65.0](https://github.com/et0and/wwwtom/compare/v1.64.6...v1.65.0) (2026-01-16)
+
+
+### Features
+
+* **infra:** create pulumi infra ([c0d8130](https://github.com/et0and/wwwtom/commit/c0d8130cba88d270d2e096910e584854ad41c68d))
+
 ## [1.64.6](https://github.com/et0and/wwwtom/compare/v1.64.5...v1.64.6) (2026-01-16)
 
 
