@@ -1,3 +1,10 @@
+# [1.66.0](https://github.com/et0and/wwwtom/compare/v1.65.0...v1.66.0) (2026-01-16)
+
+
+### Features
+
+* pre commit, snap ([f36d71e](https://github.com/et0and/wwwtom/commit/f36d71e307f9d3f375bec83145f960f0a9959826))
+
 # [1.65.0](https://github.com/et0and/wwwtom/compare/v1.64.6...v1.65.0) (2026-01-16)
 
 
