@@ -1,3 +1,10 @@
+## [1.64.6](https://github.com/et0and/wwwtom/compare/v1.64.5...v1.64.6) (2026-01-16)
+
+
+### Bug Fixes
+
+* **web:** update snapshot ([1d1a8a4](https://github.com/et0and/wwwtom/commit/1d1a8a4bbdb9f27fbeb828918cff45f53fa16651))
+
 ## [1.64.5](https://github.com/et0and/wwwtom/compare/v1.64.4...v1.64.5) (2026-01-16)
 
 
