@@ -1,3 +1,10 @@
+## [1.64.5](https://github.com/et0and/wwwtom/compare/v1.64.4...v1.64.5) (2026-01-16)
+
+
+### Bug Fixes
+
+* **web:** skiplink id ([2de1ee0](https://github.com/et0and/wwwtom/commit/2de1ee0c9465b5e5566b21e111cfa9fdf479c031))
+
 ## [1.64.4](https://github.com/et0and/wwwtom/compare/v1.64.3...v1.64.4) (2026-01-16)
 
 
