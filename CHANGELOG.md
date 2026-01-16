@@ -1,9 +1,8 @@
 ## [1.64.3](https://github.com/et0and/wwwtom/compare/v1.64.2...v1.64.3) (2026-01-15)
 
-
 ### Bug Fixes
 
-* **web:** broken reactivity ([c50d3b4](https://github.com/et0and/wwwtom/commit/c50d3b400803751513e7c762444dcd43b8587b2d))
+- **web:** broken reactivity ([c50d3b4](https://github.com/et0and/wwwtom/commit/c50d3b400803751513e7c762444dcd43b8587b2d))
 
 ## [1.64.2](https://github.com/et0and/wwwtom/compare/v1.64.1...v1.64.2) (2026-01-14)
 

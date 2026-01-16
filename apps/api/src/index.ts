@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Scalar } from "@scalar/hono-api-reference";
 import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
-import { ValidationError, FontFetchError, ImageGenerationError } from "@tom/types/errors";
-import { Schema, Effect } from "effect";
+import { Effect, Data } from "effect";
+import { Schema } from "effect";
 import { ImageResponse } from "workers-og";
 import {
   healthResponseSchema,
@@ -13,12 +13,19 @@ import {
 import { OgTemplates, OgTemplateParams } from "@tom/ui";
 import { requestId } from "hono/request-id";
 import { Checkout, CustomerPortal } from "@polar-sh/hono";
-import { logger } from "@tom/utils";
+import { logger, runServerEffect } from "@tom/utils";
+import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types";
 
 type Env = {
   POLAR_ACCESS_TOKEN: string | undefined;
   SUCCESS_URL: string | undefined;
 };
+
+class PolarApiError extends Data.TaggedError("PolarApiError")<{
+  readonly message: string;
+  readonly status: number;
+  readonly operation: string;
+}> {}
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -45,28 +52,27 @@ const fontFetchEffect = Effect.gen(function* () {
   const data = yield* Effect.tryPromise({
     try: () =>
       fetch(FONT_URL).then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch font: ${res.status}`);
+        }
         return res.arrayBuffer();
       }),
-    catch: (error) => {
-      logger.error("Failed to fetch font");
-      return new FontFetchError(
+    catch: (error) =>
+      new FontFetchError(
         "Failed to fetch font",
         error instanceof Error ? error.message : "Unknown error",
-      );
-    },
+      ),
   });
 
-  yield* Effect.sync(() => {
-    cachedFontData = data;
-  });
+  cachedFontData = data;
 
   return data;
 });
 
-function getTemplate(
+const getTemplate = (
   requester: string,
   templateParam?: string,
-): (params: OgTemplateParams) => string {
+): ((params: OgTemplateParams) => string) => {
   if (templateParam && templateParam in OgTemplates) {
     return OgTemplates[templateParam as keyof typeof OgTemplates];
   }
@@ -78,7 +84,7 @@ function getTemplate(
     default:
       return OgTemplates.minimal;
   }
-}
+};
 
 const generateOgImageEffect = (
   title: string,
@@ -106,12 +112,207 @@ const generateOgImageEffect = (
     });
   });
 
-function runEffectWithErrorHandler<A>(
-  effect: Effect.Effect<A, FontFetchError | ValidationError | ImageGenerationError>,
-  onError: (error: FontFetchError | ValidationError | ImageGenerationError) => Response,
-): Promise<A | Response> {
-  return Effect.runPromise(Effect.catchAll(effect, (error) => Effect.succeed(onError(error))));
-}
+const fetchPolarProducts = (
+  accessToken: string | undefined,
+): Effect.Effect<unknown[], PolarApiError> =>
+  Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch("https://api.polar.sh/v1/products?is_archived=false", {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }),
+      catch: () =>
+        new PolarApiError({
+          message: "Network error",
+          status: 0,
+          operation: "fetch_products",
+        }),
+    });
+
+    if (!response.ok) {
+      logger.error("Failed to fetch Polar products", {
+        status: response.status,
+      });
+      return yield* Effect.fail(
+        new PolarApiError({
+          message: "Failed to fetch products",
+          status: response.status,
+          operation: "fetch_products",
+        }),
+      );
+    }
+
+    return yield* Effect.tryPromise({
+      try: () => response.json() as Promise<{ items: unknown[] }>,
+      catch: () =>
+        new PolarApiError({
+          message: "Failed to parse response",
+          status: 500,
+          operation: "fetch_products",
+        }),
+    }).pipe(Effect.map((data) => data.items));
+  });
+
+const fetchPolarProduct = (
+  productId: string,
+  accessToken: string | undefined,
+): Effect.Effect<unknown, PolarApiError> =>
+  Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch(`https://api.polar.sh/v1/products/${productId}`, {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }),
+      catch: () =>
+        new PolarApiError({
+          message: "Network error",
+          status: 0,
+          operation: "fetch_product",
+        }),
+    });
+
+    if (!response.ok) {
+      logger.error("Failed to fetch Polar product", {
+        status: response.status,
+      });
+      return yield* Effect.fail(
+        new PolarApiError({
+          message: "Failed to fetch product",
+          status: response.status,
+          operation: "fetch_product",
+        }),
+      );
+    }
+
+    return yield* Effect.tryPromise({
+      try: () => response.json(),
+      catch: () =>
+        new PolarApiError({
+          message: "Failed to parse response",
+          status: 500,
+          operation: "fetch_product",
+        }),
+    });
+  });
+
+const createPolarCustomer = (
+  email: string,
+  name: string | undefined,
+  externalId: string | undefined,
+  accessToken: string | undefined,
+): Effect.Effect<unknown, PolarApiError> =>
+  Effect.gen(function* () {
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch("https://api.polar.sh/v1/customers/", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            name,
+            external_id: externalId,
+          }),
+        }),
+      catch: () =>
+        new PolarApiError({
+          message: "Network error",
+          status: 0,
+          operation: "create_customer",
+        }),
+    });
+
+    if (!response.ok) {
+      const errorData = yield* Effect.tryPromise({
+        try: () => response.text(),
+        catch: () =>
+          new PolarApiError({
+            message: "Failed to read error response",
+            status: response.status,
+            operation: "create_customer",
+          }),
+      });
+
+      if (response.status === 422 && errorData.includes("already exists")) {
+        const listResponse = yield* Effect.tryPromise({
+          try: () =>
+            fetch(`https://api.polar.sh/v1/customers?email=${encodeURIComponent(email)}`, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }),
+          catch: () =>
+            new PolarApiError({
+              message: "Network error",
+              status: 0,
+              operation: "find_customer",
+            }),
+        });
+
+        if (!listResponse.ok) {
+          logger.error("Failed to find existing Polar customer", {
+            status: listResponse.status,
+          });
+          return yield* Effect.fail(
+            new PolarApiError({
+              message: "Failed to find existing customer",
+              status: listResponse.status,
+              operation: "find_customer",
+            }),
+          );
+        }
+
+        const listData = yield* Effect.tryPromise({
+          try: () => listResponse.json() as Promise<{ items: unknown[] }>,
+          catch: () =>
+            new PolarApiError({
+              message: "Failed to parse response",
+              status: 500,
+              operation: "find_customer",
+            }),
+        });
+
+        if (listData.items && listData.items.length > 0) {
+          return listData.items[0];
+        }
+      }
+
+      logger.error("Failed to create Polar customer", {
+        status: response.status,
+        error: errorData,
+      });
+      return yield* Effect.fail(
+        new PolarApiError({
+          message: `Failed to create customer: ${errorData}`,
+          status: response.status,
+          operation: "create_customer",
+        }),
+      );
+    }
+
+    return yield* Effect.tryPromise({
+      try: () => response.json(),
+      catch: () =>
+        new PolarApiError({
+          message: "Failed to parse response",
+          status: 500,
+          operation: "create_customer",
+        }),
+    });
+  });
+
+const handlePolarError = (error: PolarApiError): Response => {
+  return new Response(JSON.stringify({ error: error.message }), {
+    status: error.status as 400 | 404 | 500,
+    headers: { "Content-Type": "application/json" },
+  });
+};
 
 const handleOgError = (
   error: FontFetchError | ValidationError | ImageGenerationError,
@@ -188,26 +389,20 @@ app.get(
 );
 
 app.get("/products", async (c) => {
-  try {
-    const response = await fetch("https://api.polar.sh/v1/products?is_archived=false", {
-      headers: {
-        Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
-      },
-    });
+  const result = await runServerEffect(
+    fetchPolarProducts(c.env.POLAR_ACCESS_TOKEN).pipe(
+      Effect.catchAll((error) => {
+        logger.error("Error fetching Polar products", error);
+        return Effect.succeed(handlePolarError(error));
+      }),
+    ),
+  );
 
-    if (!response.ok) {
-      logger.error("Failed to fetch Polar products", {
-        status: response.status,
-      });
-      return c.json({ error: "Failed to fetch products" }, response.status as 400 | 500);
-    }
-
-    const data = (await response.json()) as { items: unknown[] };
-    return c.json(data.items);
-  } catch (error) {
-    logger.error("Error fetching Polar products", error);
-    return c.json({ error: "Internal server error" }, 500);
+  if (result instanceof Response) {
+    return result;
   }
+
+  return c.json(result);
 });
 
 app.get("/products/:productId", async (c) => {
@@ -217,26 +412,20 @@ app.get("/products/:productId", async (c) => {
     return c.json({ error: "Product ID is required" }, 400);
   }
 
-  try {
-    const response = await fetch(`https://api.polar.sh/v1/products/${productId}`, {
-      headers: {
-        Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
-      },
-    });
+  const result = await runServerEffect(
+    fetchPolarProduct(productId, c.env.POLAR_ACCESS_TOKEN).pipe(
+      Effect.catchAll((error) => {
+        logger.error("Error fetching Polar product", error);
+        return Effect.succeed(handlePolarError(error));
+      }),
+    ),
+  );
 
-    if (!response.ok) {
-      logger.error("Failed to fetch Polar product", {
-        status: response.status,
-      });
-      return c.json({ error: "Failed to fetch product" }, response.status as 400 | 404 | 500);
-    }
-
-    const product = await response.json();
-    return c.json(product);
-  } catch (error) {
-    logger.error("Error fetching Polar product", error);
-    return c.json({ error: "Internal server error" }, 500);
+  if (result instanceof Response) {
+    return result;
   }
+
+  return c.json(result);
 });
 
 app.post("/customers", async (c) => {
@@ -247,62 +436,20 @@ app.post("/customers", async (c) => {
     return c.json({ error: "Email is required" }, 400);
   }
 
-  try {
-    const response = await fetch("https://api.polar.sh/v1/customers/", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        name,
-        external_id: externalId,
+  const result = await runServerEffect(
+    createPolarCustomer(email, name, externalId, c.env.POLAR_ACCESS_TOKEN).pipe(
+      Effect.mapError((error) => {
+        logger.error("Error creating Polar customer", error);
+        return error;
       }),
-    });
+    ),
+  );
 
-    if (!response.ok) {
-      const errorData = await response.text();
-
-      if (response.status === 422 && errorData.includes("already exists")) {
-        const listResponse = await fetch(
-          `https://api.polar.sh/v1/customers?email=${encodeURIComponent(email)}`,
-          {
-            headers: {
-              Authorization: `Bearer ${c.env.POLAR_ACCESS_TOKEN}`,
-            },
-          },
-        );
-
-        if (!listResponse.ok) {
-          logger.error("Failed to find existing Polar customer", {
-            status: listResponse.status,
-          });
-          return c.json({ error: "Failed to find existing customer" }, 500);
-        }
-
-        const listData = (await listResponse.json()) as { items: unknown[] };
-        if (listData.items && listData.items.length > 0) {
-          return c.json(listData.items[0], 200);
-        }
-      }
-
-      logger.error("Failed to create Polar customer", {
-        status: response.status,
-        error: errorData,
-      });
-      return c.json(
-        { error: "Failed to create customer", details: errorData },
-        response.status as 400 | 422 | 500,
-      );
-    }
-
-    const customer = await response.json();
-    return c.json(customer, 201);
-  } catch (error) {
-    logger.error("Error creating Polar customer", error);
-    return c.json({ error: "Internal server error" }, 500);
+  if (result instanceof Response) {
+    return result;
   }
+
+  return c.json(result, 201);
 });
 
 app.get(
@@ -415,13 +562,27 @@ app.get(
     const referer = c.req.header("Referer") || "";
     const requester = referer || c.req.query("requester") || "unknown";
 
-    const validationResult = await Effect.runPromise(
-      Schema.decode(ogImageQueryParamsSchema)({ title, summary }),
-    );
-
-    const result = await runEffectWithErrorHandler(
-      generateOgImageEffect(title, summary, requester, template),
-      handleOgError,
+    const result = await runServerEffect(
+      Effect.gen(function* () {
+        const validation = yield* Schema.decode(ogImageQueryParamsSchema)({
+          title,
+          summary,
+        });
+        return yield* generateOgImageEffect(title, summary, requester, template);
+      }).pipe(
+        Effect.catchTag("ParseError", (error) =>
+          Effect.fail(
+            new ValidationError({
+              field: "params",
+              issue: error.message || "Invalid query parameters",
+            }),
+          ),
+        ),
+        Effect.catchAll((error) => {
+          logger.error("Error generating OG image", error);
+          return Effect.succeed(handleOgError(error));
+        }),
+      ),
     );
 
     if (result instanceof Response) {
