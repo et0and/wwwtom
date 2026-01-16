@@ -43,7 +43,9 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
       {props.jsonLd && (
         <script type="application/ld+json" innerHTML={JSON.stringify(props.jsonLd)} />
       )}
-      <main id="main" class="mx-auto p-8 max-w-[750px]">{props.children}</main>
+      <main id="main" class="mx-auto p-8 max-w-[750px]">
+        {props.children}
+      </main>
     </>
   );
 };

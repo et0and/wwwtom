@@ -1,16 +1,14 @@
 ## [1.64.5](https://github.com/et0and/wwwtom/compare/v1.64.4...v1.64.5) (2026-01-16)
 
-
 ### Bug Fixes
 
-* **web:** skiplink id ([2de1ee0](https://github.com/et0and/wwwtom/commit/2de1ee0c9465b5e5566b21e111cfa9fdf479c031))
+- **web:** skiplink id ([2de1ee0](https://github.com/et0and/wwwtom/commit/2de1ee0c9465b5e5566b21e111cfa9fdf479c031))
 
 ## [1.64.4](https://github.com/et0and/wwwtom/compare/v1.64.3...v1.64.4) (2026-01-16)
 
-
 ### Bug Fixes
 
-* **api:** type errors ([06f7828](https://github.com/et0and/wwwtom/commit/06f78284af0cb935d1313b69f4b26742a13f347d))
+- **api:** type errors ([06f7828](https://github.com/et0and/wwwtom/commit/06f78284af0cb935d1313b69f4b26742a13f347d))
 
 ## [1.64.3](https://github.com/et0and/wwwtom/compare/v1.64.2...v1.64.3) (2026-01-15)
 
