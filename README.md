@@ -6,6 +6,8 @@ A website of my very own, and my first foray into [Solid Start](https://start.so
 
 This is still very much a work in progress and has some rough edges. I'm still fairly new to [Solid](https://solidjs.com) and am a recovering React user lol.
 
+Parts of this monorepo might seem a bit over engineered, and chances are it probably is. But I'm using this as a means of exploring different technologies and patterns, mostly for my own enjoyment.
+
 ## Developing
 
 ```bash
@@ -34,7 +36,7 @@ I use Vitest for snapshot and integration tests.
 
 ## Credits
 
-I make extensive use of [arena-ts](https://github.com/e-e-e/arena-ts) by [Benjamin Forster]. I wanted to use [Effect](https://effect.website) with a lot of the client callers so have just got the entirely library in this repo, but all credit to him (I have added attribution as comments in the relevant files). It's an awesome library and provides a great way of working with the [are.na API](https://dev.are.na) in Typescript projects.
+I make extensive use of [arena-ts](https://github.com/e-e-e/arena-ts) by Benjamin Forster. I wanted to use [Effect](https://effect.website) with a lot of the client callers so have just got the entirely library in this repo, but all credit to him (I have added attribution as comments in the relevant files). It's an awesome library and provides a great way of working with the [are.na API](https://dev.are.na) in Typescript projects.
 
 As mentioned above, I also make use of Effect for handling errors clearly and logging. It is a lot to learn so I am just adding it incrementally, but am hoping to make greater use of the library in the future for handling things like retries, observability and so on.
 
