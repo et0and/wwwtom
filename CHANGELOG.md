@@ -1,23 +1,20 @@
 # [1.66.0](https://github.com/et0and/wwwtom/compare/v1.65.0...v1.66.0) (2026-01-16)
 
-
 ### Features
 
-* pre commit, snap ([f36d71e](https://github.com/et0and/wwwtom/commit/f36d71e307f9d3f375bec83145f960f0a9959826))
+- pre commit, snap ([f36d71e](https://github.com/et0and/wwwtom/commit/f36d71e307f9d3f375bec83145f960f0a9959826))
 
 # [1.65.0](https://github.com/et0and/wwwtom/compare/v1.64.6...v1.65.0) (2026-01-16)
 
-
 ### Features
 
-* **infra:** create pulumi infra ([c0d8130](https://github.com/et0and/wwwtom/commit/c0d8130cba88d270d2e096910e584854ad41c68d))
+- **infra:** create pulumi infra ([c0d8130](https://github.com/et0and/wwwtom/commit/c0d8130cba88d270d2e096910e584854ad41c68d))
 
 ## [1.64.6](https://github.com/et0and/wwwtom/compare/v1.64.5...v1.64.6) (2026-01-16)
 
-
 ### Bug Fixes
 
-* **web:** update snapshot ([1d1a8a4](https://github.com/et0and/wwwtom/commit/1d1a8a4bbdb9f27fbeb828918cff45f53fa16651))
+- **web:** update snapshot ([1d1a8a4](https://github.com/et0and/wwwtom/commit/1d1a8a4bbdb9f27fbeb828918cff45f53fa16651))
 
 ## [1.64.5](https://github.com/et0and/wwwtom/compare/v1.64.4...v1.64.5) (2026-01-16)
 

@@ -1,4 +1,41 @@
-import type { PayloadContentNode, PayloadMedia, ArenaBlockData } from "@tom/payload";
+import type {
+  PayloadContentNode,
+  PayloadMedia,
+  PayloadMediaSize,
+  ArenaBlockData,
+} from "@tom/payload";
+
+const CDN_DOMAIN = "cdn.tom.so";
+
+function getOptimizedImageUrl(url: string, width: number, format = "webp"): string {
+  if (!url.includes(CDN_DOMAIN)) return url;
+  return `/api/image?url=${encodeURIComponent(url)}&width=${width}&format=${format}`;
+}
+
+function buildSrcSet(media: PayloadMedia): string {
+  const sources: Array<{ url: string; width: number }> = [];
+
+  const sizeKeys: Array<keyof typeof media.sizes> = [
+    "thumbnail",
+    "small",
+    "medium",
+    "large",
+    "xlarge",
+  ];
+
+  for (const key of sizeKeys) {
+    const size = media.sizes[key] as PayloadMediaSize | null;
+    if (size?.url && size.width) {
+      sources.push({ url: size.url, width: size.width });
+    }
+  }
+
+  if (sources.length === 0 && media.url) {
+    sources.push({ url: media.url, width: media.width || 800 });
+  }
+
+  return sources.map((s) => `${getOptimizedImageUrl(s.url, s.width)} ${s.width}w`).join(", ");
+}
 
 function extractTextFromLexical(node: PayloadContentNode): string {
   if (!node) return "";
@@ -129,8 +166,20 @@ function convertBlock(node: PayloadContentNode, skipArena = false): string {
 
 function convertMediaBlock(media: PayloadMedia): string {
   const caption = media.caption ? convertLexicalToHTML(media.caption.root) : "";
+  const srcset = buildSrcSet(media);
+  const defaultSrc = getOptimizedImageUrl(media.url, 900);
+
   return `<figure class="media-block">
-		<img src="${media.url}" alt="${media.alt || ""}" />
+		<img
+			src="${defaultSrc}"
+			srcset="${srcset}"
+			sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 900px"
+			alt="${media.alt || ""}"
+			width="${media.width}"
+			height="${media.height}"
+			loading="lazy"
+			decoding="async"
+		/>
 		${caption ? `<figcaption>${caption}</figcaption>` : ""}
 	</figure>`;
 }
