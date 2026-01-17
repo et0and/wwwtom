@@ -4,6 +4,10 @@ import { Effect, pipe } from "effect";
 import { logger, runServerEffect } from "@tom/utils";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
+const S3_BUCKET_HOST = process.env.S3_BUCKET_HOST ?? "";
+
+const isAllowedDomain = (hostname: string) =>
+  ALLOWED_DOMAINS.includes(hostname) || hostname.endsWith(S3_BUCKET_HOST);
 
 export async function GET({ request }: APIEvent) {
   const url = new URL(request.url);
@@ -27,7 +31,7 @@ export async function GET({ request }: APIEvent) {
         }),
       ),
       Effect.flatMap((parsed) =>
-        ALLOWED_DOMAINS.includes(parsed.hostname)
+        isAllowedDomain(parsed.hostname)
           ? Effect.succeed(parsed)
           : Effect.fail({
               response: new Response("Domain not allowed", { status: 403 }),

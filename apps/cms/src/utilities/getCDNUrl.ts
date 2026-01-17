@@ -1,16 +1,48 @@
 /**
- * Converts S3 URLs to CDN URLs if CDN_URL is configured
+ * Converts S3 URLs to optimised CDN URLs via image optimization endpoint
  */
-export const getCDNUrl = (url: string): string => {
+export const getCDNUrl = (url: string, width?: number): string => {
   if (!url) return url;
 
   const cdnUrl = process.env.CDN_URL;
   if (!cdnUrl) return url;
 
-  // If URL is already using CDN, return as-is
   if (url.startsWith(cdnUrl)) return url;
 
-  // Extract filename from S3 URL and convert to CDN URL
   const filename = url.split("/").pop();
-  return `${cdnUrl}/${filename}`;
+  if (!filename) return url;
+
+  const originalUrl = encodeURIComponent(url);
+
+  if (width) {
+    return `https://tom.so/api/image?url=${originalUrl}&width=${width}`;
+  }
+
+  return `https://tom.so/api/image?url=${originalUrl}`;
+};
+
+interface ImageSize {
+  width: number;
+  height?: number;
+  crop?: "center" | "top" | "bottom" | "left" | "right";
+}
+
+const imageSizes: Record<string, ImageSize> = {
+  thumbnail: { width: 300 },
+  square: { width: 500, height: 500 },
+  small: { width: 600 },
+  medium: { width: 900 },
+  large: { width: 1400 },
+  xlarge: { width: 1920 },
+  og: { width: 1200, height: 630, crop: "center" },
+} as const;
+
+export const getOptimizedMediaUrl = (
+  url: string | null | undefined,
+  size?: keyof typeof imageSizes,
+): string => {
+  if (!url) return "";
+
+  const width = size ? imageSizes[size]?.width : undefined;
+  return getCDNUrl(url, width);
 };

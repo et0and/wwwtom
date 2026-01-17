@@ -5,16 +5,10 @@ import {
   InlineToolbarFeature,
   lexicalEditor,
 } from "@payloadcms/richtext-lexical";
-import path from "path";
-import { fileURLToPath } from "url";
 
-import { anyone } from "../access/anyone";
 import { authenticated } from "../access/authenticated";
 import { frontendOnly } from "../access/frontendOnly";
-import { getCDNUrl } from "../utilities/getCDNUrl";
-
-const filename = fileURLToPath(import.meta.url);
-const dirname = path.dirname(filename);
+import { getOptimizedMediaUrl } from "../utilities/getCDNUrl";
 
 export const Media: CollectionConfig = {
   slug: "media",
@@ -65,14 +59,17 @@ export const Media: CollectionConfig = {
   hooks: {
     afterRead: [
       ({ doc }) => {
-        // Convert S3 URLs to CDN URLs
         if (doc.url) {
-          doc.url = getCDNUrl(doc.url);
+          doc.url = getOptimizedMediaUrl(doc.url);
         }
         if (doc.sizes) {
-          Object.keys(doc.sizes).forEach((size) => {
-            if (doc.sizes[size]?.url) {
-              doc.sizes[size].url = getCDNUrl(doc.sizes[size].url);
+          Object.keys(doc.sizes).forEach((sizeKey) => {
+            const size = doc.sizes[sizeKey];
+            if (size?.url) {
+              doc.sizes[sizeKey].url = getOptimizedMediaUrl(
+                size.url,
+                sizeKey as Parameters<typeof getOptimizedMediaUrl>[1],
+              );
             }
           });
         }
