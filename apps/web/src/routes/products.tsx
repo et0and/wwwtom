@@ -2,7 +2,7 @@ import { PageLayout } from "~/layouts";
 import { createResource, For, Suspense, ErrorBoundary, Show } from "solid-js";
 import { Effect } from "effect";
 import { Spinner } from "@tom/ui";
-import { fetchProducts, formatPrice } from "@tom/utils";
+import { fetchProducts, formatPrice } from "@tom/checkout";
 
 const isDev = import.meta.env.DEV;
 

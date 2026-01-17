@@ -1,8 +1,9 @@
 import { Effect } from "effect";
 import { HttpError } from "@tom/types";
 import type { Product, Customer, CustomerInput } from "@tom/types";
+import { HttpStatus } from "@tom/constants";
 
-export const getApiBase = (isDev: boolean): string =>
+const getCheckoutApiBase = (isDev: boolean): string =>
   isDev ? "http://localhost:8787" : "https://api.tom.so";
 
 export const formatPrice = (product: Product): string => {
@@ -12,7 +13,7 @@ export const formatPrice = (product: Product): string => {
 
 export const fetchProducts = (isDev: boolean): Effect.Effect<Product[], HttpError> =>
   Effect.gen(function* () {
-    const base = getApiBase(isDev);
+    const base = getCheckoutApiBase(isDev);
     const response = yield* Effect.tryPromise({
       try: () => fetch(`${base}/products`),
       catch: () => new HttpError({ message: "Network error", status: 0 }),
@@ -29,7 +30,11 @@ export const fetchProducts = (isDev: boolean): Effect.Effect<Product[], HttpErro
 
     return yield* Effect.tryPromise({
       try: () => response.json() as Promise<Product[]>,
-      catch: () => new HttpError({ message: "Failed to parse response", status: 500 }),
+      catch: () =>
+        new HttpError({
+          message: "Failed to parse response",
+          status: HttpStatus.InternalServerError,
+        }),
     });
   });
 
@@ -38,7 +43,7 @@ export const fetchProduct = (
   isDev: boolean,
 ): Effect.Effect<Product, HttpError> =>
   Effect.gen(function* () {
-    const base = getApiBase(isDev);
+    const base = getCheckoutApiBase(isDev);
     const response = yield* Effect.tryPromise({
       try: () => fetch(`${base}/products/${productId}`),
       catch: () => new HttpError({ message: "Network error", status: 0 }),
@@ -55,7 +60,11 @@ export const fetchProduct = (
 
     return yield* Effect.tryPromise({
       try: () => response.json() as Promise<Product>,
-      catch: () => new HttpError({ message: "Failed to parse response", status: 500 }),
+      catch: () =>
+        new HttpError({
+          message: "Failed to parse response",
+          status: HttpStatus.InternalServerError,
+        }),
     });
   });
 
@@ -64,7 +73,7 @@ export const createCustomer = (
   isDev: boolean,
 ): Effect.Effect<Customer, HttpError> =>
   Effect.gen(function* () {
-    const base = getApiBase(isDev);
+    const base = getCheckoutApiBase(isDev);
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch(`${base}/customers`, {
@@ -94,11 +103,15 @@ export const createCustomer = (
 
     return yield* Effect.tryPromise({
       try: () => response.json() as Promise<Customer>,
-      catch: () => new HttpError({ message: "Failed to parse response", status: 500 }),
+      catch: () =>
+        new HttpError({
+          message: "Failed to parse response",
+          status: HttpStatus.InternalServerError,
+        }),
     });
   });
 
 export const getCheckoutUrl = (productId: string, customerId: string, isDev: boolean): string => {
-  const base = getApiBase(isDev);
+  const base = getCheckoutApiBase(isDev);
   return `${base}/checkout?products=${productId}&customerId=${customerId}`;
 };

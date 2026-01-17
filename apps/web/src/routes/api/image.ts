@@ -2,6 +2,7 @@ import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import type { APIEvent } from "@solidjs/start/server";
 import { Effect, pipe } from "effect";
 import { logger, runServerEffect } from "@tom/utils";
+import { HttpStatus } from "@tom/constants";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -16,13 +17,17 @@ export async function GET({ request }: APIEvent) {
     pipe(
       Effect.fromNullable(urlStr),
       Effect.mapError(() => ({
-        response: new Response("Missing url parameter", { status: 400 }),
+        response: new Response("Missing url parameter", {
+          status: HttpStatus.BadRequest,
+        }),
       })),
       Effect.flatMap((url) =>
         Effect.try({
           try: () => new URL(url),
           catch: () => ({
-            response: new Response("Invalid URL", { status: 400 }),
+            response: new Response("Invalid URL", {
+              status: HttpStatus.BadRequest,
+            }),
           }),
         }),
       ),
@@ -30,7 +35,9 @@ export async function GET({ request }: APIEvent) {
         ALLOWED_DOMAINS.includes(parsed.hostname)
           ? Effect.succeed(parsed)
           : Effect.fail({
-              response: new Response("Domain not allowed", { status: 403 }),
+              response: new Response("Domain not allowed", {
+                status: HttpStatus.Forbidden,
+              }),
             }),
       ),
     );
@@ -40,7 +47,9 @@ export async function GET({ request }: APIEvent) {
       Effect.tryPromise({
         try: () => fetch(validUrl),
         catch: (cause) => ({
-          response: new Response("Failed to fetch image", { status: 500 }),
+          response: new Response("Failed to fetch image", {
+            status: HttpStatus.InternalServerError,
+          }),
           cause,
         }),
       }),
@@ -48,7 +57,9 @@ export async function GET({ request }: APIEvent) {
         res.ok
           ? Effect.succeed(res)
           : Effect.fail({
-              response: new Response("Failed to fetch image", { status: 500 }),
+              response: new Response("Failed to fetch image", {
+                status: HttpStatus.InternalServerError,
+              }),
             }),
       ),
     );
@@ -85,7 +96,9 @@ export async function GET({ request }: APIEvent) {
         return { outputBuffer, contentType };
       },
       catch: (cause) => ({
-        response: new Response("Failed to process image", { status: 500 }),
+        response: new Response("Failed to process image", {
+          status: HttpStatus.InternalServerError,
+        }),
         cause,
       }),
     });

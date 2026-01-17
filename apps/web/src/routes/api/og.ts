@@ -2,6 +2,7 @@ import type { APIEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
 import { logger } from "@tom/utils";
+import { HttpStatus } from "@tom/constants";
 
 export function GET({ request }: APIEvent) {
   const url = new URL(request.url);
@@ -14,7 +15,11 @@ export function GET({ request }: APIEvent) {
   const program = Effect.gen(function* () {
     const upstreamUrl = env?.OG_SERVICE_URL;
     if (!upstreamUrl) {
-      return yield* Effect.fail(new Response("OG service not configured", { status: 500 }));
+      return yield* Effect.fail(
+        new Response("OG service not configured", {
+          status: HttpStatus.InternalServerError,
+        }),
+      );
     }
 
     const params = new URLSearchParams();
@@ -33,19 +38,27 @@ export function GET({ request }: APIEvent) {
         } as RequestInit),
       catch: (error) => {
         logger.error("OG image proxy error:", error);
-        return new Response("Failed to fetch OG image", { status: 500 });
+        return new Response("Failed to fetch OG image", {
+          status: HttpStatus.InternalServerError,
+        });
       },
     });
 
     if (!response.ok) {
-      return yield* Effect.fail(new Response("Failed to generate OG image", { status: 500 }));
+      return yield* Effect.fail(
+        new Response("Failed to generate OG image", {
+          status: HttpStatus.InternalServerError,
+        }),
+      );
     }
 
     const imageBuffer = yield* Effect.tryPromise({
       try: () => response.arrayBuffer(),
       catch: (error) => {
         logger.error("Failed to read image buffer:", error);
-        return new Response("Failed to read image data", { status: 500 });
+        return new Response("Failed to read image data", {
+          status: HttpStatus.InternalServerError,
+        });
       },
     });
 

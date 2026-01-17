@@ -22,7 +22,8 @@ import type {
   GetBlockCommentApiResponse,
   CreateBlockCommentApiResponse,
 } from "@tom/schemas";
-import { HttpError } from "@tom/types/errors";
+import { HttpError } from "@tom/types";
+import { HttpStatus } from "@tom/constants";
 
 export interface ArenaBlockApi {
   get(): Effect.Effect<GetBlockApiResponse, HttpError>;
@@ -350,7 +351,7 @@ export class ArenaClient implements ArenaApi {
         catch: () =>
           new HttpError({
             message: "Failed to parse JSON response",
-            status: 500,
+            status: HttpStatus.InternalServerError,
           }),
       });
 
@@ -419,7 +420,7 @@ export class ArenaClient implements ArenaApi {
         catch: () =>
           new HttpError({
             message: "Failed to parse JSON response",
-            status: 500,
+            status: HttpStatus.InternalServerError,
           }),
       });
 

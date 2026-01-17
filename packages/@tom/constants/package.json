@@ -1,5 +1,5 @@
 {
-  "name": "@tom/types",
+  "name": "@tom/constants",
   "version": "0.0.1",
   "private": true,
   "type": "module",
@@ -12,8 +12,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "effect": "^3.19.5",
-    "kysely": "^0.28.9"
+    "@tom/types": "workspace:*",
+    "effect": "^3.19.5"
   },
   "devDependencies": {
     "typescript": "^5.9.3"

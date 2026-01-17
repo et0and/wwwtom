@@ -9,6 +9,7 @@ import {
   AuthenticationError,
   HttpError,
 } from "@tom/types";
+import { HttpStatus } from "@tom/constants";
 
 const REDIRECT_URI = Redacted.make(
   import.meta.env.PROD
@@ -75,28 +76,28 @@ export const initiateAuth = (fediverseHandle: string) =>
           if (code === "ETIMEDOUT" || code === "ECONNABORTED") {
             return new HttpError({
               message: `Connection timeout trying to reach ${instance}. This might be a network/firewall issue on the server, or the instance may be down. Try a different instance like mastodon.social`,
-              status: 504,
+              status: HttpStatus.GatewayTimeout,
             });
           }
 
           if (code === "ENOTFOUND") {
             return new HttpError({
               message: `Could not find ${instance}. Please check the instance name is correct.`,
-              status: 404,
+              status: HttpStatus.NotFound,
             });
           }
 
           if (code === "ECONNREFUSED") {
             return new HttpError({
               message: `Connection refused by ${instance}. The instance may be down.`,
-              status: 503,
+              status: HttpStatus.ServiceUnavailable,
             });
           }
 
           if (code === "ENETUNREACH") {
             return new HttpError({
               message: `Network unreachable for ${instance}. This is likely a server network configuration issue.`,
-              status: 503,
+              status: HttpStatus.ServiceUnavailable,
             });
           }
         }
@@ -108,7 +109,7 @@ export const initiateAuth = (fediverseHandle: string) =>
             if (code === "ETIMEDOUT") {
               return new HttpError({
                 message: `Connection timeout trying to reach ${instance}. The server cannot reach this instance. Try a different instance like mastodon.social or fosstodon.org`,
-                status: 504,
+                status: HttpStatus.GatewayTimeout,
               });
             }
           }
@@ -116,7 +117,7 @@ export const initiateAuth = (fediverseHandle: string) =>
 
         return new HttpError({
           message: `Failed to connect to ${instance}. Please verify it's a valid Mastodon/Fediverse instance and try a well-known instance like mastodon.social`,
-          status: 502,
+          status: HttpStatus.BadGateway,
         });
       },
     });

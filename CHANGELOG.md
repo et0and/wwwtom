@@ -1,11 +1,10 @@
 ## [1.67.2](https://github.com/et0and/wwwtom/compare/v1.67.1...v1.67.2) (2026-01-17)
 
-
 ### Bug Fixes
 
-* precommit ([7f5b15e](https://github.com/et0and/wwwtom/commit/7f5b15efcd2d5c56bfa1b441f8529924aab1949b))
-* precommit ([52ea3d1](https://github.com/et0and/wwwtom/commit/52ea3d1082aa4fb8ed88d17bb0889a30b286437c))
-* precommit ([778ac21](https://github.com/et0and/wwwtom/commit/778ac2106160d0ffb348ed17891b691f81079f73))
+- precommit ([7f5b15e](https://github.com/et0and/wwwtom/commit/7f5b15efcd2d5c56bfa1b441f8529924aab1949b))
+- precommit ([52ea3d1](https://github.com/et0and/wwwtom/commit/52ea3d1082aa4fb8ed88d17bb0889a30b286437c))
+- precommit ([778ac21](https://github.com/et0and/wwwtom/commit/778ac2106160d0ffb348ed17891b691f81079f73))
 
 ## [1.67.1](https://github.com/et0and/wwwtom/compare/v1.67.0...v1.67.1) (2026-01-17)
 

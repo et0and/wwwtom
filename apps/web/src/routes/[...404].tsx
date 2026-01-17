@@ -1,4 +1,8 @@
 import { PageLayout } from "~/layouts";
+import { logger } from "@tom/utils";
+import { HttpStatus } from "@tom/constants";
+
+logger.info("Page not found", HttpStatus.NotFound);
 
 export default function NotFound() {
   return (

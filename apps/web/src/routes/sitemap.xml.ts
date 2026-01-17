@@ -1,6 +1,7 @@
 import { fetchPayload } from "~/libs/actions/payload/client";
 import type { PayloadResponse, PayloadPost } from "@tom/payload";
 import { Effect } from "effect";
+import { HttpStatus } from "@tom/constants";
 
 export async function GET() {
   const effect = Effect.gen(function* () {
@@ -63,7 +64,7 @@ ${works.docs
     Effect.catchAll((error) =>
       Effect.succeed(
         new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${error.message}</error>`, {
-          status: 500,
+          status: HttpStatus.InternalServerError,
           headers: { "Content-Type": "application/xml" },
         }),
       ),

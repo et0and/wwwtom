@@ -1,5 +1,6 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { Effect } from "effect";
+import { HttpStatus } from "@tom/constants";
 
 export async function GET(_event: APIEvent) {
   const program = Effect.gen(function* () {
@@ -26,7 +27,7 @@ export async function GET(_event: APIEvent) {
         Effect.gen(function* () {
           yield* Effect.logError("Version endpoint error", error);
           return new Response("unknown", {
-            status: 500,
+            status: HttpStatus.InternalServerError,
             headers: { "Content-Type": "text/plain" },
           });
         }),

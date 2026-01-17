@@ -5,6 +5,12 @@ export class ImageError extends Data.TaggedError("ImageError")<{
   readonly cause?: unknown;
 }> {}
 
+export class PolarApiError extends Data.TaggedError("PolarApiError")<{
+  readonly message: string;
+  readonly status: number;
+  readonly operation: string;
+}> {}
+
 export class ArenaConfigError extends Data.TaggedError("ArenaConfigError")<{
   readonly message: string;
 }> {}

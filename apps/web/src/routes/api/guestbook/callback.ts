@@ -2,6 +2,7 @@ import { type APIEvent } from "@solidjs/start/server";
 import * as auth from "~/libs/actions/guestbook/auth";
 import { runServerEffect } from "@tom/utils";
 import { Redacted } from "effect";
+import { HttpStatus } from "@tom/constants";
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url);
@@ -13,7 +14,9 @@ export async function GET(event: APIEvent) {
     ?.split("=")[1];
 
   if (!code || !sessionToken) {
-    return new Response("Missing code or session", { status: 400 });
+    return new Response("Missing code or session", {
+      status: HttpStatus.BadRequest,
+    });
   }
 
   const user = await runServerEffect(
@@ -35,7 +38,7 @@ export async function GET(event: APIEvent) {
   });
 
   return new Response(null, {
-    status: 302,
+    status: HttpStatus.Found,
     headers,
   });
 }

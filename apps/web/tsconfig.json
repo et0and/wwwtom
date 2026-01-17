@@ -18,7 +18,8 @@
     "types": ["node", "vinxi/types/client"],
     "baseUrl": ".",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@tom/*": ["../../packages/@tom/*/src"]
     },
     "plugins": [
       {

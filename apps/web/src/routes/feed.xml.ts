@@ -4,6 +4,7 @@ import { fetchPayload } from "~/libs/actions/payload/client";
 import { convertLexicalToHTML } from "~/libs/actions/payload/content-converter";
 import type { PayloadPost, PayloadResponse } from "@tom/payload";
 import { logger } from "@tom/utils";
+import { HttpStatus } from "@tom/constants";
 
 export async function GET() {
   const feed = new RSS({
@@ -52,7 +53,9 @@ export async function GET() {
         }),
       onFailure: (error) => {
         logger.error("Error generating RSS feed:", error);
-        return new Response("Error generating RSS feed", { status: 500 });
+        return new Response("Error generating RSS feed", {
+          status: HttpStatus.InternalServerError,
+        });
       },
     }),
   );

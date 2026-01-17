@@ -2,8 +2,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { Scalar } from "@scalar/hono-api-reference";
 import { describeRoute, openAPIRouteHandler, resolver } from "hono-openapi";
-import { Effect, Data } from "effect";
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { ImageResponse } from "workers-og";
 import {
   healthResponseSchema,
@@ -14,18 +13,13 @@ import { OgTemplates, OgTemplateParams } from "@tom/ui";
 import { requestId } from "hono/request-id";
 import { Checkout, CustomerPortal } from "@polar-sh/hono";
 import { logger, runServerEffect } from "@tom/utils";
-import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types";
+import { FontFetchError, ValidationError, ImageGenerationError, PolarApiError } from "@tom/types";
+import { HttpStatus } from "@tom/constants";
 
 type Env = {
   POLAR_ACCESS_TOKEN: string | undefined;
   SUCCESS_URL: string | undefined;
 };
-
-class PolarApiError extends Data.TaggedError("PolarApiError")<{
-  readonly message: string;
-  readonly status: number;
-  readonly operation: string;
-}> {}
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -45,7 +39,9 @@ const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 let cachedFontData: ArrayBuffer | null = null;
 
 const fontFetchEffect = Effect.gen(function* () {
+  logger.info("Fetching font");
   if (cachedFontData !== null) {
+    logger.info("Pulling cached font files");
     return cachedFontData;
   }
 
@@ -93,6 +89,7 @@ const generateOgImageEffect = (
   templateParam?: string,
 ) =>
   Effect.gen(function* () {
+    logger.info("Generating OG image");
     const fontData = yield* fontFetchEffect;
     const template = getTemplate(requester, templateParam);
 
@@ -116,6 +113,7 @@ const fetchPolarProducts = (
   accessToken: string | undefined,
 ): Effect.Effect<unknown[], PolarApiError> =>
   Effect.gen(function* () {
+    logger.info("Fetching products from Polar API");
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch("https://api.polar.sh/v1/products?is_archived=false", {
@@ -149,7 +147,7 @@ const fetchPolarProducts = (
       catch: () =>
         new PolarApiError({
           message: "Failed to parse response",
-          status: 500,
+          status: HttpStatus.InternalServerError,
           operation: "fetch_products",
         }),
     }).pipe(Effect.map((data) => data.items));
@@ -160,6 +158,7 @@ const fetchPolarProduct = (
   accessToken: string | undefined,
 ): Effect.Effect<unknown, PolarApiError> =>
   Effect.gen(function* () {
+    logger.info(`Fetching product ${productId} from Polar API`);
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch(`https://api.polar.sh/v1/products/${productId}`, {
@@ -176,7 +175,7 @@ const fetchPolarProduct = (
     });
 
     if (!response.ok) {
-      logger.error("Failed to fetch Polar product", {
+      logger.error(`Failed to fetch Polar product ${productId}`, {
         status: response.status,
       });
       return yield* Effect.fail(
@@ -193,7 +192,7 @@ const fetchPolarProduct = (
       catch: () =>
         new PolarApiError({
           message: "Failed to parse response",
-          status: 500,
+          status: HttpStatus.InternalServerError,
           operation: "fetch_product",
         }),
     });
@@ -206,6 +205,7 @@ const createPolarCustomer = (
   accessToken: string | undefined,
 ): Effect.Effect<unknown, PolarApiError> =>
   Effect.gen(function* () {
+    logger.info("Customer doesn't exist in Polar, creating now");
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch("https://api.polar.sh/v1/customers/", {
@@ -239,7 +239,11 @@ const createPolarCustomer = (
           }),
       });
 
-      if (response.status === 422 && errorData.includes("already exists")) {
+      if (
+        response.status === HttpStatus.UnprocessableEntity &&
+        errorData.includes("already exists")
+      ) {
+        logger.info("Customer already exists in Polar, fetching details");
         const listResponse = yield* Effect.tryPromise({
           try: () =>
             fetch(`https://api.polar.sh/v1/customers?email=${encodeURIComponent(email)}`, {
@@ -256,7 +260,7 @@ const createPolarCustomer = (
         });
 
         if (!listResponse.ok) {
-          logger.error("Failed to find existing Polar customer", {
+          logger.error(`Failed to find existing Polar customer with email ${email}`, {
             status: listResponse.status,
           });
           return yield* Effect.fail(
@@ -273,7 +277,7 @@ const createPolarCustomer = (
           catch: () =>
             new PolarApiError({
               message: "Failed to parse response",
-              status: 500,
+              status: HttpStatus.InternalServerError,
               operation: "find_customer",
             }),
         });
@@ -301,7 +305,7 @@ const createPolarCustomer = (
       catch: () =>
         new PolarApiError({
           message: "Failed to parse response",
-          status: 500,
+          status: HttpStatus.InternalServerError,
           operation: "create_customer",
         }),
     });
@@ -309,7 +313,10 @@ const createPolarCustomer = (
 
 const handlePolarError = (error: PolarApiError): Response => {
   return new Response(JSON.stringify({ error: error.message }), {
-    status: error.status as 400 | 404 | 500,
+    status: error.status as
+      | HttpStatus.BadGateway
+      | HttpStatus.NotFound
+      | HttpStatus.InternalServerError,
     headers: { "Content-Type": "application/json" },
   });
 };
@@ -319,7 +326,7 @@ const handleOgError = (
 ): Response => {
   if (error instanceof FontFetchError) {
     return new Response(JSON.stringify({ error: error.message, cause: error.cause }), {
-      status: 502,
+      status: HttpStatus.BadGateway,
       headers: { "Content-Type": "application/json" },
     });
   }
@@ -329,13 +336,13 @@ const handleOgError = (
         error: `Validation error: ${error.field} - ${error.issue}`,
       }),
       {
-        status: 400,
+        status: HttpStatus.BadRequest,
         headers: { "Content-Type": "application/json" },
       },
     );
   }
   return new Response(JSON.stringify({ error: error.message }), {
-    status: 500,
+    status: HttpStatus.InternalServerError,
     headers: { "Content-Type": "application/json" },
   });
 };
@@ -409,7 +416,7 @@ app.get("/products/:productId", async (c) => {
   const productId = c.req.param("productId");
 
   if (!productId) {
-    return c.json({ error: "Product ID is required" }, 400);
+    return c.json({ error: "Product ID is required" }, HttpStatus.BadRequest);
   }
 
   const result = await runServerEffect(
@@ -433,7 +440,7 @@ app.post("/customers", async (c) => {
   const { email, name, externalId } = body;
 
   if (!email) {
-    return c.json({ error: "Email is required" }, 400);
+    return c.json({ error: "Email is required" }, HttpStatus.BadRequest);
   }
 
   const result = await runServerEffect(
@@ -449,7 +456,7 @@ app.post("/customers", async (c) => {
     return result;
   }
 
-  return c.json(result, 201);
+  return c.json(result, HttpStatus.Created);
 });
 
 app.get(
