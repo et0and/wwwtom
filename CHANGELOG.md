@@ -1,3 +1,10 @@
+## [1.67.1](https://github.com/et0and/wwwtom/compare/v1.67.0...v1.67.1) (2026-01-17)
+
+
+### Bug Fixes
+
+* **web:** no need to pass extra width args ([e98d96d](https://github.com/et0and/wwwtom/commit/e98d96d6acf012d58f3ddc55659e10fe4659cfbc))
+
 # [1.67.0](https://github.com/et0and/wwwtom/compare/v1.66.0...v1.67.0) (2026-01-17)
 
 ### Features
