@@ -1,3 +1,10 @@
+## [1.67.5](https://github.com/et0and/wwwtom/compare/v1.67.4...v1.67.5) (2026-01-17)
+
+
+### Bug Fixes
+
+* spring clean ([79841fa](https://github.com/et0and/wwwtom/commit/79841fa8eb9c862ab8eb24591eb9a97897b7dc39))
+
 ## [1.67.4](https://github.com/et0and/wwwtom/compare/v1.67.3...v1.67.4) (2026-01-17)
 
 ### Bug Fixes
