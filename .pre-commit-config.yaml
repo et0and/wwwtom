@@ -1,0 +1,13 @@
+repos:
+  - repo: local
+    hooks:
+      - id: lint
+        name: Run linter
+        entry: bun lint
+        language: system
+        pass_filenames: false
+      - id: format
+        name: Check formatting
+        entry: bun format
+        language: system
+        pass_filenames: false
