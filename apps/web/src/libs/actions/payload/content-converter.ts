@@ -7,9 +7,9 @@ import type {
 
 const CDN_DOMAIN = "cdn.tom.so";
 
-function getOptimizedImageUrl(url: string, width: number, format = "webp"): string {
+function getOptimizedImageUrl(url: string, _width: number, format = "webp"): string {
   if (!url.includes(CDN_DOMAIN)) return url;
-  return `/api/image?url=${encodeURIComponent(url)}&width=${width}&format=${format}`;
+  return `/api/image?url=${encodeURIComponent(url)}&format=${format}`;
 }
 
 function buildSrcSet(media: PayloadMedia): string {

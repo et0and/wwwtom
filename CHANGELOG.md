@@ -1,9 +1,8 @@
 # [1.67.0](https://github.com/et0and/wwwtom/compare/v1.66.0...v1.67.0) (2026-01-17)
 
-
 ### Features
 
-* **web, packages:** cdn ([70d057a](https://github.com/et0and/wwwtom/commit/70d057a03d1ba090a3519d5d39e023714dd0cd49))
+- **web, packages:** cdn ([70d057a](https://github.com/et0and/wwwtom/commit/70d057a03d1ba090a3519d5d39e023714dd0cd49))
 
 # [1.66.0](https://github.com/et0and/wwwtom/compare/v1.65.0...v1.66.0) (2026-01-16)
 
