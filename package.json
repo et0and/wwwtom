@@ -17,8 +17,6 @@
     "test": "turbo run test",
     "deploy": "turbo run build --filter=@tom/web && cd apps/web && wrangler deploy",
     "deploy:api": "turbo run deploy --filter=@tom/api",
-    "deploy:infra": "cd infra && npm run up",
-    "preview:infra": "cd infra && npm run preview",
     "semantic-release": "semantic-release"
   },
   "devDependencies": {

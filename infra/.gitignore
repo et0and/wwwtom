@@ -1,8 +1,0 @@
-node_modules/
-*.state
-bin/
-.yarn/
-dist/
-.build/
-Pulumi.*.yaml
-!Pulumi.yaml

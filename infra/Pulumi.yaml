@@ -1,6 +1,0 @@
-name: wwwtom-infra
-runtime: nodejs
-description: Pulumi infrastructure for wwwtom
-config:
-  cloudflare:apiToken:
-    value: ${CLOUDFLARE_API_TOKEN}
