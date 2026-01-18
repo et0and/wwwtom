@@ -1,3 +1,10 @@
+# [1.69.0](https://github.com/et0and/wwwtom/compare/v1.68.0...v1.69.0) (2026-01-18)
+
+
+### Features
+
+* **web, api, packages:** init err alerting basic ([77e06be](https://github.com/et0and/wwwtom/commit/77e06bef8f4800897a941c004c0bea95881c8a5a))
+
 # [1.68.0](https://github.com/et0and/wwwtom/compare/v1.67.5...v1.68.0) (2026-01-18)
 
 ### Features
