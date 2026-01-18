@@ -2,7 +2,7 @@ import { getRequestEvent } from "solid-js/web";
 import { Effect, Redacted } from "effect";
 import { ArenaClient } from "@tom/arena";
 import { ArenaConfigError, HttpError } from "@tom/types";
-import { retryPolicy } from "@tom/utils";
+import { logger, retryPolicy } from "@tom/utils";
 
 export function getArenaClient(): Effect.Effect<ArenaClient, ArenaConfigError> {
   "use server";
@@ -17,7 +17,7 @@ export function getArenaClient(): Effect.Effect<ArenaClient, ArenaConfigError> {
       import.meta.env.ARENA_TOKEN;
 
     if (!tokenValue) {
-      yield* Effect.logError("ARENA_TOKEN environment variable is not set");
+      logger.error("ARENA_TOKEN environment variable is not set");
       return yield* Effect.fail(
         new ArenaConfigError({
           message: "ARENA_TOKEN environment variable is not set",

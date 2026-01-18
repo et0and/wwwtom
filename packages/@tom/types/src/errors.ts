@@ -79,3 +79,8 @@ export class ValidationError extends Data.TaggedError("ValidationError")<{
 export class ImageGenerationError extends Data.TaggedError("ImageGenerationError")<{
   readonly message: string;
 }> {}
+
+export class TelegramError extends Data.TaggedError("TelegramError")<{
+  readonly message: string;
+  readonly status?: number;
+}> {}

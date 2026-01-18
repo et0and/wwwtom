@@ -12,16 +12,31 @@ import {
 import { OgTemplates, OgTemplateParams } from "@tom/ui";
 import { requestId } from "hono/request-id";
 import { Checkout, CustomerPortal } from "@polar-sh/hono";
-import { logger, runServerEffect } from "@tom/utils";
+import { logger, runServerEffect, setupErrorAlerting } from "@tom/utils";
 import { FontFetchError, ValidationError, ImageGenerationError, PolarApiError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";
 
 type Env = {
   POLAR_ACCESS_TOKEN: string | undefined;
   SUCCESS_URL: string | undefined;
+  TELEGRAM_BOT_TOKEN: string | undefined;
+  TELEGRAM_CHAT_ID: string | undefined;
 };
 
 const app = new Hono<{ Bindings: Env }>();
+
+let alertingSetup = false;
+
+app.use("*", async (c, next) => {
+  if (!alertingSetup && c.env.TELEGRAM_BOT_TOKEN && c.env.TELEGRAM_CHAT_ID) {
+    setupErrorAlerting({
+      TELEGRAM_BOT_TOKEN: c.env.TELEGRAM_BOT_TOKEN,
+      TELEGRAM_CHAT_ID: c.env.TELEGRAM_CHAT_ID,
+    });
+    alertingSetup = true;
+  }
+  await next();
+});
 
 app.use("*", requestId());
 app.use(
