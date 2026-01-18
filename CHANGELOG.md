@@ -1,3 +1,10 @@
+## [1.69.1](https://github.com/et0and/wwwtom/compare/v1.69.0...v1.69.1) (2026-01-18)
+
+
+### Bug Fixes
+
+* rem precommit ([a9973b8](https://github.com/et0and/wwwtom/commit/a9973b8c3a48d2ee1482ec0b0fa41c945a580b1b))
+
 # [1.69.0](https://github.com/et0and/wwwtom/compare/v1.68.0...v1.69.0) (2026-01-18)
 
 
