@@ -1,3 +1,10 @@
+## [1.69.2](https://github.com/et0and/wwwtom/compare/v1.69.1...v1.69.2) (2026-01-20)
+
+
+### Bug Fixes
+
+* **web:** side effects not needed ([1d2f5d8](https://github.com/et0and/wwwtom/commit/1d2f5d8d3545b4f9b8c09b62c5352646bcd1e1e5))
+
 ## [1.69.1](https://github.com/et0and/wwwtom/compare/v1.69.0...v1.69.1) (2026-01-18)
 
 ### Bug Fixes
