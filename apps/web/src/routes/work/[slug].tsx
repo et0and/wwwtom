@@ -1,7 +1,6 @@
-import { Show, lazy, For, createEffect } from "solid-js";
+import { Show, lazy, For } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { createAsync, type RouteDefinition } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
 import { getWorkBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 
@@ -29,20 +28,6 @@ export default function WorkPage() {
       deferStream: true,
     },
   );
-
-  createEffect(() => {
-    const event = getRequestEvent();
-    if (event) {
-      event.response.headers.set(
-        "Cache-Control",
-        "public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400",
-      );
-      event.response.headers.set(
-        "CDN-Cache-Control",
-        "public, max-age=3600, stale-while-revalidate=86400",
-      );
-    }
-  });
 
   return (
     <>

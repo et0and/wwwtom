@@ -84,3 +84,9 @@ export class TelegramError extends Data.TaggedError("TelegramError")<{
   readonly message: string;
   readonly status?: number;
 }> {}
+
+export class AnalyticsError extends Data.TaggedError("AnalyticsError")<{
+  readonly message: string;
+  readonly operation?: string;
+  readonly cause?: unknown;
+}> {}

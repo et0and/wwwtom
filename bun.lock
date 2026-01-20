@@ -1,6 +1,5 @@
 {
   "lockfileVersion": 1,
-  "configVersion": 0,
   "workspaces": {
     "": {
       "name": "tom-web",
@@ -109,6 +108,7 @@
         "@solidjs/router": "^0.15.0",
         "@solidjs/start": "^1.1.0",
         "@tanstack/solid-virtual": "^3.13.12",
+        "@tom/analytics": "workspace:*",
         "@tom/arena": "workspace:*",
         "@tom/db": "workspace:*",
         "@tom/payload": "workspace:*",
@@ -144,10 +144,22 @@
         "vitest": "^3.2.4",
       },
     },
+    "packages/@tom/analytics": {
+      "name": "@tom/analytics",
+      "version": "0.0.1",
+      "dependencies": {
+        "@tom/types": "workspace:*",
+        "effect": "^3.19.5",
+      },
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/@tom/arena": {
       "name": "@tom/arena",
       "version": "0.0.1",
       "dependencies": {
+        "@tom/constants": "workspace:*",
         "@tom/types": "workspace:*",
         "effect": "^3.19.5",
       },
@@ -1302,6 +1314,8 @@
     "@testing-library/user-event": ["@testing-library/user-event@14.6.1", "", { "peerDependencies": { "@testing-library/dom": ">=7.21.4" } }, "sha512-vq7fv0rnt+QTXgPxr5Hjc210p6YKq2kmdziLgnsZGgLJ9e6VAShx1pACLuRjd/AS/sr7phAR58OIIpf0LlmQNw=="],
 
     "@tokenizer/token": ["@tokenizer/token@0.3.0", "", {}, "sha512-OvjF+z51L3ov0OyAU0duzsYuvO01PH7x4t6DJx+guahgTnBHkhJdG7soQeTSFLWN3efnHyibZ4Z8l2EuWwJN3A=="],
+
+    "@tom/analytics": ["@tom/analytics@workspace:packages/@tom/analytics"],
 
     "@tom/api": ["@tom/api@workspace:apps/api"],
 
