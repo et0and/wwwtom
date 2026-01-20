@@ -12,15 +12,8 @@ app.config.timestamp_*.js
 tsconfig.tsbuildinfo
 .turbo
 
-# Our git subtrees
-/neverthrow
-/effect
-/megalodon
-/kysely
-/solid-start
-/tom-cms-payload
-
 db.sqlite3
+/effect
 
 *.py[cod]
 *.so

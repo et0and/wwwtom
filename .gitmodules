@@ -4,3 +4,6 @@
 [submodule "kysely"]
 	path = kysely
 	url = https://github.com/kysely-org/kysely
+[submodule "effect"]
+	path = effect
+	url = https://github.com/effect-ts/effect

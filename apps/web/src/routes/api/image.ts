@@ -1,8 +1,11 @@
 import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import type { APIEvent } from "@solidjs/start/server";
 import { Effect, pipe } from "effect";
-import { logger, runServerEffect } from "@tom/utils";
+import { makeScopedRunner } from "@tom/utils";
 import { HttpStatus } from "@tom/constants";
+
+const scope = "wwwtom:apps:web:api:image";
+const run = makeScopedRunner(scope);
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -105,19 +108,29 @@ export async function GET({ request }: APIEvent) {
 
   const program = pipe(
     validateUrl(imageUrl),
+    Effect.tap(() =>
+      Effect.logInfo(
+        `image:request url=${imageUrl ?? ""} width=${width} quality=${quality} format=${requestedFormat ?? ""}`,
+      ),
+    ),
     Effect.flatMap(fetchImage),
     Effect.flatMap(processImage),
+    Effect.tap(({ contentType }) =>
+      Effect.logDebug(`image:success contentType=${contentType} width=${width}`),
+    ),
     Effect.catchAll((error) =>
-      Effect.sync(() => {
+      Effect.gen(function* () {
         if ("cause" in error) {
-          logger.error("Image optimization error:", error.cause);
+          yield* Effect.logError("image:error", error.cause);
+        } else {
+          yield* Effect.logError("image:error");
         }
         return error.response;
       }),
     ),
   );
 
-  const result = await runServerEffect(program);
+  const result = await run(program);
 
   if (result instanceof Response) {
     return result;

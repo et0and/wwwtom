@@ -1,7 +1,10 @@
 import { query } from "@solidjs/router";
-import { fetchArena } from "./client";
-import { runServerEffect } from "@tom/utils";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
 import type { PaginationAttributes } from "@tom/arena";
+import { fetchArena } from "./client";
+
+const scope = "wwwtom:apps:web:arena:block";
+const run = makeScopedRunner(scope);
 
 /**
  * Fetches a block by ID including its connections to channels.
@@ -16,7 +19,13 @@ import type { PaginationAttributes } from "@tom/arena";
  */
 export const getBlock = query(async (id: number) => {
   "use server";
-  return runServerEffect(fetchArena((client) => client.block(id).get(), `getBlock(${id})`));
+
+  return run(
+    withActionLogs(
+      `getBlock:${id}`,
+      fetchArena((client) => client.block(id).get(), `getBlock(${id})`),
+    ),
+  );
 }, "arena-block");
 
 /**
@@ -33,8 +42,12 @@ export const getBlock = query(async (id: number) => {
  */
 export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena((client) => client.block(id).channels(options), `getBlockChannels(${id})`),
+
+  return run(
+    withActionLogs(
+      `getBlockChannels:${id}`,
+      fetchArena((client) => client.block(id).channels(options), `getBlockChannels(${id})`),
+    ),
   );
 }, "arena-block-channels");
 
@@ -52,7 +65,11 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
  */
 export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena((client) => client.block(id).comments(options), `getBlockComments(${id})`),
+
+  return run(
+    withActionLogs(
+      `getBlockComments:${id}`,
+      fetchArena((client) => client.block(id).comments(options), `getBlockComments(${id})`),
+    ),
   );
 }, "arena-block-comments");

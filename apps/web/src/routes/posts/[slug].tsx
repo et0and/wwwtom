@@ -4,6 +4,9 @@ import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getPostBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Spinner } from "~/components";
+import { logger } from "@tom/utils";
+
+const scope = "wwwtom:apps:web:route:posts";
 
 const ArenaCarousel = lazy(() =>
   import("~/components").then((m) => ({ default: m.ArenaCarousel })),
@@ -12,6 +15,7 @@ const ArenaCarousel = lazy(() =>
 export const route = {
   preload: ({ params }) => {
     if (!params.slug) return;
+    logger.info(`${scope}:preload slug=${params.slug}`);
     return getPostBySlug(params.slug);
   },
 } satisfies RouteDefinition;
@@ -21,6 +25,7 @@ export default function PostPage() {
   const post = createAsync(
     () => {
       if (!params.slug) return Promise.resolve(null);
+      logger.info(`${scope}:load slug=${params.slug}`);
       return getPostBySlug(params.slug);
     },
     {

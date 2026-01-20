@@ -1,8 +1,11 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
-import { logger } from "@tom/utils";
 import { HttpStatus } from "@tom/constants";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
+
+const scope = "wwwtom:apps:web:api:og";
+const run = makeScopedRunner(scope);
 
 export function GET({ request }: APIEvent) {
   const url = new URL(request.url);
@@ -36,13 +39,19 @@ export function GET({ request }: APIEvent) {
             cacheEverything: true,
           },
         } as RequestInit),
-      catch: (error) => {
-        logger.error("OG image proxy error:", error);
-        return new Response("Failed to fetch OG image", {
-          status: HttpStatus.InternalServerError,
-        });
-      },
-    });
+      catch: (error) => error,
+    }).pipe(
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.logError("OG image proxy error", error);
+          return yield* Effect.fail(
+            new Response("Failed to fetch OG image", {
+              status: HttpStatus.InternalServerError,
+            }),
+          );
+        }),
+      ),
+    );
 
     if (!response.ok) {
       return yield* Effect.fail(
@@ -54,13 +63,19 @@ export function GET({ request }: APIEvent) {
 
     const imageBuffer = yield* Effect.tryPromise({
       try: () => response.arrayBuffer(),
-      catch: (error) => {
-        logger.error("Failed to read image buffer:", error);
-        return new Response("Failed to read image data", {
-          status: HttpStatus.InternalServerError,
-        });
-      },
-    });
+      catch: (error) => error,
+    }).pipe(
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.logError("Failed to read image buffer", error);
+          return yield* Effect.fail(
+            new Response("Failed to read image data", {
+              status: HttpStatus.InternalServerError,
+            }),
+          );
+        }),
+      ),
+    );
 
     return new Response(imageBuffer, {
       headers: {
@@ -72,7 +87,10 @@ export function GET({ request }: APIEvent) {
     });
   });
 
-  return Effect.runPromise(
-    program.pipe(Effect.catchAll((errorResponse) => Effect.succeed(errorResponse))),
+  return run(
+    withActionLogs(
+      "og:get",
+      program.pipe(Effect.catchAll((errorResponse) => Effect.succeed(errorResponse))),
+    ),
   );
 }

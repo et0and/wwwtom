@@ -1,7 +1,10 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
-import { runServerEffect } from "@tom/utils";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
 import type { PaginationAttributes } from "@tom/arena";
+
+const scope = "wwwtom:apps:web:arena:search";
+const run = makeScopedRunner(scope);
 
 /**
  * Searches across all Arena content (blocks, channels, users).
@@ -18,10 +21,13 @@ import type { PaginationAttributes } from "@tom/arena";
 export const searchEverything = query(
   async (searchQuery: string, options?: PaginationAttributes) => {
     "use server";
-    return runServerEffect(
-      fetchArena(
-        (client) => client.search.everything(searchQuery, options),
-        `searchEverything("${searchQuery}")`,
+    return run(
+      withActionLogs(
+        `searchEverything:${searchQuery}`,
+        fetchArena(
+          (client) => client.search.everything(searchQuery, options),
+          `searchEverything("${searchQuery}")`,
+        ),
       ),
     );
   },
@@ -42,10 +48,13 @@ export const searchEverything = query(
  */
 export const searchChannels = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena(
-      (client) => client.search.channels(searchQuery, options),
-      `searchChannels("${searchQuery}")`,
+  return run(
+    withActionLogs(
+      `searchChannels:${searchQuery}`,
+      fetchArena(
+        (client) => client.search.channels(searchQuery, options),
+        `searchChannels("${searchQuery}")`,
+      ),
     ),
   );
 }, "arena-search-channels");
@@ -64,10 +73,13 @@ export const searchChannels = query(async (searchQuery: string, options?: Pagina
  */
 export const searchBlocks = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena(
-      (client) => client.search.blocks(searchQuery, options),
-      `searchBlocks("${searchQuery}")`,
+  return run(
+    withActionLogs(
+      `searchBlocks:${searchQuery}`,
+      fetchArena(
+        (client) => client.search.blocks(searchQuery, options),
+        `searchBlocks("${searchQuery}")`,
+      ),
     ),
   );
 }, "arena-search-blocks");
@@ -86,10 +98,13 @@ export const searchBlocks = query(async (searchQuery: string, options?: Paginati
  */
 export const searchUsers = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena(
-      (client) => client.search.users(searchQuery, options),
-      `searchUsers("${searchQuery}")`,
+  return run(
+    withActionLogs(
+      `searchUsers:${searchQuery}`,
+      fetchArena(
+        (client) => client.search.users(searchQuery, options),
+        `searchUsers("${searchQuery}")`,
+      ),
     ),
   );
 }, "arena-search-users");

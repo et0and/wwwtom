@@ -2,6 +2,10 @@ import { fetchPayload } from "~/libs/actions/payload/client";
 import type { PayloadResponse, PayloadPost } from "@tom/payload";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
+
+const scope = "wwwtom:apps:web:api:sitemap";
+const run = makeScopedRunner(scope);
 
 export async function GET() {
   const effect = Effect.gen(function* () {
@@ -71,5 +75,5 @@ ${works.docs
     ),
   );
 
-  return Effect.runPromise(effect);
+  return run(withActionLogs("sitemap:get", effect));
 }

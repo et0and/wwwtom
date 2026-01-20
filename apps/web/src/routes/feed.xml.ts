@@ -3,8 +3,11 @@ import { Effect } from "effect";
 import { fetchPayload } from "~/libs/actions/payload/client";
 import { convertLexicalToHTML } from "~/libs/actions/payload/content-converter";
 import type { PayloadPost, PayloadResponse } from "@tom/payload";
-import { logger } from "@tom/utils";
 import { HttpStatus } from "@tom/constants";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
+
+const scope = "wwwtom:apps:web:api:feed";
+const run = makeScopedRunner(scope);
 
 export async function GET() {
   const feed = new RSS({
@@ -18,6 +21,7 @@ export async function GET() {
   const effect = fetchPayload<PayloadResponse<PayloadPost>>(
     "/posts?sort=-publishedAt&limit=20&depth=3",
   ).pipe(
+    Effect.tap(() => Effect.logInfo("feed:fetch")),
     Effect.map((response) => {
       for (const post of response.docs) {
         const postUrl = `https://tom.so/posts/${post.slug}`;
@@ -51,14 +55,14 @@ export async function GET() {
             "Cache-Control": "public, max-age=3600",
           },
         }),
-      onFailure: (error) => {
-        logger.error("Error generating RSS feed:", error);
-        return new Response("Error generating RSS feed", {
+      onFailure: (error) =>
+        new Response("Error generating RSS feed", {
           status: HttpStatus.InternalServerError,
-        });
-      },
+          headers: { "Content-Type": "text/plain" },
+          statusText: String(error instanceof Error ? error.message : error),
+        }),
     }),
   );
 
-  return Effect.runPromise(effect);
+  return run(withActionLogs("feed:get", effect));
 }

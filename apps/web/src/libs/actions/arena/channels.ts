@@ -1,7 +1,10 @@
 import { query } from "@solidjs/router";
 import { fetchArena } from "./client";
-import { runServerEffect } from "@tom/utils";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
 import type { PaginationAttributes } from "@tom/arena";
+
+const scope = "wwwtom:apps:web:arena:channels";
+const run = makeScopedRunner(scope);
 
 /**
  * Fetches a channel by slug with optional pagination for its contents.
@@ -17,8 +20,11 @@ import type { PaginationAttributes } from "@tom/arena";
  */
 export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena((client) => client.channel(slug).get(options), `getChannel(${slug})`),
+  return run(
+    withActionLogs(
+      `getChannel:${slug}`,
+      fetchArena((client) => client.channel(slug).get(options), `getChannel(${slug})`),
+    ),
   );
 }, "arena-channel");
 
@@ -36,8 +42,11 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
  */
 export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(
-    fetchArena((client) => client.channel(slug).contents(options), `getChannelContents(${slug})`),
+  return run(
+    withActionLogs(
+      `getChannelContents:${slug}`,
+      fetchArena((client) => client.channel(slug).contents(options), `getChannelContents(${slug})`),
+    ),
   );
 }, "arena-channel-contents");
 
@@ -54,8 +63,11 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
  */
 export const getChannelThumb = query(async (slug: string) => {
   "use server";
-  return runServerEffect(
-    fetchArena((client) => client.channel(slug).thumb(), `getChannelThumb(${slug})`),
+  return run(
+    withActionLogs(
+      `getChannelThumb:${slug}`,
+      fetchArena((client) => client.channel(slug).thumb(), `getChannelThumb(${slug})`),
+    ),
   );
 }, "arena-channel-thumb");
 
@@ -72,5 +84,10 @@ export const getChannelThumb = query(async (slug: string) => {
  */
 export const getChannels = query(async (options?: PaginationAttributes) => {
   "use server";
-  return runServerEffect(fetchArena((client) => client.channels(options), "getChannels()"));
+  return run(
+    withActionLogs(
+      "getChannels",
+      fetchArena((client) => client.channels(options), "getChannels()"),
+    ),
+  );
 }, "arena-channels");

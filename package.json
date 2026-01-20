@@ -19,6 +19,9 @@
     "deploy:api": "turbo run deploy --filter=@tom/api",
     "semantic-release": "semantic-release"
   },
+  "dependencies": {
+    "tom-web": "."
+  },
   "devDependencies": {
     "@effect/language-service": "^0.56.0",
     "@semantic-release/changelog": "^6.0.3",

@@ -1,8 +1,12 @@
 import { query } from "@solidjs/router";
+import { Effect } from "effect";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
 import type { PayloadPost, PayloadResponse } from "@tom/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
-import { Effect } from "effect";
+
+const scope = "wwwtom:apps:web:payload:posts";
+const run = makeScopedRunner(scope);
 
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
@@ -35,16 +39,20 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
       },
     })),
     Effect.catchAll((error) =>
-      Effect.succeed({
-        data: [],
-        meta: {
-          pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 },
-        },
-        error: error instanceof Error ? error.message : String(error),
+      Effect.gen(function* () {
+        yield* Effect.logError("getPosts:error", error);
+        return {
+          data: [],
+          meta: {
+            pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 },
+          },
+          error: error instanceof Error ? error.message : String(error),
+        };
       }),
     ),
   );
-  return Effect.runPromise(effect);
+
+  return run(withActionLogs(`getPosts:${page}:${pageSize}`, effect));
 }, "posts");
 
 /**
@@ -101,7 +109,13 @@ export const getPostBySlug = query(async (slug: string) => {
         meta: post.meta,
       };
     }),
-    Effect.catchAll(() => Effect.succeed(null)),
+    Effect.catchAll((error) =>
+      Effect.gen(function* () {
+        yield* Effect.logError("getPostBySlug:error", error);
+        return null;
+      }),
+    ),
   );
-  return Effect.runPromise(effect);
+
+  return run(withActionLogs(`getPostBySlug:${slug}`, effect));
 }, "post");

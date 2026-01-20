@@ -1,8 +1,12 @@
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
 import type { PayloadPost, PayloadResponse } from "@tom/payload";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { fetchPayload } from "./client";
+
+const scope = "wwwtom:apps:web:payload:works";
+const run = makeScopedRunner(scope);
 
 /**
  * Creates a query using the Payload fetch client to return a list of works from Payload organised by title.
@@ -19,8 +23,16 @@ export const getWorks = query(async () => {
   const effect = fetchPayload<PayloadResponse<PayloadPost>>("/works?sort=title", {
     useCache: true,
     cacheTTL: 3600,
-  }).pipe(Effect.map((response) => response.docs));
-  return Effect.runPromise(effect);
+  }).pipe(
+    Effect.map((response) => response.docs),
+    Effect.catchAll((error) =>
+      Effect.gen(function* () {
+        yield* Effect.logError("getWorks:error", error);
+        return [] as PayloadPost[];
+      }),
+    ),
+  );
+  return run(withActionLogs("getWorks", effect));
 }, "works");
 
 /**
@@ -66,6 +78,12 @@ export const getWorkBySlug = query(async (slug: string) => {
         arenaBlocks,
       };
     }),
+    Effect.catchAll((error) =>
+      Effect.gen(function* () {
+        yield* Effect.logError("getWorkBySlug:error", error);
+        return null;
+      }),
+    ),
   );
-  return Effect.runPromise(effect);
+  return run(withActionLogs(`getWorkBySlug:${slug}`, effect));
 }, "work");

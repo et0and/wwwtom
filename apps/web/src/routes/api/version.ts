@@ -1,6 +1,10 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
+import { makeScopedRunner, withActionLogs } from "@tom/utils";
+
+const scope = "wwwtom:apps:web:api:version";
+const run = makeScopedRunner(scope);
 
 export async function GET(_event: APIEvent) {
   const program = Effect.gen(function* () {
@@ -21,16 +25,19 @@ export async function GET(_event: APIEvent) {
     });
   });
 
-  return Effect.runPromise(
-    program.pipe(
-      Effect.catchAll((error) =>
-        Effect.gen(function* () {
-          yield* Effect.logError("Version endpoint error", error);
-          return new Response("unknown", {
-            status: HttpStatus.InternalServerError,
-            headers: { "Content-Type": "text/plain" },
-          });
-        }),
+  return run(
+    withActionLogs(
+      "version:get",
+      program.pipe(
+        Effect.catchAll((error) =>
+          Effect.gen(function* () {
+            yield* Effect.logError("Version endpoint error", error);
+            return new Response("unknown", {
+              status: HttpStatus.InternalServerError,
+              headers: { "Content-Type": "text/plain" },
+            });
+          }),
+        ),
       ),
     ),
   );
