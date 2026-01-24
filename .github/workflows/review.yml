@@ -6,7 +6,7 @@ on:
 
 jobs:
   review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     permissions:
       id-token: write
       contents: read
@@ -20,7 +20,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: opencode/glm-4.7-free
+          model: opencode/big-pickle
           prompt: |
             Review this pull request:
             - Check for code quality issues
