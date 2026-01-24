@@ -1,28 +1,7 @@
 // @refresh reload
 import { createHandler, StartServer } from "@solidjs/start/server";
-import type { CloudflareEnv } from "@tom/utils/services";
-import { createServicesLayer } from "~/libs/runtime";
 
-export default createHandler((event) => {
-  const cf = event.nativeEvent.context.cloudflare;
-  const cfEnv = cf?.env as CloudflareEnv | undefined;
-
-  // Initialize Effect services layer for this request
-  if (cfEnv) {
-    event.nativeEvent.context.effectLayer = createServicesLayer(cfEnv);
-  } else {
-    // Fallback for local development without Cloudflare
-    const devEnv: CloudflareEnv = {
-      ARENA_TOKEN: process.env.ARENA_TOKEN ?? import.meta.env.ARENA_TOKEN,
-      PAYLOAD_URL: process.env.PAYLOAD_URL ?? import.meta.env.PAYLOAD_URL,
-      DATABASE_URL: process.env.DATABASE_URL ?? import.meta.env.DATABASE_URL,
-      TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? import.meta.env.TELEGRAM_BOT_TOKEN,
-      TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? import.meta.env.TELEGRAM_CHAT_ID,
-      NODE_ENV: process.env.NODE_ENV ?? "development",
-    };
-    event.nativeEvent.context.effectLayer = createServicesLayer(devEnv);
-  }
-
+export default createHandler(() => {
   return (
     <StartServer
       document={({ assets, children, scripts }) => (

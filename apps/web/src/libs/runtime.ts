@@ -20,6 +20,15 @@ export const createServicesLayer = (env: CloudflareEnv): CompositeLayer => {
   return Layer.merge(configLayer, servicesWithConfig) as CompositeLayer;
 };
 
+const getDevEnv = (): CloudflareEnv => ({
+  ARENA_TOKEN: process.env.ARENA_TOKEN ?? import.meta.env.ARENA_TOKEN,
+  PAYLOAD_URL: process.env.PAYLOAD_URL ?? import.meta.env.PAYLOAD_URL,
+  DATABASE_URL: process.env.DATABASE_URL ?? import.meta.env.DATABASE_URL,
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN ?? import.meta.env.TELEGRAM_BOT_TOKEN,
+  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? import.meta.env.TELEGRAM_CHAT_ID,
+  NODE_ENV: process.env.NODE_ENV ?? "development",
+});
+
 declare module "vinxi/http" {
   interface H3EventContext {
     effectLayer?: CompositeLayer;
@@ -28,7 +37,16 @@ declare module "vinxi/http" {
 
 export const getServiceLayer = (): CompositeLayer | undefined => {
   const event = getRequestEvent();
-  return event?.nativeEvent.context.effectLayer;
+  if (!event) return undefined;
+
+  const context = event.nativeEvent.context;
+  if (context.effectLayer) return context.effectLayer;
+
+  const cfEnv = context.cloudflare?.env as CloudflareEnv | undefined;
+  const env = cfEnv ?? getDevEnv();
+  const layer = createServicesLayer(env);
+  context.effectLayer = layer;
+  return layer;
 };
 
 const getMinLogLevel = () => {
@@ -74,7 +92,7 @@ export const runEffect = <A, E>(
 
   if (!resolvedLayer) {
     return Promise.reject(
-      new Error("Service layer not initialised. Ensure entry-server.tsx sets up the layer."),
+      new Error("Service layer not initialised. Ensure middleware sets up the layer."),
     );
   }
 
