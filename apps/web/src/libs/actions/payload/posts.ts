@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
@@ -19,6 +19,7 @@ import { runEffect } from "~/libs/runtime";
  */
 export const getPosts = query(async (page: number = 1, pageSize: number = 5) => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -61,6 +62,7 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
         },
       };
     }),
+    layer,
   );
 }, "posts");
 
@@ -78,6 +80,7 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
  */
 export const getPostBySlug = query(async (slug: string) => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -136,5 +139,6 @@ export const getPostBySlug = query(async (slug: string) => {
         meta: post.meta,
       };
     }),
+    layer,
   );
 }, "post");

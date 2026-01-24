@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
 import { retryPolicy } from "@tom/utils";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Searches across all Arena content (blocks, channels, users).
@@ -20,6 +20,7 @@ import { runEffect } from "~/libs/runtime";
 export const searchEverything = query(
   async (searchQuery: string, options?: PaginationAttributes) => {
     "use server";
+    const layer = getServiceLayer();
     return runEffect(
       Effect.gen(function* () {
         const arena = yield* ArenaService;
@@ -30,6 +31,7 @@ export const searchEverything = query(
         yield* Effect.logInfo(`searchEverything:${searchQuery}:success`);
         return result;
       }),
+      layer,
     );
   },
   "arena-search-everything",
@@ -49,6 +51,7 @@ export const searchEverything = query(
  */
 export const searchChannels = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -59,6 +62,7 @@ export const searchChannels = query(async (searchQuery: string, options?: Pagina
       yield* Effect.logInfo(`searchChannels:${searchQuery}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-search-channels");
 
@@ -76,6 +80,7 @@ export const searchChannels = query(async (searchQuery: string, options?: Pagina
  */
 export const searchBlocks = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -86,6 +91,7 @@ export const searchBlocks = query(async (searchQuery: string, options?: Paginati
       yield* Effect.logInfo(`searchBlocks:${searchQuery}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-search-blocks");
 
@@ -103,6 +109,7 @@ export const searchBlocks = query(async (searchQuery: string, options?: Paginati
  */
 export const searchUsers = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -113,5 +120,6 @@ export const searchUsers = query(async (searchQuery: string, options?: Paginatio
       yield* Effect.logInfo(`searchUsers:${searchQuery}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-search-users");

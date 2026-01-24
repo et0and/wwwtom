@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Creates a query using the Payload fetch client to return a list of works from Payload organised by title.
@@ -17,6 +17,7 @@ import { runEffect } from "~/libs/runtime";
  */
 export const getWorks = query(async () => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -40,6 +41,7 @@ export const getWorks = query(async () => {
       yield* Effect.logInfo("getWorks:success");
       return response.docs;
     }),
+    layer,
   );
 }, "works");
 
@@ -57,6 +59,7 @@ export const getWorks = query(async () => {
  */
 export const getWorkBySlug = query(async (slug: string) => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -105,5 +108,6 @@ export const getWorkBySlug = query(async (slug: string) => {
         arenaBlocks,
       };
     }),
+    layer,
   );
 }, "work");

@@ -4,9 +4,10 @@ import { PayloadService } from "@tom/payload/service";
 import { convertLexicalToHTML } from "~/libs/actions/payload/content-converter";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 export async function GET() {
+  const layer = getServiceLayer();
   const feed = new RSS({
     title: "Tom Hackshaw",
     description: "Latest blog posts from Tom Hackshaw",
@@ -65,5 +66,6 @@ export async function GET() {
         ),
       ),
     ),
+    layer,
   );
 }

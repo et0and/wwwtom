@@ -2,9 +2,10 @@ import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse, PayloadWork } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 export async function GET() {
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const payload = yield* PayloadService;
@@ -80,5 +81,6 @@ ${works.docs
         ),
       ),
     ),
+    layer,
   );
 }

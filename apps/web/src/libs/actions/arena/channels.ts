@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
 import { retryPolicy } from "@tom/utils";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Fetches a channel by slug with optional pagination for its contents.
@@ -19,6 +19,7 @@ import { runEffect } from "~/libs/runtime";
  */
 export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -27,6 +28,7 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
       yield* Effect.logInfo(`getChannel:${slug}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-channel");
 
@@ -44,6 +46,7 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
  */
 export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -55,6 +58,7 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
       yield* Effect.logInfo(`getChannelContents:${slug}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-channel-contents");
 
@@ -71,6 +75,7 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
  */
 export const getChannelThumb = query(async (slug: string) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -79,6 +84,7 @@ export const getChannelThumb = query(async (slug: string) => {
       yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-channel-thumb");
 
@@ -95,6 +101,7 @@ export const getChannelThumb = query(async (slug: string) => {
  */
 export const getChannels = query(async (options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const arena = yield* ArenaService;
@@ -103,5 +110,6 @@ export const getChannels = query(async (options?: PaginationAttributes) => {
       yield* Effect.logInfo("getChannels:success");
       return result;
     }),
+    layer,
   );
 }, "arena-channels");

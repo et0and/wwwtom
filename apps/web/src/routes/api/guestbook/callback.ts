@@ -1,10 +1,11 @@
 import { type APIEvent } from "@solidjs/start/server";
 import * as auth from "~/libs/actions/guestbook/auth";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 import { Effect, Redacted } from "effect";
 import { HttpStatus } from "@tom/constants";
 
 export async function GET(event: APIEvent) {
+  const layer = getServiceLayer();
   const url = new URL(event.request.url);
   const code = url.searchParams.get("code");
   const sessionToken = event.request.headers
@@ -29,6 +30,7 @@ export async function GET(event: APIEvent) {
       yield* Effect.logInfo("guestbook:callback:success");
       return result;
     }),
+    layer,
   );
 
   const isProd = Redacted.make(import.meta.env.PROD.toString());

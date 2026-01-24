@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
 import { retryPolicy } from "@tom/utils";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Fetches a block by ID including its connections to channels.
@@ -18,6 +18,7 @@ import { runEffect } from "~/libs/runtime";
  */
 export const getBlock = query(async (id: number) => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -27,6 +28,7 @@ export const getBlock = query(async (id: number) => {
       yield* Effect.logInfo(`getBlock:${id}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-block");
 
@@ -44,6 +46,7 @@ export const getBlock = query(async (id: number) => {
  */
 export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -56,6 +59,7 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
       yield* Effect.logInfo(`getBlockChannels:${id}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-block-channels");
 
@@ -73,6 +77,7 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
  */
 export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
   "use server";
+  const layer = getServiceLayer();
 
   return runEffect(
     Effect.gen(function* () {
@@ -85,5 +90,6 @@ export const getBlockComments = query(async (id: number, options?: PaginationAtt
       yield* Effect.logInfo(`getBlockComments:${id}:success`);
       return result;
     }),
+    layer,
   );
 }, "arena-block-comments");

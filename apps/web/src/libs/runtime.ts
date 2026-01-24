@@ -1,3 +1,5 @@
+"use server";
+
 import { Effect, Layer, Logger, LogLevel } from "effect";
 import { getRequestEvent } from "solid-js/web";
 import type { CloudflareEnv } from "@tom/utils/services";
@@ -47,28 +49,36 @@ export const runSimpleEffect = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =
 
 /**
  * Run an effect that requires services.
- * Gets the layer from the current request context.
+ * The layer must be captured at the start of the server function before any async operations.
  *
  * @example
  * ```ts
- * const result = await runEffect(
- *   Effect.gen(function* () {
- *     const db = yield* DatabaseService;
- *     return yield* db.getGuestbookEntries({ page: 1 });
- *   })
- * );
+ * export const getData = query(async () => {
+ *   "use server";
+ *   const layer = getServiceLayer();
+ *   return runEffect(
+ *     Effect.gen(function* () {
+ *       const db = yield* DatabaseService;
+ *       return yield* db.getGuestbookEntries({ page: 1 });
+ *     }),
+ *     layer,
+ *   );
+ * }, "data");
  * ```
  */
-export const runEffect = <A, E>(effect: Effect.Effect<A, E, AllServices>): Promise<A> => {
-  const layer = getServiceLayer();
+export const runEffect = <A, E>(
+  effect: Effect.Effect<A, E, AllServices>,
+  layer?: CompositeLayer,
+): Promise<A> => {
+  const resolvedLayer = layer ?? getServiceLayer();
 
-  if (!layer) {
+  if (!resolvedLayer) {
     return Promise.reject(
       new Error("Service layer not initialised. Ensure entry-server.tsx sets up the layer."),
     );
   }
 
-  return Effect.runPromise(effect.pipe(Effect.provide(layer), withLogging));
+  return Effect.runPromise(effect.pipe(Effect.provide(resolvedLayer), withLogging));
 };
 
 /**
@@ -78,6 +88,7 @@ export const runEffect = <A, E>(effect: Effect.Effect<A, E, AllServices>): Promi
 export const runWithLogs = <A, E>(
   name: string,
   effect: Effect.Effect<A, E, AllServices>,
+  layer?: CompositeLayer,
 ): Promise<A> => {
   const wrapped = Effect.gen(function* () {
     yield* Effect.logInfo(`${name}:start`);
@@ -93,5 +104,5 @@ export const runWithLogs = <A, E>(
     ),
   );
 
-  return runEffect(wrapped as Effect.Effect<A, E, AllServices>);
+  return runEffect(wrapped as Effect.Effect<A, E, AllServices>, layer);
 };

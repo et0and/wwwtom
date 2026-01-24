@@ -5,7 +5,7 @@ import * as auth from "~/libs/actions/guestbook/auth";
 import { checkProfanity } from "@tom/utils";
 import { getCookie, getEvent, setCookie } from "vinxi/http";
 import { MissingFieldError, ProfanityError, AuthenticationError } from "@tom/types";
-import { runEffect } from "~/libs/runtime";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 const SESSION_COOKIE = "guestbook_session";
 const USER_COOKIE = "guestbook_user";
@@ -32,6 +32,7 @@ const setSessionCookie = (name: string, value: string, maxAge: number) =>
 
 export const getEntries = query(async () => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       const db = yield* DatabaseService;
@@ -40,11 +41,13 @@ export const getEntries = query(async () => {
       yield* Effect.logInfo("guestbook:getEntries:success");
       return data.results;
     }),
+    layer,
   );
 }, "guestbook-entries");
 
 export const getCurrentUser = query(async () => {
   "use server";
+  const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:getCurrentUser:start");
@@ -55,11 +58,13 @@ export const getCurrentUser = query(async () => {
       yield* Effect.logInfo("guestbook:getCurrentUser:success");
       return user;
     }),
+    layer,
   );
 }, "guestbook-current-user");
 
 export const initiateAuthAction = action(async (formData: FormData) => {
   "use server";
+  const layer = getServiceLayer();
   const authUrl = await runEffect(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:initiateAuth:start");
@@ -75,6 +80,7 @@ export const initiateAuthAction = action(async (formData: FormData) => {
 
       return result.authUrl;
     }),
+    layer,
   );
 
   return redirect(authUrl);
@@ -82,6 +88,7 @@ export const initiateAuthAction = action(async (formData: FormData) => {
 
 export const signGuestbookAction = action(async (formData: FormData) => {
   "use server";
+  const layer = getServiceLayer();
   await runEffect(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:sign:start");
@@ -113,6 +120,7 @@ export const signGuestbookAction = action(async (formData: FormData) => {
       });
       yield* Effect.logInfo("guestbook:sign:success");
     }),
+    layer,
   );
 
   return { success: true };
@@ -120,6 +128,7 @@ export const signGuestbookAction = action(async (formData: FormData) => {
 
 export const logoutAction = action(async () => {
   "use server";
+  const layer = getServiceLayer();
   await runEffect(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:logout:start");
@@ -127,6 +136,7 @@ export const logoutAction = action(async () => {
       yield* setSessionCookie(SESSION_COOKIE, "", 0);
       yield* Effect.logInfo("guestbook:logout:success");
     }),
+    layer,
   );
 
   return redirect("/guestbook");

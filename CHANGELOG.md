@@ -1,9 +1,8 @@
 # [1.71.0](https://github.com/et0and/wwwtom/compare/v1.70.0...v1.71.0) (2026-01-24)
 
-
 ### Features
 
-* **api, web, packages:** big effect clean up ([00a7438](https://github.com/et0and/wwwtom/commit/00a7438cba20030c1c0ec8ebdf53be9876bb03f3))
+- **api, web, packages:** big effect clean up ([00a7438](https://github.com/et0and/wwwtom/commit/00a7438cba20030c1c0ec8ebdf53be9876bb03f3))
 
 # [1.70.0](https://github.com/et0and/wwwtom/compare/v1.69.2...v1.70.0) (2026-01-20)
 
