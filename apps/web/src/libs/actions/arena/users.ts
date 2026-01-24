@@ -1,10 +1,9 @@
 import { query } from "@solidjs/router";
-import { fetchArena } from "./client";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
+import { Effect } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
-
-const scope = "wwwtom:apps:web:arena:users";
-const run = makeScopedRunner(scope);
+import { retryPolicy } from "@tom/utils";
+import { runEffect } from "~/libs/runtime";
 
 /**
  * Fetches user profile information by ID or slug.
@@ -19,11 +18,14 @@ const run = makeScopedRunner(scope);
  */
 export const getUser = query(async (id: number | string) => {
   "use server";
-  return run(
-    withActionLogs(
-      `getUser:${id}`,
-      fetchArena((client) => client.user(id).get(), `getUser(${id})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getUser:${id}:start`);
+      const result = yield* arena.client.user(id).get().pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getUser:${id}:success`);
+      return result;
+    }),
   );
 }, "arena-user");
 
@@ -42,11 +44,17 @@ export const getUser = query(async (id: number | string) => {
 export const getUserChannels = query(
   async (id: number | string, options?: PaginationAttributes) => {
     "use server";
-    return run(
-      withActionLogs(
-        `getUserChannels:${id}`,
-        fetchArena((client) => client.user(id).channels(options), `getUserChannels(${id})`),
-      ),
+    return runEffect(
+      Effect.gen(function* () {
+        const arena = yield* ArenaService;
+        yield* Effect.logInfo(`getUserChannels:${id}:start`);
+        const result = yield* arena.client
+          .user(id)
+          .channels(options)
+          .pipe(Effect.retry(retryPolicy));
+        yield* Effect.logInfo(`getUserChannels:${id}:success`);
+        return result;
+      }),
     );
   },
   "arena-user-channels",
@@ -65,11 +73,14 @@ export const getUserChannels = query(
  */
 export const getUserFollowing = query(async (id: number | string) => {
   "use server";
-  return run(
-    withActionLogs(
-      `getUserFollowing:${id}`,
-      fetchArena((client) => client.user(id).following(), `getUserFollowing(${id})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getUserFollowing:${id}:start`);
+      const result = yield* arena.client.user(id).following().pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getUserFollowing:${id}:success`);
+      return result;
+    }),
   );
 }, "arena-user-following");
 
@@ -86,10 +97,13 @@ export const getUserFollowing = query(async (id: number | string) => {
  */
 export const getUserFollowers = query(async (id: number | string) => {
   "use server";
-  return run(
-    withActionLogs(
-      `getUserFollowers:${id}`,
-      fetchArena((client) => client.user(id).followers(), `getUserFollowers(${id})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getUserFollowers:${id}:start`);
+      const result = yield* arena.client.user(id).followers().pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getUserFollowers:${id}:success`);
+      return result;
+    }),
   );
 }, "arena-user-followers");

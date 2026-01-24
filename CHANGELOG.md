@@ -1,9 +1,8 @@
 # [1.70.0](https://github.com/et0and/wwwtom/compare/v1.69.2...v1.70.0) (2026-01-20)
 
-
 ### Features
 
-* **web, packages:** structured logs ([873d14c](https://github.com/et0and/wwwtom/commit/873d14c93dba6de4bb851bef732d7d47e33f7702))
+- **web, packages:** structured logs ([873d14c](https://github.com/et0and/wwwtom/commit/873d14c93dba6de4bb851bef732d7d47e33f7702))
 
 ## [1.69.2](https://github.com/et0and/wwwtom/compare/v1.69.1...v1.69.2) (2026-01-20)
 

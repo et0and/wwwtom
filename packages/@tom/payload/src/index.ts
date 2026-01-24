@@ -1,4 +1,5 @@
 export * from "./converter";
+export * from "./service";
 export type {
   ArenaBlockData,
   PayloadContentNode,

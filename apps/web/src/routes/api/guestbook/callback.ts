@@ -1,11 +1,8 @@
 import { type APIEvent } from "@solidjs/start/server";
 import * as auth from "~/libs/actions/guestbook/auth";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-import { Redacted } from "effect";
+import { runEffect } from "~/libs/runtime";
+import { Effect, Redacted } from "effect";
 import { HttpStatus } from "@tom/constants";
-
-const scope = "wwwtom:apps:web:guestbook:callback";
-const run = makeScopedRunner(scope);
 
 export async function GET(event: APIEvent) {
   const url = new URL(event.request.url);
@@ -22,14 +19,16 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  const user = await run(
-    withActionLogs(
-      "guestbook:callback",
-      auth.handleCallback({
+  const user = await runEffect(
+    Effect.gen(function* () {
+      yield* Effect.logInfo("guestbook:callback:start");
+      const result = yield* auth.handleCallback({
         code,
         session_token: sessionToken,
-      }),
-    ),
+      });
+      yield* Effect.logInfo("guestbook:callback:success");
+      return result;
+    }),
   );
 
   const isProd = Redacted.make(import.meta.env.PROD.toString());

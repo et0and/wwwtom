@@ -1,8 +1,8 @@
 import { createAsync } from "@solidjs/router";
+import { Effect } from "effect";
 import { Show, Index } from "solid-js";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
-import { logger } from "@tom/utils";
 import { Spinner } from "@tom/ui";
 
 interface ArenaCarouselProps {
@@ -20,7 +20,11 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
           when={response().contents && response().contents.length > 0}
           fallback={
             <>
-              {logger.warn(`Warning: no contents found for channel slug "${props.slug}"`)}
+              {
+                void Effect.runFork(
+                  Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+                )
+              }
               <p>Sorry, no content found</p>
             </>
           }
@@ -135,7 +139,7 @@ function LinkBlock(props: { block: ArenaBlock }) {
             src={block().image?.display.url}
             alt={block().title || block().generated_title || ""}
             class="w-full h-full object-cover"
-            onError={() => logger.error("Failed to load arena link image")}
+            onError={() => void Effect.runFork(Effect.logError("Failed to load arena link image"))}
           />
         </div>
       </Show>
@@ -177,7 +181,9 @@ function AttachmentBlock(props: { block: ArenaBlock }) {
           href={fileUrl()}
           download={fileName()}
           class="block no-underline hover:underline"
-          onError={() => logger.error("Failed to load arena media attachment")}
+          onError={() =>
+            void Effect.runFork(Effect.logError("Failed to load arena media attachment"))
+          }
         >
           <div class="attachment p-2 border border-gray-300 text-sm">
             {fileName()}

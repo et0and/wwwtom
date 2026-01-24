@@ -1,11 +1,8 @@
 import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import type { APIEvent } from "@solidjs/start/server";
-import { Effect, pipe } from "effect";
-import { makeScopedRunner } from "@tom/utils";
+import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
-
-const scope = "wwwtom:apps:web:api:image";
-const run = makeScopedRunner(scope);
+import { runSimpleEffect } from "~/libs/runtime";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -17,8 +14,7 @@ export async function GET({ request }: APIEvent) {
   const requestedFormat = url.searchParams.get("format");
 
   const validateUrl = (urlStr: string | null) =>
-    pipe(
-      Effect.fromNullable(urlStr),
+    Effect.fromNullable(urlStr).pipe(
       Effect.mapError(() => ({
         response: new Response("Missing url parameter", {
           status: HttpStatus.BadRequest,
@@ -46,16 +42,15 @@ export async function GET({ request }: APIEvent) {
     );
 
   const fetchImage = (validUrl: URL) =>
-    pipe(
-      Effect.tryPromise({
-        try: () => fetch(validUrl),
-        catch: (cause) => ({
-          response: new Response("Failed to fetch image", {
-            status: HttpStatus.InternalServerError,
-          }),
-          cause,
+    Effect.tryPromise({
+      try: () => fetch(validUrl),
+      catch: (cause) => ({
+        response: new Response("Failed to fetch image", {
+          status: HttpStatus.InternalServerError,
         }),
+        cause,
       }),
+    }).pipe(
       Effect.flatMap((res) =>
         res.ok
           ? Effect.succeed(res)
@@ -106,8 +101,7 @@ export async function GET({ request }: APIEvent) {
       }),
     });
 
-  const program = pipe(
-    validateUrl(imageUrl),
+  const program = validateUrl(imageUrl).pipe(
     Effect.tap(() =>
       Effect.logInfo(
         `image:request url=${imageUrl ?? ""} width=${width} quality=${quality} format=${requestedFormat ?? ""}`,
@@ -130,7 +124,7 @@ export async function GET({ request }: APIEvent) {
     ),
   );
 
-  const result = await run(program);
+  const result = await runSimpleEffect(program);
 
   if (result instanceof Response) {
     return result;

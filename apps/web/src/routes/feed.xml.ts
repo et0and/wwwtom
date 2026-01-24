@@ -1,13 +1,10 @@
 import RSS from "rss";
 import { Effect } from "effect";
-import { fetchPayload } from "~/libs/actions/payload/client";
+import { PayloadService } from "@tom/payload/service";
 import { convertLexicalToHTML } from "~/libs/actions/payload/content-converter";
-import type { PayloadPost, PayloadResponse } from "@tom/payload";
+import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-
-const scope = "wwwtom:apps:web:api:feed";
-const run = makeScopedRunner(scope);
+import { runEffect } from "~/libs/runtime";
 
 export async function GET() {
   const feed = new RSS({
@@ -18,15 +15,19 @@ export async function GET() {
     language: "en_NZ",
   });
 
-  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-    "/posts?sort=-publishedAt&limit=20&depth=3",
-  ).pipe(
-    Effect.tap(() => Effect.logInfo("feed:fetch")),
-    Effect.map((response) => {
+  return runEffect(
+    Effect.gen(function* () {
+      const payload = yield* PayloadService;
+      yield* Effect.logInfo("feed:fetch:start");
+
+      const response = yield* payload.fetch<PayloadResponse<PayloadPost>>(
+        "/posts?sort=-publishedAt&limit=20&depth=3",
+      );
+
       for (const post of response.docs) {
         const postUrl = `https://tom.so/posts/${post.slug}`;
 
-        const summary = post.summary || post.meta?.description || "";
+        const summary = post.summary ?? post.meta?.description ?? "";
         let content = "";
         if (typeof post.content === "string") {
           content = post.content;
@@ -45,24 +46,24 @@ export async function GET() {
         });
       }
 
-      return feed.xml({ indent: true });
-    }),
-    Effect.match({
-      onSuccess: (xml) =>
-        new Response(xml, {
-          headers: {
-            "Content-Type": "application/rss+xml",
-            "Cache-Control": "public, max-age=3600",
-          },
-        }),
-      onFailure: (error) =>
-        new Response("Error generating RSS feed", {
-          status: HttpStatus.InternalServerError,
-          headers: { "Content-Type": "text/plain" },
-          statusText: String(error instanceof Error ? error.message : error),
-        }),
-    }),
-  );
+      yield* Effect.logInfo("feed:fetch:success");
 
-  return run(withActionLogs("feed:get", effect));
+      return new Response(feed.xml({ indent: true }), {
+        headers: {
+          "Content-Type": "application/rss+xml",
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    }).pipe(
+      Effect.catchAll((error) =>
+        Effect.succeed(
+          new Response("Error generating RSS feed", {
+            status: HttpStatus.InternalServerError,
+            headers: { "Content-Type": "text/plain" },
+            statusText: String(error instanceof Error ? error.message : error),
+          }),
+        ),
+      ),
+    ),
+  );
 }

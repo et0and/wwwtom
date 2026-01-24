@@ -1,10 +1,9 @@
 import { query } from "@solidjs/router";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
+import { Effect } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
-import { fetchArena } from "./client";
-
-const scope = "wwwtom:apps:web:arena:block";
-const run = makeScopedRunner(scope);
+import { retryPolicy } from "@tom/utils";
+import { runEffect } from "~/libs/runtime";
 
 /**
  * Fetches a block by ID including its connections to channels.
@@ -20,11 +19,14 @@ const run = makeScopedRunner(scope);
 export const getBlock = query(async (id: number) => {
   "use server";
 
-  return run(
-    withActionLogs(
-      `getBlock:${id}`,
-      fetchArena((client) => client.block(id).get(), `getBlock(${id})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getBlock:${id}:start`);
+      const result = yield* arena.client.block(id).get().pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getBlock:${id}:success`);
+      return result;
+    }),
   );
 }, "arena-block");
 
@@ -43,11 +45,17 @@ export const getBlock = query(async (id: number) => {
 export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
   "use server";
 
-  return run(
-    withActionLogs(
-      `getBlockChannels:${id}`,
-      fetchArena((client) => client.block(id).channels(options), `getBlockChannels(${id})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getBlockChannels:${id}:start`);
+      const result = yield* arena.client
+        .block(id)
+        .channels(options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getBlockChannels:${id}:success`);
+      return result;
+    }),
   );
 }, "arena-block-channels");
 
@@ -66,10 +74,16 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
 export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
   "use server";
 
-  return run(
-    withActionLogs(
-      `getBlockComments:${id}`,
-      fetchArena((client) => client.block(id).comments(options), `getBlockComments(${id})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getBlockComments:${id}:start`);
+      const result = yield* arena.client
+        .block(id)
+        .comments(options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getBlockComments:${id}:success`);
+      return result;
+    }),
   );
 }, "arena-block-comments");

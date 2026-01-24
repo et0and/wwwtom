@@ -1,8 +1,8 @@
 import { PageLayout } from "~/layouts";
-import { logger } from "@tom/utils";
+import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
 
-logger.info("Page not found", HttpStatus.NotFound);
+void Effect.runFork(Effect.logInfo("Page not found", HttpStatus.NotFound));
 
 export default function NotFound() {
   return (

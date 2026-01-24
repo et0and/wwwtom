@@ -1,12 +1,9 @@
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-import type { PayloadPost, PayloadResponse } from "@tom/payload";
+import { PayloadService } from "@tom/payload/service";
+import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import { fetchPayload } from "./client";
-
-const scope = "wwwtom:apps:web:payload:works";
-const run = makeScopedRunner(scope);
+import { runEffect } from "~/libs/runtime";
 
 /**
  * Creates a query using the Payload fetch client to return a list of works from Payload organised by title.
@@ -20,19 +17,30 @@ const run = makeScopedRunner(scope);
  */
 export const getWorks = query(async () => {
   "use server";
-  const effect = fetchPayload<PayloadResponse<PayloadPost>>("/works?sort=title", {
-    useCache: true,
-    cacheTTL: 3600,
-  }).pipe(
-    Effect.map((response) => response.docs),
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        yield* Effect.logError("getWorks:error", error);
-        return [] as PayloadPost[];
-      }),
-    ),
+
+  return runEffect(
+    Effect.gen(function* () {
+      const payload = yield* PayloadService;
+      yield* Effect.logInfo("getWorks:start");
+
+      const response = yield* payload
+        .fetch<PayloadResponse<PayloadPost>>("/works?sort=title", {
+          useCache: true,
+          cacheTTL: 3600,
+        })
+        .pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function* () {
+              yield* Effect.logError("getWorks:error", error);
+              return { docs: [] as readonly PayloadPost[] };
+            }),
+          ),
+        );
+
+      yield* Effect.logInfo("getWorks:success");
+      return response.docs;
+    }),
   );
-  return run(withActionLogs("getWorks", effect));
 }, "works");
 
 /**
@@ -49,11 +57,28 @@ export const getWorks = query(async () => {
  */
 export const getWorkBySlug = query(async (slug: string) => {
   "use server";
-  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-    `/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-    { useCache: true, cacheTTL: 3600 },
-  ).pipe(
-    Effect.map((response) => {
+
+  return runEffect(
+    Effect.gen(function* () {
+      const payload = yield* PayloadService;
+      yield* Effect.logInfo(`getWorkBySlug:${slug}:start`);
+
+      const response = yield* payload
+        .fetch<PayloadResponse<PayloadPost>>(
+          `/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+          { useCache: true, cacheTTL: 3600 },
+        )
+        .pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function* () {
+              yield* Effect.logError("getWorkBySlug:error", error);
+              return null;
+            }),
+          ),
+        );
+
+      if (!response) return null;
+
       const work = response.docs[0];
       if (!work) return null;
 
@@ -72,18 +97,13 @@ export const getWorkBySlug = query(async (slug: string) => {
         content = work.content;
       }
 
+      yield* Effect.logInfo(`getWorkBySlug:${slug}:success`);
+
       return {
         ...work,
         content,
         arenaBlocks,
       };
     }),
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        yield* Effect.logError("getWorkBySlug:error", error);
-        return null;
-      }),
-    ),
   );
-  return run(withActionLogs(`getWorkBySlug:${slug}`, effect));
 }, "work");

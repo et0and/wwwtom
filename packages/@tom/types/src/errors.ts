@@ -62,14 +62,10 @@ export class NodeinfoError extends Data.TaggedError("NodeinfoError")<{
   readonly cause?: unknown;
 }> {}
 
-export class FontFetchError extends Data.TaggedError("FontFetchError") {
-  constructor(
-    readonly message: string,
-    readonly cause: string,
-  ) {
-    super();
-  }
-}
+export class FontFetchError extends Data.TaggedError("FontFetchError")<{
+  readonly message: string;
+  readonly cause: string;
+}> {}
 
 export class ValidationError extends Data.TaggedError("ValidationError")<{
   readonly field: string;

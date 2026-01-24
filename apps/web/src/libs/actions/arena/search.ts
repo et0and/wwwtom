@@ -1,10 +1,9 @@
 import { query } from "@solidjs/router";
-import { fetchArena } from "./client";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
+import { Effect } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
-
-const scope = "wwwtom:apps:web:arena:search";
-const run = makeScopedRunner(scope);
+import { retryPolicy } from "@tom/utils";
+import { runEffect } from "~/libs/runtime";
 
 /**
  * Searches across all Arena content (blocks, channels, users).
@@ -21,14 +20,16 @@ const run = makeScopedRunner(scope);
 export const searchEverything = query(
   async (searchQuery: string, options?: PaginationAttributes) => {
     "use server";
-    return run(
-      withActionLogs(
-        `searchEverything:${searchQuery}`,
-        fetchArena(
-          (client) => client.search.everything(searchQuery, options),
-          `searchEverything("${searchQuery}")`,
-        ),
-      ),
+    return runEffect(
+      Effect.gen(function* () {
+        const arena = yield* ArenaService;
+        yield* Effect.logInfo(`searchEverything:${searchQuery}:start`);
+        const result = yield* arena.client.search
+          .everything(searchQuery, options)
+          .pipe(Effect.retry(retryPolicy));
+        yield* Effect.logInfo(`searchEverything:${searchQuery}:success`);
+        return result;
+      }),
     );
   },
   "arena-search-everything",
@@ -48,14 +49,16 @@ export const searchEverything = query(
  */
 export const searchChannels = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
-  return run(
-    withActionLogs(
-      `searchChannels:${searchQuery}`,
-      fetchArena(
-        (client) => client.search.channels(searchQuery, options),
-        `searchChannels("${searchQuery}")`,
-      ),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`searchChannels:${searchQuery}:start`);
+      const result = yield* arena.client.search
+        .channels(searchQuery, options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`searchChannels:${searchQuery}:success`);
+      return result;
+    }),
   );
 }, "arena-search-channels");
 
@@ -73,14 +76,16 @@ export const searchChannels = query(async (searchQuery: string, options?: Pagina
  */
 export const searchBlocks = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
-  return run(
-    withActionLogs(
-      `searchBlocks:${searchQuery}`,
-      fetchArena(
-        (client) => client.search.blocks(searchQuery, options),
-        `searchBlocks("${searchQuery}")`,
-      ),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`searchBlocks:${searchQuery}:start`);
+      const result = yield* arena.client.search
+        .blocks(searchQuery, options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`searchBlocks:${searchQuery}:success`);
+      return result;
+    }),
   );
 }, "arena-search-blocks");
 
@@ -98,13 +103,15 @@ export const searchBlocks = query(async (searchQuery: string, options?: Paginati
  */
 export const searchUsers = query(async (searchQuery: string, options?: PaginationAttributes) => {
   "use server";
-  return run(
-    withActionLogs(
-      `searchUsers:${searchQuery}`,
-      fetchArena(
-        (client) => client.search.users(searchQuery, options),
-        `searchUsers("${searchQuery}")`,
-      ),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`searchUsers:${searchQuery}:start`);
+      const result = yield* arena.client.search
+        .users(searchQuery, options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`searchUsers:${searchQuery}:success`);
+      return result;
+    }),
   );
 }, "arena-search-users");

@@ -1,7 +1,7 @@
 import { createSignal, onMount, onCleanup, Show, createEffect } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
+import { Effect } from "effect";
 import { Spinner } from "~/components";
-import { logger } from "@tom/utils";
 
 export default function Hold() {
   const [timer, setTimer] = createSignal(0);
@@ -37,7 +37,7 @@ export default function Hold() {
     const audio = new Audio("https://cdn.tom.so/hold.mp3");
     audio.loop = true;
     audio.play().catch((error) => {
-      logger.error("Failed to play audio:", error);
+      void Effect.runFork(Effect.logError("Failed to play audio:", error));
     });
     audioRef = audio;
     setIsPlaybackInitiated(true);
@@ -50,7 +50,7 @@ export default function Hold() {
       setIsPlaying(false);
     } else {
       audioRef?.play().catch((error) => {
-        logger.error("Failed to play audio:", error);
+        void Effect.runFork(Effect.logError("Failed to play audio:", error));
       });
       setIsPlaying(true);
     }

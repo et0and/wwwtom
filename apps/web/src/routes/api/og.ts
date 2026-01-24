@@ -2,10 +2,8 @@ import type { APIEvent } from "@solidjs/start/server";
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-
-const scope = "wwwtom:apps:web:api:og";
-const run = makeScopedRunner(scope);
+import { runSimpleEffect } from "~/libs/runtime";
+import { ImageGenerationError } from "@tom/types";
 
 export function GET({ request }: APIEvent) {
   const url = new URL(request.url);
@@ -39,7 +37,10 @@ export function GET({ request }: APIEvent) {
             cacheEverything: true,
           },
         } as RequestInit),
-      catch: (error) => error,
+      catch: () =>
+        new ImageGenerationError({
+          message: "Failed to fetch OG image",
+        }),
     }).pipe(
       Effect.catchAll((error) =>
         Effect.gen(function* () {
@@ -63,7 +64,10 @@ export function GET({ request }: APIEvent) {
 
     const imageBuffer = yield* Effect.tryPromise({
       try: () => response.arrayBuffer(),
-      catch: (error) => error,
+      catch: () =>
+        new ImageGenerationError({
+          message: "Failed to read image buffer",
+        }),
     }).pipe(
       Effect.catchAll((error) =>
         Effect.gen(function* () {
@@ -87,10 +91,19 @@ export function GET({ request }: APIEvent) {
     });
   });
 
-  return run(
-    withActionLogs(
-      "og:get",
-      program.pipe(Effect.catchAll((errorResponse) => Effect.succeed(errorResponse))),
-    ),
-  );
+  const action = program.pipe(Effect.catchAll((errorResponse) => Effect.succeed(errorResponse)));
+  const loggedAction = Effect.gen(function* () {
+    yield* Effect.logInfo("og:get:start");
+    return yield* action.pipe(
+      Effect.tap(() => Effect.logDebug("og:get:success")),
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.logError("og:get:error", error);
+          return yield* Effect.fail(error);
+        }),
+      ),
+    );
+  });
+
+  return runSimpleEffect(loggedAction);
 }

@@ -8,13 +8,15 @@
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/schemas.ts",
-    "./client": "./src/client.ts"
+    "./client": "./src/client.ts",
+    "./service": "./src/service.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tom/types": "workspace:*",
+    "@tom/utils": "workspace:*",
     "effect": "^3.19.5"
   },
   "devDependencies": {

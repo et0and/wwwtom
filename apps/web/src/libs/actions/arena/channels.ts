@@ -1,10 +1,9 @@
 import { query } from "@solidjs/router";
-import { fetchArena } from "./client";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
+import { Effect } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
-
-const scope = "wwwtom:apps:web:arena:channels";
-const run = makeScopedRunner(scope);
+import { retryPolicy } from "@tom/utils";
+import { runEffect } from "~/libs/runtime";
 
 /**
  * Fetches a channel by slug with optional pagination for its contents.
@@ -20,11 +19,14 @@ const run = makeScopedRunner(scope);
  */
 export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
   "use server";
-  return run(
-    withActionLogs(
-      `getChannel:${slug}`,
-      fetchArena((client) => client.channel(slug).get(options), `getChannel(${slug})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getChannel:${slug}:start`);
+      const result = yield* arena.client.channel(slug).get(options).pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getChannel:${slug}:success`);
+      return result;
+    }),
   );
 }, "arena-channel");
 
@@ -42,11 +44,17 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
  */
 export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
   "use server";
-  return run(
-    withActionLogs(
-      `getChannelContents:${slug}`,
-      fetchArena((client) => client.channel(slug).contents(options), `getChannelContents(${slug})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getChannelContents:${slug}:start`);
+      const result = yield* arena.client
+        .channel(slug)
+        .contents(options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getChannelContents:${slug}:success`);
+      return result;
+    }),
   );
 }, "arena-channel-contents");
 
@@ -63,11 +71,14 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
  */
 export const getChannelThumb = query(async (slug: string) => {
   "use server";
-  return run(
-    withActionLogs(
-      `getChannelThumb:${slug}`,
-      fetchArena((client) => client.channel(slug).thumb(), `getChannelThumb(${slug})`),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getChannelThumb:${slug}:start`);
+      const result = yield* arena.client.channel(slug).thumb().pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
+      return result;
+    }),
   );
 }, "arena-channel-thumb");
 
@@ -84,10 +95,13 @@ export const getChannelThumb = query(async (slug: string) => {
  */
 export const getChannels = query(async (options?: PaginationAttributes) => {
   "use server";
-  return run(
-    withActionLogs(
-      "getChannels",
-      fetchArena((client) => client.channels(options), "getChannels()"),
-    ),
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo("getChannels:start");
+      const result = yield* arena.client.channels(options).pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo("getChannels:success");
+      return result;
+    }),
   );
 }, "arena-channels");

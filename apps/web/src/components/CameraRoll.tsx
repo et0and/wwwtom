@@ -1,8 +1,8 @@
 import { createAsync } from "@solidjs/router";
+import { Effect } from "effect";
 import { Show, Index, createMemo, onMount, createSignal } from "solid-js";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
-import { logger } from "@tom/utils";
 import { Spinner } from "@tom/ui";
 
 interface CameraRollProps {
@@ -102,7 +102,11 @@ export function CameraRoll(props: CameraRollProps) {
           when={response().contents && response().contents.length > 0}
           fallback={
             <>
-              {logger.warn(`Warning: no contents found for channel slug "${props.slug}"`)}
+              {
+                void Effect.runFork(
+                  Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+                )
+              }
               <p>Sorry, no content found</p>
             </>
           }

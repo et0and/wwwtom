@@ -1,29 +1,51 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import { Effect, Layer, Redacted } from "effect";
+import { ArenaService, ArenaServiceLive } from "@tom/arena/service";
+import { AppConfig } from "@tom/utils/services";
 import { fetchArena } from "~/libs/actions/arena/client";
-import { logger, runServerEffect } from "@tom/utils";
+
+function getArenaToken(): string | undefined {
+  return (
+    (typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
+    import.meta.env.ARENA_TOKEN
+  );
+}
+
+function createTestLayer() {
+  const token = getArenaToken() ?? "";
+  const configLayer = Layer.succeed(AppConfig, {
+    arenaToken: Redacted.make(token),
+    payloadUrl: Redacted.make(""),
+    databaseUrl: Redacted.make(""),
+    telegramBotToken: undefined,
+    telegramChatId: undefined,
+    isDev: true,
+  });
+  return Layer.provideMerge(ArenaServiceLive, configLayer);
+}
+
+function runTestEffect<A, E>(effect: Effect.Effect<A, E, ArenaService>): Promise<A> {
+  const layer = createTestLayer();
+  const provided = Effect.provide(effect, layer);
+  return Effect.runPromise(provided);
+}
 
 describe("Are.na channel integration", () => {
   beforeAll(() => {
-    const tokenValue =
-      (typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
-      import.meta.env.ARENA_TOKEN;
-    const hasToken = !!tokenValue;
+    const hasToken = !!getArenaToken();
     if (!hasToken) {
-      logger.warn("ARENA_TOKEN not found, skipping integration tests");
+      void Effect.runFork(Effect.logWarning("ARENA_TOKEN not found, skipping integration tests"));
     }
   });
 
   describe("getChannelContents", () => {
     it("should fetch channel contents with pagination", async () => {
-      const tokenValue =
-        (typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
-        import.meta.env.ARENA_TOKEN;
-      const hasToken = !!tokenValue;
+      const hasToken = !!getArenaToken();
       if (!hasToken) {
-        logger.warn("Skipping test: ARENA_TOKEN not available");
+        void Effect.runFork(Effect.logWarning("Skipping test: ARENA_TOKEN not available"));
         return;
       }
-      const result = await runServerEffect(
+      const result = await runTestEffect(
         fetchArena(
           (client) => client.channel("imaginary-museum").contents({ per: 10 }),
           "getChannelContents(imaginary-museum)",
@@ -33,21 +55,18 @@ describe("Are.na channel integration", () => {
       expect(result).toBeDefined();
       expect(result).toHaveProperty("contents");
       expect(Array.isArray(result.contents)).toBe(true);
-      logger.debug("Fetched contents:", result.contents);
+      void Effect.runFork(Effect.logDebug("Fetched contents:", result.contents));
     });
   });
 
   describe("getChannel", () => {
     it("should fetch a single channel by slug", async () => {
-      const hasToken = !!(
-        (typeof process !== "undefined" ? process.env?.ARENA_TOKEN : undefined) ||
-        import.meta.env.ARENA_TOKEN
-      );
+      const hasToken = !!getArenaToken();
       if (!hasToken) {
-        logger.warn("Skipping test: ARENA_TOKEN not available");
+        void Effect.runFork(Effect.logWarning("Skipping test: ARENA_TOKEN not available"));
         return;
       }
-      const result = await runServerEffect(
+      const result = await runTestEffect(
         fetchArena(
           (client) => client.channel("imaginary-museum").get(),
           "getChannel(imaginary-museum)",
@@ -57,7 +76,7 @@ describe("Are.na channel integration", () => {
       expect(result).toBeDefined();
       expect(result).toHaveProperty("slug");
       expect(result.slug).toBe("imaginary-museum");
-      logger.debug("Fetched channel:", result);
+      void Effect.runFork(Effect.logDebug("Fetched channel:", result));
     });
   });
 });

@@ -1,20 +1,21 @@
-import { fetchPayload } from "~/libs/actions/payload/client";
-import type { PayloadResponse, PayloadPost } from "@tom/payload";
 import { Effect } from "effect";
+import { PayloadService } from "@tom/payload/service";
+import type { PayloadPost, PayloadResponse, PayloadWork } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-
-const scope = "wwwtom:apps:web:api:sitemap";
-const run = makeScopedRunner(scope);
+import { runEffect } from "~/libs/runtime";
 
 export async function GET() {
-  const effect = Effect.gen(function* () {
-    const [posts, works] = yield* Effect.all([
-      fetchPayload<PayloadResponse<PayloadPost>>("/posts?sort=-publishedAt&limit=500&depth=0"),
-      fetchPayload<PayloadResponse<PayloadPost>>("/works?sort=-updatedAt&limit=500&depth=0"),
-    ]);
+  return runEffect(
+    Effect.gen(function* () {
+      const payload = yield* PayloadService;
+      yield* Effect.logInfo("sitemap:fetch:start");
 
-    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+      const [posts, works] = yield* Effect.all([
+        payload.fetch<PayloadResponse<PayloadPost>>("/posts?sort=-publishedAt&limit=500&depth=0"),
+        payload.fetch<PayloadResponse<PayloadWork>>("/works?sort=-updatedAt&limit=500&depth=0"),
+      ]);
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://tom.so/</loc>
@@ -58,22 +59,26 @@ ${works.docs
   .join("")}
 </urlset>`;
 
-    return new Response(xml, {
-      headers: {
-        "Content-Type": "application/xml",
-        "Cache-Control": "public, max-age=3600",
-      },
-    });
-  }).pipe(
-    Effect.catchAll((error) =>
-      Effect.succeed(
-        new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${error.message}</error>`, {
-          status: HttpStatus.InternalServerError,
-          headers: { "Content-Type": "application/xml" },
-        }),
+      yield* Effect.logInfo("sitemap:fetch:success");
+
+      return new Response(xml, {
+        headers: {
+          "Content-Type": "application/xml",
+          "Cache-Control": "public, max-age=3600",
+        },
+      });
+    }).pipe(
+      Effect.catchAll((error) =>
+        Effect.succeed(
+          new Response(
+            `<?xml version="1.0" encoding="UTF-8"?><error>${error instanceof Error ? error.message : String(error)}</error>`,
+            {
+              status: HttpStatus.InternalServerError,
+              headers: { "Content-Type": "application/xml" },
+            },
+          ),
+        ),
       ),
     ),
   );
-
-  return run(withActionLogs("sitemap:get", effect));
 }

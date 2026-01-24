@@ -1,7 +1,7 @@
 import generator from "megalodon";
 import { Effect, Redacted } from "effect";
-import { retryPolicy, logger } from "@tom/utils";
-import * as db from "~/libs/db/guestbook";
+import { retryPolicy } from "@tom/utils";
+import { DatabaseService } from "@tom/db/service";
 import { detector } from "./detector";
 import {
   GuestbookValidationError,
@@ -39,6 +39,8 @@ const generateState = () => {
 
 export const initiateAuth = (fediverseHandle: string) =>
   Effect.gen(function* () {
+    const db = yield* DatabaseService;
+
     const parts = fediverseHandle.split("@").filter(Boolean);
     if (parts.length !== 2) {
       return yield* Effect.fail(
@@ -68,7 +70,7 @@ export const initiateAuth = (fediverseHandle: string) =>
         });
       },
       catch: (error) => {
-        logger.error("Megalodon registerApp error:", error);
+        void Effect.runFork(Effect.logError("Megalodon registerApp error:", error));
 
         if (error && typeof error === "object" && "code" in error) {
           const code = (error as { code: string }).code;
@@ -154,6 +156,7 @@ export const initiateAuth = (fediverseHandle: string) =>
 
 export const handleCallback = (params: { code: string; session_token: string }) =>
   Effect.gen(function* () {
+    const db = yield* DatabaseService;
     const session = yield* db.getOAuthSession(params.session_token);
 
     if (!session) {
@@ -212,6 +215,7 @@ export const handleCallback = (params: { code: string; session_token: string }) 
 
 export const signGuestbook = (params: { user: FediverseUser; message: string }) =>
   Effect.gen(function* () {
+    const db = yield* DatabaseService;
     const hasSigned = yield* db.hasUserSigned(`${params.user.username}@${params.user.instance}`);
 
     if (hasSigned) {

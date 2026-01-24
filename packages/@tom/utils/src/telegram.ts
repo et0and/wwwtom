@@ -1,21 +1,16 @@
-import { Effect } from "effect";
+import { Context, Effect, Layer, Redacted } from "effect";
 import { TelegramError } from "@tom/types";
-import { logger } from "./logger";
+import { AppConfig } from "./services/config";
 
-export interface TelegramBindings {
-  TELEGRAM_BOT_TOKEN?: string;
-  TELEGRAM_CHAT_ID?: string;
+export interface TelegramServiceShape {
+  readonly sendAlert: (message: string) => Effect.Effect<void, TelegramError>;
+  readonly sendError: (message: string, error?: unknown) => Effect.Effect<void, TelegramError>;
 }
 
-let telegramBindings: TelegramBindings | null = null;
-
-export const initTelegram = (b: TelegramBindings) => {
-  telegramBindings = b;
-};
-
-const isConfigured = (): boolean => {
-  return !!(telegramBindings?.TELEGRAM_BOT_TOKEN && telegramBindings?.TELEGRAM_CHAT_ID);
-};
+export class TelegramService extends Context.Tag("TelegramService")<
+  TelegramService,
+  TelegramServiceShape
+>() {}
 
 const formatErrorMessage = (level: string, message: string, error?: unknown): string => {
   const timestamp = new Date().toISOString();
@@ -35,34 +30,29 @@ const formatErrorMessage = (level: string, message: string, error?: unknown): st
   return text;
 };
 
-const doSendTelegramAlert = (text: string): Effect.Effect<void, TelegramError> => {
-  return Effect.gen(function* () {
-    const bindings = telegramBindings;
-    if (!isConfigured() || !bindings) {
-      return yield* Effect.fail(new TelegramError({ message: "Telegram not configured" }));
-    }
-
-    const telegramUrl = `https://api.telegram.org/bot${bindings.TELEGRAM_BOT_TOKEN}/sendMessage`;
+const doSendTelegramAlert = (
+  token: string,
+  chatId: string,
+  text: string,
+): Effect.Effect<void, TelegramError> =>
+  Effect.gen(function* () {
+    const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
 
     const response = yield* Effect.tryPromise({
-      try: () => {
-        return fetch(telegramUrl, {
+      try: () =>
+        fetch(telegramUrl, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            chat_id: bindings.TELEGRAM_CHAT_ID,
+            chat_id: chatId,
             text,
             parse_mode: "Markdown",
           }),
-        });
-      },
-      catch: (error) => {
-        return new TelegramError({
+        }),
+      catch: (error) =>
+        new TelegramError({
           message: error instanceof Error ? error.message : "Unknown error",
-        });
-      },
+        }),
     });
 
     if (!response.ok) {
@@ -74,33 +64,27 @@ const doSendTelegramAlert = (text: string): Effect.Effect<void, TelegramError> =
       );
     }
   });
-};
 
-export const sendTelegramAlert = async (message: string): Promise<boolean> => {
-  const result = await Effect.runPromise(
-    doSendTelegramAlert(message).pipe(
-      Effect.as(true),
-      Effect.catchAll(() => Effect.succeed(false)),
-    ),
-  );
-  return result;
-};
+export const TelegramServiceLive = Layer.effect(
+  TelegramService,
+  Effect.gen(function* () {
+    const config = yield* AppConfig;
 
-export const telegramAlert = {
-  error: async (message: string, error?: unknown): Promise<void> => {
-    if (isConfigured()) {
-      const formatted = formatErrorMessage("ERROR", message, error);
-      await Effect.runPromise(
-        doSendTelegramAlert(formatted).pipe(
-          Effect.tap(() => Effect.sync(() => logger.info("Alert sent successfully"))),
-          Effect.catchAll((e) => {
-            logger.error("Alert send failed:", e);
-            return Effect.void;
-          }),
-        ),
-      );
+    // Return no-op service if not configured
+    if (!config.telegramBotToken || !config.telegramChatId) {
+      return {
+        sendAlert: () => Effect.void,
+        sendError: () => Effect.void,
+      };
     }
-  },
 
-  send: sendTelegramAlert,
-};
+    const token = Redacted.value(config.telegramBotToken);
+    const chatId = config.telegramChatId;
+
+    return {
+      sendAlert: (message) => doSendTelegramAlert(token, chatId, message),
+      sendError: (message, error) =>
+        doSendTelegramAlert(token, chatId, formatErrorMessage("ERROR", message, error)),
+    };
+  }),
+);

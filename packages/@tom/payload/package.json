@@ -8,13 +8,16 @@
   "exports": {
     ".": "./src/index.ts",
     "./schemas": "./src/schemas.ts",
-    "./converter": "./src/converter.ts"
+    "./converter": "./src/converter.ts",
+    "./service": "./src/service.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@tom/arena": "workspace:*",
+    "@tom/schemas": "workspace:*",
+    "@tom/utils": "workspace:*",
     "effect": "^3.19.5"
   },
   "devDependencies": {

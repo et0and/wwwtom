@@ -1,10 +1,7 @@
 import type { APIEvent } from "@solidjs/start/server";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-
-const scope = "wwwtom:apps:web:api:version";
-const run = makeScopedRunner(scope);
+import { runSimpleEffect } from "~/libs/runtime";
 
 export async function GET(_event: APIEvent) {
   const program = Effect.gen(function* () {
@@ -25,22 +22,31 @@ export async function GET(_event: APIEvent) {
     });
   });
 
-  return run(
-    withActionLogs(
-      "version:get",
-      program.pipe(
-        Effect.catchAll((error) =>
-          Effect.gen(function* () {
-            yield* Effect.logError("Version endpoint error", error);
-            return new Response("unknown", {
-              status: HttpStatus.InternalServerError,
-              headers: { "Content-Type": "text/plain" },
-            });
-          }),
-        ),
-      ),
+  const action = program.pipe(
+    Effect.catchAll((error) =>
+      Effect.gen(function* () {
+        yield* Effect.logError("Version endpoint error", error);
+        return new Response("unknown", {
+          status: HttpStatus.InternalServerError,
+          headers: { "Content-Type": "text/plain" },
+        });
+      }),
     ),
   );
+  const loggedAction = Effect.gen(function* () {
+    yield* Effect.logInfo("version:get:start");
+    return yield* action.pipe(
+      Effect.tap(() => Effect.logDebug("version:get:success")),
+      Effect.catchAll((error) =>
+        Effect.gen(function* () {
+          yield* Effect.logError("version:get:error", error);
+          return yield* Effect.fail(error);
+        }),
+      ),
+    );
+  });
+
+  return runSimpleEffect(loggedAction);
 }
 
 function getLatestCommitHash(): Effect.Effect<string> {

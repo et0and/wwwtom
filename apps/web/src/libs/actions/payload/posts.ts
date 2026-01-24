@@ -1,12 +1,9 @@
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
-import { makeScopedRunner, withActionLogs } from "@tom/utils";
-import type { PayloadPost, PayloadResponse } from "@tom/payload";
+import { PayloadService } from "@tom/payload/service";
+import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import { fetchPayload } from "./client";
-
-const scope = "wwwtom:apps:web:payload:posts";
-const run = makeScopedRunner(scope);
+import { runEffect } from "~/libs/runtime";
 
 /**
  * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
@@ -23,36 +20,48 @@ const run = makeScopedRunner(scope);
 export const getPosts = query(async (page: number = 1, pageSize: number = 5) => {
   "use server";
 
-  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-    `/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
-    { useCache: true, cacheTTL: 3600 },
-  ).pipe(
-    Effect.map((response) => ({
-      data: response.docs,
-      meta: {
-        pagination: {
-          page: response.page,
-          pageSize: response.limit,
-          pageCount: response.totalPages,
-          total: response.totalDocs,
-        },
-      },
-    })),
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        yield* Effect.logError("getPosts:error", error);
-        return {
-          data: [],
-          meta: {
-            pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 },
-          },
-          error: error instanceof Error ? error.message : String(error),
-        };
-      }),
-    ),
-  );
+  return runEffect(
+    Effect.gen(function* () {
+      const payload = yield* PayloadService;
+      yield* Effect.logInfo(`getPosts:${page}:${pageSize}:start`);
 
-  return run(withActionLogs(`getPosts:${page}:${pageSize}`, effect));
+      const response = yield* payload
+        .fetch<PayloadResponse<PayloadPost>>(
+          `/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
+          { useCache: true, cacheTTL: 3600 },
+        )
+        .pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function* () {
+              yield* Effect.logError("getPosts:error", error);
+              return {
+                docs: [] as readonly PayloadPost[],
+                totalDocs: 0,
+                limit: pageSize,
+                page: 1,
+                totalPages: 0,
+                hasNextPage: false,
+                hasPrevPage: false,
+              };
+            }),
+          ),
+        );
+
+      yield* Effect.logInfo(`getPosts:${page}:${pageSize}:success`);
+
+      return {
+        data: response.docs,
+        meta: {
+          pagination: {
+            page: response.page,
+            pageSize: response.limit,
+            pageCount: response.totalPages,
+            total: response.totalDocs,
+          },
+        },
+      };
+    }),
+  );
 }, "posts");
 
 /**
@@ -70,11 +79,27 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
 export const getPostBySlug = query(async (slug: string) => {
   "use server";
 
-  const effect = fetchPayload<PayloadResponse<PayloadPost>>(
-    `/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-    { useCache: true, cacheTTL: 3600 },
-  ).pipe(
-    Effect.map((response) => {
+  return runEffect(
+    Effect.gen(function* () {
+      const payload = yield* PayloadService;
+      yield* Effect.logInfo(`getPostBySlug:${slug}:start`);
+
+      const response = yield* payload
+        .fetch<PayloadResponse<PayloadPost>>(
+          `/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+          { useCache: true, cacheTTL: 3600 },
+        )
+        .pipe(
+          Effect.catchAll((error) =>
+            Effect.gen(function* () {
+              yield* Effect.logError("getPostBySlug:error", error);
+              return null;
+            }),
+          ),
+        );
+
+      if (!response) return null;
+
       const post = response.docs[0];
       if (!post) return null;
 
@@ -93,6 +118,8 @@ export const getPostBySlug = query(async (slug: string) => {
         content = post.content;
       }
 
+      yield* Effect.logInfo(`getPostBySlug:${slug}:success`);
+
       return {
         id: String(post.id),
         title: post.title,
@@ -109,13 +136,5 @@ export const getPostBySlug = query(async (slug: string) => {
         meta: post.meta,
       };
     }),
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
-        yield* Effect.logError("getPostBySlug:error", error);
-        return null;
-      }),
-    ),
   );
-
-  return run(withActionLogs(`getPostBySlug:${slug}`, effect));
 }, "post");

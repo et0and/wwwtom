@@ -25,6 +25,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Run typecheck
+        run: bunx tsc
+
       - name: Run tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}

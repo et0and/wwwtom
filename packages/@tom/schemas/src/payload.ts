@@ -1,116 +1,19 @@
 import { Schema } from "effect";
 
-export type PayloadMediaSize = {
-  url: string | null;
-  width: number | null;
-  height: number | null;
-  mimeType: string | null;
-  filesize: number | null;
-  filename: string | null;
-};
+// =============================================================================
+// Media Schemas
+// =============================================================================
 
-export type PayloadMediaSizes = {
-  thumbnail: PayloadMediaSize | null;
-  square: PayloadMediaSize | null;
-  small: PayloadMediaSize | null;
-  medium: PayloadMediaSize | null;
-  large: PayloadMediaSize | null;
-  xlarge: PayloadMediaSize | null;
-  og: PayloadMediaSize | null;
-};
-
-export type PayloadMedia = {
-  id: number;
-  alt: string | null;
-  caption: PayloadRichContent | null;
-  updatedAt: string;
-  createdAt: string;
-  url: string;
-  thumbnailURL: string;
-  filename: string;
-  mimeType: string;
-  filesize: number;
-  width: number;
-  height: number;
-  focalX: number;
-  focalY: number;
-  sizes: PayloadMediaSizes;
-};
-
-export type PayloadBlockFields = {
-  id?: string;
-  media?: PayloadMedia;
-  blockName?: string;
-  blockType?: string;
-  content?: PayloadRichContent;
-  style?: string;
-  url?: string;
-  newTab?: boolean;
-  arenaSlug?: string;
-  arenaTitle?: string;
-};
-
-export type PayloadContentNode = {
-  type: string;
-  format?: number | string;
-  indent?: number | string;
-  version?: number;
-  children?: readonly PayloadContentNode[];
-  direction?: string | null;
-  textStyle?: string;
-  textFormat?: number;
-  fields?: PayloadBlockFields;
-  tag?: string;
-  mode?: string;
-  text?: string;
-  style?: string;
-  detail?: number;
-  id?: string;
-};
-
-export type PayloadRichContent = {
-  root: PayloadContentNode;
-};
-
-export type PayloadPost = {
-  id: number | string;
-  title: string;
-  summary?: string | null;
-  publishedAt: string;
-  slug: string;
-  content?: string | PayloadRichContent;
-  heroImage?: { url: string; alt?: string } | null;
-  arenaSlug?: string | null;
-  arenaTitle?: string | null;
-  createdAt: string;
-  updatedAt: string;
-  meta?: {
-    title?: string | null;
-    description?: string | null;
-    image?: string | null;
-  };
-};
-
-export type PayloadResponse<T> = {
-  docs: readonly T[];
-  totalDocs: number;
-  limit: number;
-  page: number;
-  totalPages: number;
-  hasNextPage: boolean;
-  hasPrevPage: boolean;
-};
-
-const PayloadMediaSizeSchema = Schema.Struct({
+export const PayloadMediaSizeSchema = Schema.Struct({
   url: Schema.NullOr(Schema.String),
   width: Schema.NullOr(Schema.Number),
   height: Schema.NullOr(Schema.Number),
   mimeType: Schema.NullOr(Schema.String),
   filesize: Schema.NullOr(Schema.Number),
   filename: Schema.NullOr(Schema.String),
-}) as Schema.Schema<unknown, PayloadMediaSize, never>;
+});
 
-const PayloadMediaSizesSchema = Schema.Struct({
+export const PayloadMediaSizesSchema = Schema.Struct({
   thumbnail: Schema.NullOr(PayloadMediaSizeSchema),
   square: Schema.NullOr(PayloadMediaSizeSchema),
   small: Schema.NullOr(PayloadMediaSizeSchema),
@@ -118,12 +21,68 @@ const PayloadMediaSizesSchema = Schema.Struct({
   large: Schema.NullOr(PayloadMediaSizeSchema),
   xlarge: Schema.NullOr(PayloadMediaSizeSchema),
   og: Schema.NullOr(PayloadMediaSizeSchema),
-}) as Schema.Schema<unknown, PayloadMediaSizes, never>;
+});
 
-const PayloadMediaSchema = Schema.Struct({
+// Forward declaration for recursive types
+type PayloadRichContentType = {
+  readonly root: PayloadContentNodeType;
+};
+
+type PayloadContentNodeType = {
+  readonly type: string;
+  readonly format?: number | string | undefined;
+  readonly indent?: number | string | undefined;
+  readonly version?: number | undefined;
+  readonly children?: ReadonlyArray<PayloadContentNodeType> | undefined;
+  readonly direction?: string | null | undefined;
+  readonly textStyle?: string | undefined;
+  readonly textFormat?: number | undefined;
+  readonly fields?: PayloadBlockFieldsType | undefined;
+  readonly tag?: string | undefined;
+  readonly mode?: string | undefined;
+  readonly text?: string | undefined;
+  readonly style?: string | undefined;
+  readonly detail?: number | undefined;
+  readonly id?: string | undefined;
+};
+
+type PayloadBlockFieldsType = {
+  readonly id?: string | undefined;
+  readonly media?: PayloadMediaType | undefined;
+  readonly blockName?: string | undefined;
+  readonly blockType?: string | undefined;
+  readonly content?: PayloadRichContentType | undefined;
+  readonly style?: string | undefined;
+  readonly url?: string | undefined;
+  readonly newTab?: boolean | undefined;
+  readonly arenaSlug?: string | undefined;
+  readonly arenaTitle?: string | undefined;
+};
+
+type PayloadMediaType = {
+  readonly id: number;
+  readonly alt: string | null;
+  readonly caption: PayloadRichContentType | null;
+  readonly updatedAt: string;
+  readonly createdAt: string;
+  readonly url: string;
+  readonly thumbnailURL: string;
+  readonly filename: string;
+  readonly mimeType: string;
+  readonly filesize: number;
+  readonly width: number;
+  readonly height: number;
+  readonly focalX: number;
+  readonly focalY: number;
+  readonly sizes: Schema.Schema.Type<typeof PayloadMediaSizesSchema>;
+};
+
+export const PayloadMediaSchema: Schema.Schema<PayloadMediaType> = Schema.Struct({
   id: Schema.Number,
   alt: Schema.NullOr(Schema.String),
-  caption: Schema.suspend(() => Schema.NullOr(PayloadRichContentSchema)),
+  caption: Schema.suspend(
+    (): Schema.Schema<PayloadRichContentType | null> => Schema.NullOr(PayloadRichContentSchema),
+  ),
   updatedAt: Schema.String,
   createdAt: Schema.String,
   url: Schema.String,
@@ -136,22 +95,24 @@ const PayloadMediaSchema = Schema.Struct({
   focalX: Schema.Number,
   focalY: Schema.Number,
   sizes: PayloadMediaSizesSchema,
-}) as Schema.Schema<unknown, PayloadMedia, never>;
+});
 
-const PayloadBlockFieldsSchema = Schema.Struct({
+export const PayloadBlockFieldsSchema: Schema.Schema<PayloadBlockFieldsType> = Schema.Struct({
   id: Schema.optional(Schema.String),
   media: Schema.optional(PayloadMediaSchema),
   blockName: Schema.optional(Schema.String),
   blockType: Schema.optional(Schema.String),
-  content: Schema.optional(Schema.suspend(() => PayloadRichContentSchema)),
+  content: Schema.optional(
+    Schema.suspend((): Schema.Schema<PayloadRichContentType> => PayloadRichContentSchema),
+  ),
   style: Schema.optional(Schema.String),
   url: Schema.optional(Schema.String),
   newTab: Schema.optional(Schema.Boolean),
   arenaSlug: Schema.optional(Schema.String),
   arenaTitle: Schema.optional(Schema.String),
-}) as Schema.Schema<unknown, PayloadBlockFields, never>;
+});
 
-const PayloadContentNodeSchema = Schema.suspend(() =>
+export const PayloadContentNodeSchema: Schema.Schema<PayloadContentNodeType> = Schema.suspend(() =>
   Schema.Struct({
     type: Schema.String,
     format: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
@@ -161,7 +122,7 @@ const PayloadContentNodeSchema = Schema.suspend(() =>
     direction: Schema.optional(Schema.NullOr(Schema.String)),
     textStyle: Schema.optional(Schema.String),
     textFormat: Schema.optional(Schema.Number),
-    fields: Schema.optional(Schema.suspend(() => PayloadBlockFieldsSchema)),
+    fields: Schema.optional(PayloadBlockFieldsSchema),
     tag: Schema.optional(Schema.String),
     mode: Schema.optional(Schema.String),
     text: Schema.optional(Schema.String),
@@ -169,11 +130,26 @@ const PayloadContentNodeSchema = Schema.suspend(() =>
     detail: Schema.optional(Schema.Number),
     id: Schema.optional(Schema.String),
   }),
-) as Schema.Schema<unknown, PayloadContentNode, never>;
+);
 
-export const PayloadRichContentSchema = Schema.Struct({
+export const PayloadRichContentSchema: Schema.Schema<PayloadRichContentType> = Schema.Struct({
   root: PayloadContentNodeSchema,
-}) as Schema.Schema<unknown, PayloadRichContent, never>;
+});
+
+// =============================================================================
+// Post Schema
+// =============================================================================
+
+export const PayloadHeroImageSchema = Schema.Struct({
+  url: Schema.String,
+  alt: Schema.optional(Schema.String),
+});
+
+export const PayloadMetaSchema = Schema.Struct({
+  title: Schema.optional(Schema.NullOr(Schema.String)),
+  description: Schema.optional(Schema.NullOr(Schema.String)),
+  image: Schema.optional(Schema.NullOr(Schema.String)),
+});
 
 export const PayloadPostSchema = Schema.Struct({
   id: Schema.Union(Schema.Number, Schema.String),
@@ -182,28 +158,38 @@ export const PayloadPostSchema = Schema.Struct({
   publishedAt: Schema.String,
   slug: Schema.String,
   content: Schema.optional(Schema.Union(Schema.String, PayloadRichContentSchema)),
-  heroImage: Schema.optional(
-    Schema.NullOr(
-      Schema.Struct({
-        url: Schema.String,
-        alt: Schema.optional(Schema.String),
-      }),
-    ),
-  ),
+  heroImage: Schema.optional(Schema.NullOr(PayloadHeroImageSchema)),
   arenaSlug: Schema.optional(Schema.NullOr(Schema.String)),
   arenaTitle: Schema.optional(Schema.NullOr(Schema.String)),
   createdAt: Schema.String,
   updatedAt: Schema.String,
-  meta: Schema.optional(
-    Schema.Struct({
-      title: Schema.optional(Schema.NullOr(Schema.String)),
-      description: Schema.optional(Schema.NullOr(Schema.String)),
-      image: Schema.optional(Schema.NullOr(Schema.String)),
-    }),
-  ),
-}) as Schema.Schema<unknown, PayloadPost, never>;
+  meta: Schema.optional(PayloadMetaSchema),
+});
 
-export const PayloadResponseSchema = <T>(itemSchema: Schema.Schema<T>) =>
+// =============================================================================
+// Work Schema
+// =============================================================================
+
+export const PayloadWorkSchema = Schema.Struct({
+  id: Schema.Union(Schema.Number, Schema.String),
+  title: Schema.String,
+  summary: Schema.optional(Schema.NullOr(Schema.String)),
+  publishedAt: Schema.String,
+  slug: Schema.String,
+  content: Schema.optional(Schema.Union(Schema.String, PayloadRichContentSchema)),
+  heroImage: Schema.optional(Schema.NullOr(PayloadHeroImageSchema)),
+  arenaSlug: Schema.optional(Schema.NullOr(Schema.String)),
+  arenaTitle: Schema.optional(Schema.NullOr(Schema.String)),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+  meta: Schema.optional(PayloadMetaSchema),
+});
+
+// =============================================================================
+// Response Schema
+// =============================================================================
+
+export const PayloadResponseSchema = <A, I, R>(itemSchema: Schema.Schema<A, I, R>) =>
   Schema.Struct({
     docs: Schema.Array(itemSchema),
     totalDocs: Schema.Number,
@@ -212,4 +198,28 @@ export const PayloadResponseSchema = <T>(itemSchema: Schema.Schema<T>) =>
     totalPages: Schema.Number,
     hasNextPage: Schema.Boolean,
     hasPrevPage: Schema.Boolean,
-  }) as Schema.Schema<unknown, PayloadResponse<T>, never>;
+  });
+
+// =============================================================================
+// Derived Types (from schemas)
+// =============================================================================
+
+export type PayloadMediaSize = Schema.Schema.Type<typeof PayloadMediaSizeSchema>;
+export type PayloadMediaSizes = Schema.Schema.Type<typeof PayloadMediaSizesSchema>;
+export type PayloadMedia = Schema.Schema.Type<typeof PayloadMediaSchema>;
+export type PayloadBlockFields = Schema.Schema.Type<typeof PayloadBlockFieldsSchema>;
+export type PayloadContentNode = Schema.Schema.Type<typeof PayloadContentNodeSchema>;
+export type PayloadRichContent = Schema.Schema.Type<typeof PayloadRichContentSchema>;
+export type PayloadHeroImage = Schema.Schema.Type<typeof PayloadHeroImageSchema>;
+export type PayloadMeta = Schema.Schema.Type<typeof PayloadMetaSchema>;
+export type PayloadPost = Schema.Schema.Type<typeof PayloadPostSchema>;
+export type PayloadWork = Schema.Schema.Type<typeof PayloadWorkSchema>;
+export type PayloadResponse<T> = {
+  readonly docs: ReadonlyArray<T>;
+  readonly totalDocs: number;
+  readonly limit: number;
+  readonly page: number;
+  readonly totalPages: number;
+  readonly hasNextPage: boolean;
+  readonly hasPrevPage: boolean;
+};

@@ -1,4 +1,3 @@
-export { getArenaClient, fetchArena } from "./client";
 export { getChannel, getChannelContents, getChannelThumb, getChannels } from "./channels";
 export { getBlock, getBlockChannels, getBlockComments } from "./blocks";
 export { getUser, getUserChannels, getUserFollowing, getUserFollowers } from "./users";
