@@ -1,3 +1,10 @@
+## [1.71.1](https://github.com/et0and/wwwtom/compare/v1.71.0...v1.71.1) (2026-01-24)
+
+
+### Bug Fixes
+
+* **web:** SSR shenanigans ([80fd937](https://github.com/et0and/wwwtom/commit/80fd937b1305acb0482c22549475358a1c70d0aa))
+
 # [1.71.0](https://github.com/et0and/wwwtom/compare/v1.70.0...v1.71.0) (2026-01-24)
 
 ### Features
