@@ -1,3 +1,10 @@
+## [1.71.2](https://github.com/et0and/wwwtom/compare/v1.71.1...v1.71.2) (2026-01-24)
+
+
+### Bug Fixes
+
+* debug runtime layer ([b5ed56f](https://github.com/et0and/wwwtom/commit/b5ed56fe99d30f5e09cadbec1d544d9e046dc99c))
+
 ## [1.71.1](https://github.com/et0and/wwwtom/compare/v1.71.0...v1.71.1) (2026-01-24)
 
 
