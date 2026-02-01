@@ -1,3 +1,10 @@
+# [1.72.0](https://github.com/et0and/wwwtom/compare/v1.71.3...v1.72.0) (2026-02-01)
+
+
+### Features
+
+* **packages, api:** refactor api routes, structure cf env type, add telegram tests ([0a8c5da](https://github.com/et0and/wwwtom/commit/0a8c5dae53021a4a627c5bc824021e80f71c57a0))
+
 ## [1.71.3](https://github.com/et0and/wwwtom/compare/v1.71.2...v1.71.3) (2026-01-24)
 
 ### Bug Fixes
