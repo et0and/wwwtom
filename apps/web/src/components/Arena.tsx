@@ -1,6 +1,7 @@
 import { createAsync } from "@solidjs/router";
 import { Effect } from "effect";
-import { Show, Index } from "solid-js";
+import { Show, Index, createSignal } from "solid-js";
+import { Motion } from "solid-motionone";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
 import { Spinner } from "@tom/ui";
@@ -12,6 +13,34 @@ interface ArenaCarouselProps {
 
 export function ArenaCarousel(props: ArenaCarouselProps) {
   const contents = createAsync(() => getChannelContents(props.slug, { per: 10 }));
+  const [expandedBlock, setExpandedBlock] = createSignal<ArenaBlock | null>(null);
+  const [isClosing, setIsClosing] = createSignal(false);
+
+  const openLightbox = (block: ArenaBlock) => {
+    if (!block.image) return;
+    setExpandedBlock(block);
+  };
+
+  const closeLightbox = () => {
+    setIsClosing(true);
+  };
+
+  const handleAnimationComplete = () => {
+    if (isClosing()) {
+      setExpandedBlock(null);
+      setIsClosing(false);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    if (e.key === "Escape" && expandedBlock() && !isClosing()) {
+      closeLightbox();
+    }
+  };
+
+  if (typeof document !== "undefined") {
+    document.addEventListener("keydown", handleKeyDown);
+  }
 
   return (
     <Show when={contents()} fallback={<Spinner />}>
@@ -29,12 +58,18 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
             </>
           }
         >
+          <ImageLightbox
+            block={expandedBlock()}
+            isClosing={isClosing()}
+            onClose={closeLightbox}
+            onAnimationComplete={handleAnimationComplete}
+          />
           <div class="overflow-x-auto whitespace-nowrap border border-black">
             <div class="carousel-container inline-flex gap-4 p-4">
               <Index each={response().contents}>
                 {(item) => (
                   <div class="carousel-item flex-shrink-0 w-80">
-                    <ArenaItem item={item()} />
+                    <ArenaItem item={item()} onExpand={openLightbox} />
                   </div>
                 )}
               </Index>
@@ -52,37 +87,127 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
   );
 }
 
-function ArenaItem(props: { item: ArenaChannelContents }) {
-  const item = () => props.item;
+interface ImageLightboxProps {
+  block: ArenaBlock | null;
+  isClosing: boolean;
+  onClose: () => void;
+  onAnimationComplete: () => void;
+}
+
+function ImageLightbox(props: ImageLightboxProps) {
+  const [isLoading, setIsLoading] = createSignal(true);
+  let imgRef: HTMLImageElement | undefined;
+
+  const handleBackdropClick = (e: MouseEvent) => {
+    if (e.target === e.currentTarget && !props.isClosing) {
+      props.onClose();
+    }
+  };
+
+  const handleImageLoad = () => {
+    setIsLoading(false);
+  };
 
   return (
-    <Show when={item().base_class === "Block"}>
-      <ArenaBlockItem block={item() as ArenaBlock} />
+    <Show when={props.block} keyed>
+      {(block) => (
+        <div
+          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={handleBackdropClick}
+        >
+          <Show when={isLoading()}>
+            <div class="absolute inset-0 flex items-center justify-center z-10">
+              <Spinner color="white" class="h-8 w-8" />
+            </div>
+          </Show>
+          <Motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={props.isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, easing: "ease-out" }}
+            onMotionComplete={props.onAnimationComplete}
+            class="relative max-w-[90vw] max-h-[90vh]"
+          >
+            <div class="relative">
+              <img
+                ref={(el) => {
+                  imgRef = el;
+                  if (el?.complete) {
+                    handleImageLoad();
+                  }
+                }}
+                src={block.image?.large.url}
+                alt={block.title || block.generated_title || ""}
+                class="max-w-full max-h-[90vh] w-auto h-auto object-contain"
+                onLoad={handleImageLoad}
+              />
+            </div>
+          </Motion.div>
+        </div>
+      )}
     </Show>
   );
 }
 
-function ImageBlock(props: { block: ArenaBlock }) {
-  const block = () => props.block;
+interface ArenaItemProps {
+  item: ArenaChannelContents;
+  onExpand: (block: ArenaBlock, imgElement: HTMLImageElement) => void;
+}
+
+function ArenaItem(props: ArenaItemProps) {
+  const item = () => props.item;
 
   return (
-    <div class="image-block relative w-full h-60 bg-gray-100">
+    <Show when={item().base_class === "Block"}>
+      <ArenaBlockItem block={item() as ArenaBlock} onExpand={props.onExpand} />
+    </Show>
+  );
+}
+
+interface ImageBlockProps {
+  block: ArenaBlock;
+  onExpand: (block: ArenaBlock, imgElement: HTMLImageElement) => void;
+}
+
+function ImageBlock(props: ImageBlockProps) {
+  const block = () => props.block;
+  let imgRef: HTMLImageElement | undefined;
+
+  const handleClick = () => {
+    if (imgRef) {
+      props.onExpand(block(), imgRef);
+    }
+  };
+
+  return (
+    <div
+      class="image-block relative w-full h-60 bg-gray-100 cursor-pointer pointer-events-auto"
+      data-block-id={block().id}
+      onClick={handleClick}
+    >
       <img
+        ref={(el) => {
+          imgRef = el;
+        }}
         src={block().image?.display.url}
         alt={block().title || block().generated_title || ""}
-        class="w-full h-full object-cover"
+        class="w-full h-full object-cover pointer-events-none"
       />
     </div>
   );
 }
 
-function ArenaBlockItem(props: { block: ArenaBlock }) {
+interface ArenaBlockItemProps {
+  block: ArenaBlock;
+  onExpand: (block: ArenaBlock, imgElement: HTMLImageElement) => void;
+}
+
+function ArenaBlockItem(props: ArenaBlockItemProps) {
   const block = () => props.block;
 
   return (
     <div class="arena-block p-4">
       <Show when={block().class === "Image"}>
-        <ImageBlock block={block()} />
+        <ImageBlock block={block()} onExpand={props.onExpand} />
       </Show>
       <Show when={block().class === "Text"}>
         <div class="text-content prose prose-sm break-words whitespace-normal">
@@ -123,7 +248,11 @@ function ArenaBlockItem(props: { block: ArenaBlock }) {
   );
 }
 
-function LinkBlock(props: { block: ArenaBlock }) {
+interface LinkBlockProps {
+  block: ArenaBlock;
+}
+
+function LinkBlock(props: LinkBlockProps) {
   const block = () => props.block;
 
   return (
@@ -150,7 +279,11 @@ function LinkBlock(props: { block: ArenaBlock }) {
   );
 }
 
-function AttachmentBlock(props: { block: ArenaBlock }) {
+interface AttachmentBlockProps {
+  block: ArenaBlock;
+}
+
+function AttachmentBlock(props: AttachmentBlockProps) {
   const block = () => props.block;
 
   const fileName = () => block().attachment?.file_name || "";

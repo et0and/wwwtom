@@ -8,10 +8,7 @@ export default function Home() {
         title="Home"
         description="Tom Hackshaw is a design engineer from Aotearoa, New Zealand"
       >
-        <ArenaCarousel
-          slug="i-could-go-anywhere-but-again-i-go-with-you-kg36margvic"
-          title="I could go anywhere but again I go with you"
-        />
+        <ArenaCarousel slug="imaginary-museum" title="Imaginary museum" />
       </PageLayout>
     </>
   );

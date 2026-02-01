@@ -20,6 +20,7 @@
     "semantic-release": "semantic-release"
   },
   "dependencies": {
+    "solid-motionone": "^1.0.4",
     "tom-web": "."
   },
   "devDependencies": {
