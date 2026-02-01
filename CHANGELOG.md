@@ -1,3 +1,10 @@
+# [1.73.0](https://github.com/et0and/wwwtom/compare/v1.72.0...v1.73.0) (2026-02-01)
+
+
+### Features
+
+* add motion to arena client preview ([6f17fdf](https://github.com/et0and/wwwtom/commit/6f17fdfd311a624782de5417db7657af06b20d50))
+
 # [1.72.0](https://github.com/et0and/wwwtom/compare/v1.71.3...v1.72.0) (2026-02-01)
 
 ### Features
