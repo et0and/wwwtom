@@ -1,9 +1,8 @@
 ## [1.71.3](https://github.com/et0and/wwwtom/compare/v1.71.2...v1.71.3) (2026-01-24)
 
-
 ### Bug Fixes
 
-* **cms:** rem lockfile ([3c93bb9](https://github.com/et0and/wwwtom/commit/3c93bb92fea710ede0f5ac6c3938c5568d48380c))
+- **cms:** rem lockfile ([3c93bb9](https://github.com/et0and/wwwtom/commit/3c93bb92fea710ede0f5ac6c3938c5568d48380c))
 
 ## [1.71.2](https://github.com/et0and/wwwtom/compare/v1.71.1...v1.71.2) (2026-01-24)
 

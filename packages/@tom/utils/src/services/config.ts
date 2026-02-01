@@ -18,6 +18,8 @@ export type CloudflareEnv = {
   HYPERDRIVE?: { connectionString: string };
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
+  SUCCESS_URL?: string;
+  POLAR_ACCESS_TOKEN?: string;
   NODE_ENV?: string;
 };
 
