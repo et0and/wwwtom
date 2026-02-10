@@ -11,6 +11,7 @@ app.config.timestamp_*.js
 /tasks
 tsconfig.tsbuildinfo
 .turbo
+.open-next
 
 db.sqlite3
 effect

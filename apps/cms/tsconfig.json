@@ -30,11 +30,11 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "redirects.js",
+    "redirects.ts",
     "next-env.d.ts",
-    "next.config.js",
+    "next.config.ts",
     "next-sitemap.config.cjs",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "scripts"]
 }

@@ -27,7 +27,8 @@ export const Media: CollectionConfig = {
   upload: {
     disableLocalStorage: true,
     adminThumbnail: "thumbnail",
-    focalPoint: true,
+    crop: false,
+    focalPoint: false,
     imageSizes: [
       {
         name: "thumbnail",
@@ -58,7 +59,6 @@ export const Media: CollectionConfig = {
         name: "og",
         width: 1200,
         height: 630,
-        crop: "center",
       },
     ],
   },

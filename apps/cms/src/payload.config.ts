@@ -1,10 +1,12 @@
-import { postgresAdapter } from "@payloadcms/db-postgres";
+import fs from "fs";
+import { sqliteD1Adapter } from "@payloadcms/db-d1-sqlite";
 import { s3Storage } from "@payloadcms/storage-s3";
 
-import sharp from "sharp";
 import path from "path";
 import { buildConfig, PayloadRequest } from "payload";
 import { fileURLToPath } from "url";
+import { CloudflareContext, getCloudflareContext } from "@opennextjs/cloudflare";
+import { GetPlatformProxyOptions } from "wrangler";
 
 import { Categories } from "./collections/Categories";
 import { Media } from "./collections/Media";
@@ -20,6 +22,18 @@ import { getServerSideURL } from "./utilities/getURL";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
+const realpath = (value: string) => (fs.existsSync(value) ? fs.realpathSync(value) : undefined);
+
+const isCLI = process.argv.some((value) =>
+  realpath(value)?.endsWith(path.join("payload", "bin.js")),
+);
+const isProduction = process.env.NODE_ENV === "production";
+const isBuild = process.argv.some((value) => value === "build");
+
+const cloudflare =
+  isCLI || !isProduction || isBuild
+    ? await getCloudflareContextFromWrangler()
+    : await getCloudflareContext({ async: true });
 
 export default buildConfig({
   admin: {
@@ -52,11 +66,7 @@ export default buildConfig({
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
-  db: postgresAdapter({
-    pool: {
-      connectionString: process.env.DATABASE_URI || "",
-    },
-  }),
+  db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
   collections: [Pages, Posts, Works, Media, Categories, Users],
   cors: [
     getServerSideURL(),
@@ -83,8 +93,7 @@ export default buildConfig({
       disableLocalStorage: true,
     }),
   ],
-  secret: process.env.PAYLOAD_SECRET,
-  sharp,
+  secret: process.env.PAYLOAD_SECRET || "",
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },
@@ -95,7 +104,7 @@ export default buildConfig({
         if (req.user) return true;
 
         // If there is no logged in user, then check
-        // for the Vercel Cron secret to be present as an
+        // for the cron secret to be present as an
         // Authorization header:
         const authHeader = req.headers.get("authorization");
         return authHeader === `Bearer ${process.env.CRON_SECRET}`;
@@ -104,3 +113,14 @@ export default buildConfig({
     tasks: [],
   },
 });
+
+// Adapted from https://github.com/opennextjs/opennextjs-cloudflare/blob/d00b3a13e42e65aad76fba41774815726422cc39/packages/cloudflare/src/api/cloudflare-context.ts#L328C36-L328C46
+function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
+  return import(/* webpackIgnore: true */ `${"__wrangler".replaceAll("_", "")}`).then(
+    ({ getPlatformProxy }) =>
+      getPlatformProxy({
+        environment: process.env.CLOUDFLARE_ENV,
+        remoteBindings: isProduction && !isBuild,
+      } satisfies GetPlatformProxyOptions),
+  );
+}
