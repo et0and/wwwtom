@@ -28,7 +28,7 @@ const isCLI = process.argv.some((value) =>
   realpath(value)?.endsWith(path.join("payload", "bin.js")),
 );
 const isProduction = process.env.NODE_ENV === "production";
-const isBuild = process.argv.some((value) => value === "build");
+const isBuild = process.argv[1]?.endsWith("next") && process.argv.includes("build");
 
 const cloudflare =
   isCLI || !isProduction || isBuild
