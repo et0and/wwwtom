@@ -14,12 +14,12 @@
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
     "@tom/utils": "workspace:*",
-    "next": "15.1.0",
+    "next": "15.5.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@opennextjs/cloudflare": "^0.3.0",
+    "@opennextjs/cloudflare": "^1.16.4",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
