@@ -1,0 +1,10 @@
+name = "{{name}}"
+compatibility_date = "2025-01-01"
+
+main = "src/index.ts"
+
+[observability.logs]
+enabled = true
+
+[vars]
+NODE_ENV = "production"

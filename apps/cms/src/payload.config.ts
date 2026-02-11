@@ -28,10 +28,16 @@ const isCLI = process.argv.some((value) =>
   realpath(value)?.endsWith(path.join("payload", "bin.js")),
 );
 const isProduction = process.env.NODE_ENV === "production";
-const isBuild = process.argv[1]?.endsWith("next") && process.argv.includes("build");
+const phase = process.env.NEXT_PHASE;
+const isCi = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
+const isBuild =
+  phase === "phase-production-build" ||
+  phase === "phase-export" ||
+  process.env.npm_lifecycle_event === "build" ||
+  process.argv.includes("build");
 
 const cloudflare =
-  isCLI || !isProduction || isBuild
+  isCLI || !isProduction || isBuild || isCi
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
@@ -120,7 +126,7 @@ function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
     ({ getPlatformProxy }) =>
       getPlatformProxy({
         environment: process.env.CLOUDFLARE_ENV,
-        remoteBindings: isProduction && !isBuild,
+        remoteBindings: isProduction && !isBuild && !isCi,
       } satisfies GetPlatformProxyOptions),
   );
 }

@@ -1,0 +1,29 @@
+{
+  "name": "@tom/{{name}}",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "deploy": "opennextjs-cloudflare build && wrangler deploy"
+  },
+  "dependencies": {
+    "@tom/types": "workspace:*",
+    "@tom/ui": "workspace:*",
+    "@tom/utils": "workspace:*",
+    "next": "15.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@opennextjs/cloudflare": "^0.3.0",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5",
+    "wrangler": "^4.4.0"
+  }
+}

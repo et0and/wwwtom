@@ -1,0 +1,21 @@
+name = "{{name}}"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Main worker script
+main = ".output/server/index.mjs"
+
+# Build configuration
+[build]
+command = "bun run build"
+
+[observability.logs]
+enabled = true
+
+# Static assets
+[assets]
+directory = ".output/public"
+
+# Environment variables
+[vars]
+NODE_ENV = "production"
