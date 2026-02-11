@@ -6,7 +6,7 @@ exports[`Spinner > matches the snapshot 1`] = `
     data-testid="waiting-spinner"
   >
     <svg
-      class="animate-spin ml-1 h-5 w-5 text-wcc-blue"
+      class="animate-spin ml-1 h-5 w-5 text-blue"
       fill="none"
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
