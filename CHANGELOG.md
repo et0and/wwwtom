@@ -1,3 +1,10 @@
+## [1.75.2](https://github.com/et0and/wwwtom/compare/v1.75.1...v1.75.2) (2026-02-12)
+
+
+### Bug Fixes
+
+* huh ([ab118d4](https://github.com/et0and/wwwtom/commit/ab118d4e497400423b5d0107635f46a63b3bf268))
+
 ## [1.75.1](https://github.com/et0and/wwwtom/compare/v1.75.0...v1.75.1) (2026-02-12)
 
 
