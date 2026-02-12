@@ -17,10 +17,10 @@ on:
         required: false
         type: choice
         options:
-          - opencode/kimi-2.5-free
+          - opencode/kimi-k2.5-free
           - opencode/glm-4.7-free
-          - opencode/minimax-2.1-free
-        default: "opencode/kimi-2.5-free"
+          - opencode/minimax-m2.1-free
+        default: "opencode/kimi-k2.5-free"
 
 env:
   BRANCH_NAME: ${{ inputs.branch_name || format('opencode-pr-{0}', github.run_id) }}
