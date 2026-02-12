@@ -1,0 +1,77 @@
+name: Respond to PR Comments
+
+on:
+  issue_comment:
+    types: [created]
+    # Only run on PR comments, not issue comments
+  pull_request_review_comment:
+    types: [created]
+
+jobs:
+  respond:
+    # Only run if:
+    # 1. Comment contains /oc or /opencode trigger
+    # 2. AND the PR has the "opencode" label (created by create-pr workflow)
+    if: |
+      (
+        contains(github.event.comment.body, ' /oc') ||
+        startsWith(github.event.comment.body, '/oc') ||
+        contains(github.event.comment.body, ' /opencode') ||
+        startsWith(github.event.comment.body, '/opencode')
+      ) && (
+        contains(github.event.pull_request.labels.*.name, 'opencode') ||
+        contains(github.event.issue.labels.*.name, 'opencode')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Get PR info
+        id: pr
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
+            echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "pr_number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Run opencode with thread context
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode/kimi-k2.5-free
+          prompt: |
+            Respond to this comment on PR #${{ steps.pr.outputs.pr_number }}.
+
+            Comment from @${{ github.event.comment.user.login }}:
+            > ${{ github.event.comment.body }}
+
+            The PR was created by the "Create PR from Prompt" workflow. Please:
+            1. Review the context of the discussion
+            2. Make any requested changes if appropriate
+            3. Respond clearly to the comment
+
+            When making changes:
+            - Commit with a clear message referencing the comment
+            - Push to the existing branch
+            - Only modify files relevant to the request
+
+      - name: Reply with summary
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${{ job.status }}" == "success" ]]; then
+            gh pr comment ${{ steps.pr.outputs.pr_number }} --body "✅ I've processed your request. Check the latest commits for changes."
+          else
+            gh pr comment ${{ steps.pr.outputs.pr_number }} --body "❌ Something went wrong while processing your request. Please check the workflow logs."
+          fi
