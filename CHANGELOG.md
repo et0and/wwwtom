@@ -1,18 +1,16 @@
 # [1.74.0](https://github.com/et0and/wwwtom/compare/v1.73.1...v1.74.0) (2026-02-11)
 
-
 ### Bug Fixes
 
-* **cms:** payload cloud ref not needed ([5ee9cba](https://github.com/et0and/wwwtom/commit/5ee9cbac86677f70062bfccb3485003ba5d2fc70))
-* **cms:** releases ([c2287f1](https://github.com/et0and/wwwtom/commit/c2287f18d97b3c3d7a62461dc2fc974a0a08ee83))
-* names ([d7e3271](https://github.com/et0and/wwwtom/commit/d7e3271b7a7d885e4835940b6ddb31c11253b19e))
-* **web:** snaps ([c5621a1](https://github.com/et0and/wwwtom/commit/c5621a1b289353931d53b3b0416c45b1eeb73a41))
-
+- **cms:** payload cloud ref not needed ([5ee9cba](https://github.com/et0and/wwwtom/commit/5ee9cbac86677f70062bfccb3485003ba5d2fc70))
+- **cms:** releases ([c2287f1](https://github.com/et0and/wwwtom/commit/c2287f18d97b3c3d7a62461dc2fc974a0a08ee83))
+- names ([d7e3271](https://github.com/et0and/wwwtom/commit/d7e3271b7a7d885e4835940b6ddb31c11253b19e))
+- **web:** snaps ([c5621a1](https://github.com/et0and/wwwtom/commit/c5621a1b289353931d53b3b0416c45b1eeb73a41))
 
 ### Features
 
-* **cms:** migrate payload to workers ([005a6f4](https://github.com/et0and/wwwtom/commit/005a6f45c44b8d28b259649bb7e46101fb1f8e65))
-* **turbo:** add some generators, fix cms build ([4b6af41](https://github.com/et0and/wwwtom/commit/4b6af4171eafbbb7583788c19d54e9a6fc308437))
+- **cms:** migrate payload to workers ([005a6f4](https://github.com/et0and/wwwtom/commit/005a6f45c44b8d28b259649bb7e46101fb1f8e65))
+- **turbo:** add some generators, fix cms build ([4b6af41](https://github.com/et0and/wwwtom/commit/4b6af4171eafbbb7583788c19d54e9a6fc308437))
 
 ## [1.73.1](https://github.com/et0and/wwwtom/compare/v1.73.0...v1.73.1) (2026-02-03)
 
