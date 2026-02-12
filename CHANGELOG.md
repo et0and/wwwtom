@@ -1,3 +1,10 @@
+## [1.75.1](https://github.com/et0and/wwwtom/compare/v1.75.0...v1.75.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* **cms:** wrong name ([da56f4c](https://github.com/et0and/wwwtom/commit/da56f4c6ea7787949476b53b4e6de3c3a99faaf8))
+
 # [1.75.0](https://github.com/et0and/wwwtom/compare/v1.74.0...v1.75.0) (2026-02-12)
 
 
