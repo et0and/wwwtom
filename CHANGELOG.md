@@ -1,3 +1,15 @@
+# [1.75.0](https://github.com/et0and/wwwtom/compare/v1.74.0...v1.75.0) (2026-02-12)
+
+
+### Bug Fixes
+
+* rem turbo gen for now ([96e5dc8](https://github.com/et0and/wwwtom/commit/96e5dc80f93da974025f702b6db69ed12c0c661c))
+
+
+### Features
+
+* **gh:** add manual prompt action ([0aadb54](https://github.com/et0and/wwwtom/commit/0aadb548a4a8c7a682c33ebd03c418be26db7828))
+
 # [1.74.0](https://github.com/et0and/wwwtom/compare/v1.73.1...v1.74.0) (2026-02-11)
 
 ### Bug Fixes
