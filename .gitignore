@@ -12,6 +12,8 @@ app.config.timestamp_*.js
 tsconfig.tsbuildinfo
 .turbo
 .open-next
+storybook-static
+*storybook.log
 
 db.sqlite3
 effect

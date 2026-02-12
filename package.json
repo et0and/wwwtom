@@ -17,6 +17,7 @@
     "test": "turbo run test",
     "deploy": "turbo run build --filter=@tom/web && cd apps/web && wrangler deploy",
     "deploy:api": "turbo run deploy --filter=@tom/api",
+    "deploy:ui": "turbo run build --filter=@tom/ui && cd packages/@tom/ui && wrangler deploy",
     "semantic-release": "semantic-release"
   },
   "dependencies": {
@@ -33,6 +34,9 @@
     "semantic-release": "^24.2.3",
     "turbo": "^2.8.1",
     "typescript": "^5.9.3"
+  },
+  "resolutions": {
+    "@types/babel__standalone": "^7.1.7"
   },
   "packageManager": "bun@1.3.4"
 }
