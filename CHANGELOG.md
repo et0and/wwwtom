@@ -1,3 +1,10 @@
+# [1.76.0](https://github.com/et0and/wwwtom/compare/v1.75.2...v1.76.0) (2026-02-13)
+
+
+### Features
+
+* **web, cms:** darkmode ([380e9d8](https://github.com/et0and/wwwtom/commit/380e9d83399c38906f7f9813b76391e1088f4943))
+
 ## [1.75.2](https://github.com/et0and/wwwtom/compare/v1.75.1...v1.75.2) (2026-02-12)
 
 ### Bug Fixes
