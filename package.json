@@ -14,7 +14,8 @@
     "format": "oxfmt --check .",
     "write": "oxfmt --write .",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "test": "echo 'Running vitest via turbo...' && turbo run test",
+    "test:update": "cd apps/web && bun vitest run --update && cd ../../packages/@tom/utils && bun vitest run --update",
     "deploy": "turbo run build --filter=@tom/web && cd apps/web && wrangler deploy",
     "deploy:api": "turbo run deploy --filter=@tom/api",
     "semantic-release": "semantic-release"
