@@ -1,9 +1,37 @@
+"use server";
+
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
-import { ArenaService } from "@tom/arena/service";
+import { ArenaService, type ArenaServiceShape } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
+import type { GetChannelContentsApiResponse } from "@tom/schemas";
 import { retryPolicy } from "@tom/utils";
 import { runEffect, getServiceLayer } from "~/libs/runtime";
+
+type ArenaCall<T> = (arena: ArenaServiceShape) => Effect.Effect<T, unknown>;
+
+const createArenaQuery = <T, Args extends unknown[]>(
+	name: string,
+	cacheKey: string,
+	makeCall: (...args: Args) => ArenaCall<T>,
+	getLogId: (...args: Args) => string | number = () => "",
+) =>
+	query(async (...args: Args) => {
+		"use server";
+		const layer = getServiceLayer();
+		const logId = getLogId(...args);
+		const logPrefix = logId ? `${name}:${logId}` : name;
+		return runEffect(
+			Effect.gen(function* () {
+				const arena = yield* ArenaService;
+				yield* Effect.logInfo(`${logPrefix}:start`);
+				const result = yield* makeCall(...args)(arena).pipe(Effect.retry(retryPolicy));
+				yield* Effect.logInfo(`${logPrefix}:success`);
+				return result;
+			}),
+			layer,
+		);
+	}, cacheKey);
 
 /**
  * Fetches a channel by slug with optional pagination for its contents.
@@ -17,20 +45,13 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * const channel = createAsync(() => getChannel("my-channel"));
  * ```
  */
-export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getChannel:${slug}:start`);
-      const result = yield* arena.client.channel(slug).get(options).pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getChannel:${slug}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-channel");
+export const getChannel = createArenaQuery(
+	"getChannel",
+	"arena-channel",
+	(slug: string, options?: PaginationAttributes) => (arena) =>
+		arena.client.channel(slug).get(options),
+	(slug) => slug,
+);
 
 /**
  * Fetches channel contents (blocks and nested channels) with pagination.
@@ -44,23 +65,15 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
  * const contents = createAsync(() => getChannelContents("my-channel", { per: 100 }));
  * ```
  */
-export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getChannelContents:${slug}:start`);
-      const result = yield* arena.client
-        .channel(slug)
-        .contents(options)
-        .pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getChannelContents:${slug}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-channel-contents");
+export const getChannelContents = createArenaQuery<
+	GetChannelContentsApiResponse,
+	[string, PaginationAttributes?]
+>(
+	"getChannelContents",
+	"arena-channel-contents",
+	(slug, options) => (arena) => arena.client.channel(slug).contents(options),
+	(slug) => slug,
+);
 
 /**
  * Fetches the thumbnail representation of a channel (limited contents).
@@ -73,20 +86,12 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
  * const thumb = createAsync(() => getChannelThumb("my-channel"));
  * ```
  */
-export const getChannelThumb = query(async (slug: string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getChannelThumb:${slug}:start`);
-      const result = yield* arena.client.channel(slug).thumb().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-channel-thumb");
+export const getChannelThumb = createArenaQuery(
+	"getChannelThumb",
+	"arena-channel-thumb",
+	(slug: string) => (arena) => arena.client.channel(slug).thumb(),
+	(slug) => slug,
+);
 
 /**
  * Fetches all channels for the authenticated user.
@@ -99,17 +104,8 @@ export const getChannelThumb = query(async (slug: string) => {
  * const channels = createAsync(() => getChannels({ per: 50 }));
  * ```
  */
-export const getChannels = query(async (options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo("getChannels:start");
-      const result = yield* arena.client.channels(options).pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo("getChannels:success");
-      return result;
-    }),
-    layer,
-  );
-}, "arena-channels");
+export const getChannels = createArenaQuery(
+	"getChannels",
+	"arena-channels",
+	(options?: PaginationAttributes) => (arena) => arena.client.channels(options),
+);

@@ -1,9 +1,36 @@
+"use server";
+
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
-import { ArenaService } from "@tom/arena/service";
+import { ArenaService, type ArenaServiceShape } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
 import { retryPolicy } from "@tom/utils";
 import { runEffect, getServiceLayer } from "~/libs/runtime";
+
+type ArenaCall<T> = (arena: ArenaServiceShape) => Effect.Effect<T, unknown>;
+
+const createArenaQuery = <T, Args extends unknown[]>(
+	name: string,
+	cacheKey: string,
+	makeCall: (...args: Args) => ArenaCall<T>,
+	getLogId: (...args: Args) => string | number = () => "",
+) =>
+	query(async (...args: Args) => {
+		"use server";
+		const layer = getServiceLayer();
+		const logId = getLogId(...args);
+		const logPrefix = logId ? `${name}:${logId}` : name;
+		return runEffect(
+			Effect.gen(function* () {
+				const arena = yield* ArenaService;
+				yield* Effect.logInfo(`${logPrefix}:start`);
+				const result = yield* makeCall(...args)(arena).pipe(Effect.retry(retryPolicy));
+				yield* Effect.logInfo(`${logPrefix}:success`);
+				return result;
+			}),
+			layer,
+		);
+	}, cacheKey);
 
 /**
  * Fetches a block by ID including its connections to channels.
@@ -16,21 +43,12 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * const block = createAsync(() => getBlock(12345));
  * ```
  */
-export const getBlock = query(async (id: number) => {
-  "use server";
-  const layer = getServiceLayer();
-
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getBlock:${id}:start`);
-      const result = yield* arena.client.block(id).get().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getBlock:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-block");
+export const getBlock = createArenaQuery(
+	"getBlock",
+	"arena-block",
+	(id: number) => (arena) => arena.client.block(id).get(),
+	(id) => id,
+);
 
 /**
  * Fetches all channels that a block appears in.
@@ -44,24 +62,13 @@ export const getBlock = query(async (id: number) => {
  * const channels = createAsync(() => getBlockChannels(12345));
  * ```
  */
-export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getBlockChannels:${id}:start`);
-      const result = yield* arena.client
-        .block(id)
-        .channels(options)
-        .pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getBlockChannels:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-block-channels");
+export const getBlockChannels = createArenaQuery(
+	"getBlockChannels",
+	"arena-block-channels",
+	(id: number, options?: PaginationAttributes) => (arena) =>
+		arena.client.block(id).channels(options),
+	(id) => id,
+);
 
 /**
  * Fetches comments for a block.
@@ -75,21 +82,10 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
  * const comments = createAsync(() => getBlockComments(12345));
  * ```
  */
-export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getBlockComments:${id}:start`);
-      const result = yield* arena.client
-        .block(id)
-        .comments(options)
-        .pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getBlockComments:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-block-comments");
+export const getBlockComments = createArenaQuery(
+	"getBlockComments",
+	"arena-block-comments",
+	(id: number, options?: PaginationAttributes) => (arena) =>
+		arena.client.block(id).comments(options),
+	(id) => id,
+);

@@ -1,9 +1,36 @@
+"use server";
+
 import { query } from "@solidjs/router";
 import { Effect } from "effect";
-import { ArenaService } from "@tom/arena/service";
+import { ArenaService, type ArenaServiceShape } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
 import { retryPolicy } from "@tom/utils";
 import { runEffect, getServiceLayer } from "~/libs/runtime";
+
+type ArenaCall<T> = (arena: ArenaServiceShape) => Effect.Effect<T, unknown>;
+
+const createArenaQuery = <T, Args extends unknown[]>(
+	name: string,
+	cacheKey: string,
+	makeCall: (...args: Args) => ArenaCall<T>,
+	getLogId: (...args: Args) => string | number = () => "",
+) =>
+	query(async (...args: Args) => {
+		"use server";
+		const layer = getServiceLayer();
+		const logId = getLogId(...args);
+		const logPrefix = logId ? `${name}:${logId}` : name;
+		return runEffect(
+			Effect.gen(function* () {
+				const arena = yield* ArenaService;
+				yield* Effect.logInfo(`${logPrefix}:start`);
+				const result = yield* makeCall(...args)(arena).pipe(Effect.retry(retryPolicy));
+				yield* Effect.logInfo(`${logPrefix}:success`);
+				return result;
+			}),
+			layer,
+		);
+	}, cacheKey);
 
 /**
  * Fetches user profile information by ID or slug.
@@ -16,20 +43,12 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * const user = createAsync(() => getUser("username"));
  * ```
  */
-export const getUser = query(async (id: number | string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getUser:${id}:start`);
-      const result = yield* arena.client.user(id).get().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getUser:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-user");
+export const getUser = createArenaQuery(
+	"getUser",
+	"arena-user",
+	(id: number | string) => (arena) => arena.client.user(id).get(),
+	(id) => id,
+);
 
 /**
  * Fetches channels owned or collaborated on by a user.
@@ -43,25 +62,12 @@ export const getUser = query(async (id: number | string) => {
  * const channels = createAsync(() => getUserChannels("username"));
  * ```
  */
-export const getUserChannels = query(
-  async (id: number | string, options?: PaginationAttributes) => {
-    "use server";
-    const layer = getServiceLayer();
-    return runEffect(
-      Effect.gen(function* () {
-        const arena = yield* ArenaService;
-        yield* Effect.logInfo(`getUserChannels:${id}:start`);
-        const result = yield* arena.client
-          .user(id)
-          .channels(options)
-          .pipe(Effect.retry(retryPolicy));
-        yield* Effect.logInfo(`getUserChannels:${id}:success`);
-        return result;
-      }),
-      layer,
-    );
-  },
-  "arena-user-channels",
+export const getUserChannels = createArenaQuery(
+	"getUserChannels",
+	"arena-user-channels",
+	(id: number | string, options?: PaginationAttributes) => (arena) =>
+		arena.client.user(id).channels(options),
+	(id) => id,
 );
 
 /**
@@ -75,20 +81,12 @@ export const getUserChannels = query(
  * const following = createAsync(() => getUserFollowing("username"));
  * ```
  */
-export const getUserFollowing = query(async (id: number | string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getUserFollowing:${id}:start`);
-      const result = yield* arena.client.user(id).following().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getUserFollowing:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-user-following");
+export const getUserFollowing = createArenaQuery(
+	"getUserFollowing",
+	"arena-user-following",
+	(id: number | string) => (arena) => arena.client.user(id).following(),
+	(id) => id,
+);
 
 /**
  * Fetches users following the specified user.
@@ -101,17 +99,9 @@ export const getUserFollowing = query(async (id: number | string) => {
  * const followers = createAsync(() => getUserFollowers("username"));
  * ```
  */
-export const getUserFollowers = query(async (id: number | string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getUserFollowers:${id}:start`);
-      const result = yield* arena.client.user(id).followers().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getUserFollowers:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
-}, "arena-user-followers");
+export const getUserFollowers = createArenaQuery(
+	"getUserFollowers",
+	"arena-user-followers",
+	(id: number | string) => (arena) => arena.client.user(id).followers(),
+	(id) => id,
+);
