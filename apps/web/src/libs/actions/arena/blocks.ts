@@ -1,7 +1,9 @@
-"use server";
-
+import { query } from "@solidjs/router";
+import { Effect } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
-import { createArenaQuery } from "./factory";
+import { retryPolicy } from "@tom/utils";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Fetches a block by ID including its connections to channels.
@@ -14,12 +16,21 @@ import { createArenaQuery } from "./factory";
  * const block = createAsync(() => getBlock(12345));
  * ```
  */
-export const getBlock = createArenaQuery(
-	"getBlock",
-	"arena-block",
-	(id: number) => (arena) => arena.client.block(id).get(),
-	(id) => id,
-);
+export const getBlock = query(async (id: number) => {
+	"use server";
+	const layer = getServiceLayer();
+
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getBlock:${id}:start`);
+			const result = yield* arena.client.block(id).get().pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getBlock:${id}:success`);
+			return result;
+		}),
+		layer,
+	);
+}, "arena-block");
 
 /**
  * Fetches all channels that a block appears in.
@@ -33,13 +44,24 @@ export const getBlock = createArenaQuery(
  * const channels = createAsync(() => getBlockChannels(12345));
  * ```
  */
-export const getBlockChannels = createArenaQuery(
-	"getBlockChannels",
-	"arena-block-channels",
-	(id: number, options?: PaginationAttributes) => (arena) =>
-		arena.client.block(id).channels(options),
-	(id) => id,
-);
+export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
+	"use server";
+	const layer = getServiceLayer();
+
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getBlockChannels:${id}:start`);
+			const result = yield* arena.client
+				.block(id)
+				.channels(options)
+				.pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getBlockChannels:${id}:success`);
+			return result;
+		}),
+		layer,
+	);
+}, "arena-block-channels");
 
 /**
  * Fetches comments for a block.
@@ -53,10 +75,21 @@ export const getBlockChannels = createArenaQuery(
  * const comments = createAsync(() => getBlockComments(12345));
  * ```
  */
-export const getBlockComments = createArenaQuery(
-	"getBlockComments",
-	"arena-block-comments",
-	(id: number, options?: PaginationAttributes) => (arena) =>
-		arena.client.block(id).comments(options),
-	(id) => id,
-);
+export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
+	"use server";
+	const layer = getServiceLayer();
+
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getBlockComments:${id}:start`);
+			const result = yield* arena.client
+				.block(id)
+				.comments(options)
+				.pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getBlockComments:${id}:success`);
+			return result;
+		}),
+		layer,
+	);
+}, "arena-block-comments");

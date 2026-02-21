@@ -1,8 +1,9 @@
-"use server";
-
+import { query } from "@solidjs/router";
+import { Effect } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import type { PaginationAttributes } from "@tom/arena";
-import type { GetChannelContentsApiResponse } from "@tom/schemas";
-import { createArenaQuery } from "./factory";
+import { retryPolicy } from "@tom/utils";
+import { runEffect, getServiceLayer } from "~/libs/runtime";
 
 /**
  * Fetches a channel by slug with optional pagination for its contents.
@@ -16,13 +17,20 @@ import { createArenaQuery } from "./factory";
  * const channel = createAsync(() => getChannel("my-channel"));
  * ```
  */
-export const getChannel = createArenaQuery(
-	"getChannel",
-	"arena-channel",
-	(slug: string, options?: PaginationAttributes) => (arena) =>
-		arena.client.channel(slug).get(options),
-	(slug) => slug,
-);
+export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getChannel:${slug}:start`);
+			const result = yield* arena.client.channel(slug).get(options).pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getChannel:${slug}:success`);
+			return result;
+		}),
+		layer,
+	);
+}, "arena-channel");
 
 /**
  * Fetches channel contents (blocks and nested channels) with pagination.
@@ -36,15 +44,23 @@ export const getChannel = createArenaQuery(
  * const contents = createAsync(() => getChannelContents("my-channel", { per: 100 }));
  * ```
  */
-export const getChannelContents = createArenaQuery<
-	GetChannelContentsApiResponse,
-	[string, PaginationAttributes?]
->(
-	"getChannelContents",
-	"arena-channel-contents",
-	(slug, options) => (arena) => arena.client.channel(slug).contents(options),
-	(slug) => slug,
-);
+export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getChannelContents:${slug}:start`);
+			const result = yield* arena.client
+				.channel(slug)
+				.contents(options)
+				.pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getChannelContents:${slug}:success`);
+			return result;
+		}),
+		layer,
+	);
+}, "arena-channel-contents");
 
 /**
  * Fetches the thumbnail representation of a channel (limited contents).
@@ -57,12 +73,20 @@ export const getChannelContents = createArenaQuery<
  * const thumb = createAsync(() => getChannelThumb("my-channel"));
  * ```
  */
-export const getChannelThumb = createArenaQuery(
-	"getChannelThumb",
-	"arena-channel-thumb",
-	(slug: string) => (arena) => arena.client.channel(slug).thumb(),
-	(slug) => slug,
-);
+export const getChannelThumb = query(async (slug: string) => {
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getChannelThumb:${slug}:start`);
+			const result = yield* arena.client.channel(slug).thumb().pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
+			return result;
+		}),
+		layer,
+	);
+}, "arena-channel-thumb");
 
 /**
  * Fetches all channels for the authenticated user.
@@ -75,8 +99,17 @@ export const getChannelThumb = createArenaQuery(
  * const channels = createAsync(() => getChannels({ per: 50 }));
  * ```
  */
-export const getChannels = createArenaQuery(
-	"getChannels",
-	"arena-channels",
-	(options?: PaginationAttributes) => (arena) => arena.client.channels(options),
-);
+export const getChannels = query(async (options?: PaginationAttributes) => {
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo("getChannels:start");
+			const result = yield* arena.client.channels(options).pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo("getChannels:success");
+			return result;
+		}),
+		layer,
+	);
+}, "arena-channels");
