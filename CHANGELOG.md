@@ -1,3 +1,21 @@
+# [1.76.0](https://github.com/et0and/wwwtom/compare/v1.75.2...v1.76.0) (2026-02-13)
+
+### Bug Fixes
+
+- **cms:** wrong name ([da56f4c](https://github.com/et0and/wwwtom/commit/da56f4c6ea7787949476b53b4e6de3c3a99faaf8))
+
+### Features
+
+* **web, cms:** darkmode ([380e9d8](https://github.com/et0and/wwwtom/commit/380e9d83399c38906f7f9813b76391e1088f4943))
+
+## [1.75.2](https://github.com/et0and/wwwtom/compare/v1.75.1...v1.75.2) (2026-02-12)
+
+### Bug Fixes
+
+### Bug Fixes
+
+- huh ([ab118d4](https://github.com/et0and/wwwtom/commit/ab118d4e497400423b5d0107635f46a63b3bf268))
+
 ## [1.75.1](https://github.com/et0and/wwwtom/compare/v1.75.0...v1.75.1) (2026-02-12)
 
 ### Bug Fixes

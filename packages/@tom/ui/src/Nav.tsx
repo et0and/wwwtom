@@ -49,7 +49,7 @@ export function Nav() {
         </button>
       </div>
       <Show when={isOpen()}>
-        <div class="absolute top-full left-0 right-0 z-50 md:hidden bg-white shadow-xl">
+        <div class="nav-dropdown md:hidden">
           <div class="flex flex-col py-4 px-6 text-lg">
             {navItems.map((item) => (
               <A preload={true} href={item.href} onClick={() => setIsOpen(false)}>

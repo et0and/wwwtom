@@ -17,18 +17,18 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * ```
  */
 export const getUser = query(async (id: number | string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getUser:${id}:start`);
-      const result = yield* arena.client.user(id).get().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getUser:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getUser:${id}:start`);
+			const result = yield* arena.client.user(id).get().pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getUser:${id}:success`);
+			return result;
+		}),
+		layer,
+	);
 }, "arena-user");
 
 /**
@@ -44,24 +44,24 @@ export const getUser = query(async (id: number | string) => {
  * ```
  */
 export const getUserChannels = query(
-  async (id: number | string, options?: PaginationAttributes) => {
-    "use server";
-    const layer = getServiceLayer();
-    return runEffect(
-      Effect.gen(function* () {
-        const arena = yield* ArenaService;
-        yield* Effect.logInfo(`getUserChannels:${id}:start`);
-        const result = yield* arena.client
-          .user(id)
-          .channels(options)
-          .pipe(Effect.retry(retryPolicy));
-        yield* Effect.logInfo(`getUserChannels:${id}:success`);
-        return result;
-      }),
-      layer,
-    );
-  },
-  "arena-user-channels",
+	async (id: number | string, options?: PaginationAttributes) => {
+		"use server";
+		const layer = getServiceLayer();
+		return runEffect(
+			Effect.gen(function* () {
+				const arena = yield* ArenaService;
+				yield* Effect.logInfo(`getUserChannels:${id}:start`);
+				const result = yield* arena.client
+					.user(id)
+					.channels(options)
+					.pipe(Effect.retry(retryPolicy));
+				yield* Effect.logInfo(`getUserChannels:${id}:success`);
+				return result;
+			}),
+			layer,
+		);
+	},
+	"arena-user-channels",
 );
 
 /**
@@ -76,18 +76,18 @@ export const getUserChannels = query(
  * ```
  */
 export const getUserFollowing = query(async (id: number | string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getUserFollowing:${id}:start`);
-      const result = yield* arena.client.user(id).following().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getUserFollowing:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getUserFollowing:${id}:start`);
+			const result = yield* arena.client.user(id).following().pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getUserFollowing:${id}:success`);
+			return result;
+		}),
+		layer,
+	);
 }, "arena-user-following");
 
 /**
@@ -102,16 +102,16 @@ export const getUserFollowing = query(async (id: number | string) => {
  * ```
  */
 export const getUserFollowers = query(async (id: number | string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getUserFollowers:${id}:start`);
-      const result = yield* arena.client.user(id).followers().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getUserFollowers:${id}:success`);
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getUserFollowers:${id}:start`);
+			const result = yield* arena.client.user(id).followers().pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getUserFollowers:${id}:success`);
+			return result;
+		}),
+		layer,
+	);
 }, "arena-user-followers");
