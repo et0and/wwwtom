@@ -16,26 +16,29 @@ jobs:
     name: Validate PR Title
     runs-on: ubuntu-slim
     steps:
-      - uses: amannn/action-semantic-pull-request@v5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate PR title format
+        uses: actions/github-script@v7
         with:
-          types: |
-            feat
-            fix
-            chore
-            docs
-            refactor
-            test
-            ci
-            build
-            perf
-            style
-          requireScope: false
-          subjectPattern: ^[A-Z].+$
-          subjectPatternError: |
-            The subject must start with a capital letter and not end with a period.
-          headerPattern: '^([^()!]+)(?:\(([^)]+)\))?!?: (.+)$'
-          headerPatternCorrespondence: type, scope, subject
-          validateSingleCommit: true
-          validateSingleCommitMatchesPrTitle: true
+          script: |
+            const prTitle = context.payload.pull_request.title;
+            
+            // Conventional commit pattern: type(scope)!?: description
+            // Types: feat, fix, chore, docs, refactor, test, ci, build, perf, style
+            const validTypes = ['feat', 'fix', 'chore', 'docs', 'refactor', 'test', 'ci', 'build', 'perf', 'style'];
+            const pattern = /^(feat|fix|chore|docs|refactor|test|ci|build|perf|style)(\([a-z-]+\))?!?:\s(.+)$/;
+            
+            if (!pattern.test(prTitle)) {
+              const allowedTypes = validTypes.join(', ');
+              core.setFailed(
+                `Invalid PR title: "${prTitle}"\n\n` +
+                `Title must follow conventional commit format: <type>[(optional-scope)]: <description>\n\n` +
+                `Allowed types: ${allowedTypes}\n` +
+                `Examples:\n` +
+                `  feat: Add new feature\n` +
+                `  fix: Correct bug in parser\n` +
+                `  feat(auth): Add login functionality\n` +
+                `  chore: Update dependencies`
+              );
+            } else {
+              console.log(`PR title "${prTitle}" is valid.`);
+            }
