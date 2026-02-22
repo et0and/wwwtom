@@ -18,18 +18,18 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * ```
  */
 export const getChannel = query(async (slug: string, options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getChannel:${slug}:start`);
-      const result = yield* arena.client.channel(slug).get(options).pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getChannel:${slug}:success`);
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getChannel:${slug}:start`);
+			const result = yield* arena.client.channel(slug).get(options).pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getChannel:${slug}:success`);
+			return result;
+		}),
+		layer,
+	);
 }, "arena-channel");
 
 /**
@@ -45,21 +45,21 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
  * ```
  */
 export const getChannelContents = query(async (slug: string, options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getChannelContents:${slug}:start`);
-      const result = yield* arena.client
-        .channel(slug)
-        .contents(options)
-        .pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getChannelContents:${slug}:success`);
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getChannelContents:${slug}:start`);
+			const result = yield* arena.client
+				.channel(slug)
+				.contents(options)
+				.pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getChannelContents:${slug}:success`);
+			return result;
+		}),
+		layer,
+	);
 }, "arena-channel-contents");
 
 /**
@@ -74,18 +74,18 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
  * ```
  */
 export const getChannelThumb = query(async (slug: string) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo(`getChannelThumb:${slug}:start`);
-      const result = yield* arena.client.channel(slug).thumb().pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo(`getChannelThumb:${slug}:start`);
+			const result = yield* arena.client.channel(slug).thumb().pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
+			return result;
+		}),
+		layer,
+	);
 }, "arena-channel-thumb");
 
 /**
@@ -100,16 +100,16 @@ export const getChannelThumb = query(async (slug: string) => {
  * ```
  */
 export const getChannels = query(async (options?: PaginationAttributes) => {
-  "use server";
-  const layer = getServiceLayer();
-  return runEffect(
-    Effect.gen(function* () {
-      const arena = yield* ArenaService;
-      yield* Effect.logInfo("getChannels:start");
-      const result = yield* arena.client.channels(options).pipe(Effect.retry(retryPolicy));
-      yield* Effect.logInfo("getChannels:success");
-      return result;
-    }),
-    layer,
-  );
+	"use server";
+	const layer = getServiceLayer();
+	return runEffect(
+		Effect.gen(function* () {
+			const arena = yield* ArenaService;
+			yield* Effect.logInfo("getChannels:start");
+			const result = yield* arena.client.channels(options).pipe(Effect.retry(retryPolicy));
+			yield* Effect.logInfo("getChannels:success");
+			return result;
+		}),
+		layer,
+	);
 }, "arena-channels");
