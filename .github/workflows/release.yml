@@ -21,6 +21,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: true
+
+      - name: Fetch all tags and ensure branch is up to date
+        run: |
+          git fetch --tags
+          git checkout dev
+          git pull origin dev
 
       - uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
 
