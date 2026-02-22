@@ -1,3 +1,11 @@
+## [1.76.1](https://github.com/et0and/wwwtom/compare/v1.76.0...v1.76.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* bad model ([52025c3](https://github.com/et0and/wwwtom/commit/52025c3f231e583623be9be3caa6439c80ce3677))
+* ensure reviewbot can write ([941f666](https://github.com/et0and/wwwtom/commit/941f6669a1c99f4d60a9ba94fb2c4c9146a70de5))
+
 # [1.76.0](https://github.com/et0and/wwwtom/compare/v1.75.2...v1.76.0) (2026-02-13)
 
 
