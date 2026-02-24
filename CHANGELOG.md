@@ -1,3 +1,10 @@
+## [1.76.2](https://github.com/et0and/wwwtom/compare/v1.76.1...v1.76.2) (2026-02-24)
+
+
+### Bug Fixes
+
+* delete review workflow ([c312f70](https://github.com/et0and/wwwtom/commit/c312f70dc517e63b97baf641660c9bde486f67c6))
+
 ## [1.76.1](https://github.com/et0and/wwwtom/compare/v1.76.0...v1.76.1) (2026-02-22)
 
 
