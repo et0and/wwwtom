@@ -18,23 +18,23 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * ```
  */
 export const searchEverything = query(
-	async (searchQuery: string, options?: PaginationAttributes) => {
-		"use server";
-		const layer = getServiceLayer();
-		return runEffect(
-			Effect.gen(function* () {
-				const arena = yield* ArenaService;
-				yield* Effect.logInfo(`searchEverything:${searchQuery}:start`);
-				const result = yield* arena.client.search
-					.everything(searchQuery, options)
-					.pipe(Effect.retry(retryPolicy));
-				yield* Effect.logInfo(`searchEverything:${searchQuery}:success`);
-				return result;
-			}),
-			layer,
-		);
-	},
-	"arena-search-everything",
+  async (searchQuery: string, options?: PaginationAttributes) => {
+    "use server";
+    const layer = getServiceLayer();
+    return runEffect(
+      Effect.gen(function* () {
+        const arena = yield* ArenaService;
+        yield* Effect.logInfo(`searchEverything:${searchQuery}:start`);
+        const result = yield* arena.client.search
+          .everything(searchQuery, options)
+          .pipe(Effect.retry(retryPolicy));
+        yield* Effect.logInfo(`searchEverything:${searchQuery}:success`);
+        return result;
+      }),
+      layer,
+    );
+  },
+  "arena-search-everything",
 );
 
 /**
@@ -50,20 +50,20 @@ export const searchEverything = query(
  * ```
  */
 export const searchChannels = query(async (searchQuery: string, options?: PaginationAttributes) => {
-	"use server";
-	const layer = getServiceLayer();
-	return runEffect(
-		Effect.gen(function* () {
-			const arena = yield* ArenaService;
-			yield* Effect.logInfo(`searchChannels:${searchQuery}:start`);
-			const result = yield* arena.client.search
-				.channels(searchQuery, options)
-				.pipe(Effect.retry(retryPolicy));
-			yield* Effect.logInfo(`searchChannels:${searchQuery}:success`);
-			return result;
-		}),
-		layer,
-	);
+  "use server";
+  const layer = getServiceLayer();
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`searchChannels:${searchQuery}:start`);
+      const result = yield* arena.client.search
+        .channels(searchQuery, options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`searchChannels:${searchQuery}:success`);
+      return result;
+    }),
+    layer,
+  );
 }, "arena-search-channels");
 
 /**
@@ -79,20 +79,20 @@ export const searchChannels = query(async (searchQuery: string, options?: Pagina
  * ```
  */
 export const searchBlocks = query(async (searchQuery: string, options?: PaginationAttributes) => {
-	"use server";
-	const layer = getServiceLayer();
-	return runEffect(
-		Effect.gen(function* () {
-			const arena = yield* ArenaService;
-			yield* Effect.logInfo(`searchBlocks:${searchQuery}:start`);
-			const result = yield* arena.client.search
-				.blocks(searchQuery, options)
-				.pipe(Effect.retry(retryPolicy));
-			yield* Effect.logInfo(`searchBlocks:${searchQuery}:success`);
-			return result;
-		}),
-		layer,
-	);
+  "use server";
+  const layer = getServiceLayer();
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`searchBlocks:${searchQuery}:start`);
+      const result = yield* arena.client.search
+        .blocks(searchQuery, options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`searchBlocks:${searchQuery}:success`);
+      return result;
+    }),
+    layer,
+  );
 }, "arena-search-blocks");
 
 /**
@@ -108,18 +108,18 @@ export const searchBlocks = query(async (searchQuery: string, options?: Paginati
  * ```
  */
 export const searchUsers = query(async (searchQuery: string, options?: PaginationAttributes) => {
-	"use server";
-	const layer = getServiceLayer();
-	return runEffect(
-		Effect.gen(function* () {
-			const arena = yield* ArenaService;
-			yield* Effect.logInfo(`searchUsers:${searchQuery}:start`);
-			const result = yield* arena.client.search
-				.users(searchQuery, options)
-				.pipe(Effect.retry(retryPolicy));
-			yield* Effect.logInfo(`searchUsers:${searchQuery}:success`);
-			return result;
-		}),
-		layer,
-	);
+  "use server";
+  const layer = getServiceLayer();
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`searchUsers:${searchQuery}:start`);
+      const result = yield* arena.client.search
+        .users(searchQuery, options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`searchUsers:${searchQuery}:success`);
+      return result;
+    }),
+    layer,
+  );
 }, "arena-search-users");

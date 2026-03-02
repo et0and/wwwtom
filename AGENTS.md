@@ -200,8 +200,9 @@ export function getClient(): Effect.Effect<Client, ConfigError> {
 ALWAYS use conventional commit format for ALL commits - this is REQUIRED for releases to work:
 
 **Required prefixes:**
+
 - `feat(scope):` - New feature (triggers minor version bump)
-- `fix(scope):` - Bug fix (triggers patch version bump)  
+- `fix(scope):` - Bug fix (triggers patch version bump)
 - `chore(scope):` - Maintenance tasks (triggers patch version bump)
 - `refactor(scope):` - Code refactoring (triggers patch version bump)
 - `BREAKING CHANGE:` in body or `!` after type/scope - Breaking change (triggers major version bump)
@@ -209,6 +210,7 @@ ALWAYS use conventional commit format for ALL commits - this is REQUIRED for rel
 **CRITICAL:** Without these prefixes, semantic-release will NOT create a release, even if the PR is merged. PR titles must also follow this format as they become the merge commit message.
 
 Examples:
+
 - `feat(arena): add block filtering to factory`
 - `fix(api): resolve CORS issue with preflight`
 - `chore: update dependencies`

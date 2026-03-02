@@ -17,19 +17,19 @@ import { runEffect, getServiceLayer } from "~/libs/runtime";
  * ```
  */
 export const getBlock = query(async (id: number) => {
-	"use server";
-	const layer = getServiceLayer();
+  "use server";
+  const layer = getServiceLayer();
 
-	return runEffect(
-		Effect.gen(function* () {
-			const arena = yield* ArenaService;
-			yield* Effect.logInfo(`getBlock:${id}:start`);
-			const result = yield* arena.client.block(id).get().pipe(Effect.retry(retryPolicy));
-			yield* Effect.logInfo(`getBlock:${id}:success`);
-			return result;
-		}),
-		layer,
-	);
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getBlock:${id}:start`);
+      const result = yield* arena.client.block(id).get().pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getBlock:${id}:success`);
+      return result;
+    }),
+    layer,
+  );
 }, "arena-block");
 
 /**
@@ -45,22 +45,22 @@ export const getBlock = query(async (id: number) => {
  * ```
  */
 export const getBlockChannels = query(async (id: number, options?: PaginationAttributes) => {
-	"use server";
-	const layer = getServiceLayer();
+  "use server";
+  const layer = getServiceLayer();
 
-	return runEffect(
-		Effect.gen(function* () {
-			const arena = yield* ArenaService;
-			yield* Effect.logInfo(`getBlockChannels:${id}:start`);
-			const result = yield* arena.client
-				.block(id)
-				.channels(options)
-				.pipe(Effect.retry(retryPolicy));
-			yield* Effect.logInfo(`getBlockChannels:${id}:success`);
-			return result;
-		}),
-		layer,
-	);
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getBlockChannels:${id}:start`);
+      const result = yield* arena.client
+        .block(id)
+        .channels(options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getBlockChannels:${id}:success`);
+      return result;
+    }),
+    layer,
+  );
 }, "arena-block-channels");
 
 /**
@@ -76,20 +76,20 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
  * ```
  */
 export const getBlockComments = query(async (id: number, options?: PaginationAttributes) => {
-	"use server";
-	const layer = getServiceLayer();
+  "use server";
+  const layer = getServiceLayer();
 
-	return runEffect(
-		Effect.gen(function* () {
-			const arena = yield* ArenaService;
-			yield* Effect.logInfo(`getBlockComments:${id}:start`);
-			const result = yield* arena.client
-				.block(id)
-				.comments(options)
-				.pipe(Effect.retry(retryPolicy));
-			yield* Effect.logInfo(`getBlockComments:${id}:success`);
-			return result;
-		}),
-		layer,
-	);
+  return runEffect(
+    Effect.gen(function* () {
+      const arena = yield* ArenaService;
+      yield* Effect.logInfo(`getBlockComments:${id}:start`);
+      const result = yield* arena.client
+        .block(id)
+        .comments(options)
+        .pipe(Effect.retry(retryPolicy));
+      yield* Effect.logInfo(`getBlockComments:${id}:success`);
+      return result;
+    }),
+    layer,
+  );
 }, "arena-block-comments");
