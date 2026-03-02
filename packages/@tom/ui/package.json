@@ -9,7 +9,10 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "storybook": "cd src/storybook && bun run storybook",
+    "storybook:build": "cd src/storybook && bun run build",
+    "storybook:deploy": "cd src/storybook && bun run deploy"
   },
   "dependencies": {
     "@solidjs/meta": "^0.29.4",

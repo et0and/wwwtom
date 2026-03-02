@@ -1,9 +1,8 @@
 # [1.77.0](https://github.com/et0and/wwwtom/compare/v1.76.2...v1.77.0) (2026-03-02)
 
-
 ### Features
 
-* **docs:** init docs site for address API ([d357d07](https://github.com/et0and/wwwtom/commit/d357d07426713269d0b14abc7afb99d9fe283a88))
+- **docs:** init docs site for address API ([d357d07](https://github.com/et0and/wwwtom/commit/d357d07426713269d0b14abc7afb99d9fe283a88))
 
 ## [1.76.2](https://github.com/et0and/wwwtom/compare/v1.76.1...v1.76.2) (2026-02-24)
 
