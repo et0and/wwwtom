@@ -1,3 +1,15 @@
+# [1.78.0](https://github.com/et0and/wwwtom/compare/v1.77.0...v1.78.0) (2026-03-02)
+
+
+### Bug Fixes
+
+* **ui:** bad story ([68df05d](https://github.com/et0and/wwwtom/commit/68df05da80eb9c0e0172a2201ad406bd2658fd05))
+
+
+### Features
+
+* **storybook:** init sb ([ca6a439](https://github.com/et0and/wwwtom/commit/ca6a439c51675a9154a37bae56b9a97f7d6b2673))
+
 # [1.77.0](https://github.com/et0and/wwwtom/compare/v1.76.2...v1.77.0) (2026-03-02)
 
 ### Features
