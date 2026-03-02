@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Router } from "@solidjs/router";
+import { Route, Router } from "@solidjs/router";
 import { Nav } from "../../Nav";
 
 const meta = preview.meta({
@@ -9,7 +9,7 @@ const meta = preview.meta({
   decorators: [
     (Story) => (
       <Router>
-        <Story />
+        <Route path="/" component={() => <Story />} />
       </Router>
     ),
   ],
