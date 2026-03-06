@@ -1,3 +1,10 @@
+# [1.79.0](https://github.com/et0and/wwwtom/compare/v1.78.0...v1.79.0) (2026-03-06)
+
+
+### Features
+
+* **web, packages:** add haptics for mobile ([936d764](https://github.com/et0and/wwwtom/commit/936d764a2ce05195c52a2c48fd10efa0e02a8698))
+
 # [1.78.0](https://github.com/et0and/wwwtom/compare/v1.77.0...v1.78.0) (2026-03-02)
 
 ### Bug Fixes
