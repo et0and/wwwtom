@@ -1,9 +1,12 @@
 import { WebHaptics, defaultPatterns } from "@tom/haptics";
 
 let hapticsInstance: WebHaptics | null = null;
+let listenerAdded = false;
 
 export function useGlobalHaptics() {
   if (typeof window === "undefined") return;
+
+  if (listenerAdded) return;
 
   if (!hapticsInstance) {
     hapticsInstance = new WebHaptics();
@@ -16,6 +19,8 @@ export function useGlobalHaptics() {
       hapticsInstance?.trigger(defaultPatterns.selection);
     }
   });
+
+  listenerAdded = true;
 }
 
 export { hapticsInstance as haptics };
