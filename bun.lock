@@ -206,6 +206,13 @@
         "typescript": "^5.9.3",
       },
     },
+    "packages/@tom/haptics": {
+      "name": "@tom/haptics",
+      "version": "0.0.1",
+      "devDependencies": {
+        "typescript": "^5.9.3",
+      },
+    },
     "packages/@tom/payload": {
       "name": "@tom/payload",
       "version": "0.0.1",
@@ -1498,6 +1505,8 @@
     "@tom/db": ["@tom/db@workspace:packages/@tom/db"],
 
     "@tom/docs": ["@tom/docs@workspace:apps/docs"],
+
+    "@tom/haptics": ["@tom/haptics@workspace:packages/@tom/haptics"],
 
     "@tom/payload": ["@tom/payload@workspace:packages/@tom/payload"],
 
