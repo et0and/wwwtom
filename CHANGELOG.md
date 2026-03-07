@@ -1,3 +1,10 @@
+## [1.79.1](https://github.com/et0and/wwwtom/compare/v1.79.0...v1.79.1) (2026-03-07)
+
+
+### Bug Fixes
+
+* haptics ([c96a0bf](https://github.com/et0and/wwwtom/commit/c96a0bff9e60e8d4deedd540c01c0428b32c875e))
+
 # [1.79.0](https://github.com/et0and/wwwtom/compare/v1.78.0...v1.79.0) (2026-03-06)
 
 
