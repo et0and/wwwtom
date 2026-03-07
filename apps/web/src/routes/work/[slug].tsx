@@ -1,4 +1,4 @@
-import { Show, lazy, For } from "solid-js";
+import { Show, lazy, For, createMemo } from "solid-js";
 import { Effect } from "effect";
 import { createAsync, type RouteDefinition, useParams } from "@solidjs/router";
 import { getWorkBySlug } from "~/libs/actions/payload";
@@ -22,16 +22,14 @@ export const route = {
 
 export default function WorkPage() {
   const params = useParams();
-  const work = createAsync(
-    () => {
-      if (!params.slug) return Promise.resolve(null);
-      void Effect.runFork(Effect.logInfo(`${scope}:load slug=${params.slug}`));
-      return getWorkBySlug(params.slug);
-    },
-    {
-      deferStream: true,
-    },
-  );
+  const slug = createMemo(() => params.slug);
+
+  const work = createAsync(() => {
+    const s = slug();
+    if (!s) return Promise.resolve(null);
+    void Effect.runFork(Effect.logInfo(`${scope}:load slug=${s}`));
+    return getWorkBySlug(s);
+  });
 
   return (
     <>
@@ -40,13 +38,13 @@ export default function WorkPage() {
           <PageLayout
             title={data().title}
             description={data().summary || data().meta?.description || ""}
-            canonical={`https://tom.so/work/${params.slug}`}
+            canonical={`https://tom.so/work/${slug()}`}
             jsonLd={{
               "@context": "https://schema.org",
               "@type": "CreativeWork",
               name: data().title,
               description: data().summary || data().meta?.description || "",
-              url: `https://tom.so/work/${params.slug}`,
+              url: `https://tom.so/work/${slug()}`,
               author: { "@type": "Person", name: "Tom Hackshaw" },
             }}
           >

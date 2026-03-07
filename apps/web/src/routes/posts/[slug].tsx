@@ -1,4 +1,4 @@
-import { Show, lazy, For } from "solid-js";
+import { Show, lazy, For, createMemo } from "solid-js";
 import { Effect } from "effect";
 import { createAsync, type RouteDefinition, useParams } from "@solidjs/router";
 import { getPostBySlug } from "~/libs/actions/payload";
@@ -8,7 +8,7 @@ import { Spinner } from "~/components";
 const scope = "wwwtom:apps:web:route:posts";
 
 const ArenaCarousel = lazy(() =>
-  import("~/components").then((m) => ({ default: m.ArenaCarousel })),
+  import("~/components").then((m) => ({ default: m.ArenaCarousel }))
 );
 
 export const route = {
@@ -21,16 +21,14 @@ export const route = {
 
 export default function PostPage() {
   const params = useParams();
-  const post = createAsync(
-    () => {
-      if (!params.slug) return Promise.resolve(null);
-      void Effect.runFork(Effect.logInfo(`${scope}:load slug=${params.slug}`));
-      return getPostBySlug(params.slug);
-    },
-    {
-      deferStream: true,
-    },
-  );
+  const slug = createMemo(() => params.slug);
+
+  const post = createAsync(() => {
+    const s = slug();
+    if (!s) return Promise.resolve(null);
+    void Effect.runFork(Effect.logInfo(`${scope}:load slug=${s}`));
+    return getPostBySlug(s);
+  });
 
   return (
     <>
@@ -39,7 +37,7 @@ export default function PostPage() {
           <PageLayout
             title={data().title}
             description={data().summary || data().meta?.description || ""}
-            canonical={`https://tom.so/posts/${params.slug}`}
+            canonical={`https://tom.so/posts/${slug()}`}
             jsonLd={{
               "@context": "https://schema.org",
               "@type": "BlogPosting",
@@ -47,7 +45,7 @@ export default function PostPage() {
               description: data().summary || data().meta?.description || "",
               datePublished: data().publishedAt,
               dateModified: data().updatedAt,
-              url: `https://tom.so/posts/${params.slug}`,
+              url: `https://tom.so/posts/${slug()}`,
               author: { "@type": "Person", name: "Tom Hackshaw" },
             }}
           >
