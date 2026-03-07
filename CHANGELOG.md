@@ -1,3 +1,10 @@
+## [1.79.2](https://github.com/et0and/wwwtom/compare/v1.79.1...v1.79.2) (2026-03-07)
+
+
+### Bug Fixes
+
+* **web:** fix reactivity ([1c9c89e](https://github.com/et0and/wwwtom/commit/1c9c89e0eacd97484c457865881e9c0c7536d886))
+
 ## [1.79.1](https://github.com/et0and/wwwtom/compare/v1.79.0...v1.79.1) (2026-03-07)
 
 
