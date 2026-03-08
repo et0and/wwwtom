@@ -1,23 +1,20 @@
 ## [1.79.2](https://github.com/et0and/wwwtom/compare/v1.79.1...v1.79.2) (2026-03-07)
 
-
 ### Bug Fixes
 
-* **web:** fix reactivity ([1c9c89e](https://github.com/et0and/wwwtom/commit/1c9c89e0eacd97484c457865881e9c0c7536d886))
+- **web:** fix reactivity ([1c9c89e](https://github.com/et0and/wwwtom/commit/1c9c89e0eacd97484c457865881e9c0c7536d886))
 
 ## [1.79.1](https://github.com/et0and/wwwtom/compare/v1.79.0...v1.79.1) (2026-03-07)
 
-
 ### Bug Fixes
 
-* haptics ([c96a0bf](https://github.com/et0and/wwwtom/commit/c96a0bff9e60e8d4deedd540c01c0428b32c875e))
+- haptics ([c96a0bf](https://github.com/et0and/wwwtom/commit/c96a0bff9e60e8d4deedd540c01c0428b32c875e))
 
 # [1.79.0](https://github.com/et0and/wwwtom/compare/v1.78.0...v1.79.0) (2026-03-06)
 
-
 ### Features
 
-* **web, packages:** add haptics for mobile ([936d764](https://github.com/et0and/wwwtom/commit/936d764a2ce05195c52a2c48fd10efa0e02a8698))
+- **web, packages:** add haptics for mobile ([936d764](https://github.com/et0and/wwwtom/commit/936d764a2ce05195c52a2c48fd10efa0e02a8698))
 
 # [1.78.0](https://github.com/et0and/wwwtom/compare/v1.77.0...v1.78.0) (2026-03-02)
 

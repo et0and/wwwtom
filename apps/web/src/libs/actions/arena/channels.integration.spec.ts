@@ -53,9 +53,9 @@ describe("Are.na channel integration", () => {
       );
 
       expect(result).toBeDefined();
-      expect(result).toHaveProperty("contents");
-      expect(Array.isArray(result.contents)).toBe(true);
-      void Effect.runFork(Effect.logDebug("Fetched contents:", result.contents));
+      expect(result).toHaveProperty("data");
+      expect(Array.isArray(result.data)).toBe(true);
+      void Effect.runFork(Effect.logDebug("Fetched contents:", result.data));
     });
   });
 

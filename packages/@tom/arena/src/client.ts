@@ -116,7 +116,7 @@ export type Fetch = (
 export type DateProvider = { now(): number };
 
 export class ArenaClient implements ArenaApi {
-  private readonly domain = "https://api.are.na/v2/";
+  private readonly domain = "https://api.are.na/v3/";
   private readonly headers: HeadersInit;
   private readonly fetch: Fetch;
   private readonly date: DateProvider;
@@ -398,9 +398,13 @@ export class ArenaClient implements ArenaApi {
     };
     const attrs = [];
     if (page) attrs.push(`page=${page}`);
-    if (per) attrs.push(`per=${per}`);
-    if (sort) attrs.push(`sort=${sort}`);
-    if (direction) attrs.push(`direction=${direction}`);
+    if (per) attrs.push(`per_page=${per}`);
+    // Arena API expects combined sort value: "position_desc", "created_at_asc", etc.
+    if (sort && direction) {
+      attrs.push(`sort=${sort}_${direction}`);
+    } else if (sort) {
+      attrs.push(`sort=${sort}`);
+    }
     if (forceRefresh) attrs.push(`date=${this.date.now()}`);
     return attrs.join("&");
   }

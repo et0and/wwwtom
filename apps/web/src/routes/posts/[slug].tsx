@@ -8,7 +8,7 @@ import { Spinner } from "~/components";
 const scope = "wwwtom:apps:web:route:posts";
 
 const ArenaCarousel = lazy(() =>
-  import("~/components").then((m) => ({ default: m.ArenaCarousel }))
+  import("~/components").then((m) => ({ default: m.ArenaCarousel })),
 );
 
 export const route = {

@@ -1,9 +1,10 @@
 import { createAsync } from "@solidjs/router";
 import { Effect } from "effect";
-import { Show, Index, createMemo, onMount, createSignal } from "solid-js";
+import { Show, Index, createMemo, createSignal } from "solid-js";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
 import { Spinner } from "@tom/ui";
+import { decodeBlurhash } from "~/libs/utils/blurhash";
 
 interface CameraRollProps {
   slug: string;
@@ -69,10 +70,8 @@ export function CameraRoll(props: CameraRollProps) {
 
   const layouts = createMemo(() => {
     const contentsData = contents();
-    if (!contentsData?.contents) return [];
-    return contentsData.contents.map((_, i) =>
-      generateRandomLayout(i, contentsData.contents.length, 500),
-    );
+    if (!contentsData?.data) return [];
+    return contentsData.data.map((_, i) => generateRandomLayout(i, contentsData.data.length, 500));
   });
 
   const containerDimensions = createMemo(() => {
@@ -99,7 +98,7 @@ export function CameraRoll(props: CameraRollProps) {
     <Show when={contents()} fallback={<Spinner />}>
       {(response) => (
         <Show
-          when={response().contents && response().contents.length > 0}
+          when={response().data && response().data.length > 0}
           fallback={
             <>
               {
@@ -121,7 +120,7 @@ export function CameraRoll(props: CameraRollProps) {
                 "max-width": "100%",
               }}
             >
-              <Index each={response().contents}>
+              <Index each={response().data}>
                 {(item, index) => {
                   const layout = layouts()[index]!;
                   return (
@@ -161,7 +160,7 @@ function ArenaItem(props: { item: ArenaChannelContents }) {
   const item = () => props.item;
 
   return (
-    <Show when={item().base_class === "Block"}>
+    <Show when={item().base_type === "Block"}>
       <ArenaBlockItem block={item() as ArenaBlock} />
     </Show>
   );
@@ -169,13 +168,31 @@ function ArenaItem(props: { item: ArenaChannelContents }) {
 
 function ImageBlock(props: { block: ArenaBlock }) {
   const block = () => props.block;
+  const [loaded, setLoaded] = createSignal(false);
+
+  const blurhashDataUrl = createMemo(() => Effect.runSync(decodeBlurhash(block().image?.blurhash)));
 
   return (
     <div class="image-block relative w-full h-full bg-gray-100">
+      <Show when={blurhashDataUrl() && !loaded()}>
+        <img
+          src={blurhashDataUrl()!}
+          alt=""
+          class="absolute inset-0 w-full h-full object-cover blur-sm"
+        />
+      </Show>
       <img
-        src={block().image?.display.url}
-        alt={block().title || block().generated_title || ""}
+        src={block().image?.medium.src}
+        srcset={
+          block().image?.medium.src_2x
+            ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
+            : undefined
+        }
+        alt={block().image?.alt_text || block().title || block().generated_title || ""}
         class="w-full h-full object-cover"
+        classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
+        onLoad={() => setLoaded(true)}
+        loading="lazy"
       />
     </div>
   );
@@ -186,10 +203,10 @@ function ArenaBlockItem(props: { block: ArenaBlock }) {
 
   return (
     <div class="arena-block h-full overflow-hidden">
-      <Show when={block().class === "Image"}>
+      <Show when={block().type === "Image"}>
         <ImageBlock block={block()} />
       </Show>
-      <Show when={block().class === "Attachment"}>
+      <Show when={block().type === "Attachment"}>
         <AttachmentBlock block={block()} />
       </Show>
     </div>

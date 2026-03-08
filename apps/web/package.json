@@ -27,6 +27,7 @@
     "@tom/ui": "workspace:*",
     "@tom/utils": "workspace:*",
     "@vinxi/plugin-mdx": "^3.7.2",
+    "blurhash": "^2.0.5",
     "classnames": "^2.5.1",
     "effect": "^3.19.5",
     "h3": "^1.12.0",

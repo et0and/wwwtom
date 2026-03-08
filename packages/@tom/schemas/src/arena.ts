@@ -1,26 +1,29 @@
 import { Schema } from "effect";
 
-export const ArenaBlockDataSchema = Schema.Struct({
-  slug: Schema.String,
-  title: Schema.optional(Schema.String),
+const ArenaImageVersionSchema = Schema.Struct({
+  src: Schema.String,
+  src_2x: Schema.optional(Schema.String),
+  width: Schema.optional(Schema.Number),
+  height: Schema.optional(Schema.Number),
 });
 
-export const ArenaImageSchema = Schema.Struct({
-  filename: Schema.String,
-  content_type: Schema.String,
-  updated_at: Schema.String,
-  thumb: Schema.Struct({ url: Schema.String }),
-  display: Schema.Struct({ url: Schema.String }),
-  large: Schema.Struct({ url: Schema.String }),
-  square: Schema.Struct({ url: Schema.String }),
-  original: Schema.Struct({
-    file_size: Schema.Number,
-    file_size_display: Schema.String,
-    url: Schema.String,
-  }),
+const ArenaImageSchema = Schema.Struct({
+  src: Schema.String,
+  width: Schema.optional(Schema.Number),
+  height: Schema.optional(Schema.Number),
+  aspect_ratio: Schema.optional(Schema.Number),
+  content_type: Schema.optional(Schema.String),
+  filename: Schema.optional(Schema.String),
+  file_size: Schema.optional(Schema.Number),
+  alt_text: Schema.optional(Schema.String),
+  blurhash: Schema.optional(Schema.String),
+  small: ArenaImageVersionSchema,
+  medium: ArenaImageVersionSchema,
+  large: ArenaImageVersionSchema,
+  square: ArenaImageVersionSchema,
 });
 
-export const ArenaAttachmentSchema = Schema.Struct({
+const ArenaAttachmentSchema = Schema.Struct({
   content_type: Schema.String,
   extension: Schema.String,
   file_name: Schema.String,
@@ -29,7 +32,7 @@ export const ArenaAttachmentSchema = Schema.Struct({
   url: Schema.String,
 });
 
-export const ArenaEmbedSchema = Schema.Struct({
+const ArenaEmbedSchema = Schema.Struct({
   author_name: Schema.NullOr(Schema.String),
   author_url: Schema.NullOr(Schema.String),
   height: Schema.Number,
@@ -42,7 +45,28 @@ export const ArenaEmbedSchema = Schema.Struct({
   width: Schema.Number,
 });
 
-export const ArenaUserSchema = Schema.Struct({
+const ArenaMarkdownContentSchema = Schema.Struct({
+  markdown: Schema.String,
+  html: Schema.String,
+  plain: Schema.String,
+});
+
+const ArenaEmbeddedUserSchema = Schema.Struct({
+  id: Schema.Number,
+  type: Schema.Literal("User"),
+  slug: Schema.String,
+  full_name: Schema.optional(Schema.String),
+});
+
+const ArenaConnectionSchema = Schema.Struct({
+  id: Schema.Number,
+  position: Schema.Number,
+  pinned: Schema.Boolean,
+  connected_at: Schema.String,
+  connected_by: Schema.optional(ArenaEmbeddedUserSchema),
+});
+
+const ArenaUserSchema = Schema.Struct({
   id: Schema.Number,
   slug: Schema.String,
   username: Schema.String,
@@ -54,11 +78,11 @@ export const ArenaUserSchema = Schema.Struct({
   following_count: Schema.Number,
   profile_id: Schema.Number,
   follower_count: Schema.Number,
-  class: Schema.Literal("User"),
+  type: Schema.Literal("User"),
   initials: Schema.String,
 });
 
-export const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe(
+const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe(
   Schema.omit("avatar_image"),
   Schema.extend(
     Schema.Struct({
@@ -83,10 +107,10 @@ export const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe(
   ),
 );
 
-export const ArenaGroupSchema = Schema.Struct({
+const ArenaGroupSchema = Schema.Struct({
   id: Schema.Number,
-  class: Schema.Literal("Group"),
-  base_class: Schema.Literal("Group"),
+  type: Schema.Literal("Group"),
+  base_type: Schema.Literal("Group"),
   created_at: Schema.String,
   updated_at: Schema.String,
   name: Schema.String,
@@ -95,25 +119,30 @@ export const ArenaGroupSchema = Schema.Struct({
   slug: Schema.String,
 });
 
-export const ArenaOwnerInfoSchema = Schema.Struct({
+const ArenaOwnerInfoSchema = Schema.Struct({
   owner_type: Schema.Union(Schema.Literal("Group"), Schema.Literal("User")),
   owner_id: Schema.String,
   owner_slug: Schema.optional(Schema.String),
 });
 
-export const ArenaChannelSchema = Schema.Struct({
+const ArenaChannelCountsSchema = Schema.Struct({
+  contents: Schema.Number,
+  blocks: Schema.Number,
+  channels: Schema.Number,
+  collaborators: Schema.Number,
+});
+
+const ArenaChannelSchema = Schema.Struct({
   id: Schema.Number,
   title: Schema.String,
   created_at: Schema.String,
   updated_at: Schema.String,
   added_to_at: Schema.optional(Schema.String),
-  published: Schema.Boolean,
-  open: Schema.Boolean,
   collaboration: Schema.Boolean,
   slug: Schema.String,
-  length: Schema.Number,
+  counts: ArenaChannelCountsSchema,
   kind: Schema.Union(Schema.Literal("default"), Schema.Literal("profile")),
-  status: Schema.Union(
+  visibility: Schema.Union(
     Schema.Literal("private"),
     Schema.Literal("public"),
     Schema.Literal("closed"),
@@ -122,11 +151,11 @@ export const ArenaChannelSchema = Schema.Struct({
   "nsfw?": Schema.Boolean,
   metadata: Schema.NullOr(Schema.Struct({ description: Schema.NullOr(Schema.String) })),
   user_id: Schema.Number,
-  class: Schema.Literal("Channel"),
-  base_class: Schema.Literal("Channel"),
+  type: Schema.Literal("Channel"),
+  base_type: Schema.Literal("Channel"),
 });
 
-export const ArenaBaseBlockSchema = Schema.Struct({
+const ArenaBaseBlockSchema = Schema.Struct({
   id: Schema.Number,
   title: Schema.NullOr(Schema.String),
   updated_at: Schema.String,
@@ -141,18 +170,17 @@ export const ArenaBaseBlockSchema = Schema.Struct({
   visibility: Schema.optional(Schema.Union(Schema.Literal("private"), Schema.Literal("public"))),
   comment_count: Schema.Number,
   generated_title: Schema.String,
-  class: Schema.Union(
+  type: Schema.Union(
     Schema.Literal("Image"),
     Schema.Literal("Text"),
     Schema.Literal("Link"),
-    Schema.Literal("Media"),
+    Schema.Literal("Embed"),
     Schema.Literal("Attachment"),
   ),
-  base_class: Schema.Literal("Block"),
-  content: Schema.NullOr(Schema.String),
-  content_html: Schema.NullOr(Schema.String),
-  description: Schema.NullOr(Schema.String),
-  description_html: Schema.NullOr(Schema.String),
+  base_type: Schema.Literal("Block"),
+  connection: Schema.optional(ArenaConnectionSchema),
+  content: Schema.optional(ArenaMarkdownContentSchema),
+  description: Schema.optional(ArenaMarkdownContentSchema),
   source: Schema.NullOr(
     Schema.Struct({
       title: Schema.optional(Schema.String),
@@ -173,11 +201,11 @@ export const ArenaBaseBlockSchema = Schema.Struct({
   connections: Schema.optional(Schema.Array(Schema.suspend(() => ArenaChannelSchema))),
 });
 
-export const ArenaImageBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("class", "image", "source"),
+const ArenaImageBlockSchema = ArenaBaseBlockSchema.pipe(
+  Schema.omit("type", "image", "source"),
   Schema.extend(
     Schema.Struct({
-      class: Schema.Literal("Image"),
+      type: Schema.Literal("Image"),
       image: ArenaImageSchema,
       source: Schema.Struct({
         title: Schema.optional(Schema.String),
@@ -193,22 +221,21 @@ export const ArenaImageBlockSchema = ArenaBaseBlockSchema.pipe(
   ),
 );
 
-export const ArenaTextBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("class", "content", "content_html"),
+const ArenaTextBlockSchema = ArenaBaseBlockSchema.pipe(
+  Schema.omit("type", "content"),
   Schema.extend(
     Schema.Struct({
-      class: Schema.Literal("Text"),
-      content: Schema.String,
-      content_html: Schema.String,
+      type: Schema.Literal("Text"),
+      content: ArenaMarkdownContentSchema,
     }),
   ),
 );
 
-export const ArenaLinkBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("class", "image", "source"),
+const ArenaLinkBlockSchema = ArenaBaseBlockSchema.pipe(
+  Schema.omit("type", "image", "source"),
   Schema.extend(
     Schema.Struct({
-      class: Schema.Literal("Link"),
+      type: Schema.Literal("Link"),
       image: ArenaImageSchema,
       source: Schema.Struct({
         title: Schema.optional(Schema.String),
@@ -224,33 +251,33 @@ export const ArenaLinkBlockSchema = ArenaBaseBlockSchema.pipe(
   ),
 );
 
-export const ArenaMediaBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("class"),
+const ArenaEmbedBlockSchema = ArenaBaseBlockSchema.pipe(
+  Schema.omit("type"),
   Schema.extend(
     Schema.Struct({
-      class: Schema.Literal("Media"),
+      type: Schema.Literal("Embed"),
     }),
   ),
 );
 
-export const ArenaAttachmentBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("class"),
+const ArenaAttachmentBlockSchema = ArenaBaseBlockSchema.pipe(
+  Schema.omit("type"),
   Schema.extend(
     Schema.Struct({
-      class: Schema.Literal("Attachment"),
+      type: Schema.Literal("Attachment"),
     }),
   ),
 );
 
-export const ArenaBlockSchema = Schema.Union(
+const ArenaBlockSchema = Schema.Union(
   ArenaImageBlockSchema,
   ArenaTextBlockSchema,
   ArenaLinkBlockSchema,
-  ArenaMediaBlockSchema,
+  ArenaEmbedBlockSchema,
   ArenaAttachmentBlockSchema,
 );
 
-export const ArenaCommentEntitySchema = Schema.Struct({
+const ArenaCommentEntitySchema = Schema.Struct({
   type: Schema.Literal("user"),
   user_id: Schema.Number,
   user_slug: Schema.String,
@@ -259,7 +286,7 @@ export const ArenaCommentEntitySchema = Schema.Struct({
   end: Schema.Number,
 });
 
-export const ArenaBlockCommentSchema = Schema.Struct({
+const ArenaBlockCommentSchema = Schema.Struct({
   id: Schema.Number,
   created_at: Schema.String,
   updated_at: Schema.String,
@@ -269,13 +296,13 @@ export const ArenaBlockCommentSchema = Schema.Struct({
   user_id: Schema.String,
   deleted: Schema.NullOr(Schema.Boolean),
   entities: Schema.Array(ArenaCommentEntitySchema),
-  base_class: Schema.Literal("Comment"),
+  base_type: Schema.Literal("Comment"),
   user: ArenaUserWithDetailsSchema,
 });
 
-export const ConnectionDataSchema = Schema.Struct({
+const ConnectionDataSchema = Schema.Struct({
   position: Schema.Number,
-  selected: Schema.Boolean,
+  pinned: Schema.Boolean,
   connected_at: Schema.String,
   connected_by_user_id: Schema.Number,
   connection_id: Schema.optional(Schema.Number),
@@ -296,7 +323,7 @@ type ArenaChannelContentsType =
   | (Schema.Schema.Type<typeof ArenaBlockSchema> & Schema.Schema.Type<typeof ConnectionDataSchema>)
   | (ArenaChannelWithDetailsType & Schema.Schema.Type<typeof ConnectionDataSchema>);
 
-export const ArenaChannelWithDetailsSchema: Schema.Schema<ArenaChannelWithDetailsType> =
+const ArenaChannelWithDetailsSchema: Schema.Schema<ArenaChannelWithDetailsType> =
   ArenaOwnerInfoSchema.pipe(
     Schema.extend(ArenaChannelSchema),
     Schema.extend(
@@ -316,14 +343,14 @@ export const ArenaChannelWithDetailsSchema: Schema.Schema<ArenaChannelWithDetail
     ),
   );
 
-export const ArenaChannelContentsSchema: Schema.Schema<ArenaChannelContentsType> = Schema.suspend(
+const ArenaChannelContentsSchema: Schema.Schema<ArenaChannelContentsType> = Schema.suspend(
   (): Schema.Schema<ArenaChannelContentsType> =>
     Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
       Schema.extend(ConnectionDataSchema),
     ) as Schema.Schema<ArenaChannelContentsType>,
 );
 
-export const MeApiResponseSchema = ArenaUserWithDetailsSchema.pipe(
+const MeApiResponseSchema = ArenaUserWithDetailsSchema.pipe(
   Schema.extend(
     Schema.Struct({
       channels: Schema.Array(Schema.suspend(() => GetChannelsApiResponseSchema)),
@@ -331,32 +358,29 @@ export const MeApiResponseSchema = ArenaUserWithDetailsSchema.pipe(
   ),
 );
 
-export const GetUserApiResponseSchema = ArenaUserWithDetailsSchema;
+const GetUserApiResponseSchema = ArenaUserWithDetailsSchema;
 
-export const GetUserFollowersApiResponseSchema = Schema.Struct({
-  length: Schema.Number,
+const GetUserFollowersApiResponseSchema = Schema.Struct({
   total_pages: Schema.Number,
   current_page: Schema.Number,
   per: Schema.Number,
-  base_class: Schema.Literal("User"),
-  class: Schema.Literal("User"),
+  base_type: Schema.Literal("User"),
+  type: Schema.Literal("User"),
   users: Schema.Array(ArenaUserWithDetailsSchema),
 });
 
-export const GetUserFollowingApiResponseSchema = GetUserFollowersApiResponseSchema;
+const GetUserFollowingApiResponseSchema = GetUserFollowersApiResponseSchema;
 
-export const GetUserChannelsApiResponseSchema = Schema.Struct({
-  length: Schema.Number,
+const GetUserChannelsApiResponseSchema = Schema.Struct({
   total_pages: Schema.Number,
   current_page: Schema.Number,
   per: Schema.Number,
-  base_class: Schema.Literal("User"),
-  class: Schema.Literal("User"),
+  base_type: Schema.Literal("User"),
+  type: Schema.Literal("User"),
   channels: Schema.Array(ArenaChannelWithDetailsSchema),
 });
 
-export const GetBlockCommentApiResponseSchema = Schema.Struct({
-  length: Schema.Number,
+const GetBlockCommentApiResponseSchema = Schema.Struct({
   total_pages: Schema.NullOr(Schema.Number),
   current_page: Schema.Number,
   per: Schema.Number,
@@ -364,9 +388,9 @@ export const GetBlockCommentApiResponseSchema = Schema.Struct({
   comments: Schema.Array(ArenaBlockCommentSchema),
 });
 
-export const CreateBlockCommentApiResponseSchema = ArenaBlockCommentSchema;
+const CreateBlockCommentApiResponseSchema = ArenaBlockCommentSchema;
 
-export const GetBlockApiResponseSchema = ArenaBlockSchema.pipe(
+const GetBlockApiResponseSchema = ArenaBlockSchema.pipe(
   Schema.omit("connections"),
   Schema.extend(
     Schema.Struct({
@@ -375,19 +399,16 @@ export const GetBlockApiResponseSchema = ArenaBlockSchema.pipe(
   ),
 );
 
-export const CreateBlockApiResponseSchema = ArenaBlockSchema.pipe(
-  Schema.extend(ConnectionDataSchema),
-);
+const CreateBlockApiResponseSchema = ArenaBlockSchema.pipe(Schema.extend(ConnectionDataSchema));
 
-export const GetBlockChannelsApiResponseSchema = Schema.Struct({
-  length: Schema.Number,
+const GetBlockChannelsApiResponseSchema = Schema.Struct({
   total_pages: Schema.Number,
   current_page: Schema.Number,
   per: Schema.Number,
   channels: Schema.Array(ArenaChannelWithDetailsSchema),
 });
 
-export const GetGroupApiResponseSchema = ArenaGroupSchema.pipe(
+const GetGroupApiResponseSchema = ArenaGroupSchema.pipe(
   Schema.extend(
     Schema.Struct({
       title: Schema.String,
@@ -400,11 +421,9 @@ export const GetGroupApiResponseSchema = ArenaGroupSchema.pipe(
   ),
 );
 
-export const CreateChannelApiResponseSchema = ArenaChannelSchema.pipe(
-  Schema.extend(ArenaOwnerInfoSchema),
-);
+const CreateChannelApiResponseSchema = ArenaChannelSchema.pipe(Schema.extend(ArenaOwnerInfoSchema));
 
-export const GetChannelThumbApiResponseSchema = ArenaChannelSchema.pipe(
+const GetChannelThumbApiResponseSchema = ArenaChannelSchema.pipe(
   Schema.extend(ArenaOwnerInfoSchema),
   Schema.extend(
     Schema.Struct({
@@ -424,20 +443,30 @@ export const GetChannelThumbApiResponseSchema = ArenaChannelSchema.pipe(
   ),
 );
 
-export const GetChannelContentsApiResponseSchema = Schema.Struct({
-  contents: Schema.Array(ArenaChannelContentsSchema),
+const ArenaPaginationMetaSchema = Schema.Struct({
+  current_page: Schema.Number,
+  per_page: Schema.Number,
+  total_pages: Schema.Number,
+  total_count: Schema.Number,
+  next_page: Schema.optional(Schema.Union(Schema.Number, Schema.Null)),
+  prev_page: Schema.optional(Schema.Union(Schema.Number, Schema.Null)),
+  has_more_pages: Schema.optional(Schema.Boolean),
 });
 
-export const ChannelConnectBlockApiResponseSchema = ArenaBlockSchema.pipe(
+const GetChannelContentsApiResponseSchema = Schema.Struct({
+  data: Schema.Array(ArenaChannelContentsSchema),
+  meta: ArenaPaginationMetaSchema,
+});
+
+const ChannelConnectBlockApiResponseSchema = ArenaBlockSchema.pipe(
   Schema.extend(ConnectionDataSchema),
 );
 
-export const ChannelConnectChannelApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
+const ChannelConnectChannelApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
   Schema.extend(ConnectionDataSchema),
 );
 
-export const GetGroupChannelsApiResponseSchema = Schema.Struct({
-  length: Schema.Number,
+const GetGroupChannelsApiResponseSchema = Schema.Struct({
   total_pages: Schema.NullOr(Schema.Number),
   current_page: Schema.Number,
   per: Schema.Number,
@@ -445,7 +474,7 @@ export const GetGroupChannelsApiResponseSchema = Schema.Struct({
   channels: Schema.Array(ArenaChannelWithDetailsSchema),
 });
 
-export const GetChannelsApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
+const GetChannelsApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
   Schema.extend(
     Schema.Struct({
       per: Schema.Number,
@@ -456,12 +485,12 @@ export const GetChannelsApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
   ),
 );
 
-export const GetConnectionsApiResponseSchema = Schema.Union(
+const GetConnectionsApiResponseSchema = Schema.Union(
   ArenaBlockSchema,
   GetChannelsApiResponseSchema,
 ).pipe(Schema.extend(ConnectionDataSchema));
 
-export const PaginationAttributesSchema = Schema.Struct({
+const PaginationAttributesSchema = Schema.Struct({
   per: Schema.optional(Schema.Number),
   page: Schema.optional(Schema.Number),
   sort: Schema.optional(Schema.String),
@@ -469,32 +498,92 @@ export const PaginationAttributesSchema = Schema.Struct({
   forceRefresh: Schema.optional(Schema.Boolean),
 });
 
-export const SearchApiResponseSchema = Schema.Struct({
+const SearchApiResponseSchema = Schema.Struct({
   term: Schema.String,
   per: Schema.Number,
   current_page: Schema.Number,
   total_pages: Schema.Number,
-  length: Schema.Number,
   authenticated: Schema.Boolean,
   channels: Schema.Array(ArenaChannelSchema),
   blocks: Schema.Array(ArenaBlockSchema),
   users: Schema.Array(ArenaUserWithDetailsSchema),
 });
 
+const ArenaBlockDataSchema = Schema.Struct({
+  slug: Schema.String,
+  title: Schema.optional(Schema.String),
+});
+
+export {
+  ArenaBlockDataSchema,
+  ArenaImageVersionSchema,
+  ArenaImageSchema,
+  ArenaAttachmentSchema,
+  ArenaEmbedSchema,
+  ArenaMarkdownContentSchema,
+  ArenaEmbeddedUserSchema,
+  ArenaConnectionSchema,
+  ArenaUserSchema,
+  ArenaUserWithDetailsSchema,
+  ArenaGroupSchema,
+  ArenaOwnerInfoSchema,
+  ArenaChannelCountsSchema,
+  ArenaChannelSchema,
+  ArenaBaseBlockSchema,
+  ArenaImageBlockSchema,
+  ArenaTextBlockSchema,
+  ArenaLinkBlockSchema,
+  ArenaEmbedBlockSchema,
+  ArenaAttachmentBlockSchema,
+  ArenaBlockSchema,
+  ArenaCommentEntitySchema,
+  ArenaBlockCommentSchema,
+  ConnectionDataSchema,
+  ArenaChannelWithDetailsSchema,
+  ArenaChannelContentsSchema,
+  MeApiResponseSchema,
+  GetUserApiResponseSchema,
+  GetUserFollowersApiResponseSchema,
+  GetUserFollowingApiResponseSchema,
+  GetUserChannelsApiResponseSchema,
+  GetBlockCommentApiResponseSchema,
+  CreateBlockCommentApiResponseSchema,
+  GetBlockApiResponseSchema,
+  CreateBlockApiResponseSchema,
+  GetBlockChannelsApiResponseSchema,
+  GetGroupApiResponseSchema,
+  CreateChannelApiResponseSchema,
+  GetChannelThumbApiResponseSchema,
+  GetChannelContentsApiResponseSchema,
+  ArenaPaginationMetaSchema,
+  ChannelConnectBlockApiResponseSchema,
+  ChannelConnectChannelApiResponseSchema,
+  GetGroupChannelsApiResponseSchema,
+  GetChannelsApiResponseSchema,
+  GetConnectionsApiResponseSchema,
+  PaginationAttributesSchema,
+  SearchApiResponseSchema,
+};
+
 export type ArenaBlockData = Schema.Schema.Type<typeof ArenaBlockDataSchema>;
+export type ArenaImageVersion = Schema.Schema.Type<typeof ArenaImageVersionSchema>;
 export type ArenaImage = Schema.Schema.Type<typeof ArenaImageSchema>;
 export type ArenaAttachment = Schema.Schema.Type<typeof ArenaAttachmentSchema>;
 export type ArenaEmbed = Schema.Schema.Type<typeof ArenaEmbedSchema>;
+export type ArenaMarkdownContent = Schema.Schema.Type<typeof ArenaMarkdownContentSchema>;
+export type ArenaEmbeddedUser = Schema.Schema.Type<typeof ArenaEmbeddedUserSchema>;
+export type ArenaConnection = Schema.Schema.Type<typeof ArenaConnectionSchema>;
 export type ArenaUser = Schema.Schema.Type<typeof ArenaUserSchema>;
 export type ArenaUserWithDetails = Schema.Schema.Type<typeof ArenaUserWithDetailsSchema>;
 export type ArenaGroup = Schema.Schema.Type<typeof ArenaGroupSchema>;
 export type ArenaOwnerInfo = Schema.Schema.Type<typeof ArenaOwnerInfoSchema>;
+export type ArenaChannelCounts = Schema.Schema.Type<typeof ArenaChannelCountsSchema>;
 export type ArenaChannel = Schema.Schema.Type<typeof ArenaChannelSchema>;
 export type ArenaBaseBlock = Schema.Schema.Type<typeof ArenaBaseBlockSchema>;
 export type ArenaImageBlock = Schema.Schema.Type<typeof ArenaImageBlockSchema>;
 export type ArenaTextBlock = Schema.Schema.Type<typeof ArenaTextBlockSchema>;
 export type ArenaLinkBlock = Schema.Schema.Type<typeof ArenaLinkBlockSchema>;
-export type ArenaMediaBlock = Schema.Schema.Type<typeof ArenaMediaBlockSchema>;
+export type ArenaEmbedBlock = Schema.Schema.Type<typeof ArenaEmbedBlockSchema>;
 export type ArenaAttachmentBlock = Schema.Schema.Type<typeof ArenaAttachmentBlockSchema>;
 export type ArenaBlock = Schema.Schema.Type<typeof ArenaBlockSchema>;
 export type ArenaCommentEntity = Schema.Schema.Type<typeof ArenaCommentEntitySchema>;
@@ -532,6 +621,7 @@ export type GetChannelThumbApiResponse = Schema.Schema.Type<
 export type GetChannelContentsApiResponse = Schema.Schema.Type<
   typeof GetChannelContentsApiResponseSchema
 >;
+export type ArenaPaginationMeta = Schema.Schema.Type<typeof ArenaPaginationMetaSchema>;
 export type ChannelConnectBlockApiResponse = Schema.Schema.Type<
   typeof ChannelConnectBlockApiResponseSchema
 >;

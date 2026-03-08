@@ -1,10 +1,11 @@
 import { createAsync } from "@solidjs/router";
 import { Effect } from "effect";
-import { Show, Index, createSignal } from "solid-js";
+import { Show, Index, createMemo, createSignal } from "solid-js";
 import { Motion } from "solid-motionone";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
 import { Spinner } from "@tom/ui";
+import { decodeBlurhash } from "~/libs/utils/blurhash";
 
 interface ArenaCarouselProps {
   slug: string;
@@ -46,7 +47,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     <Show when={contents()} fallback={<Spinner />}>
       {(response) => (
         <Show
-          when={response().contents && response().contents.length > 0}
+          when={response().data && response().data.length > 0}
           fallback={
             <>
               {
@@ -66,7 +67,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
           />
           <div class="overflow-x-auto whitespace-nowrap border border-black">
             <div class="carousel-container inline-flex gap-4 p-4">
-              <Index each={response().contents}>
+              <Index each={response().data}>
                 {(item) => (
                   <div class="carousel-item flex-shrink-0 w-80">
                     <ArenaItem item={item()} onExpand={openLightbox} />
@@ -135,7 +136,12 @@ function ImageLightbox(props: ImageLightboxProps) {
                     handleImageLoad();
                   }
                 }}
-                src={block.image?.large.url}
+                src={block.image?.large.src}
+                srcset={
+                  block.image?.large.src_2x
+                    ? `${block.image?.large.src} 1x, ${block.image?.large.src_2x} 2x`
+                    : undefined
+                }
                 alt={block.title || block.generated_title || ""}
                 class="max-w-full max-h-[90vh] w-auto h-auto object-contain"
                 onLoad={handleImageLoad}
@@ -157,7 +163,7 @@ function ArenaItem(props: ArenaItemProps) {
   const item = () => props.item;
 
   return (
-    <Show when={item().base_class === "Block"}>
+    <Show when={item().base_type === "Block"}>
       <ArenaBlockItem block={item() as ArenaBlock} onExpand={props.onExpand} />
     </Show>
   );
@@ -171,6 +177,9 @@ interface ImageBlockProps {
 function ImageBlock(props: ImageBlockProps) {
   const block = () => props.block;
   let imgRef: HTMLImageElement | undefined;
+  const [loaded, setLoaded] = createSignal(false);
+
+  const blurhashDataUrl = createMemo(() => Effect.runSync(decodeBlurhash(block().image?.blurhash)));
 
   const handleClick = () => {
     if (imgRef) {
@@ -184,13 +193,28 @@ function ImageBlock(props: ImageBlockProps) {
       data-block-id={block().id}
       onClick={handleClick}
     >
+      <Show when={blurhashDataUrl() && !loaded()}>
+        <img
+          src={blurhashDataUrl()!}
+          alt=""
+          class="absolute inset-0 w-full h-full object-cover blur-sm"
+        />
+      </Show>
       <img
         ref={(el) => {
           imgRef = el;
         }}
-        src={block().image?.display.url}
-        alt={block().title || block().generated_title || ""}
+        src={block().image?.medium.src}
+        srcset={
+          block().image?.medium.src_2x
+            ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
+            : undefined
+        }
+        alt={block().image?.alt_text || block().title || block().generated_title || ""}
         class="w-full h-full object-cover pointer-events-none"
+        classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
+        onLoad={() => setLoaded(true)}
+        loading="lazy"
       />
     </div>
   );
@@ -206,25 +230,25 @@ function ArenaBlockItem(props: ArenaBlockItemProps) {
 
   return (
     <div class="arena-block p-4">
-      <Show when={block().class === "Image"}>
+      <Show when={block().type === "Image"}>
         <ImageBlock block={block()} onExpand={props.onExpand} />
       </Show>
-      <Show when={block().class === "Text"}>
+      <Show when={block().type === "Text"}>
         <div class="text-content prose prose-sm break-words whitespace-normal">
-          {block().content_html ? (
-            <div innerHTML={block().content_html || ""} />
+          {block().content?.html ? (
+            <div innerHTML={block().content?.html || ""} />
           ) : (
-            <p>{block().content}</p>
+            <p>{block().content?.markdown}</p>
           )}
         </div>
       </Show>
-      <Show when={block().class === "Link"}>
+      <Show when={block().type === "Link"}>
         <LinkBlock block={block()} />
       </Show>
-      <Show when={block().class === "Attachment"}>
+      <Show when={block().type === "Attachment"}>
         <AttachmentBlock block={block()} />
       </Show>
-      <Show when={block().class === "Media"}>
+      <Show when={block().type === "Embed"}>
         <div class="media-content">
           {(() => {
             const embed = block().embed;
@@ -265,10 +289,16 @@ function LinkBlock(props: LinkBlockProps) {
       <Show when={block().image}>
         <div class="relative w-full h-60 bg-gray-100">
           <img
-            src={block().image?.display.url}
+            src={block().image?.medium.src}
+            srcset={
+              block().image?.medium.src_2x
+                ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
+                : undefined
+            }
             alt={block().title || block().generated_title || ""}
             class="w-full h-full object-cover"
             onError={() => void Effect.runFork(Effect.logError("Failed to load arena link image"))}
+            loading="lazy"
           />
         </div>
       </Show>
