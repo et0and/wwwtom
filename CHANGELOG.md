@@ -1,3 +1,10 @@
+## [1.79.7](https://github.com/et0and/wwwtom/compare/v1.79.6...v1.79.7) (2026-03-09)
+
+
+### Bug Fixes
+
+* 😔 ([0bebb3e](https://github.com/et0and/wwwtom/commit/0bebb3ea50c8ae274dc5e3315b0a9acb0a7c481f))
+
 ## [1.79.6](https://github.com/et0and/wwwtom/compare/v1.79.5...v1.79.6) (2026-03-09)
 
 ### Bug Fixes
