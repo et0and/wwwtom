@@ -1,9 +1,10 @@
 import { createAsync } from "@solidjs/router";
 import { Effect } from "effect";
-import { Show, Index, createMemo, createSignal } from "solid-js";
+import { Show, Index, createEffect, createMemo, createSignal } from "solid-js";
 import { Motion } from "solid-motionone";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
+import type { GetChannelContentsApiResponse } from "@tom/schemas";
 import { Spinner } from "@tom/ui";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 
@@ -12,8 +13,85 @@ interface ArenaCarouselProps {
   title?: string;
 }
 
+const getPublicChannelContents = async (
+  slug: string,
+  per: number,
+): Promise<GetChannelContentsApiResponse> => {
+  const response = await fetch(
+    `https://api.are.na/v3/channels/${slug}/contents?per_page=${per}&sort=position_desc`,
+    {
+      headers: {
+        Accept: "application/json",
+      },
+    },
+  );
+  if (!response.ok) {
+    throw new Error(`Are.na public fetch failed for slug "${slug}" with status ${response.status}`);
+  }
+  return (await response.json()) as GetChannelContentsApiResponse;
+};
+
 export function ArenaCarousel(props: ArenaCarouselProps) {
-  const contents = createAsync(() => getChannelContents(props.slug, { per: 10 }));
+  const contents = createAsync(async () => {
+    try {
+      return await getChannelContents(props.slug, { per: 10 });
+    } catch (error) {
+      void Effect.runFork(
+        Effect.logWarning(
+          `[arena] getChannelContents failed for slug "${props.slug}"; returning null for client fallback`,
+        ),
+      );
+      return null;
+    }
+  });
+
+  const [fallbackData, setFallbackData] = createSignal<GetChannelContentsApiResponse | null>(null);
+  const [isFallbackLoading, setIsFallbackLoading] = createSignal(false);
+  const [fallbackError, setFallbackError] = createSignal<Error | null>(null);
+  const [didFallbackAttempt, setDidFallbackAttempt] = createSignal(false);
+
+  createEffect(() => {
+    if (typeof window === "undefined") return;
+    if (didFallbackAttempt()) return;
+    const response = contents();
+    if (response === undefined) return;
+    if (response?.data && response.data.length > 0) return;
+
+    setDidFallbackAttempt(true);
+    setIsFallbackLoading(true);
+    void getPublicChannelContents(props.slug, 10)
+      .then((data) => {
+        setFallbackData(data);
+      })
+      .catch((error) => {
+        const err = error instanceof Error ? error : new Error(String(error));
+        setFallbackError(err);
+        void Effect.runFork(
+          Effect.logWarning(
+            `[arena] client fallback failed for slug "${props.slug}": ${err.message}`,
+          ),
+        );
+      })
+      .finally(() => {
+        setIsFallbackLoading(false);
+      });
+  });
+
+  const activeContents = createMemo(() => {
+    const response = contents();
+    if (response?.data && response.data.length > 0) return response;
+    const fallback = fallbackData();
+    if (fallback?.data && fallback.data.length > 0) return fallback;
+    if (response !== undefined) return response;
+    return fallback;
+  });
+
+  const isLoading = createMemo(() => contents() === undefined || isFallbackLoading());
+
+  const hasContent = createMemo(() => {
+    const response = activeContents();
+    return !!(response?.data && response.data.length > 0);
+  });
   const [expandedBlock, setExpandedBlock] = createSignal<ArenaBlock | null>(null);
   const [isClosing, setIsClosing] = createSignal(false);
 
@@ -44,46 +122,51 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
   }
 
   return (
-    <Show when={contents()} fallback={<Spinner />}>
-      {(response) => (
-        <Show
-          when={response().data && response().data.length > 0}
-          fallback={
-            <>
-              {
-                void Effect.runFork(
-                  Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+    <Show when={!isLoading()} fallback={<Spinner />}>
+      <Show
+        when={hasContent()}
+        fallback={
+          <>
+            {
+              void Effect.runFork(
+                Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+              )
+            }
+            {fallbackError()
+              ? void Effect.runFork(
+                  Effect.logWarning(
+                    `[arena] both server and client fetch failed for slug "${props.slug}"`,
+                  ),
                 )
-              }
-              <p>Sorry, no content found</p>
-            </>
-          }
-        >
-          <ImageLightbox
-            block={expandedBlock()}
-            isClosing={isClosing()}
-            onClose={closeLightbox}
-            onAnimationComplete={handleAnimationComplete}
-          />
-          <div class="overflow-x-auto whitespace-nowrap border border-black">
-            <div class="carousel-container inline-flex gap-4 p-4">
-              <Index each={response().data}>
-                {(item) => (
-                  <div class="carousel-item flex-shrink-0 w-80">
-                    <ArenaItem item={item()} onExpand={openLightbox} />
-                  </div>
-                )}
-              </Index>
-            </div>
+              : null}
+            <p>Sorry, no content found</p>
+          </>
+        }
+      >
+        <ImageLightbox
+          block={expandedBlock()}
+          isClosing={isClosing()}
+          onClose={closeLightbox}
+          onAnimationComplete={handleAnimationComplete}
+        />
+        <div class="overflow-x-auto whitespace-nowrap border border-black">
+          <div class="carousel-container inline-flex gap-4 p-4">
+            <Index each={activeContents()?.data || []}>
+              {(item) => (
+                <div class="carousel-item flex-shrink-0 w-80">
+                  <ArenaItem item={item()} onExpand={openLightbox} />
+                </div>
+              )}
+            </Index>
           </div>
-          <p class="text-xs mt-2">
-            Source:{" "}
-            <a href={`https://are.na/tom/${props.slug}`} target="_blank" rel="noopener noreferrer">
-              {props.title || props.slug}
-            </a>
-          </p>
-        </Show>
-      )}
+        </div>
+        <p class="text-xs mt-2">
+          Source:{" "}
+          <a href={`https://are.na/tom/${props.slug}`} target="_blank" rel="noopener noreferrer">
+            {props.title || props.slug}
+          </a>
+        </p>
+      </Show>
     </Show>
   );
 }
