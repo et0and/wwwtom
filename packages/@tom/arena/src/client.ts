@@ -146,6 +146,7 @@ export class ArenaClient implements ArenaApi {
     const token = ArenaClient.normalizeToken(config?.token);
     this.headers = {
       "Content-Type": "application/json",
+      "Accept": "application/json",
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     this.fetch = config?.fetch || fetch.bind(globalThis);
