@@ -1,3 +1,10 @@
+## [1.79.6](https://github.com/et0and/wwwtom/compare/v1.79.5...v1.79.6) (2026-03-09)
+
+
+### Bug Fixes
+
+* harden client ([b7d9478](https://github.com/et0and/wwwtom/commit/b7d9478ec2bee6385d5a0de4b90e4f480c6de920))
+
 ## [1.79.5](https://github.com/et0and/wwwtom/compare/v1.79.4...v1.79.5) (2026-03-09)
 
 ### Bug Fixes
