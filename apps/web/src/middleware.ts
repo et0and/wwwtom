@@ -4,6 +4,15 @@ import { createMiddleware } from "@solidjs/start/middleware";
 import type { CloudflareEnv } from "@tom/utils/services";
 import { createServicesLayer } from "~/libs/runtime";
 
+const normalizeArenaToken = (token?: string | null): string | null => {
+  if (typeof token !== "string") return null;
+  const normalized = token.trim();
+  if (!normalized) return null;
+  if (normalized === "undefined") return null;
+  if (normalized === "null") return null;
+  return normalized;
+};
+
 export default createMiddleware({
   onRequest: (event) => {
     const cf = event.nativeEvent.context.cloudflare;
@@ -16,6 +25,11 @@ export default createMiddleware({
       TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID ?? import.meta.env.TELEGRAM_CHAT_ID,
       NODE_ENV: process.env.NODE_ENV ?? "development",
     };
+
+    // TODO: remove after Are.na 403 incident is resolved.
+    console.info(
+      `[arena-diag] middleware arenaTokenPresent=${Boolean(normalizeArenaToken(env.ARENA_TOKEN))}`,
+    );
 
     event.nativeEvent.context.effectLayer = createServicesLayer(env);
   },

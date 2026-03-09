@@ -110,7 +110,13 @@ export interface ArenaApi {
 
 export type Fetch = (
   url: RequestInfo,
-  init?: RequestInit & { cf?: { cacheTtl?: number; cacheKey?: string } },
+  init?: RequestInit & {
+    cf?: {
+      cacheTtl?: number;
+      cacheKey?: string;
+      cacheTtlByStatus?: Record<string, number>;
+    };
+  },
 ) => Promise<Response>;
 
 export type DateProvider = { now(): number };
@@ -127,10 +133,20 @@ export class ArenaClient implements ArenaApi {
     per: 50,
   };
 
+  private static normalizeToken(token?: string | null): string | null {
+    if (typeof token !== "string") return null;
+    const normalized = token.trim();
+    if (!normalized) return null;
+    if (normalized === "undefined") return null;
+    if (normalized === "null") return null;
+    return normalized;
+  }
+
   constructor(config?: { token?: string | null; fetch?: Fetch; date?: DateProvider }) {
+    const token = ArenaClient.normalizeToken(config?.token);
     this.headers = {
       "Content-Type": "application/json",
-      ...(config?.token ? { Authorization: `Bearer ${config.token}` } : {}),
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     };
     this.fetch = config?.fetch || fetch.bind(globalThis);
     this.date = config?.date || Date;
@@ -329,25 +345,33 @@ export class ArenaClient implements ArenaApi {
     const hasAuthorization = Boolean(this.headers.Authorization);
 
     return Effect.gen(this, function* () {
+      // TODO: remove after Are.na 403 incident is resolved.
       const request = (withAuthorization: boolean, useCache: boolean) =>
         Effect.tryPromise({
-          try: () =>
-            this.fetch(url, {
+          try: () => {
+            const hasRequestAuthorization =
+              withAuthorization && Boolean(this.headers.Authorization);
+            const shouldUseEdgeCache = useCache && !(isGet && hasRequestAuthorization);
+            return this.fetch(url, {
               method,
               headers: {
                 ...(withAuthorization ? this.headers : this.headersWithoutAuthorization()),
-                "Cache-Control": useCache ? "public, max-age=86400" : "no-cache",
+                "Cache-Control": shouldUseEdgeCache ? "public, max-age=86400" : "no-cache",
               },
               body: data && !isGet ? JSON.stringify(data) : null,
-              cf: useCache
+              cf: shouldUseEdgeCache
                 ? {
                     cacheTtl: 86400,
-                    cacheKey: url,
+                    cacheKey: `arena:v3:public:${url}`,
+                    cacheTtlByStatus: {
+                      "400-599": 0,
+                    },
                   }
                 : {
                     cacheTtl: 0,
                   },
-            }),
+            });
+          },
           catch: () => new HttpError({ message: "Network request failed", status: 0 }),
         });
 
@@ -360,13 +384,29 @@ export class ArenaClient implements ArenaApi {
         ? yield* request(false, false)
         : response;
 
+      yield* Effect.logInfo(
+        `[arena-diag] request method=${method} endpoint=${endpoint} hasAuthorization=${hasAuthorization} firstStatus=${response.status} retryWithoutAuthorization=${shouldRetryWithoutAuthorization} finalStatus=${finalResponse.status}`,
+      );
+
       if (!finalResponse.ok) {
-        return yield* Effect.fail(
-          new HttpError({
-            message: finalResponse.statusText,
-            status: finalResponse.status,
-          }),
+        const contentType = finalResponse.headers.get("content-type") ?? "unknown";
+        const contentLength = finalResponse.headers.get("content-length") ?? "unknown";
+        const providerRequestId =
+          finalResponse.headers.get("cf-ray") ??
+          finalResponse.headers.get("x-request-id") ??
+          undefined;
+        const providerRequestIdField = providerRequestId
+          ? ` providerRequestId=${providerRequestId}`
+          : "";
+
+        yield* Effect.logWarning(
+          `[arena-diag] method=${method} endpoint=${endpoint} hasAuthorization=${hasAuthorization} firstStatus=${response.status} retryWithoutAuthorization=${shouldRetryWithoutAuthorization} finalStatus=${finalResponse.status} finalStatusText=${finalResponse.statusText} contentType=${contentType} contentLength=${contentLength}${providerRequestIdField}`,
         );
+
+        return yield* new HttpError({
+          message: finalResponse.statusText,
+          status: finalResponse.status,
+        });
       }
 
       if (method === "DELETE" || method === "PUT") {
