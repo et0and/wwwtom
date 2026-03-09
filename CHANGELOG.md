@@ -1,3 +1,10 @@
+## [1.79.8](https://github.com/et0and/wwwtom/compare/v1.79.7...v1.79.8) (2026-03-09)
+
+
+### Bug Fixes
+
+* **web:** fetch from client if ss fetch fails ([2b4a6ea](https://github.com/et0and/wwwtom/commit/2b4a6eaa9c717b8aade45fd36b68c8bfd90a1b2f))
+
 ## [1.79.7](https://github.com/et0and/wwwtom/compare/v1.79.6...v1.79.7) (2026-03-09)
 
 
