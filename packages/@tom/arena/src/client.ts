@@ -130,7 +130,7 @@ export class ArenaClient implements ArenaApi {
   constructor(config?: { token?: string | null; fetch?: Fetch; date?: DateProvider }) {
     this.headers = {
       "Content-Type": "application/json",
-      Authorization: config?.token ? `Bearer ${config.token}` : "",
+      ...(config?.token ? { Authorization: `Bearer ${config.token}` } : {}),
     };
     this.fetch = config?.fetch || fetch.bind(globalThis);
     this.date = config?.date || Date;
