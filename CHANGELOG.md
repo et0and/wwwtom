@@ -1,16 +1,14 @@
 ## [1.79.4](https://github.com/et0and/wwwtom/compare/v1.79.3...v1.79.4) (2026-03-09)
 
-
 ### Bug Fixes
 
-* token fetch ([252fa4d](https://github.com/et0and/wwwtom/commit/252fa4d58a656f53264d4c50cb8685ec8b187b3d))
+- token fetch ([252fa4d](https://github.com/et0and/wwwtom/commit/252fa4d58a656f53264d4c50cb8685ec8b187b3d))
 
 ## [1.79.3](https://github.com/et0and/wwwtom/compare/v1.79.2...v1.79.3) (2026-03-08)
 
-
 ### Bug Fixes
 
-* new arena schema ([389a0f4](https://github.com/et0and/wwwtom/commit/389a0f4218704cd98f1df2b6693240c9bb910d05))
+- new arena schema ([389a0f4](https://github.com/et0and/wwwtom/commit/389a0f4218704cd98f1df2b6693240c9bb910d05))
 
 ## [1.79.2](https://github.com/et0and/wwwtom/compare/v1.79.1...v1.79.2) (2026-03-07)
 

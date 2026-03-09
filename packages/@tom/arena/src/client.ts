@@ -117,7 +117,7 @@ export type DateProvider = { now(): number };
 
 export class ArenaClient implements ArenaApi {
   private readonly domain = "https://api.are.na/v3/";
-  private readonly headers: HeadersInit;
+  private readonly headers: Record<string, string>;
   private readonly fetch: Fetch;
   private readonly date: DateProvider;
 
@@ -326,34 +326,45 @@ export class ArenaClient implements ArenaApi {
     const url = `${this.domain}${endpoint}`;
     const isGet = method === "GET";
     const cacheConfig = options?.cache ?? isGet;
+    const hasAuthorization = Boolean(this.headers.Authorization);
 
     return Effect.gen(this, function* () {
-      const response = yield* Effect.tryPromise({
-        try: () =>
-          this.fetch(url, {
-            method,
-            headers: {
-              ...this.headers,
-              "Cache-Control": cacheConfig ? "public, max-age=86400" : "no-cache",
-            },
-            body: data && !isGet ? JSON.stringify(data) : null,
-            cf: cacheConfig
-              ? {
-                  cacheTtl: 86400,
-                  cacheKey: url,
-                }
-              : {
-                  cacheTtl: 0,
-                },
-          }),
-        catch: () => new HttpError({ message: "Network request failed", status: 0 }),
-      });
+      const request = (withAuthorization: boolean, useCache: boolean) =>
+        Effect.tryPromise({
+          try: () =>
+            this.fetch(url, {
+              method,
+              headers: {
+                ...(withAuthorization ? this.headers : this.headersWithoutAuthorization()),
+                "Cache-Control": useCache ? "public, max-age=86400" : "no-cache",
+              },
+              body: data && !isGet ? JSON.stringify(data) : null,
+              cf: useCache
+                ? {
+                    cacheTtl: 86400,
+                    cacheKey: url,
+                  }
+                : {
+                    cacheTtl: 0,
+                  },
+            }),
+          catch: () => new HttpError({ message: "Network request failed", status: 0 }),
+        });
 
-      if (!response.ok) {
+      const response = yield* request(true, cacheConfig);
+      const shouldRetryWithoutAuthorization =
+        isGet &&
+        hasAuthorization &&
+        (response.status === HttpStatus.Unauthorized || response.status === HttpStatus.Forbidden);
+      const finalResponse = shouldRetryWithoutAuthorization
+        ? yield* request(false, false)
+        : response;
+
+      if (!finalResponse.ok) {
         return yield* Effect.fail(
           new HttpError({
-            message: response.statusText,
-            status: response.status,
+            message: finalResponse.statusText,
+            status: finalResponse.status,
           }),
         );
       }
@@ -363,7 +374,7 @@ export class ArenaClient implements ArenaApi {
       }
 
       const json = yield* Effect.tryPromise({
-        try: () => response.json() as Promise<T>,
+        try: () => finalResponse.json() as Promise<T>,
         catch: () =>
           new HttpError({
             message: "Failed to parse JSON response",
@@ -389,6 +400,12 @@ export class ArenaClient implements ArenaApi {
 
   private del(endpoint: string): Effect.Effect<void, HttpError> {
     return this.makeRequest<void>(endpoint, "DELETE", undefined, { cache: false });
+  }
+
+  private headersWithoutAuthorization(): Record<string, string> {
+    const headers = { ...this.headers };
+    delete headers.Authorization;
+    return headers;
   }
 
   private paginationQueryString(options?: PaginationAttributes) {

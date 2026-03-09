@@ -11,6 +11,7 @@ export interface ArenaServiceShape {
    * Get the Arena API client configured with the token from AppConfig
    */
   readonly client: ArenaApi;
+  readonly publicClient: ArenaApi;
 }
 
 export class ArenaService extends Context.Tag("ArenaService")<ArenaService, ArenaServiceShape>() {}
@@ -19,13 +20,13 @@ export const ArenaServiceLive = Layer.effect(
   ArenaService,
   Effect.gen(function* () {
     const config = yield* AppConfig;
-    const token = Redacted.value(config.arenaToken);
+    const token = config.arenaToken ? Redacted.value(config.arenaToken) : null;
 
-    // Create the client with the token (null if not set)
     const client = new ArenaClient({
-      token: token || null,
+      token,
     });
+    const publicClient = new ArenaClient({ token: null });
 
-    return { client };
+    return { client, publicClient };
   }),
 );

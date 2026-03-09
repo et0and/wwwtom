@@ -24,7 +24,10 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
     Effect.gen(function* () {
       const arena = yield* ArenaService;
       yield* Effect.logInfo(`getChannel:${slug}:start`);
-      const result = yield* arena.client.channel(slug).get(options).pipe(Effect.retry(retryPolicy));
+      const result = yield* arena.publicClient
+        .channel(slug)
+        .get(options)
+        .pipe(Effect.retry(retryPolicy));
       yield* Effect.logInfo(`getChannel:${slug}:success`);
       return result;
     }),
@@ -51,7 +54,7 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
     Effect.gen(function* () {
       const arena = yield* ArenaService;
       yield* Effect.logInfo(`getChannelContents:${slug}:start`);
-      const result = yield* arena.client
+      const result = yield* arena.publicClient
         .channel(slug)
         .contents(options)
         .pipe(Effect.retry(retryPolicy));
@@ -80,7 +83,10 @@ export const getChannelThumb = query(async (slug: string) => {
     Effect.gen(function* () {
       const arena = yield* ArenaService;
       yield* Effect.logInfo(`getChannelThumb:${slug}:start`);
-      const result = yield* arena.client.channel(slug).thumb().pipe(Effect.retry(retryPolicy));
+      const result = yield* arena.publicClient
+        .channel(slug)
+        .thumb()
+        .pipe(Effect.retry(retryPolicy));
       yield* Effect.logInfo(`getChannelThumb:${slug}:success`);
       return result;
     }),
