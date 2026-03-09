@@ -1,3 +1,10 @@
+## [1.79.4](https://github.com/et0and/wwwtom/compare/v1.79.3...v1.79.4) (2026-03-09)
+
+
+### Bug Fixes
+
+* token fetch ([252fa4d](https://github.com/et0and/wwwtom/commit/252fa4d58a656f53264d4c50cb8685ec8b187b3d))
+
 ## [1.79.3](https://github.com/et0and/wwwtom/compare/v1.79.2...v1.79.3) (2026-03-08)
 
 
