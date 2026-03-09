@@ -7,14 +7,16 @@ import { retryPolicy } from "@tom/utils";
 export function fetchArena<T>(
   operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
   name: string,
+  mode: "auth" | "public" = "auth",
 ): Effect.Effect<T, HttpError, ArenaService> {
   "use server";
 
   return Effect.gen(function* () {
     const arena = yield* ArenaService;
     yield* Effect.logDebug(`Arena operation: ${name}`);
+    const client = mode === "public" ? arena.publicClient : arena.client;
 
-    return yield* operation(arena.client).pipe(Effect.retry(retryPolicy));
+    return yield* operation(client).pipe(Effect.retry(retryPolicy));
   }).pipe(
     Effect.catchAll((error) =>
       Effect.gen(function* () {

@@ -1,9 +1,8 @@
 ## [1.79.5](https://github.com/et0and/wwwtom/compare/v1.79.4...v1.79.5) (2026-03-09)
 
-
 ### Bug Fixes
 
-* **pkgs:** more arena fixes ([8f2cae4](https://github.com/et0and/wwwtom/commit/8f2cae4f7de39870ff57406d1fa6c31088124a71))
+- **pkgs:** more arena fixes ([8f2cae4](https://github.com/et0and/wwwtom/commit/8f2cae4f7de39870ff57406d1fa6c31088124a71))
 
 ## [1.79.4](https://github.com/et0and/wwwtom/compare/v1.79.3...v1.79.4) (2026-03-09)
 
