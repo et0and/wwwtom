@@ -1,3 +1,10 @@
+## [1.79.9](https://github.com/et0and/wwwtom/compare/v1.79.8...v1.79.9) (2026-03-13)
+
+
+### Bug Fixes
+
+* **packages:** use type safe const obj, not loose enums ([70dcb4c](https://github.com/et0and/wwwtom/commit/70dcb4c5bc3c7d441992c03c777075d2b55eb23e))
+
 ## [1.79.8](https://github.com/et0and/wwwtom/compare/v1.79.7...v1.79.8) (2026-03-09)
 
 
