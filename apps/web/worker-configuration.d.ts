@@ -7,6 +7,7 @@ declare namespace Cloudflare {
   }
   interface Env {
     TOM_RATE_LIMIT_KV: KVNamespace;
+    TOM_ISR_KV: KVNamespace;
     PAYLOAD_URL: string;
     DATABASE_URL: string;
     S3_BUCKET_HOST: string;

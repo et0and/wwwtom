@@ -13,19 +13,20 @@ export const route = {
 export default function WorkHome() {
   const works = createAsync(() => getWorks());
 
-  createEffect(() => {
-    const event = getRequestEvent();
-    if (event) {
-      event.response.headers.set(
-        "Cache-Control",
-        "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
-      );
-      event.response.headers.set(
-        "CDN-Cache-Control",
-        "public, max-age=600, stale-while-revalidate=86400",
-      );
-    }
-  });
+	// Set cache headers for ISR support - aligned with 120s revalidation
+	createEffect(() => {
+		const event = getRequestEvent();
+		if (event) {
+			event.response.headers.set(
+				"Cache-Control",
+				"public, max-age=120, s-maxage=120, stale-while-revalidate=86400",
+			);
+			event.response.headers.set(
+				"CDN-Cache-Control",
+				"public, max-age=120, stale-while-revalidate=86400",
+			);
+		}
+	});
 
   return (
     <PageLayout
