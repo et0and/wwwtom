@@ -18,10 +18,6 @@
  */
 import { Schema } from "effect";
 
-// =============================================================================
-// Arena User ID
-// =============================================================================
-
 /**
  * Branded type for Arena user IDs.
  *
@@ -34,10 +30,6 @@ import { Schema } from "effect";
 export const ArenaUserId = Schema.Number.pipe(Schema.brand("ArenaUserId"));
 export type ArenaUserId = Schema.Schema.Type<typeof ArenaUserId>;
 
-// =============================================================================
-// Arena Channel ID
-// =============================================================================
-
 /**
  * Branded type for Arena channel IDs.
  *
@@ -46,10 +38,6 @@ export type ArenaUserId = Schema.Schema.Type<typeof ArenaUserId>;
  */
 export const ArenaChannelId = Schema.Number.pipe(Schema.brand("ArenaChannelId"));
 export type ArenaChannelId = Schema.Schema.Type<typeof ArenaChannelId>;
-
-// =============================================================================
-// Arena Block ID
-// =============================================================================
 
 /**
  * Branded type for Arena block IDs.
@@ -61,10 +49,6 @@ export type ArenaChannelId = Schema.Schema.Type<typeof ArenaChannelId>;
 export const ArenaBlockId = Schema.Number.pipe(Schema.brand("ArenaBlockId"));
 export type ArenaBlockId = Schema.Schema.Type<typeof ArenaBlockId>;
 
-// =============================================================================
-// Arena Group ID
-// =============================================================================
-
 /**
  * Branded type for Arena group IDs.
  *
@@ -74,10 +58,6 @@ export type ArenaBlockId = Schema.Schema.Type<typeof ArenaBlockId>;
 export const ArenaGroupId = Schema.Number.pipe(Schema.brand("ArenaGroupId"));
 export type ArenaGroupId = Schema.Schema.Type<typeof ArenaGroupId>;
 
-// =============================================================================
-// Arena Connection ID
-// =============================================================================
-
 /**
  * Branded type for Arena connection IDs.
  *
@@ -85,14 +65,8 @@ export type ArenaGroupId = Schema.Schema.Type<typeof ArenaGroupId>;
  * - ArenaConnectionSchema.id
  * - ConnectionDataSchema.connection_id
  */
-export const ArenaConnectionId = Schema.Number.pipe(
-	Schema.brand("ArenaConnectionId"),
-);
+export const ArenaConnectionId = Schema.Number.pipe(Schema.brand("ArenaConnectionId"));
 export type ArenaConnectionId = Schema.Schema.Type<typeof ArenaConnectionId>;
-
-// =============================================================================
-// Arena Comment ID
-// =============================================================================
 
 /**
  * Branded type for Arena comment IDs.
@@ -100,22 +74,16 @@ export type ArenaConnectionId = Schema.Schema.Type<typeof ArenaConnectionId>;
  * Used in:
  * - ArenaBlockCommentSchema.id
  */
-export const ArenaCommentId = Schema.Number.pipe(
-	Schema.brand("ArenaCommentId"),
-);
+export const ArenaCommentId = Schema.Number.pipe(Schema.brand("ArenaCommentId"));
 export type ArenaCommentId = Schema.Schema.Type<typeof ArenaCommentId>;
-
-// =============================================================================
-// Payload IDs
-// =============================================================================
 
 /**
  * Branded type for Payload post IDs.
  * Note: Can be either number or string (union type)
  */
 export const PayloadPostId = Schema.Union(
-	Schema.Number.pipe(Schema.brand("PayloadPostId")),
-	Schema.String.pipe(Schema.brand("PayloadPostId")),
+  Schema.Number.pipe(Schema.brand("PayloadPostId")),
+  Schema.String.pipe(Schema.brand("PayloadPostId")),
 );
 export type PayloadPostId = Schema.Schema.Type<typeof PayloadPostId>;
 
@@ -124,8 +92,8 @@ export type PayloadPostId = Schema.Schema.Type<typeof PayloadPostId>;
  * Note: Can be either number or string (union type)
  */
 export const PayloadWorkId = Schema.Union(
-	Schema.Number.pipe(Schema.brand("PayloadWorkId")),
-	Schema.String.pipe(Schema.brand("PayloadWorkId")),
+  Schema.Number.pipe(Schema.brand("PayloadWorkId")),
+  Schema.String.pipe(Schema.brand("PayloadWorkId")),
 );
 export type PayloadWorkId = Schema.Schema.Type<typeof PayloadWorkId>;
 
@@ -134,10 +102,6 @@ export type PayloadWorkId = Schema.Schema.Type<typeof PayloadWorkId>;
  */
 export const PayloadMediaId = Schema.Number.pipe(Schema.brand("PayloadMediaId"));
 export type PayloadMediaId = Schema.Schema.Type<typeof PayloadMediaId>;
-
-// =============================================================================
-// Parsing Functions
-// =============================================================================
 
 /**
  * Parse and validate a numeric ID into ArenaUserId.

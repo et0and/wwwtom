@@ -87,19 +87,28 @@ export const getPostBySlug = query(async (slug: string) => {
       const payload = yield* PayloadService;
       yield* Effect.logInfo(`getPostBySlug:${slug}:start`);
 
-      const response = yield* payload
-        .fetch<PayloadResponse<PayloadPost>>(
+      const fetchPostBySlug = (options: RequestInit & { useCache?: boolean; cacheTTL?: number }) =>
+        payload.fetch<PayloadResponse<PayloadPost>>(
           `/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
-          { useCache: true, cacheTTL: 3600 },
-        )
-        .pipe(
-          Effect.catchAll((error) =>
-            Effect.gen(function* () {
-              yield* Effect.logError("getPostBySlug:error", error);
-              return null;
-            }),
-          ),
+          options,
         );
+
+      const response = yield* fetchPostBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
+        Effect.catchAll((error) =>
+          Effect.gen(function* () {
+            yield* Effect.logError("getPostBySlug:error", error);
+            yield* Effect.logInfo(`getPostBySlug:${slug}:retry-no-cache`);
+            return yield* fetchPostBySlug({ useCache: false }).pipe(
+              Effect.catchAll((retryError) =>
+                Effect.gen(function* () {
+                  yield* Effect.logError("getPostBySlug:retry-error", retryError);
+                  return null;
+                }),
+              ),
+            );
+          }),
+        ),
+      );
 
       if (!response) return null;
 

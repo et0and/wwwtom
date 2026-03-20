@@ -12,10 +12,6 @@ import {
 import type { Database } from "@tom/types/db";
 import type { Selectable } from "kysely";
 
-// =============================================================================
-// DatabaseService - Effect Service Pattern
-// =============================================================================
-
 export type GuestbookEntryParams = {
   fediverse_username: string;
   fediverse_instance: string;
@@ -88,7 +84,6 @@ const createConnection = (
 
 export class DatabaseService extends Effect.Service<DatabaseService>()("DatabaseService", {
   accessors: true,
-  dependencies: [AppConfig.Default],
   effect: Effect.gen(function* () {
     const config = yield* AppConfig;
     const connectionString = Redacted.value(config.databaseUrl);

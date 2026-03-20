@@ -9,7 +9,6 @@ export interface TelegramServiceShape {
 
 export class TelegramService extends Effect.Service<TelegramService>()("TelegramService", {
   accessors: true,
-  dependencies: [AppConfig.Default],
   effect: Effect.gen(function* () {
     const config = yield* AppConfig;
 

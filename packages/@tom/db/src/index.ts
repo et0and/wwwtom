@@ -1,6 +1,3 @@
-// =============================================================================
-// DatabaseService - Effect Service Pattern
-// =============================================================================
 export {
   DatabaseService,
   type DatabaseServiceShape,

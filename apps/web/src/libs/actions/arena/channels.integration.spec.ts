@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { Effect, Layer } from "effect";
 import { ArenaService } from "@tom/arena/service";
-import { AppConfig } from "@tom/utils/services";
+import { makeAppConfigLayer } from "@tom/utils/services";
 import { fetchArena } from "~/libs/actions/arena/client";
 
 function getArenaToken(): string | undefined {
@@ -13,7 +13,7 @@ function getArenaToken(): string | undefined {
 
 function createTestLayer() {
   const token = getArenaToken() ?? "";
-  const configLayer = AppConfig.fromEnv({
+  const configLayer = makeAppConfigLayer({
     ARENA_TOKEN: token,
     PAYLOAD_URL: "",
     DATABASE_URL: "",

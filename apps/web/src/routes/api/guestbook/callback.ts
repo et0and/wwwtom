@@ -1,11 +1,11 @@
 import { type APIEvent } from "@solidjs/start/server";
 import * as auth from "~/libs/actions/guestbook/auth";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffectWithDb, getServiceLayerWithDb } from "~/libs/runtime";
 import { Effect, Redacted } from "effect";
 import { HttpStatus } from "@tom/constants";
 
 export async function GET(event: APIEvent) {
-  const layer = getServiceLayer();
+  const layer = getServiceLayerWithDb();
   const url = new URL(event.request.url);
   const code = url.searchParams.get("code");
   const sessionToken = event.request.headers
@@ -20,7 +20,7 @@ export async function GET(event: APIEvent) {
     });
   }
 
-  const user = await runEffect(
+  const user = await runEffectWithDb(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:callback:start");
       const result = yield* auth.handleCallback({

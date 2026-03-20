@@ -1,9 +1,8 @@
 # [1.80.0](https://github.com/et0and/wwwtom/compare/v1.79.9...v1.80.0) (2026-03-20)
 
-
 ### Features
 
-* **effect:** migrate services and errors to Effect patterns ([d1f6a9a](https://github.com/et0and/wwwtom/commit/d1f6a9a19e15963ca29a82e1a49237cacf734ac1))
+- **effect:** migrate services and errors to Effect patterns ([d1f6a9a](https://github.com/et0and/wwwtom/commit/d1f6a9a19e15963ca29a82e1a49237cacf734ac1))
 
 ## [1.79.9](https://github.com/et0and/wwwtom/compare/v1.79.8...v1.79.9) (2026-03-13)
 

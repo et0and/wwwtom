@@ -5,7 +5,7 @@ import * as auth from "~/libs/actions/guestbook/auth";
 import { checkProfanity } from "@tom/utils";
 import { getCookie, getEvent, setCookie } from "vinxi/http";
 import { MissingFieldError, ProfanityError, AuthenticationError } from "@tom/types";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffect, runEffectWithDb, getServiceLayer, getServiceLayerWithDb } from "~/libs/runtime";
 
 const SESSION_COOKIE = "guestbook_session";
 const USER_COOKIE = "guestbook_user";
@@ -32,8 +32,8 @@ const setSessionCookie = (name: string, value: string, maxAge: number) =>
 
 export const getEntries = query(async () => {
   "use server";
-  const layer = getServiceLayer();
-  return runEffect(
+  const layer = getServiceLayerWithDb();
+  return runEffectWithDb(
     Effect.gen(function* () {
       const db = yield* DatabaseService;
       yield* Effect.logInfo("guestbook:getEntries:start");
@@ -64,8 +64,8 @@ export const getCurrentUser = query(async () => {
 
 export const initiateAuthAction = action(async (formData: FormData) => {
   "use server";
-  const layer = getServiceLayer();
-  const authUrl = await runEffect(
+  const layer = getServiceLayerWithDb();
+  const authUrl = await runEffectWithDb(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:initiateAuth:start");
       const handle = formData.get("handle")?.toString();
@@ -88,8 +88,8 @@ export const initiateAuthAction = action(async (formData: FormData) => {
 
 export const signGuestbookAction = action(async (formData: FormData) => {
   "use server";
-  const layer = getServiceLayer();
-  await runEffect(
+  const layer = getServiceLayerWithDb();
+  await runEffectWithDb(
     Effect.gen(function* () {
       yield* Effect.logInfo("guestbook:sign:start");
       const message = formData.get("message")?.toString();

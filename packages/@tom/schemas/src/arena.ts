@@ -1,11 +1,11 @@
 import { Schema } from "effect";
 import {
-	ArenaBlockId,
-	ArenaChannelId,
-	ArenaCommentId,
-	ArenaConnectionId,
-	ArenaGroupId,
-	ArenaUserId,
+  ArenaBlockId,
+  ArenaChannelId,
+  ArenaCommentId,
+  ArenaConnectionId,
+  ArenaGroupId,
+  ArenaUserId,
 } from "./branded";
 
 const ArenaImageVersionSchema = Schema.Struct({
@@ -320,7 +320,8 @@ const ConnectionDataSchema = Schema.Struct({
 
 // Encoded types (input from API) - IDs are plain numbers
 type ArenaChannelContentsEncoded =
-  | (Schema.Schema.Encoded<typeof ArenaBlockSchema> & Schema.Schema.Encoded<typeof ConnectionDataSchema>)
+  | (Schema.Schema.Encoded<typeof ArenaBlockSchema> &
+      Schema.Schema.Encoded<typeof ConnectionDataSchema>)
   | (Schema.Schema.Encoded<typeof ArenaOwnerInfoSchema> &
       Schema.Schema.Encoded<typeof ArenaChannelSchema> & {
         readonly user?: Schema.Schema.Encoded<typeof ArenaUserWithDetailsSchema> | undefined;
@@ -346,10 +347,11 @@ type ArenaChannelContentsDecoded =
 const ArenaChannelContentsSchema: Schema.Schema<
   ArenaChannelContentsDecoded,
   ArenaChannelContentsEncoded
-> = Schema.suspend(() =>
-  Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
-    Schema.extend(ConnectionDataSchema),
-  ) as Schema.Schema<ArenaChannelContentsDecoded, ArenaChannelContentsEncoded>,
+> = Schema.suspend(
+  () =>
+    Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
+      Schema.extend(ConnectionDataSchema),
+    ) as Schema.Schema<ArenaChannelContentsDecoded, ArenaChannelContentsEncoded>,
 );
 
 const ArenaChannelWithDetailsSchema = ArenaOwnerInfoSchema.pipe(
@@ -360,9 +362,7 @@ const ArenaChannelWithDetailsSchema = ArenaOwnerInfoSchema.pipe(
       group: Schema.optional(ArenaGroupSchema),
       follower_count: Schema.Number,
       can_index: Schema.Boolean,
-      contents: Schema.NullOr(
-        Schema.Array(ArenaChannelContentsSchema),
-      ),
+      contents: Schema.NullOr(Schema.Array(ArenaChannelContentsSchema)),
     }),
   ),
 );

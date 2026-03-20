@@ -41,16 +41,7 @@ export class AppConfig extends Effect.Service<AppConfig>()("AppConfig", {
   },
 }) {
   static fromEnv(env: CloudflareEnv): Layer.Layer<AppConfig> {
-    const arenaToken = parseOptionalSecret(env.ARENA_TOKEN);
-    return Layer.succeed(AppConfig, {
-      _tag: "AppConfig",
-      arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
-      payloadUrl: Redacted.make(env.PAYLOAD_URL ?? ""),
-      databaseUrl: Redacted.make(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL ?? ""),
-      telegramBotToken: env.TELEGRAM_BOT_TOKEN ? Redacted.make(env.TELEGRAM_BOT_TOKEN) : undefined,
-      telegramChatId: env.TELEGRAM_CHAT_ID,
-      isDev: env.NODE_ENV !== "production",
-    });
+    return makeAppConfigLayer(env);
   }
 }
 
@@ -58,21 +49,13 @@ export class AppConfig extends Effect.Service<AppConfig>()("AppConfig", {
  * Create a config layer from a partial config object.
  * Useful for testing and API routes that only need subset of config.
  */
-export const makeAppConfigLayer = (
-  config: Partial<{
-    ARENA_TOKEN: string;
-    PAYLOAD_URL: string;
-    DATABASE_URL: string;
-    TELEGRAM_BOT_TOKEN: string;
-    TELEGRAM_CHAT_ID: string;
-    NODE_ENV: string;
-  }>,
-): Layer.Layer<AppConfig> => {
+export const makeAppConfigLayer = (config: Partial<CloudflareEnv>): Layer.Layer<AppConfig> => {
+  const arenaToken = parseOptionalSecret(config.ARENA_TOKEN);
   return Layer.succeed(AppConfig, {
     _tag: "AppConfig",
-    arenaToken: config.ARENA_TOKEN ? Redacted.make(config.ARENA_TOKEN) : undefined,
+    arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
     payloadUrl: Redacted.make(config.PAYLOAD_URL ?? ""),
-    databaseUrl: Redacted.make(config.DATABASE_URL ?? ""),
+    databaseUrl: Redacted.make(config.HYPERDRIVE?.connectionString ?? config.DATABASE_URL ?? ""),
     telegramBotToken: config.TELEGRAM_BOT_TOKEN
       ? Redacted.make(config.TELEGRAM_BOT_TOKEN)
       : undefined,

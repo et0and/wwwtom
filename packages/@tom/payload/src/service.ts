@@ -3,10 +3,6 @@ import { AppConfig } from "@tom/utils/services";
 import { retryPolicy } from "@tom/utils/retry";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 
-// =============================================================================
-// PayloadService - Effect Service Pattern
-// =============================================================================
-
 export class PayloadError extends Error {
   readonly _tag = "PayloadError";
   constructor(
@@ -83,7 +79,6 @@ const buildQuery = (params?: {
 
 export class PayloadService extends Effect.Service<PayloadService>()("PayloadService", {
   accessors: true,
-  dependencies: [AppConfig.Default],
   effect: Effect.gen(function* () {
     const config = yield* AppConfig;
     const baseUrl = Redacted.value(config.payloadUrl);
@@ -183,7 +178,9 @@ export class PayloadService extends Effect.Service<PayloadService>()("PayloadSer
 
       getPosts: (params) => {
         const endpoint = `/posts${buildQuery(params)}`;
-        return doFetch<PayloadResponse<PayloadPost>>(endpoint, { useCache: true });
+        return doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          useCache: true,
+        });
       },
 
       getPostBySlug: Effect.fn("PayloadService.getPostBySlug")(
@@ -204,7 +201,9 @@ export class PayloadService extends Effect.Service<PayloadService>()("PayloadSer
 
       getWorks: (params) => {
         const endpoint = `/works${buildQuery(params)}`;
-        return doFetch<PayloadResponse<PayloadPost>>(endpoint, { useCache: true });
+        return doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          useCache: true,
+        });
       },
 
       getWorkBySlug: Effect.fn("PayloadService.getWorkBySlug")(
