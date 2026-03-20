@@ -1,4 +1,4 @@
-import { Context, Layer, Redacted } from "effect";
+import { Effect, Layer, Redacted } from "effect";
 
 export interface AppConfigShape {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
@@ -17,8 +17,6 @@ const parseOptionalSecret = (value?: string): string | undefined => {
   return v;
 };
 
-export class AppConfig extends Context.Tag("AppConfig")<AppConfig, AppConfigShape>() {}
-
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
   PAYLOAD_URL?: string;
@@ -31,20 +29,54 @@ export type CloudflareEnv = {
   NODE_ENV?: string;
 };
 
-export const makeAppConfigLayer = (env: CloudflareEnv): Layer.Layer<AppConfig> =>
-  Layer.succeed(
-    AppConfig,
-    (() => {
-      const arenaToken = parseOptionalSecret(env.ARENA_TOKEN);
-      return {
-        arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
-        payloadUrl: Redacted.make(env.PAYLOAD_URL ?? ""),
-        databaseUrl: Redacted.make(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL ?? ""),
-        telegramBotToken: env.TELEGRAM_BOT_TOKEN
-          ? Redacted.make(env.TELEGRAM_BOT_TOKEN)
-          : undefined,
-        telegramChatId: env.TELEGRAM_CHAT_ID,
-        isDev: env.NODE_ENV !== "production",
-      };
-    })(),
-  );
+export class AppConfig extends Effect.Service<AppConfig>()("AppConfig", {
+  accessors: true,
+  succeed: {
+    arenaToken: undefined as Redacted.Redacted<string> | undefined,
+    payloadUrl: Redacted.make(""),
+    databaseUrl: Redacted.make(""),
+    telegramBotToken: undefined as Redacted.Redacted<string> | undefined,
+    telegramChatId: undefined as string | undefined,
+    isDev: true as boolean,
+  },
+}) {
+  static fromEnv(env: CloudflareEnv): Layer.Layer<AppConfig> {
+    const arenaToken = parseOptionalSecret(env.ARENA_TOKEN);
+    return Layer.succeed(AppConfig, {
+      _tag: "AppConfig",
+      arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
+      payloadUrl: Redacted.make(env.PAYLOAD_URL ?? ""),
+      databaseUrl: Redacted.make(env.HYPERDRIVE?.connectionString ?? env.DATABASE_URL ?? ""),
+      telegramBotToken: env.TELEGRAM_BOT_TOKEN ? Redacted.make(env.TELEGRAM_BOT_TOKEN) : undefined,
+      telegramChatId: env.TELEGRAM_CHAT_ID,
+      isDev: env.NODE_ENV !== "production",
+    });
+  }
+}
+
+/**
+ * Create a config layer from a partial config object.
+ * Useful for testing and API routes that only need subset of config.
+ */
+export const makeAppConfigLayer = (
+  config: Partial<{
+    ARENA_TOKEN: string;
+    PAYLOAD_URL: string;
+    DATABASE_URL: string;
+    TELEGRAM_BOT_TOKEN: string;
+    TELEGRAM_CHAT_ID: string;
+    NODE_ENV: string;
+  }>,
+): Layer.Layer<AppConfig> => {
+  return Layer.succeed(AppConfig, {
+    _tag: "AppConfig",
+    arenaToken: config.ARENA_TOKEN ? Redacted.make(config.ARENA_TOKEN) : undefined,
+    payloadUrl: Redacted.make(config.PAYLOAD_URL ?? ""),
+    databaseUrl: Redacted.make(config.DATABASE_URL ?? ""),
+    telegramBotToken: config.TELEGRAM_BOT_TOKEN
+      ? Redacted.make(config.TELEGRAM_BOT_TOKEN)
+      : undefined,
+    telegramChatId: config.TELEGRAM_CHAT_ID,
+    isDev: config.NODE_ENV !== "production",
+  });
+};

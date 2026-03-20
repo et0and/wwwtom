@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll } from "vitest";
-import { Effect, Layer, Redacted } from "effect";
-import { ArenaService, ArenaServiceLive } from "@tom/arena/service";
+import { Effect, Layer } from "effect";
+import { ArenaService } from "@tom/arena/service";
 import { AppConfig } from "@tom/utils/services";
 import { fetchArena } from "~/libs/actions/arena/client";
 
@@ -13,15 +13,13 @@ function getArenaToken(): string | undefined {
 
 function createTestLayer() {
   const token = getArenaToken() ?? "";
-  const configLayer = Layer.succeed(AppConfig, {
-    arenaToken: Redacted.make(token),
-    payloadUrl: Redacted.make(""),
-    databaseUrl: Redacted.make(""),
-    telegramBotToken: undefined,
-    telegramChatId: undefined,
-    isDev: true,
+  const configLayer = AppConfig.fromEnv({
+    ARENA_TOKEN: token,
+    PAYLOAD_URL: "",
+    DATABASE_URL: "",
+    NODE_ENV: "development",
   });
-  return Layer.provideMerge(ArenaServiceLive, configLayer);
+  return Layer.provideMerge(ArenaService.Default, configLayer);
 }
 
 function runTestEffect<A, E>(effect: Effect.Effect<A, E, ArenaService>): Promise<A> {

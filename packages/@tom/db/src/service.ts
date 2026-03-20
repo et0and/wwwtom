@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Effect, Redacted } from "effect";
 import postgres from "postgres";
 import { Kysely } from "kysely";
 import { PostgresJSDialect } from "kysely-postgres-js";
@@ -69,11 +69,6 @@ export interface DatabaseServiceShape {
   readonly cleanupExpiredSessions: () => Effect.Effect<number, OAuthSessionError>;
 }
 
-export class DatabaseService extends Context.Tag("DatabaseService")<
-  DatabaseService,
-  DatabaseServiceShape
->() {}
-
 // Create Kysely connection from connection string
 const createConnection = (
   connectionString: string,
@@ -91,26 +86,26 @@ const createConnection = (
       }),
   });
 
-// Implementation using the Effect service pattern
-export const DatabaseServiceLive = Layer.effect(
-  DatabaseService,
-  Effect.gen(function* () {
+export class DatabaseService extends Effect.Service<DatabaseService>()("DatabaseService", {
+  accessors: true,
+  dependencies: [AppConfig.Default],
+  effect: Effect.gen(function* () {
     const config = yield* AppConfig;
     const connectionString = Redacted.value(config.databaseUrl);
 
     if (!connectionString) {
-      return yield* Effect.fail(
-        new DatabaseConnectionError({
-          message: "Database URL not configured",
-        }),
-      );
+      return yield* new DatabaseConnectionError({
+        message: "Database URL not configured",
+      });
     }
 
     const db = yield* createConnection(connectionString);
 
-    const service: DatabaseServiceShape = {
-      createGuestbookEntry: (params) =>
-        Effect.tryPromise({
+    return {
+      createGuestbookEntry: Effect.fn("DatabaseService.createGuestbookEntry")(function* (
+        params: GuestbookEntryParams,
+      ) {
+        return yield* Effect.tryPromise({
           try: async () =>
             await db
               .insertInto("guestbook_entries")
@@ -127,52 +122,57 @@ export const DatabaseServiceLive = Layer.effect(
             new GuestbookValidationError({
               message: `Failed to create guestbook entry: ${error}`,
             }),
-        }).pipe(Effect.retry(retryPolicy)),
+        }).pipe(Effect.retry(retryPolicy));
+      }),
 
-      getGuestbookEntries: (params) =>
-        Effect.gen(function* () {
-          const page = params.page ?? 1;
-          const pageSize = params.page_size ?? 100;
-          const offset = (page - 1) * pageSize;
+      getGuestbookEntries: Effect.fn("DatabaseService.getGuestbookEntries")(function* (params: {
+        page?: number;
+        page_size?: number;
+      }) {
+        const page = params.page ?? 1;
+        const pageSize = params.page_size ?? 100;
+        const offset = (page - 1) * pageSize;
 
-          const [results, totalCountResult] = yield* Effect.all([
-            Effect.tryPromise({
-              try: async () =>
-                await db
-                  .selectFrom("guestbook_entries")
-                  .selectAll()
-                  .orderBy("created_at", "desc")
-                  .limit(pageSize)
-                  .offset(offset)
-                  .execute(),
-              catch: (error) =>
-                new GuestbookValidationError({
-                  message: `Failed to get guestbook entries: ${error}`,
-                }),
-            }),
-            Effect.tryPromise({
-              try: async () =>
-                await db
-                  .selectFrom("guestbook_entries")
-                  .select(({ fn }) => [fn.count("id").as("count")])
-                  .executeTakeFirstOrThrow(),
-              catch: (error) =>
-                new GuestbookValidationError({
-                  message: `Failed to get guestbook count: ${error}`,
-                }),
-            }),
-          ]);
+        const [results, totalCountResult] = yield* Effect.all([
+          Effect.tryPromise({
+            try: async () =>
+              await db
+                .selectFrom("guestbook_entries")
+                .selectAll()
+                .orderBy("created_at", "desc")
+                .limit(pageSize)
+                .offset(offset)
+                .execute(),
+            catch: (error) =>
+              new GuestbookValidationError({
+                message: `Failed to get guestbook entries: ${error}`,
+              }),
+          }),
+          Effect.tryPromise({
+            try: async () =>
+              await db
+                .selectFrom("guestbook_entries")
+                .select(({ fn }) => [fn.count("id").as("count")])
+                .executeTakeFirstOrThrow(),
+            catch: (error) =>
+              new GuestbookValidationError({
+                message: `Failed to get guestbook count: ${error}`,
+              }),
+          }),
+        ]).pipe(Effect.retry(retryPolicy));
 
-          return {
-            results,
-            page,
-            page_size: pageSize,
-            total_count: Number(totalCountResult.count),
-          };
-        }).pipe(Effect.retry(retryPolicy)),
+        return {
+          results,
+          page,
+          page_size: pageSize,
+          total_count: Number(totalCountResult.count),
+        };
+      }),
 
-      hasUserSigned: (fediverse_username) =>
-        Effect.tryPromise({
+      hasUserSigned: Effect.fn("DatabaseService.hasUserSigned")(function* (
+        fediverse_username: string,
+      ) {
+        return yield* Effect.tryPromise({
           try: async () => {
             const result = await db
               .selectFrom("guestbook_entries")
@@ -185,10 +185,13 @@ export const DatabaseServiceLive = Layer.effect(
             new GuestbookValidationError({
               message: `Failed to check if user signed: ${error}`,
             }),
-        }).pipe(Effect.retry(retryPolicy)),
+        }).pipe(Effect.retry(retryPolicy));
+      }),
 
-      createOAuthSession: (params) =>
-        Effect.tryPromise({
+      createOAuthSession: Effect.fn("DatabaseService.createOAuthSession")(function* (
+        params: OAuthSessionParams,
+      ) {
+        return yield* Effect.tryPromise({
           try: async () =>
             await db
               .insertInto("oauth_sessions")
@@ -208,10 +211,13 @@ export const DatabaseServiceLive = Layer.effect(
               message: `Failed to create OAuth session: ${error}`,
               sessionToken: params.session_token,
             }),
-        }).pipe(Effect.retry(retryPolicy)),
+        }).pipe(Effect.retry(retryPolicy));
+      }),
 
-      getOAuthSession: (session_token) =>
-        Effect.tryPromise({
+      getOAuthSession: Effect.fn("DatabaseService.getOAuthSession")(function* (
+        session_token: string,
+      ) {
+        return yield* Effect.tryPromise({
           try: async () => {
             const result = await db
               .selectFrom("oauth_sessions")
@@ -227,10 +233,13 @@ export const DatabaseServiceLive = Layer.effect(
               message: `Failed to get OAuth session: ${error}`,
               sessionToken: session_token,
             }),
-        }).pipe(Effect.retry(retryPolicy)),
+        }).pipe(Effect.retry(retryPolicy));
+      }),
 
-      deleteOAuthSession: (session_token) =>
-        Effect.tryPromise({
+      deleteOAuthSession: Effect.fn("DatabaseService.deleteOAuthSession")(function* (
+        session_token: string,
+      ) {
+        return yield* Effect.tryPromise({
           try: async () => {
             const result = await db
               .deleteFrom("oauth_sessions")
@@ -243,10 +252,11 @@ export const DatabaseServiceLive = Layer.effect(
               message: `Failed to delete OAuth session: ${error}`,
               sessionToken: session_token,
             }),
-        }).pipe(Effect.retry(retryPolicy)),
+        }).pipe(Effect.retry(retryPolicy));
+      }),
 
-      cleanupExpiredSessions: () =>
-        Effect.tryPromise({
+      cleanupExpiredSessions: Effect.fn("DatabaseService.cleanupExpiredSessions")(function* () {
+        return yield* Effect.tryPromise({
           try: async () => {
             const result = await db
               .deleteFrom("oauth_sessions")
@@ -258,9 +268,8 @@ export const DatabaseServiceLive = Layer.effect(
             new OAuthSessionError({
               message: `Failed to cleanup expired sessions: ${error}`,
             }),
-        }).pipe(Effect.retry(retryPolicy)),
+        }).pipe(Effect.retry(retryPolicy));
+      }),
     };
-
-    return service;
   }),
-);
+}) {}

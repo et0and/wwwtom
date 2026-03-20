@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Effect, Redacted } from "effect";
 import { AppConfig } from "@tom/utils/services";
 import { ArenaClient, type ArenaApi } from "./client";
 
@@ -14,11 +14,10 @@ export interface ArenaServiceShape {
   readonly publicClient: ArenaApi;
 }
 
-export class ArenaService extends Context.Tag("ArenaService")<ArenaService, ArenaServiceShape>() {}
-
-export const ArenaServiceLive = Layer.effect(
-  ArenaService,
-  Effect.gen(function* () {
+export class ArenaService extends Effect.Service<ArenaService>()("ArenaService", {
+  accessors: true,
+  dependencies: [AppConfig.Default],
+  effect: Effect.gen(function* () {
     const config = yield* AppConfig;
     const token = config.arenaToken ? Redacted.value(config.arenaToken) : null;
 
@@ -29,4 +28,4 @@ export const ArenaServiceLive = Layer.effect(
 
     return { client, publicClient };
   }),
-);
+}) {}

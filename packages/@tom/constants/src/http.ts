@@ -17,4 +17,4 @@ export const HttpStatus = {
   FunnyMemeStatus: 67,
 } as const;
 
-export type HttpStatus = typeof HttpStatus[keyof typeof HttpStatus];
+export type HttpStatus = (typeof HttpStatus)[keyof typeof HttpStatus];

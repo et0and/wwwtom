@@ -1,82 +1,103 @@
-import { Data } from "effect";
+import { Schema } from "effect";
 
-export class ImageError extends Data.TaggedError("ImageError")<{
-  readonly response: Response;
-  readonly cause?: unknown;
-}> {}
+export class ImageError extends Schema.TaggedError<ImageError>()("ImageError", {
+  response: Schema.Unknown,
+  cause: Schema.optional(Schema.Unknown),
+}) {}
 
-export class PolarApiError extends Data.TaggedError("PolarApiError")<{
-  readonly message: string;
-  readonly status: number;
-  readonly operation: string;
-}> {}
+export class PolarApiError extends Schema.TaggedError<PolarApiError>()("PolarApiError", {
+  message: Schema.String,
+  status: Schema.Number,
+  operation: Schema.String,
+}) {}
 
-export class ArenaConfigError extends Data.TaggedError("ArenaConfigError")<{
-  readonly message: string;
-}> {}
+export class ArenaConfigError extends Schema.TaggedError<ArenaConfigError>()("ArenaConfigError", {
+  message: Schema.String,
+}) {}
 
-export class SearchError extends Data.TaggedError("SearchError")<{
-  message: string;
-}> {}
+export class SearchError extends Schema.TaggedError<SearchError>()("SearchError", {
+  message: Schema.String,
+}) {}
 
-export class HttpError extends Data.TaggedError("HttpError")<{
-  readonly message: string;
-  readonly status: number;
-}> {}
+export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
+  message: Schema.String,
+  status: Schema.Number,
+}) {}
 
-export class DatabaseConnectionError extends Data.TaggedError("DatabaseConnectionError")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class DatabaseConnectionError extends Schema.TaggedError<DatabaseConnectionError>()(
+  "DatabaseConnectionError",
+  {
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {}
 
-export class StoredProcedureError extends Data.TaggedError("StoredProcedureError")<{
-  readonly procedure: string;
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class StoredProcedureError extends Schema.TaggedError<StoredProcedureError>()(
+  "StoredProcedureError",
+  {
+    procedure: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {}
 
-export class GuestbookValidationError extends Data.TaggedError("GuestbookValidationError")<{
-  readonly message: string;
-  readonly field?: string;
-}> {}
+export class GuestbookValidationError extends Schema.TaggedError<GuestbookValidationError>()(
+  "GuestbookValidationError",
+  {
+    message: Schema.String,
+    field: Schema.optional(Schema.String),
+  },
+) {}
 
-export class OAuthSessionError extends Data.TaggedError("OAuthSessionError")<{
-  readonly message: string;
-  readonly sessionToken?: string;
-}> {}
+export class OAuthSessionError extends Schema.TaggedError<OAuthSessionError>()(
+  "OAuthSessionError",
+  {
+    message: Schema.String,
+    sessionToken: Schema.optional(Schema.String),
+  },
+) {}
 
-export class MissingFieldError extends Data.TaggedError("MissingFieldError")<{
-  readonly field: string;
-}> {}
+export class MissingFieldError extends Schema.TaggedError<MissingFieldError>()(
+  "MissingFieldError",
+  {
+    field: Schema.String,
+  },
+) {}
 
-export class ProfanityError extends Data.TaggedError("ProfanityError")<{
-  readonly message: string;
-}> {}
+export class ProfanityError extends Schema.TaggedError<ProfanityError>()("ProfanityError", {
+  message: Schema.String,
+}) {}
 
-export class AuthenticationError extends Data.TaggedError("AuthenticationError")<{
-  readonly message: string;
-}> {}
+export class AuthenticationError extends Schema.TaggedError<AuthenticationError>()(
+  "AuthenticationError",
+  {
+    message: Schema.String,
+  },
+) {}
 
-export class NodeinfoError extends Data.TaggedError("NodeinfoError")<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
+export class NodeinfoError extends Schema.TaggedError<NodeinfoError>()("NodeinfoError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}
 
-export class FontFetchError extends Data.TaggedError("FontFetchError")<{
-  readonly message: string;
-  readonly cause: string;
-}> {}
+export class FontFetchError extends Schema.TaggedError<FontFetchError>()("FontFetchError", {
+  message: Schema.String,
+  cause: Schema.String,
+}) {}
 
-export class ValidationError extends Data.TaggedError("ValidationError")<{
-  readonly field: string;
-  readonly issue: string;
-}> {}
+export class ValidationError extends Schema.TaggedError<ValidationError>()("ValidationError", {
+  field: Schema.String,
+  issue: Schema.String,
+}) {}
 
-export class ImageGenerationError extends Data.TaggedError("ImageGenerationError")<{
-  readonly message: string;
-}> {}
+export class ImageGenerationError extends Schema.TaggedError<ImageGenerationError>()(
+  "ImageGenerationError",
+  {
+    message: Schema.String,
+  },
+) {}
 
-export class TelegramError extends Data.TaggedError("TelegramError")<{
-  readonly message: string;
-  readonly status?: number;
-}> {}
+export class TelegramError extends Schema.TaggedError<TelegramError>()("TelegramError", {
+  message: Schema.String,
+  status: Schema.optional(Schema.Number),
+}) {}
