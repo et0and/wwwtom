@@ -1,23 +1,20 @@
 ## [1.79.9](https://github.com/et0and/wwwtom/compare/v1.79.8...v1.79.9) (2026-03-13)
 
-
 ### Bug Fixes
 
-* **packages:** use type safe const obj, not loose enums ([70dcb4c](https://github.com/et0and/wwwtom/commit/70dcb4c5bc3c7d441992c03c777075d2b55eb23e))
+- **packages:** use type safe const obj, not loose enums ([70dcb4c](https://github.com/et0and/wwwtom/commit/70dcb4c5bc3c7d441992c03c777075d2b55eb23e))
 
 ## [1.79.8](https://github.com/et0and/wwwtom/compare/v1.79.7...v1.79.8) (2026-03-09)
 
-
 ### Bug Fixes
 
-* **web:** fetch from client if ss fetch fails ([2b4a6ea](https://github.com/et0and/wwwtom/commit/2b4a6eaa9c717b8aade45fd36b68c8bfd90a1b2f))
+- **web:** fetch from client if ss fetch fails ([2b4a6ea](https://github.com/et0and/wwwtom/commit/2b4a6eaa9c717b8aade45fd36b68c8bfd90a1b2f))
 
 ## [1.79.7](https://github.com/et0and/wwwtom/compare/v1.79.6...v1.79.7) (2026-03-09)
 
-
 ### Bug Fixes
 
-* 😔 ([0bebb3e](https://github.com/et0and/wwwtom/commit/0bebb3ea50c8ae274dc5e3315b0a9acb0a7c481f))
+- 😔 ([0bebb3e](https://github.com/et0and/wwwtom/commit/0bebb3ea50c8ae274dc5e3315b0a9acb0a7c481f))
 
 ## [1.79.6](https://github.com/et0and/wwwtom/compare/v1.79.5...v1.79.6) (2026-03-09)
 

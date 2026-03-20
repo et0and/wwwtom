@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect, Layer, Redacted } from "effect";
-import { TelegramService, TelegramServiceLive } from "../src/telegram";
+import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
 
 type TestConfig = {
@@ -12,6 +12,7 @@ const createConfigLayer = (config: TestConfig) => {
   const token = config.telegramBotToken;
   const chatId = config.telegramChatId;
   return Layer.succeed(AppConfig, {
+    _tag: "AppConfig",
     arenaToken: Redacted.make(""),
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
@@ -22,7 +23,7 @@ const createConfigLayer = (config: TestConfig) => {
 };
 
 const createLayer = (config: TestConfig) =>
-  Layer.provideMerge(TelegramServiceLive, createConfigLayer(config));
+  Layer.provideMerge(TelegramService.Default, createConfigLayer(config));
 
 const runTestEffect = <A, E>(
   effect: Effect.Effect<A, E, TelegramService>,

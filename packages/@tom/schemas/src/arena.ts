@@ -1,4 +1,12 @@
 import { Schema } from "effect";
+import {
+	ArenaBlockId,
+	ArenaChannelId,
+	ArenaCommentId,
+	ArenaConnectionId,
+	ArenaGroupId,
+	ArenaUserId,
+} from "./branded";
 
 const ArenaImageVersionSchema = Schema.Struct({
   src: Schema.String,
@@ -52,14 +60,14 @@ const ArenaMarkdownContentSchema = Schema.Struct({
 });
 
 const ArenaEmbeddedUserSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaUserId,
   type: Schema.Literal("User"),
   slug: Schema.String,
   full_name: Schema.optional(Schema.String),
 });
 
 const ArenaConnectionSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaConnectionId,
   position: Schema.Number,
   pinned: Schema.Boolean,
   connected_at: Schema.String,
@@ -67,7 +75,7 @@ const ArenaConnectionSchema = Schema.Struct({
 });
 
 const ArenaUserSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaUserId,
   slug: Schema.String,
   username: Schema.String,
   first_name: Schema.String,
@@ -76,7 +84,7 @@ const ArenaUserSchema = Schema.Struct({
   avatar_image: Schema.NullOr(Schema.Array(ArenaImageSchema)),
   channel_count: Schema.Number,
   following_count: Schema.Number,
-  profile_id: Schema.Number,
+  profile_id: ArenaUserId,
   follower_count: Schema.Number,
   type: Schema.Literal("User"),
   initials: Schema.String,
@@ -108,7 +116,7 @@ const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe(
 );
 
 const ArenaGroupSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaGroupId,
   type: Schema.Literal("Group"),
   base_type: Schema.Literal("Group"),
   created_at: Schema.String,
@@ -133,7 +141,7 @@ const ArenaChannelCountsSchema = Schema.Struct({
 });
 
 const ArenaChannelSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaChannelId,
   title: Schema.String,
   created_at: Schema.String,
   updated_at: Schema.String,
@@ -150,13 +158,13 @@ const ArenaChannelSchema = Schema.Struct({
   state: Schema.Literal("available"),
   "nsfw?": Schema.Boolean,
   metadata: Schema.NullOr(Schema.Struct({ description: Schema.NullOr(Schema.String) })),
-  user_id: Schema.Number,
+  user_id: ArenaUserId,
   type: Schema.Literal("Channel"),
   base_type: Schema.Literal("Channel"),
 });
 
 const ArenaBaseBlockSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaBlockId,
   title: Schema.NullOr(Schema.String),
   updated_at: Schema.String,
   created_at: Schema.String,
@@ -279,7 +287,7 @@ const ArenaBlockSchema = Schema.Union(
 
 const ArenaCommentEntitySchema = Schema.Struct({
   type: Schema.Literal("user"),
-  user_id: Schema.Number,
+  user_id: ArenaUserId,
   user_slug: Schema.String,
   user_name: Schema.String,
   start: Schema.Number,
@@ -287,10 +295,10 @@ const ArenaCommentEntitySchema = Schema.Struct({
 });
 
 const ArenaBlockCommentSchema = Schema.Struct({
-  id: Schema.Number,
+  id: ArenaCommentId,
   created_at: Schema.String,
   updated_at: Schema.String,
-  commentable_id: Schema.Number,
+  commentable_id: ArenaBlockId,
   commentable_type: Schema.Literal("Block"),
   body: Schema.String,
   user_id: Schema.String,
@@ -304,50 +312,59 @@ const ConnectionDataSchema = Schema.Struct({
   position: Schema.Number,
   pinned: Schema.Boolean,
   connected_at: Schema.String,
-  connected_by_user_id: Schema.Number,
-  connection_id: Schema.optional(Schema.Number),
+  connected_by_user_id: ArenaUserId,
+  connection_id: Schema.optional(ArenaConnectionId),
   connected_by_username: Schema.optional(Schema.String),
   connected_by_user_slug: Schema.optional(Schema.String),
 });
 
-type ArenaChannelWithDetailsType = Schema.Schema.Type<typeof ArenaOwnerInfoSchema> &
-  Schema.Schema.Type<typeof ArenaChannelSchema> & {
-    readonly user?: Schema.Schema.Type<typeof ArenaUserWithDetailsSchema> | undefined;
-    readonly group?: Schema.Schema.Type<typeof ArenaGroupSchema> | undefined;
-    readonly follower_count: number;
-    readonly can_index: boolean;
-    readonly contents: ReadonlyArray<ArenaChannelContentsType> | null;
-  };
+// Encoded types (input from API) - IDs are plain numbers
+type ArenaChannelContentsEncoded =
+  | (Schema.Schema.Encoded<typeof ArenaBlockSchema> & Schema.Schema.Encoded<typeof ConnectionDataSchema>)
+  | (Schema.Schema.Encoded<typeof ArenaOwnerInfoSchema> &
+      Schema.Schema.Encoded<typeof ArenaChannelSchema> & {
+        readonly user?: Schema.Schema.Encoded<typeof ArenaUserWithDetailsSchema> | undefined;
+        readonly group?: Schema.Schema.Encoded<typeof ArenaGroupSchema> | undefined;
+        readonly follower_count: number;
+        readonly can_index: boolean;
+        readonly contents: ReadonlyArray<ArenaChannelContentsEncoded> | null;
+      } & Schema.Schema.Encoded<typeof ConnectionDataSchema>);
 
-type ArenaChannelContentsType =
+// Decoded types (after transformation) - IDs are branded
+type ArenaChannelContentsDecoded =
   | (Schema.Schema.Type<typeof ArenaBlockSchema> & Schema.Schema.Type<typeof ConnectionDataSchema>)
-  | (ArenaChannelWithDetailsType & Schema.Schema.Type<typeof ConnectionDataSchema>);
+  | (Schema.Schema.Type<typeof ArenaOwnerInfoSchema> &
+      Schema.Schema.Type<typeof ArenaChannelSchema> & {
+        readonly user?: Schema.Schema.Type<typeof ArenaUserWithDetailsSchema> | undefined;
+        readonly group?: Schema.Schema.Type<typeof ArenaGroupSchema> | undefined;
+        readonly follower_count: number;
+        readonly can_index: boolean;
+        readonly contents: ReadonlyArray<ArenaChannelContentsDecoded> | null;
+      } & Schema.Schema.Type<typeof ConnectionDataSchema>);
 
-const ArenaChannelWithDetailsSchema: Schema.Schema<ArenaChannelWithDetailsType> =
-  ArenaOwnerInfoSchema.pipe(
-    Schema.extend(ArenaChannelSchema),
-    Schema.extend(
-      Schema.Struct({
-        user: Schema.optional(ArenaUserWithDetailsSchema),
-        group: Schema.optional(ArenaGroupSchema),
-        follower_count: Schema.Number,
-        can_index: Schema.Boolean,
-        contents: Schema.NullOr(
-          Schema.Array(
-            Schema.suspend(
-              (): Schema.Schema<ArenaChannelContentsType> => ArenaChannelContentsSchema,
-            ),
-          ),
-        ),
-      }),
-    ),
-  );
+// Recursive schemas with explicit types for circular dependency resolution
+const ArenaChannelContentsSchema: Schema.Schema<
+  ArenaChannelContentsDecoded,
+  ArenaChannelContentsEncoded
+> = Schema.suspend(() =>
+  Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
+    Schema.extend(ConnectionDataSchema),
+  ) as Schema.Schema<ArenaChannelContentsDecoded, ArenaChannelContentsEncoded>,
+);
 
-const ArenaChannelContentsSchema: Schema.Schema<ArenaChannelContentsType> = Schema.suspend(
-  (): Schema.Schema<ArenaChannelContentsType> =>
-    Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
-      Schema.extend(ConnectionDataSchema),
-    ) as Schema.Schema<ArenaChannelContentsType>,
+const ArenaChannelWithDetailsSchema = ArenaOwnerInfoSchema.pipe(
+  Schema.extend(ArenaChannelSchema),
+  Schema.extend(
+    Schema.Struct({
+      user: Schema.optional(ArenaUserWithDetailsSchema),
+      group: Schema.optional(ArenaGroupSchema),
+      follower_count: Schema.Number,
+      can_index: Schema.Boolean,
+      contents: Schema.NullOr(
+        Schema.Array(ArenaChannelContentsSchema),
+      ),
+    }),
+  ),
 );
 
 const MeApiResponseSchema = ArenaUserWithDetailsSchema.pipe(
@@ -414,8 +431,8 @@ const GetGroupApiResponseSchema = ArenaGroupSchema.pipe(
       title: Schema.String,
       user: ArenaUserWithDetailsSchema,
       users: Schema.Array(ArenaUserWithDetailsSchema),
-      member_ids: Schema.Array(Schema.Number),
-      accessible_by_ids: Schema.Array(Schema.Number),
+      member_ids: Schema.Array(ArenaUserId),
+      accessible_by_ids: Schema.Array(ArenaUserId),
       published: Schema.Boolean,
     }),
   ),

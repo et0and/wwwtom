@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Effect, Layer, Redacted } from "effect";
-import { TelegramService, TelegramServiceLive } from "../src/telegram";
+import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -8,6 +8,7 @@ const chatId = process.env.TELEGRAM_CHAT_ID;
 
 const createConfigLayer = (botToken: string, chat: string) =>
   Layer.succeed(AppConfig, {
+    _tag: "AppConfig",
     arenaToken: Redacted.make(""),
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
@@ -17,7 +18,7 @@ const createConfigLayer = (botToken: string, chat: string) =>
   });
 
 const createLayer = (botToken: string, chat: string) =>
-  Layer.provideMerge(TelegramServiceLive, createConfigLayer(botToken, chat));
+  Layer.provideMerge(TelegramService.Default, createConfigLayer(botToken, chat));
 
 const runTestResult = <A, E>(
   effect: Effect.Effect<A, E, TelegramService>,

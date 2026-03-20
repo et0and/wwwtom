@@ -1,5 +1,5 @@
 import { Effect, Layer, Logger, LogLevel } from "effect";
-import { TelegramService, TelegramServiceLive, makeAppConfigLayer } from "@tom/utils/services";
+import { TelegramService, makeAppConfigLayer } from "@tom/utils/services";
 import type { CloudflareEnv } from "@tom/utils/services";
 
 export type Env = CloudflareEnv;
@@ -15,7 +15,7 @@ export const createApiLayer = (env: Env) => {
     TELEGRAM_BOT_TOKEN: env.TELEGRAM_BOT_TOKEN,
     TELEGRAM_CHAT_ID: env.TELEGRAM_CHAT_ID,
   });
-  return Layer.provide(TelegramServiceLive, configLayer);
+  return Layer.provide(TelegramService.Default, configLayer);
 };
 
 export const sendErrorAlert = (env: Env, message: string, error?: unknown) => {

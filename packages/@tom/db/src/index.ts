@@ -3,7 +3,6 @@
 // =============================================================================
 export {
   DatabaseService,
-  DatabaseServiceLive,
   type DatabaseServiceShape,
   type GuestbookEntry,
   type GuestbookEntryParams,

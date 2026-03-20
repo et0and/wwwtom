@@ -3,19 +3,23 @@
 import { Effect, Layer, Logger, LogLevel } from "effect";
 import { getRequestEvent } from "solid-js/web";
 import type { CloudflareEnv } from "@tom/utils/services";
-import { AppConfig, makeAppConfigLayer } from "@tom/utils/services";
-import { DatabaseService, DatabaseServiceLive } from "@tom/db/service";
-import { PayloadService, PayloadServiceLive } from "@tom/payload/service";
-import { ArenaService, ArenaServiceLive } from "@tom/arena/service";
+import { AppConfig } from "@tom/utils/services";
+import { DatabaseService } from "@tom/db/service";
+import { PayloadService } from "@tom/payload/service";
+import { ArenaService } from "@tom/arena/service";
 
 export type AllServices = AppConfig | DatabaseService | PayloadService | ArenaService;
 
-const AllServicesLive = Layer.mergeAll(DatabaseServiceLive, PayloadServiceLive, ArenaServiceLive);
+const AllServicesLive = Layer.mergeAll(
+  DatabaseService.Default,
+  PayloadService.Default,
+  ArenaService.Default,
+);
 
 export type CompositeLayer = Layer.Layer<AllServices>;
 
 export const createServicesLayer = (env: CloudflareEnv): CompositeLayer => {
-  const configLayer = makeAppConfigLayer(env);
+  const configLayer = AppConfig.fromEnv(env);
   const servicesWithConfig = Layer.provide(AllServicesLive, configLayer);
   return Layer.merge(configLayer, servicesWithConfig) as CompositeLayer;
 };
