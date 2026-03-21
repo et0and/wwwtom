@@ -1,9 +1,8 @@
 ## [1.80.1](https://github.com/et0and/wwwtom/compare/v1.80.0...v1.80.1) (2026-03-20)
 
-
 ### Bug Fixes
 
-* reactivity ([c7c9620](https://github.com/et0and/wwwtom/commit/c7c9620e21cdb1ad9dcf70702fda66db984fa777))
+- reactivity ([c7c9620](https://github.com/et0and/wwwtom/commit/c7c9620e21cdb1ad9dcf70702fda66db984fa777))
 
 # [1.80.0](https://github.com/et0and/wwwtom/compare/v1.79.9...v1.80.0) (2026-03-20)
 
