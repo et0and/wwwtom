@@ -18,9 +18,15 @@
   "d1_databases": [
     {
       "binding": "D1",
-      //"database_id": "6c865196-f720-4030-be16-217541f26766",
       "database_name": "sophie-cms",
+      "database_id": "32f59e6e-bff9-41b3-9a7f-66ff389d5030",
       "remote": true,
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "sophie-media",
     },
   ],
   "services": [
@@ -32,7 +38,13 @@
   ],
   // Environment variables for the worker
   "vars": {
-    "NEXT_PUBLIC_SERVER_URL": "https://sophie.st",
+    //"NEXT_PUBLIC_SERVER_URL": "https://sophie.st",
     "CDN_URL": "https://cdn.tom.so",
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
   },
 }

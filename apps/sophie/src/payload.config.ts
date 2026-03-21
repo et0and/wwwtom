@@ -11,14 +11,23 @@ import { r2Storage } from "@payloadcms/storage-r2";
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 
+type R2StorageOptions = Parameters<typeof r2Storage>[0];
+
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 const realpath = (value: string) => (fs.existsSync(value) ? fs.realpathSync(value) : undefined);
 
 const isCLI = process.argv.some((value) =>
-  realpath(value).endsWith(path.join("payload", "bin.js")),
+  realpath(value)?.endsWith(path.join("payload", "bin.js")),
 );
 const isProduction = process.env.NODE_ENV === "production";
+const phase = process.env.NEXT_PHASE;
+const isCi = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
+const isBuild =
+  phase === "phase-production-build" ||
+  phase === "phase-export" ||
+  process.env.npm_lifecycle_event === "build" ||
+  process.argv.includes("build");
 
 const createLog =
   (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
@@ -41,7 +50,7 @@ const cloudflareLogger = {
 } as any; // Use PayloadLogger type when it's exported
 
 const cloudflare =
-  isCLI || !isProduction
+  isCLI || !isProduction || isBuild || isCi
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
@@ -62,7 +71,7 @@ export default buildConfig({
   logger: isProduction ? cloudflareLogger : undefined,
   plugins: [
     r2Storage({
-      bucket: cloudflare.env.R2,
+      bucket: cloudflare.env.R2 as unknown as R2StorageOptions["bucket"],
       collections: { media: true },
     }),
   ],
@@ -74,7 +83,7 @@ function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
     ({ getPlatformProxy }) =>
       getPlatformProxy({
         environment: process.env.CLOUDFLARE_ENV,
-        remoteBindings: isProduction,
+        remoteBindings: isProduction && !isBuild && !isCi,
       } satisfies GetPlatformProxyOptions),
   );
 }
