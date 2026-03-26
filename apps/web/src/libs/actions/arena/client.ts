@@ -18,10 +18,10 @@ export function fetchArena<T>(
 
     return yield* operation(client).pipe(Effect.retry(retryPolicy));
   }).pipe(
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
+    Effect.catchAll(
+      Effect.fn("fetchArenaErrorHandler")(function* (error: HttpError) {
         yield* Effect.logError(`Arena operation failed after retries: ${name}`, error);
-        return yield* Effect.fail(error);
+        return yield* error;
       }),
     ),
   );
