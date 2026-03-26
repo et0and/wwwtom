@@ -121,17 +121,38 @@ export type Fetch = (
 
 export type DateProvider = { now(): number };
 
+export const defaultPaginationOptions: PaginationAttributes = {
+  sort: "position",
+  direction: "desc",
+  per: 50,
+};
+
+export function paginationQueryString(
+  options: PaginationAttributes | undefined,
+  dateProvider: DateProvider,
+): string {
+  const { page, per, sort, direction, forceRefresh } = {
+    ...defaultPaginationOptions,
+    ...options,
+  };
+  const attrs: string[] = [];
+  if (page) attrs.push(`page=${page}`);
+  if (per) attrs.push(`per_page=${per}`);
+  // Arena API expects combined sort value: "position_desc", "created_at_asc", etc.
+  if (sort && direction) {
+    attrs.push(`sort=${sort}_${direction}`);
+  } else if (sort) {
+    attrs.push(`sort=${sort}`);
+  }
+  if (forceRefresh) attrs.push(`date=${dateProvider.now()}`);
+  return attrs.join("&");
+}
+
 export class ArenaClient implements ArenaApi {
   private readonly domain = "https://api.are.na/v3/";
   private readonly headers: Record<string, string>;
   private readonly fetch: Fetch;
   private readonly date: DateProvider;
-
-  private static defaultPaginationOptions: PaginationAttributes = {
-    sort: "position",
-    direction: "desc",
-    per: 50,
-  };
 
   private static normalizeToken(token?: string | null): string | null {
     if (typeof token !== "string") return null;
@@ -261,7 +282,7 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search`, {
+        this.getJsonWithSearchAndPaginationQuery(`search`, {
           q: query,
           ...options,
         }),
@@ -269,7 +290,7 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search/blocks`, {
+        this.getJsonWithSearchAndPaginationQuery(`search/blocks`, {
           q: query,
           ...options,
         }),
@@ -277,7 +298,7 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search/channels`, {
+        this.getJsonWithSearchAndPaginationQuery(`search/channels`, {
           q: query,
           ...options,
         }),
@@ -285,7 +306,7 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`/search/users`, {
+        this.getJsonWithSearchAndPaginationQuery(`search/users`, {
           q: query,
           ...options,
         }),
@@ -320,7 +341,7 @@ export class ArenaClient implements ArenaApi {
     url: string,
     options?: PaginationAttributes & { q?: string },
   ): Effect.Effect<T, HttpError> {
-    const qs = this.paginationQueryString(options);
+    const qs = paginationQueryString(options, this.date);
     const searchQuery = options && options.q ? `q=${options.q}${qs ? "&" : ""}` : "";
     return this.getJson<T>(`${url}?${searchQuery}${qs}`);
   }
@@ -329,7 +350,7 @@ export class ArenaClient implements ArenaApi {
     url: string,
     options?: PaginationAttributes,
   ): Effect.Effect<T, HttpError> {
-    const qs = this.paginationQueryString(options);
+    const qs = paginationQueryString(options, this.date);
     return this.getJson<T>(`${url}?${qs}`);
   }
 
@@ -446,23 +467,5 @@ export class ArenaClient implements ArenaApi {
     const headers = { ...this.headers };
     delete headers.Authorization;
     return headers;
-  }
-
-  private paginationQueryString(options?: PaginationAttributes) {
-    const { page, per, sort, direction, forceRefresh } = {
-      ...ArenaClient.defaultPaginationOptions,
-      ...options,
-    };
-    const attrs = [];
-    if (page) attrs.push(`page=${page}`);
-    if (per) attrs.push(`per_page=${per}`);
-    // Arena API expects combined sort value: "position_desc", "created_at_asc", etc.
-    if (sort && direction) {
-      attrs.push(`sort=${sort}_${direction}`);
-    } else if (sort) {
-      attrs.push(`sort=${sort}`);
-    }
-    if (forceRefresh) attrs.push(`date=${this.date.now()}`);
-    return attrs.join("&");
   }
 }

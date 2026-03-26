@@ -7,6 +7,8 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["tests/int/**/*.int.spec.ts"],
+    // Integration tests removed - they required Cloudflare Workers runtime
+    // E2E tests in tests/e2e/ cover the same functionality
+    include: [],
   },
 });
