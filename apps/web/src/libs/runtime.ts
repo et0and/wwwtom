@@ -142,8 +142,8 @@ export const runWithLogs = <A, E>(
     yield* Effect.logInfo(`${name}:success`);
     return result;
   }).pipe(
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
+    Effect.catchAll(
+      Effect.fn("runWithLogsErrorHandler")(function* (error: E) {
         yield* Effect.logError(`${name}:error`, error);
         return yield* Effect.fail(error);
       }),

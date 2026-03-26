@@ -1,15 +1,13 @@
 # [1.81.0](https://github.com/et0and/wwwtom/compare/v1.80.1...v1.81.0) (2026-03-21)
 
-
 ### Bug Fixes
 
-* **sophie:** broken deploy and build ([9c14e11](https://github.com/et0and/wwwtom/commit/9c14e11c0d110d75d55ddaf99ab519daf68449e7))
-
+- **sophie:** broken deploy and build ([9c14e11](https://github.com/et0and/wwwtom/commit/9c14e11c0d110d75d55ddaf99ab519daf68449e7))
 
 ### Features
 
-* **sophie:** add sophie app, rem old docs site ([8898744](https://github.com/et0and/wwwtom/commit/8898744a2bf0a5492e0e89d8d15a3402e642f0c2))
-* **sophie:** init landing page ([fd8017d](https://github.com/et0and/wwwtom/commit/fd8017d76ca05e6c87122853530f5e1b1b3f17ee))
+- **sophie:** add sophie app, rem old docs site ([8898744](https://github.com/et0and/wwwtom/commit/8898744a2bf0a5492e0e89d8d15a3402e642f0c2))
+- **sophie:** init landing page ([fd8017d](https://github.com/et0and/wwwtom/commit/fd8017d76ca05e6c87122853530f5e1b1b3f17ee))
 
 ## [1.80.1](https://github.com/et0and/wwwtom/compare/v1.80.0...v1.80.1) (2026-03-20)
 

@@ -112,8 +112,8 @@ export async function GET({ request }: APIEvent) {
     Effect.tap(({ contentType }) =>
       Effect.logDebug(`image:success contentType=${contentType} width=${width}`),
     ),
-    Effect.catchAll((error) =>
-      Effect.gen(function* () {
+    Effect.catchAll(
+      Effect.fn("imageErrorHandler")(function* (error: { response: Response; cause?: unknown }) {
         if ("cause" in error) {
           yield* Effect.logError("image:error", error.cause);
         } else {

@@ -42,8 +42,8 @@ export function GET({ request }: APIEvent) {
           message: "Failed to fetch OG image",
         }),
     }).pipe(
-      Effect.catchAll((error) =>
-        Effect.gen(function* () {
+      Effect.catchAll(
+        Effect.fn("ogFetchErrorHandler")(function* (error: ImageGenerationError) {
           yield* Effect.logError("OG image proxy error", error);
           return yield* Effect.fail(
             new Response("Failed to fetch OG image", {
@@ -69,8 +69,8 @@ export function GET({ request }: APIEvent) {
           message: "Failed to read image buffer",
         }),
     }).pipe(
-      Effect.catchAll((error) =>
-        Effect.gen(function* () {
+      Effect.catchAll(
+        Effect.fn("ogBufferErrorHandler")(function* (error: ImageGenerationError) {
           yield* Effect.logError("Failed to read image buffer", error);
           return yield* Effect.fail(
             new Response("Failed to read image data", {
@@ -96,8 +96,8 @@ export function GET({ request }: APIEvent) {
     yield* Effect.logInfo("og:get:start");
     return yield* action.pipe(
       Effect.tap(() => Effect.logDebug("og:get:success")),
-      Effect.catchAll((error) =>
-        Effect.gen(function* () {
+      Effect.catchAll(
+        Effect.fn("ogLoggedErrorHandler")(function* (error: Response) {
           yield* Effect.logError("og:get:error", error);
           return yield* Effect.fail(error);
         }),
