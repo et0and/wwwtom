@@ -11,6 +11,9 @@
   "scripts": {
     "typecheck": "tsc --noEmit"
   },
+  "dependencies": {
+    "web-haptics": "0.0.6"
+  },
   "devDependencies": {
     "typescript": "^5.9.3"
   }
