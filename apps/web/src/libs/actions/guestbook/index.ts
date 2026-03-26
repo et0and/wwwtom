@@ -70,7 +70,7 @@ export const initiateAuthAction = action(async (formData: FormData) => {
       yield* Effect.logInfo("guestbook:initiateAuth:start");
       const handle = formData.get("handle")?.toString();
       if (!handle) {
-        return yield* Effect.fail(new MissingFieldError({ field: "handle" }));
+        return yield* new MissingFieldError({ field: "handle" });
       }
 
       const result = yield* auth.initiateAuth(handle);
@@ -94,22 +94,20 @@ export const signGuestbookAction = action(async (formData: FormData) => {
       yield* Effect.logInfo("guestbook:sign:start");
       const message = formData.get("message")?.toString();
       if (!message) {
-        return yield* Effect.fail(new MissingFieldError({ field: "message" }));
+        return yield* new MissingFieldError({ field: "message" });
       }
 
       const profanityCheck = checkProfanity(message);
       if (profanityCheck.hasProfanity) {
-        return yield* Effect.fail(
-          new ProfanityError({
-            message:
-              profanityCheck.message ?? "Your message contains profanity. Please keep it clean!",
-          }),
-        );
+        return yield* new ProfanityError({
+          message:
+            profanityCheck.message ?? "Your message contains profanity. Please keep it clean!",
+        });
       }
 
       const userCookie = yield* getCookieValue(USER_COOKIE);
       if (!userCookie) {
-        return yield* Effect.fail(new AuthenticationError({ message: "Not authenticated" }));
+        return yield* new AuthenticationError({ message: "Not authenticated" });
       }
 
       const user = JSON.parse(userCookie) as auth.FediverseUser;

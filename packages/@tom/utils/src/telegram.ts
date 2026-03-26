@@ -45,36 +45,33 @@ export class TelegramService extends Effect.Service<TelegramService>()("Telegram
       return text;
     };
 
-    const doSendTelegramAlert = (text: string): Effect.Effect<void, TelegramError> =>
-      Effect.gen(function* () {
-        const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
+    const doSendTelegramAlert = Effect.fn("doSendTelegramAlert")(function* (text: string) {
+      const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
 
-        const response = yield* Effect.tryPromise({
-          try: () =>
-            fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                chat_id: chatId,
-                text,
-                parse_mode: "Markdown",
-              }),
+      const response = yield* Effect.tryPromise({
+        try: () =>
+          fetch(telegramUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chat_id: chatId,
+              text,
+              parse_mode: "Markdown",
             }),
-          catch: (error) =>
-            new TelegramError({
-              message: error instanceof Error ? error.message : "Unknown error",
-            }),
-        });
-
-        if (!response.ok) {
-          return yield* Effect.fail(
-            new TelegramError({
-              message: `Telegram API error: ${response.status} ${response.statusText}`,
-              status: response.status,
-            }),
-          );
-        }
+          }),
+        catch: (error) =>
+          new TelegramError({
+            message: error instanceof Error ? error.message : "Unknown error",
+          }),
       });
+
+      if (!response.ok) {
+        return yield* new TelegramError({
+          message: `Telegram API error: ${response.status} ${response.statusText}`,
+          status: response.status,
+        });
+      }
+    });
 
     return {
       sendAlert: Effect.fn("TelegramService.sendAlert")((message: string) =>

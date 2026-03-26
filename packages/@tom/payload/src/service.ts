@@ -183,21 +183,18 @@ export class PayloadService extends Effect.Service<PayloadService>()("PayloadSer
         });
       },
 
-      getPostBySlug: Effect.fn("PayloadService.getPostBySlug")(
-        (slug: string): Effect.Effect<PayloadPost | null, PayloadError> =>
-          Effect.gen(function* () {
-            const endpoint = `/posts?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`;
-            const data = yield* doFetch<PayloadResponse<PayloadPost>>(endpoint, {
-              useCache: true,
-            });
+      getPostBySlug: Effect.fn("PayloadService.getPostBySlug")(function* (slug: string) {
+        const endpoint = `/posts?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`;
+        const data = yield* doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          useCache: true,
+        });
 
-            if (!data.docs || data.docs.length === 0) {
-              return null;
-            }
+        if (!data.docs || data.docs.length === 0) {
+          return null;
+        }
 
-            return data.docs[0] ?? null;
-          }),
-      ),
+        return data.docs[0] ?? null;
+      }),
 
       getWorks: (params) => {
         const endpoint = `/works${buildQuery(params)}`;
@@ -206,21 +203,18 @@ export class PayloadService extends Effect.Service<PayloadService>()("PayloadSer
         });
       },
 
-      getWorkBySlug: Effect.fn("PayloadService.getWorkBySlug")(
-        (slug: string): Effect.Effect<PayloadPost | null, PayloadError> =>
-          Effect.gen(function* () {
-            const endpoint = `/works?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`;
-            const data = yield* doFetch<PayloadResponse<PayloadPost>>(endpoint, {
-              useCache: true,
-            });
+      getWorkBySlug: Effect.fn("PayloadService.getWorkBySlug")(function* (slug: string) {
+        const endpoint = `/works?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`;
+        const data = yield* doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          useCache: true,
+        });
 
-            if (!data.docs || data.docs.length === 0) {
-              return null;
-            }
+        if (!data.docs || data.docs.length === 0) {
+          return null;
+        }
 
-            return data.docs[0] ?? null;
-          }),
-      ),
+        return data.docs[0] ?? null;
+      }),
     };
 
     return service;
