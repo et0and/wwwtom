@@ -41,6 +41,15 @@ const cloudflare =
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
+const payloadSecretBinding = Reflect.get(cloudflare.env, "PAYLOAD_SECRET");
+const payloadSecret =
+  process.env.PAYLOAD_SECRET ||
+  (typeof payloadSecretBinding === "string" ? payloadSecretBinding : "");
+
+if (!process.env.PAYLOAD_SECRET && payloadSecret) {
+  process.env.PAYLOAD_SECRET = payloadSecret;
+}
+
 export default buildConfig({
   admin: {
     importMap: {
@@ -99,7 +108,7 @@ export default buildConfig({
       disableLocalStorage: true,
     }),
   ],
-  secret: process.env.PAYLOAD_SECRET || "",
+  secret: payloadSecret,
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },

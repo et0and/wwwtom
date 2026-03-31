@@ -79,11 +79,23 @@ export const FormBlock: React.FC<
           clearTimeout(loadingTimerID);
 
           if (req.status >= 400) {
+            const message =
+              typeof res === "object" &&
+              res !== null &&
+              "errors" in res &&
+              Array.isArray(res.errors) &&
+              typeof res.errors[0] === "object" &&
+              res.errors[0] !== null &&
+              "message" in res.errors[0] &&
+              typeof res.errors[0].message === "string"
+                ? res.errors[0].message
+                : "Internal Server Error";
+
             setIsLoading(false);
 
             setError({
-              message: res.errors?.[0]?.message || "Internal Server Error",
-              status: res.status,
+              message,
+              status: String(req.status),
             });
 
             return;
