@@ -10,6 +10,10 @@ import { r2Storage } from "@payloadcms/storage-r2";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
+import { Categories } from "./collections/Categories";
+import { Tags } from "./collections/Tags";
+import { Posts } from "./collections/Posts";
+import { plugins } from "./plugins";
 
 type R2StorageOptions = Parameters<typeof r2Storage>[0];
 
@@ -70,7 +74,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Categories, Tags, Posts],
   editor: lexicalEditor(),
   secret: payloadSecret,
   typescript: {
@@ -79,6 +83,7 @@ export default buildConfig({
   db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
   logger: isProduction ? cloudflareLogger : undefined,
   plugins: [
+    ...plugins,
     r2Storage({
       bucket: cloudflare.env.R2 as unknown as R2StorageOptions["bucket"],
       collections: { media: true },

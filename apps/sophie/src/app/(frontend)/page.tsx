@@ -1,25 +1,19 @@
-import Link from "next/link";
-import config from "@/payload.config";
 import { SideBySide } from "../../components/SideBySide";
 import "./styles.css";
 
 export default async function HomePage() {
+  const nav = {
+    homeHref: "/",
+    title: "Sophie Tremaine",
+    shortTitle: "ST",
+    links: [
+      { href: "/about", label: "About" },
+      { href: "/posts", label: "Posts" },
+    ],
+  };
+
   return (
-    <SideBySide
-      left={
-        <nav className="flex flex-col gap-4">
-          <h1 className="text-xl font-medium lowercase">Sophie Tremaine</h1>
-          <div className="mt-4">
-            <Link href="/about" className="block py-2 link">
-              About
-            </Link>
-            <Link href="/posts" className="block py-2 link">
-              Posts
-            </Link>
-          </div>
-        </nav>
-      }
-    >
+    <SideBySide nav={nav}>
       <p>Hehehe</p>
     </SideBySide>
   );
