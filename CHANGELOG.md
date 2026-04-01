@@ -1,3 +1,26 @@
+# [1.82.0](https://github.com/et0and/wwwtom/compare/v1.81.0...v1.82.0) (2026-04-01)
+
+
+### Bug Fixes
+
+* **ci:** bad syntax ([0b3f2cd](https://github.com/et0and/wwwtom/commit/0b3f2cd86d169fec6ed06ab292fac295b05295c6))
+* **ci:** harden oc bot invocation ([f52e9a3](https://github.com/et0and/wwwtom/commit/f52e9a319fb203353f9aebcd2ef8bcf03b5c03c5))
+* **cms:** it was the db ([a510d78](https://github.com/et0and/wwwtom/commit/a510d789b5a9a62a240ced9a6355008c34201e62))
+* **effect:** resolve yieldable error and Effect.fn lint issues ([fad5642](https://github.com/et0and/wwwtom/commit/fad5642f8c457fa50d22baa24f7e4bae2c53275c))
+* fix precommit hook ([e0436dd](https://github.com/et0and/wwwtom/commit/e0436dd25400dbc1134ae4f5fb4ae618e2a08f3d))
+* **sophie:** bad copy pasta ([569eba8](https://github.com/et0and/wwwtom/commit/569eba8e7137fba2f15f821c950d80133c18da9c))
+* **sophie:** clean up cms config ([a833264](https://github.com/et0and/wwwtom/commit/a83326468aba5025917a1312a3021425ae82340c))
+* **sophie:** rem stale script ([fa74b2c](https://github.com/et0and/wwwtom/commit/fa74b2cb400dd509ede55ec35265b199fcb7f9a4))
+* **test:** fix de tests ([0c901a1](https://github.com/et0and/wwwtom/commit/0c901a19c9b07bfd87c9e8cf0852c98c12724f15))
+* unblock releases ([8870e4d](https://github.com/et0and/wwwtom/commit/8870e4dd016c4edb869d5a25ae2cfade6bddcafa))
+* **web:** effect linting ([d3e2a67](https://github.com/et0and/wwwtom/commit/d3e2a673a3a9fcc6d02be8a603b5c841527796bd))
+
+
+### Features
+
+* **haptics:** replace local implementation with web-haptics ([ae5aa09](https://github.com/et0and/wwwtom/commit/ae5aa097a7d1237afbe43c33c3eae9539e077e31))
+* **sophie:** media payload blocks ([d39b942](https://github.com/et0and/wwwtom/commit/d39b94222b7db8cbde006e747f9051f4fbe017da))
+
 # [1.81.0](https://github.com/et0and/wwwtom/compare/v1.80.1...v1.81.0) (2026-03-21)
 
 ### Bug Fixes
