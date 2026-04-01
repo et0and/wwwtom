@@ -1,6 +1,7 @@
 import React from "react";
 import { EB_Garamond } from "next/font/google";
 import "./styles.css";
+import { siteMetadata } from "./site-config";
 
 const ebGaramond = EB_Garamond({
   subsets: ["latin"],
@@ -8,12 +9,9 @@ const ebGaramond = EB_Garamond({
   variable: "--font-sans",
 });
 
-export const metadata = {
-  description: "Personal website of Sophie Tremaine",
-  title: "Sophie Tremaine",
-};
+export const metadata = siteMetadata;
 
-export default async function RootLayout(props: { children: React.ReactNode }) {
+export default function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props;
 
   return (

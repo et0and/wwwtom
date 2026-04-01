@@ -1,12 +1,7 @@
-import { getPayload } from "payload";
-import config from "@payload-config";
 import { SideBySide } from "../../../components/SideBySide";
 import Link from "next/link";
-import "../styles.css";
-
-import type { Post } from "../../../payload-types";
-
-const POSTS_PER_PAGE = 10;
+import { siteNav } from "../site-config";
+import { getPublishedPostsPage } from "./post-data";
 
 interface PostsPageProps {
   searchParams: Promise<{
@@ -17,37 +12,10 @@ interface PostsPageProps {
 export default async function PostsPage(props: PostsPageProps) {
   const searchParams = await props.searchParams;
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10));
-
-  const payload = await getPayload({ config });
-
-  const result = await payload.find({
-    collection: "posts",
-    where: {
-      status: {
-        equals: "published",
-      },
-    },
-    sort: "-publishedAt",
-    limit: POSTS_PER_PAGE,
-    page,
-    depth: 2,
-  });
-
-  const posts = result.docs as Post[];
-  const totalPages = Math.ceil(result.totalDocs / POSTS_PER_PAGE);
-
-  const nav = {
-    homeHref: "/",
-    title: "Sophie Tremaine",
-    shortTitle: "ST",
-    links: [
-      { href: "/about", label: "About" },
-      { href: "/posts", label: "Posts" },
-    ],
-  };
+  const { posts, totalPages } = await getPublishedPostsPage(page);
 
   return (
-    <SideBySide nav={nav}>
+    <SideBySide nav={siteNav}>
       <div className="space-y-8">
         <h1 className="text-3xl font-medium">Posts</h1>
         {posts.length === 0 ? (

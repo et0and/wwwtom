@@ -1,19 +1,9 @@
 import { SideBySide } from "../../../components/SideBySide";
-import "../styles.css";
+import { siteNav } from "../site-config";
 
-export default async function HomePage() {
-  const nav = {
-    homeHref: "/",
-    title: "Sophie Tremaine",
-    shortTitle: "ST",
-    links: [
-      { href: "/about", label: "About" },
-      { href: "/posts", label: "Posts" },
-    ],
-  };
-
+export default function AboutPage() {
   return (
-    <SideBySide nav={nav}>
+    <SideBySide nav={siteNav}>
       <p>About meh</p>
     </SideBySide>
   );

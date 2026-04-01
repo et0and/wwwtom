@@ -3,12 +3,12 @@ import type { ReactNode } from "react";
 import { Footer } from "./Footer";
 import { SkipLink } from "./SkipLink";
 
-interface SideBySideNavLink {
+export interface SideBySideNavLink {
   href: string;
   label: string;
 }
 
-interface SideBySideNav {
+export interface SideBySideNav {
   homeHref: string;
   title: string;
   shortTitle: string;

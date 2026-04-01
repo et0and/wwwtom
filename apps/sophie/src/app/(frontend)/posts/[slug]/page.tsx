@@ -1,10 +1,10 @@
-import { getPayload } from "payload";
-import config from "@payload-config";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SideBySide } from "../../../../components/SideBySide";
 import { RichText } from "@payloadcms/richtext-lexical/react";
-import "../styles.css";
 import type { Metadata } from "next";
+import { siteNav } from "../../site-config";
+import { getPublishedPostBySlug } from "../post-data";
 
 import type { Post, ContentBlock, ImageBlock, YouTubeBlock } from "../../../../payload-types";
 
@@ -12,23 +12,7 @@ export async function generateMetadata(props: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const payload = await getPayload({ config });
-
-  const result = await payload.find({
-    collection: "posts",
-    where: {
-      slug: {
-        equals: params.slug,
-      },
-      status: {
-        equals: "published",
-      },
-    },
-    limit: 1,
-    depth: 1,
-  });
-
-  const post = result.docs[0] as Post | undefined;
+  const post = await getPublishedPostBySlug(params.slug);
   if (!post) {
     return { title: "Post Not Found" };
   }
@@ -106,12 +90,7 @@ function PostImageBlock({ block }: { block: ImageBlock }) {
 
   return (
     <figure className={`my-8 ${getLayoutClasses(block.layout)}`}>
-      <img
-        src={image.url ?? ""}
-        alt={image.alt}
-        className="w-full h-auto rounded-lg"
-        loading="lazy"
-      />
+      <img src={image.url ?? ""} alt={image.alt} className="w-full h-auto" loading="lazy" />
       {block.caption && (
         <figcaption className="mt-2 text-sm text-gray-500 text-center">{block.caption}</figcaption>
       )}
@@ -174,39 +153,13 @@ function renderContent(content: Post["content"]) {
 
 export default async function PostPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
-  const payload = await getPayload({ config });
-
-  const result = await payload.find({
-    collection: "posts",
-    where: {
-      slug: {
-        equals: params.slug,
-      },
-      status: {
-        equals: "published",
-      },
-    },
-    limit: 1,
-    depth: 2,
-  });
-
-  const post = result.docs[0] as Post | undefined;
+  const post = await getPublishedPostBySlug(params.slug);
   if (!post) {
     notFound();
   }
 
-  const nav = {
-    homeHref: "/",
-    title: "Sophie Tremaine",
-    shortTitle: "ST",
-    links: [
-      { href: "/about", label: "About" },
-      { href: "/posts", label: "Posts" },
-    ],
-  };
-
   return (
-    <SideBySide nav={nav}>
+    <SideBySide nav={siteNav}>
       <article className="space-y-8">
         <header className="space-y-4">
           <h1 className="text-3xl font-medium">{post.title}</h1>
@@ -214,12 +167,12 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
             {post.author && typeof post.author !== "number" && <span>By {post.author.email}</span>}
             {post.category && typeof post.category !== "number" && (
               <span>
-                <a
+                <Link
                   href={`/posts?category=${post.category.slug}`}
                   className="hover:text-orange-600 transition-colors"
                 >
                   {post.category.title}
-                </a>
+                </Link>
               </span>
             )}
             {post.publishedAt && (
