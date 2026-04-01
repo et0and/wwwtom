@@ -130,7 +130,11 @@ export const Posts: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [
-      ({ data, operation, originalDoc }) => {
+      ({ req, operation, data, originalDoc }) => {
+        // Auto-assign author on create
+        if (operation === "create" && !data.author && req.user) {
+          data.author = req.user.id;
+        }
         // Auto-set publishedAt when status changes to 'published'
         if (
           operation === "update" &&

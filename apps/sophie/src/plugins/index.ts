@@ -3,7 +3,7 @@ import type { Plugin } from "payload";
 
 export const plugins: Plugin[] = [
   seoPlugin({
-    generateTitle: ({ doc }) => doc?.title ?? "Tom.so",
-    generateURL: ({ doc }) => `https://tom.so/posts/${doc?.slug}`,
+    generateTitle: ({ doc }) => doc?.title ?? "Sophie",
+    generateURL: ({ doc }) => `https://sophie.st/posts/${doc?.slug}`,
   }),
 ];
