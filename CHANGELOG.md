@@ -1,3 +1,10 @@
+## [1.82.1](https://github.com/et0and/wwwtom/compare/v1.82.0...v1.82.1) (2026-04-02)
+
+
+### Bug Fixes
+
+* **sophie:** user migration ([ab7db30](https://github.com/et0and/wwwtom/commit/ab7db3030252852f847126020e82874ff00239f7))
+
 # [1.82.0](https://github.com/et0and/wwwtom/compare/v1.81.0...v1.82.0) (2026-04-01)
 
 ### Bug Fixes
