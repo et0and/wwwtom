@@ -164,7 +164,9 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
         <header className="space-y-4">
           <h1 className="text-3xl font-medium">{post.title}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-            {post.author && typeof post.author !== "number" && <span>By {post.author.email}</span>}
+            {post.author && typeof post.author !== "number" && (
+              <span>By {post.author.name || post.author.email}</span>
+            )}
             {post.category && typeof post.category !== "number" && (
               <span>
                 <Link
