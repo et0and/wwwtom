@@ -1,12 +1,16 @@
 import config from "@payload-config";
 import { getPayload } from "payload";
-import { cache } from "react";
+import { cacheLife, cacheTag } from "next/cache";
 
 import type { Post } from "../../../payload-types";
+import { getPostCacheTag, POSTS_CACHE_TAG } from "../../../utilities/postCacheTags";
 
 const POSTS_PER_PAGE = 10;
 
 export async function getPublishedPostsPage(page: number) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(POSTS_CACHE_TAG);
   const payload = await getPayload({ config });
 
   const result = await payload.find({
@@ -28,7 +32,11 @@ export async function getPublishedPostsPage(page: number) {
   };
 }
 
-export const getPublishedPostBySlug = cache(async (slug: string): Promise<Post | null> => {
+export async function getPublishedPostBySlug(slug: string): Promise<Post | null> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag(POSTS_CACHE_TAG);
+  cacheTag(getPostCacheTag(slug));
   const payload = await getPayload({ config });
 
   const result = await payload.find({
@@ -46,4 +54,4 @@ export const getPublishedPostBySlug = cache(async (slug: string): Promise<Post |
   });
 
   return (result.docs[0] as Post | undefined) ?? null;
-});
+}

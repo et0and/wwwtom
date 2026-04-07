@@ -22,13 +22,17 @@
     "deploy:cms": "cd apps/cms && opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
     "deploy:sophie": "cd apps/sophie && opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
     "deploy:api": "turbo run deploy --filter=@tom/api",
-    "semantic-release": "semantic-release"
+    "semantic-release": "semantic-release",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "turbo run build && changeset publish --no-git"
   },
   "dependencies": {
     "solid-motionone": "^1.0.4",
     "tom-web": "."
   },
   "devDependencies": {
+    "@changesets/cli": "^2.30.0",
     "@effect/language-service": "^0.56.0",
     "@semantic-release/changelog": "^6.0.3",
     "@semantic-release/git": "^10.0.1",

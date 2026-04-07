@@ -2,7 +2,7 @@
 
 ## Purpose
 
-- This repo is a Bun + Turborepo monorepo for tom.so.
+- This repo is a Bun + Turborepo monorepo for tom.so, api.tom.so, cms.tom.so and sophie.st.
 - Make the smallest correct change, follow local patterns, and verify before
   handoff.
 - Prefer improving existing code over introducing new abstractions.
@@ -11,8 +11,8 @@
 
 - `apps/web` — SolidStart app on Cloudflare Workers.
 - `apps/api` — Hono API on Cloudflare Workers.
-- `apps/cms` — Payload CMS on Next.js.
-- `apps/docs` — Astro docs app.
+- `apps/cms` — Payload CMS on Next.js with Open Next.
+- `apps/(stores)` — Ecommerce stores running on Medusa.js (in progress).
 - `packages/@tom/*` — shared packages like `ui`, `utils`, `types`, `db`,
   `arena`, `payload`, `schemas`, `checkout`, `constants`, `haptics`, and
   other `@tom/*` workspaces present in the repo.
@@ -25,19 +25,18 @@
 - AVOID `try`/`catch` - use Effect for error handling
 - AVOID using `any` type
 - AVOID `let` statements - prefer `const`
-- PREFER single word variable names where possible
+- PREFER clear, descriptive variable names where possible
 - AVOID Node-specific APIs - this runs on Cloudflare Workers
 - Improve existing files instead of rewriting patterns arbitrarily.
 
 ## Runtime and Platform Constraints
 
-- Web and API code run on Cloudflare Workers.
-- Avoid Node-only APIs in shared code, web, and api unless the runtime boundary
+- All code run on Cloudflare Workers.
+- Avoid Node-only APIs unless the runtime boundary
   already requires them.
 - Treat `packages/@tom/*` as portable across apps.
 - `apps/web` uses Wrangler with `nodejs_compat`, but still prefer web-standard
   and Worker-safe APIs.
-- CMS is the exception: keep Node-oriented tooling scoped to `apps/cms`.
 
 ## Core Commands
 

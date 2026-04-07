@@ -1,5 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { slugField } from "payload";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -12,6 +13,17 @@ import { createPosts, deletePosts, readPosts, updatePosts } from "../access/post
 import { ContentBlock } from "../blocks/ContentBlock";
 import { ImageBlock } from "../blocks/ImageBlock";
 import { YouTubeBlock } from "../blocks/YouTubeBlock";
+import { getPostCacheTag, POSTS_CACHE_TAG } from "../utilities/postCacheTags";
+
+const revalidatePostListing = () => {
+  revalidateTag(POSTS_CACHE_TAG, "max");
+  revalidatePath("/posts");
+};
+
+const revalidatePostDetail = (slug: string) => {
+  revalidateTag(getPostCacheTag(slug), "max");
+  revalidatePath(`/posts/${slug}`);
+};
 
 export const Posts: CollectionConfig = {
   slug: "posts",
@@ -129,6 +141,40 @@ export const Posts: CollectionConfig = {
     },
   ],
   hooks: {
+    afterChange: [
+      ({ doc, previousDoc, req: { context } }) => {
+        if (context.disableRevalidate) {
+          return doc;
+        }
+
+        revalidatePostListing();
+
+        if (doc.slug) {
+          revalidatePostDetail(doc.slug);
+        }
+
+        if (previousDoc?.slug && previousDoc.slug !== doc.slug) {
+          revalidatePostDetail(previousDoc.slug);
+        }
+
+        return doc;
+      },
+    ],
+    afterDelete: [
+      ({ doc, req: { context } }) => {
+        if (context.disableRevalidate) {
+          return doc;
+        }
+
+        revalidatePostListing();
+
+        if (doc?.slug) {
+          revalidatePostDetail(doc.slug);
+        }
+
+        return doc;
+      },
+    ],
     beforeChange: [
       ({ req, operation, data, originalDoc }) => {
         // Auto-assign author on create

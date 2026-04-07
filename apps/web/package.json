@@ -1,5 +1,6 @@
 {
   "name": "@tom/web",
+  "version": "1.1.0",
   "private": true,
   "description": "Tom's personal website",
   "type": "module",

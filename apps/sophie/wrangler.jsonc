@@ -39,7 +39,7 @@
   // Environment variables for the worker
   "vars": {
     //"NEXT_PUBLIC_SERVER_URL": "https://sophie.st",
-    "CDN_URL": "https://cdn.tom.so",
+    "CDN_URL": "https://cdn.sophie.st",
   },
   "observability": {
     "logs": {
