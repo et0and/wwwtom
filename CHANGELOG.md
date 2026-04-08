@@ -1,3 +1,10 @@
+## [1.82.3](https://github.com/et0and/wwwtom/compare/v1.82.2...v1.82.3) (2026-04-08)
+
+
+### Bug Fixes
+
+* update action workflows ([2eae60e](https://github.com/et0and/wwwtom/commit/2eae60e298d58c60fb12ae2825348b0ceb578bda))
+
 ## [1.82.2](https://github.com/et0and/wwwtom/compare/v1.82.1...v1.82.2) (2026-04-08)
 
 ### Bug Fixes
