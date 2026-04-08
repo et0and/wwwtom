@@ -1,3 +1,11 @@
+## [1.82.2](https://github.com/et0and/wwwtom/compare/v1.82.1...v1.82.2) (2026-04-08)
+
+
+### Bug Fixes
+
+* **sophie:** ppr sophie cms ([25ce1b9](https://github.com/et0and/wwwtom/commit/25ce1b997a1ddd93bc4dcce24c8d92d055e96470))
+* **sophie:** ppr, isr fix ([f0ca1fc](https://github.com/et0and/wwwtom/commit/f0ca1fc5ef5ff973378afc1ccabeb10e5b54fd57))
+
 ## [1.82.1](https://github.com/et0and/wwwtom/compare/v1.82.0...v1.82.1) (2026-04-02)
 
 ### Bug Fixes
