@@ -1,6 +1,6 @@
 import type { CollectionConfig } from "payload";
 import { slugField } from "payload";
-import { revalidatePath, revalidateTag } from "next/cache";
+import { revalidatePath } from "next/cache";
 import {
   MetaDescriptionField,
   MetaImageField,
@@ -13,18 +13,6 @@ import { createPosts, deletePosts, readPosts, updatePosts } from "../access/post
 import { ContentBlock } from "../blocks/ContentBlock";
 import { ImageBlock } from "../blocks/ImageBlock";
 import { YouTubeBlock } from "../blocks/YouTubeBlock";
-import { getPostCacheTag, POSTS_CACHE_TAG } from "../utilities/postCacheTags";
-
-const revalidatePostListing = () => {
-  revalidateTag(POSTS_CACHE_TAG, "max");
-  revalidatePath("/posts");
-};
-
-const revalidatePostDetail = (slug: string) => {
-  revalidateTag(getPostCacheTag(slug), "max");
-  revalidatePath(`/posts/${slug}`);
-};
-
 export const Posts: CollectionConfig = {
   slug: "posts",
   access: {
@@ -147,14 +135,14 @@ export const Posts: CollectionConfig = {
           return doc;
         }
 
-        revalidatePostListing();
+        revalidatePath("/posts");
 
         if (doc.slug) {
-          revalidatePostDetail(doc.slug);
+          revalidatePath(`/posts/${doc.slug}`);
         }
 
         if (previousDoc?.slug && previousDoc.slug !== doc.slug) {
-          revalidatePostDetail(previousDoc.slug);
+          revalidatePath(`/posts/${previousDoc.slug}`);
         }
 
         return doc;
@@ -166,10 +154,10 @@ export const Posts: CollectionConfig = {
           return doc;
         }
 
-        revalidatePostListing();
+        revalidatePath("/posts");
 
         if (doc?.slug) {
-          revalidatePostDetail(doc.slug);
+          revalidatePath(`/posts/${doc.slug}`);
         }
 
         return doc;

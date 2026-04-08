@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { SideBySide } from "../../../../components/SideBySide";
@@ -42,27 +41,6 @@ export async function generateMetadata(props: {
       images: metaImage?.url ? [{ url: metaImage.url, alt: metaImage.alt }] : undefined,
     },
   };
-}
-
-function PostSkeleton() {
-  return (
-    <article className="space-y-8">
-      <header className="space-y-4">
-        <div className="h-10 w-2/3 animate-pulse rounded bg-gray-200" />
-        <div className="flex flex-wrap gap-3">
-          <div className="h-4 w-24 animate-pulse rounded bg-gray-100" />
-          <div className="h-4 w-20 animate-pulse rounded bg-gray-100" />
-          <div className="h-4 w-32 animate-pulse rounded bg-gray-100" />
-        </div>
-      </header>
-      <div className="h-80 w-full animate-pulse rounded-lg bg-gray-100" />
-      <div className="space-y-3">
-        <div className="h-5 w-full animate-pulse rounded bg-gray-100" />
-        <div className="h-5 w-5/6 animate-pulse rounded bg-gray-100" />
-        <div className="h-5 w-4/6 animate-pulse rounded bg-gray-100" />
-      </div>
-    </article>
-  );
 }
 
 const extractYouTubeId = (url: string): string | null => {
@@ -173,7 +151,7 @@ function renderContent(content: Post["content"]) {
   });
 }
 
-async function PostContent(props: { params: Promise<{ slug: string }> }) {
+export default async function PostPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
   const post = await getPublishedPostBySlug(params.slug);
   if (!post) {
@@ -181,76 +159,68 @@ async function PostContent(props: { params: Promise<{ slug: string }> }) {
   }
 
   return (
-    <article className="space-y-8">
-      <header className="space-y-4">
-        <h1 className="text-3xl font-medium">{post.title}</h1>
-        <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-          {post.author && typeof post.author !== "number" && (
-            <span>By {post.author.name || post.author.email}</span>
-          )}
-          {post.category && typeof post.category !== "number" && (
-            <span>
-              <Link
-                href={`/posts?category=${post.category.slug}`}
-                className="hover:text-orange-600 transition-colors"
-              >
-                {post.category.title}
-              </Link>
-            </span>
-          )}
-          {post.publishedAt && (
-            <time dateTime={post.publishedAt}>
-              {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-          )}
-        </div>
-        {post.tags && post.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {post.tags.map((tag) => {
-              const tagObj = typeof tag === "number" ? null : tag;
-              if (!tagObj) return null;
-              return (
-                <span key={tagObj.id} className="px-2 py-1 text-xs bg-gray-100 rounded">
-                  {tagObj.title}
-                </span>
-              );
-            })}
-          </div>
-        )}
-      </header>
-
-      {post.featuredImage && typeof post.featuredImage !== "number" && (
-        <figure className="py-4">
-          <img
-            src={post.featuredImage.url ?? ""}
-            alt={post.featuredImage.alt}
-            className="w-full h-auto rounded-lg"
-          />
-          {post.featuredImage.alt && (
-            <figcaption className="mt-2 text-sm text-gray-500 text-center">
-              {post.featuredImage.alt}
-            </figcaption>
-          )}
-        </figure>
-      )}
-
-      {post.excerpt && <p className="text-lg text-gray-600">{post.excerpt}</p>}
-
-      <div className="prose prose-lg max-w-none">{renderContent(post.content)}</div>
-    </article>
-  );
-}
-
-export default function PostPage(props: { params: Promise<{ slug: string }> }) {
-  return (
     <SideBySide nav={siteNav}>
-      <Suspense fallback={<PostSkeleton />}>
-        <PostContent params={props.params} />
-      </Suspense>
+      <article className="space-y-8">
+        <header className="space-y-4">
+          <h1 className="text-3xl font-medium">{post.title}</h1>
+          <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+            {post.author && typeof post.author !== "number" && (
+              <span>By {post.author.name || post.author.email}</span>
+            )}
+            {post.category && typeof post.category !== "number" && (
+              <span>
+                <Link
+                  href={`/posts?category=${post.category.slug}`}
+                  className="hover:text-orange-600 transition-colors"
+                >
+                  {post.category.title}
+                </Link>
+              </span>
+            )}
+            {post.publishedAt && (
+              <time dateTime={post.publishedAt}>
+                {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </time>
+            )}
+          </div>
+          {post.tags && post.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {post.tags.map((tag) => {
+                const tagObj = typeof tag === "number" ? null : tag;
+                if (!tagObj) return null;
+                return (
+                  <span key={tagObj.id} className="px-2 py-1 text-xs bg-gray-100 rounded">
+                    {tagObj.title}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </header>
+
+        {post.featuredImage && typeof post.featuredImage !== "number" && (
+          <figure className="py-4">
+            <img
+              src={post.featuredImage.url ?? ""}
+              alt={post.featuredImage.alt}
+              className="w-full h-auto rounded-lg"
+            />
+            {post.featuredImage.alt && (
+              <figcaption className="mt-2 text-sm text-gray-500 text-center">
+                {post.featuredImage.alt}
+              </figcaption>
+            )}
+          </figure>
+        )}
+
+        {post.excerpt && <p className="text-lg text-gray-600">{post.excerpt}</p>}
+
+        <div className="prose prose-lg max-w-none">{renderContent(post.content)}</div>
+      </article>
     </SideBySide>
   );
 }
