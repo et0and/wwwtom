@@ -1,3 +1,10 @@
+# [1.83.0](https://github.com/et0and/wwwtom/compare/v1.82.4...v1.83.0) (2026-04-13)
+
+
+### Features
+
+* **sophie:** post pagination ([a66988d](https://github.com/et0and/wwwtom/commit/a66988d736ac4c6586a23ca9933a0bb101c2b739))
+
 ## [1.82.4](https://github.com/et0and/wwwtom/compare/v1.82.3...v1.82.4) (2026-04-13)
 
 ### Bug Fixes
