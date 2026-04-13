@@ -1,9 +1,8 @@
 ## [1.82.4](https://github.com/et0and/wwwtom/compare/v1.82.3...v1.82.4) (2026-04-13)
 
-
 ### Bug Fixes
 
-* **sophie:** bad use of revalidate path, I love Next ([73c525f](https://github.com/et0and/wwwtom/commit/73c525feb73d46ea9627ebb171dc15fc16a0abe0))
+- **sophie:** bad use of revalidate path, I love Next ([73c525f](https://github.com/et0and/wwwtom/commit/73c525feb73d46ea9627ebb171dc15fc16a0abe0))
 
 ## [1.82.3](https://github.com/et0and/wwwtom/compare/v1.82.2...v1.82.3) (2026-04-08)
 
