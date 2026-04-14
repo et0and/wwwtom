@@ -3,6 +3,41 @@ import { AppConfig } from "@tom/utils/services";
 import { retryPolicy } from "@tom/utils/retry";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 
+const cacheExpiryHeader = "x-payload-cache-expires-at";
+
+const getCacheExpiryTimestamp = (response: Response): number | null => {
+  const cacheExpiryValue = response.headers.get(cacheExpiryHeader);
+  if (!cacheExpiryValue) return null;
+
+  const cacheExpiryTimestamp = Number(cacheExpiryValue);
+  if (!Number.isFinite(cacheExpiryTimestamp)) return null;
+
+  return cacheExpiryTimestamp;
+};
+
+const hasExpiredCacheEntry = (response: Response, cacheTTL?: number): boolean => {
+  if (!cacheTTL || cacheTTL <= 0) return false;
+
+  const cacheExpiryTimestamp = getCacheExpiryTimestamp(response);
+  if (cacheExpiryTimestamp === null) return true;
+
+  return cacheExpiryTimestamp <= Date.now();
+};
+
+const withCacheMetadata = (response: Response, cacheTTL?: number): Response => {
+  const headers = new Headers(response.headers);
+
+  if (cacheTTL && cacheTTL > 0) {
+    headers.set(cacheExpiryHeader, String(Date.now() + cacheTTL * 1000));
+  }
+
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+};
+
 export class PayloadError extends Error {
   readonly _tag = "PayloadError";
   constructor(
@@ -94,6 +129,12 @@ export class PayloadService extends Effect.Service<PayloadService>()("PayloadSer
       ): Effect.Effect<T, PayloadError> =>
         Effect.gen(function* () {
           const url = `${baseUrl}/api${endpoint}`;
+          const fetchResponse = () =>
+            Effect.tryPromise({
+              try: () => fetch(url, { ...options, headers }),
+              catch: (e) =>
+                new PayloadError(e instanceof Error ? e.message : "Fetch error", endpoint),
+            });
 
           const headers: HeadersInit = {
             "Content-Type": "application/json",
@@ -119,38 +160,31 @@ export class PayloadService extends Effect.Service<PayloadService>()("PayloadSer
                 catch: () => null,
               }).pipe(Effect.catchAll(() => Effect.succeed(null as Response | null)));
 
-              if (cached) {
+              if (cached && !hasExpiredCacheEntry(cached, options.cacheTTL)) {
                 yield* Effect.logDebug(`Cache hit: ${url}`);
                 response = cached;
               } else {
+                if (cached) {
+                  yield* Effect.logDebug(`Cache stale: ${url}`);
+                }
+
                 yield* Effect.logDebug(`Cache miss: ${url}`);
-                response = yield* Effect.tryPromise({
-                  try: () => fetch(url, { ...options, headers }),
-                  catch: (e) =>
-                    new PayloadError(e instanceof Error ? e.message : "Fetch error", endpoint),
-                });
+                response = yield* fetchResponse();
 
                 if (response.ok) {
                   const clone = response.clone();
+                  const responseWithCacheMetadata = withCacheMetadata(clone, options.cacheTTL);
                   yield* Effect.tryPromise({
-                    try: async () => await cacheResult.put(cacheReq, clone),
+                    try: async () => await cacheResult.put(cacheReq, responseWithCacheMetadata),
                     catch: () => null,
                   }).pipe(Effect.catchAll(() => Effect.void));
                 }
               }
             } else {
-              response = yield* Effect.tryPromise({
-                try: () => fetch(url, { ...options, headers }),
-                catch: (e) =>
-                  new PayloadError(e instanceof Error ? e.message : "Fetch error", endpoint),
-              });
+              response = yield* fetchResponse();
             }
           } else {
-            response = yield* Effect.tryPromise({
-              try: () => fetch(url, { ...options, headers }),
-              catch: (e) =>
-                new PayloadError(e instanceof Error ? e.message : "Fetch error", endpoint),
-            });
+            response = yield* fetchResponse();
           }
 
           if (!response.ok) {

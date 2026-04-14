@@ -1,6 +1,7 @@
 import { Show, lazy, For, createMemo } from "solid-js";
 import { Effect } from "effect";
 import { createAsync, type RouteDefinition, useParams } from "@solidjs/router";
+import { getRequestEvent } from "solid-js/web";
 import { getPostBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Spinner } from "~/components";
@@ -22,6 +23,18 @@ export const route = {
 export default function PostPage() {
   const params = useParams();
   const slug = createMemo(() => params.slug);
+  const event = getRequestEvent();
+
+  if (event) {
+    event.response.headers.set(
+      "Cache-Control",
+      "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
+    );
+    event.response.headers.set(
+      "CDN-Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
+  }
 
   const post = createAsync(() => {
     const s = slug();

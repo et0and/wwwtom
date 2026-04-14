@@ -1,6 +1,5 @@
 import { createAsync, useSearchParams } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import { createEffect } from "solid-js";
 import { getPosts } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, Show, For } from "solid-js";
@@ -9,21 +8,20 @@ import { Spinner, Link } from "~/components";
 export default function PostsHome() {
   const [searchParams] = useSearchParams();
   const currentPage = () => Number(searchParams.page) || 1;
-  const posts = createAsync(() => getPosts(currentPage()));
+  const event = getRequestEvent();
 
-  createEffect(() => {
-    const event = getRequestEvent();
-    if (event) {
-      event.response.headers.set(
-        "Cache-Control",
-        "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
-      );
-      event.response.headers.set(
-        "CDN-Cache-Control",
-        "public, max-age=600, stale-while-revalidate=86400",
-      );
-    }
-  });
+  if (event) {
+    event.response.headers.set(
+      "Cache-Control",
+      "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
+    );
+    event.response.headers.set(
+      "CDN-Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
+  }
+
+  const posts = createAsync(() => getPosts(currentPage()));
 
   return (
     <PageLayout

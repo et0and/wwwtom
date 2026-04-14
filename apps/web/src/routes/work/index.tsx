@@ -1,6 +1,5 @@
 import { createAsync } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
-import { createEffect } from "solid-js";
 import { getWorks } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, For, Show } from "solid-js";
@@ -11,21 +10,20 @@ export const route = {
 };
 
 export default function WorkHome() {
-  const works = createAsync(() => getWorks());
+  const event = getRequestEvent();
 
-  createEffect(() => {
-    const event = getRequestEvent();
-    if (event) {
-      event.response.headers.set(
-        "Cache-Control",
-        "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
-      );
-      event.response.headers.set(
-        "CDN-Cache-Control",
-        "public, max-age=600, stale-while-revalidate=86400",
-      );
-    }
-  });
+  if (event) {
+    event.response.headers.set(
+      "Cache-Control",
+      "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
+    );
+    event.response.headers.set(
+      "CDN-Cache-Control",
+      "public, max-age=3600, stale-while-revalidate=86400",
+    );
+  }
+
+  const works = createAsync(() => getWorks());
 
   return (
     <PageLayout
