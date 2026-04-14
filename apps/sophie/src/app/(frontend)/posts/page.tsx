@@ -8,20 +8,38 @@ import type { Post } from "../../../payload-types";
 interface PostsPageProps {
   searchParams: Promise<{
     page?: string;
+    category?: string;
   }>;
+}
+
+function postsUrl(params: { page?: number; category?: string }): string {
+  const searchParams = new URLSearchParams();
+  if (params.category) searchParams.set("category", params.category);
+  if (params.page && params.page > 1) searchParams.set("page", String(params.page));
+  const qs = searchParams.toString();
+  return qs ? `/posts?${qs}` : "/posts";
 }
 
 export default async function PostsPage(props: PostsPageProps) {
   const query = await props.searchParams;
   const page = Math.max(1, parseInt(query.page ?? "1", 10));
-  const { posts, totalPages } = await getPublishedPostsPage(page);
+  const categorySlug = query.category;
+  const { posts, totalPages, categoryName } = await getPublishedPostsPage(page, categorySlug);
 
   return (
     <SideBySide nav={siteNav}>
       <div className="space-y-8">
         <h1 className="text-3xl font-medium">Posts</h1>
+        {categoryName && (
+          <div className="text-sm text-gray-600">
+            Showing posts in &ldquo;{categoryName}&rdquo; &bull;{" "}
+            <Link href="/posts" className="text-orange-600 hover:underline">
+              Clear filter
+            </Link>
+          </div>
+        )}
         {posts.length === 0 ? (
-          <p>No posts yet.</p>
+          <p>{categorySlug ? "No posts found in this category." : "No posts yet."}</p>
         ) : (
           <>
             <div className="space-y-6">
@@ -64,7 +82,7 @@ export default async function PostsPage(props: PostsPageProps) {
               <nav className="mt-8 flex justify-center gap-2" aria-label="Pagination">
                 {page > 1 && (
                   <Link
-                    href={`/posts?page=${page - 1}`}
+                    href={postsUrl({ page: page - 1, category: categorySlug })}
                     className="px-3 py-1 border border-gray-300 rounded hover:border-orange-600 transition-colors"
                   >
                     Previous
@@ -73,7 +91,7 @@ export default async function PostsPage(props: PostsPageProps) {
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
                   <Link
                     key={p}
-                    href={`/posts?page=${p}`}
+                    href={postsUrl({ page: p, category: categorySlug })}
                     className={`px-3 py-1 border rounded transition-colors ${
                       p === page
                         ? "border-orange-600 bg-orange-600 text-white"
@@ -86,7 +104,7 @@ export default async function PostsPage(props: PostsPageProps) {
                 ))}
                 {page < totalPages && (
                   <Link
-                    href={`/posts?page=${page + 1}`}
+                    href={postsUrl({ page: page + 1, category: categorySlug })}
                     className="px-3 py-1 border border-gray-300 rounded hover:border-orange-600 transition-colors"
                   >
                     Next

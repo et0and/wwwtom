@@ -135,7 +135,7 @@ export const Posts: CollectionConfig = {
           return doc;
         }
 
-        revalidatePath("/posts");
+        //revalidatePath("/posts");
 
         if (doc.slug) {
           revalidatePath(`/posts/${doc.slug}`);
@@ -154,7 +154,7 @@ export const Posts: CollectionConfig = {
           return doc;
         }
 
-        revalidatePath("/posts");
+        //revalidatePath('/posts')
 
         if (doc?.slug) {
           revalidatePath(`/posts/${doc.slug}`);

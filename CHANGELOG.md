@@ -1,3 +1,15 @@
+# [1.83.0](https://github.com/et0and/wwwtom/compare/v1.82.4...v1.83.0) (2026-04-13)
+
+### Features
+
+* **sophie:** post pagination ([a66988d](https://github.com/et0and/wwwtom/commit/a66988d736ac4c6586a23ca9933a0bb101c2b739))
+
+## [1.82.4](https://github.com/et0and/wwwtom/compare/v1.82.3...v1.82.4) (2026-04-13)
+
+### Bug Fixes
+
+- **sophie:** bad use of revalidate path, I love Next ([73c525f](https://github.com/et0and/wwwtom/commit/73c525feb73d46ea9627ebb171dc15fc16a0abe0))
+
 ## [1.82.3](https://github.com/et0and/wwwtom/compare/v1.82.2...v1.82.3) (2026-04-08)
 
 ### Bug Fixes
