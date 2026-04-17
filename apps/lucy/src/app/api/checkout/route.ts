@@ -140,20 +140,34 @@ const createCheckoutSession = Effect.fn("createCheckoutSession")(function* (requ
   return { url: session.url };
 });
 
+const NO_STORE_HEADERS = { "Cache-Control": "no-store" } as const;
+
 function toNextResponse(error: CheckoutError): NextResponse {
   switch (error._tag) {
     case "InvalidRequestBody":
-      return NextResponse.json({ error: error.message }, { status: error.httpStatus });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.httpStatus, headers: NO_STORE_HEADERS },
+      );
     case "ProductNotFound":
-      return NextResponse.json({ error: "Product not found." }, { status: error.httpStatus });
+      return NextResponse.json(
+        { error: "Product not found." },
+        { status: error.httpStatus, headers: NO_STORE_HEADERS },
+      );
     case "ProductNotPurchasable":
-      return NextResponse.json({ error: error.reason }, { status: error.httpStatus });
+      return NextResponse.json(
+        { error: error.reason },
+        { status: error.httpStatus, headers: NO_STORE_HEADERS },
+      );
     case "CheckoutConfigError":
-      return NextResponse.json({ error: error.message }, { status: error.httpStatus });
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.httpStatus, headers: NO_STORE_HEADERS },
+      );
     case "CheckoutSessionError":
       return NextResponse.json(
         { error: "Failed to create checkout session." },
-        { status: error.httpStatus },
+        { status: error.httpStatus, headers: NO_STORE_HEADERS },
       );
   }
 }
@@ -163,7 +177,7 @@ export async function POST(request: Request) {
     createCheckoutSession(request).pipe(
       Effect.withLogSpan("checkout"),
       Effect.annotateLogs({ method: "POST", route: "/api/checkout" }),
-      Effect.map((data) => NextResponse.json(data)),
+      Effect.map((data) => NextResponse.json(data, { headers: NO_STORE_HEADERS })),
       Effect.catchTags({
         InvalidRequestBody: (error) => Effect.succeed(toNextResponse(error)),
         ProductNotFound: (error) => Effect.succeed(toNextResponse(error)),
