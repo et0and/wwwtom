@@ -214,6 +214,20 @@ export const Products: CollectionConfig = {
         }
       },
     ],
+    afterDelete: [
+      async ({ doc }) => {
+        try {
+          await fetch(
+            `${process.env.NEXT_PUBLIC_SERVER_URL}/api/revalidate?secret=${process.env.REVALIDATION_KEY}&path=/products/${doc.slug}`,
+          );
+          await fetch(
+            `${process.env.NEXT_PUBLIC_SERVER_URL}/api/revalidate?secret=${process.env.REVALIDATION_KEY}&path=/products`,
+          );
+        } catch {
+          // revalidation failure is non-fatal
+        }
+      },
+    ],
   },
   fields: [
     {
