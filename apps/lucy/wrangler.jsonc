@@ -1,0 +1,47 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "lucy-gcs",
+  "compatibility_date": "2025-08-15",
+  "compatibility_flags": [
+    // Enable Node.js API
+    // see https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
+    "nodejs_compat",
+    // Allow to fetch URLs in your app
+    // see https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public
+    "global_fetch_strictly_public",
+  ],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "lucy-gcs",
+      "database_id": "bc5447aa-bb00-46c2-9e72-7df205642a87",
+      "remote": true,
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "lucy-media",
+    },
+  ],
+  "services": [
+    // The service should match the "name" of your worker
+  ],
+  // Environment variables for the worker
+  // Secrets: STRIPE_SECRET_KEY — set via `wrangler secret put` in production
+  "vars": {
+    //"NEXT_PUBLIC_SERVER_URL": "https://gcs.co.nz",
+    "STRIPE_NZ_SHIPPING_RATE_ID": "",
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+    },
+  },
+}
