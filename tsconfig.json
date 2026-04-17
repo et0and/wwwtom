@@ -1,8 +1,12 @@
 {
+  "$schema": "https://raw.githubusercontent.com/Effect-TS/language-service/refs/heads/main/schema.json",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "rewriteRelativeImportExtensions": true,
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
     "strict": true,
@@ -10,10 +14,14 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": true,
+    "noUnusedLocals": true,
+    "noImplicitOverride": true,
     "isolatedModules": true,
     "skipLibCheck": true,
     "declaration": true,
     "declarationMap": true,
+    "sourceMap": true,
+    "incremental": true,
     "composite": true,
     "baseUrl": ".",
     "paths": {

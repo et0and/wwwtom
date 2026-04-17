@@ -1,8 +1,11 @@
+import { Effect } from "effect";
 import type { CollectionAfterChangeHook, CollectionConfig } from "payload";
 import { slugField } from "payload";
 
 import { readProducts, createProducts, updateProducts, deleteProducts } from "../access/products";
+import { StripeSyncFailed } from "../lib/errors";
 import { getStripe } from "../lib/stripe";
+import { CloudflareLoggerLive } from "../lib/logger";
 
 const syncProductToStripe: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) => {
   if (req.context?.skipHooks) return;
@@ -10,6 +13,11 @@ const syncProductToStripe: CollectionAfterChangeHook = async ({ doc, previousDoc
   const secretKey = process.env.STRIPE_SECRET_KEY;
 
   if (!secretKey) {
+    await Effect.runPromise(
+      Effect.gen(function* () {
+        yield* Effect.logError("STRIPE_SECRET_KEY not configured", { productId: String(doc.id) });
+      }).pipe(Effect.provide(CloudflareLoggerLive)),
+    );
     await req.payload.update({
       collection: "products",
       id: doc.id,
@@ -26,76 +34,131 @@ const syncProductToStripe: CollectionAfterChangeHook = async ({ doc, previousDoc
   }
 
   const stripe = getStripe(secretKey);
+  const productId = String(doc.id);
 
-  try {
-    const name = doc.name as string;
-    const description = (doc.shortDescription as string | undefined) ?? "";
+  await Effect.runPromise(
+    Effect.gen(function* () {
+      yield* Effect.logInfo("Syncing product to Stripe", { productId });
 
-    const existingProductId = doc.stripeSync?.stripeProductId as string | undefined;
+      const name = doc.name as string;
+      const description = (doc.shortDescription as string | undefined) ?? "";
+      const existingProductId = doc.stripeSync?.stripeProductId as string | undefined;
 
-    const stripeProduct = existingProductId
-      ? await stripe.products.update(existingProductId, { name, description })
-      : await stripe.products.create({
-          name,
-          description,
-          metadata: { payloadId: String(doc.id) },
-        });
+      const stripeProduct = existingProductId
+        ? yield* Effect.tryPromise({
+            try: () =>
+              stripe.products.update(existingProductId, {
+                name,
+                description,
+              }),
+            catch: (cause) => new StripeSyncFailed({ productId, cause }),
+          })
+        : yield* Effect.tryPromise({
+            try: () =>
+              stripe.products.create({
+                name,
+                description,
+                metadata: { payloadId: productId },
+              }),
+            catch: (cause) => new StripeSyncFailed({ productId, cause }),
+          });
 
-    const nextStripeProductId = stripeProduct.id;
+      const nextStripeProductId = stripeProduct.id;
 
-    const existingPriceId = doc.stripeSync?.stripePriceId as string | undefined;
-    const previousUnitAmount = previousDoc?.unitAmountNZD as number | undefined;
-    const currentUnitAmount = doc.unitAmountNZD as number;
-    const priceChanged = !existingPriceId || currentUnitAmount !== previousUnitAmount;
+      const existingPriceId = doc.stripeSync?.stripePriceId as string | undefined;
+      const previousUnitAmount = previousDoc?.unitAmountNZD as number | undefined;
+      const currentUnitAmount = doc.unitAmountNZD as number;
+      const priceChanged = !existingPriceId || currentUnitAmount !== previousUnitAmount;
 
-    const nextStripePriceId = await (async () => {
-      if (!priceChanged) return existingPriceId as string;
+      const nextStripePriceId = priceChanged
+        ? yield* Effect.gen(function* () {
+            const newPrice = yield* Effect.tryPromise({
+              try: () =>
+                stripe.prices.create(
+                  {
+                    product: nextStripeProductId,
+                    unit_amount: currentUnitAmount,
+                    currency: "nzd",
+                  },
+                  {
+                    idempotencyKey: `price-${productId}-${currentUnitAmount}`,
+                  },
+                ),
+              catch: (cause) => new StripeSyncFailed({ productId, cause }),
+            });
 
-      const newPrice = await stripe.prices.create(
-        {
-          product: nextStripeProductId,
-          unit_amount: currentUnitAmount,
-          currency: "nzd",
-        },
-        { idempotencyKey: `price-${doc.id}-${currentUnitAmount}` },
+            if (existingPriceId && existingPriceId !== newPrice.id) {
+              yield* Effect.logInfo("Deactivating previous price", {
+                productId,
+                priceId: existingPriceId,
+              });
+              yield* Effect.tryPromise({
+                try: () =>
+                  stripe.prices.update(existingPriceId, {
+                    active: false,
+                  }),
+                catch: (cause) => new StripeSyncFailed({ productId, cause }),
+              });
+            }
+
+            return newPrice.id;
+          })
+        : (existingPriceId as string);
+
+      yield* Effect.logInfo("Product synced successfully", {
+        productId,
+        stripeProductId: nextStripeProductId,
+        stripePriceId: nextStripePriceId,
+      });
+
+      yield* Effect.promise(() =>
+        req.payload.update({
+          collection: "products",
+          id: doc.id,
+          data: {
+            stripeSync: {
+              stripeProductId: nextStripeProductId,
+              stripePriceId: nextStripePriceId,
+              stripeSyncStatus: "synced",
+              stripeSyncError: "",
+            },
+          },
+          context: { skipHooks: true },
+          req,
+        }),
       );
-
-      if (existingPriceId && existingPriceId !== newPrice.id) {
-        await stripe.prices.update(existingPriceId, { active: false });
-      }
-
-      return newPrice.id;
-    })();
-
-    await req.payload.update({
-      collection: "products",
-      id: doc.id,
-      data: {
-        stripeSync: {
-          stripeProductId: nextStripeProductId,
-          stripePriceId: nextStripePriceId,
-          stripeSyncStatus: "synced",
-          stripeSyncError: "",
-        },
-      },
-      context: { skipHooks: true },
-      req,
-    });
-  } catch (err) {
-    const errorMessage = err instanceof Error ? err.message : String(err);
-    await req.payload.update({
-      collection: "products",
-      id: doc.id,
-      data: {
-        stripeSync: {
-          stripeSyncStatus: "error",
-          stripeSyncError: errorMessage,
-        },
-      },
-      context: { skipHooks: true },
-      req,
-    });
-  }
+    }).pipe(
+      Effect.catchTag("StripeSyncFailed", (error) =>
+        Effect.gen(function* () {
+          const message =
+            error.cause instanceof Error
+              ? error.cause.message
+              : String(error.cause ?? "Unknown Stripe error");
+          yield* Effect.logError("Stripe sync failed", {
+            productId,
+            error: message,
+          });
+          yield* Effect.promise(() =>
+            req.payload.update({
+              collection: "products",
+              id: doc.id,
+              data: {
+                stripeSync: {
+                  stripeSyncStatus: "error",
+                  stripeSyncError: message,
+                },
+              },
+              context: { skipHooks: true },
+              req,
+            }),
+          );
+        }),
+      ),
+      Effect.withLogSpan("stripe-sync"),
+      Effect.annotateLogs({ productId: String(doc.id) }),
+      Effect.provide(CloudflareLoggerLive),
+    ),
+  );
 };
 
 export const Products: CollectionConfig = {
@@ -154,7 +217,6 @@ export const Products: CollectionConfig = {
     ],
   },
   fields: [
-    // ── Core content ──────────────────────────────────────────
     {
       name: "name",
       type: "text",
@@ -208,7 +270,6 @@ export const Products: CollectionConfig = {
       ],
     },
 
-    // ── Pricing ───────────────────────────────────────────────
     {
       name: "unitAmountNZD",
       type: "number",
@@ -222,7 +283,6 @@ export const Products: CollectionConfig = {
       },
     },
 
-    // ── Availability ──────────────────────────────────────────
     {
       name: "isAvailable",
       type: "checkbox",
@@ -247,7 +307,6 @@ export const Products: CollectionConfig = {
       },
     },
 
-    // ── Stripe (read-only, written by sync hook) ──────────────
     {
       name: "stripeSync",
       type: "group",
@@ -290,7 +349,6 @@ export const Products: CollectionConfig = {
       ],
     },
 
-    // ── SEO ───────────────────────────────────────────────────
     {
       name: "meta",
       type: "group",
