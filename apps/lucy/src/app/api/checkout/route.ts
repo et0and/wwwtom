@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Logger } from "effect";
 import { NextResponse } from "next/server";
 import { getPayload } from "payload";
 import config from "@payload-config";
@@ -11,7 +11,6 @@ import {
   CheckoutSessionError,
   type CheckoutError,
 } from "@/lib/errors";
-import { CloudflareLoggerLive } from "@/lib/logger";
 
 const createCheckoutSession = Effect.fn("createCheckoutSession")(function* (request: Request) {
   // Parse and validate body
@@ -176,7 +175,7 @@ export async function POST(request: Request) {
             return toNextResponse(error);
           }),
       }),
-      Effect.provide(CloudflareLoggerLive),
+      Effect.provide(Logger.json),
     ),
   );
 }

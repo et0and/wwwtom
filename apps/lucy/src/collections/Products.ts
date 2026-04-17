@@ -1,11 +1,10 @@
-import { Effect } from "effect";
+import { Effect, Logger } from "effect";
 import type { CollectionAfterChangeHook, CollectionConfig } from "payload";
 import { slugField } from "payload";
 
 import { readProducts, createProducts, updateProducts, deleteProducts } from "../access/products";
 import { StripeSyncFailed } from "../lib/errors";
 import { getStripe } from "../lib/stripe";
-import { CloudflareLoggerLive } from "../lib/logger";
 
 const syncProductToStripe: CollectionAfterChangeHook = async ({ doc, previousDoc, req }) => {
   if (req.context?.skipHooks) return;
@@ -16,7 +15,7 @@ const syncProductToStripe: CollectionAfterChangeHook = async ({ doc, previousDoc
     await Effect.runPromise(
       Effect.gen(function* () {
         yield* Effect.logError("STRIPE_SECRET_KEY not configured", { productId: String(doc.id) });
-      }).pipe(Effect.provide(CloudflareLoggerLive)),
+      }).pipe(Effect.provide(Logger.json)),
     );
     await req.payload.update({
       collection: "products",
@@ -156,7 +155,7 @@ const syncProductToStripe: CollectionAfterChangeHook = async ({ doc, previousDoc
       ),
       Effect.withLogSpan("stripe-sync"),
       Effect.annotateLogs({ productId: String(doc.id) }),
-      Effect.provide(CloudflareLoggerLive),
+      Effect.provide(Logger.json),
     ),
   );
 };
