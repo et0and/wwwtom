@@ -8,9 +8,7 @@ export const storefrontCopy = {
   },
   footer: {
     tagline: "Heirloom knitwear and crochet pieces made slowly, by hand, in New Zealand.",
-    newsletterLabel: "From Grandma Hope",
-    newsletterBody:
-      "Small handmade releases, restock notes, and stories from Grandma Hope's worktable.",
+
     columns: [
       {
         title: "Browse",

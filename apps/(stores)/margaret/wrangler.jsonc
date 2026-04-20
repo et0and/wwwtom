@@ -29,11 +29,17 @@
       "bucket_name": "margaret-media",
     },
   ],
+  "send_email": [
+    {
+      "name": "SEND_EMAIL",
+      "allowed_sender_addresses": ["noreply@office.yufugumi.com"],
+    },
+  ],
   "services": [
     // The service should match the "name" of your worker
   ],
   // Environment variables for the worker
-  // Secrets: STRIPE_SECRET_KEY, RESEND_API — set via `wrangler secret put` in production
+  // Secrets: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET — set via `wrangler secret put` in production
   "vars": {
     "NEXT_PUBLIC_SERVER_URL": "https://grandmahope.yufugumi.com",
     "STRIPE_NZ_SHIPPING_RATE_ID": "",

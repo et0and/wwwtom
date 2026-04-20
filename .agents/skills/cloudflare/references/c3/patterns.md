@@ -35,7 +35,7 @@ npm create cloudflare@latest my-blog -- --type=web-app --framework=astro --platf
 
 ## Monorepo
 
-C3 detects workspace config (`package.json` workspaces or `pnpm-workspace.yaml`).
+C3 detects workspace config (`package.json` workspaces, including Bun workspaces).
 
 ```bash
 cd packages/

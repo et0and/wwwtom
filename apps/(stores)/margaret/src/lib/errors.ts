@@ -75,5 +75,30 @@ export const CheckoutError = Schema.Union(
 );
 export type CheckoutError = typeof CheckoutError.Type;
 
+export class WebhookSignatureInvalid extends Schema.TaggedError<WebhookSignatureInvalid>()(
+  "WebhookSignatureInvalid",
+  {
+    message: Schema.String,
+  },
+) {
+  get httpStatus() {
+    return HttpStatus.BadRequest;
+  }
+}
+
+export class WebhookProcessingError extends Schema.TaggedError<WebhookProcessingError>()(
+  "WebhookProcessingError",
+  {
+    cause: Schema.Defect,
+  },
+) {
+  get httpStatus() {
+    return HttpStatus.InternalServerError;
+  }
+}
+
+export const WebhookError = Schema.Union(WebhookSignatureInvalid, WebhookProcessingError);
+export type WebhookError = typeof WebhookError.Type;
+
 export const StripeSyncError = Schema.Union(StripeKeyNotConfigured, StripeSyncFailed);
 export type StripeSyncError = typeof StripeSyncError.Type;

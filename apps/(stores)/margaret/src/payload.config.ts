@@ -7,12 +7,13 @@ import { fileURLToPath } from "url";
 import { CloudflareContext, getCloudflareContext } from "@opennextjs/cloudflare";
 import { GetPlatformProxyOptions } from "wrangler";
 import { r2Storage } from "@payloadcms/storage-r2";
-import { resendAdapter } from "@payloadcms/email-resend";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Products } from "./collections/Products";
+import { Orders } from "./collections/Orders";
 import { plugins } from "./plugins";
+import { cloudflareEmailAdapter } from "./email/cloudflareEmailAdapter";
 
 type R2StorageOptions = Parameters<typeof r2Storage>[0];
 
@@ -41,6 +42,8 @@ const createLog =
     }
   };
 
+type ConfigLogger = Parameters<typeof buildConfig>[0]["logger"];
+
 const cloudflareLogger = {
   level: process.env.PAYLOAD_LOG_LEVEL || "info",
   trace: createLog("trace", console.debug),
@@ -50,7 +53,7 @@ const cloudflareLogger = {
   error: createLog("error", console.error),
   fatal: createLog("fatal", console.error),
   silent: () => {},
-} as any; // Use PayloadLogger type when it's exported
+} as unknown as ConfigLogger;
 
 const cloudflare =
   isCLI || !isProduction || isBuild || isCi
@@ -58,6 +61,7 @@ const cloudflare =
     : await getCloudflareContext({ async: true });
 
 const payloadSecretBinding = Reflect.get(cloudflare.env, "PAYLOAD_SECRET");
+const sendEmailBinding = Reflect.get(cloudflare.env, "SEND_EMAIL");
 const payloadSecret =
   process.env.PAYLOAD_SECRET ||
   (typeof payloadSecretBinding === "string" ? payloadSecretBinding : "");
@@ -66,16 +70,10 @@ if (!process.env.PAYLOAD_SECRET && payloadSecret) {
   process.env.PAYLOAD_SECRET = payloadSecret;
 }
 
-const resendApiKeyBinding = Reflect.get(cloudflare.env, "RESEND_API");
-const resendApiKey =
-  process.env.RESEND_API || (typeof resendApiKeyBinding === "string" ? resendApiKeyBinding : "");
-
-if (!process.env.RESEND_API && resendApiKey) {
-  process.env.RESEND_API = resendApiKey;
-}
-
-if (!resendApiKey && process.env.NODE_ENV === "production") {
-  throw new Error("RESEND_API is required in production");
+if (!sendEmailBinding && isProduction && !isBuild && !isCi && !isCLI) {
+  throw new Error(
+    "SEND_EMAIL binding is required when cloudflareEmailAdapter is configured. Add SEND_EMAIL to your Cloudflare bindings and local Wrangler environment.",
+  );
 }
 
 export default buildConfig({
@@ -107,15 +105,18 @@ export default buildConfig({
       titleSuffix: "- Grandma Hope",
     },
   },
-  collections: [Users, Media, Products],
+  collections: [Users, Media, Products, Orders],
   editor: lexicalEditor(),
   secret: payloadSecret,
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
-  email: resendAdapter({
-    defaultFromAddress: "noreply@system.yufugumi.com",
-    defaultFromName: "Grandma Hope",
-    apiKey: resendApiKey,
-  }),
+  ...(sendEmailBinding
+    ? {
+        email: cloudflareEmailAdapter({
+          d1: cloudflare.env.D1,
+          email: sendEmailBinding as SendEmail,
+        }),
+      }
+    : {}),
   typescript: {
     outputFile: path.resolve(dirname, "payload-types.ts"),
   },

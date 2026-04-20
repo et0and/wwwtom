@@ -321,6 +321,19 @@ export const Products: CollectionConfig = {
     },
 
     {
+      name: "stock",
+      type: "number",
+      label: "Stock",
+      defaultValue: 0,
+      min: 0,
+      admin: {
+        position: "sidebar",
+        step: 1,
+        description: "Current inventory count. Decremented automatically on purchase.",
+      },
+    },
+
+    {
       name: "stripeSync",
       type: "group",
       label: "Stripe",

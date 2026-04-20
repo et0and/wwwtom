@@ -6,13 +6,13 @@ Official CLI for scaffolding Cloudflare Workers and Pages projects with template
 
 ```bash
 # Interactive (recommended for first-time)
-npm create cloudflare@latest my-app
+bun create cloudflare@latest my-app
 
 # Worker (API/WebSocket/Cron)
-npm create cloudflare@latest my-api -- --type=hello-world --ts
+bun create cloudflare@latest my-api -- --type=hello-world --ts
 
 # Pages (static/SSG/full-stack)
-npm create cloudflare@latest my-site -- --type=web-app --framework=astro --platform=pages
+bun create cloudflare@latest my-site -- --type=web-app --framework=astro --platform=pages
 ```
 
 ## Platform Decision Tree
@@ -22,11 +22,11 @@ What are you building?
 
 ├─ API / WebSocket / Cron / Email handler
 │   └─ Workers (default) - no --platform flag needed
-│       npm create cloudflare@latest my-api -- --type=hello-world
+│       bun create cloudflare@latest my-api -- --type=hello-world
 
 ├─ Static site / SSG / Documentation
 │   └─ Pages - requires --platform=pages
-│       npm create cloudflare@latest my-site -- --type=web-app --framework=astro --platform=pages
+│       bun create cloudflare@latest my-site -- --type=web-app --framework=astro --platform=pages
 
 ├─ Full-stack app (Next.js/Remix/SvelteKit)
 │   ├─ Need Durable Objects, Queues, or Workers-only features?
@@ -35,7 +35,7 @@ What are you building?
 │       └─ Add --platform=pages
 
 └─ Convert existing project
-    └─ npm create cloudflare@latest . -- --type=pre-existing --existing-script=./src/worker.ts
+    └─ bun create cloudflare@latest . -- --type=pre-existing --existing-script=./src/worker.ts
 ```
 
 **Critical:** Pages projects require `--platform=pages` flag. Without it, C3 defaults to Workers.
@@ -61,8 +61,8 @@ npm create cloudflare@latest
 # Yarn
 yarn create cloudflare
 
-# PNPM
-pnpm create cloudflare@latest
+# Bun
+bun create cloudflare@latest
 ```
 
 ## In This Reference
@@ -92,13 +92,13 @@ pnpm create cloudflare@latest
 cd my-app
 
 # Local dev with hot reload
-npm run dev
+bun run dev
 
 # Generate TypeScript types for bindings
-npm run cf-typegen
+bun run cf-typegen
 
 # Deploy to Cloudflare
-npm run deploy
+bun run deploy
 ```
 
 ## See Also
