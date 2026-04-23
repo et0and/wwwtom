@@ -134,8 +134,6 @@ export interface User {
   resetPasswordExpiration?: string | null;
   salt?: string | null;
   hash?: string | null;
-  _verified?: boolean | null;
-  _verificationToken?: string | null;
   loginAttempts?: number | null;
   lockUntil?: string | null;
   sessions?:
@@ -237,52 +235,76 @@ export interface Product {
    */
   generateSlug?: boolean | null;
   slug: string;
-  /**
-   * Shown on the product listing page. Keep under 160 characters.
-   */
-  shortDescription?: string | null;
-  content?: unknown[] | null;
   featuredImage?: (number | null) | Media;
+  content?: (ContentBlock | ImageBlock | YouTubeBlock)[] | null;
   /**
-   * Additional product images shown on the detail page.
+   * Stripe Checkout or Payment Link URL
    */
-  gallery?:
-    | {
-        image: number | Media;
-        alt?: string | null;
-        id?: string | null;
-      }[]
-    | null;
+  stripeCheckoutLink?: string | null;
   /**
-   * Enter price in cents. e.g. $29.99 = 2999. GST-inclusive. Currency is always NZD.
+   * Price in NZD cents
    */
-  unitAmountNZD: number;
-  /**
-   * Product must be available AND published AND synced to Stripe before checkout is enabled.
-   */
+  unitAmountNZD?: number | null;
   isAvailable?: boolean | null;
-  maxQuantity: number;
-  /**
-   * Current inventory count. Decremented automatically on purchase.
-   */
-  stock?: number | null;
-  /**
-   * Managed automatically. Do not edit manually.
-   */
-  stripeSync?: {
-    stripeProductId?: string | null;
-    stripePriceId?: string | null;
-    stripeSyncStatus?: ("pending" | "synced" | "error") | null;
-    stripeSyncError?: string | null;
-  };
   meta?: {
     title?: string | null;
-    description?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
     image?: (number | null) | Media;
+    description?: string | null;
   };
   updatedAt: string;
   createdAt: string;
   _status?: ("draft" | "published") | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContentBlock".
+ */
+export interface ContentBlock {
+  richText?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ("ltr" | "rtl") | null;
+      format: "left" | "start" | "center" | "right" | "end" | "justify" | "";
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: "content";
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock".
+ */
+export interface ImageBlock {
+  image: number | Media;
+  caption?: string | null;
+  layout?: ("full" | "wide" | "centered") | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: "image";
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "YouTubeBlock".
+ */
+export interface YouTubeBlock {
+  url: string;
+  aspectRatio?: ("16:9" | "4:3" | "1:1") | null;
+  caption?: string | null;
+  id?: string | null;
+  blockName?: string | null;
+  blockType: "youtube";
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -406,8 +428,6 @@ export interface UsersSelect<T extends boolean = true> {
   resetPasswordExpiration?: T;
   salt?: T;
   hash?: T;
-  _verified?: T;
-  _verificationToken?: T;
   loginAttempts?: T;
   lockUntil?: T;
   sessions?:
@@ -518,38 +538,58 @@ export interface ProductsSelect<T extends boolean = true> {
   name?: T;
   generateSlug?: T;
   slug?: T;
-  shortDescription?: T;
-  content?: T | {};
   featuredImage?: T;
-  gallery?:
+  content?:
     | T
     | {
-        image?: T;
-        alt?: T;
-        id?: T;
+        content?: T | ContentBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        youtube?: T | YouTubeBlockSelect<T>;
       };
+  stripeCheckoutLink?: T;
   unitAmountNZD?: T;
   isAvailable?: T;
-  maxQuantity?: T;
-  stock?: T;
-  stripeSync?:
-    | T
-    | {
-        stripeProductId?: T;
-        stripePriceId?: T;
-        stripeSyncStatus?: T;
-        stripeSyncError?: T;
-      };
   meta?:
     | T
     | {
         title?: T;
-        description?: T;
         image?: T;
+        description?: T;
       };
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ContentBlock_select".
+ */
+export interface ContentBlockSelect<T extends boolean = true> {
+  richText?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ImageBlock_select".
+ */
+export interface ImageBlockSelect<T extends boolean = true> {
+  image?: T;
+  caption?: T;
+  layout?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "YouTubeBlock_select".
+ */
+export interface YouTubeBlockSelect<T extends boolean = true> {
+  url?: T;
+  aspectRatio?: T;
+  caption?: T;
+  id?: T;
+  blockName?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

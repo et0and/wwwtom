@@ -61,11 +61,7 @@ export default async function ProductsPage(props: ProductsPageProps) {
                       <Link href={`/products/${product.slug}`} className="link text-xl font-medium">
                         {product.name}
                       </Link>
-                      {product.shortDescription != null && (
-                        <p className="text-sm text-[var(--color-ink-muted)]">
-                          {product.shortDescription}
-                        </p>
-                      )}
+
                       <p className="text-sm font-semibold text-[var(--color-ink)]">
                         {formatNZD(product.unitAmountNZD)} · {copy.priceSuffix}
                       </p>

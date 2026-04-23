@@ -23,7 +23,7 @@ export async function generateMetadata(props: ProductPageProps): Promise<Metadat
 
   return {
     title: product.meta?.title ?? product.name,
-    description: product.meta?.description ?? product.shortDescription ?? undefined,
+    description: product.meta?.description ?? undefined,
   };
 }
 
@@ -45,12 +45,6 @@ export default async function ProductPage(props: ProductPageProps) {
     notFound();
   }
 
-  const isPurchasable =
-    product._status === "published" &&
-    product.isAvailable === true &&
-    product.stripeSync?.stripeSyncStatus === "synced" &&
-    Boolean(product.stripeSync?.stripePriceId);
-
   const featuredImage =
     product.featuredImage != null && typeof product.featuredImage !== "number"
       ? (product.featuredImage as Media)
@@ -69,17 +63,9 @@ export default async function ProductPage(props: ProductPageProps) {
                 {copy.priceSuffix}
               </span>
             </p>
-            {product.shortDescription != null && (
-              <p className="body-copy text-base">{product.shortDescription}</p>
-            )}
             <div className="surface-card space-y-3">
               <h2 className="text-xl">{copy.purchaseHeading}</h2>
               <p className="text-sm text-[var(--color-ink-muted)]">{copy.purchaseBody}</p>
-              {isPurchasable ? (
-                <QuantityForm productSlug={product.slug} maxQuantity={product.maxQuantity} />
-              ) : (
-                <p className="text-sm text-[var(--color-ink-muted)]">{copy.unavailable}</p>
-              )}
             </div>
           </div>
 
@@ -97,18 +83,18 @@ export default async function ProductPage(props: ProductPageProps) {
           )}
         </section>
 
-        {product.gallery != null && product.gallery.length > 0 && (
+        {/*{product.gallery != null && product.gallery.length > 0 && (
           <section className="space-y-3" aria-label={copy.galleryLabel}>
             <hr className="editorial-divider" />
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
               {product.gallery.map((item, index) => {
                 const img =
-                  item.image != null && typeof item.image !== "number"
+                  item.image != null && typeof item.image !== 'number'
                     ? (item.image as Media)
-                    : null;
+                    : null
 
                 if (img?.url == null) {
-                  return null;
+                  return null
                 }
 
                 return (
@@ -124,11 +110,11 @@ export default async function ProductPage(props: ProductPageProps) {
                       sizes="(max-width: 640px) 50vw, 20vw"
                     />
                   </div>
-                );
+                )
               })}
             </div>
           </section>
-        )}
+        )}*/}
       </div>
     </SideBySide>
   );

@@ -17,12 +17,8 @@ export const Footer = (props: FooterProps) => {
       <div className="content-container space-y-8">
         <div className="grid gap-8 md:grid-cols-[1.5fr_1fr_1fr]">
           <div className="space-y-3">
-            <p className="label">{storefrontCopy.footer.newsletterLabel}</p>
             <p className="heading-section text-[1.9rem]">{storefrontCopy.nav.brand}</p>
             <p className="body-copy text-base">{storefrontCopy.footer.tagline}</p>
-            <p className="text-sm text-[var(--color-ink-muted)]">
-              {storefrontCopy.footer.newsletterBody}
-            </p>
           </div>
 
           {storefrontCopy.footer.columns.map((column) => (

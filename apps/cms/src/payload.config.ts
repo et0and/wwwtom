@@ -81,7 +81,7 @@ export default buildConfig({
   },
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
-  db: sqliteD1Adapter({ binding: cloudflare.env.D1 }),
+  db: sqliteD1Adapter({ binding: cloudflare.env.D1, push: false }),
   collections: [Pages, Posts, Works, Media, Categories, Users],
   cors: [
     getServerSideURL(),
