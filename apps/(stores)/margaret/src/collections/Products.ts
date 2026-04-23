@@ -45,15 +45,28 @@ export const Products: CollectionConfig = {
       blocks: [ContentBlock, ImageBlock, YouTubeBlock],
     },
     {
-      name: "stripeCheckoutLink",
+      name: "shortDescription",
       type: "text",
-      admin: {
-        description: "Stripe Checkout or Payment Link URL",
-      },
+    },
+    {
+      name: "gallery",
+      type: "array",
+      fields: [
+        {
+          name: "image",
+          type: "upload",
+          relationTo: "media",
+        },
+        {
+          name: "alt",
+          type: "text",
+        },
+      ],
     },
     {
       name: "unitAmountNZD",
       type: "number",
+      required: true,
       admin: {
         description: "Price in NZD cents",
       },
@@ -65,6 +78,50 @@ export const Products: CollectionConfig = {
       admin: {
         position: "sidebar",
       },
+    },
+    {
+      name: "maxQuantity",
+      type: "number",
+      defaultValue: 10,
+      required: true,
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "stock",
+      type: "number",
+      defaultValue: 0,
+      admin: {
+        position: "sidebar",
+      },
+    },
+    {
+      name: "stripeSync",
+      type: "group",
+      admin: {
+        position: "sidebar",
+      },
+      fields: [
+        {
+          name: "stripeProductId",
+          type: "text",
+        },
+        {
+          name: "stripePriceId",
+          type: "text",
+        },
+        {
+          name: "stripeSyncStatus",
+          type: "select",
+          options: ["pending", "synced", "error"],
+          defaultValue: "pending",
+        },
+        {
+          name: "stripeSyncError",
+          type: "text",
+        },
+      ],
     },
     {
       name: "meta",

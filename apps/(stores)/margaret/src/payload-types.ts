@@ -230,27 +230,29 @@ export interface Media {
 export interface Product {
   id: number;
   name: string;
-  /**
-   * When enabled, the slug will auto-generate from the title field on save and autosave.
-   */
   generateSlug?: boolean | null;
   slug: string;
+  shortDescription?: string | null;
   featuredImage?: (number | null) | Media;
-  content?: (ContentBlock | ImageBlock | YouTubeBlock)[] | null;
-  /**
-   * Stripe Checkout or Payment Link URL
-   */
-  stripeCheckoutLink?: string | null;
-  /**
-   * Price in NZD cents
-   */
-  unitAmountNZD?: number | null;
+  gallery?:
+    | {
+        image?: (number | null) | Media;
+        alt?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  unitAmountNZD: number;
   isAvailable?: boolean | null;
+  maxQuantity: number;
+  stock?: number | null;
+  stripeSync?: {
+    stripeProductId?: string | null;
+    stripePriceId?: string | null;
+    stripeSyncStatus?: ("pending" | "synced" | "error") | null;
+    stripeSyncError?: string | null;
+  };
   meta?: {
     title?: string | null;
-    /**
-     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
-     */
     image?: (number | null) | Media;
     description?: string | null;
   };
@@ -538,17 +540,27 @@ export interface ProductsSelect<T extends boolean = true> {
   name?: T;
   generateSlug?: T;
   slug?: T;
+  shortDescription?: T;
   featuredImage?: T;
-  content?:
+  gallery?:
     | T
     | {
-        content?: T | ContentBlockSelect<T>;
-        image?: T | ImageBlockSelect<T>;
-        youtube?: T | YouTubeBlockSelect<T>;
+        image?: T;
+        alt?: T;
+        id?: T;
       };
-  stripeCheckoutLink?: T;
   unitAmountNZD?: T;
   isAvailable?: T;
+  maxQuantity?: T;
+  stock?: T;
+  stripeSync?:
+    | T
+    | {
+        stripeProductId?: T;
+        stripePriceId?: T;
+        stripeSyncStatus?: T;
+        stripeSyncError?: T;
+      };
   meta?:
     | T
     | {
