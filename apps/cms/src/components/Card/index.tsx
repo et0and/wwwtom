@@ -24,7 +24,7 @@ export const Card: React.FC<{
   const { slug, categories, meta, title } = doc || {};
   const { description, image: metaImage } = meta || {};
 
-  const hasCategories = categories && Array.isArray(categories) && categories.length > 0;
+  const hasCategories = categories && categories.length > 0;
   const titleToUse = titleFromProps || title;
   const sanitizedDescription = description?.replace(/\s/g, " "); // replace non-breaking space with white space
   const href = `/${relationTo}/${slug}`;
@@ -39,7 +39,7 @@ export const Card: React.FC<{
     >
       <div className="relative w-full ">
         {!metaImage && <div className="">No image</div>}
-        {metaImage && typeof metaImage !== "string" && <Media resource={metaImage} size="33vw" />}
+        {metaImage && typeof metaImage === "object" && <Media resource={metaImage} size="33vw" />}
       </div>
       <div className="p-4">
         {showCategories && hasCategories && (

@@ -19,109 +19,81 @@ type DailyQuotaReservation = {
   sendCount: number;
 };
 
-type AddressInput = NonNullable<SendEmailOptions["to"]>;
-type AddressValue = {
+type PayloadAddressValue = {
   address?: string;
   email?: string;
   name?: string;
 };
+
+type EmailAddress = {
+  address: string;
+  name?: string;
+};
+
 type AttachmentInput = NonNullable<SendEmailOptions["attachments"]>[number];
 
-const getAddressValue = (value: string | AddressValue): string => {
-  if (typeof value === "string") return value;
-  if (value.address) return value.address;
-  if (value.email) return value.email;
-
-  throw new Error("Email address is missing `address` or `email` value");
+const resolveAddress = (value: string | PayloadAddressValue): EmailAddress => {
+  if (typeof value === "string") return { address: value };
+  const address = value.address ?? value.email;
+  if (!address) throw new Error("Email address is missing `address` or `email` value");
+  return { address, name: value.name };
 };
 
-const toAddressString = (address: string | AddressValue): string => {
-  const emailAddress = getAddressValue(address);
-  if (typeof address === "string") return emailAddress;
-  if (!address.name) return emailAddress;
-  return `${address.name} <${emailAddress}>`;
-};
-
-const normalizeAddressList = (value: SendEmailOptions["to"]): string[] => {
+const resolveAddressList = (
+  value: SendEmailOptions["to"] | SendEmailOptions["cc"] | SendEmailOptions["bcc"],
+): EmailAddress[] => {
   if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) return value.map((address) => toAddressString(address));
-  return [toAddressString(value as AddressInput)];
+  if (typeof value === "string") return [{ address: value }];
+  if (Array.isArray(value)) return value.map(resolveAddress);
+  return [resolveAddress(value)];
+};
+
+const formatAddress = (email: EmailAddress): string => {
+  if (!email.name) return email.address;
+  return `${email.name} <${email.address}>`;
 };
 
 const hasRecipientListDelimiter = (value: string): boolean => {
   return value.includes(",") || value.includes(";");
 };
 
-const normalizeAddressValues = (
-  value: SendEmailOptions["to"] | SendEmailOptions["cc"] | SendEmailOptions["bcc"],
-): string[] => {
-  if (!value) return [];
-  if (typeof value === "string") return [value];
-  if (Array.isArray(value)) {
-    return value.map((address) =>
-      typeof address === "string" ? address : getAddressValue(address),
+const assertNoDisplayName = (addresses: EmailAddress[], field: "to" | "cc" | "bcc"): void => {
+  for (const addr of addresses) {
+    if (!addr.name) continue;
+    throw new Error(
+      `Transactional email does not allow display names in \`${field}\` recipients`,
     );
   }
-
-  return [getAddressValue(value)];
-};
-
-const assertNoRecipientDisplayName = (
-  value: SendEmailOptions["to"] | SendEmailOptions["cc"] | SendEmailOptions["bcc"],
-  field: "to" | "cc" | "bcc",
-): void => {
-  if (!value) return;
-
-  if (typeof value === "string") return;
-
-  if (Array.isArray(value)) {
-    for (const address of value) {
-      if (typeof address === "string") continue;
-      if (!address.name) continue;
-
-      throw new Error(
-        `Transactional email does not allow display names in \`${field}\` recipients`,
-      );
-    }
-
-    return;
-  }
-
-  if (!value.name) return;
-
-  throw new Error(`Transactional email does not allow display names in \`${field}\` recipients`);
 };
 
 const assertNoRecipientListDelimiter = (
-  value: SendEmailOptions["to"] | SendEmailOptions["cc"] | SendEmailOptions["bcc"],
+  addresses: EmailAddress[],
   field: "to" | "cc" | "bcc",
 ): void => {
-  for (const addressValue of normalizeAddressValues(value)) {
-    if (!hasRecipientListDelimiter(addressValue)) continue;
-
+  for (const addr of addresses) {
+    if (!hasRecipientListDelimiter(addr.address)) continue;
     throw new Error(
       `Transactional email does not support delimiter-based recipient lists in \`${field}\``,
     );
   }
 };
 
-const normalizeSingleAddress = (value: SendEmailOptions["replyTo"]): string | undefined => {
+const resolveSingleAddress = (
+  value: SendEmailOptions["replyTo"],
+): EmailAddress | undefined => {
   if (!value) return undefined;
-  if (typeof value === "string") return value;
-  if (Array.isArray(value) && value.length > 0) return toAddressString(value[0]);
-  if (Array.isArray(value)) return undefined;
-  return toAddressString(value);
+  if (typeof value === "string") return { address: value };
+  if (Array.isArray(value)) {
+    if (value.length === 0) return undefined;
+    return resolveAddress(value[0]);
+  }
+  return resolveAddress(value);
 };
 
 const normalizeAttachmentContent = (
   content: AttachmentInput["content"],
 ): string | ArrayBuffer | ArrayBufferView => {
-  if (typeof content === "string") return content;
-  if (content instanceof ArrayBuffer) return content;
-  if (ArrayBuffer.isView(content)) return content;
-
-  throw new Error("Attachment content must be a string, ArrayBuffer, or typed array");
+  return content as string | ArrayBuffer | ArrayBufferView;
 };
 
 const normalizeAttachments = (
@@ -278,16 +250,17 @@ const buildSendPayload = (
   text?: string;
   attachments?: EmailAttachment[];
 } => {
-  assertNoRecipientListDelimiter(message.to, "to");
-  assertNoRecipientListDelimiter(message.cc, "cc");
-  assertNoRecipientListDelimiter(message.bcc, "bcc");
-  assertNoRecipientDisplayName(message.to, "to");
-  assertNoRecipientDisplayName(message.cc, "cc");
-  assertNoRecipientDisplayName(message.bcc, "bcc");
+  const to = resolveAddressList(message.to);
+  const cc = resolveAddressList(message.cc);
+  const bcc = resolveAddressList(message.bcc);
 
-  const to = normalizeAddressList(message.to);
-  const cc = normalizeAddressList(message.cc);
-  const bcc = normalizeAddressList(message.bcc);
+  assertNoRecipientListDelimiter(to, "to");
+  assertNoRecipientListDelimiter(cc, "cc");
+  assertNoRecipientListDelimiter(bcc, "bcc");
+  assertNoDisplayName(to, "to");
+  assertNoDisplayName(cc, "cc");
+  assertNoDisplayName(bcc, "bcc");
+
   const totalRecipientCount = to.length + cc.length + bcc.length;
 
   if (totalRecipientCount !== 1 || to.length !== 1 || cc.length > 0 || bcc.length > 0) {
@@ -300,10 +273,12 @@ const buildSendPayload = (
     throw new Error("Email subject is required");
   }
 
-  const from = message.from ? toAddressString(message.from) : DEFAULT_FROM_ADDRESS;
+  const from = message.from
+    ? formatAddress(resolveAddress(message.from))
+    : DEFAULT_FROM_ADDRESS;
   const payload = {
     from,
-    to: to[0],
+    to: to[0].address,
     subject: message.subject,
     replyTo: undefined as string | undefined,
     cc: undefined as string[] | undefined,
@@ -313,12 +288,12 @@ const buildSendPayload = (
     attachments: undefined as EmailAttachment[] | undefined,
   };
 
-  const replyTo = normalizeSingleAddress(message.replyTo);
-  if (replyTo) payload.replyTo = replyTo;
+  const replyTo = resolveSingleAddress(message.replyTo);
+  if (replyTo) payload.replyTo = formatAddress(replyTo);
 
-  if (cc.length > 0) payload.cc = cc;
+  if (cc.length > 0) payload.cc = cc.map((addr) => addr.address);
 
-  if (bcc.length > 0) payload.bcc = bcc;
+  if (bcc.length > 0) payload.bcc = bcc.map((addr) => addr.address);
 
   if (message.html) payload.html = message.html.toString();
   if (message.text) payload.text = message.text.toString();

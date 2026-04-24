@@ -28,8 +28,10 @@ type NodeTypes =
 
 const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
   const { value, relationTo } = linkNode.fields.doc!;
-  if (typeof value !== "object") {
-    throw new Error("Expected value to be an object");
+  if (typeof value === "number") {
+    throw new Error(
+      "Internal link document is not populated — ensure rich text is fetched with sufficient depth to resolve link targets",
+    );
   }
   const slug = value.slug;
   return relationTo === "posts" ? `/posts/${slug}` : `/${slug}`;

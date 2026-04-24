@@ -19,7 +19,7 @@ export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searc
     categories: [],
   };
 
-  if (categories && Array.isArray(categories) && categories.length > 0) {
+  if (categories && categories.length > 0) {
     const populatedCategories: { id: string | number; title: string }[] = [];
     for (const category of categories) {
       if (!category) {
