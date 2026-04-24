@@ -28,4 +28,4 @@ jobs:
       - name: Run tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
-        run: turbo run test --filter=!@tom/margaret
+        run: bunx turbo run test --filter=!@tom/margaret
