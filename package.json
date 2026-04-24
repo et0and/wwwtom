@@ -3,9 +3,11 @@
   "private": true,
   "workspaces": [
     "apps/*",
+    "apps/*/*",
     "packages/@tom/*"
   ],
   "scripts": {
+    "prepare": "effect-language-service patch",
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "dev:web": "turbo run dev --filter=@tom/web",

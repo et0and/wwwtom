@@ -1,15 +1,14 @@
 ## [1.83.1](https://github.com/et0and/wwwtom/compare/v1.83.0...v1.83.1) (2026-04-14)
 
-
 ### Bug Fixes
 
-* **web:** better caching ([f9e4f4c](https://github.com/et0and/wwwtom/commit/f9e4f4cd98409c3c2a64790fa98f213aa6e99997))
+- **web:** better caching ([f9e4f4c](https://github.com/et0and/wwwtom/commit/f9e4f4cd98409c3c2a64790fa98f213aa6e99997))
 
 # [1.83.0](https://github.com/et0and/wwwtom/compare/v1.82.4...v1.83.0) (2026-04-13)
 
 ### Features
 
-* **sophie:** post pagination ([a66988d](https://github.com/et0and/wwwtom/commit/a66988d736ac4c6586a23ca9933a0bb101c2b739))
+- **sophie:** post pagination ([a66988d](https://github.com/et0and/wwwtom/commit/a66988d736ac4c6586a23ca9933a0bb101c2b739))
 
 ## [1.82.4](https://github.com/et0and/wwwtom/compare/v1.82.3...v1.82.4) (2026-04-13)
 

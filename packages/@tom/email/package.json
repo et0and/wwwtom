@@ -1,0 +1,23 @@
+{
+  "name": "@tom/email",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.tsx",
+  "types": "./src/index.tsx",
+  "exports": {
+    ".": "./src/index.tsx"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-email/components": "^0.0.39",
+    "@react-email/render": "^1.0.5",
+    "react": "19.2.1",
+    "react-email": "^4.0.18"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

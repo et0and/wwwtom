@@ -5,7 +5,7 @@
 ```bash
 npm create cloudflare@latest [name] [-- flags]  # NPM requires --
 yarn create cloudflare [name] [flags]
-pnpm create cloudflare@latest [name] [-- flags]
+bun create cloudflare@latest [name] [-- flags]
 ```
 
 ## Core Flags

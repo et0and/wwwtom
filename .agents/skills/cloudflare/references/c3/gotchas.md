@@ -46,8 +46,8 @@ npm run cf-typegen  # Regenerate types
 **Multiple lockfiles causing issues:**
 
 ```bash
-rm pnpm-lock.yaml  # If using npm
-rm package-lock.json  # If using pnpm
+rm package-lock.json  # If using Bun
+rm bun.lockb bun.lock  # If using npm
 ```
 
 ## CI/CD

@@ -16,12 +16,17 @@ Wrangler is the Cloudflare Developer Platform CLI that allows you to:
 ## Installation
 
 ```bash
-npm install wrangler --save-dev
+bun add -d wrangler
 # or globally
-npm install -g wrangler
+bun add -g wrangler
 ```
 
-Run commands: `npx wrangler <command>` (or `pnpm`/`yarn wrangler`)
+Run commands: `bunx wrangler <command>`
+
+### Other package managers (optional)
+
+- `npx wrangler <command>`
+- `yarn wrangler <command>`
 
 ## Reading Order
 
