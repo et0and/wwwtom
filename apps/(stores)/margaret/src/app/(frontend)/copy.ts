@@ -3,7 +3,6 @@ export const storefrontCopy = {
     brand: "Grandma Hope",
     shortBrand: "Grandma Hope",
     links: [{ href: "/products", label: "Shop" }],
-    bagLink: { href: "/products", label: "Cart" },
     skipToContent: "Skip to main content",
   },
   footer: {
@@ -92,7 +91,6 @@ export const storefrontCopy = {
       previous: "Previous page",
       next: "Next page",
     },
-    priceSuffix: "incl. GST",
   },
   productDetail: {
     eyebrow: "Product detail",
@@ -101,11 +99,7 @@ export const storefrontCopy = {
     purchaseBody:
       "Checkout is secure and you will receive a confirmation email with delivery details.",
     unavailable: "This item is currently unavailable while the next batch is in progress.",
-    priceSuffix: "incl. GST",
-    quantityLabel: "Quantity",
     submitLabel: "Buy now",
-    submitLoadingLabel: "Redirecting…",
-    genericCheckoutError: "Something went wrong. Please try again.",
   },
   success: {
     eyebrow: "Order received",

@@ -12,7 +12,7 @@ export const getPublishedProductsPage = cache(async (page: number) => {
       and: [{ _status: { equals: "published" } }, { isAvailable: { equals: true } }],
     },
     sort: "-updatedAt",
-    depth: 2,
+    depth: 1,
     page,
     limit: PRODUCTS_PER_PAGE,
   });
@@ -25,7 +25,7 @@ export const getPublishedProductBySlug = cache(async (slug: string) => {
     where: {
       and: [{ slug: { equals: slug } }, { _status: { equals: "published" } }],
     },
-    depth: 2,
+    depth: 1,
     limit: 1,
   });
   return result.docs[0] ?? null;

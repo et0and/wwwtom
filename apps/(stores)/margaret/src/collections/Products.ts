@@ -22,7 +22,7 @@ export const Products: CollectionConfig = {
     update: updateProducts,
   },
   admin: {
-    defaultColumns: ["name", "isAvailable", "_status", "updatedAt"],
+    defaultColumns: ["name", "priceLabel", "isAvailable", "_status", "updatedAt"],
     useAsTitle: "name",
   },
   fields: [
@@ -64,11 +64,31 @@ export const Products: CollectionConfig = {
       ],
     },
     {
-      name: "unitAmountNZD",
-      type: "number",
-      required: true,
+      name: "priceLabel",
+      type: "text",
       admin: {
-        description: "Price in NZD cents",
+        description: "Display price, for example $45 NZD.",
+      },
+    },
+    {
+      name: "stripePaymentLink",
+      type: "text",
+      admin: {
+        description: "Paste the Stripe Payment Link for this product.",
+      },
+      validate: (value: string | null | undefined) => {
+        if (value == null || value.length === 0) return true;
+
+        try {
+          const url = new URL(value);
+          if (url.protocol === "https:" && url.hostname.endsWith("stripe.com")) {
+            return true;
+          }
+        } catch {
+          return "Enter a valid Stripe Payment Link URL.";
+        }
+
+        return "Enter a valid Stripe Payment Link URL.";
       },
     },
     {
@@ -78,50 +98,6 @@ export const Products: CollectionConfig = {
       admin: {
         position: "sidebar",
       },
-    },
-    {
-      name: "maxQuantity",
-      type: "number",
-      defaultValue: 10,
-      required: true,
-      admin: {
-        position: "sidebar",
-      },
-    },
-    {
-      name: "stock",
-      type: "number",
-      defaultValue: 0,
-      admin: {
-        position: "sidebar",
-      },
-    },
-    {
-      name: "stripeSync",
-      type: "group",
-      admin: {
-        position: "sidebar",
-      },
-      fields: [
-        {
-          name: "stripeProductId",
-          type: "text",
-        },
-        {
-          name: "stripePriceId",
-          type: "text",
-        },
-        {
-          name: "stripeSyncStatus",
-          type: "select",
-          options: ["pending", "synced", "error"],
-          defaultValue: "pending",
-        },
-        {
-          name: "stripeSyncError",
-          type: "text",
-        },
-      ],
     },
     {
       name: "meta",

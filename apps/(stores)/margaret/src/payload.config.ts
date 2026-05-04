@@ -11,7 +11,6 @@ import { r2Storage } from "@payloadcms/storage-r2";
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
 import { Products } from "./collections/Products";
-import { Orders } from "./collections/Orders";
 import { plugins } from "./plugins";
 import { cloudflareEmailAdapter } from "./email/cloudflareEmailAdapter";
 
@@ -105,7 +104,7 @@ export default buildConfig({
       titleSuffix: "- Grandma Hope",
     },
   },
-  collections: [Users, Media, Products, Orders],
+  collections: [Users, Media, Products],
   editor: lexicalEditor(),
   secret: payloadSecret,
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",

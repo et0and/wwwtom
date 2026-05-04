@@ -14,7 +14,6 @@ export interface SideBySideNav {
   title: string;
   shortTitle: string;
   links: ReadonlyArray<SideBySideNavLink>;
-  bagLink: SideBySideNavLink;
 }
 
 interface SideBySideProps {
@@ -51,14 +50,7 @@ export const SideBySide = (props: SideBySideProps) => {
               {props.nav.title}
             </Link>
 
-            <div className="flex items-center justify-end border-l border-[var(--color-border)] py-4 pl-4">
-              <Link
-                href={props.nav.bagLink.href}
-                className="link text-sm font-semibold tracking-wide"
-              >
-                {props.nav.bagLink.label}
-              </Link>
-            </div>
+            <div className="border-l border-[var(--color-border)] py-4 pl-4" aria-hidden="true" />
           </div>
         </div>
       </header>

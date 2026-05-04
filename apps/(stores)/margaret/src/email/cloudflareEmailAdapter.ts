@@ -60,9 +60,7 @@ const hasRecipientListDelimiter = (value: string): boolean => {
 const assertNoDisplayName = (addresses: EmailAddress[], field: "to" | "cc" | "bcc"): void => {
   for (const addr of addresses) {
     if (!addr.name) continue;
-    throw new Error(
-      `Transactional email does not allow display names in \`${field}\` recipients`,
-    );
+    throw new Error(`Transactional email does not allow display names in \`${field}\` recipients`);
   }
 };
 
@@ -78,9 +76,7 @@ const assertNoRecipientListDelimiter = (
   }
 };
 
-const resolveSingleAddress = (
-  value: SendEmailOptions["replyTo"],
-): EmailAddress | undefined => {
+const resolveSingleAddress = (value: SendEmailOptions["replyTo"]): EmailAddress | undefined => {
   if (!value) return undefined;
   if (typeof value === "string") return { address: value };
   if (Array.isArray(value)) {
@@ -273,9 +269,7 @@ const buildSendPayload = (
     throw new Error("Email subject is required");
   }
 
-  const from = message.from
-    ? formatAddress(resolveAddress(message.from))
-    : DEFAULT_FROM_ADDRESS;
+  const from = message.from ? formatAddress(resolveAddress(message.from)) : DEFAULT_FROM_ADDRESS;
   const payload = {
     from,
     to: to[0].address,

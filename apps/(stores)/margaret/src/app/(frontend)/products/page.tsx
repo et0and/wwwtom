@@ -5,7 +5,6 @@ import type { Media } from "@/payload-types";
 import { storefrontCopy } from "@/app/(frontend)/copy";
 import { siteMetadata, siteNav } from "@/app/(frontend)/site-config";
 import { SideBySide } from "@/components/SideBySide";
-import { formatNZD } from "@/lib/formatNZD";
 import { getPublishedProductsPage } from "./product-data";
 
 export const metadata: Metadata = {
@@ -62,9 +61,11 @@ export default async function ProductsPage(props: ProductsPageProps) {
                         {product.name}
                       </Link>
 
-                      <p className="text-sm font-semibold text-[var(--color-ink)]">
-                        {formatNZD(product.unitAmountNZD)} · {copy.priceSuffix}
-                      </p>
+                      {product.priceLabel != null && product.priceLabel.length > 0 && (
+                        <p className="text-sm font-semibold text-[var(--color-ink)]">
+                          {product.priceLabel}
+                        </p>
+                      )}
                     </div>
                   </article>
                 );

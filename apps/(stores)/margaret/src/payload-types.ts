@@ -70,7 +70,6 @@ export interface Config {
     users: User;
     media: Media;
     products: Product;
-    orders: Order;
     "payload-kv": PayloadKv;
     "payload-locked-documents": PayloadLockedDocument;
     "payload-preferences": PayloadPreference;
@@ -81,7 +80,6 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     products: ProductsSelect<false> | ProductsSelect<true>;
-    orders: OrdersSelect<false> | OrdersSelect<true>;
     "payload-kv": PayloadKvSelect<false> | PayloadKvSelect<true>;
     "payload-locked-documents":
       | PayloadLockedDocumentsSelect<false>
@@ -230,10 +228,14 @@ export interface Media {
 export interface Product {
   id: number;
   name: string;
+  /**
+   * When enabled, the slug will auto-generate from the title field on save and autosave.
+   */
   generateSlug?: boolean | null;
   slug: string;
-  shortDescription?: string | null;
   featuredImage?: (number | null) | Media;
+  content?: (ContentBlock | ImageBlock | YouTubeBlock)[] | null;
+  shortDescription?: string | null;
   gallery?:
     | {
         image?: (number | null) | Media;
@@ -241,18 +243,20 @@ export interface Product {
         id?: string | null;
       }[]
     | null;
-  unitAmountNZD: number;
+  /**
+   * Display price, for example $45 NZD.
+   */
+  priceLabel?: string | null;
+  /**
+   * Paste the Stripe Payment Link for this product.
+   */
+  stripePaymentLink?: string | null;
   isAvailable?: boolean | null;
-  maxQuantity: number;
-  stock?: number | null;
-  stripeSync?: {
-    stripeProductId?: string | null;
-    stripePriceId?: string | null;
-    stripeSyncStatus?: ("pending" | "synced" | "error") | null;
-    stripeSyncError?: string | null;
-  };
   meta?: {
     title?: string | null;
+    /**
+     * Maximum upload file size: 12MB. Recommended file size for images is <500KB.
+     */
     image?: (number | null) | Media;
     description?: string | null;
   };
@@ -310,33 +314,6 @@ export interface YouTubeBlock {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders".
- */
-export interface Order {
-  id: number;
-  orderNumber: string;
-  product: number | Product;
-  quantity: number;
-  amountPaid: number;
-  customerEmail: string;
-  stripeSessionId: string;
-  stripePaymentIntentId?: string | null;
-  status?: ("paid" | "shipped" | "refunded" | "flagged") | null;
-  shippingAddress: {
-    name: string;
-    line1: string;
-    line2?: string | null;
-    city: string;
-    postalCode: string;
-    country?: string | null;
-  };
-  confirmationEmailSent?: boolean | null;
-  notes?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -370,10 +347,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: "products";
         value: number | Product;
-      } | null)
-    | ({
-        relationTo: "orders";
-        value: number | Order;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -540,8 +513,15 @@ export interface ProductsSelect<T extends boolean = true> {
   name?: T;
   generateSlug?: T;
   slug?: T;
-  shortDescription?: T;
   featuredImage?: T;
+  content?:
+    | T
+    | {
+        content?: T | ContentBlockSelect<T>;
+        image?: T | ImageBlockSelect<T>;
+        youtube?: T | YouTubeBlockSelect<T>;
+      };
+  shortDescription?: T;
   gallery?:
     | T
     | {
@@ -549,18 +529,9 @@ export interface ProductsSelect<T extends boolean = true> {
         alt?: T;
         id?: T;
       };
-  unitAmountNZD?: T;
+  priceLabel?: T;
+  stripePaymentLink?: T;
   isAvailable?: T;
-  maxQuantity?: T;
-  stock?: T;
-  stripeSync?:
-    | T
-    | {
-        stripeProductId?: T;
-        stripePriceId?: T;
-        stripeSyncStatus?: T;
-        stripeSyncError?: T;
-      };
   meta?:
     | T
     | {
@@ -602,34 +573,6 @@ export interface YouTubeBlockSelect<T extends boolean = true> {
   caption?: T;
   id?: T;
   blockName?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "orders_select".
- */
-export interface OrdersSelect<T extends boolean = true> {
-  orderNumber?: T;
-  product?: T;
-  quantity?: T;
-  amountPaid?: T;
-  customerEmail?: T;
-  stripeSessionId?: T;
-  stripePaymentIntentId?: T;
-  status?: T;
-  shippingAddress?:
-    | T
-    | {
-        name?: T;
-        line1?: T;
-        line2?: T;
-        city?: T;
-        postalCode?: T;
-        country?: T;
-      };
-  confirmationEmailSent?: T;
-  notes?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

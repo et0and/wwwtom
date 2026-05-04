@@ -13,5 +13,4 @@ export const siteNav: SideBySideNav = {
   title: siteTitle,
   shortTitle: storefrontCopy.nav.shortBrand,
   links: storefrontCopy.nav.links,
-  bagLink: storefrontCopy.nav.bagLink,
 };

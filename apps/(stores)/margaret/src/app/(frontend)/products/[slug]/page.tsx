@@ -5,8 +5,6 @@ import type { Media } from "@/payload-types";
 import { storefrontCopy } from "@/app/(frontend)/copy";
 import { siteNav } from "@/app/(frontend)/site-config";
 import { SideBySide } from "@/components/SideBySide";
-import { QuantityForm } from "@/components/QuantityForm";
-import { formatNZD } from "@/lib/formatNZD";
 import { getPublishedProductBySlug, getPublishedProductsPage } from "../product-data";
 
 interface ProductPageProps {
@@ -57,15 +55,25 @@ export default async function ProductPage(props: ProductPageProps) {
           <div className="space-y-5">
             <p className="label">{copy.eyebrow}</p>
             <h1 className="heading-section text-[2.5rem]">{product.name}</h1>
-            <p className="text-lg font-semibold">
-              {formatNZD(product.unitAmountNZD)} ·
-              <span className="ml-1 text-sm font-normal text-[var(--color-ink-muted)]">
-                {copy.priceSuffix}
-              </span>
-            </p>
+            {product.priceLabel != null && product.priceLabel.length > 0 && (
+              <p className="text-lg font-semibold">{product.priceLabel}</p>
+            )}
             <div className="surface-card space-y-3">
               <h2 className="text-xl">{copy.purchaseHeading}</h2>
               <p className="text-sm text-[var(--color-ink-muted)]">{copy.purchaseBody}</p>
+              {product.isAvailable === true &&
+              product.stripePaymentLink != null &&
+              product.stripePaymentLink.length > 0 ? (
+                <a
+                  href={product.stripePaymentLink}
+                  className="button-primary inline-flex"
+                  rel="noopener noreferrer"
+                >
+                  {copy.submitLabel}
+                </a>
+              ) : (
+                <p className="feedback-error">{copy.unavailable}</p>
+              )}
             </div>
           </div>
 

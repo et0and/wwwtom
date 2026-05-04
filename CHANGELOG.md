@@ -1,20 +1,18 @@
 # [1.84.0](https://github.com/et0and/wwwtom/compare/v1.83.1...v1.84.0) (2026-04-24)
 
-
 ### Bug Fixes
 
-* lockfile ([7049833](https://github.com/et0and/wwwtom/commit/7049833c290f7ecc553be779b4b5febde2971a0d))
-* **margaret:** minor clean up ([9686af4](https://github.com/et0and/wwwtom/commit/9686af4f7b612f1d9a630dbc8f183bbead5af8b4))
-
+- lockfile ([7049833](https://github.com/et0and/wwwtom/commit/7049833c290f7ecc553be779b4b5febde2971a0d))
+- **margaret:** minor clean up ([9686af4](https://github.com/et0and/wwwtom/commit/9686af4f7b612f1d9a630dbc8f183bbead5af8b4))
 
 ### Features
 
-* **lucy:** add cache headers for product routes and API ([0e36109](https://github.com/et0and/wwwtom/commit/0e361099cd00ac075733d54e5d2327878cc30545))
-* **lucy:** add Effect error handling and logger ([24d6211](https://github.com/et0and/wwwtom/commit/24d62119d97df634a784a8dfaf4ba4e95844e5b0))
-* **lucy:** add revalidation API route and afterDelete hook ([0dff7cd](https://github.com/et0and/wwwtom/commit/0dff7cd18bd91719abd75a3fd52036fc4f0ff7da))
-* **lucy:** init lucy store ([e662ae6](https://github.com/et0and/wwwtom/commit/e662ae663b67476e2de778c456f45de94f6a4bc5))
-* **margaret:** frontend of shop ([5816bf9](https://github.com/et0and/wwwtom/commit/5816bf9be7db23cc92c6d3bea0eeaa1fdd92bae9))
-* **margaret:** productionise ([4bdba96](https://github.com/et0and/wwwtom/commit/4bdba968acbce7b1dc026564bc4c39becdbbf2d8))
+- **lucy:** add cache headers for product routes and API ([0e36109](https://github.com/et0and/wwwtom/commit/0e361099cd00ac075733d54e5d2327878cc30545))
+- **lucy:** add Effect error handling and logger ([24d6211](https://github.com/et0and/wwwtom/commit/24d62119d97df634a784a8dfaf4ba4e95844e5b0))
+- **lucy:** add revalidation API route and afterDelete hook ([0dff7cd](https://github.com/et0and/wwwtom/commit/0dff7cd18bd91719abd75a3fd52036fc4f0ff7da))
+- **lucy:** init lucy store ([e662ae6](https://github.com/et0and/wwwtom/commit/e662ae663b67476e2de778c456f45de94f6a4bc5))
+- **margaret:** frontend of shop ([5816bf9](https://github.com/et0and/wwwtom/commit/5816bf9be7db23cc92c6d3bea0eeaa1fdd92bae9))
+- **margaret:** productionise ([4bdba96](https://github.com/et0and/wwwtom/commit/4bdba968acbce7b1dc026564bc4c39becdbbf2d8))
 
 ## [1.83.1](https://github.com/et0and/wwwtom/compare/v1.83.0...v1.83.1) (2026-04-14)
 

@@ -2,9 +2,7 @@ import type { Access } from "payload";
 
 export const readProducts: Access = ({ req: { user } }) => {
   if (user) return true;
-  return {
-    and: [{ _status: { equals: "published" } }, { isAvailable: { equals: true } }],
-  };
+  return { _status: { equals: "published" } };
 };
 
 export const createProducts: Access = ({ req: { user } }) => Boolean(user);
