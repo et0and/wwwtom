@@ -1,3 +1,10 @@
+# [1.85.0](https://github.com/et0and/wwwtom/compare/v1.84.0...v1.85.0) (2026-05-04)
+
+
+### Features
+
+* **margaret:** simplify store ([53d610e](https://github.com/et0and/wwwtom/commit/53d610e2316c34d81aa4e2deb5a1fb43027047cd))
+
 # [1.84.0](https://github.com/et0and/wwwtom/compare/v1.83.1...v1.84.0) (2026-04-24)
 
 ### Bug Fixes
