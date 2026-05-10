@@ -1,0 +1,18 @@
+{
+  "name": "my-app",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "dependencies": {
+    "alchemy": "^0.93.7",
+    "effect": "^3.21.2",
+    "@effect/platform-bun": "^0.89.0",
+    "@effect/platform-node": "^0.106.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

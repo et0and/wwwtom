@@ -30,6 +30,10 @@
     "release": "turbo run build && changeset publish --no-git"
   },
   "dependencies": {
+    "@effect/platform-bun": "^0.89.0",
+    "@effect/platform-node": "^0.106.0",
+    "alchemy": "^0.93.7",
+    "effect": "^3.21.2",
     "solid-motionone": "^1.0.4",
     "tom-web": "."
   },
