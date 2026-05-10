@@ -3,7 +3,7 @@
 exports[`Nav > matches the snapshot 1`] = `
 <div>
   <nav
-    class="relative tracking-tighter px-6 py-4 flex-shrink-0"
+    class="relative tracking-tighter px-6 py-4 flex-shrink-0 view-transition-header bg-white dark:bg-[#0a0a0a] z-50"
   >
     <div
       class="flex items-center justify-between h-16"
@@ -23,14 +23,6 @@ exports[`Nav > matches the snapshot 1`] = `
       >
         <a
           class="inactive"
-          href="/about"
-          link=""
-          preload="true"
-        >
-          About
-        </a>
-        <a
-          class="inactive"
           href="/work"
           link=""
           preload="true"
@@ -44,14 +36,6 @@ exports[`Nav > matches the snapshot 1`] = `
           preload="true"
         >
           Writing
-        </a>
-        <a
-          class="inactive"
-          href="/guestbook"
-          link=""
-          preload="true"
-        >
-          Guestbook
         </a>
       </div>
       <button
