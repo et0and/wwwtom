@@ -5,14 +5,12 @@ export function Nav() {
   const [isOpen, setIsOpen] = createSignal(false);
 
   const navItems = [
-    { href: "/about", label: "About" },
     { href: "/work", label: "Work" },
     { href: "/posts", label: "Writing" },
-    { href: "/guestbook", label: "Guestbook" },
   ];
 
   return (
-    <nav class="relative tracking-tighter px-6 py-4 flex-shrink-0">
+    <nav class="relative tracking-tighter px-6 py-4 flex-shrink-0 view-transition-header">
       <div class="flex items-center justify-between h-16">
         <a class="font-medium" href="/">
           <h1 class="!text-lg">Tom Hackshaw</h1>
