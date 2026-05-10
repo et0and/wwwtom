@@ -23,14 +23,6 @@ exports[`Nav > matches the snapshot 1`] = `
       >
         <a
           class="inactive"
-          href="/about"
-          link=""
-          preload="true"
-        >
-          About
-        </a>
-        <a
-          class="inactive"
           href="/work"
           link=""
           preload="true"
@@ -44,14 +36,6 @@ exports[`Nav > matches the snapshot 1`] = `
           preload="true"
         >
           Writing
-        </a>
-        <a
-          class="inactive"
-          href="/guestbook"
-          link=""
-          preload="true"
-        >
-          Guestbook
         </a>
       </div>
       <button

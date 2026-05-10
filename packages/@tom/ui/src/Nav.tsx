@@ -5,10 +5,8 @@ export function Nav() {
   const [isOpen, setIsOpen] = createSignal(false);
 
   const navItems = [
-    { href: "/about", label: "About" },
     { href: "/work", label: "Work" },
     { href: "/posts", label: "Writing" },
-    { href: "/guestbook", label: "Guestbook" },
   ];
 
   return (
