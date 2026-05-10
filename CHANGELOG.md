@@ -1,3 +1,10 @@
+# [1.86.0](https://github.com/et0and/wwwtom/compare/v1.85.0...v1.86.0) (2026-05-10)
+
+
+### Features
+
+* **web:** homepage content ([e6dd3be](https://github.com/et0and/wwwtom/commit/e6dd3bea06f4fd51cc936b10d60205a00b62e322))
+
 # [1.85.0](https://github.com/et0and/wwwtom/compare/v1.84.0...v1.85.0) (2026-05-04)
 
 ### Features
