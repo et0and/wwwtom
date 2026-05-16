@@ -45,7 +45,7 @@ curl -X POST 'https://api.cloudflare.com/client/v4/accounts/<account_id>/realtim
 **React**:
 
 ```tsx
-import { RtkMeeting } from '@cloudflare/realtimekit-react-ui';
+import { RtkMeeting } from "@cloudflare/realtimekit-react-ui";
 
 function App() {
   return <RtkMeeting authToken="<participant_auth_token>" onLeave={() => {}} />;
@@ -55,9 +55,9 @@ function App() {
 **Core SDK**:
 
 ```typescript
-import RealtimeKitClient from '@cloudflare/realtimekit';
+import RealtimeKitClient from "@cloudflare/realtimekit";
 
-const meeting = new RealtimeKitClient({ authToken: '<token>', video: true, audio: true });
+const meeting = new RealtimeKitClient({ authToken: "<token>", video: true, audio: true });
 await meeting.join();
 ```
 

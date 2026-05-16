@@ -4,23 +4,23 @@
 
 ```typescript
 interface BotManagement {
-  score: number;              // 1-99 (Enterprise), 0 if not computed
-  verifiedBot: boolean;       // Is verified bot
-  staticResource: boolean;    // Serves static resource
-  ja3Hash: string;            // JA3 fingerprint (Enterprise, HTTPS only)
-  ja4: string;                // JA4 fingerprint (Enterprise, HTTPS only)
+  score: number; // 1-99 (Enterprise), 0 if not computed
+  verifiedBot: boolean; // Is verified bot
+  staticResource: boolean; // Serves static resource
+  ja3Hash: string; // JA3 fingerprint (Enterprise, HTTPS only)
+  ja4: string; // JA4 fingerprint (Enterprise, HTTPS only)
   jsDetection?: {
-    passed: boolean;          // Passed JS detection (if enabled)
+    passed: boolean; // Passed JS detection (if enabled)
   };
-  detectionIds: number[];     // Heuristic detection IDs
-  corporateProxy?: boolean;   // From corporate proxy (Enterprise)
+  detectionIds: number[]; // Heuristic detection IDs
+  corporateProxy?: boolean; // From corporate proxy (Enterprise)
 }
 
 // DEPRECATED: Use botManagement.score instead
 // request.cf.clientTrustScore (legacy, duplicate of botManagement.score)
 
 // Access via request.cf
-import type { IncomingRequestCfProperties } from '@cloudflare/workers-types';
+import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -29,11 +29,11 @@ export default {
 
     if (!botMgmt) return fetch(request);
     if (botMgmt.verifiedBot) return fetch(request); // Allow verified bots
-    if (botMgmt.score === 1) return new Response('Blocked', { status: 403 });
-    if (botMgmt.score < 30) return new Response('Challenge required', { status: 429 });
+    if (botMgmt.score === 1) return new Response("Blocked", { status: 403 });
+    if (botMgmt.score < 30) return new Response("Challenge required", { status: 429 });
 
     return fetch(request);
-  }
+  },
 };
 ```
 
@@ -63,22 +63,22 @@ request.cf.verifiedBotCategory
 ## JA4 Signals (Enterprise)
 
 ```typescript
-import type { IncomingRequestCfProperties } from '@cloudflare/workers-types';
+import type { IncomingRequestCfProperties } from "@cloudflare/workers-types";
 
 interface JA4Signals {
   // Ratios (0.0-1.0)
-  heuristic_ratio_1h?: number;  // Fraction flagged by heuristics
-  browser_ratio_1h?: number;    // Fraction from real browsers
-  cache_ratio_1h?: number;      // Fraction hitting cache
-  h2h3_ratio_1h?: number;       // Fraction using HTTP/2 or HTTP/3
+  heuristic_ratio_1h?: number; // Fraction flagged by heuristics
+  browser_ratio_1h?: number; // Fraction from real browsers
+  cache_ratio_1h?: number; // Fraction hitting cache
+  h2h3_ratio_1h?: number; // Fraction using HTTP/2 or HTTP/3
   // Ranks (relative position in distribution)
-  uas_rank_1h?: number;         // User-Agent diversity rank
-  paths_rank_1h?: number;       // Path diversity rank
-  reqs_rank_1h?: number;        // Request volume rank
-  ips_rank_1h?: number;         // IP diversity rank
+  uas_rank_1h?: number; // User-Agent diversity rank
+  paths_rank_1h?: number; // Path diversity rank
+  reqs_rank_1h?: number; // Request volume rank
+  ips_rank_1h?: number; // IP diversity rank
   // Quantiles (0.0-1.0, percentile in distribution)
-  reqs_quantile_1h?: number;    // Request volume quantile
-  ips_quantile_1h?: number;     // IP count quantile
+  reqs_quantile_1h?: number; // Request volume quantile
+  ips_quantile_1h?: number; // IP count quantile
 }
 
 export default {
@@ -94,11 +94,11 @@ export default {
     const browserRatio = ja4Signals.browser_ratio_1h ?? 0;
 
     if (heuristicRatio > 0.5 || browserRatio < 0.3) {
-      return new Response('Suspicious traffic', { status: 403 });
+      return new Response("Suspicious traffic", { status: 403 });
     }
 
     return fetch(request);
-  }
+  },
 };
 ```
 
@@ -165,7 +165,7 @@ Miniflare provides mock botManagement data for local development:
 **Override in tests:**
 
 ```typescript
-import { getPlatformProxy } from 'wrangler';
+import { getPlatformProxy } from "wrangler";
 
 const { cf, dispose } = await getPlatformProxy();
 // cf.botManagement is frozen mock object

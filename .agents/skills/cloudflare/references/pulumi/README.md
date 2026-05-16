@@ -32,10 +32,15 @@ import * as cloudflare from "@pulumi/cloudflare";
 const provider = new cloudflare.Provider("cf", { apiToken: process.env.CLOUDFLARE_API_TOKEN });
 
 // API Key (legacy): CLOUDFLARE_API_KEY + CLOUDFLARE_EMAIL env
-const provider = new cloudflare.Provider("cf", { apiKey: process.env.CLOUDFLARE_API_KEY, email: process.env.CLOUDFLARE_EMAIL });
+const provider = new cloudflare.Provider("cf", {
+  apiKey: process.env.CLOUDFLARE_API_KEY,
+  email: process.env.CLOUDFLARE_EMAIL,
+});
 
 // API User Service Key: CLOUDFLARE_API_USER_SERVICE_KEY env
-const provider = new cloudflare.Provider("cf", { apiUserServiceKey: process.env.CLOUDFLARE_API_USER_SERVICE_KEY });
+const provider = new cloudflare.Provider("cf", {
+  apiUserServiceKey: process.env.CLOUDFLARE_API_USER_SERVICE_KEY,
+});
 ```
 
 ## Setup

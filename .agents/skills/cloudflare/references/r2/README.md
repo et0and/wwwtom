@@ -24,7 +24,7 @@ wrangler r2 object put my-bucket/file.txt --file=./local.txt
 ```typescript
 // Upload
 await env.MY_BUCKET.put(key, data, {
-  httpMetadata: { contentType: 'image/jpeg' }
+  httpMetadata: { contentType: "image/jpeg" },
 });
 
 // Download

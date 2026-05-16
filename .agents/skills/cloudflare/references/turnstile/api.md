@@ -18,10 +18,10 @@ Renders a Turnstile widget into a container element.
 **Example:**
 
 ```javascript
-const widgetId = window.turnstile.render('#my-container', {
-  sitekey: 'YOUR_SITE_KEY',
-  callback: (token) => console.log('Success:', token),
-  'error-callback': (code) => console.error('Error:', code)
+const widgetId = window.turnstile.render("#my-container", {
+  sitekey: "YOUR_SITE_KEY",
+  callback: (token) => console.log("Success:", token),
+  "error-callback": (code) => console.error("Error:", code),
 });
 ```
 
@@ -121,8 +121,8 @@ type UnsupportedCallback = () => void;
 
 ```typescript
 interface SiteverifyRequest {
-  secret: string;    // Your secret key (never expose client-side)
-  response: string;  // Token from cf-turnstile-response
+  secret: string; // Your secret key (never expose client-side)
+  response: string; // Token from cf-turnstile-response
   remoteip?: string; // User's IP (optional but recommended)
   idempotency_key?: string; // Unique key for idempotent validation
 }
@@ -132,14 +132,14 @@ interface SiteverifyRequest {
 
 ```javascript
 // Cloudflare Workers
-const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     secret: env.TURNSTILE_SECRET,
     response: token,
-    remoteip: request.headers.get('CF-Connecting-IP')
-  })
+    remoteip: request.headers.get("CF-Connecting-IP"),
+  }),
 });
 const data = await result.json();
 ```
@@ -148,12 +148,12 @@ const data = await result.json();
 
 ```typescript
 interface SiteverifyResponse {
-  success: boolean;           // Validation result
-  challenge_ts?: string;      // ISO timestamp of challenge
-  hostname?: string;          // Hostname where widget was solved
-  'error-codes'?: string[];   // Error codes if success=false
-  action?: string;            // Action name from widget config
-  cdata?: string;             // Custom data from widget config
+  success: boolean; // Validation result
+  challenge_ts?: string; // ISO timestamp of challenge
+  hostname?: string; // Hostname where widget was solved
+  "error-codes"?: string[]; // Error codes if success=false
+  action?: string; // Action name from widget config
+  cdata?: string; // Custom data from widget config
 }
 ```
 
@@ -198,23 +198,23 @@ interface TurnstileOptions {
   action?: string;
   cData?: string;
   callback?: (token: string) => void;
-  'error-callback'?: (errorCode: string) => void;
-  'expired-callback'?: () => void;
-  'timeout-callback'?: () => void;
-  'before-interactive-callback'?: () => void;
-  'after-interactive-callback'?: () => void;
-  'unsupported-callback'?: () => void;
-  theme?: 'light' | 'dark' | 'auto';
-  size?: 'normal' | 'compact' | 'flexible';
+  "error-callback"?: (errorCode: string) => void;
+  "expired-callback"?: () => void;
+  "timeout-callback"?: () => void;
+  "before-interactive-callback"?: () => void;
+  "after-interactive-callback"?: () => void;
+  "unsupported-callback"?: () => void;
+  theme?: "light" | "dark" | "auto";
+  size?: "normal" | "compact" | "flexible";
   tabindex?: number;
-  'response-field'?: boolean;
-  'response-field-name'?: string;
-  retry?: 'auto' | 'never';
-  'retry-interval'?: number;
+  "response-field"?: boolean;
+  "response-field-name"?: string;
+  retry?: "auto" | "never";
+  "retry-interval"?: number;
   language?: string;
-  execution?: 'render' | 'execute';
-  appearance?: 'always' | 'execute' | 'interaction-only';
-  'refresh-expired'?: 'auto' | 'manual' | 'never';
+  execution?: "render" | "execute";
+  appearance?: "always" | "execute" | "interaction-only";
+  "refresh-expired"?: "auto" | "manual" | "never";
 }
 
 interface Turnstile {
@@ -246,8 +246,8 @@ declare global {
 <!-- With load callback -->
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=onloadTurnstileCallback"></script>
 <script>
-window.onloadTurnstileCallback = () => {
-  window.turnstile.render('#container', { sitekey: 'YOUR_SITE_KEY' });
-};
+  window.onloadTurnstileCallback = () => {
+    window.turnstile.render("#container", { sitekey: "YOUR_SITE_KEY" });
+  };
 </script>
 ```

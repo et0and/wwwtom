@@ -52,7 +52,8 @@ _dmarc.example.com. IN TXT "v=DMARC1; p=quarantine"
 
 ```typescript
 // Routing/auth: envelope
-if (message.from === "trusted@example.com") { }
+if (message.from === "trusted@example.com") {
+}
 
 // Display: headers
 const display = message.headers.get("from");
@@ -150,7 +151,7 @@ export default {
       console.error(err);
       message.setReject(err.message);
     }
-  }
+  },
 } satisfies ExportedHandler;
 ```
 
@@ -163,7 +164,7 @@ const auth = message.headers.get("authentication-results") || "";
 console.log({
   spf: auth.includes("spf=pass"),
   dkim: auth.includes("dkim=pass"),
-  dmarc: auth.includes("dmarc=pass")
+  dmarc: auth.includes("dmarc=pass"),
 });
 
 if (!auth.includes("pass")) {

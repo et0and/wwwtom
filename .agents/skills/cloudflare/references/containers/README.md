@@ -33,7 +33,7 @@ export default {
     const container = env.MY_CONTAINER.getByName("instance-1");
     await container.startAndWaitForPorts();
     return container.fetch(request);
-  }
+  },
 };
 ```
 

@@ -23,7 +23,7 @@ wrangler queues consumer add my-queue my-worker
 
 ```typescript
 // Producer
-await env.MY_QUEUE.send({ userId: 123, action: 'notify' });
+await env.MY_QUEUE.send({ userId: 123, action: "notify" });
 
 // Consumer (with proper error handling)
 export default {
@@ -36,7 +36,7 @@ export default {
         msg.retry({ delaySeconds: 60 });
       }
     }
-  }
+  },
 };
 ```
 

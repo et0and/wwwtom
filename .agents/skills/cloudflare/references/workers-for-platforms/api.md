@@ -21,23 +21,24 @@ const scriptFile = new File([scriptContent], `${scriptName}.mjs`, {
   type: "application/javascript+module",
 });
 
-await client.workersForPlatforms.dispatch.namespaces.scripts.update(
-  namespace, scriptName,
-  {
-    account_id: accountId,
-    metadata: { main_module: `${scriptName}.mjs` },
-    files: [scriptFile],
-  }
-);
+await client.workersForPlatforms.dispatch.namespaces.scripts.update(namespace, scriptName, {
+  account_id: accountId,
+  metadata: { main_module: `${scriptName}.mjs` },
+  files: [scriptFile],
+});
 ```
 
 ## TypeScript Types
 
 ```typescript
-import type { DispatchNamespace } from '@cloudflare/workers-types';
+import type { DispatchNamespace } from "@cloudflare/workers-types";
 
 interface DispatchNamespace {
-  get(name: string, options?: Record<string, unknown>, dispatchOptions?: DynamicDispatchOptions): Fetcher;
+  get(
+    name: string,
+    options?: Record<string, unknown>,
+    dispatchOptions?: DynamicDispatchOptions,
+  ): Fetcher;
 }
 
 interface DynamicDispatchOptions {
@@ -46,15 +47,19 @@ interface DynamicDispatchOptions {
 }
 
 interface DynamicDispatchLimits {
-  cpuMs?: number;        // Max CPU milliseconds
-  subRequests?: number;  // Max fetch() calls
+  cpuMs?: number; // Max CPU milliseconds
+  subRequests?: number; // Max fetch() calls
 }
 
 // Usage
-const userWorker = env.DISPATCHER.get('customer-123', {}, {
-  limits: { cpuMs: 50, subRequests: 20 },
-  outbound: { customerId: '123', url: request.url }
-});
+const userWorker = env.DISPATCHER.get(
+  "customer-123",
+  {},
+  {
+    limits: { cpuMs: 50, subRequests: 20 },
+    outbound: { customerId: "123", url: request.url },
+  },
+);
 ```
 
 ## Deploy with Bindings
@@ -171,8 +176,9 @@ Control external fetch from user Workers:
 
 ```typescript
 const userWorker = env.DISPATCHER.get(
-  workerName, {},
-  { outbound: { customer_context: { customer_name: workerName, url: request.url } } }
+  workerName,
+  {},
+  { outbound: { customer_context: { customer_name: workerName, url: request.url } } },
 );
 ```
 
@@ -185,7 +191,7 @@ export default {
     const url = new URL(request.url);
 
     // Block domains
-    if (["malicious.com"].some(d => url.hostname.includes(d))) {
+    if (["malicious.com"].some((d) => url.hostname.includes(d))) {
       return new Response("Blocked", { status: 403 });
     }
 

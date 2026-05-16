@@ -155,11 +155,7 @@ interface StaticSiteArgs {
 class StaticSite extends pulumi.ComponentResource {
   public readonly url: pulumi.Output<string>;
 
-  constructor(
-    name: string,
-    args: StaticSiteArgs,
-    opts?: pulumi.ComponentResourceOptions,
-  ) {
+  constructor(name: string, args: StaticSiteArgs, opts?: pulumi.ComponentResourceOptions) {
     super("myorg:components:StaticSite", name, args, opts);
 
     // Resources created here - see practice 4 for parent setup

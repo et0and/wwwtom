@@ -34,7 +34,7 @@ interface Env {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     // ...
-  }
+  },
 } satisfies ExportedHandler<Env>;
 ```
 

@@ -60,7 +60,7 @@
 await client.networkInterconnects.slots.list({
   account_id: id,
   occupied: false,
-  facility: 'EWR1',
+  facility: "EWR1",
 });
 ```
 

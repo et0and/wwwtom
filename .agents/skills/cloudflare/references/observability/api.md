@@ -86,19 +86,19 @@ ORDER BY occurrences DESC;
 
 ```typescript
 // Standard methods (all appear in Workers Logs)
-console.log('info message');
-console.info('info message');
-console.warn('warning message');
-console.error('error message');
-console.debug('debug message');
+console.log("info message");
+console.info("info message");
+console.warn("warning message");
+console.error("error message");
+console.debug("debug message");
 
 // Structured logging (recommended)
 console.log({
-  level: 'info',
-  user_id: '123',
-  action: 'checkout',
+  level: "info",
+  user_id: "123",
+  action: "checkout",
   amount: 99.99,
-  currency: 'USD'
+  currency: "USD",
 });
 ```
 
@@ -106,9 +106,9 @@ console.log({
 
 ```typescript
 console.log({
-  level: 'error',
-  message: 'Payment failed',
-  error_code: 'CARD_DECLINED'
+  level: "error",
+  message: "Payment failed",
+  error_code: "CARD_DECLINED",
 });
 ```
 
@@ -149,14 +149,14 @@ interface TraceItem {
 }
 
 interface TraceEvent {
-  outcome: 'ok' | 'exception' | 'exceededCpu' | 'exceededMemory' | 'unknown';
+  outcome: "ok" | "exception" | "exceededCpu" | "exceededMemory" | "unknown";
   cpuTime: number; // microseconds
   wallTime: number; // microseconds
 }
 
 interface TraceLog {
   timestamp: number;
-  level: 'log' | 'info' | 'debug' | 'warn' | 'error';
+  level: "log" | "info" | "debug" | "warn" | "error";
   message: any; // string or structured object
 }
 

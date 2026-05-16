@@ -28,7 +28,7 @@ credentials-file: /path/to/<UUID>.json
 ingress:
   - hostname: app.example.com
     service: http://localhost:8000
-  - service: http_status:404  # Required catch-all
+  - service: http_status:404 # Required catch-all
 ```
 
 ## Ingress Rules
@@ -90,9 +90,9 @@ originRequest:
 
 ```yaml
 originRequest:
-  noTLSVerify: true                      # Disable cert verification
-  originServerName: "app.internal"       # Override SNI
-  caPool: /path/to/ca.pem                # Custom CA
+  noTLSVerify: true # Disable cert verification
+  originServerName: "app.internal" # Override SNI
+  caPool: /path/to/ca.pem # Custom CA
 ```
 
 ### HTTP Settings

@@ -9,9 +9,9 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["Counter", "Session", "RateLimiter"]
-    }
-  ]
+      "new_sqlite_classes": ["Counter", "Session", "RateLimiter"],
+    },
+  ],
 }
 ```
 
@@ -26,9 +26,9 @@
   "migrations": [
     {
       "tag": "v1",
-      "new_classes": ["OldCounter"]
-    }
-  ]
+      "new_classes": ["OldCounter"],
+    },
+  ],
 }
 ```
 
@@ -60,7 +60,7 @@ interface Env {
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const id = env.MY_DO.idFromName('singleton');
+    const id = env.MY_DO.idFromName("singleton");
     const stub = env.MY_DO.get(id);
 
     // Modern RPC: call methods directly (recommended)
@@ -69,8 +69,8 @@ export default {
 
     // Legacy: forward request (still works)
     // return stub.fetch(request);
-  }
-}
+  },
+};
 ```
 
 ## CPU Limits
@@ -78,8 +78,8 @@ export default {
 ```jsonc
 {
   "limits": {
-    "cpu_ms": 300000  // 5 minutes (default 30s)
-  }
+    "cpu_ms": 300000, // 5 minutes (default 30s)
+  },
 }
 ```
 

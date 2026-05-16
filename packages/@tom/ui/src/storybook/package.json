@@ -12,8 +12,8 @@
   "scripts": {
     "storybook": "storybook dev -p 6006",
     "build": "storybook build",
-    "deploy": "bun run build && bunx wrangler pages deploy ./storybook-static --project-name storybooktom",
-    "preview:deploy": "bun run build && bunx wrangler pages dev ./storybook-static"
+    "deploy": "pnpm run build && pnpm dlx wrangler pages deploy ./storybook-static --project-name storybooktom",
+    "preview:deploy": "pnpm run build && pnpm dlx wrangler pages dev ./storybook-static"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.0.1",

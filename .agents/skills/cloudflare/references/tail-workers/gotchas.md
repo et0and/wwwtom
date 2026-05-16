@@ -13,14 +13,14 @@
 export default {
   async tail(events) {
     fetch(endpoint, { body: JSON.stringify(events) });
-  }
+  },
 };
 
 // ❌ WRONG - blocking await
 export default {
   async tail(events, env, ctx) {
     await fetch(endpoint, { body: JSON.stringify(events) });
-  }
+  },
 };
 
 // ✅ CORRECT
@@ -30,9 +30,9 @@ export default {
       (async () => {
         await fetch(endpoint, { body: JSON.stringify(events) });
         await processMore();
-      })()
+      })(),
     );
-  }
+  },
 };
 ```
 
@@ -49,11 +49,17 @@ export default {
 
 ```typescript
 // ❌ WRONG
-if (event.outcome === 500) { /* never matches */ }
+if (event.outcome === 500) {
+  /* never matches */
+}
 
 // ✅ CORRECT
-if (event.outcome === 'exception') { /* script threw */ }
-if (event.event?.response?.status === 500) { /* HTTP 500 */ }
+if (event.outcome === "exception") {
+  /* script threw */
+}
+if (event.event?.response?.status === 500) {
+  /* HTTP 500 */
+}
 ```
 
 ### 4. Timestamp Units
@@ -72,9 +78,11 @@ if (event.event?.response?.status === 500) { /* HTTP 500 */ }
 **Cause:** Old docs used `TailItem`, SDK uses `TraceItem`
 
 ```typescript
-import type { TraceItem } from '@cloudflare/workers-types';
+import type { TraceItem } from "@cloudflare/workers-types";
 export default {
-  async tail(events: TraceItem[], env, ctx) { /* ... */ }
+  async tail(events: TraceItem[], env, ctx) {
+    /* ... */
+  },
 };
 ```
 
@@ -87,9 +95,9 @@ export default {
 ```typescript
 export default {
   async tail(events, env, ctx) {
-    if (Math.random() > 0.1) return;  // 10% sample
+    if (Math.random() > 0.1) return; // 10% sample
     ctx.waitUntil(sendToEndpoint(events));
-  }
+  },
 };
 ```
 
@@ -100,15 +108,18 @@ export default {
 **Solution:**
 
 ```typescript
-const safePayload = events.map(e => ({
+const safePayload = events.map((e) => ({
   ...e,
-  logs: e.logs.map(log => ({
+  logs: e.logs.map((log) => ({
     ...log,
-    message: log.message.map(m => {
-      try { return JSON.parse(JSON.stringify(m)); }
-      catch { return String(m); }
-    })
-  }))
+    message: log.message.map((m) => {
+      try {
+        return JSON.parse(JSON.stringify(m));
+      } catch {
+        return String(m);
+      }
+    }),
+  })),
 }));
 ```
 
@@ -119,14 +130,16 @@ const safePayload = events.map(e => ({
 **Solution:**
 
 ```typescript
-ctx.waitUntil((async () => {
-  try {
-    await fetch(env.ENDPOINT, { body: JSON.stringify(events) });
-  } catch (error) {
-    console.error("Tail error:", error);
-    await env.FALLBACK_KV.put(`failed:${Date.now()}`, JSON.stringify(events));
-  }
-})());
+ctx.waitUntil(
+  (async () => {
+    try {
+      await fetch(env.ENDPOINT, { body: JSON.stringify(events) });
+    } catch (error) {
+      console.error("Tail error:", error);
+      await env.FALLBACK_KV.put(`failed:${Date.now()}`, JSON.stringify(events));
+    }
+  })(),
+);
 ```
 
 ### 9. Deployment Order
@@ -165,12 +178,12 @@ Add test endpoint to producer:
 ```typescript
 export default {
   async fetch(request) {
-    if (request.url.includes('/test')) {
-      console.log('Test log');
-      throw new Error('Test error');
+    if (request.url.includes("/test")) {
+      console.log("Test log");
+      throw new Error("Test error");
     }
-    return new Response('OK');
-  }
+    return new Response("OK");
+  },
 };
 ```
 

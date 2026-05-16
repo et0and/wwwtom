@@ -85,10 +85,10 @@ export default {
 
     // GOOD: Explicit error handling
     ctx.waitUntil(
-      riskyOperation().catch(err => {
+      riskyOperation().catch((err) => {
         console.error("Background task failed:", err);
         return logError(err, env);
-      })
+      }),
     );
   },
 };

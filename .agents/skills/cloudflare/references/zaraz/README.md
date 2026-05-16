@@ -23,13 +23,13 @@ Zaraz offloads third-party scripts (analytics, ads, chat, marketing) to Cloudfla
 
 ```javascript
 // Track page view
-zaraz.track('page_view');
+zaraz.track("page_view");
 
 // Track custom event
-zaraz.track('button_click', { button_id: 'cta' });
+zaraz.track("button_click", { button_id: "cta" });
 
 // Set user properties
-zaraz.set('userId', 'user_123');
+zaraz.set("userId", "user_123");
 ```
 
 ## When to Use Zaraz

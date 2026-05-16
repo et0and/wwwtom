@@ -28,7 +28,7 @@ async function putWithRetry(
   kv: KVNamespace,
   key: string,
   value: string,
-  maxAttempts = 5
+  maxAttempts = 5,
 ): Promise<void> {
   let delay = 1000;
   for (let i = 0; i < maxAttempts; i++) {
@@ -38,7 +38,7 @@ async function putWithRetry(
     } catch (err) {
       if (err instanceof Error && err.message.includes("429")) {
         if (i === maxAttempts - 1) throw err;
-        await new Promise(r => setTimeout(r, delay));
+        await new Promise((r) => setTimeout(r, delay));
         delay *= 2; // Exponential backoff
       } else {
         throw err;
@@ -87,7 +87,7 @@ if (!exists) {
 }
 
 // Alternative: Always assume key may not exist, use defaults
-const value = await env.KV.get("key") ?? "default-value";
+const value = (await env.KV.get("key")) ?? "default-value";
 ```
 
 ## Performance Tips

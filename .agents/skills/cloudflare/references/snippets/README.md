@@ -63,8 +63,8 @@ export default {
     newResponse.headers.set("X-Frame-Options", "DENY");
     newResponse.headers.set("X-Content-Type-Options", "nosniff");
     return newResponse;
-  }
-}
+  },
+};
 ```
 
 Deploy via Dashboard (Rules → Snippets) or API/Terraform. See configuration.md for details.

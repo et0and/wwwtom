@@ -5,7 +5,7 @@
 ```jsonc
 // wrangler.jsonc
 {
-  "ai": { "binding": "AI" }
+  "ai": { "binding": "AI" },
 }
 ```
 
@@ -16,7 +16,7 @@ interface Env {
 
 const answer = await env.AI.autorag("my-instance").aiSearch({
   query: "How do I configure caching?",
-  model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+  model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
 });
 ```
 
@@ -85,7 +85,7 @@ const answer = await env.AI.autorag(env.AI_SEARCH_INSTANCE).aiSearch({ query });
 
 ```typescript
 const instances = await env.AI.autorag("_").listInstances();
-console.log(instances.find(i => i.name === "docs"));
+console.log(instances.find((i) => i.name === "docs"));
 ```
 
 Dashboard shows: files indexed, status, last index time, storage usage.

@@ -12,12 +12,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-email/components": "^0.0.39",
-    "@react-email/render": "^1.0.5",
-    "react": "19.2.1",
-    "react-email": "^4.0.18"
+    "@react-email/components": "0.0.39",
+    "@react-email/render": "1.0.5",
+    "react": "catalog:",
+    "react-email": "4.3.2"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   }
 }

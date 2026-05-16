@@ -5,9 +5,7 @@
 ```jsonc
 // wrangler.jsonc
 {
-  "pipelines": [
-    { "pipeline": "<STREAM_ID>", "binding": "STREAM" }
-  ]
+  "pipelines": [{ "pipeline": "<STREAM_ID>", "binding": "STREAM" }],
 }
 ```
 

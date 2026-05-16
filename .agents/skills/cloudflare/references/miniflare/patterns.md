@@ -116,14 +116,19 @@ await worker.scheduled({ cron: "0 0 * * *" });
 
 ```js
 // Per-test isolation
-beforeEach(() => { mf = new Miniflare({ kvNamespaces: ["TEST"] }); });
+beforeEach(() => {
+  mf = new Miniflare({ kvNamespaces: ["TEST"] });
+});
 afterEach(() => mf.dispose());
 
 // Mock external APIs
 new Miniflare({
   workers: [
     { name: "main", serviceBindings: { API: "mock-api" }, script: `...` },
-    { name: "mock-api", script: `export default { async fetch() { return Response.json({mock: true}); } }` },
+    {
+      name: "mock-api",
+      script: `export default { async fetch() { return Response.json({mock: true}); } }`,
+    },
   ],
 });
 ```
@@ -144,7 +149,7 @@ await env.KV.put("key", "value"); // Typed!
 export default {
   async fetch(req: Request, env: Env) {
     return new Response(await env.KV.get("key"));
-  }
+  },
 } satisfies ExportedHandler<Env>;
 ```
 

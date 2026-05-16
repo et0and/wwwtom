@@ -4,13 +4,9 @@
 
 ```typescript
 export default {
-  async tail(
-    events: TraceItem[],
-    env: Env,
-    ctx: ExecutionContext
-  ): Promise<void> {
+  async tail(events: TraceItem[], env: Env, ctx: ExecutionContext): Promise<void> {
     // Process events
-  }
+  },
 } satisfies ExportedHandler<Env>;
 ```
 
@@ -26,18 +22,25 @@ export default {
 
 ```typescript
 interface TraceItem {
-  scriptName: string;           // Producer Worker name
-  eventTimestamp: number;        // Epoch milliseconds
-  outcome: 'ok' | 'exception' | 'exceededCpu' | 'exceededMemory'
-         | 'canceled' | 'scriptNotFound' | 'responseStreamDisconnected' | 'unknown';
+  scriptName: string; // Producer Worker name
+  eventTimestamp: number; // Epoch milliseconds
+  outcome:
+    | "ok"
+    | "exception"
+    | "exceededCpu"
+    | "exceededMemory"
+    | "canceled"
+    | "scriptNotFound"
+    | "responseStreamDisconnected"
+    | "unknown";
 
   event?: {
     request?: {
-      url: string;               // Redacted by default
+      url: string; // Redacted by default
       method: string;
-      headers: Record<string, string>;  // Sensitive headers redacted
+      headers: Record<string, string>; // Sensitive headers redacted
       cf?: IncomingRequestCfProperties;
-      getUnredacted(): TraceRequest;    // Bypass redaction (use carefully)
+      getUnredacted(): TraceRequest; // Bypass redaction (use carefully)
     };
     response?: {
       status: number;
@@ -45,21 +48,21 @@ interface TraceItem {
   };
 
   logs: Array<{
-    timestamp: number;           // Epoch milliseconds
-    level: 'debug' | 'info' | 'log' | 'warn' | 'error';
-    message: unknown[];          // Args passed to console function
+    timestamp: number; // Epoch milliseconds
+    level: "debug" | "info" | "log" | "warn" | "error";
+    message: unknown[]; // Args passed to console function
   }>;
 
   exceptions: Array<{
-    timestamp: number;           // Epoch milliseconds
-    name: string;                // Error type (Error, TypeError, etc.)
-    message: string;             // Error description
+    timestamp: number; // Epoch milliseconds
+    name: string; // Error type (Error, TypeError, etc.)
+    message: string; // Error description
   }>;
 
   diagnosticsChannelEvents: Array<{
     channel: string;
     message: unknown;
-    timestamp: number;           // Epoch milliseconds
+    timestamp: number; // Epoch milliseconds
   }>;
 }
 ```
@@ -106,7 +109,7 @@ export default {
       const unredacted = event.event?.request?.getUnredacted();
       // unredacted.url and unredacted.headers contain raw values
     }
-  }
+  },
 };
 ```
 
@@ -128,12 +131,8 @@ interface Env {
 }
 
 export default {
-  async tail(
-    events: TraceItem[],
-    env: Env,
-    ctx: ExecutionContext
-  ): Promise<void> {
-    const payload = events.map(event => ({
+  async tail(events: TraceItem[], env: Env, ctx: ExecutionContext): Promise<void> {
+    const payload = events.map((event) => ({
       script: event.scriptName,
       timestamp: event.eventTimestamp,
       outcome: event.outcome,
@@ -146,9 +145,9 @@ export default {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
-      })
+      }),
     );
-  }
+  },
 } satisfies ExportedHandler<Env>;
 ```
 
@@ -162,7 +161,7 @@ export default {
 
 ```typescript
 // ✅ Check outcome for script execution status
-if (event.outcome === 'exception') {
+if (event.outcome === "exception") {
   // Script threw uncaught exception
 }
 
@@ -181,18 +180,18 @@ if (event.event?.response?.status === 500) {
 JSON.stringify(events);
 
 // ✅ Safe serialization
-const safePayload = events.map(event => ({
+const safePayload = events.map((event) => ({
   ...event,
-  logs: event.logs.map(log => ({
+  logs: event.logs.map((log) => ({
     ...log,
-    message: log.message.map(m => {
+    message: log.message.map((m) => {
       try {
         return JSON.parse(JSON.stringify(m));
       } catch {
         return String(m);
       }
-    })
-  }))
+    }),
+  })),
 }));
 ```
 

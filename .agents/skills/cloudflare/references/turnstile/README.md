@@ -35,10 +35,10 @@ Turnstile is a user-friendly CAPTCHA alternative that runs challenges in the bac
 <div id="turnstile-container"></div>
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
 <script>
-window.turnstile.render('#turnstile-container', {
-  sitekey: 'YOUR_SITE_KEY',
-  callback: (token) => console.log('Token:', token)
-});
+  window.turnstile.render("#turnstile-container", {
+    sitekey: "YOUR_SITE_KEY",
+    callback: (token) => console.log("Token:", token),
+  });
 </script>
 ```
 
@@ -49,25 +49,25 @@ window.turnstile.render('#turnstile-container', {
 export default {
   async fetch(request) {
     const formData = await request.formData();
-    const token = formData.get('cf-turnstile-response');
+    const token = formData.get("cf-turnstile-response");
 
-    const result = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const result = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         secret: env.TURNSTILE_SECRET,
         response: token,
-        remoteip: request.headers.get('CF-Connecting-IP')
-      })
+        remoteip: request.headers.get("CF-Connecting-IP"),
+      }),
     });
 
     const validation = await result.json();
     if (!validation.success) {
-      return new Response('Invalid CAPTCHA', { status: 400 });
+      return new Response("Invalid CAPTCHA", { status: 400 });
     }
     // Process form...
-  }
-}
+  },
+};
 ```
 
 ## Testing Keys

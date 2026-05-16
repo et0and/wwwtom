@@ -23,10 +23,10 @@ Manual control over when/where widgets render via `window.turnstile.render()`.
 ```html
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?onload=myCallback"></script>
 <script>
-function myCallback() {
-  // API ready
-  window.turnstile.render('#container', { sitekey: 'YOUR_SITE_KEY' });
-}
+  function myCallback() {
+    // API ready
+    window.turnstile.render("#container", { sitekey: "YOUR_SITE_KEY" });
+  }
 </script>
 ```
 
@@ -131,11 +131,13 @@ For implicit rendering, use data attributes on `<div class="cf-turnstile">`:
 **Example:**
 
 ```html
-<div class="cf-turnstile"
-     data-sitekey="YOUR_SITE_KEY"
-     data-theme="dark"
-     data-callback="onTurnstileSuccess"
-     data-error-callback="onTurnstileError"></div>
+<div
+  class="cf-turnstile"
+  data-sitekey="YOUR_SITE_KEY"
+  data-theme="dark"
+  data-callback="onTurnstileSuccess"
+  data-error-callback="onTurnstileError"
+></div>
 ```
 
 ## Content Security Policy
@@ -150,10 +152,12 @@ frame-src https://challenges.cloudflare.com;
 **Full Example:**
 
 ```html
-<meta http-equiv="Content-Security-Policy"
-      content="default-src 'self';
+<meta
+  http-equiv="Content-Security-Policy"
+  content="default-src 'self';
                script-src 'self' https://challenges.cloudflare.com;
-               frame-src https://challenges.cloudflare.com;">
+               frame-src https://challenges.cloudflare.com;"
+/>
 ```
 
 ## Framework-Specific Setup
@@ -165,12 +169,9 @@ npm install @marsidev/react-turnstile
 ```
 
 ```jsx
-import Turnstile from '@marsidev/react-turnstile';
+import Turnstile from "@marsidev/react-turnstile";
 
-<Turnstile
-  siteKey="YOUR_SITE_KEY"
-  onSuccess={(token) => console.log(token)}
-/>
+<Turnstile siteKey="YOUR_SITE_KEY" onSuccess={(token) => console.log(token)} />;
 ```
 
 ### Vue
@@ -184,7 +185,7 @@ npm install vue-turnstile
   <VueTurnstile site-key="YOUR_SITE_KEY" @success="onSuccess" />
 </template>
 <script setup>
-import VueTurnstile from 'vue-turnstile';
+import VueTurnstile from "vue-turnstile";
 </script>
 ```
 
@@ -205,8 +206,8 @@ import Turnstile from 'svelte-turnstile';
 
 ```tsx
 // app/components/TurnstileWidget.tsx
-'use client';
-import { useEffect, useRef } from 'react';
+"use client";
+import { useEffect, useRef } from "react";
 
 export default function TurnstileWidget({ sitekey, onSuccess }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -215,7 +216,7 @@ export default function TurnstileWidget({ sitekey, onSuccess }) {
     if (ref.current && window.turnstile) {
       const widgetId = window.turnstile.render(ref.current, {
         sitekey,
-        callback: onSuccess
+        callback: onSuccess,
       });
       return () => window.turnstile.remove(widgetId);
     }
@@ -233,10 +234,10 @@ npm install @cloudflare/pages-plugin-turnstile
 
 ```typescript
 // functions/_middleware.ts
-import turnstilePlugin from '@cloudflare/pages-plugin-turnstile';
+import turnstilePlugin from "@cloudflare/pages-plugin-turnstile";
 
 export const onRequest = turnstilePlugin({
-  secret: 'YOUR_SECRET_KEY',
-  onError: () => new Response('CAPTCHA failed', { status: 403 })
+  secret: "YOUR_SECRET_KEY",
+  onError: () => new Response("CAPTCHA failed", { status: 403 }),
 });
 ```

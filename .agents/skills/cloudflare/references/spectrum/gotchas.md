@@ -27,7 +27,7 @@ dig app.example.com
 // Enable in Spectrum app
 const app = await client.spectrum.apps.create({
   // ...
-  proxy_protocol: 'v1',  // TCP: v1/v2; UDP: simple
+  proxy_protocol: "v1", // TCP: v1/v2; UDP: simple
 });
 ```
 
@@ -128,8 +128,8 @@ frontend ft_ssh
 const app = await client.spectrum.apps.create({
   // ...
   edge_ips: {
-    type: 'dynamic',
-    connectivity: 'ipv4',  // Options: 'all', 'ipv4', 'ipv6'
+    type: "dynamic",
+    connectivity: "ipv4", // Options: 'all', 'ipv4', 'ipv6'
   },
 });
 ```

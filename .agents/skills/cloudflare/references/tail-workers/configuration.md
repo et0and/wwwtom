@@ -14,9 +14,9 @@ export default {
       fetch(env.LOG_ENDPOINT, {
         method: "POST",
         body: JSON.stringify(events),
-      })
+      }),
     );
-  }
+  },
 };
 ```
 
@@ -29,9 +29,9 @@ In producer's `wrangler.jsonc`:
   "name": "my-producer-worker",
   "tail_consumers": [
     {
-      "service": "my-tail-worker"
-    }
-  ]
+      "service": "my-tail-worker",
+    },
+  ],
 }
 ```
 
@@ -56,9 +56,9 @@ wrangler deploy
   "name": "producer-worker",
   "tail_consumers": [
     {
-      "service": "logging-tail-worker"
-    }
-  ]
+      "service": "logging-tail-worker",
+    },
+  ],
 }
 ```
 
@@ -69,12 +69,12 @@ wrangler deploy
   "name": "producer-worker",
   "tail_consumers": [
     {
-      "service": "logging-tail-worker"
+      "service": "logging-tail-worker",
     },
     {
-      "service": "metrics-tail-worker"
-    }
-  ]
+      "service": "metrics-tail-worker",
+    },
+  ],
 }
 ```
 
@@ -84,7 +84,7 @@ wrangler deploy
 
 ```jsonc
 {
-  "tail_consumers": []
+  "tail_consumers": [],
 }
 ```
 
@@ -98,14 +98,14 @@ Tail Workers use same binding syntax as regular Workers:
 {
   "name": "my-tail-worker",
   "vars": {
-    "LOG_ENDPOINT": "https://logs.example.com/ingest"
+    "LOG_ENDPOINT": "https://logs.example.com/ingest",
   },
   "kv_namespaces": [
     {
       "binding": "LOGS_KV",
-      "id": "abc123..."
-    }
-  ]
+      "id": "abc123...",
+    },
+  ],
 }
 ```
 
@@ -164,9 +164,9 @@ For dynamic dispatch Workers, both dispatch and user Worker events sent to tail 
   "name": "dispatch-worker",
   "tail_consumers": [
     {
-      "service": "platform-tail-worker"
-    }
-  ]
+      "service": "platform-tail-worker",
+    },
+  ],
 }
 ```
 

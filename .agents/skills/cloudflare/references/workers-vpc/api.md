@@ -5,10 +5,7 @@ Complete API reference for the Cloudflare Workers TCP Sockets API (`cloudflare:s
 ## Core Function: `connect()`
 
 ```typescript
-function connect(
-  address: SocketAddress,
-  options?: SocketOptions
-): Socket
+function connect(address: SocketAddress, options?: SocketOptions): Socket;
 ```
 
 Creates an outbound TCP connection to the specified address.
@@ -20,7 +17,7 @@ Creates an outbound TCP connection to the specified address.
 ```typescript
 interface SocketAddress {
   hostname: string; // DNS hostname or IP address
-  port: number;     // TCP port (1-65535, excluding blocked ports)
+  port: number; // TCP port (1-65535, excluding blocked ports)
 }
 ```
 
@@ -105,7 +102,7 @@ Promise that resolves when connection succeeds, rejects on failure.
 ```typescript
 interface SocketInfo {
   remoteAddress?: string; // May be undefined
-  localAddress?: string;  // May be undefined
+  localAddress?: string; // May be undefined
 }
 
 try {
@@ -139,10 +136,7 @@ try {
 Upgrades connection to TLS. Only available when `secureTransport: "starttls"` was specified.
 
 ```typescript
-const socket = connect(
-  { hostname: "db.internal", port: 5432 },
-  { secureTransport: "starttls" }
-);
+const socket = connect({ hostname: "db.internal", port: 5432 }, { secureTransport: "starttls" });
 
 // Send protocol-specific StartTLS command
 const writer = socket.writable.getWriter();
@@ -156,7 +150,7 @@ const secureWriter = secureSocket.writable.getWriter();
 ## Complete Example
 
 ```typescript
-import { connect } from 'cloudflare:sockets';
+import { connect } from "cloudflare:sockets";
 
 export default {
   async fetch(req: Request): Promise<Response> {
@@ -176,7 +170,7 @@ export default {
     } finally {
       await socket.close();
     }
-  }
+  },
 };
 ```
 

@@ -15,7 +15,7 @@ export default {
     } finally {
       await browser.close(); // ALWAYS in finally
     }
-  }
+  },
 };
 ```
 
@@ -49,7 +49,7 @@ if (sessionId) {
 ```typescript
 const pages = await Promise.all(urls.map(() => browser.newPage()));
 await Promise.all(pages.map((p, i) => p.goto(urls[i])));
-const titles = await Promise.all(pages.map(p => p.title()));
+const titles = await Promise.all(pages.map((p) => p.title()));
 ```
 
 ## Playwright Selectors
@@ -86,7 +86,8 @@ try {
   await page.goto(url, { timeout: 30000, waitUntil: "networkidle0" });
 } catch (e) {
   if (e.message.includes("timeout")) return new Response("Timeout", { status: 504 });
-  if (e.message.includes("Session limit")) return new Response("Too many sessions", { status: 429 });
+  if (e.message.includes("Session limit"))
+    return new Response("Too many sessions", { status: 429 });
 } finally {
   if (browser) await browser.close();
 }

@@ -7,10 +7,12 @@
 ```jsonc
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "dispatch_namespaces": [{
-    "binding": "DISPATCHER",
-    "namespace": "production"
-  }]
+  "dispatch_namespaces": [
+    {
+      "binding": "DISPATCHER",
+      "namespace": "production",
+    },
+  ],
 }
 ```
 
@@ -45,14 +47,16 @@ curl -X PUT \
 
 ```jsonc
 {
-  "dispatch_namespaces": [{
-    "binding": "DISPATCHER",
-    "namespace": "production",
-    "outbound": {
-      "service": "outbound-worker",
-      "parameters": ["customer_context"]
-    }
-  }]
+  "dispatch_namespaces": [
+    {
+      "binding": "DISPATCHER",
+      "namespace": "production",
+      "outbound": {
+        "service": "outbound-worker",
+        "parameters": ["customer_context"],
+      },
+    },
+  ],
 }
 ```
 
@@ -76,10 +80,10 @@ const userWorker = env.DISPATCHER.get(
   {},
   {
     limits: {
-      cpuMs: 10,        // Max CPU ms
-      subRequests: 5    // Max fetch() calls
-    }
-  }
+      cpuMs: 10, // Max CPU ms
+      subRequests: 5, // Max fetch() calls
+    },
+  },
 );
 ```
 
@@ -108,8 +112,8 @@ Deploy HTML/CSS/images with Workers. See [api.md](./api.md#static-assets) for up
   "main": "./src/index.js",
   "assets": {
     "directory": "./public",
-    "binding": "ASSETS"
-  }
+    "binding": "ASSETS",
+  },
 }
 ```
 
@@ -153,9 +157,9 @@ Add via API metadata (see [api.md](./api.md#deploy-with-bindings)):
 ```json
 {
   "bindings": [
-    {"type": "kv_namespace", "name": "USER_KV", "namespace_id": "..."},
-    {"type": "r2_bucket", "name": "STORAGE", "bucket_name": "..."},
-    {"type": "d1", "name": "DB", "id": "..."}
+    { "type": "kv_namespace", "name": "USER_KV", "namespace_id": "..." },
+    { "type": "r2_bucket", "name": "STORAGE", "bucket_name": "..." },
+    { "type": "d1", "name": "DB", "id": "..." }
   ]
 }
 ```
@@ -164,8 +168,8 @@ Preserve existing bindings:
 
 ```json
 {
-  "bindings": [{"type": "r2_bucket", "name": "STORAGE", "bucket_name": "new"}],
-  "keep_bindings": ["kv_namespace", "d1"]  // Preserves existing bindings of these types
+  "bindings": [{ "type": "r2_bucket", "name": "STORAGE", "bucket_name": "new" }],
+  "keep_bindings": ["kv_namespace", "d1"] // Preserves existing bindings of these types
 }
 ```
 

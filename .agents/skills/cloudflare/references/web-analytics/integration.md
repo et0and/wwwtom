@@ -5,8 +5,11 @@
 ## Basic HTML
 
 ```html
-<script defer src='https://static.cloudflareinsights.com/beacon.min.js'
-        data-cf-beacon='{"token": "YOUR_TOKEN", "spa": true}'></script>
+<script
+  defer
+  src="https://static.cloudflareinsights.com/beacon.min.js"
+  data-cf-beacon='{"token": "YOUR_TOKEN", "spa": true}'
+></script>
 ```
 
 Place before closing `</body>` tag.
@@ -50,11 +53,11 @@ connect-src 'self' https://cloudflareinsights.com;
 
 ```typescript
 // Load conditionally based on consent
-if (localStorage.getItem('analytics-consent') === 'true') {
-  const script = document.createElement('script');
-  script.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+if (localStorage.getItem("analytics-consent") === "true") {
+  const script = document.createElement("script");
+  script.src = "https://static.cloudflareinsights.com/beacon.min.js";
   script.defer = true;
-  script.setAttribute('data-cf-beacon', '{"token": "YOUR_TOKEN", "spa": true}');
+  script.setAttribute("data-cf-beacon", '{"token": "YOUR_TOKEN", "spa": true}');
   document.body.appendChild(script);
 }
 ```

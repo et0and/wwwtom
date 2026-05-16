@@ -14,9 +14,9 @@
   "dependencies": {
     "@tom/constants": "workspace:*",
     "@tom/types": "workspace:*",
-    "effect": "^3.19.5"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   }
 }

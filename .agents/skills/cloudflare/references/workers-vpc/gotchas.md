@@ -18,8 +18,12 @@ Common pitfalls, limitations, and solutions for TCP Sockets in Cloudflare Worker
 
 ```typescript
 for (let i = 0; i < hosts.length; i += 6) {
-  const batch = hosts.slice(i, i + 6).map(h => connect({ hostname: h, port: 443 }));
-  await Promise.all(batch.map(async s => { /* use */ await s.close(); }));
+  const batch = hosts.slice(i, i + 6).map((h) => connect({ hostname: h, port: 443 }));
+  await Promise.all(
+    batch.map(async (s) => {
+      /* use */ await s.close();
+    }),
+  );
 }
 ```
 
@@ -71,7 +75,7 @@ Cloudflare IPs (1.1.1.1), localhost (127.0.0.1), port 25 (SMTP), Worker's own UR
 
 ```typescript
 const socket = connect(addr, opts);
-const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000));
+const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 5000));
 await Promise.race([socket.opened, timeout]);
 ```
 
@@ -141,9 +145,9 @@ try {
 **Solution:** Validate against strict allowlist:
 
 ```typescript
-const ALLOWED = ['api1.internal.net', 'api2.internal.net'];
-const host = new URL(req.url).searchParams.get('host');
-if (!host || !ALLOWED.includes(host)) return new Response('Forbidden', { status: 403 });
+const ALLOWED = ["api1.internal.net", "api2.internal.net"];
+const host = new URL(req.url).searchParams.get("host");
+if (!host || !ALLOWED.includes(host)) return new Response("Forbidden", { status: 403 });
 ```
 
 ## When to Use Alternatives

@@ -22,9 +22,9 @@ const answer = await env.AI.autorag("saas-docs").aiSearch({
   model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
   filters: {
     column: "folder",
-    operator: "gte",  // "starts with" pattern
-    value: `tenants/${tenantId}/`
-  }
+    operator: "gte", // "starts with" pattern
+    value: `tenants/${tenantId}/`,
+  },
 });
 ```
 
@@ -32,7 +32,9 @@ const answer = await env.AI.autorag("saas-docs").aiSearch({
 
 ```typescript
 const stream = await env.AI.autorag("docs").aiSearch({
-  query, model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast", stream: true
+  query,
+  model: "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+  stream: true,
 });
 return new Response(stream, { headers: { "Content-Type": "text/event-stream" } });
 ```

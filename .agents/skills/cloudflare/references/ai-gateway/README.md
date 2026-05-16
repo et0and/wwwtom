@@ -27,9 +27,9 @@ Expert guidance for implementing Cloudflare AI Gateway - a universal gateway for
 Most modern pattern using official `ai-gateway-provider` package with automatic fallbacks.
 
 ```typescript
-import { createAiGateway } from 'ai-gateway-provider';
-import { createOpenAI } from '@ai-sdk/openai';
-import { generateText } from 'ai';
+import { createAiGateway } from "ai-gateway-provider";
+import { createOpenAI } from "@ai-sdk/openai";
+import { generateText } from "ai";
 
 const gateway = createAiGateway({
   accountId: process.env.CF_ACCOUNT_ID,
@@ -37,22 +37,22 @@ const gateway = createAiGateway({
 });
 
 const openai = createOpenAI({
-  apiKey: process.env.OPENAI_API_KEY
+  apiKey: process.env.OPENAI_API_KEY,
 });
 
 // Single model
 const { text } = await generateText({
-  model: gateway(openai('gpt-4o')),
-  prompt: 'Hello'
+  model: gateway(openai("gpt-4o")),
+  prompt: "Hello",
 });
 
 // Automatic fallback array
 const { text } = await generateText({
   model: gateway([
-    openai('gpt-4o'),              // Try first
-    anthropic('claude-sonnet-4-5'), // Fallback
+    openai("gpt-4o"), // Try first
+    anthropic("claude-sonnet-4-5"), // Fallback
   ]),
-  prompt: 'Hello'
+  prompt: "Hello",
 });
 ```
 
@@ -63,20 +63,20 @@ const { text } = await generateText({
 Drop-in replacement for OpenAI API with multi-provider support.
 
 ```typescript
-import OpenAI from 'openai';
+import OpenAI from "openai";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/compat`,
   defaultHeaders: {
-    'cf-aig-authorization': `Bearer ${cfToken}` // For authenticated gateways
-  }
+    "cf-aig-authorization": `Bearer ${cfToken}`, // For authenticated gateways
+  },
 });
 
 // Switch providers by changing model format: {provider}/{model}
 const response = await client.chat.completions.create({
-  model: 'openai/gpt-4o', // or 'anthropic/claude-sonnet-4-5'
-  messages: [{ role: 'user', content: 'Hello!' }]
+  model: "openai/gpt-4o", // or 'anthropic/claude-sonnet-4-5'
+  messages: [{ role: "user", content: "Hello!" }],
 });
 ```
 
@@ -88,18 +88,18 @@ For Cloudflare Workers using Workers AI.
 export default {
   async fetch(request, env, ctx) {
     const response = await env.AI.run(
-      '@cf/meta/llama-3-8b-instruct',
-      { messages: [{ role: 'user', content: 'Hello!' }] },
+      "@cf/meta/llama-3-8b-instruct",
+      { messages: [{ role: "user", content: "Hello!" }] },
       {
         gateway: {
-          id: 'my-gateway',
-          metadata: { userId: '123', team: 'engineering' }
-        }
-      }
+          id: "my-gateway",
+          metadata: { userId: "123", team: "engineering" },
+        },
+      },
     );
 
     return Response.json(response);
-  }
+  },
 };
 ```
 

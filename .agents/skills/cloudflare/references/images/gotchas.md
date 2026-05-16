@@ -13,7 +13,7 @@
 ## Format Selection
 
 ```typescript
-format: 'auto' // Recommended - negotiates best format
+format: "auto"; // Recommended - negotiates best format
 ```
 
 **Support:** AVIF (Chrome 85+, Firefox 93+, Safari 16.4+), WebP (Chrome 23+, Firefox 65+, Safari 14+)
@@ -73,7 +73,7 @@ Verify API token has `Cloudflare Images → Edit` permission
 - **Browser detection**:
 
 ```typescript
-const format = /image\/avif/.test(request.headers.get('Accept') || '') ? 'avif' : 'webp';
+const format = /image\/avif/.test(request.headers.get("Accept") || "") ? "avif" : "webp";
 ```
 
 ## Anti-Patterns
@@ -96,7 +96,7 @@ transform({ width: 800, height: 600, fit: 'cover' })
 
 ```typescript
 // Check response headers
-console.log('Content-Type:', response.headers.get('Content-Type'));
+console.log("Content-Type:", response.headers.get("Content-Type"));
 
 // Test with curl
 // curl -I "https://imagedelivery.net/{hash}/{id}/width=800,format=avif"

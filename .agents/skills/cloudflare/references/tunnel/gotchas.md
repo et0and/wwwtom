@@ -20,8 +20,8 @@ journalctl -u cloudflared -n 100      # Check logs
 
 ```yaml
 originRequest:
-  noTLSVerify: true      # Dev only
-  caPool: /path/to/ca.pem  # Custom CA
+  noTLSVerify: true # Dev only
+  caPool: /path/to/ca.pem # Custom CA
 ```
 
 ### "Connection timeout"

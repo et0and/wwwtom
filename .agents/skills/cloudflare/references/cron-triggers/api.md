@@ -17,10 +17,10 @@ export default {
 
 ```typescript
 interface ScheduledController {
-  scheduledTime: number;  // Unix ms when scheduled to run
-  cron: string;           // Expression that triggered (e.g., "*/5 * * * *")
-  type: string;           // Always "scheduled"
-  noRetry(): void;        // Prevent automatic retry on failure
+  scheduledTime: number; // Unix ms when scheduled to run
+  cron: string; // Expression that triggered (e.g., "*/5 * * * *")
+  type: string; // Always "scheduled"
+  noRetry(): void; // Prevent automatic retry on failure
 }
 ```
 
@@ -69,10 +69,17 @@ export default {
 export default {
   async scheduled(controller, env, ctx) {
     switch (controller.cron) {
-      case "*/3 * * * *": ctx.waitUntil(updateRecentData(env)); break;
-      case "0 * * * *": ctx.waitUntil(processHourlyAggregation(env)); break;
-      case "0 2 * * *": ctx.waitUntil(performDailyMaintenance(env)); break;
-      default: console.warn(`Unhandled: ${controller.cron}`);
+      case "*/3 * * * *":
+        ctx.waitUntil(updateRecentData(env));
+        break;
+      case "0 * * * *":
+        ctx.waitUntil(processHourlyAggregation(env));
+        break;
+      case "0 2 * * *":
+        ctx.waitUntil(performDailyMaintenance(env));
+        break;
+      default:
+        console.warn(`Unhandled: ${controller.cron}`);
     }
   },
 };
@@ -86,11 +93,13 @@ export default {
     const data = await fetchCriticalData(); // Critical path
 
     // Non-blocking background tasks
-    ctx.waitUntil(Promise.all([
-      logToAnalytics(data),
-      cleanupOldRecords(env.DB),
-      notifyWebhook(env.WEBHOOK_URL, data),
-    ]));
+    ctx.waitUntil(
+      Promise.all([
+        logToAnalytics(data),
+        cleanupOldRecords(env.DB),
+        notifyWebhook(env.WEBHOOK_URL, data),
+      ]),
+    );
   },
 };
 ```
@@ -150,7 +159,12 @@ import worker from "../src/index";
 
 describe("Scheduled Handler", () => {
   it("processes scheduled event", async () => {
-    const controller = { scheduledTime: Date.now(), cron: "*/5 * * * *", type: "scheduled" as const, noRetry: () => {} };
+    const controller = {
+      scheduledTime: Date.now(),
+      cron: "*/5 * * * *",
+      type: "scheduled" as const,
+      noRetry: () => {},
+    };
     const ctx = { waitUntil: (p: Promise<any>) => p, passThroughOnException: () => {} };
     await worker.scheduled(controller, env, ctx);
     expect(await env.MY_KV.get("last_run")).toBeDefined();
@@ -158,7 +172,11 @@ describe("Scheduled Handler", () => {
 
   it("handles multiple crons", async () => {
     const ctx = { waitUntil: () => {}, passThroughOnException: () => {} };
-    await worker.scheduled({ scheduledTime: Date.now(), cron: "*/5 * * * *", type: "scheduled", noRetry: () => {} }, env, ctx);
+    await worker.scheduled(
+      { scheduledTime: Date.now(), cron: "*/5 * * * *", type: "scheduled", noRetry: () => {} },
+      env,
+      ctx,
+    );
     expect(await env.MY_KV.get("last_type")).toBe("frequent");
   });
 });

@@ -12,16 +12,28 @@ export class MyDO extends DurableObject<Env> {
   }
 
   // RPC methods (called directly from worker)
-  async myMethod(arg: string): Promise<string> { return arg; }
+  async myMethod(arg: string): Promise<string> {
+    return arg;
+  }
 
   // fetch handler (legacy/HTTP semantics)
-  async fetch(req: Request): Promise<Response> { /* ... */ }
+  async fetch(req: Request): Promise<Response> {
+    /* ... */
+  }
 
   // Lifecycle handlers
-  async alarm() { /* alarm fired */ }
-  async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) { /* ... */ }
-  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) { /* ... */ }
-  async webSocketError(ws: WebSocket, error: unknown) { /* ... */ }
+  async alarm() {
+    /* alarm fired */
+  }
+  async webSocketMessage(ws: WebSocket, msg: string | ArrayBuffer) {
+    /* ... */
+  }
+  async webSocketClose(ws: WebSocket, code: number, reason: string, wasClean: boolean) {
+    /* ... */
+  }
+  async webSocketError(ws: WebSocket, error: unknown) {
+    /* ... */
+  }
 }
 ```
 
@@ -48,16 +60,16 @@ await this.ctx.blockConcurrencyWhile(async () => {
 ### Lifecycle
 
 ```typescript
-this.ctx.id              // DurableObjectId of this instance
-this.ctx.abort()         // Force eviction (use after PITR restore to reload state)
+this.ctx.id; // DurableObjectId of this instance
+this.ctx.abort(); // Force eviction (use after PITR restore to reload state)
 ```
 
 ### Storage Access
 
 ```typescript
-this.ctx.storage.sql     // SQLite API (recommended)
-this.ctx.storage.kv      // Sync KV API (SQLite DOs only)
-this.ctx.storage         // Async KV API (legacy/KV-only DOs)
+this.ctx.storage.sql; // SQLite API (recommended)
+this.ctx.storage.kv; // Sync KV API (SQLite DOs only)
+this.ctx.storage; // Async KV API (legacy/KV-only DOs)
 ```
 
 See **[DO Storage](../do-storage/README.md)** for complete storage API reference.
@@ -88,13 +100,13 @@ Quick reference:
 
 ```typescript
 // SQLite (recommended)
-this.ctx.storage.sql.exec("SELECT * FROM users WHERE id = ?", userId).one()
+this.ctx.storage.sql.exec("SELECT * FROM users WHERE id = ?", userId).one();
 
 // Sync KV (SQLite DOs only)
-this.ctx.storage.kv.get("key")
+this.ctx.storage.kv.get("key");
 
 // Async KV (legacy)
-await this.ctx.storage.get("key")
+await this.ctx.storage.get("key");
 ```
 
 ## Alarms
@@ -180,10 +192,10 @@ async webSocketError(ws: WebSocket, error: unknown) {
 
 ```typescript
 // Store connection metadata (survives hibernation)
-ws.serializeAttachment({ userId: "abc", room: "lobby" })
+ws.serializeAttachment({ userId: "abc", room: "lobby" });
 
 // Retrieve after hibernation
-const { userId, room } = ws.deserializeAttachment()
+const { userId, room } = ws.deserializeAttachment();
 ```
 
 ## See Also

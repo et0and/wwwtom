@@ -29,7 +29,7 @@
 ```typescript
 const worker = await startWorker({
   config: "wrangler.jsonc",
-  remote: true  // or "minimal" for faster tests
+  remote: true, // or "minimal" for faster tests
 });
 ```
 
@@ -50,10 +50,8 @@ const worker = await startWorker({
 ```jsonc
 {
   "durable_objects": {
-    "bindings": [
-      { "name": "MY_DO", "class_name": "MyDO", "script_name": "my-worker" }
-    ]
-  }
+    "bindings": [{ "name": "MY_DO", "class_name": "MyDO", "script_name": "my-worker" }],
+  },
 }
 ```
 
@@ -92,8 +90,8 @@ For local DOs in same Worker, `script_name` is optional.
   "assets": {
     "directory": "./dist",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "single-page-application"
-  }
+    "not_found_handling": "single-page-application",
+  },
 }
 ```
 
@@ -103,7 +101,7 @@ For local DOs in same Worker, `script_name` is optional.
 **Solution:** Smart Placement only helps when Worker accesses D1 or Durable Objects. It doesn't affect KV, R2, or external API latency.
 
 ```jsonc
-{ "placement": { "mode": "smart" } }  // Only beneficial with D1/DOs
+{ "placement": { "mode": "smart" } } // Only beneficial with D1/DOs
 ```
 
 ### "unstable_startWorker not found"
@@ -112,7 +110,7 @@ For local DOs in same Worker, `script_name` is optional.
 **Solution:** Use stable `startWorker` instead:
 
 ```typescript
-import { startWorker } from "wrangler";  // Not unstable_startWorker
+import { startWorker } from "wrangler"; // Not unstable_startWorker
 ```
 
 ### "outboundService not mocking fetch"
@@ -126,8 +124,8 @@ const worker = await startWorker({
     if (shouldMock(req)) {
       return new Response("mocked");
     }
-    return fetch(req);  // Required for non-mocked requests
-  }
+    return fetch(req); // Required for non-mocked requests
+  },
 });
 ```
 

@@ -18,14 +18,14 @@ wrangler kv namespace create MY_NAMESPACE --preview  # For local dev
   "kv_namespaces": [
     {
       "binding": "MY_KV",
-      "id": "abc123xyz789"
+      "id": "abc123xyz789",
     },
     // Optional: Different namespace for preview/development
     {
       "binding": "MY_KV",
-      "preview_id": "preview-abc123"
-    }
-  ]
+      "preview_id": "preview-abc123",
+    },
+  ],
 }
 ```
 
@@ -49,7 +49,7 @@ export default {
     // env.MY_KV is now typed as KVNamespace
     const value = await env.MY_KV.get("key");
     return new Response(value || "Not found");
-  }
+  },
 } satisfies ExportedHandler<Env>;
 ```
 
@@ -106,18 +106,18 @@ wrangler dev --remote       # Remote KV (production)
 ### Single Operations
 
 ```typescript
-import Cloudflare from 'cloudflare';
+import Cloudflare from "cloudflare";
 
 const client = new Cloudflare({
   apiEmail: process.env.CLOUDFLARE_EMAIL,
-  apiKey: process.env.CLOUDFLARE_API_KEY
+  apiKey: process.env.CLOUDFLARE_API_KEY,
 });
 
 // Single key operations
-await client.kv.namespaces.values.update(namespaceId, 'key', {
+await client.kv.namespaces.values.update(namespaceId, "key", {
   account_id: accountId,
-  value: 'value',
-  expiration_ttl: 3600
+  value: "value",
+  expiration_ttl: 3600,
 });
 ```
 
@@ -130,19 +130,19 @@ await client.kv.namespaces.bulkUpdate(namespaceId, {
   body: [
     { key: "key1", value: "value1", expiration_ttl: 3600 },
     { key: "key2", value: "value2", metadata: { version: 1 } },
-    { key: "key3", value: "value3" }
-  ]
+    { key: "key3", value: "value3" },
+  ],
 });
 
 // Bulk get (up to 100 keys)
 const results = await client.kv.namespaces.bulkGet(namespaceId, {
   account_id: accountId,
-  keys: ["key1", "key2", "key3"]
+  keys: ["key1", "key2", "key3"],
 });
 
 // Bulk delete (up to 10,000 keys)
 await client.kv.namespaces.bulkDelete(namespaceId, {
   account_id: accountId,
-  keys: ["key1", "key2", "key3"]
+  keys: ["key1", "key2", "key3"],
 });
 ```

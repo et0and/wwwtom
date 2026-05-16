@@ -38,20 +38,20 @@ import puppeteer from "@cloudflare/puppeteer";
 
 const browser = await puppeteer.launch(env.MYBROWSER, { keep_alive: 600000 });
 const page = await browser.newPage();
-await page.goto('https://example.com', { waitUntil: 'networkidle0' });
+await page.goto("https://example.com", { waitUntil: "networkidle0" });
 
 // Content
 const html = await page.content();
 const title = await page.title();
 
 // Screenshot/PDF
-await page.screenshot({ fullPage: true, type: 'png' });
-await page.pdf({ format: 'A4', printBackground: true });
+await page.screenshot({ fullPage: true, type: "png" });
+await page.pdf({ format: "A4", printBackground: true });
 
 // Interaction
-await page.click('#button');
-await page.type('#input', 'text');
-await page.evaluate(() => document.querySelector('h1')?.textContent);
+await page.click("#button");
+await page.type("#input", "text");
+await page.evaluate(() => document.querySelector("h1")?.textContent);
 
 // Session management
 const sessions = await puppeteer.sessions(env.MYBROWSER);
@@ -68,17 +68,17 @@ import { launch, connect } from "@cloudflare/playwright";
 const browser = await launch(env.MYBROWSER, { keep_alive: 600000 });
 const page = await browser.newPage();
 
-await page.goto('https://example.com', { waitUntil: 'networkidle' });
+await page.goto("https://example.com", { waitUntil: "networkidle" });
 
 // Modern selectors
-await page.locator('.button').click();
-await page.getByText('Submit').click();
-await page.getByTestId('search').fill('query');
+await page.locator(".button").click();
+await page.getByText("Submit").click();
+await page.getByTestId("search").fill("query");
 
 // Context for isolation
 const context = await browser.newContext({
   viewport: { width: 1920, height: 1080 },
-  userAgent: 'custom'
+  userAgent: "custom",
 });
 
 await browser.close();

@@ -59,7 +59,7 @@ Is your site proxied through Cloudflare?
 **Critical for modern frameworks:**
 
 ```json
-{"token": "YOUR_TOKEN", "spa": true}
+{ "token": "YOUR_TOKEN", "spa": true }
 ```
 
 Without `spa: true`, client-side navigation (React Router, Vue Router, Next.js routing) will NOT be tracked. Only initial page loads will register.

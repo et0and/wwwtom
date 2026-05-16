@@ -39,9 +39,9 @@ npx wrangler hyperdrive create my-db \
     {
       "binding": "HYPERDRIVE",
       "id": "<HYPERDRIVE_ID>",
-      "localConnectionString": "postgres://user:pass@localhost:5432/dev"
-    }
-  ]
+      "localConnectionString": "postgres://user:pass@localhost:5432/dev",
+    },
+  ],
 }
 ```
 
@@ -52,9 +52,9 @@ npx wrangler hyperdrive create my-db \
 ```jsonc
 {
   "hyperdrive": [
-    {"binding": "HYPERDRIVE_CACHED", "id": "<ID1>"},
-    {"binding": "HYPERDRIVE_NO_CACHE", "id": "<ID2>"}
-  ]
+    { "binding": "HYPERDRIVE_CACHED", "id": "<ID1>" },
+    { "binding": "HYPERDRIVE_NO_CACHE", "id": "<ID2>" },
+  ],
 }
 ```
 
@@ -90,14 +90,14 @@ For Workers making **multiple queries** per request, enable Smart Placement to e
   "compatibility_date": "2025-01-01",
   "compatibility_flags": ["nodejs_compat"],
   "placement": {
-    "mode": "smart"
+    "mode": "smart",
   },
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",
-      "id": "<HYPERDRIVE_ID>"
-    }
-  ]
+      "id": "<HYPERDRIVE_ID>",
+    },
+  ],
 }
 ```
 

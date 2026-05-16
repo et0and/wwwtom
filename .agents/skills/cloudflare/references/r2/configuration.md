@@ -9,45 +9,49 @@
   "r2_buckets": [
     {
       "binding": "MY_BUCKET",
-      "bucket_name": "my-bucket-name"
-    }
-  ]
+      "bucket_name": "my-bucket-name",
+    },
+  ],
 }
 ```
 
 ## TypeScript Types
 
 ```typescript
-interface Env { MY_BUCKET: R2Bucket; }
+interface Env {
+  MY_BUCKET: R2Bucket;
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    const object = await env.MY_BUCKET.get('file.txt');
+    const object = await env.MY_BUCKET.get("file.txt");
     return new Response(object?.body);
-  }
-}
+  },
+};
 ```
 
 ## S3 SDK Setup
 
 ```typescript
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
-  region: 'auto',
+  region: "auto",
   endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: env.R2_ACCESS_KEY_ID,
-    secretAccessKey: env.R2_SECRET_ACCESS_KEY
-  }
+    secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+  },
 });
 
-await s3.send(new PutObjectCommand({
-  Bucket: 'my-bucket',
-  Key: 'file.txt',
-  Body: data,
-  StorageClass: 'STANDARD' // or 'STANDARD_IA'
-}));
+await s3.send(
+  new PutObjectCommand({
+    Bucket: "my-bucket",
+    Key: "file.txt",
+    Body: data,
+    StorageClass: "STANDARD", // or 'STANDARD_IA'
+  }),
+);
 ```
 
 ## Location Hints
@@ -64,55 +68,61 @@ wrangler r2 bucket create my-bucket --location=enam
 CORS must be configured via S3 SDK or dashboard (not available in Workers API):
 
 ```typescript
-import { S3Client, PutBucketCorsCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutBucketCorsCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({
-  region: 'auto',
+  region: "auto",
   endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId: env.R2_ACCESS_KEY_ID,
-    secretAccessKey: env.R2_SECRET_ACCESS_KEY
-  }
+    secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+  },
 });
 
-await s3.send(new PutBucketCorsCommand({
-  Bucket: 'my-bucket',
-  CORSConfiguration: {
-    CORSRules: [{
-      AllowedOrigins: ['https://example.com'],
-      AllowedMethods: ['GET', 'PUT', 'HEAD'],
-      AllowedHeaders: ['*'],
-      ExposeHeaders: ['ETag'],
-      MaxAgeSeconds: 3600
-    }]
-  }
-}));
+await s3.send(
+  new PutBucketCorsCommand({
+    Bucket: "my-bucket",
+    CORSConfiguration: {
+      CORSRules: [
+        {
+          AllowedOrigins: ["https://example.com"],
+          AllowedMethods: ["GET", "PUT", "HEAD"],
+          AllowedHeaders: ["*"],
+          ExposeHeaders: ["ETag"],
+          MaxAgeSeconds: 3600,
+        },
+      ],
+    },
+  }),
+);
 ```
 
 ## Object Lifecycles
 
 ```typescript
-import { PutBucketLifecycleConfigurationCommand } from '@aws-sdk/client-s3';
+import { PutBucketLifecycleConfigurationCommand } from "@aws-sdk/client-s3";
 
-await s3.send(new PutBucketLifecycleConfigurationCommand({
-  Bucket: 'my-bucket',
-  LifecycleConfiguration: {
-    Rules: [
-      {
-        ID: 'expire-old-logs',
-        Status: 'Enabled',
-        Prefix: 'logs/',
-        Expiration: { Days: 90 }
-      },
-      {
-        ID: 'transition-to-ia',
-        Status: 'Enabled',
-        Prefix: 'archives/',
-        Transitions: [{ Days: 30, StorageClass: 'STANDARD_IA' }]
-      }
-    ]
-  }
-}));
+await s3.send(
+  new PutBucketLifecycleConfigurationCommand({
+    Bucket: "my-bucket",
+    LifecycleConfiguration: {
+      Rules: [
+        {
+          ID: "expire-old-logs",
+          Status: "Enabled",
+          Prefix: "logs/",
+          Expiration: { Days: 90 },
+        },
+        {
+          ID: "transition-to-ia",
+          Status: "Enabled",
+          Prefix: "archives/",
+          Transitions: [{ Days: 30, StorageClass: "STANDARD_IA" }],
+        },
+      ],
+    },
+  }),
+);
 ```
 
 ## API Token Scopes
@@ -140,15 +150,15 @@ When creating R2 tokens, set minimal permissions:
       "event_notifications": [
         {
           "queue": "r2-events",
-          "actions": ["PutObject", "DeleteObject", "CompleteMultipartUpload"]
-        }
-      ]
-    }
+          "actions": ["PutObject", "DeleteObject", "CompleteMultipartUpload"],
+        },
+      ],
+    },
   ],
   "queues": {
     "producers": [{ "binding": "R2_EVENTS", "queue": "r2-events" }],
-    "consumers": [{ "queue": "r2-events", "max_batch_size": 10 }]
-  }
+    "consumers": [{ "queue": "r2-events", "max_batch_size": 10 }],
+  },
 }
 ```
 

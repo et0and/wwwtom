@@ -24,11 +24,11 @@ interface Env {
 
 export default {
   async fetch(request: Request, env: Env) {
-    const response = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
-      messages: [{ role: 'user', content: 'What is Cloudflare?' }]
+    const response = await env.AI.run("@cf/meta/llama-3.1-8b-instruct", {
+      messages: [{ role: "user", content: "What is Cloudflare?" }],
     });
     return Response.json(response);
-  }
+  },
 };
 ```
 
@@ -107,11 +107,11 @@ curl https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/run/@cf/meta/
 **Why**: Unified interface across providers
 
 ```typescript
-import { openai } from '@ai-sdk/openai';
+import { openai } from "@ai-sdk/openai";
 
-const model = openai('model-name', {
-  baseURL: 'https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1',
-  headers: { Authorization: 'Bearer <API_TOKEN>' }
+const model = openai("model-name", {
+  baseURL: "https://api.cloudflare.com/client/v4/accounts/<ACCOUNT_ID>/ai/v1",
+  headers: { Authorization: "Bearer <API_TOKEN>" },
 });
 ```
 

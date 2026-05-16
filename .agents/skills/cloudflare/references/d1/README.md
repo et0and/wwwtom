@@ -32,8 +32,10 @@ wrangler dev
 ```typescript
 // .all() - Returns all rows; .first() - First row or null; .first(col) - Single column value
 // .run() - INSERT/UPDATE/DELETE; .raw() - Array of arrays (efficient)
-const { results, success, meta } = await env.DB.prepare('SELECT * FROM users WHERE active = ?').bind(true).all();
-const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
+const { results, success, meta } = await env.DB.prepare("SELECT * FROM users WHERE active = ?")
+  .bind(true)
+  .all();
+const user = await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
 ```
 
 ## Batch Operations
@@ -41,9 +43,9 @@ const user = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userI
 ```typescript
 // Multiple queries in single round trip (atomic transaction)
 const results = await env.DB.batch([
-  env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(1),
-  env.DB.prepare('SELECT * FROM posts WHERE author_id = ?').bind(1),
-  env.DB.prepare('UPDATE users SET last_access = ? WHERE id = ?').bind(Date.now(), 1)
+  env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(1),
+  env.DB.prepare("SELECT * FROM posts WHERE author_id = ?").bind(1),
+  env.DB.prepare("UPDATE users SET last_access = ? WHERE id = ?").bind(Date.now(), 1),
 ]);
 ```
 
@@ -53,8 +55,8 @@ const results = await env.DB.batch([
 // Create long-running session for analytics/migrations (up to 15 minutes)
 const session = env.DB.withSession();
 try {
-  await session.prepare('CREATE INDEX idx_heavy ON large_table(column)').run();
-  await session.prepare('ANALYZE').run();
+  await session.prepare("CREATE INDEX idx_heavy ON large_table(column)").run();
+  await session.prepare("ANALYZE").run();
 } finally {
   session.close(); // Always close to release resources
 }
@@ -64,10 +66,10 @@ try {
 
 ```typescript
 // Read from nearest replica for lower latency (automatic failover)
-const user = await env.DB_REPLICA.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
+const user = await env.DB_REPLICA.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
 
 // Writes always go to primary
-await env.DB.prepare('UPDATE users SET last_login = ? WHERE id = ?').bind(Date.now(), userId).run();
+await env.DB.prepare("UPDATE users SET last_login = ? WHERE id = ?").bind(Date.now(), userId).run();
 ```
 
 ## Platform Limits

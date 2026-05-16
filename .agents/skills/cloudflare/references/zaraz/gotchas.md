@@ -13,8 +13,8 @@
 
 ```javascript
 zaraz.debug = true;
-console.log('Tools:', zaraz.tools);
-console.log('Consent:', zaraz.consent.getAll());
+console.log("Tools:", zaraz.tools);
+console.log("Consent:", zaraz.consent.getAll());
 ```
 
 ## Consent Issues
@@ -23,7 +23,7 @@ console.log('Consent:', zaraz.consent.getAll());
 
 ```javascript
 // Clear consent cookie
-document.cookie = 'zaraz-consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+document.cookie = "zaraz-consent=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
 location.reload();
 ```
 
@@ -37,8 +37,8 @@ location.reload();
 2. Hash routing (`#/path`) requires manual tracking:
 
 ```javascript
-window.addEventListener('hashchange', () => {
-  zaraz.track('pageview', { page_path: location.pathname + location.hash });
+window.addEventListener("hashchange", () => {
+  zaraz.track("pageview", { page_path: location.pathname + location.hash });
 });
 ```
 
@@ -47,7 +47,7 @@ window.addEventListener('hashchange', () => {
 ```javascript
 const location = useLocation();
 useEffect(() => {
-  zaraz.track('pageview', { page_path: location.pathname });
+  zaraz.track("pageview", { page_path: location.pathname });
 }, [location]); // Include dependency
 ```
 

@@ -15,7 +15,7 @@ try {
   if (e.message.startsWith("Worker not found")) {
     return new Response("Worker not found", { status: 404 });
   }
-  throw e;  // Re-throw unexpected errors
+  throw e; // Re-throw unexpected errors
 }
 ```
 
@@ -71,7 +71,7 @@ async function deployWithBackoff(deploy: () => Promise<void>, maxRetries = 3) {
       return await deploy();
     } catch (e) {
       if (e.status === 429 && i < maxRetries - 1) {
-        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+        await new Promise((r) => setTimeout(r, Math.pow(2, i) * 1000));
         continue;
       }
       throw e;

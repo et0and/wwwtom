@@ -82,7 +82,7 @@ try { ... } catch (e) {
 ## Debugging
 
 ```javascript
-console.log('URL:', request.url); // View in browser DevTools Console
+console.log("URL:", request.url); // View in browser DevTools Console
 ```
 
 **Note:** `console.log` works in playground. For production, use Logpush or Tail Workers.

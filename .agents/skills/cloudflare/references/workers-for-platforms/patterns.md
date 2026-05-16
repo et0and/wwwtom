@@ -35,11 +35,13 @@ export default {
 - R2 bucket per customer
 
 ```typescript
-const bindings = [{
-  type: "kv_namespace",
-  name: "USER_KV",
-  namespace_id: `customer-${customerId}-kv`
-}];
+const bindings = [
+  {
+    type: "kv_namespace",
+    name: "USER_KV",
+    namespace_id: `customer-${customerId}-kv`,
+  },
+];
 ```
 
 ## Hostname Routing
@@ -128,9 +130,13 @@ env.ANALYTICS.writeDataPoint({
 ```graphql
 query {
   viewer {
-    accounts(filter: {accountTag: $accountId}) {
-      workersInvocationsAdaptive(filter: {dispatchNamespaceName: "production"}) {
-        sum { requests errors cpuTime }
+    accounts(filter: { accountTag: $accountId }) {
+      workersInvocationsAdaptive(filter: { dispatchNamespaceName: "production" }) {
+        sum {
+          requests
+          errors
+          cpuTime
+        }
       }
     }
   }

@@ -11,7 +11,7 @@ interface Env {
 }
 
 async function fetchWithAuth(url: string, key: string) {
-  return fetch(url, { headers: { "Authorization": `Bearer ${key}` } });
+  return fetch(url, { headers: { Authorization: `Bearer ${key}` } });
 }
 
 export default {
@@ -24,8 +24,8 @@ export default {
     }
 
     return resp;
-  }
-}
+  },
+};
 ```
 
 Workflow: Create `api_key_v2` → add fallback binding → deploy → swap primary → deploy → remove `v1`
@@ -41,11 +41,17 @@ interface Env {
 async function encryptValue(value: string, key: string): Promise<string> {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey(
-    "raw", enc.encode(key), { name: "AES-GCM" }, false, ["encrypt"]
+    "raw",
+    enc.encode(key),
+    { name: "AES-GCM" },
+    false,
+    ["encrypt"],
   );
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const encrypted = await crypto.subtle.encrypt(
-    { name: "AES-GCM", iv }, keyMaterial, enc.encode(value)
+    { name: "AES-GCM", iv },
+    keyMaterial,
+    enc.encode(value),
   );
 
   const combined = new Uint8Array(iv.length + encrypted.byteLength);
@@ -60,8 +66,8 @@ export default {
     const encrypted = await encryptValue("sensitive-data", key);
     await env.CACHE.put("user:123:data", encrypted);
     return Response.json({ ok: true });
-  }
-}
+  },
+};
 ```
 
 ## HMAC Signing
@@ -74,7 +80,11 @@ interface Env {
 async function signRequest(data: string, secret: string): Promise<string> {
   const enc = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    "raw", enc.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
   );
   const sig = await crypto.subtle.sign("HMAC", key, enc.encode(data));
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
@@ -86,8 +96,8 @@ export default {
     const payload = await request.text();
     const signature = await signRequest(payload, secret);
     return Response.json({ signature });
-  }
-}
+  },
+};
 ```
 
 ## Audit & Monitoring
@@ -99,7 +109,7 @@ export default {
     try {
       const apiKey = await env.API_KEY.get();
       const resp = await fetch("https://api.example.com", {
-        headers: { "Authorization": `Bearer ${apiKey}` }
+        headers: { Authorization: `Bearer ${apiKey}` },
       });
 
       ctx.waitUntil(
@@ -110,9 +120,9 @@ export default {
             secret_name: "API_KEY",
             timestamp: new Date().toISOString(),
             duration_ms: Date.now() - startTime,
-            success: resp.ok
-          })
-        })
+            success: resp.ok,
+          }),
+        }),
       );
       return resp;
     } catch (error) {
@@ -122,14 +132,14 @@ export default {
           body: JSON.stringify({
             event: "secret_access_failed",
             secret_name: "API_KEY",
-            error: error instanceof Error ? error.message : "Unknown"
-          })
-        })
+            error: error instanceof Error ? error.message : "Unknown",
+          }),
+        }),
       );
       return new Response("Error", { status: 500 });
     }
-  }
-}
+  },
+};
 ```
 
 ## Migration from Worker Secrets
@@ -185,8 +195,8 @@ export default {
       }
       throw error;
     }
-  }
-}
+  },
+};
 ```
 
 Store JSON secret:

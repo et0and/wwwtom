@@ -22,8 +22,12 @@
 **Solution:** Run `npx wrangler types` or manually define:
 
 ```typescript
-interface Env { MY_BINDING: KVNamespace; }
-export const onRequest: PagesFunction<Env> = async (ctx) => { /* ... */ };
+interface Env {
+  MY_BINDING: KVNamespace;
+}
+export const onRequest: PagesFunction<Env> = async (ctx) => {
+  /* ... */
+};
 ```
 
 ### Secrets not available in production
@@ -41,9 +45,9 @@ echo "value" | npx wrangler pages secret put SECRET_KEY --project-name=my-app
 ```typescript
 // Console logging
 export async function onRequest(ctx) {
-  console.log('Request:', ctx.request.method, ctx.request.url);
+  console.log("Request:", ctx.request.method, ctx.request.url);
   const res = await ctx.next();
-  console.log('Status:', res.status);
+  console.log("Status:", res.status);
   return res;
 }
 ```

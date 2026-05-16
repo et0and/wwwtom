@@ -31,11 +31,13 @@ const emb = await env.AI.run("@cf/baai/bge-base-en-v1.5", { text: [query] });
 const matches = await env.VECTORIZE.query(emb.data[0], { topK: 5, returnMetadata: "indexed" });
 
 // 3. Fetch full docs from R2/D1/KV
-const docs = await Promise.all(matches.matches.map(m => env.R2.get(m.metadata.key).then(o => o?.text())));
+const docs = await Promise.all(
+  matches.matches.map((m) => env.R2.get(m.metadata.key).then((o) => o?.text())),
+);
 
 // 4. Generate with context
 const answer = await env.AI.run("@cf/meta/llama-3-8b-instruct", {
-  prompt: `Context:\n${docs.filter(Boolean).join("\n\n")}\n\nQuestion: ${query}\n\nAnswer:`
+  prompt: `Context:\n${docs.filter(Boolean).join("\n\n")}\n\nQuestion: ${query}\n\nAnswer:`,
 });
 ```
 
@@ -66,8 +68,8 @@ const matches = await env.VECTORIZE.query(vec, {
   topK: 20,
   filter: {
     category: { $in: ["tech", "science"] },
-    published: { $gte: lastMonthTimestamp }
-  }
+    published: { $gte: lastMonthTimestamp },
+  },
 });
 ```
 

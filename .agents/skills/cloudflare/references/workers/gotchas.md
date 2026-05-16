@@ -39,8 +39,8 @@
 
 ```typescript
 const session = env.DB.withSession();
-await session.prepare('INSERT INTO users (name) VALUES (?)').bind('Alice').run();
-const user = await session.prepare('SELECT * FROM users WHERE name = ?').bind('Alice').first(); // Guaranteed to see Alice
+await session.prepare("INSERT INTO users (name) VALUES (?)").bind("Alice").run();
+const user = await session.prepare("SELECT * FROM users WHERE name = ?").bind("Alice").first(); // Guaranteed to see Alice
 ```
 
 **When to use sessions:** Write → Read patterns, transactions requiring consistency
@@ -68,16 +68,23 @@ Then import: `import type { Env } from './.wrangler/types/runtime';`
 export class MyDO {
   async fetch(request: Request) {
     const { method } = await request.json();
-    if (method === 'increment') return new Response(String(await this.increment()));
+    if (method === "increment") return new Response(String(await this.increment()));
   }
-  async increment() { return ++this.value; }
+  async increment() {
+    return ++this.value;
+  }
 }
 const stub = env.DO.get(id);
-const res = await stub.fetch('http://x', { method: 'POST', body: JSON.stringify({ method: 'increment' }) });
+const res = await stub.fetch("http://x", {
+  method: "POST",
+  body: JSON.stringify({ method: "increment" }),
+});
 
 // ✅ RPC pattern (type-safe, no serialization overhead)
 export class MyDO {
-  async increment() { return ++this.value; }
+  async increment() {
+    return ++this.value;
+  }
 }
 const stub = env.DO.get(id);
 const count = await stub.increment(); // Direct method call
@@ -108,9 +115,11 @@ Hibernation automatically suspends inactive connections, wakes on events
 
 ```typescript
 // ✅ Hono (Workers-native)
-import { Hono } from 'hono';
+import { Hono } from "hono";
 const app = new Hono();
-app.use('*', async (c, next) => { /* middleware */ await next(); });
+app.use("*", async (c, next) => {
+  /* middleware */ await next();
+});
 ```
 
 See [frameworks.md](./frameworks.md) for full patterns

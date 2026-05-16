@@ -18,9 +18,9 @@
     "@tom/arena": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/utils": "workspace:*",
-    "effect": "^3.19.5"
+    "effect": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   }
 }

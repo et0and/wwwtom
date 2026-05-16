@@ -65,10 +65,10 @@ async checkSchedules() { if ((await this.getSchedules()).length > 800) console.w
 
 ```ts
 try {
-  return await this.env.AI.run(model, {prompt});
+  return await this.env.AI.run(model, { prompt });
 } catch (e) {
   console.error("AI error:", e);
-  return {error: "Unavailable"};
+  return { error: "Unavailable" };
 }
 ```
 

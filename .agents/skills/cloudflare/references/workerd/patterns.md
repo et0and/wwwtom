@@ -126,13 +126,13 @@ See systemd socket activation docs for complete setup.
 ### Hono
 
 ```javascript
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 const app = new Hono();
 
-app.get('/', (c) => c.text('Hello Hono!'));
-app.get('/api/:id', async (c) => {
-  const id = c.req.param('id');
+app.get("/", (c) => c.text("Hello Hono!"));
+app.get("/api/:id", async (c) => {
+  const id = c.req.param("id");
   const data = await c.env.KV.get(id);
   return c.json({ id, data });
 });
@@ -143,19 +143,19 @@ export default app;
 ### itty-router
 
 ```javascript
-import { Router } from 'itty-router';
+import { Router } from "itty-router";
 
 const router = Router();
 
-router.get('/', () => new Response('Hello itty!'));
-router.get('/api/:id', async (request, env) => {
+router.get("/", () => new Response("Hello itty!"));
+router.get("/api/:id", async (request, env) => {
   const { id } = request.params;
   const data = await env.KV.get(id);
   return Response.json({ id, data });
 });
 
 export default {
-  fetch: (request, env, ctx) => router.handle(request, env, ctx)
+  fetch: (request, env, ctx) => router.handle(request, env, ctx),
 };
 ```
 
@@ -181,9 +181,9 @@ export default {
       return await handleRequest(request, env);
     } catch (error) {
       console.error("Request failed", error);
-      return new Response("Internal Error", {status: 500});
+      return new Response("Internal Error", { status: 500 });
     }
-  }
+  },
 };
 ```
 
@@ -195,12 +195,10 @@ export default {
     const response = new Response("OK");
 
     // Fire-and-forget background work
-    ctx.waitUntil(
-      env.ANALYTICS.put(request.url, Date.now())
-    );
+    ctx.waitUntil(env.ANALYTICS.put(request.url, Date.now()));
 
     return response;
-  }
+  },
 };
 ```
 

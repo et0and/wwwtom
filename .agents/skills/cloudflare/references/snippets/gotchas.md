@@ -7,8 +7,11 @@
 Runtime error or syntax error. Wrap code in try/catch:
 
 ```javascript
-try { return await fetch(request); }
-catch (error) { return new Response(`Error: ${error.message}`, { status: 500 }); }
+try {
+  return await fetch(request);
+} catch (error) {
+  return new Response(`Error: ${error.message}`, { status: 500 });
+}
 ```
 
 ### 1100: "Exceeded execution limit"
@@ -21,7 +24,8 @@ Call `fetch(request)` exactly once:
 
 ```javascript
 // ❌ Multiple origin fetches
-const r1 = await fetch(request); const r2 = await fetch(request);
+const r1 = await fetch(request);
+const r2 = await fetch(request);
 // ✅ Single fetch, reuse response
 const response = await fetch(request);
 ```

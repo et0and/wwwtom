@@ -6,8 +6,8 @@
 {
   "observability": {
     "enabled": true,
-    "head_sampling_rate": 1  // 100% sampling (default)
-  }
+    "head_sampling_rate": 1, // 100% sampling (default)
+  },
 }
 ```
 
@@ -19,7 +19,7 @@ console.log({
   user_id: 123,
   action: "login",
   status: "success",
-  duration_ms: 45
+  duration_ms: 45,
 });
 
 // Avoid - unstructured string
@@ -33,9 +33,9 @@ console.log("user_id: 123 logged in successfully in 45ms");
   "observability": {
     "traces": {
       "enabled": true,
-      "head_sampling_rate": 0.05  // 5% sampling
-    }
-  }
+      "head_sampling_rate": 0.05, // 5% sampling
+    },
+  },
 }
 ```
 
@@ -63,14 +63,14 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     // Track metrics
     env.ANALYTICS.writeDataPoint({
-      blobs: ['customer_123', 'POST', '/api/v1/users'],
+      blobs: ["customer_123", "POST", "/api/v1/users"],
       doubles: [1, 245.5], // request_count, response_time_ms
-      indexes: ['customer_123'] // for efficient filtering
+      indexes: ["customer_123"], // for efficient filtering
     });
 
-    return new Response('OK');
-  }
-}
+    return new Response("OK");
+  },
+};
 ```
 
 ### Configure Tail Workers
@@ -94,21 +94,21 @@ service = "my-worker" # Worker to tail
 export default {
   async tail(events: TraceItem[], env: Env, ctx: ExecutionContext) {
     // Filter errors only
-    const errors = events.filter(event =>
-      event.outcome === 'exception' || event.outcome === 'exceededCpu'
+    const errors = events.filter(
+      (event) => event.outcome === "exception" || event.outcome === "exceededCpu",
     );
 
     if (errors.length > 0) {
       // Send to external monitoring
       ctx.waitUntil(
-        fetch('https://monitoring.example.com/errors', {
-          method: 'POST',
-          body: JSON.stringify(errors)
-        })
+        fetch("https://monitoring.example.com/errors", {
+          method: "POST",
+          body: JSON.stringify(errors),
+        }),
       );
     }
-  }
-}
+  },
+};
 ```
 
 ### Configure Logpush
@@ -150,9 +150,9 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/{account_id}/logpush
     "enabled": true,
     "head_sampling_rate": 1.0,
     "traces": {
-      "enabled": true
-    }
-  }
+      "enabled": true,
+    },
+  },
 }
 ```
 
@@ -165,9 +165,9 @@ curl -X POST "https://api.cloudflare.com/client/v4/accounts/{account_id}/logpush
     "enabled": true,
     "head_sampling_rate": 0.1, // 10% sampling
     "traces": {
-      "enabled": true
-    }
-  }
+      "enabled": true,
+    },
+  },
 }
 ```
 

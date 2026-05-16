@@ -15,12 +15,12 @@
   "dependencies": {
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
-    "effect": "^3.19.5",
-    "kysely": "^0.28.9",
-    "kysely-postgres-js": "^3.0.0",
-    "postgres": "^3.4.7"
+    "effect": "catalog:",
+    "kysely": "catalog:",
+    "kysely-postgres-js": "3.0.0",
+    "postgres": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   }
 }

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-- This repo is a Bun + Turborepo monorepo for tom.so, api.tom.so, cms.tom.so and sophie.st.
+- This repo is a pnpm + Turborepo monorepo for tom.so, api.tom.so, cms.tom.so and sophie.st.
 - Make the smallest correct change, follow local patterns, and verify before
   handoff.
 - Prefer improving existing code over introducing new abstractions.
@@ -42,36 +42,36 @@
 
 ### Root
 
-- `bun dev` — run all dev tasks through Turbo.
-- `bun dev:web` — run only `@tom/web`.
-- `bun dev:api` — run only `@tom/api`.
-- `bun build` — Turbo build.
-- `bun lint` — Turbo lint.
-- `bun format` — `oxfmt --check .`.
-- `bun write` — `oxfmt --write .`.
-- `bun typecheck` — Turbo typecheck.
-- `bun test` — run tests via Turbo.
-- `bun test:update` — update snapshots in web and utils.
-- `bun deploy` / `bun deploy:api` — deploy web or api.
+- `pnpm dev` — run all dev tasks through Turbo.
+- `pnpm dev:web` — run only `@tom/web`.
+- `pnpm dev:api` — run only `@tom/api`.
+- `pnpm build` — Turbo build.
+- `pnpm lint` — Turbo lint.
+- `pnpm format` — `oxfmt --check .`.
+- `pnpm write` — `oxfmt --write .`.
+- `pnpm typecheck` — Turbo typecheck.
+- `pnpm test` — run tests via Turbo.
+- `pnpm test:update` — update snapshots in web and utils.
+- `pnpm deploy` / `pnpm deploy:api` — deploy web or api.
 
 ### App / Package Commands
 
-- `apps/web`: `bun run dev|build|typecheck|lint|test|test:ui|test:coverage`
-- `apps/api`: `bun run dev|build|deploy|cf-typegen`
-- `apps/cms`: `bun run dev|build|lint|lint:fix|generate:types|preview`
-- `apps/docs`: `bun run dev|build|preview`
-- `packages/@tom/utils`: `bun run test|typecheck`
+- `apps/web`: `pnpm run dev|build|typecheck|lint|test|test:ui|test:coverage`
+- `apps/api`: `pnpm run dev|build|deploy|cf-typegen`
+- `apps/cms`: `pnpm run dev|build|lint|lint:fix|generate:types|preview`
+- `apps/docs`: `pnpm run dev|build|preview`
+- `packages/@tom/utils`: `pnpm run test|typecheck`
 
 ## Single-Test Commands
 
-- Root filename filter: `bun test -- Nav.test.tsx`
+- Root filename filter: `pnpm test -- Nav.test.tsx`
 - Web exact file: `cd apps/web && npx vitest run Nav.test.tsx`
 - Web exact path:
   `cd apps/web && npx vitest run src/components/__tests__/Nav.test.tsx`
 - Utils exact file:
-  `cd packages/@tom/utils && bun vitest run __tests__/telegram.test.ts`
+  `cd packages/@tom/utils && pnpm vitest run __tests__/telegram.test.ts`
 - CMS integration file:
-  `cd apps/cms && bun vitest run tests/int/<name>.int.spec.ts`
+  `cd apps/cms && pnpm vitest run tests/int/<name>.int.spec.ts`
 
 ## Test Locations and Setup
 
@@ -177,7 +177,7 @@ Never guess at Effect patterns - check the guide first.
 
 - Minimum: run targeted tests for changed code when tests exist.
 - For broader changes, also run relevant lint and typecheck commands.
-- Good defaults: `bun lint`, `bun typecheck`, and `bun test -- <file>` or a
+- Good defaults: `pnpm lint`, `pnpm typecheck`, and `pnpm test -- <file>` or a
   package-local Vitest command.
 - If something cannot be verified locally, say so explicitly.
 

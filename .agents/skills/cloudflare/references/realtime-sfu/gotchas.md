@@ -36,18 +36,18 @@
 
 ```typescript
 pc.oniceconnectionstatechange = async () => {
-  if (pc.iceConnectionState === 'failed') {
-    console.warn('ICE failed, attempting restart');
+  if (pc.iceConnectionState === "failed") {
+    console.warn("ICE failed, attempting restart");
     await pc.restartIce(); // Triggers new ICE gathering
 
     // Create new offer with ICE restart flag
-    const offer = await pc.createOffer({iceRestart: true});
+    const offer = await pc.createOffer({ iceRestart: true });
     await pc.setLocalDescription(offer);
 
     // Send to backend → Cloudflare API
     await fetch(`/api/sessions/${sessionId}/renegotiate`, {
-      method: 'PUT',
-      body: JSON.stringify({sdp: offer.sdp})
+      method: "PUT",
+      body: JSON.stringify({ sdp: offer.sdp }),
     });
   }
 };
@@ -71,9 +71,9 @@ pc.oniceconnectionstatechange = async () => {
 
 ```typescript
 // Listen for network changes
-if ('connection' in navigator) {
-  (navigator as any).connection.addEventListener('change', async () => {
-    console.log('Network changed');
+if ("connection" in navigator) {
+  (navigator as any).connection.addEventListener("change", async () => {
+    console.log("Network changed");
     await pc.restartIce(); // Use ICE restart pattern above
   });
 }
@@ -89,12 +89,12 @@ async function fetchWithRetry(url: string, options: RequestInit, maxRetries = 3)
     try {
       const res = await fetch(url, options);
       if (res.ok) return res;
-      if (res.status >= 500) throw new Error('Server error');
+      if (res.status >= 500) throw new Error("Server error");
       return res; // Client error, don't retry
     } catch (err) {
       if (i === maxRetries - 1) throw err;
       const delay = Math.min(1000 * 2 ** i, 10000); // Cap at 10s
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 }

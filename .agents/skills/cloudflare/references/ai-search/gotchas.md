@@ -83,6 +83,10 @@ const answer = await env.AI.autorag(env.AI_SEARCH_INSTANCE).aiSearch({...});
 **Handle specific error types:**
 
 ```typescript
-if (error instanceof AutoRAGNotFoundError) { /* 404 */ }
-if (error instanceof AutoRAGUnauthorizedError) { /* 401 */ }
+if (error instanceof AutoRAGNotFoundError) {
+  /* 404 */
+}
+if (error instanceof AutoRAGUnauthorizedError) {
+  /* 401 */
+}
 ```

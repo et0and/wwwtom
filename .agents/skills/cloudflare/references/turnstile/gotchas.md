@@ -10,14 +10,14 @@
 
 ```javascript
 // CORRECT - Server validates token
-app.post('/submit', async (req, res) => {
-  const token = req.body['cf-turnstile-response'];
-  const validation = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
-    method: 'POST',
-    body: JSON.stringify({ secret: SECRET, response: token })
-  }).then(r => r.json());
+app.post("/submit", async (req, res) => {
+  const token = req.body["cf-turnstile-response"];
+  const validation = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    body: JSON.stringify({ secret: SECRET, response: token }),
+  }).then((r) => r.json());
 
-  if (!validation.success) return res.status(403).json({ error: 'CAPTCHA failed' });
+  if (!validation.success) return res.status(403).json({ error: "CAPTCHA failed" });
 });
 ```
 
@@ -44,10 +44,10 @@ if (!response.ok) window.turnstile.reset(widgetId);
 **Solution:** Handle expiry callback or use auto-refresh.
 
 ```javascript
-window.turnstile.render('#container', {
-  sitekey: 'YOUR_SITE_KEY',
-  'refresh-expired': 'auto', // or 'manual' with expired-callback
-  'expired-callback': () => window.turnstile.reset(widgetId)
+window.turnstile.render("#container", {
+  sitekey: "YOUR_SITE_KEY",
+  "refresh-expired": "auto", // or 'manual' with expired-callback
+  "expired-callback": () => window.turnstile.reset(widgetId),
 });
 ```
 
@@ -76,8 +76,8 @@ function TurnstileWidget({ onToken }) {
   useEffect(() => {
     if (containerRef.current && !widgetIdRef.current) {
       widgetIdRef.current = window.turnstile.render(containerRef.current, {
-        sitekey: 'YOUR_SITE_KEY',
-        callback: onToken
+        sitekey: "YOUR_SITE_KEY",
+        callback: onToken,
       });
     }
     return () => {
@@ -100,7 +100,7 @@ function TurnstileWidget({ onToken }) {
 
 ```tsx
 useEffect(() => {
-  const widgetId = window.turnstile.render('#container', { sitekey });
+  const widgetId = window.turnstile.render("#container", { sitekey });
   return () => window.turnstile.remove(widgetId);
 }, []);
 ```
@@ -112,8 +112,10 @@ useEffect(() => {
 **Solution:** Use `'use client'` or dynamic import with `ssr: false`.
 
 ```tsx
-'use client';
-export default function Turnstile() { /* component */ }
+"use client";
+export default function Turnstile() {
+  /* component */
+}
 ```
 
 ### SPA: Navigation Without Cleanup
@@ -139,9 +141,11 @@ useEffect(() => () => window.turnstile.remove(widgetId), []);
 **Solution:** Add CSP directives.
 
 ```html
-<meta http-equiv="Content-Security-Policy"
-      content="script-src 'self' https://challenges.cloudflare.com;
-               frame-src https://challenges.cloudflare.com;">
+<meta
+  http-equiv="Content-Security-Policy"
+  content="script-src 'self' https://challenges.cloudflare.com;
+               frame-src https://challenges.cloudflare.com;"
+/>
 ```
 
 ### IP Address Forwarding
@@ -152,10 +156,10 @@ useEffect(() => () => window.turnstile.remove(widgetId), []);
 
 ```javascript
 // Cloudflare Workers
-const ip = request.headers.get('CF-Connecting-IP');
+const ip = request.headers.get("CF-Connecting-IP");
 
 // Behind proxy
-const ip = request.headers.get('X-Forwarded-For')?.split(',')[0];
+const ip = request.headers.get("X-Forwarded-For")?.split(",")[0];
 ```
 
 ### CORS (Siteverify)
@@ -177,12 +181,12 @@ const ip = request.headers.get('X-Forwarded-For')?.split(',')[0];
 ### Console Logging
 
 ```javascript
-window.turnstile.render('#container', {
-  sitekey: 'YOUR_SITE_KEY',
-  callback: (token) => console.log('✓ Token:', token),
-  'error-callback': (code) => console.error('✗ Error:', code),
-  'expired-callback': () => console.warn('⏱ Expired'),
-  'timeout-callback': () => console.warn('⏱ Timeout')
+window.turnstile.render("#container", {
+  sitekey: "YOUR_SITE_KEY",
+  callback: (token) => console.log("✓ Token:", token),
+  "error-callback": (code) => console.error("✗ Error:", code),
+  "expired-callback": () => console.warn("⏱ Expired"),
+  "timeout-callback": () => console.warn("⏱ Timeout"),
 });
 ```
 
@@ -190,8 +194,8 @@ window.turnstile.render('#container', {
 
 ```javascript
 const token = window.turnstile.getResponse(widgetId);
-console.log('Token:', token || 'NOT READY');
-console.log('Expired:', window.turnstile.isExpired(widgetId));
+console.log("Token:", token || "NOT READY");
+console.log("Expired:", window.turnstile.isExpired(widgetId));
 ```
 
 ### Test Keys (Use First)
@@ -222,9 +226,10 @@ Always develop with test keys before production:
 **Solution:** Environment-based keys.
 
 ```javascript
-const SITE_KEY = process.env.NODE_ENV === 'production'
-  ? process.env.TURNSTILE_SITE_KEY
-  : '1x00000000000000000000AA';
+const SITE_KEY =
+  process.env.NODE_ENV === "production"
+    ? process.env.TURNSTILE_SITE_KEY
+    : "1x00000000000000000000AA";
 ```
 
 ### Missing Environment Variables

@@ -30,9 +30,9 @@ Ensure `observability.enabled = true`, redeploy Worker, check `head_sampling_rat
     "enabled": true,
     "head_sampling_rate": 1.0,
     "traces": {
-      "enabled": true
-    }
-  }
+      "enabled": true,
+    },
+  },
 }
 ```
 
@@ -67,8 +67,8 @@ export default {
 
     // For detailed performance analysis, use Workers Traces instead
     return response;
-  }
-}
+  },
+};
 ```
 
 ### Analytics Engine \_sample_interval Aggregation
@@ -96,11 +96,11 @@ FROM api_usage GROUP BY customer_id;
 ```typescript
 // For deep call chains, add custom correlation ID
 const correlationId = crypto.randomUUID();
-console.log({ correlationId, event: 'request_start' });
+console.log({ correlationId, event: "request_start" });
 
 // Pass correlationId through headers to downstream services
-await fetch('https://api.example.com', {
-  headers: { 'X-Correlation-ID': correlationId }
+await fetch("https://api.example.com", {
+  headers: { "X-Correlation-ID": correlationId },
 });
 ```
 

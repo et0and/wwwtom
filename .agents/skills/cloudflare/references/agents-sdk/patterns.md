@@ -19,15 +19,19 @@ export class ChatAgent extends AIChatAgent<Env> {
         getWeather: tool({
           description: "Get current weather",
           parameters: z.object({ city: z.string() }),
-          execute: async ({ city }) => `Weather in ${city}: Sunny, 72°F`
+          execute: async ({ city }) => `Weather in ${city}: Sunny, 72°F`,
         }),
         searchDocs: tool({
           description: "Search documentation",
           parameters: z.object({ query: z.string() }),
-          execute: async ({ query }) => JSON.stringify(
-            this.sql<{title, content}>`SELECT title, content FROM docs WHERE content LIKE ${'%' + query + '%'}`
-          )
-        })
+          execute: async ({ query }) =>
+            JSON.stringify(
+              this.sql<{
+                title;
+                content;
+              }>`SELECT title, content FROM docs WHERE content LIKE ${"%" + query + "%"}`,
+            ),
+        }),
       },
       onFinish,
     });
@@ -47,7 +51,11 @@ function ChatUI() {
 
   return (
     <div>
-      {messages.map(m => <div key={m.id}>{m.role}: {m.content}</div>)}
+      {messages.map((m) => (
+        <div key={m.id}>
+          {m.role}: {m.content}
+        </div>
+      ))}
       <form onSubmit={handleSubmit}>
         <input value={input} onChange={handleInputChange} disabled={isLoading} />
         <button disabled={isLoading}>Send</button>
@@ -73,7 +81,7 @@ export class ChatAgent extends AIChatAgent<Env> {
           description: "Ask user to confirm",
           parameters: z.object({ action: z.string() }),
           execute: "client", // Client-side execution
-        })
+        }),
       },
       onFinish,
     });
@@ -87,7 +95,7 @@ const { messages } = useAgentChat({
     if (toolCall.toolName === "confirmAction") {
       return { confirmed: window.confirm(`Confirm: ${toolCall.args.action}?`) };
     }
-  }
+  },
 });
 ```
 
@@ -126,14 +134,18 @@ Custom protocols (non-AI):
 export class ChatAgent extends Agent<Env> {
   async onConnect(conn: Connection, ctx: ConnectionContext) {
     conn.accept();
-    conn.setState({userId: ctx.request.headers.get("X-User-ID") || "anon"});
-    conn.send(JSON.stringify({type: "history", messages: this.state.messages}));
+    conn.setState({ userId: ctx.request.headers.get("X-User-ID") || "anon" });
+    conn.send(JSON.stringify({ type: "history", messages: this.state.messages }));
   }
 
   async onMessage(conn: Connection, msg: WSMessage) {
-    const newMsg = {userId: conn.state.userId, text: JSON.parse(msg as string).text, timestamp: Date.now()};
-    this.setState({messages: [...this.state.messages, newMsg]});
-    this.connections.forEach(c => c.send(JSON.stringify(newMsg)));
+    const newMsg = {
+      userId: conn.state.userId,
+      text: JSON.parse(msg as string).text,
+      timestamp: Date.now(),
+    };
+    this.setState({ messages: [...this.state.messages, newMsg] });
+    this.connections.forEach((c) => c.send(JSON.stringify(newMsg)));
   }
 }
 ```
@@ -143,14 +155,19 @@ export class ChatAgent extends Agent<Env> {
 ```ts
 export class EmailAgent extends Agent<Env> {
   async onEmail(email: AgentEmail) {
-    const [text, from, subject] = [await email.text(), email.from, email.headers.get("subject") || ""];
+    const [text, from, subject] = [
+      await email.text(),
+      email.from,
+      email.headers.get("subject") || "",
+    ];
     this.sql`INSERT INTO emails (from_addr, subject, body) VALUES (${from}, ${subject}, ${text})`;
 
     const { text: summary } = await generateText({
-      model: openai("gpt-4o-mini"), prompt: `Summarize: ${subject}\n\n${text}`
+      model: openai("gpt-4o-mini"),
+      prompt: `Summarize: ${subject}\n\n${text}`,
     });
 
-    this.connections.forEach(c => c.send(JSON.stringify({type: "new_email", from, summary})));
+    this.connections.forEach((c) => c.send(JSON.stringify({ type: "new_email", from, summary })));
     if (summary.includes("urgent")) await this.schedule(0, "sendAutoReply", { to: from });
   }
 }
@@ -168,8 +185,10 @@ export class GameAgent extends Agent<Env> {
     conn.setState({ playerId });
 
     const newPlayer = { id: playerId, score: 0 };
-    this.setState({...this.state, players: [...this.state.players, newPlayer]});
-    this.connections.forEach(c => c.send(JSON.stringify({type: "player_joined", player: newPlayer})));
+    this.setState({ ...this.state, players: [...this.state.players, newPlayer] });
+    this.connections.forEach((c) =>
+      c.send(JSON.stringify({ type: "player_joined", player: newPlayer })),
+    );
   }
 
   async onMessage(conn: Connection, msg: WSMessage) {
@@ -178,14 +197,18 @@ export class GameAgent extends Agent<Env> {
     if (m.type === "move") {
       this.setState({
         ...this.state,
-        players: this.state.players.map(p => p.id === conn.state.playerId ? {...p, score: p.score + m.points} : p)
+        players: this.state.players.map((p) =>
+          p.id === conn.state.playerId ? { ...p, score: p.score + m.points } : p,
+        ),
       });
-      this.connections.forEach(c => c.send(JSON.stringify({type: "player_moved", playerId: conn.state.playerId})));
+      this.connections.forEach((c) =>
+        c.send(JSON.stringify({ type: "player_moved", playerId: conn.state.playerId })),
+      );
     }
 
     if (m.type === "start" && this.state.players.length >= 2) {
-      this.setState({...this.state, gameStarted: true});
-      this.connections.forEach(c => c.send(JSON.stringify({type: "game_started"})));
+      this.setState({ ...this.state, gameStarted: true });
+      this.connections.forEach((c) => c.send(JSON.stringify({ type: "game_started" })));
     }
   }
 }

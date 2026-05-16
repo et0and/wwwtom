@@ -45,14 +45,14 @@ Need private network connectivity from Workers?
 ## Quick Start
 
 ```typescript
-import { connect } from 'cloudflare:sockets';
+import { connect } from "cloudflare:sockets";
 
 export default {
   async fetch(req: Request): Promise<Response> {
     // Connect to private service
     const socket = connect(
       { hostname: "db.internal.company.net", port: 5432 },
-      { secureTransport: "on" }
+      { secureTransport: "on" },
     );
 
     try {
@@ -69,7 +69,7 @@ export default {
     } finally {
       await socket.close();
     }
-  }
+  },
 };
 ```
 

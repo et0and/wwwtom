@@ -8,15 +8,15 @@ Fire-and-forget (returns `void`, not Promise). Writes happen asynchronously.
 
 ```typescript
 interface AnalyticsEngineDataPoint {
-  blobs?: string[];      // Up to 20 strings (dimensions), 16KB each
-  doubles?: number[];    // Up to 20 numbers (metrics)
-  indexes?: string[];    // 1 indexed string for high-cardinality filtering
+  blobs?: string[]; // Up to 20 strings (dimensions), 16KB each
+  doubles?: number[]; // Up to 20 numbers (metrics)
+  indexes?: string[]; // 1 indexed string for high-cardinality filtering
 }
 
 env.ANALYTICS.writeDataPoint({
   blobs: ["/api/users", "GET", "200"],
-  doubles: [145.2, 1],  // latency_ms, count
-  indexes: ["customer_abc123"]
+  doubles: [145.2, 1], // latency_ms, count
+  indexes: ["customer_abc123"],
 });
 ```
 
@@ -36,7 +36,7 @@ export default {
       env.ANALYTICS.writeDataPoint({
         blobs: [url.pathname, request.method, response.status.toString()],
         doubles: [Date.now() - start, 1],
-        indexes: [request.headers.get("x-api-key") || "anonymous"]
+        indexes: [request.headers.get("x-api-key") || "anonymous"],
       });
       return response;
     } catch (error) {
@@ -46,7 +46,7 @@ export default {
       });
       throw error;
     }
-  }
+  },
 };
 ```
 
@@ -96,7 +96,7 @@ FROM api_requests GROUP BY blob1
 ## Response Format
 
 ```json
-{"data": [{"endpoint": "/api/users", "requests": 1523}], "rows": 2}
+{ "data": [{ "endpoint": "/api/users", "requests": 1523 }], "rows": 2 }
 ```
 
 ## Limits

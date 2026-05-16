@@ -21,7 +21,7 @@
 const client = new Cloudflare({ maxRetries: 5 });
 
 // Add application-level throttling
-import pLimit from 'p-limit';
+import pLimit from "p-limit";
 const limit = pLimit(10); // Max 10 concurrent requests
 ```
 
@@ -133,12 +133,12 @@ const zones = await client.zones.list();
 ```typescript
 // Verify token is set
 if (!process.env.CLOUDFLARE_API_TOKEN) {
-  throw new Error('CLOUDFLARE_API_TOKEN not set');
+  throw new Error("CLOUDFLARE_API_TOKEN not set");
 }
 
 // Test token
 const user = await client.user.tokens.verify();
-console.log('Token valid:', user.status);
+console.log("Token valid:", user.status);
 ```
 
 ## Timeout Errors

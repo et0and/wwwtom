@@ -44,7 +44,18 @@ DELETE /accounts/{account_id}/cni/interconnects/{icon}
 **Response Example:**
 
 ```json
-{"result": [{"id": "icon_abc", "name": "prod", "type": "direct", "facility": "EWR1", "speed": "10G", "status": "active"}]}
+{
+  "result": [
+    {
+      "id": "icon_abc",
+      "name": "prod",
+      "type": "direct",
+      "facility": "EWR1",
+      "speed": "10G",
+      "status": "active"
+    }
+  ]
+}
 ```
 
 ## CNI Objects (BGP config)
@@ -74,7 +85,7 @@ Configure via Magic Transit/WAN tunnel endpoints (CNI v2).
 
 ```typescript
 await client.magicTransit.tunnels.update(accountId, tunnelId, {
-  health_check: { enabled: true, target: '192.0.2.1', rate: 'high', type: 'request' },
+  health_check: { enabled: true, target: "192.0.2.1", rate: "high", type: "request" },
 });
 ```
 
@@ -92,7 +103,7 @@ Body: `default_asn`
 ## TypeScript SDK
 
 ```typescript
-import Cloudflare from 'cloudflare';
+import Cloudflare from "cloudflare";
 
 const client = new Cloudflare({ apiToken: process.env.CF_TOKEN });
 
@@ -100,44 +111,50 @@ const client = new Cloudflare({ apiToken: process.env.CF_TOKEN });
 await client.networkInterconnects.interconnects.list({ account_id: id });
 
 // Create with validation
-await client.networkInterconnects.interconnects.create({
-  account_id: id,
-  account: id,
-  slot_id: 'slot_abc',
-  type: 'direct',
-  facility: 'EWR1',
-  speed: '10G',
-  name: 'prod-interconnect',
-}, {
-  query: { validate_only: true }, // Dry-run validation
-});
+await client.networkInterconnects.interconnects.create(
+  {
+    account_id: id,
+    account: id,
+    slot_id: "slot_abc",
+    type: "direct",
+    facility: "EWR1",
+    speed: "10G",
+    name: "prod-interconnect",
+  },
+  {
+    query: { validate_only: true }, // Dry-run validation
+  },
+);
 
 // Create without validation
 await client.networkInterconnects.interconnects.create({
   account_id: id,
   account: id,
-  slot_id: 'slot_abc',
-  type: 'direct',
-  facility: 'EWR1',
-  speed: '10G',
-  name: 'prod-interconnect',
+  slot_id: "slot_abc",
+  type: "direct",
+  facility: "EWR1",
+  speed: "10G",
+  name: "prod-interconnect",
 });
 
 // Status
 await client.networkInterconnects.interconnects.get(accountId, iconId);
 
 // LOA (use fetch)
-const res = await fetch(`https://api.cloudflare.com/client/v4/accounts/${id}/cni/interconnects/${iconId}/loa`, {
-  headers: { Authorization: `Bearer ${token}` },
-});
-await fs.writeFile('loa.pdf', Buffer.from(await res.arrayBuffer()));
+const res = await fetch(
+  `https://api.cloudflare.com/client/v4/accounts/${id}/cni/interconnects/${iconId}/loa`,
+  {
+    headers: { Authorization: `Bearer ${token}` },
+  },
+);
+await fs.writeFile("loa.pdf", Buffer.from(await res.arrayBuffer()));
 
 // CNI object
 await client.networkInterconnects.cnis.create({
   account_id: id,
   account: id,
-  cust_ip: '192.0.2.1/31',
-  cf_ip: '192.0.2.0/31',
+  cust_ip: "192.0.2.1/31",
+  cf_ip: "192.0.2.0/31",
   bgp_asn: 65000,
   vlan: 100,
 });
@@ -146,8 +163,8 @@ await client.networkInterconnects.cnis.create({
 await client.networkInterconnects.slots.list({
   account_id: id,
   occupied: false,
-  facility: 'EWR1',
-  speed: '10G',
+  facility: "EWR1",
+  speed: "10G",
 });
 ```
 

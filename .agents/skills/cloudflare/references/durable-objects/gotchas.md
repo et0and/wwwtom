@@ -154,12 +154,14 @@ async criticalOperation() {
 export default {
   async scheduled(event: ScheduledEvent, env: Env) {
     const criticalIds = ["auth", "sessions", "locks"];
-    await Promise.all(criticalIds.map(name => {
-      const id = env.MY_DO.idFromName(name);
-      const stub = env.MY_DO.get(id);
-      return stub.ping();  // Keep warm
-    }));
-  }
+    await Promise.all(
+      criticalIds.map((name) => {
+        const id = env.MY_DO.idFromName(name);
+        const stub = env.MY_DO.get(id);
+        return stub.ping(); // Keep warm
+      }),
+    );
+  },
 };
 ```
 

@@ -37,10 +37,10 @@ Your Network B ──10G CNI v2──> CF CCR Device 2
 // 1. Create interconnect
 const ic = await client.networkInterconnects.interconnects.create({
   account_id: id,
-  type: 'direct',
-  facility: 'EWR1',
-  speed: '10G',
-  name: 'magic-transit-primary',
+  type: "direct",
+  facility: "EWR1",
+  speed: "10G",
+  name: "magic-transit-primary",
 });
 
 // 2. Poll until active
@@ -64,8 +64,8 @@ const status = await pollUntilActive(id, ic.id);
 // 4. Configure static routes in Magic WAN
 
 await configureStaticRoutes(id, {
-  prefix: '10.0.0.0/8',
-  nexthop: 'aws-direct-connect',
+  prefix: "10.0.0.0/8",
+  nexthop: "aws-direct-connect",
 });
 ```
 
@@ -89,28 +89,28 @@ await configureStaticRoutes(id, {
 // Primary (NY)
 const primary = await client.networkInterconnects.interconnects.create({
   account_id: id,
-  type: 'direct',
-  facility: 'EWR1',
-  speed: '10G',
-  name: 'primary-ewr1',
+  type: "direct",
+  facility: "EWR1",
+  speed: "10G",
+  name: "primary-ewr1",
 });
 
 // Secondary (NY, different hardware)
 const secondary = await client.networkInterconnects.interconnects.create({
   account_id: id,
-  type: 'direct',
-  facility: 'EWR2',
-  speed: '10G',
-  name: 'secondary-ewr2',
+  type: "direct",
+  facility: "EWR2",
+  speed: "10G",
+  name: "secondary-ewr2",
 });
 
 // Tertiary (LA, different geography)
 const tertiary = await client.networkInterconnects.interconnects.create({
   account_id: id,
-  type: 'partner',
-  facility: 'LAX1',
-  speed: '10G',
-  name: 'tertiary-lax1',
+  type: "partner",
+  facility: "LAX1",
+  speed: "10G",
+  name: "tertiary-lax1",
 });
 
 // BGP local preferences:

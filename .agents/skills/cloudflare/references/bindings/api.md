@@ -52,10 +52,10 @@ interface Env {
 ```typescript
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
-    const value = await env.MY_KV.get('key');
+    const value = await env.MY_KV.get("key");
     return new Response(value);
-  }
-}
+  },
+};
 ```
 
 **Why:** Type-safe, aligns with Workers API, supports ctx for waitUntil/passThroughOnException.
@@ -63,12 +63,12 @@ export default {
 ### Method 2: Hono Framework
 
 ```typescript
-import { Hono } from 'hono';
+import { Hono } from "hono";
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.get('/', async (c) => {
-  const value = await c.env.MY_KV.get('key');
+app.get("/", async (c) => {
+  const value = await c.env.MY_KV.get("key");
   return c.json({ value });
 });
 
@@ -81,11 +81,11 @@ export default app;
 
 ```typescript
 export async function handleRequest(request: Request, env: Env): Promise<Response> {
-  const value = await env.MY_KV.get('key');
+  const value = await env.MY_KV.get("key");
   return new Response(value);
 }
 
-addEventListener('fetch', (event) => {
+addEventListener("fetch", (event) => {
   // env not directly available - requires workarounds
 });
 ```
@@ -120,10 +120,10 @@ npx wrangler types
 **KV:**
 
 ```typescript
-await env.MY_KV.get(key, { type: 'json' });  // text|json|arrayBuffer|stream
+await env.MY_KV.get(key, { type: "json" }); // text|json|arrayBuffer|stream
 await env.MY_KV.put(key, value, { expirationTtl: 3600 });
 await env.MY_KV.delete(key);
-await env.MY_KV.list({ prefix: 'user:' });
+await env.MY_KV.list({ prefix: "user:" });
 ```
 
 **R2:**
@@ -132,40 +132,40 @@ await env.MY_KV.list({ prefix: 'user:' });
 await env.BUCKET.get(key);
 await env.BUCKET.put(key, value);
 await env.BUCKET.delete(key);
-await env.BUCKET.list({ prefix: 'images/' });
+await env.BUCKET.list({ prefix: "images/" });
 ```
 
 **D1:**
 
 ```typescript
-await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
+await env.DB.prepare("SELECT * FROM users WHERE id = ?").bind(userId).first();
 await env.DB.batch([stmt1, stmt2]);
 ```
 
 **Service:**
 
 ```typescript
-await env.MY_SERVICE.fetch(new Request('https://fake/path'));
+await env.MY_SERVICE.fetch(new Request("https://fake/path"));
 ```
 
 **Workers AI:**
 
 ```typescript
-await env.AI.run('@cf/meta/llama-3.1-8b-instruct', { prompt: 'Hello' });
+await env.AI.run("@cf/meta/llama-3.1-8b-instruct", { prompt: "Hello" });
 ```
 
 **Queues:**
 
 ```typescript
-await env.MY_QUEUE.send({ userId: 123, action: 'process' });
+await env.MY_QUEUE.send({ userId: 123, action: "process" });
 ```
 
 **Durable Objects:**
 
 ```typescript
-const id = env.MY_DO.idFromName('user-123');
+const id = env.MY_DO.idFromName("user-123");
 const stub = env.MY_DO.get(id);
-await stub.fetch(new Request('https://fake/increment'));
+await stub.fetch(new Request("https://fake/increment"));
 ```
 
 ## Runtime vs Build-Time Types

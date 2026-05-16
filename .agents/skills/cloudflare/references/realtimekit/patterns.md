@@ -48,11 +48,11 @@ RealtimeKit provides 133+ pre-built Stencil.js Web Components with framework wra
 ### Basic Setup
 
 ```typescript
-import RealtimeKitClient from '@cloudflare/realtimekit';
+import RealtimeKitClient from "@cloudflare/realtimekit";
 
 const meeting = new RealtimeKitClient({ authToken, video: true, audio: true });
-meeting.self.on('roomJoined', () => console.log('Joined:', meeting.meta.meetingTitle));
-meeting.participants.joined.on('participantJoined', (p) => console.log(`${p.name} joined`));
+meeting.self.on("roomJoined", () => console.log("Joined:", meeting.meta.meetingTitle));
+meeting.participants.joined.on("participantJoined", (p) => console.log(`${p.name} joined`));
 await meeting.join();
 ```
 
@@ -115,7 +115,7 @@ function MyComponent() {
 
 ```typescript
 // Monitor waitlist
-meeting.participants.waitlisted.on('participantJoined', (participant) => {
+meeting.participants.waitlisted.on("participantJoined", (participant) => {
   console.log(`${participant.name} is waiting`);
   // Show admin UI to approve/reject
 });
@@ -124,14 +124,14 @@ meeting.participants.waitlisted.on('participantJoined', (participant) => {
 await fetch(
   `https://api.cloudflare.com/client/v4/accounts/${accountId}/realtime/kit/${appId}/meetings/${meetingId}/active-session/waitlist/approve`,
   {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiToken}` },
-    body: JSON.stringify({ user_ids: [participant.userId] })
-  }
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiToken}` },
+    body: JSON.stringify({ user_ids: [participant.userId] }),
+  },
 );
 
 // Client receives automatic transition when approved
-meeting.self.on('roomJoined', () => console.log('Approved and joined'));
+meeting.self.on("roomJoined", () => console.log("Approved and joined"));
 ```
 
 ## Audio-Only Mode
@@ -159,15 +159,15 @@ import { RtkAudioGrid } from '@cloudflare/realtimekit-react-ui';
 
 ```typescript
 // List available addons
-meeting.plugins.all.forEach(plugin => {
+meeting.plugins.all.forEach((plugin) => {
   console.log(plugin.id, plugin.name, plugin.active);
 });
 
 // Activate collaborative app
-await meeting.plugins.activate('whiteboard-addon-id');
+await meeting.plugins.activate("whiteboard-addon-id");
 
 // Listen for activations
-meeting.plugins.on('pluginActivated', ({ plugin }) => {
+meeting.plugins.on("pluginActivated", ({ plugin }) => {
   console.log(`${plugin.name} activated`);
 });
 
@@ -180,28 +180,35 @@ await meeting.plugins.deactivate();
 ### Token Generation (Workers)
 
 ```typescript
-export interface Env { CLOUDFLARE_API_TOKEN: string; CLOUDFLARE_ACCOUNT_ID: string; REALTIMEKIT_APP_ID: string; }
+export interface Env {
+  CLOUDFLARE_API_TOKEN: string;
+  CLOUDFLARE_ACCOUNT_ID: string;
+  REALTIMEKIT_APP_ID: string;
+}
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/join-meeting') {
+    if (url.pathname === "/api/join-meeting") {
       const { meetingId, userName, presetName } = await request.json();
       const response = await fetch(
         `https://api.cloudflare.com/client/v4/accounts/${env.CLOUDFLARE_ACCOUNT_ID}/realtime/kit/${env.REALTIMEKIT_APP_ID}/meetings/${meetingId}/participants`,
         {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.CLOUDFLARE_API_TOKEN}` },
-          body: JSON.stringify({ name: userName, preset_name: presetName })
-        }
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
+          },
+          body: JSON.stringify({ name: userName, preset_name: presetName }),
+        },
       );
       const data = await response.json();
       return Response.json({ authToken: data.result.authToken });
     }
 
-    return new Response('Not found', { status: 404 });
-  }
+    return new Response("Not found", { status: 404 });
+  },
 };
 ```
 

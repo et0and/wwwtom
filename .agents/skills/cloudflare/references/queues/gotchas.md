@@ -93,10 +93,10 @@ async queue(batch: MessageBatch, env: Env): Promise<void> {
 
 ```typescript
 // Use json for pull consumers
-await env.MY_QUEUE.send(data, { contentType: 'json' });
+await env.MY_QUEUE.send(data, { contentType: "json" });
 
 // Use v8 only for push consumers with complex JS types
-await env.MY_QUEUE.send({ date: new Date(), tags: new Set() }, { contentType: 'v8' });
+await env.MY_QUEUE.send({ date: new Date(), tags: new Set() }, { contentType: "v8" });
 ```
 
 ### "Messages Not Being Delivered"
@@ -178,13 +178,16 @@ function isRetryable(error: unknown): boolean {
 
 ```typescript
 // Dashboard/pull: use json
-await env.QUEUE.send({ id: 123, name: 'test' }, { contentType: 'json' });
+await env.QUEUE.send({ id: 123, name: "test" }, { contentType: "json" });
 
 // Complex JS types (push only): use v8
-await env.QUEUE.send({
-  created: new Date(),
-  tags: new Set(['a', 'b'])
-}, { contentType: 'v8' });
+await env.QUEUE.send(
+  {
+    created: new Date(),
+    tags: new Set(["a", "b"]),
+  },
+  { contentType: "v8" },
+);
 ```
 
 ## Limits

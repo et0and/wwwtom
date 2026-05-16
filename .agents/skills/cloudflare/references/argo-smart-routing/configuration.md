@@ -74,17 +74,17 @@ export function getArgoConfig(env: string): ArgoEnvironmentConfig {
 
 ```typescript
 // pulumi/argo.ts
-import * as cloudflare from '@pulumi/cloudflare';
+import * as cloudflare from "@pulumi/cloudflare";
 
-const zone = new cloudflare.Zone('example-zone', {
-  zone: 'example.com',
-  plan: 'enterprise',
+const zone = new cloudflare.Zone("example-zone", {
+  zone: "example.com",
+  plan: "enterprise",
 });
 
-const argoSettings = new cloudflare.Argo('argo-config', {
+const argoSettings = new cloudflare.Argo("argo-config", {
   zoneId: zone.id,
-  smartRouting: 'on',
-  tieredCaching: 'on',
+  smartRouting: "on",
+  tieredCaching: "on",
 });
 
 export const argoEnabled = argoSettings.smartRouting;
@@ -128,21 +128,21 @@ ARGO_TIERED_CACHE=true
 
 ```typescript
 // config/env.ts
-import { z } from 'zod';
+import { z } from "zod";
 
 const envSchema = z.object({
   CLOUDFLARE_API_TOKEN: z.string().min(1),
   CLOUDFLARE_ZONE_ID: z.string().min(1),
   CLOUDFLARE_ACCOUNT_ID: z.string().min(1),
-  ARGO_ENABLED: z.string().optional().default('false'),
-  ARGO_TIERED_CACHE: z.string().optional().default('false'),
+  ARGO_ENABLED: z.string().optional().default("false"),
+  ARGO_TIERED_CACHE: z.string().optional().default("false"),
 });
 
 export const env = envSchema.parse(process.env);
 
 export const argoConfig = {
-  enabled: env.ARGO_ENABLED === 'true',
-  tieredCache: env.ARGO_TIERED_CACHE === 'true',
+  enabled: env.ARGO_ENABLED === "true",
+  tieredCache: env.ARGO_TIERED_CACHE === "true",
 };
 ```
 
@@ -158,7 +158,7 @@ on:
   push:
     branches: [main]
     paths:
-      - 'terraform/argo.tf'
+      - "terraform/argo.tf"
 
 jobs:
   deploy:

@@ -84,9 +84,7 @@ Bindings are how Workers access Cloudflare resources (storage, compute, services
 
 ```jsonc
 {
-  "kv_namespaces": [
-    { "binding": "MY_KV", "id": "your-kv-id" }
-  ]
+  "kv_namespaces": [{ "binding": "MY_KV", "id": "your-kv-id" }],
 }
 ```
 
@@ -101,10 +99,10 @@ npx wrangler types
 ```typescript
 export default {
   async fetch(request, env, ctx) {
-    await env.MY_KV.put('key', 'value');
-    return new Response('OK');
-  }
-}
+    await env.MY_KV.put("key", "value");
+    return new Response("OK");
+  },
+};
 ```
 
 ## Type Safety

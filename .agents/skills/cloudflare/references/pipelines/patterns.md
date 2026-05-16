@@ -5,22 +5,22 @@
 ```typescript
 export default {
   async fetch(request, env, ctx) {
-    const event = { user_id: '...', event_type: 'page_view', timestamp: new Date().toISOString() };
+    const event = { user_id: "...", event_type: "page_view", timestamp: new Date().toISOString() };
     ctx.waitUntil(env.STREAM.send([event])); // Don't block response
-    return new Response('OK');
-  }
+    return new Response("OK");
+  },
 };
 ```
 
 ## Schema Validation with Zod
 
 ```typescript
-import { z } from 'zod';
+import { z } from "zod";
 
 const EventSchema = z.object({
   user_id: z.string(),
-  event_type: z.enum(['purchase', 'view']),
-  amount: z.number().positive().optional()
+  event_type: z.enum(["purchase", "view"]),
+  amount: z.number().positive().optional(),
 });
 
 const validated = EventSchema.parse(rawEvent); // Throws on invalid
@@ -53,8 +53,8 @@ FROM my_stream
 
 ```typescript
 await Promise.all([
-  env.ANALYTICS_STREAM.send([event]),  // Long-term storage
-  env.PROCESS_QUEUE.send(event)        // Immediate processing
+  env.ANALYTICS_STREAM.send([event]), // Long-term storage
+  env.PROCESS_QUEUE.send(event), // Immediate processing
 ]);
 ```
 

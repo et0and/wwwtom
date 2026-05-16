@@ -11,8 +11,8 @@ Expert guidance for deploying and configuring static assets with Cloudflare Work
   "main": "src/index.ts",
   "compatibility_date": "2025-01-01",
   "assets": {
-    "directory": "./dist"
-  }
+    "directory": "./dist",
+  },
 }
 ```
 
@@ -21,7 +21,7 @@ Expert guidance for deploying and configuring static assets with Cloudflare Work
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     return env.ASSETS.fetch(request);
-  }
+  },
 };
 ```
 

@@ -22,14 +22,14 @@ Email Workers enable custom email processing logic at the edge. Build spam filte
 export default {
   async email(message, env, ctx) {
     // Reject spam
-    if (message.from.includes('spam.com')) {
-      message.setReject('Blocked');
+    if (message.from.includes("spam.com")) {
+      message.setReject("Blocked");
       return;
     }
 
     // Forward to inbox
-    await message.forward('inbox@example.com');
-  }
+    await message.forward("inbox@example.com");
+  },
 };
 ```
 

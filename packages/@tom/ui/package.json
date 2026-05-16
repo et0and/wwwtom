@@ -10,17 +10,17 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "storybook": "cd src/storybook && bun run storybook",
-    "storybook:build": "cd src/storybook && bun run build",
-    "storybook:deploy": "cd src/storybook && bun run deploy"
+    "storybook": "cd src/storybook && pnpm run storybook",
+    "storybook:build": "cd src/storybook && pnpm run build",
+    "storybook:deploy": "cd src/storybook && pnpm run deploy"
   },
   "dependencies": {
-    "@solidjs/meta": "^0.29.4",
-    "@solidjs/router": "^0.15.0",
-    "classnames": "^2.5.1",
-    "solid-js": "^1.9.5"
+    "@solidjs/meta": "catalog:",
+    "@solidjs/router": "catalog:",
+    "classnames": "catalog:",
+    "solid-js": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.9.3"
+    "typescript": "5.9.3"
   }
 }

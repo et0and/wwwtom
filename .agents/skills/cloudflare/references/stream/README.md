@@ -64,7 +64,8 @@ curl -X POST \
 <iframe
   src="https://customer-<CODE>.cloudflarestream.com/<VIDEO_ID>/iframe"
   style="border: none;"
-  height="720" width="1280"
+  height="720"
+  width="1280"
   allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
   allowfullscreen="true"
 ></iframe>

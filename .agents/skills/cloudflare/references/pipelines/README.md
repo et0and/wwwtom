@@ -48,8 +48,8 @@ export default {
     // Fire-and-forget pattern
     ctx.waitUntil(env.STREAM.send([event]));
 
-    return new Response('OK');
-  }
+    return new Response("OK");
+  },
 } satisfies ExportedHandler<Env>;
 ```
 

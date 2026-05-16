@@ -38,7 +38,7 @@ class Miniflare {
 ```js
 const res = await mf.dispatchFetch("http://localhost:8787/path", {
   method: "POST",
-  headers: { "Authorization": "Bearer token" },
+  headers: { Authorization: "Bearer token" },
   body: JSON.stringify({ data: "value" }),
 });
 ```
@@ -47,7 +47,7 @@ const res = await mf.dispatchFetch("http://localhost:8787/path", {
 
 ```js
 const res = await mf.dispatchFetch("http://localhost:8787/", {
-  headers: { "Host": "api.example.com" },
+  headers: { Host: "api.example.com" },
 });
 ```
 

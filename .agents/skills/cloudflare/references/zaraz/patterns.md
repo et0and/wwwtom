@@ -8,7 +8,7 @@
 
 ```javascript
 // On route change
-zaraz.track('pageview', { page_path: pathname, page_title: document.title });
+zaraz.track("pageview", { page_path: pathname, page_title: document.title });
 ```
 
 ## User Identification
@@ -16,10 +16,10 @@ zaraz.track('pageview', { page_path: pathname, page_title: document.title });
 ```javascript
 // Login
 zaraz.set({ userId: user.id, email: user.email, plan: user.plan });
-zaraz.track('login', { method: 'oauth' });
+zaraz.track("login", { method: "oauth" });
 
 // Logout - set to null (cannot clear)
-zaraz.set('userId', null);
+zaraz.set("userId", null);
 ```
 
 ## E-commerce Funnel
@@ -34,10 +34,10 @@ zaraz.set('userId', null);
 ## A/B Testing
 
 ```javascript
-zaraz.set('experiment_checkout', variant);
-zaraz.track('experiment_viewed', { experiment_id: 'checkout', variant });
+zaraz.set("experiment_checkout", variant);
+zaraz.track("experiment_viewed", { experiment_id: "checkout", variant });
 // On conversion
-zaraz.track('experiment_conversion', { experiment_id, variant, value });
+zaraz.track("experiment_conversion", { experiment_id, variant, value });
 ```
 
 ## Worker Integration
@@ -50,7 +50,7 @@ export default {
     const body = await request.json();
     body.system.userRegion = request.cf?.region;
     return Response.json(body);
-  }
+  },
 };
 ```
 
