@@ -42,6 +42,14 @@
   },
   "packageManager": "pnpm@11.1.2",
   "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "core-js-pure",
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "workerd"
+    ],
     "catalogs": {
       "default": {
         "effect": "3.19.5",
