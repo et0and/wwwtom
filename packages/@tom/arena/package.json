@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@aredotna/sdk": "0.0.4",
+    "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
