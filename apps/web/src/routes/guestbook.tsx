@@ -1,4 +1,4 @@
-import { createAsync, useSubmission } from "@solidjs/router";
+import { createAsync, useSubmission, type RouteDefinition } from "@solidjs/router";
 import { For, Show, Suspense, createSignal } from "solid-js";
 import { PageLayout } from "~/layouts";
 import { Spinner } from "~/components";
@@ -9,6 +9,13 @@ import {
   logoutAction,
   signGuestbookAction,
 } from "~/libs/actions/guestbook";
+
+export const route = {
+  preload: () => {
+    getEntries();
+    getCurrentUser();
+  },
+} satisfies RouteDefinition;
 
 export default function Guestbook() {
   const entries = createAsync(() => getEntries());

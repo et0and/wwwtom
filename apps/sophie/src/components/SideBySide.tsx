@@ -36,7 +36,7 @@ export const SideBySide = (props: SideBySideProps) => {
             </h1>
             <div className="mt-4">
               {props.nav.links.map((item) => (
-                <Link key={item.href} href={item.href} className="block py-2 link">
+                <Link prefetch={true} key={item.href} href={item.href} className="block py-2 link">
                   {item.label}
                 </Link>
               ))}
@@ -67,7 +67,12 @@ export const SideBySide = (props: SideBySideProps) => {
             <nav className="absolute right-0 top-full border-b border-gray-200 bg-white px-4 py-4">
               <div className="flex flex-col gap-3">
                 {props.nav.links.map((item) => (
-                  <Link key={item.href} href={item.href} className="block py-2 link">
+                  <Link
+                    prefetch={true}
+                    key={item.href}
+                    href={item.href}
+                    className="block py-2 link"
+                  >
                     {item.label}
                   </Link>
                 ))}

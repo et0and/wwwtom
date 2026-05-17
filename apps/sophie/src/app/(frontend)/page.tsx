@@ -4,7 +4,7 @@ import { siteNav } from "./site-config";
 export default function HomePage() {
   return (
     <SideBySide nav={siteNav}>
-      <p>Hehehe</p>
+      <div className="flex flex-1 flex-col overflow-hidden"></div>
     </SideBySide>
   );
 }

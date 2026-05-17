@@ -2,6 +2,8 @@ import config from "@payload-config";
 import { getPayload } from "payload";
 import { cache } from "react";
 
+import type { Where } from "payload";
+
 import type { Category } from "../../../payload-types";
 import type { Post } from "../../../payload-types";
 
@@ -12,7 +14,7 @@ export const getPublishedPostsPage = cache(async (page: number, categorySlug?: s
 
   let categoryName: string | undefined;
 
-  const conditions: Record<string, unknown>[] = [{ status: { equals: "published" } }];
+  const conditions: Where[] = [{ status: { equals: "published" } }];
 
   if (categorySlug) {
     const categoryResult = await payload.find({
@@ -29,7 +31,7 @@ export const getPublishedPostsPage = cache(async (page: number, categorySlug?: s
     }
   }
 
-  const where = conditions.length === 1 ? conditions[0] : { and: conditions };
+  const where: Where = conditions.length === 1 ? conditions[0] : { and: conditions };
 
   const result = await payload.find({
     collection: "posts",

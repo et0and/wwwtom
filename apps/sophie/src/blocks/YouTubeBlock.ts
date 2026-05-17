@@ -1,7 +1,8 @@
 import type { Block } from "payload";
 
-const validateYouTubeUrl = (value: string | undefined): true | string => {
+const validateYouTubeUrl = (value: string | string[] | null | undefined): true | string => {
   if (!value) return "Please enter a YouTube URL";
+  if (Array.isArray(value)) return "Please enter a single YouTube URL";
 
   // Support various YouTube URL formats
   const patterns = [

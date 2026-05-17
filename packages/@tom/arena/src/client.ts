@@ -1,4 +1,6 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
+import { createArena, ArenaApiError, ArenaNetworkError, type Arena } from "@aredotna/sdk";
+import { GetChannelContentsApiResponseSchema } from "@tom/schemas";
 import type {
   GetChannelsApiResponse,
   GetConnectionsApiResponse,
@@ -8,19 +10,15 @@ import type {
   GetGroupChannelsApiResponse,
   SearchApiResponse,
   GetBlockApiResponse,
-  CreateBlockApiResponse,
   GetBlockChannelsApiResponse,
   CreateChannelApiResponse,
   GetChannelThumbApiResponse,
   GetChannelContentsApiResponse,
-  ChannelConnectBlockApiResponse,
-  ChannelConnectChannelApiResponse,
   GetUserChannelsApiResponse,
   GetUserApiResponse,
   GetUserFollowersApiResponse,
   GetUserFollowingApiResponse,
   GetBlockCommentApiResponse,
-  CreateBlockCommentApiResponse,
 } from "@tom/schemas";
 import { HttpError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";
@@ -34,9 +32,6 @@ export interface ArenaBlockApi {
     content?: string;
   }): Effect.Effect<void, HttpError>;
   comments(options?: PaginationAttributes): Effect.Effect<GetBlockCommentApiResponse, HttpError>;
-  addComment(comment: string): Effect.Effect<CreateBlockCommentApiResponse, HttpError>;
-  deleteComment(commentId: number): Effect.Effect<void, HttpError>;
-  updateComment(commentId: number, comment: string): Effect.Effect<void, HttpError>;
 }
 
 export interface ArenaUserApi {
@@ -59,24 +54,7 @@ export interface ArenaChannelApi {
   delete(): Effect.Effect<void, HttpError>;
   update(data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError>;
   thumb(): Effect.Effect<GetChannelThumbApiResponse, HttpError>;
-  sort: {
-    block(id: number, position: number): Effect.Effect<void, HttpError>;
-    channel(id: number, position: number): Effect.Effect<void, HttpError>;
-  };
   contents(options?: PaginationAttributes): Effect.Effect<GetChannelContentsApiResponse, HttpError>;
-  createBlock(data: {
-    source?: string;
-    content?: string;
-    description?: string;
-  }): Effect.Effect<CreateBlockApiResponse, HttpError>;
-  connect: {
-    block(id: number): Effect.Effect<ChannelConnectBlockApiResponse, HttpError>;
-    channel(id: number): Effect.Effect<ChannelConnectChannelApiResponse, HttpError>;
-  };
-  disconnect: {
-    block(id: number): Effect.Effect<void, HttpError>;
-    connection(id: number): Effect.Effect<void, HttpError>;
-  };
   connections(
     options?: PaginationAttributes,
   ): Effect.Effect<GetConnectionsApiResponse[], HttpError>;
@@ -148,11 +126,58 @@ export function paginationQueryString(
   return attrs.join("&");
 }
 
+function mapArenaError(error: unknown): HttpError {
+  if (error instanceof ArenaApiError) {
+    return new HttpError({ message: error.message, status: error.status });
+  }
+  if (error instanceof ArenaNetworkError) {
+    return new HttpError({ message: error.message, status: 0 });
+  }
+  return new HttpError({
+    message: error instanceof Error ? error.message : String(error),
+    status: HttpStatus.InternalServerError,
+  });
+}
+
+function toSdkQuery(options: PaginationAttributes | undefined): {
+  page?: number;
+  per?: number;
+  sort?: string;
+} {
+  const { page, per, sort, direction } = {
+    ...defaultPaginationOptions,
+    ...options,
+  };
+  const result: { page?: number; per?: number; sort?: string } = {};
+  if (page) result.page = page;
+  if (per) result.per = per;
+  if (sort && direction) {
+    result.sort = `${sort}_${direction}`;
+  } else if (sort) {
+    result.sort = sort;
+  }
+  return result;
+}
+
+function toSdkSearchQuery(
+  query: string,
+  type: "users" | "channels" | "blocks" | undefined,
+  options: PaginationAttributes | undefined,
+): Record<string, unknown> {
+  const base = toSdkQuery(options);
+  const result: Record<string, unknown> = { query, ...base };
+  if (type) {
+    result.type = type === "users" ? ["User"] : type === "channels" ? ["Channel"] : ["Block"];
+  }
+  return result;
+}
+
 export class ArenaClient implements ArenaApi {
   private readonly domain = "https://api.are.na/v3/";
   private readonly headers: Record<string, string>;
-  private readonly fetch: Fetch;
+  private readonly rawFetch: Fetch;
   private readonly date: DateProvider;
+  private readonly arena: Arena;
 
   private static normalizeToken(token?: string | null): string | null {
     if (typeof token !== "string") return null;
@@ -163,18 +188,85 @@ export class ArenaClient implements ArenaApi {
     return normalized;
   }
 
+  private static hasAuthorizationHeader(headers: HeadersInit | undefined): boolean {
+    if (!headers) return false;
+    if (headers instanceof Headers) return headers.has("Authorization");
+    if (Array.isArray(headers)) return headers.some(([key]) => key === "Authorization");
+    return "Authorization" in headers && Boolean(headers.Authorization);
+  }
+
+  private static removeAuthorizationHeader(
+    headers: HeadersInit | undefined,
+  ): HeadersInit | undefined {
+    if (!headers) return undefined;
+    if (headers instanceof Headers) {
+      const h = new Headers(headers);
+      h.delete("Authorization");
+      return h;
+    }
+    if (Array.isArray(headers)) return headers.filter(([key]) => key !== "Authorization");
+    const h = { ...headers } as Record<string, string>;
+    delete h.Authorization;
+    return h;
+  }
+
+  private createCachedFetch(fetchImpl: Fetch): Fetch {
+    return async (input, init) => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      const method = init?.method ?? "GET";
+      const hasAuth = ArenaClient.hasAuthorizationHeader(init?.headers);
+      const shouldUseEdgeCache = method === "GET" && !hasAuth;
+
+      const requestInit = (
+        shouldUseEdgeCache
+          ? {
+              ...init,
+              cf: {
+                cacheTtl: 86400,
+                cacheKey: `arena:v3:public:${url}`,
+                cacheTtlByStatus: { "400-599": 0 },
+              },
+            }
+          : { ...init, cf: { cacheTtl: 0 } }
+      ) as NonNullable<Parameters<Fetch>[1]>;
+
+      const response = await fetchImpl(input, requestInit);
+
+      const shouldRetryWithoutAuth =
+        method === "GET" && hasAuth && (response.status === 401 || response.status === 403);
+
+      if (shouldRetryWithoutAuth) {
+        const retryInit = { ...requestInit };
+        const retryHeaders = ArenaClient.removeAuthorizationHeader(requestInit.headers);
+        if (retryHeaders) retryInit.headers = retryHeaders;
+        return fetchImpl(input, retryInit);
+      }
+
+      return response;
+    };
+  }
+
   constructor(config?: { token?: string | null; fetch?: Fetch; date?: DateProvider }) {
-    const token = ArenaClient.normalizeToken(config?.token);
+    const normalizedToken = ArenaClient.normalizeToken(config?.token);
     this.headers = {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}),
     };
-    this.fetch = config?.fetch || fetch.bind(globalThis);
+    const wrappedFetch = this.createCachedFetch(config?.fetch || fetch.bind(globalThis));
+    this.rawFetch = wrappedFetch;
     this.date = config?.date || Date;
+    this.arena = createArena({
+      fetch: wrappedFetch as typeof fetch,
+      baseUrl: "https://api.are.na",
+      ...(normalizedToken ? { token: normalizedToken } : {}),
+    });
   }
 
   me(): Effect.Effect<MeApiResponse, HttpError> {
-    return this.getJson<MeApiResponse>("me");
+    return Effect.tryPromise({
+      try: () => this.arena.me() as unknown as Promise<MeApiResponse>,
+      catch: mapArenaError,
+    });
   }
 
   channels(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> {
@@ -183,21 +275,37 @@ export class ArenaClient implements ArenaApi {
 
   user(id: number | string): ArenaUserApi {
     return {
-      get: (): Effect.Effect<GetUserApiResponse, HttpError> => this.getJson(`users/${id}`),
+      get: (): Effect.Effect<GetUserApiResponse, HttpError> =>
+        Effect.tryPromise({
+          try: () => this.arena.users.get(id) as unknown as Promise<GetUserApiResponse>,
+          catch: mapArenaError,
+        }),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetUserChannelsApiResponse, HttpError> =>
         this.getJsonWithPaginationQuery(`users/${id}/channels`, options),
       following: (): Effect.Effect<GetUserFollowingApiResponse, HttpError> =>
-        this.getJson(`users/${id}/following`),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.users.following(id) as unknown as Promise<GetUserFollowingApiResponse>,
+          catch: mapArenaError,
+        }),
       followers: (): Effect.Effect<GetUserFollowersApiResponse, HttpError> =>
-        this.getJson(`users/${id}/followers`),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.users.followers(id) as unknown as Promise<GetUserFollowersApiResponse>,
+          catch: mapArenaError,
+        }),
     };
   }
 
   group(slug: string): ArenaGroupApi {
     return {
-      get: (): Effect.Effect<GetGroupApiResponse, HttpError> => this.getJson(`groups/${slug}`),
+      get: (): Effect.Effect<GetGroupApiResponse, HttpError> =>
+        Effect.tryPromise({
+          try: () => this.arena.groups.get(slug) as unknown as Promise<GetGroupApiResponse>,
+          catch: mapArenaError,
+        }),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetGroupChannelsApiResponse, HttpError> =>
@@ -207,45 +315,65 @@ export class ArenaClient implements ArenaApi {
 
   channel(slug: string): ArenaChannelApi {
     return {
-      sort: {
-        block: (id: number, position: number): Effect.Effect<void, HttpError> =>
-          this.sortConnection(slug, id, position, "Block"),
-        channel: (id: number, position: number): Effect.Effect<void, HttpError> =>
-          this.sortConnection(slug, id, position, "Channel"),
-      },
-      connect: {
-        block: (blockId: number): Effect.Effect<ChannelConnectBlockApiResponse, HttpError> =>
-          this.createConnection<ChannelConnectBlockApiResponse>(slug, blockId, "Block"),
-        channel: (channelId: number): Effect.Effect<ChannelConnectChannelApiResponse, HttpError> =>
-          this.createConnection<ChannelConnectChannelApiResponse>(slug, channelId, "Channel"),
-      },
-      disconnect: {
-        block: (blockId: number): Effect.Effect<void, HttpError> =>
-          this.del(`channels/${slug}/blocks/${blockId}`),
-        connection: (connectionId: number): Effect.Effect<void, HttpError> =>
-          this.del(`connections/${connectionId}`),
-      },
       contents: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`channels/${slug}/contents`, options),
+        Effect.gen(this, function* () {
+          const sdkResponse = yield* Effect.tryPromise({
+            try: () => this.arena.channels.contents(slug, toSdkQuery(options) as any),
+            catch: mapArenaError,
+          });
+          const validated = yield* Schema.decodeUnknown(GetChannelContentsApiResponseSchema)(
+            sdkResponse,
+          ).pipe(
+            Effect.mapError(
+              (parseError) => new HttpError({ message: String(parseError), status: 500 }),
+            ),
+          );
+          return validated;
+        }),
       connections: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetConnectionsApiResponse[], HttpError> =>
-        this.getJsonWithPaginationQuery(`channels/${slug}/connections`, options),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.channels.connections(slug, toSdkQuery(options) as any) as unknown as Promise<
+              GetConnectionsApiResponse[]
+            >,
+          catch: mapArenaError,
+        }),
       create: (status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError> =>
-        this.postJson("channels", { title: slug, status }),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.channels.create({
+              title: slug,
+              visibility: status as "public" | "private" | "closed",
+            } as any) as unknown as Promise<CreateChannelApiResponse>,
+          catch: mapArenaError,
+        }),
       update: (data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError> =>
-        this.putJson(`channels/${slug}`, data),
-      createBlock: (data: {
-        source?: string;
-        content?: string;
-        description?: string;
-      }): Effect.Effect<CreateBlockApiResponse, HttpError> =>
-        this.postJson(`channels/${slug}/blocks`, data),
+        Effect.tryPromise({
+          try: () => {
+            const body: Record<string, unknown> = { title: data.title };
+            if (data.status) body.visibility = data.status;
+            return this.arena.channels.update(slug, body as any) as unknown as Promise<void>;
+          },
+          catch: mapArenaError,
+        }),
       get: (options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`channels/${slug}`, options),
-      delete: (): Effect.Effect<void, HttpError> => this.del(`channels/${slug}`),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.channels.get(
+              slug,
+              toSdkQuery(options) as any,
+            ) as unknown as Promise<GetChannelsApiResponse>,
+          catch: mapArenaError,
+        }),
+      delete: (): Effect.Effect<void, HttpError> =>
+        Effect.tryPromise({
+          try: () => this.arena.channels.delete(slug) as unknown as Promise<void>,
+          catch: mapArenaError,
+        }),
       thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
         this.getJson(`channels/${slug}/thumb`),
     };
@@ -256,23 +384,39 @@ export class ArenaClient implements ArenaApi {
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockChannelsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`blocks/${id}/channels`, options),
-      get: (): Effect.Effect<GetBlockApiResponse, HttpError> => this.getJson(`blocks/${id}`),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.blocks.connections(
+              id,
+              toSdkQuery(options) as any,
+            ) as unknown as Promise<GetBlockChannelsApiResponse>,
+          catch: mapArenaError,
+        }),
+      get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
+        Effect.tryPromise({
+          try: () => this.arena.blocks.get(id) as unknown as Promise<GetBlockApiResponse>,
+          catch: mapArenaError,
+        }),
       update: (data: {
         title?: string;
         description?: string;
         content?: string;
-      }): Effect.Effect<void, HttpError> => this.putJson(`blocks/${id}`, data),
+      }): Effect.Effect<void, HttpError> =>
+        Effect.tryPromise({
+          try: () => this.arena.blocks.update(id, data as any) as unknown as Promise<void>,
+          catch: mapArenaError,
+        }),
       comments: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockCommentApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`blocks/${id}/comments`, options),
-      addComment: (body: string): Effect.Effect<CreateBlockCommentApiResponse, HttpError> =>
-        this.postJson(`blocks/${id}/comments`, { body }),
-      deleteComment: (commentId: number): Effect.Effect<void, HttpError> =>
-        this.del(`blocks/${id}/comments/${commentId}`),
-      updateComment: (commentId: number, body: string): Effect.Effect<void, HttpError> =>
-        this.putJson(`blocks/${id}/comments/${commentId}`, { body }),
+        Effect.tryPromise({
+          try: () =>
+            this.arena.blocks.comments(
+              id,
+              toSdkQuery(options) as any,
+            ) as unknown as Promise<GetBlockCommentApiResponse>,
+          catch: mapArenaError,
+        }),
     };
   }
 
@@ -282,68 +426,47 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`search`, {
-          q: query,
-          ...options,
+        Effect.tryPromise({
+          try: () =>
+            this.arena.search.query(
+              toSdkSearchQuery(query, undefined, options) as any,
+            ) as unknown as Promise<SearchApiResponse>,
+          catch: mapArenaError,
         }),
       blocks: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`search/blocks`, {
-          q: query,
-          ...options,
+        Effect.tryPromise({
+          try: () =>
+            this.arena.search.query(
+              toSdkSearchQuery(query, "blocks", options) as any,
+            ) as unknown as Promise<SearchApiResponse>,
+          catch: mapArenaError,
         }),
       channels: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`search/channels`, {
-          q: query,
-          ...options,
+        Effect.tryPromise({
+          try: () =>
+            this.arena.search.query(
+              toSdkSearchQuery(query, "channels", options) as any,
+            ) as unknown as Promise<SearchApiResponse>,
+          catch: mapArenaError,
         }),
       users: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        this.getJsonWithSearchAndPaginationQuery(`search/users`, {
-          q: query,
-          ...options,
+        Effect.tryPromise({
+          try: () =>
+            this.arena.search.query(
+              toSdkSearchQuery(query, "users", options) as any,
+            ) as unknown as Promise<SearchApiResponse>,
+          catch: mapArenaError,
         }),
     };
-  }
-
-  private createConnection<T>(
-    channelSlug: string,
-    id: number,
-    type: "Block" | "Channel",
-  ): Effect.Effect<T, HttpError> {
-    return this.postJson<T>(`channels/${channelSlug}/connections`, {
-      connectable_type: type,
-      connectable_id: id,
-    });
-  }
-
-  private sortConnection(
-    channelSlug: string,
-    id: number,
-    position: number,
-    type: "Block" | "Channel",
-  ): Effect.Effect<void, HttpError> {
-    return this.putJson(`channels/${channelSlug}/sort`, {
-      connectable_type: type,
-      connectable_id: id,
-      new_position: position,
-    });
-  }
-
-  private getJsonWithSearchAndPaginationQuery<T>(
-    url: string,
-    options?: PaginationAttributes & { q?: string },
-  ): Effect.Effect<T, HttpError> {
-    const qs = paginationQueryString(options, this.date);
-    const searchQuery = options && options.q ? `q=${options.q}${qs ? "&" : ""}` : "";
-    return this.getJson<T>(`${url}?${searchQuery}${qs}`);
   }
 
   private getJsonWithPaginationQuery<T>(
@@ -358,75 +481,37 @@ export class ArenaClient implements ArenaApi {
     endpoint: string,
     method: "GET" | "POST" | "PUT" | "DELETE",
     data?: unknown,
-    options?: { cache?: boolean },
   ): Effect.Effect<T, HttpError> {
     const url = `${this.domain}${endpoint}`;
     const isGet = method === "GET";
-    const cacheConfig = options?.cache ?? isGet;
-    const hasAuthorization = Boolean(this.headers.Authorization);
 
     return Effect.gen(this, function* () {
-      // TODO: remove after Are.na 403 incident is resolved.
-      const request = (withAuthorization: boolean, useCache: boolean) =>
-        Effect.tryPromise({
-          try: () => {
-            const hasRequestAuthorization =
-              withAuthorization && Boolean(this.headers.Authorization);
-            const shouldUseEdgeCache = useCache && !(isGet && hasRequestAuthorization);
-            return this.fetch(url, {
-              method,
-              headers: {
-                ...(withAuthorization ? this.headers : this.headersWithoutAuthorization()),
-                "Cache-Control": shouldUseEdgeCache ? "public, max-age=86400" : "no-cache",
-              },
-              body: data && !isGet ? JSON.stringify(data) : null,
-              cf: shouldUseEdgeCache
-                ? {
-                    cacheTtl: 86400,
-                    cacheKey: `arena:v3:public:${url}`,
-                    cacheTtlByStatus: {
-                      "400-599": 0,
-                    },
-                  }
-                : {
-                    cacheTtl: 0,
-                  },
-            });
-          },
-          catch: () => new HttpError({ message: "Network request failed", status: 0 }),
-        });
+      const response = yield* Effect.tryPromise({
+        try: () =>
+          this.rawFetch(url, {
+            method,
+            headers: this.headers,
+            body: data && !isGet ? JSON.stringify(data) : null,
+          }),
+        catch: () => new HttpError({ message: "Network request failed", status: 0 }),
+      });
 
-      const response = yield* request(true, cacheConfig);
-      const shouldRetryWithoutAuthorization =
-        isGet &&
-        hasAuthorization &&
-        (response.status === HttpStatus.Unauthorized || response.status === HttpStatus.Forbidden);
-      const finalResponse = shouldRetryWithoutAuthorization
-        ? yield* request(false, false)
-        : response;
-
-      yield* Effect.logInfo(
-        `[arena-diag] request method=${method} endpoint=${endpoint} hasAuthorization=${hasAuthorization} firstStatus=${response.status} retryWithoutAuthorization=${shouldRetryWithoutAuthorization} finalStatus=${finalResponse.status}`,
-      );
-
-      if (!finalResponse.ok) {
-        const contentType = finalResponse.headers.get("content-type") ?? "unknown";
-        const contentLength = finalResponse.headers.get("content-length") ?? "unknown";
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type") ?? "unknown";
+        const contentLength = response.headers.get("content-length") ?? "unknown";
         const providerRequestId =
-          finalResponse.headers.get("cf-ray") ??
-          finalResponse.headers.get("x-request-id") ??
-          undefined;
+          response.headers.get("cf-ray") ?? response.headers.get("x-request-id") ?? undefined;
         const providerRequestIdField = providerRequestId
           ? ` providerRequestId=${providerRequestId}`
           : "";
 
         yield* Effect.logWarning(
-          `[arena-diag] method=${method} endpoint=${endpoint} hasAuthorization=${hasAuthorization} firstStatus=${response.status} retryWithoutAuthorization=${shouldRetryWithoutAuthorization} finalStatus=${finalResponse.status} finalStatusText=${finalResponse.statusText} contentType=${contentType} contentLength=${contentLength}${providerRequestIdField}`,
+          `[arena-diag] method=${method} endpoint=${endpoint} status=${response.status} statusText=${response.statusText} contentType=${contentType} contentLength=${contentLength}${providerRequestIdField}`,
         );
 
         return yield* new HttpError({
-          message: finalResponse.statusText,
-          status: finalResponse.status,
+          message: response.statusText,
+          status: response.status,
         });
       }
 
@@ -435,7 +520,7 @@ export class ArenaClient implements ArenaApi {
       }
 
       const json = yield* Effect.tryPromise({
-        try: () => finalResponse.json() as Promise<T>,
+        try: () => response.json() as Promise<T>,
         catch: () =>
           new HttpError({
             message: "Failed to parse JSON response",
@@ -449,23 +534,5 @@ export class ArenaClient implements ArenaApi {
 
   private getJson<T>(endpoint: string): Effect.Effect<T, HttpError> {
     return this.makeRequest<T>(endpoint, "GET");
-  }
-
-  private putJson(endpoint: string, data?: unknown): Effect.Effect<void, HttpError> {
-    return this.makeRequest<void>(endpoint, "PUT", data, { cache: false });
-  }
-
-  private postJson<T>(endpoint: string, data?: unknown): Effect.Effect<T, HttpError> {
-    return this.makeRequest<T>(endpoint, "POST", data, { cache: false });
-  }
-
-  private del(endpoint: string): Effect.Effect<void, HttpError> {
-    return this.makeRequest<void>(endpoint, "DELETE", undefined, { cache: false });
-  }
-
-  private headersWithoutAuthorization(): Record<string, string> {
-    const headers = { ...this.headers };
-    delete headers.Authorization;
-    return headers;
   }
 }

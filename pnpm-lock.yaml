@@ -574,12 +574,18 @@ importers:
       '@tom/arena':
         specifier: workspace:*
         version: link:../../packages/@tom/arena
+      '@tom/constants':
+        specifier: workspace:*
+        version: link:../../packages/@tom/constants
       '@tom/db':
         specifier: workspace:*
         version: link:../../packages/@tom/db
       '@tom/payload':
         specifier: workspace:*
         version: link:../../packages/@tom/payload
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../../packages/@tom/schemas
       '@tom/types':
         specifier: workspace:*
         version: link:../../packages/@tom/types
@@ -671,6 +677,12 @@ importers:
 
   packages/@tom/arena:
     dependencies:
+      '@aredotna/sdk':
+        specifier: 0.0.4
+        version: 0.0.4
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       '@tom/types':
         specifier: workspace:*
         version: link:../types

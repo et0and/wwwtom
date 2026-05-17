@@ -3,8 +3,6 @@ import Link from "next/link";
 import { siteNav } from "../site-config";
 import { getPublishedPostsPage } from "./post-data";
 
-import type { Post } from "../../../payload-types";
-
 interface PostsPageProps {
   searchParams: Promise<{
     page?: string;
@@ -45,7 +43,7 @@ export default async function PostsPage(props: PostsPageProps) {
             <div className="space-y-6">
               {posts.map((post) => (
                 <article key={post.id} className="border-b border-gray-200 pb-6 last:border-0">
-                  <Link href={`/posts/${post.slug}`} className="group block">
+                  <Link prefetch={true} href={`/posts/${post.slug}`} className="group block">
                     <h2 className="text-xl font-medium group-hover:text-orange-600 transition-colors">
                       {post.title}
                     </h2>

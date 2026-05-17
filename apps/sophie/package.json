@@ -17,6 +17,7 @@
     "generate:types:payload": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
     "ii": "pnpm install --filter @tom/sophie",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
+    "typecheck": "node --stack-size=8192 ./node_modules/typescript/bin/tsc --noEmit",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview --env=$CLOUDFLARE_ENV",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start"

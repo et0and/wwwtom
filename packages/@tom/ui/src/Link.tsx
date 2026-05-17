@@ -25,7 +25,7 @@ export function Link(props: LinkProps) {
       <A
         href={props.href}
         class={props.class}
-        preload={props.preload ?? false}
+        preload={props.preload ?? true}
         onClick={handleClick}
       >
         {props.children}

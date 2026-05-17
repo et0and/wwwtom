@@ -1,7 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { Effect } from "effect";
 import { ArenaClient, paginationQueryString, type Fetch, type DateProvider } from "../src/client";
-import { HttpError } from "@tom/types";
 
 type MockFetch = ReturnType<typeof vi.fn<Fetch>>;
 
@@ -11,7 +10,8 @@ const createMockFetch = (response: Partial<Response> = {}): MockFetch => {
     status: 200,
     statusText: "OK",
     headers: new Headers({ "content-type": "application/json" }),
-    json: async () => ({}),
+    json: async () => ({ data: {} }),
+    text: async () => JSON.stringify({ data: {} }),
     ...response,
   } as Response;
   return vi.fn(async () => defaultResponse);
@@ -20,6 +20,22 @@ const createMockFetch = (response: Partial<Response> = {}): MockFetch => {
 const createDateProvider = (timestamp: number): DateProvider => ({
   now: () => timestamp,
 });
+
+const getRequestUrl = (call: unknown[]): string => {
+  const input = call[0];
+  if (input instanceof Request) return input.url;
+  if (typeof input === "string") return input;
+  return String(input);
+};
+
+const getRequestHeaders = (call: unknown[]): Headers => {
+  const input = call[0];
+  if (input instanceof Request) return input.headers;
+  const init = call[1] as RequestInit | undefined;
+  if (!init?.headers) return new Headers();
+  if (init.headers instanceof Headers) return init.headers;
+  return new Headers(init.headers as Record<string, string>);
+};
 
 const runEffect = <A, E>(effect: Effect.Effect<A, E>): Promise<A> => Effect.runPromise(effect);
 
@@ -45,8 +61,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).toHaveProperty("Authorization", "Bearer valid-token");
+      const headers = getRequestHeaders(call!);
+      expect(headers.get("Authorization")).toBe("Bearer valid-token");
     });
 
     it("trims whitespace from token", async () => {
@@ -59,8 +75,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).toHaveProperty("Authorization", "Bearer valid-token");
+      const headers = getRequestHeaders(call!);
+      expect(headers.get("Authorization")).toBe("Bearer valid-token");
     });
 
     it("omits Authorization header when token is null", async () => {
@@ -73,8 +89,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).not.toHaveProperty("Authorization");
+      const headers = getRequestHeaders(call!);
+      expect(headers.has("Authorization")).toBe(false);
     });
 
     it("omits Authorization header when token is undefined", async () => {
@@ -86,8 +102,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).not.toHaveProperty("Authorization");
+      const headers = getRequestHeaders(call!);
+      expect(headers.has("Authorization")).toBe(false);
     });
 
     it("omits Authorization header when token is 'undefined' string", async () => {
@@ -100,8 +116,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).not.toHaveProperty("Authorization");
+      const headers = getRequestHeaders(call!);
+      expect(headers.has("Authorization")).toBe(false);
     });
 
     it("omits Authorization header when token is 'null' string", async () => {
@@ -114,8 +130,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).not.toHaveProperty("Authorization");
+      const headers = getRequestHeaders(call!);
+      expect(headers.has("Authorization")).toBe(false);
     });
 
     it("omits Authorization header when token is empty string", async () => {
@@ -128,8 +144,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).not.toHaveProperty("Authorization");
+      const headers = getRequestHeaders(call!);
+      expect(headers.has("Authorization")).toBe(false);
     });
 
     it("omits Authorization header when token is whitespace-only", async () => {
@@ -142,8 +158,8 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
-      const options = call?.[1];
-      expect(options?.headers).not.toHaveProperty("Authorization");
+      const headers = getRequestHeaders(call!);
+      expect(headers.has("Authorization")).toBe(false);
     });
   });
 
@@ -154,7 +170,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels());
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("sort=position_desc");
       expect(url).toContain("per_page=50");
     });
@@ -165,7 +181,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ page: 1, per: 10 }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("page=1");
       expect(url).toContain("per_page=10");
     });
@@ -176,7 +192,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ sort: "position", direction: "desc" }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("sort=position_desc");
     });
 
@@ -186,7 +202,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ sort: "created_at" }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("sort=created_at");
     });
 
@@ -196,7 +212,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ page: 2, per: 50, sort: "date", direction: "asc" }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("page=2");
       expect(url).toContain("per_page=50");
       expect(url).toContain("sort=date_asc");
@@ -210,7 +226,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ forceRefresh: true }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain(`date=${fixedTime}`);
     });
 
@@ -220,7 +236,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ per: 10, forceRefresh: false }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).not.toContain("date=");
     });
   });
@@ -232,18 +248,8 @@ describe("ArenaClient", () => {
       await runEffect(client.me());
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toBe("https://api.are.na/v3/me");
-    });
-
-    it("sets Content-Type header", async () => {
-      const client = new ArenaClient({ fetch: mockFetch });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      const options = call?.[1];
-      expect(options?.headers).toHaveProperty("Content-Type", "application/json");
     });
 
     it("uses injected fetch function", async () => {
@@ -266,7 +272,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ forceRefresh: true }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain(`date=${fixedTime}`);
     });
   });
@@ -317,7 +323,7 @@ describe("ArenaClient", () => {
       await runEffect(client.me());
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toBe("https://api.are.na/v3/me");
     });
 
@@ -327,7 +333,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channels({ page: 3, per: 25 }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("https://api.are.na/v3/channels?");
       expect(url).toContain("page=3");
       expect(url).toContain("per_page=25");
@@ -339,7 +345,7 @@ describe("ArenaClient", () => {
       await runEffect(client.user(42).get());
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toBe("https://api.are.na/v3/users/42");
     });
 
@@ -349,7 +355,7 @@ describe("ArenaClient", () => {
       await runEffect(client.user("john").channels({ per: 10 }));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("https://api.are.na/v3/users/john/channels");
       expect(url).toContain("per_page=10");
     });
@@ -360,7 +366,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channel("my-channel").get());
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("https://api.are.na/v3/channels/my-channel");
     });
 
@@ -370,7 +376,7 @@ describe("ArenaClient", () => {
       await runEffect(client.block(123).get());
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toBe("https://api.are.na/v3/blocks/123");
     });
 
@@ -380,9 +386,9 @@ describe("ArenaClient", () => {
       await runEffect(client.search.everything("test query"));
 
       const call = mockFetch.mock.calls[0];
-      const url = call?.[0];
+      const url = getRequestUrl(call!);
       expect(url).toContain("https://api.are.na/v3/search");
-      expect(url).toContain("q=test query");
+      expect(url).toContain("query=test");
     });
   });
 });

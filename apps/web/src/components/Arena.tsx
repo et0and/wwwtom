@@ -1,10 +1,9 @@
 import { createAsync } from "@solidjs/router";
 import { Effect } from "effect";
-import { Show, Index, createEffect, createMemo, createSignal } from "solid-js";
+import { Show, Index, createMemo, createSignal, createEffect, onCleanup } from "solid-js";
 import { Motion } from "solid-motionone";
 import { getChannelContents } from "~/libs/actions/arena/channels";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
-import type { GetChannelContentsApiResponse } from "@tom/schemas";
 import { Spinner } from "@tom/ui";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 
@@ -13,81 +12,20 @@ interface ArenaCarouselProps {
   title?: string;
 }
 
-const getPublicChannelContents = async (
-  slug: string,
-  per: number,
-): Promise<GetChannelContentsApiResponse> => {
-  const response = await fetch(
-    `https://api.are.na/v3/channels/${slug}/contents?per_page=${per}&sort=position_desc`,
-    {
-      headers: {
-        Accept: "application/json",
-      },
-    },
-  );
-  if (!response.ok) {
-    throw new Error(`Are.na public fetch failed for slug "${slug}" with status ${response.status}`);
-  }
-  return (await response.json()) as GetChannelContentsApiResponse;
-};
-
 export function ArenaCarousel(props: ArenaCarouselProps) {
   const contents = createAsync(async () => {
     try {
       return await getChannelContents(props.slug, { per: 10 });
-    } catch (error) {
+    } catch {
       void Effect.runFork(
-        Effect.logWarning(
-          `[arena] getChannelContents failed for slug "${props.slug}"; returning null for client fallback`,
-        ),
+        Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
       );
       return null;
     }
   });
 
-  const [fallbackData, setFallbackData] = createSignal<GetChannelContentsApiResponse | null>(null);
-  const [isFallbackLoading, setIsFallbackLoading] = createSignal(false);
-  const [fallbackError, setFallbackError] = createSignal<Error | null>(null);
-  const [didFallbackAttempt, setDidFallbackAttempt] = createSignal(false);
-
-  createEffect(() => {
-    if (typeof window === "undefined") return;
-    if (didFallbackAttempt()) return;
-    const response = contents();
-    if (response === undefined) return;
-    if (response?.data && response.data.length > 0) return;
-
-    setDidFallbackAttempt(true);
-    setIsFallbackLoading(true);
-    void getPublicChannelContents(props.slug, 10)
-      .then((data) => {
-        setFallbackData(data);
-      })
-      .catch((error) => {
-        const err = error instanceof Error ? error : new Error(String(error));
-        setFallbackError(err);
-        void Effect.runFork(
-          Effect.logWarning(
-            `[arena] client fallback failed for slug "${props.slug}": ${err.message}`,
-          ),
-        );
-      })
-      .finally(() => {
-        setIsFallbackLoading(false);
-      });
-  });
-
-  const activeContents = createMemo(() => {
-    const response = contents();
-    if (response?.data && response.data.length > 0) return response;
-    const fallback = fallbackData();
-    if (fallback?.data && fallback.data.length > 0) return fallback;
-    if (response !== undefined) return response;
-    return fallback;
-  });
-
-  const isLoading = createMemo(() => contents() === undefined || isFallbackLoading());
-
+  const activeContents = createMemo(() => contents());
+  const isLoading = createMemo(() => contents() === undefined);
   const hasContent = createMemo(() => {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);
@@ -111,15 +49,16 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Escape" && expandedBlock() && !isClosing()) {
-      closeLightbox();
-    }
-  };
-
-  if (typeof document !== "undefined") {
-    document.addEventListener("keydown", handleKeyDown);
-  }
+  createEffect(() => {
+    if (typeof document === "undefined") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && expandedBlock() && !isClosing()) {
+        closeLightbox();
+      }
+    };
+    document.addEventListener("keydown", handler);
+    onCleanup(() => document.removeEventListener("keydown", handler));
+  });
 
   return (
     <Show when={!isLoading()} fallback={<Spinner />}>
@@ -132,13 +71,6 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
                 Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
               )
             }
-            {fallbackError()
-              ? void Effect.runFork(
-                  Effect.logWarning(
-                    `[arena] both server and client fetch failed for slug "${props.slug}"`,
-                  ),
-                )
-              : null}
             <p>Sorry, no content found</p>
           </>
         }
@@ -180,7 +112,6 @@ interface ImageLightboxProps {
 
 function ImageLightbox(props: ImageLightboxProps) {
   const [isLoading, setIsLoading] = createSignal(true);
-  let imgRef: HTMLImageElement | undefined;
 
   const handleBackdropClick = (e: MouseEvent) => {
     if (e.target === e.currentTarget && !props.isClosing) {
@@ -214,7 +145,6 @@ function ImageLightbox(props: ImageLightboxProps) {
             <div class="relative">
               <img
                 ref={(el) => {
-                  imgRef = el;
                   if (el?.complete) {
                     handleImageLoad();
                   }
