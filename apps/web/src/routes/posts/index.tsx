@@ -1,4 +1,4 @@
-import { createAsync, useSearchParams, type RouteDefinition } from "@solidjs/router";
+import { createAsync, type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPosts } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
@@ -6,12 +6,14 @@ import { Suspense, Show, For } from "solid-js";
 import { Spinner, Link } from "~/components";
 
 export const route = {
-  preload: () => getPosts(1),
+  preload: ({ location }) => {
+    const page = Number(location.query.page) || 1;
+    void getPosts(page);
+  },
 } satisfies RouteDefinition;
 
-export default function PostsHome() {
-  const [searchParams] = useSearchParams();
-  const currentPage = () => Number(searchParams.page) || 1;
+export default function PostsHome(props: RouteSectionProps) {
+  const currentPage = () => Number(props.location.query.page) || 1;
   const event = getRequestEvent();
 
   if (event) {

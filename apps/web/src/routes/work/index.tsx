@@ -1,4 +1,4 @@
-import { createAsync } from "@solidjs/router";
+import { createAsync, type RouteDefinition } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getWorks } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
@@ -6,8 +6,10 @@ import { Suspense, For, Show } from "solid-js";
 import { Spinner, Link } from "~/components";
 
 export const route = {
-  preload: () => getWorks(),
-};
+  preload: () => {
+    void getWorks();
+  },
+} satisfies RouteDefinition;
 
 export default function WorkHome() {
   const event = getRequestEvent();

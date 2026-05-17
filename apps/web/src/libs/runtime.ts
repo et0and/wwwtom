@@ -1,5 +1,3 @@
-"use server";
-
 import { Effect, Layer, Logger, LogLevel } from "effect";
 import { getRequestEvent } from "solid-js/web";
 import type { CloudflareEnv } from "@tom/utils/services";

@@ -1,5 +1,3 @@
-"use server";
-
 import { createMiddleware } from "@solidjs/start/middleware";
 import type { CloudflareEnv } from "@tom/utils/services";
 import { createServicesLayer } from "~/libs/runtime";

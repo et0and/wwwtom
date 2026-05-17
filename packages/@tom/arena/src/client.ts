@@ -1,6 +1,5 @@
-import { Effect, Schema } from "effect";
+import { Effect } from "effect";
 import { createArena, ArenaApiError, ArenaNetworkError, type Arena } from "@aredotna/sdk";
-import { GetChannelContentsApiResponseSchema } from "@tom/schemas";
 import type {
   GetChannelsApiResponse,
   GetConnectionsApiResponse,
@@ -318,19 +317,13 @@ export class ArenaClient implements ArenaApi {
       contents: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
-        Effect.gen(this, function* () {
-          const sdkResponse = yield* Effect.tryPromise({
-            try: () => this.arena.channels.contents(slug, toSdkQuery(options) as any),
-            catch: mapArenaError,
-          });
-          const validated = yield* Schema.decodeUnknown(GetChannelContentsApiResponseSchema)(
-            sdkResponse,
-          ).pipe(
-            Effect.mapError(
-              (parseError) => new HttpError({ message: String(parseError), status: 500 }),
-            ),
-          );
-          return validated;
+        Effect.tryPromise({
+          try: () =>
+            this.arena.channels.contents(
+              slug,
+              toSdkQuery(options) as any,
+            ) as unknown as Promise<GetChannelContentsApiResponse>,
+          catch: mapArenaError,
         }),
       connections: (
         options?: PaginationAttributes,
