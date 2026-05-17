@@ -16,12 +16,14 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tom/constants": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {
     "typescript": "5.9.3",
+    "vite": "7.3.3",
     "vitest": "3.2.4"
   }
 }
