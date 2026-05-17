@@ -1,3 +1,19 @@
+# [1.87.0](https://github.com/et0and/wwwtom/compare/v1.86.0...v1.87.0) (2026-05-17)
+
+
+### Bug Fixes
+
+* **apps:** big refactor ([7198b90](https://github.com/et0and/wwwtom/commit/7198b904a7c168988fdc1d202c68195fb98a6318))
+* **ci:** set allowBuilds to true in pnpm-workspace.yaml ([dd6f592](https://github.com/et0and/wwwtom/commit/dd6f59232ec8bbbd5d3fff88e2d8234ef7da5735))
+* **web:** add missing workspace dependencies to fix Cloudflare build ([21ad153](https://github.com/et0and/wwwtom/commit/21ad153db2589528cdd1e1e511362738f78e96e7))
+* **web:** arena client sdk update ([b23358d](https://github.com/et0and/wwwtom/commit/b23358d3eed173a2def374c9a06aa90a50ba7d91))
+* **web:** update deps, fix build ([500f2d8](https://github.com/et0and/wwwtom/commit/500f2d8f6bee1780f23ea733cec0a89df3e6e139))
+
+
+### Features
+
+* **all:** migrate to pnpm ([48def83](https://github.com/et0and/wwwtom/commit/48def8325a3075af29197dd2ebf1a807d65048c4))
+
 # [1.86.0](https://github.com/et0and/wwwtom/compare/v1.85.0...v1.86.0) (2026-05-10)
 
 ### Features
