@@ -244,6 +244,9 @@ importers:
       '@scalar/hono-api-reference':
         specifier: 0.9.30
         version: 0.9.30(hono@4.11.3)
+      '@tom/constants':
+        specifier: workspace:*
+        version: link:../../packages/@tom/constants
       '@tom/schemas':
         specifier: workspace:*
         version: link:../../packages/@tom/schemas
@@ -574,6 +577,9 @@ importers:
       '@tom/arena':
         specifier: workspace:*
         version: link:../../packages/@tom/arena
+      '@tom/constants':
+        specifier: workspace:*
+        version: link:../../packages/@tom/constants
       '@tom/db':
         specifier: workspace:*
         version: link:../../packages/@tom/db
