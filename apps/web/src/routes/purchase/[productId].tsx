@@ -89,7 +89,7 @@ export default function Purchase() {
     <>
       <PageLayout title={pageTitle} description="Complete your purchase">
         <div class="max-w-md mx-auto space-y-6">
-          <BlurInText text="Complete your purchase" class="h1" baseDelay={0.1} step={0.025} />
+          <BlurInText text="Complete your purchase" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
             <div class="space-y-4">
               <ErrorBoundary

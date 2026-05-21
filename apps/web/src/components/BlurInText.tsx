@@ -1,21 +1,23 @@
 import { Index, mergeProps } from "solid-js";
+import { Dynamic } from "solid-js/web";
 
 interface BlurInTextProps {
   text: string;
   class?: string;
   baseDelay?: number;
   step?: number;
+  tag?: string;
 }
 
 export function BlurInText(props: BlurInTextProps) {
   const merged = mergeProps(
-    { class: "", baseDelay: 0, step: 0.025 },
+    { class: "", baseDelay: 0, step: 0.025, tag: "span" },
     props,
   );
   const characters = () => merged.text.split("");
 
   return (
-    <span class={merged.class}>
+    <Dynamic component={merged.tag} class={merged.class}>
       <span class="sr-only">{merged.text}</span>
       <span aria-hidden="true">
         <Index each={characters()}>
@@ -32,6 +34,6 @@ export function BlurInText(props: BlurInTextProps) {
           )}
         </Index>
       </span>
-    </span>
+    </Dynamic>
   );
 }

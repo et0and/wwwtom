@@ -17,7 +17,7 @@ export default function Checkout() {
         description="Amazing, beautiful products by Tom Hackshaw for sale."
       >
         <div class="space-y-6">
-          <BlurInText text="Products" class="h1" baseDelay={0.1} step={0.025} />
+          <BlurInText text="Products" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
             <ErrorBoundary fallback={<p class="text-red-600">Failed to load products</p>}>
             <Suspense fallback={<Spinner />}>

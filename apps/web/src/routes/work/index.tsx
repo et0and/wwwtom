@@ -40,7 +40,7 @@ export default function WorkHome() {
         url: "https://tom.so/work",
       }}
     >
-      <BlurInText text="Work" class="h1" baseDelay={0.1} step={0.025} />
+      <BlurInText text="Work" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
         <p>Some work that I have made.</p>
       </BlurInSection>

@@ -5,7 +5,7 @@ export default function Worktable() {
   return (
     <>
       <PageLayout title="Worktable" description="What I am currently working on or interested in">
-        <BlurInText text="Worktable" class="h1" baseDelay={0.1} step={0.025} />
+        <BlurInText text="Worktable" tag="h1" baseDelay={0.1} step={0.025} />
         <BlurInSection delay={0.3}>
           <h2>What I am currently working on or interested in</h2>
         </BlurInSection>

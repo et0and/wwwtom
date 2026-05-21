@@ -6,7 +6,7 @@ export default function About() {
   return (
     <>
       <PageLayout title="About" description="About my background">
-        <BlurInText text="About" class="h1" baseDelay={0.1} step={0.025} />
+        <BlurInText text="About" tag="h1" baseDelay={0.1} step={0.025} />
         <BlurInSection delay={0.3}>
           <p>Hi, I'm Tom,</p>
         </BlurInSection>
@@ -52,7 +52,7 @@ export default function About() {
             See also: <A href="/worktable">what I am currently working on or interested in.</A>
           </p>
         </BlurInSection>
-        <BlurInText text="Acknowledgements" class="h2" baseDelay={1.7} step={0.025} />
+        <BlurInText text="Acknowledgements" tag="h2" baseDelay={1.7} step={0.025} />
         <BlurInSection delay={1.9}>
           <p>
             I would like to acknowledge Māori as tangata whenua and Te Tiriti o Waitangi partners in

@@ -42,7 +42,7 @@ export default function PostsHome(props: RouteSectionProps) {
         url: "https://tom.so/posts",
       }}
     >
-      <BlurInText text="Writing" class="h1" baseDelay={0.1} step={0.025} />
+      <BlurInText text="Writing" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
         <p>Some of my writing.</p>
       </BlurInSection>

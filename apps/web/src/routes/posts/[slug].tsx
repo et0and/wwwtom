@@ -54,7 +54,7 @@ export default function PostPage() {
           }}
         >
           <article>
-            <BlurInText text={data().title} class="h1" baseDelay={0.1} step={0.025} />
+            <BlurInText text={data().title} tag="h1" baseDelay={0.1} step={0.025} />
             <BlurInSection delay={0.3}>
               <h2>{data().meta?.description ?? ""}</h2>
             </BlurInSection>

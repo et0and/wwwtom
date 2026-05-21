@@ -28,7 +28,7 @@ export default function Guestbook() {
 
   return (
     <PageLayout title="Guestbook" description="Sign my guestbook">
-      <BlurInText text="Guestbook" class="h1" baseDelay={0.1} step={0.025} />
+      <BlurInText text="Guestbook" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
         <div class="mx-auto">
           <Suspense fallback={<Spinner />}>
