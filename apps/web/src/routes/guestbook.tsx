@@ -1,7 +1,7 @@
 import { createAsync, useSubmission, type RouteDefinition } from "@solidjs/router";
 import { For, Show, Suspense, createSignal } from "solid-js";
 import { PageLayout } from "~/layouts";
-import { Spinner } from "~/components";
+import { Spinner, BlurInSection, BlurInText } from "~/components";
 import {
   getEntries,
   getCurrentUser,
@@ -28,10 +28,10 @@ export default function Guestbook() {
 
   return (
     <PageLayout title="Guestbook" description="Sign my guestbook">
-      <h1>Guestbook</h1>
-
-      <div class="mx-auto">
-        <Suspense fallback={<Spinner />}>
+      <BlurInText text="Guestbook" class="h1" baseDelay={0.1} step={0.025} />
+      <BlurInSection delay={0.3}>
+        <div class="mx-auto">
+          <Suspense fallback={<Spinner />}>
           <Show
             when={currentUser()}
             fallback={
@@ -122,10 +122,12 @@ export default function Guestbook() {
             )}
           </Show>
         </Suspense>
-
-        <div class="space-y-4">
-          <h2 class="mb-4">Signatures</h2>
-          <Suspense fallback={<Spinner />}>
+        </div>
+      </BlurInSection>
+        <BlurInSection delay={0.5}>
+          <div class="space-y-4">
+            <h2 class="mb-4">Signatures</h2>
+            <Suspense fallback={<Spinner />}>
             <Show
               when={entries() && entries()!.length > 0}
               fallback={<div class="text-muted">No signatures yet. Be the first!</div>}
@@ -166,7 +168,7 @@ export default function Guestbook() {
             </Show>
           </Suspense>
         </div>
-      </div>
+      </BlurInSection>
     </PageLayout>
   );
 }

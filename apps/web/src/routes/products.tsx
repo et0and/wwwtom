@@ -1,4 +1,5 @@
 import { PageLayout } from "~/layouts";
+import { BlurInSection, BlurInText } from "~/components";
 import { createResource, For, Suspense, ErrorBoundary, Show } from "solid-js";
 import { Effect } from "effect";
 import { Spinner } from "@tom/ui";
@@ -16,9 +17,9 @@ export default function Checkout() {
         description="Amazing, beautiful products by Tom Hackshaw for sale."
       >
         <div class="space-y-6">
-          <h1>Products</h1>
-
-          <ErrorBoundary fallback={<p class="text-red-600">Failed to load products</p>}>
+          <BlurInText text="Products" class="h1" baseDelay={0.1} step={0.025} />
+          <BlurInSection delay={0.3}>
+            <ErrorBoundary fallback={<p class="text-red-600">Failed to load products</p>}>
             <Suspense fallback={<Spinner />}>
               <Show
                 when={products()?.length}
@@ -46,6 +47,7 @@ export default function Checkout() {
               </Show>
             </Suspense>
           </ErrorBoundary>
+          </BlurInSection>
         </div>
       </PageLayout>
     </>

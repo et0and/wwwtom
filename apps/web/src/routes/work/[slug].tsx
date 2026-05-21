@@ -5,7 +5,7 @@ import { getRequestEvent } from "solid-js/web";
 import { getWorkBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 
-import { Spinner } from "~/components";
+import { Spinner, BlurInSection, BlurInText } from "~/components";
 
 const scope = "wwwtom:apps:web:route:work";
 
@@ -53,12 +53,18 @@ export default function WorkPage() {
           }}
         >
           <article>
-            <h1>{data().title}</h1>
-            <p>{data().summary ?? ""}</p>
-            <div innerHTML={data().content ?? ""} />
+            <BlurInText text={data().title} class="h1" baseDelay={0.1} step={0.025} />
+            <BlurInSection delay={0.3}>
+              <p>{data().summary ?? ""}</p>
+            </BlurInSection>
+            <BlurInSection delay={0.5}>
+              <div innerHTML={data().content ?? ""} />
+            </BlurInSection>
             <For each={data().arenaBlocks ?? []}>
-              {(block) => (
-                <ArenaCarousel slug={block.slug} {...(block.title ? { title: block.title } : {})} />
+              {(block, index) => (
+                <BlurInSection delay={0.7 + index() * 0.2}>
+                  <ArenaCarousel slug={block.slug} {...(block.title ? { title: block.title } : {})} />
+                </BlurInSection>
               )}
             </For>
           </article>

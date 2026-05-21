@@ -3,7 +3,7 @@ import { getRequestEvent } from "solid-js/web";
 import { getPosts } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, Show, For } from "solid-js";
-import { Spinner, Link } from "~/components";
+import { Spinner, Link, BlurInSection, BlurInText } from "~/components";
 
 export const route = {
   preload: ({ location }) => {
@@ -42,9 +42,12 @@ export default function PostsHome(props: RouteSectionProps) {
         url: "https://tom.so/posts",
       }}
     >
-      <h1>Writing</h1>
-      <p>Some of my writing.</p>
-      <Suspense fallback={<Spinner color="grey" />}>
+      <BlurInText text="Writing" class="h1" baseDelay={0.1} step={0.025} />
+      <BlurInSection delay={0.3}>
+        <p>Some of my writing.</p>
+      </BlurInSection>
+      <BlurInSection delay={0.5}>
+        <Suspense fallback={<Spinner color="grey" />}>
         <Show when={posts()}>
           {(data) => (
             <>
@@ -96,6 +99,7 @@ export default function PostsHome(props: RouteSectionProps) {
           )}
         </Show>
       </Suspense>
+      </BlurInSection>
     </PageLayout>
   );
 }
