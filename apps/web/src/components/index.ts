@@ -3,4 +3,6 @@ export { Spinner, SkipLink, Link, Footer, Nav, Metadata, PageLayout } from "@tom
 
 // App-specific components
 export * from "./Arena";
+export * from "./BlurInSection";
+export * from "./BlurInText";
 export * from "./CameraRoll";

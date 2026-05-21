@@ -2,6 +2,11 @@
 
 @source "../../../packages/@tom/ui/src/**/*.tsx";
 
+@theme {
+	--animate-blur-in: blurIn 0.3s ease-in;
+	--animate-blur-in-char: blurInChar 0.3s ease-in;
+}
+
 :root {
   color-scheme: light dark;
 }
@@ -443,6 +448,30 @@ a.page:hover {
   }
 }
 
+@keyframes blurIn {
+  0% {
+    opacity: 0;
+    filter: blur(0.2em);
+    transform: translateY(var(--offset, 0px));
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+
+@keyframes blurInChar {
+  0% {
+    filter: blur(0.3em);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
@@ -453,6 +482,14 @@ a.page:hover {
   ::view-transition-group(*),
   ::view-transition-image-pair(*) {
     animation: none;
+  }
+
+  .animate-blur-in,
+  .animate-blur-in-char {
+    animation: none;
+    opacity: 1;
+    filter: none;
+    transform: none;
   }
 }
 
