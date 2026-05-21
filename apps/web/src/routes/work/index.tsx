@@ -3,7 +3,7 @@ import { getRequestEvent } from "solid-js/web";
 import { getWorks } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, For, Show } from "solid-js";
-import { Spinner, Link } from "~/components";
+import { Spinner, Link, BlurInSection, BlurInText } from "~/components";
 
 export const route = {
   preload: () => {
@@ -40,9 +40,12 @@ export default function WorkHome() {
         url: "https://tom.so/work",
       }}
     >
-      <h1>Work</h1>
-      <p>Some work that I have made.</p>
-      <Suspense fallback={<Spinner color="grey" />}>
+      <BlurInText text="Work" tag="h1" baseDelay={0.1} step={0.025} />
+      <BlurInSection delay={0.3}>
+        <p>Some work that I have made.</p>
+      </BlurInSection>
+      <BlurInSection delay={0.5}>
+        <Suspense fallback={<Spinner color="grey" />}>
         <Show when={works()}>
           {(worksData) => (
             <For each={worksData()}>
@@ -56,6 +59,7 @@ export default function WorkHome() {
           )}
         </Show>
       </Suspense>
+      </BlurInSection>
     </PageLayout>
   );
 }

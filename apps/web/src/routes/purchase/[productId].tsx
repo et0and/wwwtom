@@ -1,4 +1,5 @@
 import { PageLayout } from "~/layouts";
+import { BlurInSection, BlurInText } from "~/components";
 import { createResource, createSignal, Suspense, ErrorBoundary, Show, createMemo } from "solid-js";
 import { Effect } from "effect";
 import { useParams } from "@solidjs/router";
@@ -88,10 +89,10 @@ export default function Purchase() {
     <>
       <PageLayout title={pageTitle} description="Complete your purchase">
         <div class="max-w-md mx-auto space-y-6">
-          <h1>Complete your purchase</h1>
-
-          <div class="space-y-4">
-            <ErrorBoundary
+          <BlurInText text="Complete your purchase" tag="h1" baseDelay={0.1} step={0.025} />
+          <BlurInSection delay={0.3}>
+            <div class="space-y-4">
+              <ErrorBoundary
               fallback={<p class="text-center text-red-600">Failed to load product</p>}
             >
               <Suspense fallback={<Spinner />}>
@@ -109,7 +110,9 @@ export default function Purchase() {
                 </Show>
               </Suspense>
             </ErrorBoundary>
-
+            </div>
+          </BlurInSection>
+          <BlurInSection delay={0.5}>
             <div class="space-y-4">
               <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
@@ -156,7 +159,7 @@ export default function Purchase() {
                 {isRedirecting() ? "Redirecting..." : "Proceed to payment"}
               </button>
             </div>
-          </div>
+          </BlurInSection>
 
           <p class="text-sm text-center">
             Powered by{" "}

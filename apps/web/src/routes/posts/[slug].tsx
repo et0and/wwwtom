@@ -4,7 +4,7 @@ import { createAsync, useParams } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPostBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
-import { Spinner } from "~/components";
+import { Spinner, BlurInSection, BlurInText } from "~/components";
 
 const scope = "wwwtom:apps:web:route:posts";
 
@@ -54,21 +54,29 @@ export default function PostPage() {
           }}
         >
           <article>
-            <h1>{data().title}</h1>
-            <h2>{data().meta?.description ?? ""}</h2>
-            {data().publishedAt ? (
-              <time>
-                {new Date(data().publishedAt ?? "").toLocaleDateString("en-NZ", {
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                })}
-              </time>
-            ) : null}
-            <div class="pt-8" innerHTML={data().content ?? ""} />
+            <BlurInText text={data().title} tag="h1" baseDelay={0.1} step={0.025} />
+            <BlurInSection delay={0.3}>
+              <h2>{data().meta?.description ?? ""}</h2>
+            </BlurInSection>
+            <BlurInSection delay={0.5}>
+              {data().publishedAt ? (
+                <time>
+                  {new Date(data().publishedAt ?? "").toLocaleDateString("en-NZ", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </time>
+              ) : null}
+            </BlurInSection>
+            <BlurInSection delay={0.7}>
+              <div class="pt-8" innerHTML={data().content ?? ""} />
+            </BlurInSection>
             <For each={data().arenaBlocks ?? []}>
-              {(block) => (
-                <ArenaCarousel slug={block.slug} {...(block.title ? { title: block.title } : {})} />
+              {(block, index) => (
+                <BlurInSection delay={0.9 + index() * 0.2}>
+                  <ArenaCarousel slug={block.slug} {...(block.title ? { title: block.title } : {})} />
+                </BlurInSection>
               )}
             </For>
           </article>
