@@ -1,3 +1,10 @@
+# [1.88.0](https://github.com/et0and/wwwtom/compare/v1.87.0...v1.88.0) (2026-05-21)
+
+
+### Features
+
+* **web:** apply text-animation blur-in skill ([d3ffb52](https://github.com/et0and/wwwtom/commit/d3ffb52a006b3394512c24b64e2c34fb2d0e451a))
+
 # [1.87.0](https://github.com/et0and/wwwtom/compare/v1.86.0...v1.87.0) (2026-05-17)
 
 
