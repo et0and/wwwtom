@@ -1,3 +1,10 @@
+## [1.88.1](https://github.com/et0and/wwwtom/compare/v1.88.0...v1.88.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* **web:** defer stream for post and work detail routes to ensure OG meta tags render in SSR head ([7f85c09](https://github.com/et0and/wwwtom/commit/7f85c0900c6e2fb29952784dab40d38cc12576df))
+
 # [1.88.0](https://github.com/et0and/wwwtom/compare/v1.87.0...v1.88.0) (2026-05-21)
 
 
