@@ -1,6 +1,6 @@
 import { lazy, For, Show, createMemo } from "solid-js";
 import { Effect } from "effect";
-import { createAsync, useParams } from "@solidjs/router";
+import { createAsync, useParams, type RouteDefinition } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getWorkBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
@@ -9,8 +9,16 @@ import { Spinner, BlurInSection, BlurInText } from "~/components";
 
 const scope = "wwwtom:apps:web:route:work";
 
+export const route = {
+	preload: ({ params }) => {
+		if (params.slug) {
+			void getWorkBySlug(params.slug);
+		}
+	},
+} satisfies RouteDefinition;
+
 const ArenaCarousel = lazy(() =>
-  import("~/components").then((m) => ({ default: m.ArenaCarousel })),
+	import("~/components").then((m) => ({ default: m.ArenaCarousel })),
 );
 
 export default function WorkPage() {
@@ -29,12 +37,15 @@ export default function WorkPage() {
     );
   }
 
-  const work = createAsync(() => {
-    const s = slug();
-    if (!s) return Promise.resolve(null);
-    void Effect.runFork(Effect.logInfo(`${scope}:load slug=${s}`));
-    return getWorkBySlug(s);
-  });
+  const work = createAsync(
+    () => {
+      const s = slug();
+      if (!s) return Promise.resolve(null);
+      void Effect.runFork(Effect.logInfo(`${scope}:load slug=${s}`));
+      return getWorkBySlug(s);
+    },
+    { deferStream: true },
+  );
 
   return (
     <Show when={work()} fallback={<Spinner color="grey" />}>
