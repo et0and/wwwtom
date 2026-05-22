@@ -1,6 +1,6 @@
 import { lazy, For, Show, createMemo } from "solid-js";
 import { Effect } from "effect";
-import { createAsync, useParams } from "@solidjs/router";
+import { createAsync, useParams, type RouteDefinition } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { getPostBySlug } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
@@ -8,8 +8,16 @@ import { Spinner, BlurInSection, BlurInText } from "~/components";
 
 const scope = "wwwtom:apps:web:route:posts";
 
+export const route = {
+	preload: ({ params }) => {
+		if (params.slug) {
+			void getPostBySlug(params.slug);
+		}
+	},
+} satisfies RouteDefinition;
+
 const ArenaCarousel = lazy(() =>
-  import("~/components").then((m) => ({ default: m.ArenaCarousel })),
+	import("~/components").then((m) => ({ default: m.ArenaCarousel })),
 );
 
 export default function PostPage() {
@@ -28,12 +36,15 @@ export default function PostPage() {
     );
   }
 
-  const post = createAsync(() => {
-    const s = slug();
-    if (!s) return Promise.resolve(null);
-    void Effect.runFork(Effect.logInfo(`${scope}:load slug=${s}`));
-    return getPostBySlug(s);
-  });
+  const post = createAsync(
+    () => {
+      const s = slug();
+      if (!s) return Promise.resolve(null);
+      void Effect.runFork(Effect.logInfo(`${scope}:load slug=${s}`));
+      return getPostBySlug(s);
+    },
+    { deferStream: true },
+  );
 
   return (
     <Show when={post()} fallback={<Spinner color="grey" />}>
