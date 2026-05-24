@@ -103,8 +103,12 @@ export const getWorkBySlug = query(async (slug: string) => {
         "root" in work.content &&
         work.content.root
       ) {
-        arenaBlocks = extractArenaBlocks(work.content.root);
-        content = convertLexicalToHTML(work.content.root, true);
+        const contentRoot = work.content.root;
+        arenaBlocks = extractArenaBlocks(contentRoot);
+        content = yield* Effect.tryPromise({
+          try: () => convertLexicalToHTML(contentRoot, true),
+          catch: () => "<p>Error rendering content</p>",
+        });
       } else if (typeof work.content === "string") {
         content = work.content;
       }

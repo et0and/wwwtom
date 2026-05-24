@@ -53,6 +53,10 @@ interface PayloadBlockFieldsType {
   readonly newTab?: boolean | undefined;
   readonly arenaSlug?: string | undefined;
   readonly arenaTitle?: string | undefined;
+  readonly code?: string | undefined;
+  readonly language?: string | undefined;
+  readonly fileName?: string | undefined;
+  readonly showLineNumbers?: boolean | undefined;
 }
 
 interface PayloadMediaType {
@@ -106,6 +110,10 @@ export const PayloadBlockFieldsSchema: Schema.Schema<PayloadBlockFieldsType> = S
   newTab: Schema.optional(Schema.Boolean),
   arenaSlug: Schema.optional(Schema.String),
   arenaTitle: Schema.optional(Schema.String),
+  code: Schema.optional(Schema.String),
+  language: Schema.optional(Schema.String),
+  fileName: Schema.optional(Schema.String),
+  showLineNumbers: Schema.optional(Schema.Boolean),
 }) as Schema.Schema<PayloadBlockFieldsType>;
 
 export const PayloadContentNodeSchema: Schema.Schema<PayloadContentNodeType> = Schema.suspend(

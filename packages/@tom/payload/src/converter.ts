@@ -126,7 +126,20 @@ function convertBlock(node: PayloadContentNode, skipArena = false): string {
     return convertMediaBlock(node.fields.media);
   }
 
+  if (node.fields.blockType === "code" && node.fields.code) {
+    return `<pre class="code-block"><code>${escapeHtml(node.fields.code)}</code></pre>`;
+  }
+
   return "";
+}
+
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function convertMediaBlock(media: PayloadMedia): string {

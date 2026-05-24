@@ -5,6 +5,8 @@ import type {
   ArenaBlockData,
 } from "@tom/payload";
 
+import { highlightCodeBlock } from "./highlight";
+
 const CDN_DOMAIN = "cdn.tom.so";
 
 function getOptimizedImageUrl(url: string, _width: number, format = "webp"): string {
@@ -80,38 +82,44 @@ export function extractArenaBlocks(node: PayloadContentNode): ArenaBlockData[] {
   return blocks;
 }
 
-export function convertLexicalToHTML(node: PayloadContentNode, skipArena = false): string {
+export async function convertLexicalToHTML(
+  node: PayloadContentNode,
+  skipArena = false,
+): Promise<string> {
   if (!node) return "";
 
   if (node.type === "root" && node.children) {
-    return node.children.map((child) => convertLexicalToHTML(child, skipArena)).join("");
+    const children = await Promise.all(
+      node.children.map((child) => convertLexicalToHTML(child, skipArena)),
+    );
+    return children.join("");
   }
 
   if (node.type === "paragraph" && node.children) {
-    const text = node.children
-      .map((child: PayloadContentNode) => {
+    const text = await Promise.all(
+      node.children.map(async (child: PayloadContentNode) => {
         if (child.type === "text") {
           return formatText(child);
         } else if (child.type === "link" && child.fields && child.children) {
           return convertLink(child);
         }
         return convertLexicalToHTML(child, skipArena);
-      })
-      .join("");
-    return `<p>${text}</p>`;
+      }),
+    );
+    return `<p>${text.join("")}</p>`;
   }
 
   if (node.type === "heading" && node.children) {
-    const text = node.children
-      .map((child: PayloadContentNode) => {
+    const text = await Promise.all(
+      node.children.map(async (child: PayloadContentNode) => {
         if (child.type === "text") {
           return formatText(child);
         }
         return convertLexicalToHTML(child, skipArena);
-      })
-      .join("");
+      }),
+    );
     const level = node.tag || "h2";
-    return `<${level}>${text}</${level}>`;
+    return `<${level}>${text.join("")}</${level}>`;
   }
 
   if (node.type === "block" && node.fields) {
@@ -142,11 +150,11 @@ function convertLink(node: PayloadContentNode): string {
   return `<a href="${url}"${newTab}>${linkText}</a>`;
 }
 
-function convertBlock(node: PayloadContentNode, skipArena = false): string {
+async function convertBlock(node: PayloadContentNode, skipArena = false): Promise<string> {
   if (!node.fields) return "";
 
   if (node.fields.blockType === "banner" && node.fields.content) {
-    const bannerContent = convertLexicalToHTML(node.fields.content.root, skipArena);
+    const bannerContent = await convertLexicalToHTML(node.fields.content.root, skipArena);
     return `<div role="region" class="banner"><p class="banner-title">Note</p>${bannerContent}</div>`;
   }
 
@@ -158,14 +166,23 @@ function convertBlock(node: PayloadContentNode, skipArena = false): string {
   }
 
   if (node.fields.blockType === "mediaBlock" && node.fields.media) {
-    return convertMediaBlock(node.fields.media);
+    return await convertMediaBlock(node.fields.media);
+  }
+
+  if (node.fields.blockType === "code" && node.fields.code) {
+    return highlightCodeBlock(
+      node.fields.code,
+      node.fields.language || "text",
+      node.fields.fileName,
+      node.fields.showLineNumbers,
+    );
   }
 
   return "";
 }
 
-function convertMediaBlock(media: PayloadMedia): string {
-  const caption = media.caption ? convertLexicalToHTML(media.caption.root) : "";
+async function convertMediaBlock(media: PayloadMedia): Promise<string> {
+  const caption = media.caption ? await convertLexicalToHTML(media.caption.root) : "";
   const srcset = buildSrcSet(media);
   const defaultSrc = getOptimizedImageUrl(media.url, 900);
 

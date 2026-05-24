@@ -124,8 +124,12 @@ export const getPostBySlug = query(async (slug: string) => {
         "root" in post.content &&
         post.content.root
       ) {
-        arenaBlocks = extractArenaBlocks(post.content.root);
-        content = convertLexicalToHTML(post.content.root);
+        const contentRoot = post.content.root;
+        arenaBlocks = extractArenaBlocks(contentRoot);
+        content = yield* Effect.tryPromise({
+          try: () => convertLexicalToHTML(contentRoot),
+          catch: () => "<p>Error rendering content</p>",
+        });
       } else if (typeof post.content === "string") {
         content = post.content;
       }

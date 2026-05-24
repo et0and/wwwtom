@@ -3,8 +3,8 @@
 @source "../../../packages/@tom/ui/src/**/*.tsx";
 
 @theme {
-	--animate-blur-in: blurIn 0.3s ease-in;
-	--animate-blur-in-char: blurInChar 0.3s ease-in;
+  --animate-blur-in: blurIn 0.3s ease-in;
+  --animate-blur-in-char: blurInChar 0.3s ease-in;
 }
 
 :root {
@@ -490,6 +490,80 @@ a.page:hover {
     opacity: 1;
     filter: none;
     transform: none;
+  }
+}
+
+.code-block {
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 1rem;
+  overflow-x: auto;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  tab-size: 2;
+}
+
+.code-block pre code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.code-filename {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  padding: 0.5rem 1rem;
+  background-color: rgb(243 244 246);
+  border: 1px solid rgb(229 231 235);
+  border-bottom: none;
+  border-radius: 0.5rem 0.5rem 0 0;
+  color: rgb(75 85 99);
+}
+
+@media (prefers-color-scheme: dark) {
+  .code-filename {
+    background-color: rgb(31 41 55);
+    border-color: rgb(75 85 99);
+    color: rgb(156 163 175);
+  }
+}
+
+.shiki-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .shiki-light {
+    display: none;
+  }
+
+  .shiki-dark {
+    display: block;
+  }
+}
+
+.code-block[data-line-numbers="true"] pre {
+  counter-reset: step;
+}
+
+.code-block[data-line-numbers="true"] pre .line::before {
+  counter-increment: step;
+  content: counter(step);
+  display: inline-block;
+  width: 2em;
+  margin-right: 1em;
+  text-align: right;
+  color: rgb(156 163 175);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-color-scheme: dark) {
+  .code-block[data-line-numbers="true"] pre .line::before {
+    color: rgb(107 114 133);
   }
 }
 
