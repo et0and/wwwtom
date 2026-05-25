@@ -18,6 +18,18 @@ export const Code: Block = {
           value: "javascript",
         },
         {
+          label: "Python",
+          value: "python",
+        },
+        {
+          label: "Rust",
+          value: "rust",
+        },
+        {
+          label: "HTML",
+          value: "html",
+        },
+        {
           label: "CSS",
           value: "css",
         },
@@ -25,9 +37,20 @@ export const Code: Block = {
     },
     {
       name: "code",
-      type: "code",
+      type: "textarea",
       label: false,
       required: true,
+    },
+    {
+      name: "fileName",
+      type: "text",
+      label: "File name (optional)",
+    },
+    {
+      name: "showLineNumbers",
+      type: "checkbox",
+      defaultValue: false,
+      label: "Show line numbers",
     },
   ],
 };

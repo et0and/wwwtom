@@ -33,7 +33,11 @@ export async function GET() {
         if (typeof post.content === "string") {
           content = post.content;
         } else if (post.content?.root) {
-          content = convertLexicalToHTML(post.content.root);
+          const contentRoot = post.content.root;
+          content = yield* Effect.tryPromise({
+            try: () => convertLexicalToHTML(contentRoot),
+            catch: () => "<p>Error rendering content</p>",
+          });
         }
 
         feed.item({
