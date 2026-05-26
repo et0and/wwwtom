@@ -13,6 +13,7 @@ interface PageLayoutProps {
     publishedAt: string;
   };
   jsonLd?: Record<string, unknown>;
+  class?: string;
 }
 
 export const PageLayout: Component<PageLayoutProps> = (props) => {
@@ -33,7 +34,7 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
   );
 
   return (
-    <>
+    <div class={props.class}>
       <Metadata
         title={title()}
         metaType="description"
@@ -46,6 +47,6 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
       <main id="main" class="mx-auto p-8 max-w-[750px] view-transition-main">
         {props.children}
       </main>
-    </>
+    </div>
   );
 };

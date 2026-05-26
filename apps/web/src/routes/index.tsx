@@ -13,21 +13,22 @@ export default function Home() {
         </p>
         <BlurInSection delay={0.4}>
           <p>
-            I'm a software engineer with a background in the arts and education. Currently based in
-            Pōneke, Te Whanganui-a-Tara.
+            I'm a software engineer with a background in the arts and education.
+            Currently based in Pōneke, Te Whanganui-a-Tara.
           </p>
         </BlurInSection>
         <BlurInSection delay={0.6}>
           <p>
-            Building useful things for real people is the foundation of how I design and build
-            systems.
+            Building useful things for real people is the foundation of how I
+            design and build systems.
           </p>
         </BlurInSection>
         <BlurInSection delay={0.8}>
           <p>
-            I would like to acknowledge Māori as tangata whenua and Te Tiriti o Waitangi partners in
-            Aotearoa New Zealand. I pay my respects to the mana whenua who are the original and
-            continued rightful stewards of the land.
+            I would like to acknowledge Māori as tangata whenua and Te Tiriti o
+            Waitangi partners in Aotearoa New Zealand. I pay my respects to the
+            mana whenua who are the original and continued rightful stewards of
+            the land.
           </p>
         </BlurInSection>
         <BlurInSection delay={1.0}>
@@ -47,6 +48,11 @@ export default function Home() {
           <p lang="ja">
             アオテアロア（ニュージーランド）の先住民族（タンガタ・フェヌア）であり、ワイタンギ条約のパートナーであるマオリの人々に敬意を表します。また、この土地の本来の、そして今も変わらぬ正当な守り手であるマナ・フェヌアに深く敬意を払います。
           </p>
+          <img
+            src="/image.svg"
+            alt="Tom Hackshaw signature"
+            class="h-16 pt-4 dark:invert"
+          />
         </BlurInSection>
       </PageLayout>
     </>
