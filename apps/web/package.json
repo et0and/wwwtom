@@ -28,6 +28,7 @@
     "@tom/haptics": "workspace:*",
     "@tom/payload": "workspace:*",
     "@tom/schemas": "workspace:*",
+    "@tom/strings": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
     "@tom/utils": "workspace:*",

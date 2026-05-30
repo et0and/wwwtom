@@ -1,0 +1,19 @@
+{
+	"name": "@tom/strings",
+	"version": "0.0.1",
+	"private": true,
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": "./src/index.ts"
+	},
+	"scripts": {
+		"typecheck": "tsc --noEmit",
+		"strings:generate": "tsx scripts/generate-jsdoc.ts"
+	},
+	"devDependencies": {
+		"tsx": "4.19.4",
+		"typescript": "5.9.3"
+	}
+}

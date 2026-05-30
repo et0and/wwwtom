@@ -1,14 +1,20 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "tasks": {
+    "strings:generate": {
+      "inputs": ["**/strings.ts"],
+      "outputs": ["**/strings.ts"],
+      "cache": true
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["strings:generate", "^build"],
       "outputs": ["dist/**", ".output/**"]
     },
     "dev": {
       "cache": false,
       "persistent": true,
-      "outputs": []
+      "outputs": [],
+      "dependsOn": ["strings:generate"]
     },
     "lint": {
       "dependsOn": ["^build"]
