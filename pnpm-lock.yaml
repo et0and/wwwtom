@@ -656,6 +656,9 @@ importers:
         specifier: 0.5.7
         version: 0.5.7(@types/node@24.9.1)(aws4fetch@1.0.20)(db0@0.3.4(drizzle-orm@0.44.7(kysely@0.28.9)(postgres@3.4.7)))(drizzle-orm@0.44.7(kysely@0.28.9)(postgres@3.4.7))(ioredis@5.10.1)(jiti@2.7.0)(lightningcss@1.32.0)(sass@1.77.4)(terser@5.47.1)(tsx@4.21.0)(yaml@2.9.0)
     devDependencies:
+      '@playwright/test':
+        specifier: 'catalog:'
+        version: 1.58.2
       '@solidjs/testing-library':
         specifier: 0.8.10
         version: 0.8.10(@solidjs/router@0.15.0(solid-js@1.9.12))(solid-js@1.9.12)

@@ -28,3 +28,42 @@ jobs:
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
         run: pnpm turbo run test --filter=!@tom/margaret
+
+  e2e:
+    name: E2E
+    runs-on: ubuntu-slim
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.1.2
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          PLAYWRIGHT_VERSION=$(pnpm --filter @tom/web exec playwright --version 2>/dev/null | grep -oP '(?<=Version )\S+')
+          echo "PLAYWRIGHT_VERSION=$PLAYWRIGHT_VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.PLAYWRIGHT_VERSION }}
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @tom/web exec playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        env:
+          ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
+          PAYLOAD_URL: ${{ vars.PAYLOAD_URL || 'https://cms.tom.so' }}
+        run: pnpm --filter @tom/web test:e2e

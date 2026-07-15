@@ -44,3 +44,7 @@ Thumbs.db
 
 # sst
 .sst
+
+# Playwright
+playwright-report/
+test-results/
