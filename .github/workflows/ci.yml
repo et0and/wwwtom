@@ -17,7 +17,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
       - name: Install dependencies
         run: pnpm install
@@ -36,7 +36,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@0ebf47130e4866e96fce0953f49152a61190b271
 
       - name: Install dependencies
         run: pnpm install
