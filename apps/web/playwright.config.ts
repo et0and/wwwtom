@@ -28,9 +28,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "cd ../.. && pnpm dev:web",
+    command: "cd ../.. && pnpm build --filter=@tom/web && pnpm --filter @tom/web start",
     reuseExistingServer: true,
-    timeout: 120000,
+    timeout: 300000,
     url: "http://localhost:3000",
   },
 });
