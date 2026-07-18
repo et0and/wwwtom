@@ -30,8 +30,6 @@ jobs:
           git pull origin dev
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
-        with:
-          version: 11.1.2
 
       - name: Check pnpm version
         run: pnpm --version
