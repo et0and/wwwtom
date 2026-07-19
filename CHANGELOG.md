@@ -1,3 +1,16 @@
+# [1.89.0](https://github.com/et0and/wwwtom/compare/v1.88.1...v1.89.0) (2026-07-18)
+
+
+### Bug Fixes
+
+* **ci:** rem hardcoded pnpm ver from release ([e9bd4ad](https://github.com/et0and/wwwtom/commit/e9bd4add2076b4b2ba0e3aea1db737e5373a7b4a))
+* **web:** rem random windows files ([a9b96fb](https://github.com/et0and/wwwtom/commit/a9b96fb808f20ba832933751209ca11dbbc9ce4c))
+
+
+### Features
+
+* **web:** add signature ([6087a46](https://github.com/et0and/wwwtom/commit/6087a4619d08dcac7d3d9cdbfdba0f425c2f8983))
+
 ## [1.88.1](https://github.com/et0and/wwwtom/compare/v1.88.0...v1.88.1) (2026-05-22)
 
 
