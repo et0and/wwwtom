@@ -3,6 +3,10 @@ import { solidStart } from "@solidjs/start/config";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
+if (process.cwd() !== import.meta.dirname) {
+  process.chdir(import.meta.dirname);
+}
+
 export default defineConfig(({ command }) => {
   if (command === "serve") {
     process.loadEnvFile(".dev.vars");
