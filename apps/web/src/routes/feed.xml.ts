@@ -18,7 +18,7 @@ export async function GET() {
 
   return runEffect(
     Effect.gen(function* () {
-      const payload = yield* PayloadService;
+      const payload = yield* Effect.service(PayloadService);
       yield* Effect.logInfo("feed:fetch:start");
 
       const response = yield* payload.fetch<PayloadResponse<PayloadPost>>(
@@ -60,7 +60,7 @@ export async function GET() {
         },
       });
     }).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.succeed(
           new Response("Error generating RSS feed", {
             status: HttpStatus.InternalServerError,

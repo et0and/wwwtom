@@ -1,4 +1,4 @@
-import { Effect, Layer, Logger, LogLevel } from "effect";
+import { Effect, Layer, Logger, References } from "effect";
 import { getRequestEvent } from "solid-js/web";
 import type { CloudflareEnv } from "@tom/utils/services";
 import { AppConfig, makeAppConfigLayer } from "@tom/utils/services";
@@ -36,18 +36,17 @@ const getDevEnv = (): CloudflareEnv => ({
   NODE_ENV: process.env.NODE_ENV ?? "development",
 });
 
-declare module "vinxi/http" {
-  interface H3EventContext {
-    effectLayer?: CompositeLayer;
-    effectLayerWithDb?: CompositeLayerWithDb;
-  }
-}
+type RequestContext = {
+  effectLayer?: CompositeLayer;
+  effectLayerWithDb?: CompositeLayerWithDb;
+  cloudflare?: { env?: CloudflareEnv };
+};
 
 export const getServiceLayer = (): CompositeLayer | undefined => {
   const event = getRequestEvent();
   if (!event) return undefined;
 
-  const context = event.nativeEvent.context;
+  const context = event.nativeEvent.context as RequestContext;
   if (context.effectLayer) return context.effectLayer;
 
   const cfEnv = context.cloudflare?.env as CloudflareEnv | undefined;
@@ -61,7 +60,7 @@ export const getServiceLayerWithDb = (): CompositeLayerWithDb | undefined => {
   const event = getRequestEvent();
   if (!event) return undefined;
 
-  const context = event.nativeEvent.context;
+  const context = event.nativeEvent.context as RequestContext;
   if (context.effectLayerWithDb) return context.effectLayerWithDb;
 
   const cfEnv = context.cloudflare?.env as CloudflareEnv | undefined;
@@ -71,13 +70,16 @@ export const getServiceLayerWithDb = (): CompositeLayerWithDb | undefined => {
   return layer;
 };
 
-const getMinLogLevel = () => {
+const getMinLogLevel = (): "Debug" | "Info" => {
   const isDev = import.meta.env.DEV;
-  return isDev ? LogLevel.Debug : LogLevel.Info;
+  return isDev ? "Debug" : "Info";
 };
 
 const withLogging = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(Logger.withMinimumLogLevel(getMinLogLevel()), Effect.provide(Logger.structured));
+  effect.pipe(
+    Effect.provideService(References.MinimumLogLevel, getMinLogLevel()),
+    Effect.provide(Logger.layer([Logger.formatJson])),
+  );
 
 /**
  * Run a simple effect without services.
@@ -140,7 +142,7 @@ export const runWithLogs = <A, E>(
     yield* Effect.logInfo(`${name}:success`);
     return result;
   }).pipe(
-    Effect.catchAll(
+    Effect.catch(
       Effect.fn("runWithLogsErrorHandler")(function* (error: E) {
         yield* Effect.logError(`${name}:error`, error);
         return yield* Effect.fail(error);

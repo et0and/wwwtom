@@ -38,7 +38,7 @@ const generateState = () => {
 };
 
 const initiateAuth_ = Effect.fn("initiateAuth")(function* (fediverseHandle: string) {
-  const db = yield* DatabaseService;
+  const db = yield* Effect.service(DatabaseService);
 
   const parts = fediverseHandle.split("@").filter(Boolean);
   if (parts.length !== 2) {
@@ -52,7 +52,7 @@ const initiateAuth_ = Effect.fn("initiateAuth")(function* (fediverseHandle: stri
   const instanceUrl = `https://${instance}`;
 
   const snsType = yield* detector(instanceUrl).pipe(
-    Effect.catchAll(() => Effect.succeed("mastodon" as const)),
+    Effect.catch(() => Effect.succeed("mastodon" as const)),
   );
 
   const client = generator(snsType, instanceUrl);
@@ -155,7 +155,7 @@ const handleCallback_ = Effect.fn("handleCallback")(function* (params: {
   code: string;
   session_token: string;
 }) {
-  const db = yield* DatabaseService;
+  const db = yield* Effect.service(DatabaseService);
   const session = yield* db.getOAuthSession(params.session_token);
 
   if (!session) {
@@ -168,7 +168,7 @@ const handleCallback_ = Effect.fn("handleCallback")(function* (params: {
   const instanceUrl = `https://${session.fediverse_instance}`;
 
   const snsType = yield* detector(instanceUrl).pipe(
-    Effect.catchAll(() => Effect.succeed("mastodon" as const)),
+    Effect.catch(() => Effect.succeed("mastodon" as const)),
   );
 
   const client = generator(snsType, instanceUrl);
@@ -217,7 +217,7 @@ const signGuestbook_ = Effect.fn("signGuestbook")(function* (params: {
   user: FediverseUser;
   message: string;
 }) {
-  const db = yield* DatabaseService;
+  const db = yield* Effect.service(DatabaseService);
   const hasSigned = yield* db.hasUserSigned(`${params.user.username}@${params.user.instance}`);
 
   if (hasSigned) {

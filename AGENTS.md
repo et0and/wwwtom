@@ -16,6 +16,7 @@
 - `packages/@tom/*` — shared packages like `ui`, `utils`, `types`, `db`,
   `arena`, `payload`, `schemas`, `checkout`, `constants`, `haptics`, and
   other `@tom/*` workspaces present in the repo.
+- `infra` — Alchemy V2 + Effect V4 Cloudflare stacks for web and api.
 
 ## General Working Rules
 
@@ -52,11 +53,13 @@
 - `pnpm typecheck` — Turbo typecheck.
 - `pnpm test` — run tests via Turbo.
 - `pnpm test:update` — update snapshots in web and utils.
-- `pnpm deploy` / `pnpm deploy:api` — deploy web or api.
+- `pnpm deploy` — deploy shared secrets, API, then web through Alchemy.
+- `pnpm deploy:shared|deploy:api|deploy:web` — deploy an individual Alchemy stack.
+- `pnpm destroy` — destroy the current Alchemy stage.
 
 ### App / Package Commands
 
-- `apps/web`: `pnpm run dev|build|typecheck|lint|test|test:ui|test:coverage`
+- `apps/web`: SolidStart 2 + Vite. `pnpm run dev|build|typecheck|lint|test|test:ui|test:coverage`
 - `apps/api`: `pnpm run dev|build|deploy|cf-typegen`
 - `apps/cms`: `pnpm run dev|build|lint|lint:fix|generate:types|preview`
 - `apps/docs`: `pnpm run dev|build|preview`
@@ -163,6 +166,18 @@ Never guess at Effect patterns - check the guide first.
 - CMS uses Next.js + Payload + React; do not force Solid patterns into CMS.
 - CMS has its own `eslint.config.mjs`; follow stronger local app rules when
   they differ.
+
+## Infrastructure
+
+- Alchemy deploy order is `shared -> api -> web`; `ALCHEMY_STAGE` is required.
+  The `production` stage adopts the existing `wwwtom` and `apitom` Workers,
+  their custom domains, `TOM_RATE_LIMIT_KV`, and
+  `guestbook-hyperdrive`.
+- `TOM_SECRETS` is a JSON bundle seeded in the account-level Cloudflare
+  Secrets Store. Workers read the Store binding at runtime; do not add
+  individual production secrets to Wrangler config.
+- `apps/web` deploys through `Cloudflare.Website.Vite`; do not reintroduce
+  Vinxi or a web Wrangler deploy config.
 
 ## Testing Conventions
 

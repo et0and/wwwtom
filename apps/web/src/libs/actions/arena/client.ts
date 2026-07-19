@@ -12,13 +12,13 @@ export function fetchArena<T>(
   "use server";
 
   return Effect.gen(function* () {
-    const arena = yield* ArenaService;
+    const arena = yield* Effect.service(ArenaService);
     yield* Effect.logDebug(`Arena operation: ${name}`);
     const client = mode === "public" ? arena.publicClient : arena.client;
 
     return yield* operation(client).pipe(Effect.retry(retryPolicy));
   }).pipe(
-    Effect.catchAll(
+    Effect.catch(
       Effect.fn("fetchArenaErrorHandler")(function* (error: HttpError) {
         yield* Effect.logError(`Arena operation failed after retries: ${name}`, error);
         return yield* error;

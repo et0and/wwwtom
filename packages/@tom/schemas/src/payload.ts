@@ -77,7 +77,7 @@ interface PayloadMediaType {
   readonly sizes: Schema.Schema.Type<typeof PayloadMediaSizesSchema>;
 }
 
-export const PayloadMediaSchema: Schema.Schema<PayloadMediaType> = Schema.Struct({
+export const PayloadMediaSchema: Schema.Codec<PayloadMediaType> = Schema.Struct({
   id: PayloadMediaId,
   alt: Schema.NullOr(Schema.String),
   caption: Schema.suspend(
@@ -95,9 +95,9 @@ export const PayloadMediaSchema: Schema.Schema<PayloadMediaType> = Schema.Struct
   focalX: Schema.Number,
   focalY: Schema.Number,
   sizes: PayloadMediaSizesSchema,
-}) as unknown as Schema.Schema<PayloadMediaType>;
+}) as unknown as Schema.Codec<PayloadMediaType>;
 
-export const PayloadBlockFieldsSchema: Schema.Schema<PayloadBlockFieldsType> = Schema.Struct({
+export const PayloadBlockFieldsSchema: Schema.Codec<PayloadBlockFieldsType> = Schema.Struct({
   id: Schema.optional(Schema.String),
   media: Schema.optional(PayloadMediaSchema),
   blockName: Schema.optional(Schema.String),
@@ -114,14 +114,14 @@ export const PayloadBlockFieldsSchema: Schema.Schema<PayloadBlockFieldsType> = S
   language: Schema.optional(Schema.String),
   fileName: Schema.optional(Schema.String),
   showLineNumbers: Schema.optional(Schema.Boolean),
-}) as Schema.Schema<PayloadBlockFieldsType>;
+}) as unknown as Schema.Codec<PayloadBlockFieldsType>;
 
-export const PayloadContentNodeSchema: Schema.Schema<PayloadContentNodeType> = Schema.suspend(
+export const PayloadContentNodeSchema: Schema.Codec<PayloadContentNodeType> = Schema.suspend(
   () =>
     Schema.Struct({
       type: Schema.String,
-      format: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
-      indent: Schema.optional(Schema.Union(Schema.Number, Schema.String)),
+      format: Schema.optional(Schema.Union([Schema.Number, Schema.String])),
+      indent: Schema.optional(Schema.Union([Schema.Number, Schema.String])),
       version: Schema.optional(Schema.Number),
       children: Schema.optional(Schema.Array(PayloadContentNodeSchema)),
       direction: Schema.optional(Schema.NullOr(Schema.String)),
@@ -134,12 +134,12 @@ export const PayloadContentNodeSchema: Schema.Schema<PayloadContentNodeType> = S
       style: Schema.optional(Schema.String),
       detail: Schema.optional(Schema.Number),
       id: Schema.optional(Schema.String),
-    }) as Schema.Schema<PayloadContentNodeType>,
+    }) as Schema.Codec<PayloadContentNodeType>,
 );
 
-export const PayloadRichContentSchema: Schema.Schema<PayloadRichContentType> = Schema.Struct({
+export const PayloadRichContentSchema: Schema.Codec<PayloadRichContentType> = Schema.Struct({
   root: PayloadContentNodeSchema,
-}) as Schema.Schema<PayloadRichContentType>;
+}) as Schema.Codec<PayloadRichContentType>;
 
 export const PayloadHeroImageSchema = Schema.Struct({
   url: Schema.String,
@@ -158,7 +158,7 @@ export const PayloadPostSchema = Schema.Struct({
   summary: Schema.optional(Schema.NullOr(Schema.String)),
   publishedAt: Schema.String,
   slug: Schema.String,
-  content: Schema.optional(Schema.Union(Schema.String, PayloadRichContentSchema)),
+  content: Schema.optional(Schema.Union([Schema.String, PayloadRichContentSchema])),
   heroImage: Schema.optional(Schema.NullOr(PayloadHeroImageSchema)),
   arenaSlug: Schema.optional(Schema.NullOr(Schema.String)),
   arenaTitle: Schema.optional(Schema.NullOr(Schema.String)),
@@ -173,7 +173,7 @@ export const PayloadWorkSchema = Schema.Struct({
   summary: Schema.optional(Schema.NullOr(Schema.String)),
   publishedAt: Schema.String,
   slug: Schema.String,
-  content: Schema.optional(Schema.Union(Schema.String, PayloadRichContentSchema)),
+  content: Schema.optional(Schema.Union([Schema.String, PayloadRichContentSchema])),
   heroImage: Schema.optional(Schema.NullOr(PayloadHeroImageSchema)),
   arenaSlug: Schema.optional(Schema.NullOr(Schema.String)),
   arenaTitle: Schema.optional(Schema.NullOr(Schema.String)),
@@ -182,7 +182,7 @@ export const PayloadWorkSchema = Schema.Struct({
   meta: Schema.optional(PayloadMetaSchema),
 });
 
-export const PayloadResponseSchema = <A, I, R>(itemSchema: Schema.Schema<A, I, R>) =>
+export const PayloadResponseSchema = <A, I, R>(itemSchema: Schema.Codec<A, I, R>) =>
   Schema.Struct({
     docs: Schema.Array(itemSchema),
     totalDocs: Schema.Number,

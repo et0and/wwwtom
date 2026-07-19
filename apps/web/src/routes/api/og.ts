@@ -11,7 +11,10 @@ export function GET({ request }: APIEvent) {
   const summary = url.searchParams.get("summary");
 
   const event = getRequestEvent();
-  const env = event?.nativeEvent.context.cloudflare?.env as { OG_SERVICE_URL?: string } | undefined;
+  const context = event?.nativeEvent.context as
+    | { cloudflare?: { env?: { OG_SERVICE_URL?: string } } }
+    | undefined;
+  const env = context?.cloudflare?.env;
 
   const program = Effect.gen(function* () {
     const upstreamUrl = env?.OG_SERVICE_URL;
@@ -42,7 +45,7 @@ export function GET({ request }: APIEvent) {
           message: "Failed to fetch OG image",
         }),
     }).pipe(
-      Effect.catchAll(
+      Effect.catch(
         Effect.fn("ogFetchErrorHandler")(function* (error: ImageGenerationError) {
           yield* Effect.logError("OG image proxy error", error);
           return yield* Effect.fail(
@@ -69,7 +72,7 @@ export function GET({ request }: APIEvent) {
           message: "Failed to read image buffer",
         }),
     }).pipe(
-      Effect.catchAll(
+      Effect.catch(
         Effect.fn("ogBufferErrorHandler")(function* (error: ImageGenerationError) {
           yield* Effect.logError("Failed to read image buffer", error);
           return yield* Effect.fail(
@@ -91,12 +94,12 @@ export function GET({ request }: APIEvent) {
     });
   });
 
-  const action = program.pipe(Effect.catchAll((errorResponse) => Effect.succeed(errorResponse)));
+  const action = program.pipe(Effect.catch((errorResponse) => Effect.succeed(errorResponse)));
   const loggedAction = Effect.gen(function* () {
     yield* Effect.logInfo("og:get:start");
     return yield* action.pipe(
       Effect.tap(() => Effect.logDebug("og:get:success")),
-      Effect.catchAll(
+      Effect.catch(
         Effect.fn("ogLoggedErrorHandler")(function* (error: Response) {
           yield* Effect.logError("og:get:error", error);
           return yield* Effect.fail(error);

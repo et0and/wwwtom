@@ -20,33 +20,33 @@ export default function Checkout() {
           <BlurInText text="Products" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
             <ErrorBoundary fallback={<p class="text-red-600">Failed to load products</p>}>
-            <Suspense fallback={<Spinner />}>
-              <Show
-                when={products()?.length}
-                fallback={<p class="text-gray-500">No products available</p>}
-              >
-                <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
-                  <For each={products()}>
-                    {(product) => (
-                      <div class="flex flex-col space-y-4">
-                        <Show when={product.medias[0]?.public_url}>
-                          {(url) => <img alt={product.name} src={url()} />}
-                        </Show>
-                        <h2>{product.name}</h2>
-                        <p>{product.description}</p>
-                        <div class="mt-auto">
-                          <p class="text-2xl font-bold">{formatPrice(product)}</p>
-                          <a href={`/purchase/${product.id}`} class="inline-block">
-                            Purchase now
-                          </a>
+              <Suspense fallback={<Spinner />}>
+                <Show
+                  when={products()?.length}
+                  fallback={<p class="text-gray-500">No products available</p>}
+                >
+                  <div class="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+                    <For each={products()}>
+                      {(product) => (
+                        <div class="flex flex-col space-y-4">
+                          <Show when={product.medias[0]?.public_url}>
+                            {(url) => <img alt={product.name} src={url()} />}
+                          </Show>
+                          <h2>{product.name}</h2>
+                          <p>{product.description}</p>
+                          <div class="mt-auto">
+                            <p class="text-2xl font-bold">{formatPrice(product)}</p>
+                            <a href={`/purchase/${product.id}`} class="inline-block">
+                              Purchase now
+                            </a>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </For>
-                </div>
-              </Show>
-            </Suspense>
-          </ErrorBoundary>
+                      )}
+                    </For>
+                  </div>
+                </Show>
+              </Suspense>
+            </ErrorBoundary>
           </BlurInSection>
         </div>
       </PageLayout>

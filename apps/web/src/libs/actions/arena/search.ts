@@ -23,7 +23,7 @@ export const searchEverything = query(
     const layer = getServiceLayer();
     return runEffect(
       Effect.gen(function* () {
-        const arena = yield* ArenaService;
+        const arena = yield* Effect.service(ArenaService);
         yield* Effect.logInfo(`searchEverything:${searchQuery}:start`);
         const result = yield* arena.client.search
           .everything(searchQuery, options)
@@ -54,7 +54,7 @@ export const searchChannels = query(async (searchQuery: string, options?: Pagina
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`searchChannels:${searchQuery}:start`);
       const result = yield* arena.client.search
         .channels(searchQuery, options)
@@ -83,7 +83,7 @@ export const searchBlocks = query(async (searchQuery: string, options?: Paginati
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`searchBlocks:${searchQuery}:start`);
       const result = yield* arena.client.search
         .blocks(searchQuery, options)
@@ -112,7 +112,7 @@ export const searchUsers = query(async (searchQuery: string, options?: Paginatio
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`searchUsers:${searchQuery}:start`);
       const result = yield* arena.client.search
         .users(searchQuery, options)

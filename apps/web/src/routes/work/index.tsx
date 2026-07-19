@@ -46,19 +46,19 @@ export default function WorkHome() {
       </BlurInSection>
       <BlurInSection delay={0.5}>
         <Suspense fallback={<Spinner color="grey" />}>
-        <Show when={works()}>
-          {(worksData) => (
-            <For each={worksData()}>
-              {(work) => (
-                <Link class="page" preload={true} href={`/work/${work.slug}`}>
-                  <h2>{work.title}</h2>
-                  <p>{work.summary}</p>
-                </Link>
-              )}
-            </For>
-          )}
-        </Show>
-      </Suspense>
+          <Show when={works()}>
+            {(worksData) => (
+              <For each={worksData()}>
+                {(work) => (
+                  <Link class="page" preload={true} href={`/work/${work.slug}`}>
+                    <h2>{work.title}</h2>
+                    <p>{work.summary}</p>
+                  </Link>
+                )}
+              </For>
+            )}
+          </Show>
+        </Suspense>
       </BlurInSection>
     </PageLayout>
   );

@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { describeRoute, resolver } from "hono-openapi";
-import { ogImageResponseSchema } from "@tom/schemas";
+import { describeRoute } from "hono-openapi";
 import { Effect } from "effect";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
 import { runEffect } from "../config/effect";
@@ -51,7 +50,16 @@ ogRoutes.get(
       200: {
         description: "Image generated successfully",
         content: {
-          "application/json": { schema: resolver(ogImageResponseSchema) },
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["success", "generatedAt"],
+              properties: {
+                success: { type: "boolean", enum: [true] },
+                generatedAt: { type: "number" },
+              },
+            },
+          },
         },
       },
       400: {
@@ -74,7 +82,7 @@ ogRoutes.get(
         yield* validateOgParams(title, summary);
         return yield* generateOgImageEffect(title, summary, requester, template);
       }).pipe(
-        Effect.catchAll((error) => {
+        Effect.catch((error) => {
           return Effect.gen(function* () {
             yield* Effect.logError("Error generating OG image", error);
             return yield* Effect.succeed(handleOgError(error));

@@ -7,7 +7,7 @@ import {
   createPolarCustomer,
   handlePolarError,
 } from "../services/polar";
-import { runEffect } from "../config/effect";
+import { resolveEnv, runEffect } from "../config/effect";
 import type { Env } from "../config/effect";
 
 const withErrorHandling = <A, E>(
@@ -16,7 +16,7 @@ const withErrorHandling = <A, E>(
   handler: (error: E) => Response,
 ) =>
   effect.pipe(
-    Effect.catchAll((error) =>
+    Effect.catch((error) =>
       Effect.gen(function* () {
         yield* Effect.logError(errorMessage, error);
         return yield* Effect.succeed(handler(error));
@@ -27,9 +27,10 @@ const withErrorHandling = <A, E>(
 export const productRoutes = new Hono<{ Bindings: Env }>();
 
 productRoutes.get("/", async (c) => {
+  const env = await resolveEnv(c.env);
   const result = await runEffect(
     withErrorHandling(
-      fetchPolarProducts(c.env.POLAR_ACCESS_TOKEN),
+      fetchPolarProducts(env.POLAR_ACCESS_TOKEN),
       "Error fetching Polar products",
       handlePolarError,
     ),
@@ -40,6 +41,7 @@ productRoutes.get("/", async (c) => {
 });
 
 productRoutes.get("/:productId", async (c) => {
+  const env = await resolveEnv(c.env);
   const productId = c.req.param("productId");
 
   if (!productId) {
@@ -48,7 +50,7 @@ productRoutes.get("/:productId", async (c) => {
 
   const result = await runEffect(
     withErrorHandling(
-      fetchPolarProduct(productId, c.env.POLAR_ACCESS_TOKEN),
+      fetchPolarProduct(productId, env.POLAR_ACCESS_TOKEN),
       "Error fetching Polar product",
       handlePolarError,
     ),
@@ -59,6 +61,7 @@ productRoutes.get("/:productId", async (c) => {
 });
 
 productRoutes.post("/customers", async (c) => {
+  const env = await resolveEnv(c.env);
   const body = await c.req.json();
   const { email, name, externalId } = body;
 
@@ -67,7 +70,7 @@ productRoutes.post("/customers", async (c) => {
   }
 
   const result = await runEffect(
-    createPolarCustomer(email, name, externalId, c.env.POLAR_ACCESS_TOKEN).pipe(
+    createPolarCustomer(email, name, externalId, env.POLAR_ACCESS_TOKEN).pipe(
       Effect.tapError((error) => Effect.logError("Error creating Polar customer", error)),
     ),
   );

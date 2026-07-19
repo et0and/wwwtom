@@ -29,7 +29,7 @@ export const getChannel = query(async (slug: string, options?: PaginationAttribu
   const pagination = sanitizePagination(options);
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       // TODO: remove after Are.na 403 incident is resolved.
       yield* Effect.logInfo(
         `[arena-diag] action=getChannel uses=publicClient slug=${slug} pagination=${JSON.stringify(pagination)}`,
@@ -64,7 +64,7 @@ export const getChannelContents = query(async (slug: string, options?: Paginatio
   const pagination = sanitizePagination(options);
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       // TODO: remove after Are.na 403 incident is resolved.
       yield* Effect.logInfo(
         `[arena-diag] action=getChannelContents uses=publicClient slug=${slug} pagination=${JSON.stringify(pagination)}`,
@@ -97,7 +97,7 @@ export const getChannelThumb = query(async (slug: string) => {
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       // TODO: remove after Are.na 403 incident is resolved.
       yield* Effect.logInfo(
         `[arena-diag] action=getChannelThumb uses=publicClient slug=${slug} pagination=${JSON.stringify(undefined)}`,
@@ -131,7 +131,7 @@ export const getChannels = query(async (options?: PaginationAttributes) => {
   const pagination = sanitizePagination(options);
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       // TODO: remove after Are.na 403 incident is resolved.
       yield* Effect.logInfo(
         `[arena-diag] action=getChannels uses=authClient slug=none pagination=${JSON.stringify(pagination)}`,

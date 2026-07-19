@@ -22,7 +22,7 @@ export const getBlock = query(async (id: number) => {
 
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`getBlock:${id}:start`);
       const result = yield* arena.client.block(id).get().pipe(Effect.retry(retryPolicy));
       yield* Effect.logInfo(`getBlock:${id}:success`);
@@ -50,7 +50,7 @@ export const getBlockChannels = query(async (id: number, options?: PaginationAtt
 
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`getBlockChannels:${id}:start`);
       const result = yield* arena.client
         .block(id)
@@ -81,7 +81,7 @@ export const getBlockComments = query(async (id: number, options?: PaginationAtt
 
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`getBlockComments:${id}:start`);
       const result = yield* arena.client
         .block(id)

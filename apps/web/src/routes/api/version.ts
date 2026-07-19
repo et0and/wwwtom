@@ -26,7 +26,7 @@ export async function GET(_event: APIEvent) {
   });
 
   const action = program.pipe(
-    Effect.catchAll(
+    Effect.catch(
       Effect.fn("versionErrorHandler")(function* (error: unknown) {
         yield* Effect.logError("Version endpoint error", error);
         return new Response("unknown", {
@@ -40,7 +40,7 @@ export async function GET(_event: APIEvent) {
     yield* Effect.logInfo("version:get:start");
     return yield* action.pipe(
       Effect.tap(() => Effect.logDebug("version:get:success")),
-      Effect.catchAll(
+      Effect.catch(
         Effect.fn("versionLoggedErrorHandler")(function* (error: unknown) {
           yield* Effect.logError("version:get:error", error);
           return yield* Effect.fail(error);
@@ -77,7 +77,7 @@ const getLatestCommitHash = Effect.fn("getLatestCommitHash")(function* () {
 
 const getLatestCommitHashWithFallback = () =>
   getLatestCommitHash().pipe(
-    Effect.catchAll(
+    Effect.catch(
       Effect.fn("getLatestCommitHashErrorHandler")(function* (error: Error) {
         yield* Effect.logError("Failed to fetch commit from GitHub API", error);
         return yield* Effect.succeed("unknown");
@@ -117,7 +117,7 @@ const getLatestVersion = Effect.fn("getLatestVersion")(function* () {
 
 const getLatestVersionWithFallback = () =>
   getLatestVersion().pipe(
-    Effect.catchAll(
+    Effect.catch(
       Effect.fn("getLatestVersionErrorHandler")(function* (error: Error) {
         yield* Effect.logError("Failed to fetch version from GitHub API", error);
         return yield* Effect.succeed("0.0.0");

@@ -23,7 +23,7 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
 
   return runEffect(
     Effect.gen(function* () {
-      const payload = yield* PayloadService;
+      const payload = yield* Effect.service(PayloadService);
       yield* Effect.logInfo(`getPosts:${page}:${pageSize}:start`);
 
       const response = yield* payload
@@ -32,7 +32,7 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
           { useCache: true, cacheTTL: 3600 },
         )
         .pipe(
-          Effect.catchAll(
+          Effect.catch(
             Effect.fn("getPostsErrorHandler")(function* (error: unknown) {
               yield* Effect.logError("getPosts:error", error);
               return {
@@ -84,7 +84,7 @@ export const getPostBySlug = query(async (slug: string) => {
 
   return runEffect(
     Effect.gen(function* () {
-      const payload = yield* PayloadService;
+      const payload = yield* Effect.service(PayloadService);
       yield* Effect.logInfo(`getPostBySlug:${slug}:start`);
 
       const fetchPostBySlug = (options: RequestInit & { useCache?: boolean; cacheTTL?: number }) =>
@@ -94,12 +94,12 @@ export const getPostBySlug = query(async (slug: string) => {
         );
 
       const response = yield* fetchPostBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
-        Effect.catchAll(
+        Effect.catch(
           Effect.fn("getPostBySlugErrorHandler")(function* (error: unknown) {
             yield* Effect.logError("getPostBySlug:error", error);
             yield* Effect.logInfo(`getPostBySlug:${slug}:retry-no-cache`);
             return yield* fetchPostBySlug({ useCache: false }).pipe(
-              Effect.catchAll(
+              Effect.catch(
                 Effect.fn("getPostBySlugRetryErrorHandler")(function* (retryError: unknown) {
                   yield* Effect.logError("getPostBySlug:retry-error", retryError);
                   return null;

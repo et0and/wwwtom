@@ -21,7 +21,7 @@ export const getUser = query(async (id: number | string) => {
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`getUser:${id}:start`);
       const result = yield* arena.client.user(id).get().pipe(Effect.retry(retryPolicy));
       yield* Effect.logInfo(`getUser:${id}:success`);
@@ -49,7 +49,7 @@ export const getUserChannels = query(
     const layer = getServiceLayer();
     return runEffect(
       Effect.gen(function* () {
-        const arena = yield* ArenaService;
+        const arena = yield* Effect.service(ArenaService);
         yield* Effect.logInfo(`getUserChannels:${id}:start`);
         const result = yield* arena.client
           .user(id)
@@ -80,7 +80,7 @@ export const getUserFollowing = query(async (id: number | string) => {
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`getUserFollowing:${id}:start`);
       const result = yield* arena.client.user(id).following().pipe(Effect.retry(retryPolicy));
       yield* Effect.logInfo(`getUserFollowing:${id}:success`);
@@ -106,7 +106,7 @@ export const getUserFollowers = query(async (id: number | string) => {
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const arena = yield* ArenaService;
+      const arena = yield* Effect.service(ArenaService);
       yield* Effect.logInfo(`getUserFollowers:${id}:start`);
       const result = yield* arena.client.user(id).followers().pipe(Effect.retry(retryPolicy));
       yield* Effect.logInfo(`getUserFollowers:${id}:success`);

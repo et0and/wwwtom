@@ -2,6 +2,7 @@ packages:
   - "apps/*"
   - "apps/*/*"
   - "packages/@tom/*"
+  - "infra"
 onlyBuiltDependencies:
   - "@parcel/watcher"
   - "core-js-pure"
@@ -10,7 +11,7 @@ onlyBuiltDependencies:
   - "unrs-resolver"
   - "workerd"
 catalog:
-  effect: 3.19.5
+  effect: 4.0.0-beta.99
   kysely: 0.28.9
   postgres: 3.4.7
   hono: 4.11.3
@@ -38,6 +39,9 @@ allowBuilds:
   "@parcel/watcher": true
   core-js-pure: true
   esbuild: true
+  msgpackr-extract: true
   sharp: true
   unrs-resolver: true
   workerd: true
+minimumReleaseAgeExclude:
+  - '@solidjs/start@2.0.0-beta.9'

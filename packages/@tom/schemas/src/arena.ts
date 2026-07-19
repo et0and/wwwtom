@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Schema, Struct, Tuple } from "effect";
 import {
   ArenaBlockId,
   ArenaChannelId,
@@ -90,10 +90,9 @@ const ArenaUserSchema = Schema.Struct({
   initials: Schema.String,
 });
 
-const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe(
-  Schema.omit("avatar_image"),
-  Schema.extend(
-    Schema.Struct({
+const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe((schema) =>
+  schema.mapFields((fields) =>
+    Struct.assign({
       avatar_image: Schema.NullOr(
         Schema.Struct({
           display: Schema.String,
@@ -111,7 +110,7 @@ const ArenaUserWithDetailsSchema = ArenaUserSchema.pipe(
       is_premium: Schema.Boolean,
       is_supporter: Schema.Boolean,
       metadata: Schema.Struct({ description: Schema.NullOr(Schema.String) }),
-    }),
+    })(Struct.omit(fields, ["avatar_image"])),
   ),
 );
 
@@ -128,7 +127,7 @@ const ArenaGroupSchema = Schema.Struct({
 });
 
 const ArenaOwnerInfoSchema = Schema.Struct({
-  owner_type: Schema.Union(Schema.Literal("Group"), Schema.Literal("User")),
+  owner_type: Schema.Union([Schema.Literal("Group"), Schema.Literal("User")]),
   owner_id: Schema.String,
   owner_slug: Schema.optional(Schema.String),
 });
@@ -149,12 +148,12 @@ const ArenaChannelSchema = Schema.Struct({
   collaboration: Schema.Boolean,
   slug: Schema.String,
   counts: ArenaChannelCountsSchema,
-  kind: Schema.Union(Schema.Literal("default"), Schema.Literal("profile")),
-  visibility: Schema.Union(
+  kind: Schema.Union([Schema.Literal("default"), Schema.Literal("profile")]),
+  visibility: Schema.Union([
     Schema.Literal("private"),
     Schema.Literal("public"),
     Schema.Literal("closed"),
-  ),
+  ]),
   state: Schema.Literal("available"),
   "nsfw?": Schema.Boolean,
   metadata: Schema.NullOr(Schema.Struct({ description: Schema.NullOr(Schema.String) })),
@@ -168,23 +167,23 @@ const ArenaBaseBlockSchema = Schema.Struct({
   title: Schema.NullOr(Schema.String),
   updated_at: Schema.String,
   created_at: Schema.String,
-  state: Schema.Union(
+  state: Schema.Union([
     Schema.Literal("available"),
     Schema.Literal("failure"),
     Schema.Literal("processed"),
     Schema.Literal("processing"),
     Schema.Literal("remote_processing"),
-  ),
-  visibility: Schema.optional(Schema.Union(Schema.Literal("private"), Schema.Literal("public"))),
+  ]),
+  visibility: Schema.optional(Schema.Union([Schema.Literal("private"), Schema.Literal("public")])),
   comment_count: Schema.Number,
   generated_title: Schema.String,
-  type: Schema.Union(
+  type: Schema.Union([
     Schema.Literal("Image"),
     Schema.Literal("Text"),
     Schema.Literal("Link"),
     Schema.Literal("Embed"),
     Schema.Literal("Attachment"),
-  ),
+  ]),
   base_type: Schema.Literal("Block"),
   connection: Schema.optional(ArenaConnectionSchema),
   content: Schema.optional(ArenaMarkdownContentSchema),
@@ -209,10 +208,9 @@ const ArenaBaseBlockSchema = Schema.Struct({
   connections: Schema.optional(Schema.Array(Schema.suspend(() => ArenaChannelSchema))),
 });
 
-const ArenaImageBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("type", "image", "source"),
-  Schema.extend(
-    Schema.Struct({
+const ArenaImageBlockSchema = ArenaBaseBlockSchema.pipe((schema) =>
+  schema.mapFields((fields) =>
+    Struct.assign({
       type: Schema.Literal("Image"),
       image: ArenaImageSchema,
       source: Schema.Struct({
@@ -225,24 +223,22 @@ const ArenaImageBlockSchema = ArenaBaseBlockSchema.pipe(
           }),
         ),
       }),
-    }),
+    })(Struct.omit(fields, ["type", "image", "source"])),
   ),
 );
 
-const ArenaTextBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("type", "content"),
-  Schema.extend(
-    Schema.Struct({
+const ArenaTextBlockSchema = ArenaBaseBlockSchema.pipe((schema) =>
+  schema.mapFields((fields) =>
+    Struct.assign({
       type: Schema.Literal("Text"),
       content: ArenaMarkdownContentSchema,
-    }),
+    })(Struct.omit(fields, ["type", "content"])),
   ),
 );
 
-const ArenaLinkBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("type", "image", "source"),
-  Schema.extend(
-    Schema.Struct({
+const ArenaLinkBlockSchema = ArenaBaseBlockSchema.pipe((schema) =>
+  schema.mapFields((fields) =>
+    Struct.assign({
       type: Schema.Literal("Link"),
       image: ArenaImageSchema,
       source: Schema.Struct({
@@ -255,35 +251,33 @@ const ArenaLinkBlockSchema = ArenaBaseBlockSchema.pipe(
           }),
         ),
       }),
-    }),
+    })(Struct.omit(fields, ["type", "image", "source"])),
   ),
 );
 
-const ArenaEmbedBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("type"),
-  Schema.extend(
-    Schema.Struct({
+const ArenaEmbedBlockSchema = ArenaBaseBlockSchema.pipe((schema) =>
+  schema.mapFields((fields) =>
+    Struct.assign({
       type: Schema.Literal("Embed"),
-    }),
+    })(Struct.omit(fields, ["type"])),
   ),
 );
 
-const ArenaAttachmentBlockSchema = ArenaBaseBlockSchema.pipe(
-  Schema.omit("type"),
-  Schema.extend(
-    Schema.Struct({
+const ArenaAttachmentBlockSchema = ArenaBaseBlockSchema.pipe((schema) =>
+  schema.mapFields((fields) =>
+    Struct.assign({
       type: Schema.Literal("Attachment"),
-    }),
+    })(Struct.omit(fields, ["type"])),
   ),
 );
 
-const ArenaBlockSchema = Schema.Union(
+const ArenaBlockSchema = Schema.Union([
   ArenaImageBlockSchema,
   ArenaTextBlockSchema,
   ArenaLinkBlockSchema,
   ArenaEmbedBlockSchema,
   ArenaAttachmentBlockSchema,
-);
+]);
 
 const ArenaCommentEntitySchema = Schema.Struct({
   type: Schema.Literal("user"),
@@ -320,16 +314,16 @@ const ConnectionDataSchema = Schema.Struct({
 
 // Encoded types (input from API) - IDs are plain numbers
 type ArenaChannelContentsEncoded =
-  | (Schema.Schema.Encoded<typeof ArenaBlockSchema> &
-      Schema.Schema.Encoded<typeof ConnectionDataSchema>)
-  | (Schema.Schema.Encoded<typeof ArenaOwnerInfoSchema> &
-      Schema.Schema.Encoded<typeof ArenaChannelSchema> & {
-        readonly user?: Schema.Schema.Encoded<typeof ArenaUserWithDetailsSchema> | undefined;
-        readonly group?: Schema.Schema.Encoded<typeof ArenaGroupSchema> | undefined;
+  | (Schema.Codec.Encoded<typeof ArenaBlockSchema> &
+      Schema.Codec.Encoded<typeof ConnectionDataSchema>)
+  | (Schema.Codec.Encoded<typeof ArenaOwnerInfoSchema> &
+      Schema.Codec.Encoded<typeof ArenaChannelSchema> & {
+        readonly user?: Schema.Codec.Encoded<typeof ArenaUserWithDetailsSchema> | undefined;
+        readonly group?: Schema.Codec.Encoded<typeof ArenaGroupSchema> | undefined;
         readonly follower_count: number;
         readonly can_index: boolean;
         readonly contents: ReadonlyArray<ArenaChannelContentsEncoded> | null;
-      } & Schema.Schema.Encoded<typeof ConnectionDataSchema>);
+      } & Schema.Codec.Encoded<typeof ConnectionDataSchema>);
 
 // Decoded types (after transformation) - IDs are branded
 type ArenaChannelContentsDecoded =
@@ -344,35 +338,33 @@ type ArenaChannelContentsDecoded =
       } & Schema.Schema.Type<typeof ConnectionDataSchema>);
 
 // Recursive schemas with explicit types for circular dependency resolution
-const ArenaChannelContentsSchema: Schema.Schema<
+const ArenaChannelContentsSchema: Schema.Codec<
   ArenaChannelContentsDecoded,
   ArenaChannelContentsEncoded
 > = Schema.suspend(
   () =>
-    Schema.Union(ArenaBlockSchema, ArenaChannelWithDetailsSchema).pipe(
-      Schema.extend(ConnectionDataSchema),
-    ) as Schema.Schema<ArenaChannelContentsDecoded, ArenaChannelContentsEncoded>,
+    Schema.Union([
+      ...ArenaBlockSchema.mapMembers(Tuple.map(Schema.fieldsAssign(ConnectionDataSchema.fields)))
+        .members,
+      ArenaChannelWithDetailsSchema.pipe(Schema.fieldsAssign(ConnectionDataSchema.fields)),
+    ]) as unknown as Schema.Codec<ArenaChannelContentsDecoded, ArenaChannelContentsEncoded>,
 );
 
 const ArenaChannelWithDetailsSchema = ArenaOwnerInfoSchema.pipe(
-  Schema.extend(ArenaChannelSchema),
-  Schema.extend(
-    Schema.Struct({
-      user: Schema.optional(ArenaUserWithDetailsSchema),
-      group: Schema.optional(ArenaGroupSchema),
-      follower_count: Schema.Number,
-      can_index: Schema.Boolean,
-      contents: Schema.NullOr(Schema.Array(ArenaChannelContentsSchema)),
-    }),
-  ),
+  Schema.fieldsAssign(ArenaChannelSchema.fields),
+  Schema.fieldsAssign({
+    user: Schema.optional(ArenaUserWithDetailsSchema),
+    group: Schema.optional(ArenaGroupSchema),
+    follower_count: Schema.Number,
+    can_index: Schema.Boolean,
+    contents: Schema.NullOr(Schema.Array(ArenaChannelContentsSchema)),
+  }),
 );
 
 const MeApiResponseSchema = ArenaUserWithDetailsSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      channels: Schema.Array(Schema.suspend(() => GetChannelsApiResponseSchema)),
-    }),
-  ),
+  Schema.fieldsAssign({
+    channels: Schema.Array(Schema.suspend(() => GetChannelsApiResponseSchema)),
+  }),
 );
 
 const GetUserApiResponseSchema = ArenaUserWithDetailsSchema;
@@ -407,16 +399,15 @@ const GetBlockCommentApiResponseSchema = Schema.Struct({
 
 const CreateBlockCommentApiResponseSchema = ArenaBlockCommentSchema;
 
-const GetBlockApiResponseSchema = ArenaBlockSchema.pipe(
-  Schema.omit("connections"),
-  Schema.extend(
-    Schema.Struct({
-      connections: Schema.Array(ArenaChannelSchema),
-    }),
+const GetBlockApiResponseSchema = ArenaBlockSchema.pipe((schema) =>
+  schema.mapMembers(
+    Tuple.map(Schema.fieldsAssign({ connections: Schema.Array(ArenaChannelSchema) })),
   ),
 );
 
-const CreateBlockApiResponseSchema = ArenaBlockSchema.pipe(Schema.extend(ConnectionDataSchema));
+const CreateBlockApiResponseSchema = ArenaBlockSchema.mapMembers(
+  Tuple.map(Schema.fieldsAssign(ConnectionDataSchema.fields)),
+);
 
 const GetBlockChannelsApiResponseSchema = Schema.Struct({
   total_pages: Schema.Number,
@@ -426,38 +417,36 @@ const GetBlockChannelsApiResponseSchema = Schema.Struct({
 });
 
 const GetGroupApiResponseSchema = ArenaGroupSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      title: Schema.String,
-      user: ArenaUserWithDetailsSchema,
-      users: Schema.Array(ArenaUserWithDetailsSchema),
-      member_ids: Schema.Array(ArenaUserId),
-      accessible_by_ids: Schema.Array(ArenaUserId),
-      published: Schema.Boolean,
-    }),
-  ),
+  Schema.fieldsAssign({
+    title: Schema.String,
+    user: ArenaUserWithDetailsSchema,
+    users: Schema.Array(ArenaUserWithDetailsSchema),
+    member_ids: Schema.Array(ArenaUserId),
+    accessible_by_ids: Schema.Array(ArenaUserId),
+    published: Schema.Boolean,
+  }),
 );
 
-const CreateChannelApiResponseSchema = ArenaChannelSchema.pipe(Schema.extend(ArenaOwnerInfoSchema));
+const CreateChannelApiResponseSchema = ArenaChannelSchema.pipe(
+  Schema.fieldsAssign(ArenaOwnerInfoSchema.fields),
+);
 
 const GetChannelThumbApiResponseSchema = ArenaChannelSchema.pipe(
-  Schema.extend(ArenaOwnerInfoSchema),
-  Schema.extend(
-    Schema.Struct({
-      contents: Schema.NullOr(
-        Schema.Array(
-          Schema.Union(
-            ArenaBlockSchema,
-            ArenaChannelWithDetailsSchema.pipe(Schema.omit("contents")) as Schema.Schema<
-              any,
-              any,
-              never
-            >,
-          ).pipe(Schema.extend(ConnectionDataSchema)),
-        ),
+  Schema.fieldsAssign(ArenaOwnerInfoSchema.fields),
+  Schema.fieldsAssign({
+    contents: Schema.NullOr(
+      Schema.Array(
+        Schema.Union([
+          ...ArenaBlockSchema.mapMembers(
+            Tuple.map(Schema.fieldsAssign(ConnectionDataSchema.fields)),
+          ).members,
+          ArenaChannelWithDetailsSchema.mapFields((fields) =>
+            Struct.assign(ConnectionDataSchema.fields)(Struct.omit(fields, ["contents"])),
+          ),
+        ]),
       ),
-    }),
-  ),
+    ),
+  }),
 );
 
 const ArenaPaginationMetaSchema = Schema.Struct({
@@ -465,8 +454,8 @@ const ArenaPaginationMetaSchema = Schema.Struct({
   per_page: Schema.Number,
   total_pages: Schema.Number,
   total_count: Schema.Number,
-  next_page: Schema.optional(Schema.Union(Schema.Number, Schema.Null)),
-  prev_page: Schema.optional(Schema.Union(Schema.Number, Schema.Null)),
+  next_page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
+  prev_page: Schema.optional(Schema.Union([Schema.Number, Schema.Null])),
   has_more_pages: Schema.optional(Schema.Boolean),
 });
 
@@ -475,12 +464,12 @@ const GetChannelContentsApiResponseSchema = Schema.Struct({
   meta: ArenaPaginationMetaSchema,
 });
 
-const ChannelConnectBlockApiResponseSchema = ArenaBlockSchema.pipe(
-  Schema.extend(ConnectionDataSchema),
+const ChannelConnectBlockApiResponseSchema = ArenaBlockSchema.pipe((schema) =>
+  schema.mapMembers(Tuple.map(Schema.fieldsAssign(ConnectionDataSchema.fields))),
 );
 
 const ChannelConnectChannelApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
-  Schema.extend(ConnectionDataSchema),
+  Schema.fieldsAssign(ConnectionDataSchema.fields),
 );
 
 const GetGroupChannelsApiResponseSchema = Schema.Struct({
@@ -492,26 +481,25 @@ const GetGroupChannelsApiResponseSchema = Schema.Struct({
 });
 
 const GetChannelsApiResponseSchema = ArenaChannelWithDetailsSchema.pipe(
-  Schema.extend(
-    Schema.Struct({
-      per: Schema.Number,
-      page: Schema.Number,
-      owner: Schema.NullOr(ArenaUserWithDetailsSchema),
-      collaborators: Schema.NullOr(Schema.Array(Schema.Array(ArenaUserSchema))),
-    }),
-  ),
+  Schema.fieldsAssign({
+    per: Schema.Number,
+    page: Schema.Number,
+    owner: Schema.NullOr(ArenaUserWithDetailsSchema),
+    collaborators: Schema.NullOr(Schema.Array(Schema.Array(ArenaUserSchema))),
+  }),
 );
 
-const GetConnectionsApiResponseSchema = Schema.Union(
-  ArenaBlockSchema,
-  GetChannelsApiResponseSchema,
-).pipe(Schema.extend(ConnectionDataSchema));
+const GetConnectionsApiResponseSchema = Schema.Union([
+  ...ArenaBlockSchema.mapMembers(Tuple.map(Schema.fieldsAssign(ConnectionDataSchema.fields)))
+    .members,
+  GetChannelsApiResponseSchema.pipe(Schema.fieldsAssign(ConnectionDataSchema.fields)),
+]);
 
 const PaginationAttributesSchema = Schema.Struct({
   per: Schema.optional(Schema.Number),
   page: Schema.optional(Schema.Number),
   sort: Schema.optional(Schema.String),
-  direction: Schema.optional(Schema.Union(Schema.Literal("asc"), Schema.Literal("desc"))),
+  direction: Schema.optional(Schema.Union([Schema.Literal("asc"), Schema.Literal("desc")])),
   forceRefresh: Schema.optional(Schema.Boolean),
 });
 

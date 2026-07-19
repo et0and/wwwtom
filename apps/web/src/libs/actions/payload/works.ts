@@ -21,7 +21,7 @@ export const getWorks = query(async () => {
 
   return runEffect(
     Effect.gen(function* () {
-      const payload = yield* PayloadService;
+      const payload = yield* Effect.service(PayloadService);
       yield* Effect.logInfo("getWorks:start");
 
       const response = yield* payload
@@ -30,7 +30,7 @@ export const getWorks = query(async () => {
           cacheTTL: 3600,
         })
         .pipe(
-          Effect.catchAll(
+          Effect.catch(
             Effect.fn("getWorksErrorHandler")(function* (error: unknown) {
               yield* Effect.logError("getWorks:error", error);
               return { docs: [] as readonly PayloadPost[] };
@@ -63,7 +63,7 @@ export const getWorkBySlug = query(async (slug: string) => {
 
   return runEffect(
     Effect.gen(function* () {
-      const payload = yield* PayloadService;
+      const payload = yield* Effect.service(PayloadService);
       yield* Effect.logInfo(`getWorkBySlug:${slug}:start`);
 
       const fetchWorkBySlug = (options: RequestInit & { useCache?: boolean; cacheTTL?: number }) =>
@@ -73,12 +73,12 @@ export const getWorkBySlug = query(async (slug: string) => {
         );
 
       const response = yield* fetchWorkBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
-        Effect.catchAll(
+        Effect.catch(
           Effect.fn("getWorkBySlugErrorHandler")(function* (error: unknown) {
             yield* Effect.logError("getWorkBySlug:error", error);
             yield* Effect.logInfo(`getWorkBySlug:${slug}:retry-no-cache`);
             return yield* fetchWorkBySlug({ useCache: false }).pipe(
-              Effect.catchAll(
+              Effect.catch(
                 Effect.fn("getWorkBySlugRetryErrorHandler")(function* (retryError: unknown) {
                   yield* Effect.logError("getWorkBySlug:retry-error", retryError);
                   return null;

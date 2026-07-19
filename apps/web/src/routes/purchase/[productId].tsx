@@ -1,7 +1,7 @@
 import { PageLayout } from "~/layouts";
 import { BlurInSection, BlurInText } from "~/components";
 import { createResource, createSignal, Suspense, ErrorBoundary, Show, createMemo } from "solid-js";
-import { Effect } from "effect";
+import { Cause, Effect, Result } from "effect";
 import { useParams } from "@solidjs/router";
 import { fetchProduct, formatPrice, createCustomer, getCheckoutUrl } from "@tom/checkout";
 import { Spinner } from "@tom/ui";
@@ -65,8 +65,8 @@ export default function Purchase() {
     );
 
     if (result._tag === "Failure") {
-      const cause = result.cause;
-      const errorData = cause._tag === "Fail" ? cause.error : null;
+      const errorResult = Cause.findError(result.cause);
+      const errorData = Result.isSuccess(errorResult) ? errorResult.success : null;
       const apiError = errorData ? JSON.parse(errorData.message) : null;
       const validationError = apiError?.detail?.find((d: { loc: string[]; msg: string }) =>
         d.loc?.includes("email"),
@@ -93,23 +93,23 @@ export default function Purchase() {
           <BlurInSection delay={0.3}>
             <div class="space-y-4">
               <ErrorBoundary
-              fallback={<p class="text-center text-red-600">Failed to load product</p>}
-            >
-              <Suspense fallback={<Spinner />}>
-                <Show when={product()}>
-                  {(p) => (
-                    <>
-                      <Show when={p().medias[0]?.public_url}>
-                        {(url) => <img alt={p().name} src={url()} />}
-                      </Show>
-                      <h2>{p().name}</h2>
-                      <p>{p().description}</p>
-                      <p class="text-2xl">{formatPrice(p())}</p>
-                    </>
-                  )}
-                </Show>
-              </Suspense>
-            </ErrorBoundary>
+                fallback={<p class="text-center text-red-600">Failed to load product</p>}
+              >
+                <Suspense fallback={<Spinner />}>
+                  <Show when={product()}>
+                    {(p) => (
+                      <>
+                        <Show when={p().medias[0]?.public_url}>
+                          {(url) => <img alt={p().name} src={url()} />}
+                        </Show>
+                        <h2>{p().name}</h2>
+                        <p>{p().description}</p>
+                        <p class="text-2xl">{formatPrice(p())}</p>
+                      </>
+                    )}
+                  </Show>
+                </Suspense>
+              </ErrorBoundary>
             </div>
           </BlurInSection>
           <BlurInSection delay={0.5}>

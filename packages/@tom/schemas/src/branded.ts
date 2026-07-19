@@ -9,7 +9,7 @@
  * import { ArenaUserId } from "@tom/schemas"
  *
  * // Parse and validate
- * const result = Schema.decodeUnknown(ArenaUserId)(123)
+ * const result = Schema.decodeUnknownEffect(ArenaUserId)(123)
  * // In case of error, EffectEither will contain the error
  *
  * // Encode back to number
@@ -81,20 +81,20 @@ export type ArenaCommentId = Schema.Schema.Type<typeof ArenaCommentId>;
  * Branded type for Payload post IDs.
  * Note: Can be either number or string (union type)
  */
-export const PayloadPostId = Schema.Union(
+export const PayloadPostId = Schema.Union([
   Schema.Number.pipe(Schema.brand("PayloadPostId")),
   Schema.String.pipe(Schema.brand("PayloadPostId")),
-);
+]);
 export type PayloadPostId = Schema.Schema.Type<typeof PayloadPostId>;
 
 /**
  * Branded type for Payload work IDs.
  * Note: Can be either number or string (union type)
  */
-export const PayloadWorkId = Schema.Union(
+export const PayloadWorkId = Schema.Union([
   Schema.Number.pipe(Schema.brand("PayloadWorkId")),
   Schema.String.pipe(Schema.brand("PayloadWorkId")),
-);
+]);
 export type PayloadWorkId = Schema.Schema.Type<typeof PayloadWorkId>;
 
 /**
@@ -107,36 +107,36 @@ export type PayloadMediaId = Schema.Schema.Type<typeof PayloadMediaId>;
  * Parse and validate a numeric ID into ArenaUserId.
  * Use for parsing user IDs atAPI boundaries.
  */
-export const parseArenaUserId = Schema.decodeUnknown(ArenaUserId);
+export const parseArenaUserId = Schema.decodeUnknownEffect(ArenaUserId);
 
 /**
  * Parse and validate a numeric ID into ArenaChannelId.
  */
-export const parseArenaChannelId = Schema.decodeUnknown(ArenaChannelId);
+export const parseArenaChannelId = Schema.decodeUnknownEffect(ArenaChannelId);
 
 /**
  * Parse and validate a numeric ID into ArenaBlockId.
  */
-export const parseArenaBlockId = Schema.decodeUnknown(ArenaBlockId);
+export const parseArenaBlockId = Schema.decodeUnknownEffect(ArenaBlockId);
 
 /**
  * Parse and validate a numeric ID into ArenaGroupId.
  */
-export const parseArenaGroupId = Schema.decodeUnknown(ArenaGroupId);
+export const parseArenaGroupId = Schema.decodeUnknownEffect(ArenaGroupId);
 
 /**
  * Parse and validate a numeric ID into ArenaConnectionId.
  */
-export const parseArenaConnectionId = Schema.decodeUnknown(ArenaConnectionId);
+export const parseArenaConnectionId = Schema.decodeUnknownEffect(ArenaConnectionId);
 
 /**
  * Parse and validate a numeric ID into ArenaCommentId.
  */
-export const parseArenaCommentId = Schema.decodeUnknown(ArenaCommentId);
+export const parseArenaCommentId = Schema.decodeUnknownEffect(ArenaCommentId);
 
 /**
  * Parse and validate a numeric ID into PayloadMediaId.
  */
-export const parsePayloadMediaId = Schema.decodeUnknown(PayloadMediaId);
+export const parsePayloadMediaId = Schema.decodeUnknownEffect(PayloadMediaId);
 
 // Note: PayloadPostId and PayloadWorkId are unions, parsing may need custom logic

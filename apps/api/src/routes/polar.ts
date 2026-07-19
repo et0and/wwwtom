@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describeRoute } from "hono-openapi";
 import { Checkout, CustomerPortal } from "@polar-sh/hono";
+import { resolveEnv } from "../config/effect";
 import type { Env } from "../config/effect";
 
 export const polarRoutes = new Hono<{ Bindings: Env }>();
@@ -44,13 +45,15 @@ polarRoutes.get(
       },
     },
   }),
-  async (c) =>
-    Checkout({
-      accessToken: c.env.POLAR_ACCESS_TOKEN,
-      successUrl: c.env.SUCCESS_URL,
+  async (c) => {
+    const env = await resolveEnv(c.env);
+    return Checkout({
+      accessToken: env.POLAR_ACCESS_TOKEN,
+      successUrl: env.SUCCESS_URL,
       server: "production",
       theme: "light",
-    })(c),
+    })(c);
+  },
 );
 
 polarRoutes.get(
@@ -75,11 +78,13 @@ polarRoutes.get(
       },
     },
   }),
-  async (c) =>
-    CustomerPortal({
-      accessToken: c.env.POLAR_ACCESS_TOKEN,
+  async (c) => {
+    const env = await resolveEnv(c.env);
+    return CustomerPortal({
+      accessToken: env.POLAR_ACCESS_TOKEN,
       getCustomerId: async () => c.req.query("customerId") ?? "",
       returnUrl: "https://tom.so/products",
       server: "production",
-    })(c),
+    })(c);
+  },
 );

@@ -9,15 +9,15 @@ import { Spinner, BlurInSection, BlurInText } from "~/components";
 const scope = "wwwtom:apps:web:route:posts";
 
 export const route = {
-	preload: ({ params }) => {
-		if (params.slug) {
-			void getPostBySlug(params.slug);
-		}
-	},
+  preload: ({ params }) => {
+    if (params.slug) {
+      void getPostBySlug(params.slug);
+    }
+  },
 } satisfies RouteDefinition;
 
 const ArenaCarousel = lazy(() =>
-	import("~/components").then((m) => ({ default: m.ArenaCarousel })),
+  import("~/components").then((m) => ({ default: m.ArenaCarousel })),
 );
 
 export default function PostPage() {
@@ -86,7 +86,10 @@ export default function PostPage() {
             <For each={data().arenaBlocks ?? []}>
               {(block, index) => (
                 <BlurInSection delay={0.9 + index() * 0.2}>
-                  <ArenaCarousel slug={block.slug} {...(block.title ? { title: block.title } : {})} />
+                  <ArenaCarousel
+                    slug={block.slug}
+                    {...(block.title ? { title: block.title } : {})}
+                  />
                 </BlurInSection>
               )}
             </For>

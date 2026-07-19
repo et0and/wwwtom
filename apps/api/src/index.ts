@@ -9,7 +9,7 @@ import { healthRoutes } from "./routes/health";
 import { ogRoutes } from "./routes/og";
 import { productRoutes } from "./routes/products";
 import { polarRoutes } from "./routes/polar";
-import { sendErrorAlert, type Env } from "./config/effect";
+import { resolveEnv, sendErrorAlert, type Env } from "./config/effect";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -24,9 +24,11 @@ app.use(
   }),
 );
 
-app.onError((error, c) => {
-  Effect.runFork(Effect.logError("Unhandled error", error));
-  sendErrorAlert(c.env, "Unhandled API error", error);
+app.onError(async (error, c) => {
+  console.error("Unhandled API error", error);
+  void resolveEnv(c.env)
+    .then((env) => sendErrorAlert(env, "Unhandled API error", error))
+    .catch((alertError) => console.error("Failed to send API error alert", alertError));
   return c.json({ error: "Internal server error" }, HttpStatus.InternalServerError);
 });
 

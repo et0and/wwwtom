@@ -3,7 +3,7 @@ import { Effect, Redacted } from "effect";
 import { DatabaseService } from "@tom/db/service";
 import * as auth from "~/libs/actions/guestbook/auth";
 import { checkProfanity } from "@tom/utils";
-import { getCookie, getEvent, setCookie } from "vinxi/http";
+import { getCookie, setCookie } from "@solidjs/start/http";
 import { MissingFieldError, ProfanityError, AuthenticationError } from "@tom/types";
 import { runEffect, runEffectWithDb, getServiceLayer, getServiceLayerWithDb } from "~/libs/runtime";
 
@@ -12,16 +12,14 @@ const USER_COOKIE = "guestbook_user";
 
 const getCookieValue = (cookieName: string) =>
   Effect.sync(() => {
-    const event = getEvent();
-    const value = getCookie(event, cookieName);
+    const value = getCookie(cookieName);
     return value ?? "";
   });
 
 const setSessionCookie = (name: string, value: string, maxAge: number) =>
   Effect.sync(() => {
-    const event = getEvent();
     const isProd = Redacted.make(import.meta.env.PROD.toString());
-    setCookie(event, name, value, {
+    setCookie(name, value, {
       httpOnly: true,
       secure: Redacted.value(isProd) === "true",
       sameSite: "lax",
@@ -35,7 +33,7 @@ export const getEntries = query(async () => {
   const layer = getServiceLayerWithDb();
   return runEffectWithDb(
     Effect.gen(function* () {
-      const db = yield* DatabaseService;
+      const db = yield* Effect.service(DatabaseService);
       yield* Effect.logInfo("guestbook:getEntries:start");
       const data = yield* db.getGuestbookEntries({ page: 1, page_size: 100 });
       yield* Effect.logInfo("guestbook:getEntries:success");

@@ -1,12 +1,17 @@
-import { Effect, Layer, Logger, LogLevel } from "effect";
-import { TelegramService, makeAppConfigLayer } from "@tom/utils/services";
+import { Effect, Layer, Logger, References } from "effect";
+import { TelegramService, makeAppConfigLayer, readCloudflareEnv } from "@tom/utils/services";
 import type { CloudflareEnv } from "@tom/utils/services";
 
 export type Env = CloudflareEnv;
 
+export const resolveEnv = (env: Env) => readCloudflareEnv(env);
+
 export const runEffect = <A, E>(effect: Effect.Effect<A, E>) => {
   return Effect.runPromise(
-    effect.pipe(Logger.withMinimumLogLevel(LogLevel.Info), Effect.provide(Logger.structured)),
+    effect.pipe(
+      Effect.provideService(References.MinimumLogLevel, "Info"),
+      Effect.provide(Logger.layer([Logger.consoleStructured])),
+    ),
   );
 };
 
@@ -26,7 +31,7 @@ export const sendErrorAlert = (env: Env, message: string, error?: unknown) => {
       yield* telegram.sendError(message, error);
     }).pipe(
       Effect.provide(layer),
-      Effect.catchAll(() => Effect.void),
+      Effect.catch(() => Effect.void),
     ),
   );
 };

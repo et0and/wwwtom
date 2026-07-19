@@ -8,7 +8,7 @@ export async function GET() {
   const layer = getServiceLayer();
   return runEffect(
     Effect.gen(function* () {
-      const payload = yield* PayloadService;
+      const payload = yield* Effect.service(PayloadService);
       yield* Effect.logInfo("sitemap:fetch:start");
 
       const [posts, works] = yield* Effect.all([
@@ -69,7 +69,7 @@ ${works.docs
         },
       });
     }).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.succeed(
           new Response(
             `<?xml version="1.0" encoding="UTF-8"?><error>${error instanceof Error ? error.message : String(error)}</error>`,

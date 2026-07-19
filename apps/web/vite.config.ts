@@ -1,22 +1,18 @@
-import { defineConfig } from "@solidjs/start/config";
-/* @ts-ignore */
-import pkg from "@vinxi/plugin-mdx";
+import mdx from "@mdx-js/rollup";
+import { solidStart } from "@solidjs/start/config";
 import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "vite";
 
-const { default: mdx } = pkg;
-export default defineConfig({
-  extensions: ["mdx", "md"],
-  server: {
-    preset: "cloudflare-module",
-    rollupConfig: {
-      external: ["@cf-wasm/photon"],
-    },
-  },
-  vite: {
+export default defineConfig(({ command }) => {
+  if (command === "serve") {
+    process.loadEnvFile(".dev.vars");
+  }
+
+  return {
     plugins: [
+      solidStart({ extensions: ["mdx", "md"] }),
       tailwindcss(),
-      mdx.withImports({})({
-        jsx: true,
+      mdx({
         jsxImportSource: "solid-js",
         providerImportSource: "solid-mdx",
       }),
@@ -32,5 +28,5 @@ export default defineConfig({
         external: ["@cf-wasm/photon"],
       },
     },
-  },
+  };
 });
