@@ -63,8 +63,7 @@
     "wrangler": "4.76.0"
   },
   "engines": {
-    "node": "^18.20.2 || >=20.9.0",
-    "pnpm": ">=11"
+    "node": "^18.20.2 || >=20.9.0"
   },
   "cloudflare": {
     "bindings": {
