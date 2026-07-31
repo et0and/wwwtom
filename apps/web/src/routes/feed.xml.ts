@@ -4,7 +4,7 @@ import { PayloadService } from "@tom/payload/service";
 import { convertLexicalToHTML } from "~/libs/actions/payload/content-converter";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffect, getServiceLayer, gen } from "~/libs/runtime";
 
 export async function GET() {
   const layer = getServiceLayer();
@@ -17,8 +17,8 @@ export async function GET() {
   });
 
   return runEffect(
-    Effect.gen(function* () {
-      const payload = yield* Effect.service(PayloadService);
+    gen(function* () {
+      const payload = yield* PayloadService;
       yield* Effect.logInfo("feed:fetch:start");
 
       const response = yield* payload.fetch<PayloadResponse<PayloadPost>>(

@@ -1,4 +1,4 @@
-import { createAsync } from "@solidjs/router";
+import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal } from "solid-js";
 import { getChannelContents } from "~/libs/actions/arena/channels";
@@ -20,9 +20,8 @@ interface BlockLayout {
   rotation: number;
 }
 
-// Generate random layout for each block
 function generateRandomLayout(index: number, total: number, containerWidth: number): BlockLayout {
-  const seed = index * 9301 + 49297; // Simple seeding for consistency
+  const seed = index * 9301 + 49297;
   const random = (n: number) => (Math.abs(Math.sin(seed + n)) * 10000) % 1;
 
   const scaleFactor = Math.min(containerWidth / 1200, 1);
@@ -66,19 +65,22 @@ function generateRandomLayout(index: number, total: number, containerWidth: numb
 }
 
 export function CameraRoll(props: CameraRollProps) {
-  const contents = createAsync(async () => {
-    try {
-      return await getChannelContents(props.slug, { per: 20 });
-    } catch {
-      void Effect.runFork(
-        Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
-      );
-      return null;
-    }
-  });
+  const contentsQuery = useQuery(() => ({
+    queryKey: ["arena-contents", props.slug],
+    queryFn: async () => {
+      try {
+        return await getChannelContents(props.slug, { per: 20 });
+      } catch {
+        void Effect.runFork(
+          Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
+        );
+        return null;
+      }
+    },
+  }));
 
-  const activeContents = createMemo(() => contents());
-  const isLoading = createMemo(() => contents() === undefined);
+  const activeContents = createMemo(() => contentsQuery.data);
+  const isLoading = createMemo(() => contentsQuery.isLoading);
   const hasContent = createMemo(() => {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);

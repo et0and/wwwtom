@@ -1,27 +1,16 @@
-import { query } from "@solidjs/router";
 import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffect, getServiceLayer, gen } from "~/libs/runtime";
 
-/**
- * Creates a query using the Payload fetch client to return a list of works from Payload organised by title.
- * @returns A promise that resolves to an array of PayloadPost objects.
- * @example
- * ```typescript
- * import { createAsync } from "@solidjs/router";
- * import { getWorks } from "~/lib/api/payload";
- * const works = createAsync(() => getWorks());
- * ```
- */
-export const getWorks = query(async () => {
+export const getWorks = async () => {
   "use server";
   const layer = getServiceLayer();
 
   return runEffect(
-    Effect.gen(function* () {
-      const payload = yield* Effect.service(PayloadService);
+    gen(function* () {
+      const payload = yield* PayloadService;
       yield* Effect.logInfo("getWorks:start");
 
       const response = yield* payload
@@ -43,27 +32,15 @@ export const getWorks = query(async () => {
     }),
     layer,
   );
-}, "works");
+};
 
-/**
- * Creates a query using the Payload fetch client to return a single work post from Payload based on its slug.
- * The content is parsed from rich text to HTML.
- * @param slug - The slug of the work item to retrieve.
- * @returns A promise that resolves to a PayloadPost object or null if not found.
- * @example
- * ```typescript
- * import { createAsync } from "@solidjs/router";
- * import { getWorkBySlug } from "~/lib/api/payload";
- * const work = createAsync(() => getWorkBySlug(params.slug));
- * ```
- */
-export const getWorkBySlug = query(async (slug: string) => {
+export const getWorkBySlug = async (slug: string) => {
   "use server";
   const layer = getServiceLayer();
 
   return runEffect(
-    Effect.gen(function* () {
-      const payload = yield* Effect.service(PayloadService);
+    gen(function* () {
+      const payload = yield* PayloadService;
       yield* Effect.logInfo(`getWorkBySlug:${slug}:start`);
 
       const fetchWorkBySlug = (options: RequestInit & { useCache?: boolean; cacheTTL?: number }) =>
@@ -123,4 +100,4 @@ export const getWorkBySlug = query(async (slug: string) => {
     }),
     layer,
   );
-}, "work");
+};

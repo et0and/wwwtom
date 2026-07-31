@@ -90,6 +90,24 @@ export const runSimpleEffect = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =
 };
 
 /**
+ * Create an effect that requires services via generator syntax.
+ * Wraps Effect.gen with the correct AllServices context type.
+ */
+export const gen = <A, E>(
+  f: () => Generator<Effect.Effect<any, E, AllServices>, A, never>,
+): Effect.Effect<A, E, AllServices> =>
+  Effect.gen(f);
+
+/**
+ * Create an effect that requires services including DatabaseService via generator syntax.
+ * Wraps Effect.gen with the correct AllServicesWithDb context type.
+ */
+export const genWithDb = <A, E>(
+  f: () => Generator<Effect.Effect<any, E, AllServicesWithDb>, A, never>,
+): Effect.Effect<A, E, AllServicesWithDb> =>
+  Effect.gen(f);
+
+/**
  * Run an effect that requires services.
  * The layer must be captured at the start of the server function before any async operations.
  */
@@ -136,7 +154,7 @@ export const runWithLogs = <A, E>(
   effect: Effect.Effect<A, E, AllServices>,
   layer?: CompositeLayer,
 ): Promise<A> => {
-  const wrapped = Effect.gen(function* () {
+  const wrapped = gen(function* () {
     yield* Effect.logInfo(`${name}:start`);
     const result = yield* effect;
     yield* Effect.logInfo(`${name}:success`);
@@ -150,5 +168,5 @@ export const runWithLogs = <A, E>(
     ),
   );
 
-  return runEffect(wrapped as Effect.Effect<A, E, AllServices>, layer);
+  return runEffect(wrapped, layer);
 };

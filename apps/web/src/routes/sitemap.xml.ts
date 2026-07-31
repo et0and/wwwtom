@@ -2,13 +2,13 @@ import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse, PayloadWork } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffect, getServiceLayer, gen } from "~/libs/runtime";
 
 export async function GET() {
   const layer = getServiceLayer();
   return runEffect(
-    Effect.gen(function* () {
-      const payload = yield* Effect.service(PayloadService);
+    gen(function* () {
+      const payload = yield* PayloadService;
       yield* Effect.logInfo("sitemap:fetch:start");
 
       const [posts, works] = yield* Effect.all([

@@ -22,6 +22,7 @@
     "@solidjs/router": "catalog:",
     "@solidjs/start": "2.0.0-beta.9",
     "@solidjs/vite-plugin-nitro-2": "0.3.2",
+    "@tanstack/solid-query": "^5.101.4",
     "@tanstack/solid-virtual": "3.13.12",
     "@tom/arena": "workspace:*",
     "@tom/checkout": "workspace:*",

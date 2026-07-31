@@ -1,11 +1,10 @@
-import { action, query, redirect } from "@solidjs/router";
 import { Effect, Redacted } from "effect";
-import { DatabaseService } from "@tom/db/service";
+import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import * as auth from "~/libs/actions/guestbook/auth";
 import { checkProfanity } from "@tom/utils";
 import { getCookie, setCookie } from "@solidjs/start/http";
 import { MissingFieldError, ProfanityError, AuthenticationError } from "@tom/types";
-import { runEffect, runEffectWithDb, getServiceLayer, getServiceLayerWithDb } from "~/libs/runtime";
+import { runEffect, runEffectWithDb, getServiceLayer, getServiceLayerWithDb, gen, genWithDb } from "~/libs/runtime";
 
 const SESSION_COOKIE = "guestbook_session";
 const USER_COOKIE = "guestbook_user";
@@ -28,26 +27,26 @@ const setSessionCookie = (name: string, value: string, maxAge: number) =>
     });
   });
 
-export const getEntries = query(async () => {
+export const getEntries = async (): Promise<readonly GuestbookEntry[]> => {
   "use server";
   const layer = getServiceLayerWithDb();
   return runEffectWithDb(
-    Effect.gen(function* () {
-      const db = yield* Effect.service(DatabaseService);
+    genWithDb(function* () {
       yield* Effect.logInfo("guestbook:getEntries:start");
+      const db = yield* DatabaseService;
       const data = yield* db.getGuestbookEntries({ page: 1, page_size: 100 });
       yield* Effect.logInfo("guestbook:getEntries:success");
       return data.results;
     }),
     layer,
   );
-}, "guestbook-entries");
+};
 
-export const getCurrentUser = query(async () => {
+export const getCurrentUser = async () => {
   "use server";
   const layer = getServiceLayer();
   return runEffect(
-    Effect.gen(function* () {
+    gen(function* () {
       yield* Effect.logInfo("guestbook:getCurrentUser:start");
       const userCookie = yield* getCookieValue(USER_COOKIE);
       if (!userCookie) return null;
@@ -58,15 +57,14 @@ export const getCurrentUser = query(async () => {
     }),
     layer,
   );
-}, "guestbook-current-user");
+};
 
-export const initiateAuthAction = action(async (formData: FormData) => {
+export const initiateAuthAction = async (handle: string) => {
   "use server";
   const layer = getServiceLayerWithDb();
-  const authUrl = await runEffectWithDb(
-    Effect.gen(function* () {
+  return runEffectWithDb(
+    genWithDb(function* () {
       yield* Effect.logInfo("guestbook:initiateAuth:start");
-      const handle = formData.get("handle")?.toString();
       if (!handle) {
         return yield* new MissingFieldError({ field: "handle" });
       }
@@ -80,17 +78,14 @@ export const initiateAuthAction = action(async (formData: FormData) => {
     }),
     layer,
   );
+};
 
-  return redirect(authUrl);
-}, "initiate-auth");
-
-export const signGuestbookAction = action(async (formData: FormData) => {
+export const signGuestbookAction = async (message: string) => {
   "use server";
   const layer = getServiceLayerWithDb();
   await runEffectWithDb(
-    Effect.gen(function* () {
+    genWithDb(function* () {
       yield* Effect.logInfo("guestbook:sign:start");
-      const message = formData.get("message")?.toString();
       if (!message) {
         return yield* new MissingFieldError({ field: "message" });
       }
@@ -120,13 +115,13 @@ export const signGuestbookAction = action(async (formData: FormData) => {
   );
 
   return { success: true };
-}, "sign-guestbook");
+};
 
-export const logoutAction = action(async () => {
+export const logoutAction = async () => {
   "use server";
   const layer = getServiceLayer();
   await runEffect(
-    Effect.gen(function* () {
+    gen(function* () {
       yield* Effect.logInfo("guestbook:logout:start");
       yield* setSessionCookie(USER_COOKIE, "", 0);
       yield* setSessionCookie(SESSION_COOKIE, "", 0);
@@ -134,6 +129,4 @@ export const logoutAction = action(async () => {
     }),
     layer,
   );
-
-  return redirect("/guestbook");
-}, "logout");
+};
