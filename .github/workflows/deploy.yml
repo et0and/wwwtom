@@ -42,4 +42,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy infrastructure
-        run: ALCHEMY STAGE=${{inputs.stage}} pnpm deploy
+        run: pnpm deploy
