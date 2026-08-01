@@ -14,7 +14,7 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins: [
-      solidStart({ extensions: ["mdx", "md"] }),
+      solidStart({ extensions: ["mdx", "md"], middleware: "./src/middleware.ts" }),
       tailwindcss(),
       mdx({
         jsxImportSource: "solid-js",
