@@ -1,3 +1,23 @@
+# [1.90.0](https://github.com/et0and/wwwtom/compare/v1.89.0...v1.90.0) (2026-08-02)
+
+
+### Bug Fixes
+
+* **ci:** correct ALCHEMY_STAGE env in manual deploy workflow ([7088db5](https://github.com/et0and/wwwtom/commit/7088db5ef02f5a038a02bbc8370c19b09b4f531f))
+* **margaret:** no per project pnpm vers ([f15059b](https://github.com/et0and/wwwtom/commit/f15059b6b1c61c3ed705d846983dcbe48d672793))
+* pnpm action ([53d1f4d](https://github.com/et0and/wwwtom/commit/53d1f4d5154d470c88959fc3f114e38a467847ab))
+* **web:** expose cloudflare env bindings to solidstart handler ([d7e5f92](https://github.com/et0and/wwwtom/commit/d7e5f92c1cf785838b746976a7c623e99dc17eb0))
+* **web:** fix tests ([cf3d1a4](https://github.com/et0and/wwwtom/commit/cf3d1a439af70ce742f62e33aeca9c7345a4b1c8))
+* **web:** further clean up of deps ([155dbc9](https://github.com/et0and/wwwtom/commit/155dbc980718db3191a8b0ebb46f7a52a1a6258e))
+* **web:** register solidstart middleware for cloudflare env ([d6a7b15](https://github.com/et0and/wwwtom/commit/d6a7b156aaa0f2c6d4e1d4aa4c0e6e31d9f2f77e))
+* whoops pnpm vers ([c803b23](https://github.com/et0and/wwwtom/commit/c803b237b2eaf12df81111ecf75b7dd1baa72f96))
+
+
+### Features
+
+* **api, web, infra:** init alchemy, update effect v4 ([43bf56f](https://github.com/et0and/wwwtom/commit/43bf56fad033d9141242203dfe330e54a7454156))
+* **ci:** setup deployment pipeline ([5037def](https://github.com/et0and/wwwtom/commit/5037def530bff5d1d73bf1f6650c30177f0e4513))
+
 # [1.89.0](https://github.com/et0and/wwwtom/compare/v1.88.1...v1.89.0) (2026-07-18)
 
 
