@@ -142,7 +142,7 @@ const promiseEffect = <T>(promise: () => Promise<T>): Effect.Effect<T, unknown> 
 const rollbackTransaction = (d1: D1Database): Effect.Effect<void> => {
   return promiseEffect(() => d1.exec("ROLLBACK")).pipe(
     Effect.asVoid,
-    Effect.catchAll(() => Effect.void),
+    Effect.catch(() => Effect.void),
   );
 };
 
@@ -193,7 +193,7 @@ const reserveDailySendSlot = (d1: D1Database): Effect.Effect<DailyQuotaReservati
           sendCount: row.send_count,
         };
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.gen(function* () {
             yield* rollbackTransaction(d1);
             return yield* Effect.fail(error);
@@ -223,12 +223,12 @@ const releaseDailySendSlotWithRetry = (
   },
 ): Effect.Effect<void, unknown> => {
   return releaseDailySendSlot(d1, dateKey).pipe(
-    Effect.catchAll((releaseError) =>
+    Effect.catch((releaseError) =>
       Effect.sync(() => {
         const releaseErrorMessage =
           releaseError instanceof Error ? releaseError.message : "Unknown quota rollback error";
         logger.error(`Retrying email quota release after failure: ${releaseErrorMessage}`);
-      }).pipe(Effect.zipRight(releaseDailySendSlot(d1, dateKey))),
+      }).pipe(Effect.andThen(releaseDailySendSlot(d1, dateKey))),
     ),
   );
 };
@@ -319,9 +319,9 @@ export const cloudflareEmailAdapter = (
           });
 
           return yield* promiseEffect(() => args.email.send(sendPayload)).pipe(
-            Effect.catchAll((sendError) =>
+            Effect.catch((sendError) =>
               releaseDailySendSlotWithRetry(args.d1, reservation.dateKey, payload.logger).pipe(
-                Effect.catchAll((releaseError) =>
+                Effect.catch((releaseError) =>
                   Effect.sync(() => {
                     const releaseErrorMessage =
                       releaseError instanceof Error
@@ -332,7 +332,7 @@ export const cloudflareEmailAdapter = (
                     );
                   }),
                 ),
-                Effect.zipRight(Effect.fail(sendError)),
+                Effect.andThen(Effect.fail(sendError)),
               ),
             ),
           );

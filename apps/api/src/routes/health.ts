@@ -1,6 +1,5 @@
 import { Hono } from "hono";
-import { describeRoute, resolver } from "hono-openapi";
-import { healthResponseSchema } from "@tom/schemas";
+import { describeRoute } from "hono-openapi";
 import type { Env } from "../config/effect";
 
 export const healthRoutes = new Hono<{ Bindings: Env }>();
@@ -13,7 +12,19 @@ healthRoutes.get(
       200: {
         description: "Service is healthy",
         content: {
-          "application/json": { schema: resolver(healthResponseSchema) },
+          "application/json": {
+            schema: {
+              type: "object",
+              required: ["status", "timestamp"],
+              properties: {
+                status: {
+                  type: "string",
+                  enum: ["healthy", "unhealthy", "degraded"],
+                },
+                timestamp: { type: "number" },
+              },
+            },
+          },
         },
       },
     },

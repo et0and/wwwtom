@@ -1,28 +1,15 @@
-import { query } from "@solidjs/router";
 import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffect, getServiceLayer, gen } from "~/libs/runtime";
 
-/**
- * Creates a query using the Payload fetch client to return a paginated list of posts from Payload organised by publication date.
- * @param page - The page number to retrieve (default is 1).
- * @param pageSize - The number of posts per page (default is 5).
- * @returns A promise that resolves to a response containing an array of PayloadPost objects.
- * @example
- * ```typescript
- * import { createAsync } from "@solidjs/router";
- * import { getPosts } from "~/lib/api/payload";
- * const posts = createAsync(() => getPosts(currentPage()));
- * ```
- */
-export const getPosts = query(async (page: number = 1, pageSize: number = 5) => {
+export const getPosts = async (page: number = 1, pageSize: number = 5) => {
   "use server";
   const layer = getServiceLayer();
 
   return runEffect(
-    Effect.gen(function* () {
+    gen(function* () {
       const payload = yield* PayloadService;
       yield* Effect.logInfo(`getPosts:${page}:${pageSize}:start`);
 
@@ -32,7 +19,7 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
           { useCache: true, cacheTTL: 3600 },
         )
         .pipe(
-          Effect.catchAll(
+          Effect.catch(
             Effect.fn("getPostsErrorHandler")(function* (error: unknown) {
               yield* Effect.logError("getPosts:error", error);
               return {
@@ -64,26 +51,14 @@ export const getPosts = query(async (page: number = 1, pageSize: number = 5) => 
     }),
     layer,
   );
-}, "posts");
+};
 
-/**
- * Creates a query using the Payload fetch client to return a single post from Payload based on its slug.
- * The post content is parsed from rich text to HTML.
- * @param slug - The slug of the post to retrieve.
- * @returns A promise that resolves to a PayloadPost object or null if not found.
- * @example
- * ```typescript
- * import { createAsync } from "@solidjs/router";
- * import { getPostBySlug } from "~/lib/api/payload";
- * const post = createAsync(() => getPostBySlug(params.slug));
- * ```
- */
-export const getPostBySlug = query(async (slug: string) => {
+export const getPostBySlug = async (slug: string) => {
   "use server";
   const layer = getServiceLayer();
 
   return runEffect(
-    Effect.gen(function* () {
+    gen(function* () {
       const payload = yield* PayloadService;
       yield* Effect.logInfo(`getPostBySlug:${slug}:start`);
 
@@ -94,12 +69,12 @@ export const getPostBySlug = query(async (slug: string) => {
         );
 
       const response = yield* fetchPostBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
-        Effect.catchAll(
+        Effect.catch(
           Effect.fn("getPostBySlugErrorHandler")(function* (error: unknown) {
             yield* Effect.logError("getPostBySlug:error", error);
             yield* Effect.logInfo(`getPostBySlug:${slug}:retry-no-cache`);
             return yield* fetchPostBySlug({ useCache: false }).pipe(
-              Effect.catchAll(
+              Effect.catch(
                 Effect.fn("getPostBySlugRetryErrorHandler")(function* (retryError: unknown) {
                   yield* Effect.logError("getPostBySlug:retry-error", retryError);
                   return null;
@@ -154,4 +129,4 @@ export const getPostBySlug = query(async (slug: string) => {
     }),
     layer,
   );
-}, "post");
+};

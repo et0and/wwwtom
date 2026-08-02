@@ -1,3 +1,3 @@
 import { Schedule } from "effect";
 
-export const retryPolicy = Schedule.exponential(200).pipe(Schedule.compose(Schedule.recurs(3)));
+export const retryPolicy = Schedule.max([Schedule.exponential(200), Schedule.recurs(3)]);

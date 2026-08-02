@@ -15,10 +15,13 @@
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",
     "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/@tom/utils && npx vitest run --update",
-    "deploy:web": "turbo run build --filter=@tom/web && cd apps/web && wrangler deploy",
+    "deploy": "pnpm run deploy:shared && pnpm run deploy:api && pnpm run deploy:web",
+    "deploy:shared": "pnpm --filter @tom/infra run deploy:shared",
+    "deploy:web": "pnpm --filter @tom/infra run deploy:web",
     "deploy:cms": "cd apps/cms && opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
     "deploy:sophie": "cd apps/sophie && opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
-    "deploy:api": "turbo run deploy --filter=@tom/api",
+    "deploy:api": "pnpm --filter @tom/infra run deploy:api",
+    "destroy": "pnpm --filter @tom/infra run destroy",
     "semantic-release": "semantic-release",
     "changeset": "changeset",
     "version": "changeset version",
@@ -40,43 +43,5 @@
     "turbo": "2.9.1",
     "typescript": "6.0.3"
   },
-  "packageManager": "pnpm@11.3.0",
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@parcel/watcher",
-      "core-js-pure",
-      "esbuild",
-      "sharp",
-      "unrs-resolver",
-      "workerd"
-    ],
-    "catalogs": {
-      "default": {
-        "effect": "3.19.5",
-        "kysely": "0.28.9",
-        "postgres": "3.4.7",
-        "hono": "4.11.3",
-        "solid-js": "1.9.5",
-        "@solidjs/meta": "0.29.4",
-        "@solidjs/router": "0.15.0",
-        "classnames": "2.5.1",
-        "obscenity": "0.4.5",
-        "next": "16.1.7",
-        "react": "19.2.1",
-        "react-dom": "19.2.1",
-        "payload": "3.75.0",
-        "@payloadcms/next": "3.75.0",
-        "@payloadcms/db-d1-sqlite": "3.75.0",
-        "@payloadcms/richtext-lexical": "3.75.0",
-        "@payloadcms/storage-r2": "3.75.0",
-        "dotenv": "16.4.7",
-        "@types/react": "19.2.9",
-        "@types/react-dom": "19.2.3",
-        "graphql": "16.12.0",
-        "postcss": "8.5.8",
-        "eslint": "9.39.2",
-        "@playwright/test": "1.58.2"
-      }
-    }
-  }
+  "packageManager": "pnpm@11.3.0"
 }

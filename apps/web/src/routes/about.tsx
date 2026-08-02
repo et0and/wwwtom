@@ -12,18 +12,18 @@ export default function About() {
         </BlurInSection>
         <BlurInSection delay={0.5}>
           <p>
-            I am a design engineer with a background in the arts and education. Presently I am working
-            as a developer in Pōneke, Te Whanganui-a-Tara. Prior to this, I taught design, art and
-            digital technology at <a href="https://takapuna.school.nz">Takapuna Grammar School</a>,
-            where I also worked on the development of Te Wāhi Auaha (a school maker space and
-            innovation space).
+            I am a design engineer with a background in the arts and education. Presently I am
+            working as a developer in Pōneke, Te Whanganui-a-Tara. Prior to this, I taught design,
+            art and digital technology at{" "}
+            <a href="https://takapuna.school.nz">Takapuna Grammar School</a>, where I also worked on
+            the development of Te Wāhi Auaha (a school maker space and innovation space).
           </p>
         </BlurInSection>
         <BlurInSection delay={0.7}>
           <p>
-            My experience in making learning more accessible and equitable across a range of students
-            from different backgrounds and abilities built the foundation of my human-centered design
-            practice.
+            My experience in making learning more accessible and equitable across a range of
+            students from different backgrounds and abilities built the foundation of my
+            human-centered design practice.
           </p>
         </BlurInSection>
         <BlurInSection delay={0.9}>

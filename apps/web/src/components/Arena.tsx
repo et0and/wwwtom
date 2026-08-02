@@ -1,4 +1,4 @@
-import { createAsync } from "@solidjs/router";
+import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal, createEffect, onCleanup } from "solid-js";
 import { Motion } from "solid-motionone";
@@ -13,19 +13,22 @@ interface ArenaCarouselProps {
 }
 
 export function ArenaCarousel(props: ArenaCarouselProps) {
-  const contents = createAsync(async () => {
-    try {
-      return await getChannelContents(props.slug, { per: 10 });
-    } catch {
-      void Effect.runFork(
-        Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
-      );
-      return null;
-    }
-  });
+  const contentsQuery = useQuery(() => ({
+    queryKey: ["arena-contents", props.slug],
+    queryFn: async () => {
+      try {
+        return await getChannelContents(props.slug, { per: 10 });
+      } catch {
+        void Effect.runFork(
+          Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
+        );
+        return null;
+      }
+    },
+  }));
 
-  const activeContents = createMemo(() => contents());
-  const isLoading = createMemo(() => contents() === undefined);
+  const activeContents = createMemo(() => contentsQuery.data);
+  const isLoading = createMemo(() => contentsQuery.isLoading);
   const hasContent = createMemo(() => {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);

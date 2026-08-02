@@ -1,13 +1,18 @@
-import { createAsync, type RouteDefinition } from "@solidjs/router";
+import { type RouteDefinition } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
+import { useQuery } from "@tanstack/solid-query";
 import { getWorks } from "~/libs/actions/payload";
 import { PageLayout } from "~/layouts";
 import { Suspense, For, Show } from "solid-js";
 import { Spinner, Link, BlurInSection, BlurInText } from "~/components";
+import { queryClient } from "~/libs/query-client";
 
 export const route = {
   preload: () => {
-    void getWorks();
+    queryClient.prefetchQuery({
+      queryKey: ["works"],
+      queryFn: getWorks,
+    });
   },
 } satisfies RouteDefinition;
 
@@ -25,7 +30,10 @@ export default function WorkHome() {
     );
   }
 
-  const works = createAsync(() => getWorks());
+  const worksQuery = useQuery(() => ({
+    queryKey: ["works"],
+    queryFn: getWorks,
+  }));
 
   return (
     <PageLayout
@@ -46,19 +54,19 @@ export default function WorkHome() {
       </BlurInSection>
       <BlurInSection delay={0.5}>
         <Suspense fallback={<Spinner color="grey" />}>
-        <Show when={works()}>
-          {(worksData) => (
-            <For each={worksData()}>
-              {(work) => (
-                <Link class="page" preload={true} href={`/work/${work.slug}`}>
-                  <h2>{work.title}</h2>
-                  <p>{work.summary}</p>
-                </Link>
-              )}
-            </For>
-          )}
-        </Show>
-      </Suspense>
+          <Show when={worksQuery.data}>
+            {(worksData) => (
+              <For each={worksData()}>
+                {(work) => (
+                  <Link class="page" preload={true} href={`/work/${work.slug}`}>
+                    <h2>{work.title}</h2>
+                    <p>{work.summary}</p>
+                  </Link>
+                )}
+              </For>
+            )}
+          </Show>
+        </Suspense>
       </BlurInSection>
     </PageLayout>
   );

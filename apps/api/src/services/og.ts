@@ -82,12 +82,12 @@ export const generateOgImageEffect = (
 
 export const validateOgParams = (title: string, summary: string) => {
   return Effect.gen(function* () {
-    return yield* Schema.decode(ogImageQueryParamsSchema)({
+    return yield* Schema.decodeUnknownEffect(ogImageQueryParamsSchema)({
       title,
       summary,
     });
   }).pipe(
-    Effect.catchTag("ParseError", (error) =>
+    Effect.catchTag("SchemaError", (error) =>
       Effect.fail(
         new ValidationError({
           field: "params",

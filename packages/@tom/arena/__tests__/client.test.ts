@@ -290,8 +290,7 @@ describe("ArenaClient", () => {
       if (result._tag !== "Failure") throw new Error("Expected Failure");
       const cause = result.cause;
       expect(cause).toBeDefined();
-      // Verify the cause structure - HttpError is wrapped in Effect's Cause
-      expect(cause._tag).toBeDefined();
+      expect(cause.reasons[0]?._tag).toBe("Fail");
     });
 
     it("returns HttpError on non-ok response", async () => {
@@ -311,8 +310,7 @@ describe("ArenaClient", () => {
       if (result._tag !== "Failure") throw new Error("Expected Failure");
       const cause = result.cause;
       expect(cause).toBeDefined();
-      // Verify the cause structure - HttpError is wrapped in Effect's Cause
-      expect(cause._tag).toBeDefined();
+      expect(cause.reasons[0]?._tag).toBe("Fail");
     });
   });
 

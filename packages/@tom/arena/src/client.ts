@@ -477,13 +477,15 @@ export class ArenaClient implements ArenaApi {
   ): Effect.Effect<T, HttpError> {
     const url = `${this.domain}${endpoint}`;
     const isGet = method === "GET";
+    const rawFetch = this.rawFetch;
+    const headers = this.headers;
 
-    return Effect.gen(this, function* () {
+    return Effect.gen(function* () {
       const response = yield* Effect.tryPromise({
         try: () =>
-          this.rawFetch(url, {
+          rawFetch(url, {
             method,
-            headers: this.headers,
+            headers,
             body: data && !isGet ? JSON.stringify(data) : null,
           }),
         catch: () => new HttpError({ message: "Network request failed", status: 0 }),

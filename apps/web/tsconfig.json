@@ -15,8 +15,7 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "types": ["node", "vinxi/types/client"],
-    "baseUrl": ".",
+    "types": ["node", "vite/client"],
     "paths": {
       "~/*": ["./src/*"],
       "@tom/*": ["../../packages/@tom/*/src"]
@@ -27,6 +26,6 @@
       }
     ]
   },
-  "include": ["src/**/*", "app.config.ts", "vitest.config.ts"],
-  "exclude": ["node_modules", ".vinxi", ".output"]
+  "include": ["src/**/*", "vite.config.ts", "vitest.config.ts"],
+  "exclude": ["node_modules", ".output"]
 }

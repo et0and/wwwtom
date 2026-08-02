@@ -25,5 +25,5 @@ export function decodeBlurhash(
       return canvas.toDataURL();
     },
     catch: () => null,
-  }).pipe(Effect.catchAll(() => Effect.succeed(null)));
+  }).pipe(Effect.catch(() => Effect.succeed(null)));
 }

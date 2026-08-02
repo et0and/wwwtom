@@ -1,7 +1,7 @@
 // @refresh reload
 import { createHandler, StartServer } from "@solidjs/start/server";
 
-export default createHandler(() => {
+const app = createHandler(() => {
   return (
     <StartServer
       document={({ assets, children, scripts }) => (
@@ -25,3 +25,16 @@ export default createHandler(() => {
     />
   );
 });
+
+type CloudflareContext = {
+  cloudflare?: { env?: unknown; ctx?: unknown };
+};
+
+export default {
+  fetch: (request: Request, env: unknown, ctx: unknown) => {
+    (request as Request & { context?: CloudflareContext }).context = {
+      cloudflare: { env, ctx },
+    };
+    return app.fetch(request);
+  },
+};

@@ -6,6 +6,8 @@ import { runSimpleEffect } from "~/libs/runtime";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
+type ImageError = { response: Response; cause?: unknown };
+
 export async function GET({ request }: APIEvent) {
   const url = new URL(request.url);
   const imageUrl = url.searchParams.get("url");
@@ -13,33 +15,35 @@ export async function GET({ request }: APIEvent) {
   const quality = parseInt(url.searchParams.get("quality") || "85");
   const requestedFormat = url.searchParams.get("format");
 
-  const validateUrl = (urlStr: string | null) =>
-    Effect.fromNullable(urlStr).pipe(
-      Effect.mapError(() => ({
-        response: new Response("Missing url parameter", {
-          status: HttpStatus.BadRequest,
-        }),
-      })),
-      Effect.flatMap((url) =>
-        Effect.try({
-          try: () => new URL(url),
-          catch: () => ({
-            response: new Response("Invalid URL", {
-              status: HttpStatus.BadRequest,
-            }),
+  const validateUrl = (urlStr: string | null): Effect.Effect<URL, ImageError> =>
+    Effect.gen(function* () {
+      if (!urlStr) {
+        return yield* Effect.fail({
+          response: new Response("Missing url parameter", {
+            status: HttpStatus.BadRequest,
+          }),
+        });
+      }
+
+      const parsed = yield* Effect.try({
+        try: () => new URL(urlStr),
+        catch: () => ({
+          response: new Response("Invalid URL", {
+            status: HttpStatus.BadRequest,
           }),
         }),
-      ),
-      Effect.flatMap((parsed) =>
-        ALLOWED_DOMAINS.includes(parsed.hostname)
-          ? Effect.succeed(parsed)
-          : Effect.fail({
-              response: new Response("Domain not allowed", {
-                status: HttpStatus.Forbidden,
-              }),
-            }),
-      ),
-    );
+      });
+
+      if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
+        return yield* Effect.fail({
+          response: new Response("Domain not allowed", {
+            status: HttpStatus.Forbidden,
+          }),
+        });
+      }
+
+      return parsed;
+    });
 
   const fetchImage = (validUrl: URL) =>
     Effect.tryPromise({
@@ -112,8 +116,8 @@ export async function GET({ request }: APIEvent) {
     Effect.tap(({ contentType }) =>
       Effect.logDebug(`image:success contentType=${contentType} width=${width}`),
     ),
-    Effect.catchAll(
-      Effect.fn("imageErrorHandler")(function* (error: { response: Response; cause?: unknown }) {
+    Effect.catch(
+      Effect.fn("imageErrorHandler")(function* (error: ImageError) {
         if ("cause" in error) {
           yield* Effect.logError("image:error", error.cause);
         } else {

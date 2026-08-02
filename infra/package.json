@@ -1,0 +1,25 @@
+{
+  "name": "@tom/infra",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "deploy": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy shared.run.ts --stage $ALCHEMY_STAGE",
+    "deploy:shared": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy shared.run.ts --stage $ALCHEMY_STAGE",
+    "deploy:api": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/api.run.ts --stage $ALCHEMY_STAGE",
+    "deploy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/web.run.ts --stage $ALCHEMY_STAGE",
+    "destroy": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy shared.run.ts --stage $ALCHEMY_STAGE",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20250408.0",
+    "@effect/platform-bun": "4.0.0-beta.99",
+    "@effect/platform-node": "4.0.0-beta.99",
+    "@tom/types": "workspace:*",
+    "alchemy": "2.0.0-beta.63",
+    "effect": "4.0.0-beta.99",
+    "vite": "^8.1.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.1"
+  }
+}

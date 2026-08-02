@@ -1,4 +1,4 @@
-import { Effect, Layer, Redacted } from "effect";
+import { Context, Layer, Redacted } from "effect";
 
 export interface AppConfigShape {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
@@ -27,19 +27,47 @@ export type CloudflareEnv = {
   SUCCESS_URL?: string;
   POLAR_ACCESS_TOKEN?: string;
   NODE_ENV?: string;
+  TOM_SECRETS?: { get(): Promise<string> };
 };
 
-export class AppConfig extends Effect.Service<AppConfig>()("AppConfig", {
-  accessors: true,
-  succeed: {
+const secretKeys = [
+  "ARENA_TOKEN",
+  "PAYLOAD_URL",
+  "DATABASE_URL",
+  "TELEGRAM_BOT_TOKEN",
+  "TELEGRAM_CHAT_ID",
+  "SUCCESS_URL",
+  "POLAR_ACCESS_TOKEN",
+] as const;
+
+export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareEnv> => {
+  if (!env.TOM_SECRETS) return env;
+
+  const parsed: unknown = JSON.parse(await env.TOM_SECRETS.get());
+  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    throw new Error("TOM_SECRETS must be a JSON object");
+  }
+
+  const bundle = Object.fromEntries(
+    secretKeys.flatMap((key) => {
+      const value = (parsed as Record<string, unknown>)[key];
+      return typeof value === "string" ? [[key, value]] : [];
+    }),
+  );
+
+  return { ...env, ...bundle };
+};
+
+export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("AppConfig") {
+  static readonly Default = Layer.succeed(AppConfig, {
     arenaToken: undefined as Redacted.Redacted<string> | undefined,
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
     telegramBotToken: undefined as Redacted.Redacted<string> | undefined,
     telegramChatId: undefined as string | undefined,
     isDev: true as boolean,
-  },
-}) {
+  });
+
   static fromEnv(env: CloudflareEnv): Layer.Layer<AppConfig> {
     return makeAppConfigLayer(env);
   }
@@ -52,7 +80,6 @@ export class AppConfig extends Effect.Service<AppConfig>()("AppConfig", {
 export const makeAppConfigLayer = (config: Partial<CloudflareEnv>): Layer.Layer<AppConfig> => {
   const arenaToken = parseOptionalSecret(config.ARENA_TOKEN);
   return Layer.succeed(AppConfig, {
-    _tag: "AppConfig",
     arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
     payloadUrl: Redacted.make(config.PAYLOAD_URL ?? ""),
     databaseUrl: Redacted.make(config.HYPERDRIVE?.connectionString ?? config.DATABASE_URL ?? ""),

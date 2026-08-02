@@ -12,6 +12,7 @@ app.config.timestamp_*.js
 tsconfig.tsbuildinfo
 .turbo
 .open-next
+.alchemy
 
 db.sqlite3
 effect

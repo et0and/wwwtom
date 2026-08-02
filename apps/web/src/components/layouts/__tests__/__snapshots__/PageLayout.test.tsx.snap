@@ -2,13 +2,15 @@
 
 exports[`PageLayout > matches the snapshot 1`] = `
 <div>
-  <main
-    class="mx-auto p-8 max-w-[750px]"
-    id="main"
-  >
-    <h1>
-      Test content
-    </h1>
-  </main>
+  <div>
+    <main
+      class="mx-auto p-8 max-w-[750px] view-transition-main"
+      id="main"
+    >
+      <h1>
+        Test content
+      </h1>
+    </main>
+  </div>
 </div>
 `;

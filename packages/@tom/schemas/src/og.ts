@@ -1,15 +1,15 @@
 import { Schema } from "effect";
 
-export const ogImageQueryParamsSchema = Schema.standardSchemaV1(
-  Schema.Struct({
-    title: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(100))),
-    summary: Schema.optional(Schema.String.pipe(Schema.minLength(1), Schema.maxLength(200))),
-  }),
-);
+const OgImageQueryParamsSchema = Schema.Struct({
+  title: Schema.optional(Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(100))),
+  summary: Schema.optional(Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(200))),
+});
 
-export const ogImageResponseSchema = Schema.standardSchemaV1(
-  Schema.Struct({
-    success: Schema.Literal(true),
-    generatedAt: Schema.Number,
-  }),
-);
+export const ogImageQueryParamsSchema = OgImageQueryParamsSchema;
+
+const OgImageResponseSchema = Schema.Struct({
+  success: Schema.Literal(true),
+  generatedAt: Schema.Number,
+});
+
+export const ogImageResponseSchema = OgImageResponseSchema;

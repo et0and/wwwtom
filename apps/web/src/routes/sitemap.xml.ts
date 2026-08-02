@@ -2,12 +2,12 @@ import { Effect } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse, PayloadWork } from "@tom/schemas";
 import { HttpStatus } from "@tom/constants";
-import { runEffect, getServiceLayer } from "~/libs/runtime";
+import { runEffect, getServiceLayer, gen } from "~/libs/runtime";
 
 export async function GET() {
   const layer = getServiceLayer();
   return runEffect(
-    Effect.gen(function* () {
+    gen(function* () {
       const payload = yield* PayloadService;
       yield* Effect.logInfo("sitemap:fetch:start");
 
@@ -69,7 +69,7 @@ ${works.docs
         },
       });
     }).pipe(
-      Effect.catchAll((error) =>
+      Effect.catch((error) =>
         Effect.succeed(
           new Response(
             `<?xml version="1.0" encoding="UTF-8"?><error>${error instanceof Error ? error.message : String(error)}</error>`,
