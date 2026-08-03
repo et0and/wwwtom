@@ -11,23 +11,28 @@ on:
           - production
           - staging
           - dev
+  push:
+    branches:
+      - dev
 
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-${{ inputs.stage }}
+  group: deploy-${{ github.event_name == 'push' && 'production' || inputs.stage }}
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Deploy ${{ inputs.stage }}
+    name: Deploy ${{ github.event_name == 'push' && 'production' || inputs.stage }}
     runs-on: ubuntu-latest
-    environment: ${{ inputs.stage }}
+    environment: ${{ github.event_name == 'push' && 'production' || inputs.stage }}
     env:
-      ALCHEMY_STAGE: ${{ inputs.stage }}
+      ALCHEMY_STAGE: ${{ github.event_name == 'push' && 'production' || inputs.stage }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
+      ALCHEMY_ENV_FILE: /dev/null
 
     steps:
       - name: Check out repository
