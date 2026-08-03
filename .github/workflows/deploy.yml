@@ -29,7 +29,7 @@ jobs:
     environment: ${{ github.event_name == 'push' && 'production' || inputs.stage }}
     env:
       ALCHEMY_STAGE: ${{ github.event_name == 'push' && 'production' || inputs.stage }}
-      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
       ALCHEMY_ENV_FILE: /dev/null
