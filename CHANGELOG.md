@@ -1,3 +1,15 @@
+# [1.91.0](https://github.com/et0and/wwwtom/compare/v1.90.0...v1.91.0) (2026-08-03)
+
+
+### Bug Fixes
+
+* **ci:** misspell ([8a2b1f1](https://github.com/et0and/wwwtom/commit/8a2b1f1573ae91305943e408e9b641d299e45996))
+
+
+### Features
+
+* **ci:** automatic deploys with alchemy ([70d7a1c](https://github.com/et0and/wwwtom/commit/70d7a1c19ab1671a04075f1d0fefdd7f09dc417f))
+
 # [1.90.0](https://github.com/et0and/wwwtom/compare/v1.89.0...v1.90.0) (2026-08-02)
 
 
