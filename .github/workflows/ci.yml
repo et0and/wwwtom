@@ -25,7 +25,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run tests
+      # Unit tests run in every workspace with a `test` script: @tom/web,
+      # @tom/api, @tom/adapter, @tom/arena and @tom/utils. @tom/margaret is
+      # excluded because it has no test runner. Turbo builds each package's
+      # workspace dependencies first.
+      - name: Run unit tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
         run: pnpm turbo run test --filter=!@tom/margaret

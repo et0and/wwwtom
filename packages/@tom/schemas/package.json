@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aredotna/sdk": "0.0.4",
     "effect": "catalog:",
     "obscenity": "catalog:"
   },

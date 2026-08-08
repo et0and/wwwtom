@@ -2,7 +2,9 @@ import { Effect, Layer, Logger, References } from "effect";
 import { TelegramService, makeAppConfigLayer, readCloudflareEnv } from "@tom/utils/services";
 import type { CloudflareEnv } from "@tom/utils/services";
 
-export type Env = CloudflareEnv;
+export type Env = CloudflareEnv & {
+  POLAR_API_URL?: string;
+};
 
 export const resolveEnv = (env: Env) => readCloudflareEnv(env);
 
@@ -35,3 +37,24 @@ export const sendErrorAlert = (env: Env, message: string, error?: unknown) => {
     ),
   );
 };
+
+/**
+ * Cloudflare passes (request, env, ctx) to the worker's fetch handler.
+ * Elysia only forwards the Request, so the env is attached to the request
+ * by the default export wrapper and read back here.
+ */
+export type RequestWithEnv = Request & { env?: Env };
+
+export const getRequestEnv = (request: Request): Env => {
+  const env = (request as RequestWithEnv).env;
+  if (!env) {
+    throw new Error("Worker env not attached to request");
+  }
+  return env;
+};
+
+export const toJsonResponse = (status: number, body: unknown): Response =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });

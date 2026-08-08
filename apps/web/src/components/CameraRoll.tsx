@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal } from "solid-js";
-import { getChannelContents } from "~/libs/actions/arena/channels";
+import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
 import { Spinner } from "@tom/ui";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
@@ -69,7 +69,7 @@ export function CameraRoll(props: CameraRollProps) {
     queryKey: ["arena-contents", props.slug],
     queryFn: async () => {
       try {
-        return await getChannelContents(props.slug, { per: 20 });
+        return await fetchChannelContents(props.slug, 20);
       } catch {
         void Effect.runFork(
           Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
@@ -176,13 +176,13 @@ function ArenaItem(props: { item: ArenaChannelContents }) {
   const item = () => props.item;
 
   return (
-    <Show when={item().base_type === "Block"}>
+    <Show when={"base_type" in item()}>
       <ArenaBlockItem block={item() as ArenaBlock} />
     </Show>
   );
 }
 
-function ImageBlock(props: { block: ArenaBlock }) {
+function ImageBlock(props: { block: Extract<ArenaBlock, { type: "Image" }> }) {
   const block = () => props.block;
   const [loaded, setLoaded] = createSignal(false);
 
@@ -204,7 +204,7 @@ function ImageBlock(props: { block: ArenaBlock }) {
             ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
             : undefined
         }
-        alt={block().image?.alt_text || block().title || block().generated_title || ""}
+        alt={block().image?.alt_text || block().title || ""}
         class="w-full h-full object-cover"
         classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
         onLoad={() => setLoaded(true)}
@@ -220,19 +220,19 @@ function ArenaBlockItem(props: { block: ArenaBlock }) {
   return (
     <div class="arena-block h-full overflow-hidden">
       <Show when={block().type === "Image"}>
-        <ImageBlock block={block()} />
+        <ImageBlock block={block() as Extract<ArenaBlock, { type: "Image" }>} />
       </Show>
       <Show when={block().type === "Attachment"}>
-        <AttachmentBlock block={block()} />
+        <AttachmentBlock block={block() as Extract<ArenaBlock, { type: "Attachment" }>} />
       </Show>
     </div>
   );
 }
 
-function AttachmentBlock(props: { block: ArenaBlock }) {
+function AttachmentBlock(props: { block: Extract<ArenaBlock, { type: "Attachment" }> }) {
   const block = () => props.block;
 
-  const fileName = () => block().attachment?.file_name || "";
+  const fileName = () => block().attachment?.filename || "";
   const fileUrl = () => block().attachment?.url || "";
   const isVideo = () => fileName().toLowerCase().endsWith(".mp4");
 

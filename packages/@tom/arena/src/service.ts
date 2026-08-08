@@ -21,8 +21,12 @@ export class ArenaService extends Context.Service<ArenaService, ArenaServiceShap
 
       const client = new ArenaClient({
         token,
+        baseUrl: config.arenaBaseUrl ?? "https://api.are.na",
       });
-      const publicClient = new ArenaClient({ token: null });
+      const publicClient = new ArenaClient({
+        token: null,
+        baseUrl: config.arenaBaseUrl ?? "https://api.are.na",
+      });
 
       return { client, publicClient };
     }),

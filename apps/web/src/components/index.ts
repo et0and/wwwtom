@@ -6,4 +6,3 @@ export * from "./Arena";
 export * from "./BlurInSection";
 export * from "./BlurInText";
 export * from "./CameraRoll";
-export * from "./CodeSnippet";

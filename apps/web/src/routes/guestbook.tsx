@@ -3,24 +3,41 @@ import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Suspense, createSignal } from "solid-js";
 import { PageLayout } from "~/layouts";
 import { Spinner, BlurInSection, BlurInText } from "~/components";
-import {
-  getEntries,
-  getCurrentUser,
-  initiateAuthAction,
-  logoutAction,
-  signGuestbookAction,
-} from "~/libs/actions/guestbook";
+import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
+
+const fetchEntries = async () => {
+  const result = await callAdapter().guestbook.entries.get();
+  return unwrapAdapter(result);
+};
+
+// The guestbook user lives in an adapter-domain cookie, so this must run in
+// the browser (client-only) — never preloaded server-side.
+const fetchCurrentUser = async () => {
+  const result = await callAdapter().guestbook.me.get();
+  return unwrapAdapter(result);
+};
+
+const initiateAuth = async (handle: string) => {
+  const result = await callAdapter().guestbook.auth.initiate.post({ handle });
+  return unwrapAdapter(result);
+};
+
+const signGuestbook = async (message: string) => {
+  const result = await callAdapter().guestbook.sign.post({ message });
+  return unwrapAdapter(result);
+};
+
+const logout = async () => {
+  const result = await callAdapter().guestbook.logout.post();
+  return unwrapAdapter(result);
+};
 
 export const route = {
   preload: () => {
     queryClient.prefetchQuery({
       queryKey: ["guestbook-entries"],
-      queryFn: getEntries,
-    });
-    queryClient.prefetchQuery({
-      queryKey: ["guestbook-current-user"],
-      queryFn: getCurrentUser,
+      queryFn: fetchEntries,
     });
   },
 } satisfies RouteDefinition;
@@ -28,26 +45,26 @@ export const route = {
 export default function Guestbook() {
   const entriesQuery = useQuery(() => ({
     queryKey: ["guestbook-entries"],
-    queryFn: getEntries,
+    queryFn: fetchEntries,
   }));
 
   const currentUserQuery = useQuery(() => ({
     queryKey: ["guestbook-current-user"],
-    queryFn: getCurrentUser,
+    queryFn: fetchCurrentUser,
   }));
 
   const [message, setMessage] = createSignal("");
   const [handle, setHandle] = createSignal("");
 
   const authMutation = useMutation(() => ({
-    mutationFn: (inputHandle: string) => initiateAuthAction(inputHandle),
-    onSuccess: (authUrl) => {
-      window.location.href = authUrl;
+    mutationFn: (inputHandle: string) => initiateAuth(inputHandle),
+    onSuccess: (result) => {
+      window.location.href = result.authUrl;
     },
   }));
 
   const signMutation = useMutation(() => ({
-    mutationFn: (inputMessage: string) => signGuestbookAction(inputMessage),
+    mutationFn: (inputMessage: string) => signGuestbook(inputMessage),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guestbook-entries"] });
       setMessage("");
@@ -55,7 +72,7 @@ export default function Guestbook() {
   }));
 
   const logoutMutation = useMutation(() => ({
-    mutationFn: () => logoutAction(),
+    mutationFn: () => logout(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guestbook-current-user"] });
       queryClient.invalidateQueries({ queryKey: ["guestbook-entries"] });
