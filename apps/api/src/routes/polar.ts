@@ -1,90 +1,104 @@
-import { Hono } from "hono";
-import { describeRoute } from "hono-openapi";
-import { Checkout, CustomerPortal } from "@polar-sh/hono";
-import { resolveEnv } from "../config/effect";
-import type { Env } from "../config/effect";
+import { Elysia } from "elysia";
+import { Effect, Schema } from "effect";
+import { HttpStatus } from "@tom/constants";
+import { createPolarCheckout, createPolarCustomerSession } from "../services/polar";
+import { getRequestEnv, runEffect, toJsonResponse } from "../config/effect";
 
-export const polarRoutes = new Hono<{ Bindings: Env }>();
+const CheckoutQuerySchema = Schema.Struct({
+  products: Schema.String,
+  customerId: Schema.optional(Schema.String),
+  customerEmail: Schema.optional(Schema.String),
+});
 
-polarRoutes.get(
-  "/checkout",
-  describeRoute({
-    description: "Create a checkout session and redirect to Polar",
-    parameters: [
-      {
-        in: "query" as const,
-        name: "products",
-        required: true,
-        schema: { type: "string" },
-        description: "Product IDs to purchase (comma-separated)",
+const checkoutQuerySchema = Schema.toStandardSchemaV1(CheckoutQuerySchema);
+
+const PortalQuerySchema = Schema.Struct({ customerId: Schema.String });
+
+const portalQuerySchema = Schema.toStandardSchemaV1(PortalQuerySchema);
+
+const withErrorHandling = (effect: Effect.Effect<Response, unknown>, errorMessage: string) =>
+  effect.pipe(
+    Effect.catch((error) =>
+      Effect.gen(function* () {
+        yield* Effect.logError(errorMessage, error);
+        return yield* Effect.succeed(toJsonResponse(HttpStatus.InternalServerError, { error }));
+      }),
+    ),
+  );
+
+export const polarRoutes = new Elysia({ name: "polar" })
+  .get(
+    "/checkout",
+    async ({ query, request }) => {
+      const env = getRequestEnv(request);
+      const successUrl = env.SUCCESS_URL
+        ? `${env.SUCCESS_URL}?checkoutId={CHECKOUT_ID}`
+        : undefined;
+      const products = query.products.split(",").filter(Boolean);
+
+      const result = await runEffect(
+        withErrorHandling(
+          createPolarCheckout(env.POLAR_ACCESS_TOKEN, env.POLAR_API_URL ?? "https://api.polar.sh", {
+            products,
+            successUrl,
+            customerId: query.customerId,
+            customerEmail: query.customerEmail,
+          }).pipe(
+            Effect.map((data) => {
+              const redirectUrl = new URL(data.url);
+              redirectUrl.searchParams.set("theme", "light");
+              return Response.redirect(redirectUrl.toString(), HttpStatus.Found);
+            }),
+          ),
+          "Error creating Polar checkout",
+        ),
+      );
+
+      return result;
+    },
+    {
+      query: checkoutQuerySchema,
+      response: {
+        302: Schema.toStandardSchemaV1(Schema.Unknown),
+        400: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
+        500: Schema.toStandardSchemaV1(Schema.Unknown),
       },
-      {
-        in: "query" as const,
-        name: "customerId",
-        required: true,
-        schema: { type: "string" },
-        description: "Existing customer ID",
-      },
-      {
-        in: "query" as const,
-        name: "customerEmail",
-        required: false,
-        schema: { type: "string" },
-        description: "Customer email address",
-      },
-    ],
-    responses: {
-      302: {
-        description: "Redirect to Polar checkout",
-      },
-      400: {
-        description: "Missing products and/or customerId parameter",
-      },
-      500: {
-        description: "Failed to create checkout",
+      detail: {
+        description: "Create a checkout session and redirect to Polar",
+        tags: ["polar"],
       },
     },
-  }),
-  async (c) => {
-    const env = await resolveEnv(c.env);
-    return Checkout({
-      accessToken: env.POLAR_ACCESS_TOKEN,
-      successUrl: env.SUCCESS_URL,
-      server: "production",
-      theme: "light",
-    })(c);
-  },
-);
+  )
+  .get(
+    "/portal",
+    async ({ query, request }) => {
+      const env = getRequestEnv(request);
 
-polarRoutes.get(
-  "/portal",
-  describeRoute({
-    description: "Redirect to Polar customer portal",
-    parameters: [
-      {
-        in: "query" as const,
-        name: "customerId",
-        required: true,
-        schema: { type: "string", format: "uuid" },
-        description: "Polar customer ID (uuid)",
+      const result = await runEffect(
+        withErrorHandling(
+          createPolarCustomerSession(
+            env.POLAR_ACCESS_TOKEN,
+            env.POLAR_API_URL ?? "https://api.polar.sh",
+            { customerId: query.customerId, returnUrl: "https://tom.so/products" },
+          ).pipe(
+            Effect.map((data) => Response.redirect(data.customer_portal_url, HttpStatus.Found)),
+          ),
+          "Error creating Polar customer session",
+        ),
+      );
+
+      return result;
+    },
+    {
+      query: portalQuerySchema,
+      response: {
+        302: Schema.toStandardSchemaV1(Schema.Unknown),
+        400: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
+        500: Schema.toStandardSchemaV1(Schema.Unknown),
       },
-    ],
-    responses: {
-      302: {
+      detail: {
         description: "Redirect to Polar customer portal",
-      },
-      400: {
-        description: "Missing customerId parameter",
+        tags: ["polar"],
       },
     },
-  }),
-  async (c) => {
-    const env = await resolveEnv(c.env);
-    return CustomerPortal({
-      accessToken: env.POLAR_ACCESS_TOKEN,
-      getCustomerId: async () => c.req.query("customerId") ?? "",
-      returnUrl: "https://tom.so/products",
-      server: "production",
-    })(c);
-  },
-);
+  );

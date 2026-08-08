@@ -2,214 +2,108 @@ import { Effect } from "effect";
 import { PolarApiError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";
 
-export const fetchPolarProducts = (
-  accessToken: string | undefined,
-): Effect.Effect<unknown[], PolarApiError> =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo("Fetching products from Polar API");
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch("https://api.polar.sh/v1/products?is_archived=false", {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }),
-      catch: () =>
-        new PolarApiError({
-          message: "Network error",
-          status: 0,
-          operation: "fetch_products",
-        }),
-    });
+const authHeaders = (accessToken: string | undefined) => ({
+  Authorization: `Bearer ${accessToken}`,
+  "Content-Type": "application/json",
+});
 
-    if (!response.ok) {
-      yield* Effect.logError("Failed to fetch Polar products", {
-        status: response.status,
-      });
-      return yield* Effect.fail(
-        new PolarApiError({
-          message: "Failed to fetch products",
-          status: response.status,
-          operation: "fetch_products",
-        }),
-      );
-    }
-
-    return yield* Effect.tryPromise({
-      try: () => response.json() as Promise<{ items: unknown[] }>,
-      catch: () =>
-        new PolarApiError({
-          message: "Failed to parse response",
-          status: HttpStatus.InternalServerError,
-          operation: "fetch_products",
-        }),
-    }).pipe(Effect.map((data) => data.items));
+const parseJson = <T>(response: Response, operation: string): Effect.Effect<T, PolarApiError> =>
+  Effect.tryPromise({
+    try: () => response.json() as Promise<T>,
+    catch: () =>
+      new PolarApiError({
+        message: "Failed to parse response",
+        status: HttpStatus.InternalServerError,
+        operation,
+      }),
   });
 
-export const fetchPolarProduct = (
-  productId: string,
+export const createPolarCheckout = (
   accessToken: string | undefined,
-): Effect.Effect<unknown, PolarApiError> =>
+  baseUrl: string,
+  params: {
+    products: string[];
+    successUrl: string | undefined;
+    customerId: string | undefined;
+    customerEmail: string | undefined;
+  },
+): Effect.Effect<{ url: string }, PolarApiError> =>
   Effect.gen(function* () {
-    yield* Effect.logInfo(`Fetching product ${productId} from Polar API`);
+    yield* Effect.logInfo("Creating Polar checkout session");
     const response = yield* Effect.tryPromise({
       try: () =>
-        fetch(`https://api.polar.sh/v1/products/${productId}`, {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }),
-      catch: () =>
-        new PolarApiError({
-          message: "Network error",
-          status: 0,
-          operation: "fetch_product",
-        }),
-    });
-
-    if (!response.ok) {
-      yield* Effect.logError(`Failed to fetch Polar product ${productId}`, {
-        status: response.status,
-      });
-      return yield* Effect.fail(
-        new PolarApiError({
-          message: "Failed to fetch product",
-          status: response.status,
-          operation: "fetch_product",
-        }),
-      );
-    }
-
-    return yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: () =>
-        new PolarApiError({
-          message: "Failed to parse response",
-          status: HttpStatus.InternalServerError,
-          operation: "fetch_product",
-        }),
-    });
-  });
-
-export const createPolarCustomer = (
-  email: string,
-  name: string | undefined,
-  externalId: string | undefined,
-  accessToken: string | undefined,
-): Effect.Effect<unknown, PolarApiError> =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo("Customer doesn't exist in Polar, creating now");
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch("https://api.polar.sh/v1/customers/", {
+        fetch(`${baseUrl}/v1/checkouts/`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
+          headers: authHeaders(accessToken),
           body: JSON.stringify({
-            email,
-            name,
-            external_id: externalId,
+            products: params.products,
+            successUrl: params.successUrl,
+            customerId: params.customerId,
+            customerEmail: params.customerEmail,
           }),
         }),
       catch: () =>
         new PolarApiError({
           message: "Network error",
           status: 0,
-          operation: "create_customer",
+          operation: "create_checkout",
         }),
     });
 
     if (!response.ok) {
-      const errorData = yield* Effect.tryPromise({
-        try: () => response.text(),
-        catch: () =>
-          new PolarApiError({
-            message: "Failed to read error response",
-            status: response.status,
-            operation: "create_customer",
-          }),
-      });
-
-      if (
-        response.status === HttpStatus.UnprocessableEntity &&
-        errorData.includes("already exists")
-      ) {
-        yield* Effect.logInfo("Customer already exists in Polar, fetching details");
-        const listResponse = yield* Effect.tryPromise({
-          try: () =>
-            fetch(`https://api.polar.sh/v1/customers?email=${encodeURIComponent(email)}`, {
-              headers: {
-                Authorization: `Bearer ${accessToken}`,
-              },
-            }),
-          catch: () =>
-            new PolarApiError({
-              message: "Network error",
-              status: 0,
-              operation: "find_customer",
-            }),
-        });
-
-        if (!listResponse.ok) {
-          yield* Effect.logError(`Failed to find existing Polar customer with email ${email}`, {
-            status: listResponse.status,
-          });
-          return yield* Effect.fail(
-            new PolarApiError({
-              message: "Failed to find existing customer",
-              status: listResponse.status,
-              operation: "find_customer",
-            }),
-          );
-        }
-
-        const listData = yield* Effect.tryPromise({
-          try: () => listResponse.json() as Promise<{ items: unknown[] }>,
-          catch: () =>
-            new PolarApiError({
-              message: "Failed to parse response",
-              status: HttpStatus.InternalServerError,
-              operation: "find_customer",
-            }),
-        });
-
-        if (listData.items && listData.items.length > 0) {
-          return listData.items[0];
-        }
-      }
-
-      yield* Effect.logError("Failed to create Polar customer", {
+      yield* Effect.logError("Failed to create Polar checkout", { status: response.status });
+      return yield* new PolarApiError({
+        message: "Failed to create checkout",
         status: response.status,
-        error: errorData,
+        operation: "create_checkout",
       });
-      return yield* Effect.fail(
-        new PolarApiError({
-          message: `Failed to create customer: ${errorData}`,
-          status: response.status,
-          operation: "create_customer",
-        }),
-      );
     }
 
-    return yield* Effect.tryPromise({
-      try: () => response.json(),
+    return yield* parseJson<{ url: string }>(response, "create_checkout");
+  });
+
+export const createPolarCustomerSession = (
+  accessToken: string | undefined,
+  baseUrl: string,
+  params: { customerId: string; returnUrl: string },
+): Effect.Effect<{ customer_portal_url: string }, PolarApiError> =>
+  Effect.gen(function* () {
+    yield* Effect.logInfo("Creating Polar customer session");
+    const response = yield* Effect.tryPromise({
+      try: () =>
+        fetch(`${baseUrl}/v1/customer-sessions/`, {
+          method: "POST",
+          headers: authHeaders(accessToken),
+          body: JSON.stringify({
+            customerId: params.customerId,
+            returnUrl: params.returnUrl,
+          }),
+        }),
       catch: () =>
         new PolarApiError({
-          message: "Failed to parse response",
-          status: HttpStatus.InternalServerError,
-          operation: "create_customer",
+          message: "Network error",
+          status: 0,
+          operation: "create_customer_session",
         }),
     });
+
+    if (!response.ok) {
+      yield* Effect.logError("Failed to create Polar customer session", {
+        status: response.status,
+      });
+      return yield* new PolarApiError({
+        message: "Failed to create customer session",
+        status: response.status,
+        operation: "create_customer_session",
+      });
+    }
+
+    return yield* parseJson<{ customer_portal_url: string }>(response, "create_customer_session");
   });
 
 export const handlePolarError = (error: PolarApiError): Response => {
   return new Response(JSON.stringify({ error: error.message }), {
-    status: error.status as
-      | HttpStatus.BadGateway
-      | HttpStatus.NotFound
-      | HttpStatus.InternalServerError,
+    status: error.status,
     headers: { "Content-Type": "application/json" },
   });
 };

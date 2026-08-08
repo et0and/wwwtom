@@ -1,81 +1,32 @@
-import { Hono } from "hono";
-import { describeRoute } from "hono-openapi";
-import { Effect } from "effect";
+import { Elysia } from "elysia";
+import { Effect, Schema } from "effect";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
 import { runEffect } from "../config/effect";
-import type { Env } from "../config/effect";
 
-export const ogRoutes = new Hono<{ Bindings: Env }>();
+// Param validation (length limits) happens in the OG service via @tom/schemas.
+const OgQuerySchema = Schema.Struct({
+  title: Schema.optional(Schema.String),
+  summary: Schema.optional(Schema.String),
+  template: Schema.optional(
+    Schema.Union([
+      Schema.Literal("default"),
+      Schema.Literal("minimal"),
+      Schema.Literal("developer"),
+    ]),
+  ),
+  requester: Schema.optional(Schema.String),
+});
 
-ogRoutes.get(
-  "/",
-  describeRoute({
-    description: "OG image generation endpoint",
-    parameters: [
-      {
-        in: "query" as const,
-        name: "title",
-        required: false,
-        schema: { type: "string", default: "Tom Hackshaw", maxLength: 100 },
-        description: "Title text for the OG image",
-        example: "Tom Hackshaw",
-      },
-      {
-        in: "query" as const,
-        name: "summary",
-        required: false,
-        schema: {
-          type: "string",
-          default: "Design engineer from Aotearoa New Zealand",
-          maxLength: 200,
-        },
-        description: "Summary/description text for the OG image",
-        example: "Design engineer from Aotearoa New Zealand",
-      },
-      {
-        in: "query" as const,
-        name: "template",
-        required: false,
-        schema: {
-          type: "string",
-          enum: ["default", "minimal", "developer"],
-          default: "default",
-        },
-        description:
-          "OG image template to use. Defaults to automatic selection based on requester. Available templates: default, minimal, developer",
-        example: "default",
-      },
-    ],
-    responses: {
-      200: {
-        description: "Image generated successfully",
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              required: ["success", "generatedAt"],
-              properties: {
-                success: { type: "boolean", enum: [true] },
-                generatedAt: { type: "number" },
-              },
-            },
-          },
-        },
-      },
-      400: {
-        description: "Invalid query parameters",
-      },
-      500: {
-        description: "Image generation failed",
-      },
-    },
-  }),
-  async (c) => {
-    const title = c.req.query("title") || "Tom Hackshaw";
-    const summary = c.req.query("summary") || "Design engineer from Aotearoa New Zealand";
-    const template = c.req.query("template") || undefined;
-    const referer = c.req.header("Referer") || "";
-    const requester = referer || c.req.query("requester") || "unknown";
+const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
+
+export const ogRoutes = new Elysia({ name: "og" }).get(
+  "/og",
+  async ({ query, request, set }) => {
+    const title = query.title || "Tom Hackshaw";
+    const summary = query.summary || "Design engineer from Aotearoa New Zealand";
+    const template = query.template;
+    const referer = request.headers.get("Referer") ?? "";
+    const requester = referer || query.requester || "unknown";
 
     const result = await runEffect(
       Effect.gen(function* () {
@@ -95,6 +46,22 @@ ogRoutes.get(
       return result;
     }
 
+    set.headers["Cache-Control"] = "public, max-age=31536000, immutable";
     return result;
+  },
+  {
+    query: ogQuerySchema,
+    response: {
+      200: Schema.toStandardSchemaV1(Schema.Unknown),
+      400: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
+      500: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
+      502: Schema.toStandardSchemaV1(
+        Schema.Struct({ error: Schema.String, cause: Schema.optional(Schema.String) }),
+      ),
+    },
+    detail: {
+      description: "OG image generation endpoint",
+      tags: ["images"],
+    },
   },
 );

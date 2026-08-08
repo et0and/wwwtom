@@ -172,7 +172,7 @@ function toSdkSearchQuery(
 }
 
 export class ArenaClient implements ArenaApi {
-  private readonly domain = "https://api.are.na/v3/";
+  private readonly domain: string;
   private readonly headers: Record<string, string>;
   private readonly rawFetch: Fetch;
   private readonly date: DateProvider;
@@ -245,8 +245,14 @@ export class ArenaClient implements ArenaApi {
     };
   }
 
-  constructor(config?: { token?: string | null; fetch?: Fetch; date?: DateProvider }) {
+  constructor(config?: {
+    token?: string | null;
+    fetch?: Fetch;
+    date?: DateProvider;
+    baseUrl?: string;
+  }) {
     const normalizedToken = ArenaClient.normalizeToken(config?.token);
+    this.domain = `${config?.baseUrl ?? "https://api.are.na"}/v3/`;
     this.headers = {
       "Content-Type": "application/json",
       ...(normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}),
@@ -256,7 +262,7 @@ export class ArenaClient implements ArenaApi {
     this.date = config?.date || Date;
     this.arena = createArena({
       fetch: wrappedFetch as typeof fetch,
-      baseUrl: "https://api.are.na",
+      baseUrl: config?.baseUrl ?? "https://api.are.na",
       ...(normalizedToken ? { token: normalizedToken } : {}),
     });
   }

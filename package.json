@@ -7,6 +7,7 @@
     "dev": "turbo run dev --parallel",
     "dev:web": "turbo run dev --filter=@tom/web",
     "dev:api": "turbo run dev --filter=@tom/api",
+    "dev:adapter": "pnpm --filter @tom/infra run dev:adapter",
     "dev:cms": "turbo run dev --filter=@tom/cms",
     "dev:sophie": "turbo run dev --filter=@tom/sophie",
     "lint": "turbo run lint",
@@ -15,12 +16,13 @@
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",
     "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/@tom/utils && npx vitest run --update",
-    "deploy": "pnpm run deploy:shared && pnpm run deploy:api && pnpm run deploy:web",
+    "deploy": "pnpm run deploy:shared && pnpm run deploy:api && pnpm run deploy:adapter && pnpm run deploy:web",
     "deploy:shared": "pnpm --filter @tom/infra run deploy:shared",
     "deploy:web": "pnpm --filter @tom/infra run deploy:web",
     "deploy:cms": "cd apps/cms && opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
     "deploy:sophie": "cd apps/sophie && opennextjs-cloudflare build --env=$CLOUDFLARE_ENV && opennextjs-cloudflare deploy --env=$CLOUDFLARE_ENV",
     "deploy:api": "pnpm --filter @tom/infra run deploy:api",
+    "deploy:adapter": "pnpm --filter @tom/infra run deploy:adapter",
     "destroy": "pnpm --filter @tom/infra run destroy",
     "semantic-release": "semantic-release",
     "changeset": "changeset",
@@ -29,6 +31,8 @@
   },
   "dependencies": {
     "@aredotna/sdk": "0.0.4",
+    "@elysiajs/eden": "1.4.9",
+    "elysia": "1.4.29",
     "solid-motionone": "1.0.4"
   },
   "devDependencies": {

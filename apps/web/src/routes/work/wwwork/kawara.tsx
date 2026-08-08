@@ -16,6 +16,7 @@ export default function Kawara() {
   const [windowHeight, setWindowHeight] = createSignal(0);
   const [scrollTop, setScrollTop] = createSignal(0);
   const [isClient, setIsClient] = createSignal(false);
+  // oxlint-disable-next-line no-unassigned-vars -- assigned by the Solid `ref` below
   let scrollContainer: HTMLDivElement | undefined;
 
   onMount(() => {

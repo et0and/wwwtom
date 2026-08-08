@@ -2,7 +2,7 @@ import { lazy, For, Show, createMemo } from "solid-js";
 import { useParams, type RouteDefinition } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { getRequestEvent } from "solid-js/web";
-import { getPostBySlug } from "~/libs/actions/payload";
+import { fetchPostBySlug } from "~/server/adapter";
 import { PageLayout } from "~/layouts";
 import { Spinner, BlurInSection, BlurInText } from "~/components";
 import { queryClient } from "~/libs/query-client";
@@ -12,7 +12,7 @@ export const route = {
     if (params.slug) {
       queryClient.prefetchQuery({
         queryKey: ["post", params.slug],
-        queryFn: () => getPostBySlug(params.slug!),
+        queryFn: () => fetchPostBySlug(params.slug!),
       });
     }
   },
@@ -43,7 +43,7 @@ export default function PostPage() {
     queryFn: () => {
       const s = slug();
       if (!s) return Promise.reject(new Error("No slug"));
-      return getPostBySlug(s);
+      return fetchPostBySlug(s);
     },
   }));
 

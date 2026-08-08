@@ -1,5 +1,24 @@
 // @refresh reload
 import { createHandler, StartServer } from "@solidjs/start/server";
+import { createResource, Suspense, Show } from "solid-js";
+import { queryClient } from "~/libs/query-client";
+import { serializeDehydratedState, waitForQueriesToSettle } from "~/libs/query-dehydration";
+
+const DehydratedQueryState = () => {
+  const [state] = createResource(async () => {
+    await waitForQueriesToSettle(queryClient);
+    return serializeDehydratedState(queryClient);
+  });
+  return (
+    <Suspense fallback={null}>
+      <Show when={state()}>
+        {(json) => (
+          <script type="application/json" id="query-dehydrated-state" innerHTML={json()} />
+        )}
+      </Show>
+    </Suspense>
+  );
+};
 
 const app = createHandler(() => {
   return (
@@ -18,6 +37,7 @@ const app = createHandler(() => {
           </head>
           <body>
             <div id="app">{children}</div>
+            <DehydratedQueryState />
             {scripts}
           </body>
         </html>

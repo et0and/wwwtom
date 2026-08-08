@@ -37,12 +37,10 @@ export const webHyperdrive = Effect.gen(function* () {
   const bundle = yield* readSecretBundle("TOM_SECRETS");
   const databaseUrl = bundle.DATABASE_URL;
   if (!databaseUrl) {
-    return yield* Effect.fail(
-      new InfrastructureConfigError({
-        variable: "TOM_SECRETS",
-        message: "TOM_SECRETS must include DATABASE_URL for the Hyperdrive origin",
-      }),
-    );
+    return yield* new InfrastructureConfigError({
+      variable: "TOM_SECRETS",
+      message: "TOM_SECRETS must include DATABASE_URL for the Hyperdrive origin",
+    });
   }
 
   return yield* Cloudflare.Hyperdrive.Connection("wwwtom-web-hyperdrive", {

@@ -1,22 +1,18 @@
 import { Effect } from "effect";
-import { PayloadService } from "@tom/payload/service";
-import type { PayloadPost, PayloadResponse, PayloadWork } from "@tom/schemas";
+import { callAdapter, adapterRequest } from "~/libs/adapter";
 import { HttpStatus } from "@tom/constants";
-import { runEffect, getServiceLayer, gen } from "~/libs/runtime";
 
-export async function GET() {
-  const layer = getServiceLayer();
-  return runEffect(
-    gen(function* () {
-      const payload = yield* PayloadService;
-      yield* Effect.logInfo("sitemap:fetch:start");
+export function GET() {
+  return Effect.runPromise(
+    Effect.all([
+      adapterRequest(() => callAdapter().payload.posts.get({ query: { page: 1, pageSize: 500 } })),
+      adapterRequest(() => callAdapter().payload.works.get({ query: { sort: "-updatedAt" } })),
+    ]).pipe(
+      Effect.map(([postsResult, worksResult]) => {
+        const posts = postsResult.data;
+        const works = worksResult;
 
-      const [posts, works] = yield* Effect.all([
-        payload.fetch<PayloadResponse<PayloadPost>>("/posts?sort=-publishedAt&limit=500&depth=0"),
-        payload.fetch<PayloadResponse<PayloadWork>>("/works?sort=-updatedAt&limit=500&depth=0"),
-      ]);
-
-      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://tom.so/</loc>
@@ -30,7 +26,7 @@ export async function GET() {
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
-${posts.docs
+${posts
   .map(
     (post) => `
   <url>
@@ -47,7 +43,7 @@ ${posts.docs
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
-${works.docs
+${works
   .map(
     (work) => `
   <url>
@@ -60,27 +56,21 @@ ${works.docs
   .join("")}
 </urlset>`;
 
-      yield* Effect.logInfo("sitemap:fetch:success");
-
-      return new Response(xml, {
-        headers: {
-          "Content-Type": "application/xml",
-          "Cache-Control": "public, max-age=3600",
-        },
-      });
-    }).pipe(
+        return new Response(xml, {
+          headers: {
+            "Content-Type": "application/xml",
+            "Cache-Control": "public, max-age=3600",
+          },
+        });
+      }),
       Effect.catch((error) =>
         Effect.succeed(
-          new Response(
-            `<?xml version="1.0" encoding="UTF-8"?><error>${error instanceof Error ? error.message : String(error)}</error>`,
-            {
-              status: HttpStatus.InternalServerError,
-              headers: { "Content-Type": "application/xml" },
-            },
-          ),
+          new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${error.message}</error>`, {
+            status: HttpStatus.InternalServerError,
+            headers: { "Content-Type": "application/xml" },
+          }),
         ),
       ),
     ),
-    layer,
   );
 }

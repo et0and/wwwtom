@@ -1,35 +1,15 @@
-import { Hono } from "hono";
-import { describeRoute } from "hono-openapi";
-import type { Env } from "../config/effect";
+import { Elysia } from "elysia";
+import { healthResponseSchema } from "@tom/schemas";
+import { Schema } from "effect";
 
-export const healthRoutes = new Hono<{ Bindings: Env }>();
-
-healthRoutes.get(
-  "/",
-  describeRoute({
-    description: "Health check endpoint",
-    responses: {
-      200: {
-        description: "Service is healthy",
-        content: {
-          "application/json": {
-            schema: {
-              type: "object",
-              required: ["status", "timestamp"],
-              properties: {
-                status: {
-                  type: "string",
-                  enum: ["healthy", "unhealthy", "degraded"],
-                },
-                timestamp: { type: "number" },
-              },
-            },
-          },
-        },
-      },
+export const healthRoutes = new Elysia().get(
+  "/health",
+  () => ({ status: "healthy" as const, timestamp: Date.now() }),
+  {
+    response: { 200: Schema.toStandardSchemaV1(healthResponseSchema) },
+    detail: {
+      description: "Health check endpoint",
+      tags: ["system"],
     },
-  }),
-  (c) => {
-    return c.json({ status: "healthy", timestamp: Date.now() });
   },
 );

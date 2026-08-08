@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal, createEffect, onCleanup } from "solid-js";
 import { Motion } from "solid-motionone";
-import { getChannelContents } from "~/libs/actions/arena/channels";
+import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
 import { Spinner } from "@tom/ui";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
@@ -12,12 +12,27 @@ interface ArenaCarouselProps {
   title?: string;
 }
 
+type ArenaImageBlock = Extract<ArenaBlock, { type: "Image" }>;
+
+const asBlock = <T extends ArenaBlock["type"]>(
+  block: ArenaBlock,
+  type: T,
+): Extract<ArenaBlock, { type: T }> | null =>
+  block.type === type ? (block as Extract<ArenaBlock, { type: T }>) : null;
+
+const formatFileSize = (bytes?: number | null): string => {
+  if (!bytes) return "";
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export function ArenaCarousel(props: ArenaCarouselProps) {
   const contentsQuery = useQuery(() => ({
     queryKey: ["arena-contents", props.slug],
     queryFn: async () => {
       try {
-        return await getChannelContents(props.slug, { per: 10 });
+        return await fetchChannelContents(props.slug, 10);
       } catch {
         void Effect.runFork(
           Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
@@ -33,12 +48,13 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);
   });
-  const [expandedBlock, setExpandedBlock] = createSignal<ArenaBlock | null>(null);
+  const [expandedBlock, setExpandedBlock] = createSignal<ArenaImageBlock | null>(null);
   const [isClosing, setIsClosing] = createSignal(false);
 
   const openLightbox = (block: ArenaBlock) => {
-    if (!block.image) return;
-    setExpandedBlock(block);
+    const image = asBlock(block, "Image");
+    if (!image) return;
+    setExpandedBlock(image);
   };
 
   const closeLightbox = () => {
@@ -107,7 +123,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
 }
 
 interface ImageLightboxProps {
-  block: ArenaBlock | null;
+  block: ArenaImageBlock | null;
   isClosing: boolean;
   onClose: () => void;
   onAnimationComplete: () => void;
@@ -158,7 +174,7 @@ function ImageLightbox(props: ImageLightboxProps) {
                     ? `${block.image?.large.src} 1x, ${block.image?.large.src_2x} 2x`
                     : undefined
                 }
-                alt={block.title || block.generated_title || ""}
+                alt={block.title || ""}
                 class="max-w-full max-h-[90vh] w-auto h-auto object-contain"
                 onLoad={handleImageLoad}
               />
@@ -179,15 +195,15 @@ function ArenaItem(props: ArenaItemProps) {
   const item = () => props.item;
 
   return (
-    <Show when={item().base_type === "Block"}>
+    <Show when={"base_type" in item()}>
       <ArenaBlockItem block={item() as ArenaBlock} onExpand={props.onExpand} />
     </Show>
   );
 }
 
 interface ImageBlockProps {
-  block: ArenaBlock;
-  onExpand: (block: ArenaBlock, imgElement: HTMLImageElement) => void;
+  block: ArenaImageBlock;
+  onExpand: (block: ArenaImageBlock, imgElement: HTMLImageElement) => void;
 }
 
 function ImageBlock(props: ImageBlockProps) {
@@ -226,7 +242,7 @@ function ImageBlock(props: ImageBlockProps) {
             ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
             : undefined
         }
-        alt={block().image?.alt_text || block().title || block().generated_title || ""}
+        alt={block().image?.alt_text || block().title || ""}
         class="w-full h-full object-cover pointer-events-none"
         classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
         onLoad={() => setLoaded(true)}
@@ -246,50 +262,54 @@ function ArenaBlockItem(props: ArenaBlockItemProps) {
 
   return (
     <div class="arena-block p-4">
-      <Show when={block().type === "Image"}>
-        <ImageBlock block={block()} onExpand={props.onExpand} />
+      <Show when={asBlock(block(), "Image")}>
+        {(img) => <ImageBlock block={img()} onExpand={props.onExpand} />}
       </Show>
-      <Show when={block().type === "Text"}>
-        <div class="text-content prose prose-sm break-words whitespace-normal">
-          {block().content?.html ? (
-            <div innerHTML={block().content?.html || ""} />
+      <Show when={asBlock(block(), "Text")}>
+        {(text) =>
+          text().content?.html ? (
+            <div class="text-content prose prose-sm break-words whitespace-normal">
+              <div innerHTML={text().content.html} />
+            </div>
           ) : (
-            <p>{block().content?.markdown}</p>
-          )}
-        </div>
+            <div class="text-content prose prose-sm break-words whitespace-normal">
+              <p>{text().content?.markdown}</p>
+            </div>
+          )
+        }
       </Show>
-      <Show when={block().type === "Link"}>
-        <LinkBlock block={block()} />
+      <Show when={asBlock(block(), "Link")}>{(link) => <LinkBlock block={link()} />}</Show>
+      <Show when={asBlock(block(), "Attachment")}>
+        {(attachment) => <AttachmentBlock block={attachment()} />}
       </Show>
-      <Show when={block().type === "Attachment"}>
-        <AttachmentBlock block={block()} />
-      </Show>
-      <Show when={block().type === "Embed"}>
-        <div class="media-content">
-          {(() => {
-            const embed = block().embed;
-            if (embed?.html) {
-              return <div innerHTML={embed.html} />;
-            }
-            return (
-              <a
-                href={block().source?.url || ""}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="block no-underline hover:underline"
-              >
-                {block().title || block().generated_title}
-              </a>
-            );
-          })()}
-        </div>
+      <Show when={asBlock(block(), "Embed")}>
+        {(embed) => (
+          <div class="media-content">
+            {(() => {
+              const embedData = embed().embed;
+              if (embedData?.html) {
+                return <div innerHTML={embedData.html} />;
+              }
+              return (
+                <a
+                  href={embed().source?.url || ""}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="block no-underline hover:underline"
+                >
+                  {embed().title}
+                </a>
+              );
+            })()}
+          </div>
+        )}
       </Show>
     </div>
   );
 }
 
 interface LinkBlockProps {
-  block: ArenaBlock;
+  block: Extract<ArenaBlock, { type: "Link" }>;
 }
 
 function LinkBlock(props: LinkBlockProps) {
@@ -311,7 +331,7 @@ function LinkBlock(props: LinkBlockProps) {
                 ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
                 : undefined
             }
-            alt={block().title || block().generated_title || ""}
+            alt={block().title || ""}
             class="w-full h-full object-cover"
             onError={() => void Effect.runFork(Effect.logError("Failed to load arena link image"))}
             loading="lazy"
@@ -319,20 +339,20 @@ function LinkBlock(props: LinkBlockProps) {
         </div>
       </Show>
       <div class="link-title mt-2 text-sm break-words whitespace-normal">
-        <p>{block().title || block().source?.title || block().generated_title}</p>
+        <p>{block().title || block().source?.title || ""}</p>
       </div>
     </a>
   );
 }
 
 interface AttachmentBlockProps {
-  block: ArenaBlock;
+  block: Extract<ArenaBlock, { type: "Attachment" }>;
 }
 
 function AttachmentBlock(props: AttachmentBlockProps) {
   const block = () => props.block;
 
-  const fileName = () => block().attachment?.file_name || "";
+  const fileName = () => block().attachment?.filename || "";
   const fileUrl = () => block().attachment?.url || "";
   const isAudio = () => fileName().toLowerCase().endsWith(".mp3");
   const isVideo = () => fileName().toLowerCase().endsWith(".mp4");
@@ -367,7 +387,7 @@ function AttachmentBlock(props: AttachmentBlockProps) {
           <div class="attachment p-2 border border-gray-300 text-sm">
             {fileName()}
             <div class="file-size text-xs text-gray-600">
-              {block().attachment?.file_size_display}
+              {formatFileSize(block().attachment?.file_size)}
             </div>
           </div>
         </a>

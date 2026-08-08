@@ -1,7 +1,7 @@
 import { type RouteDefinition } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { useQuery } from "@tanstack/solid-query";
-import { getWorks } from "~/libs/actions/payload";
+import { fetchWorks } from "~/server/adapter";
 import { PageLayout } from "~/layouts";
 import { Suspense, For, Show } from "solid-js";
 import { Spinner, Link, BlurInSection, BlurInText } from "~/components";
@@ -11,7 +11,7 @@ export const route = {
   preload: () => {
     queryClient.prefetchQuery({
       queryKey: ["works"],
-      queryFn: getWorks,
+      queryFn: fetchWorks,
     });
   },
 } satisfies RouteDefinition;
@@ -32,7 +32,7 @@ export default function WorkHome() {
 
   const worksQuery = useQuery(() => ({
     queryKey: ["works"],
-    queryFn: getWorks,
+    queryFn: fetchWorks,
   }));
 
   return (

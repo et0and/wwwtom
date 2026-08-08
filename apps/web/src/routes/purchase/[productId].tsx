@@ -1,18 +1,17 @@
 import { PageLayout } from "~/layouts";
 import { BlurInSection, BlurInText } from "~/components";
 import { createResource, createSignal, Suspense, ErrorBoundary, Show, createMemo } from "solid-js";
-import { Cause, Effect, Result } from "effect";
 import { useParams } from "@solidjs/router";
-import { fetchProduct, formatPrice, createCustomer, getCheckoutUrl } from "@tom/checkout";
+import { formatPrice } from "@tom/checkout";
 import { Spinner } from "@tom/ui";
-
-const isDev = import.meta.env.DEV;
+import { getAdapterBaseUrl } from "~/libs/adapter";
+import { fetchProduct, createCustomer } from "~/server/adapter";
 
 export default function Purchase() {
   const params = useParams();
   const [product] = createResource(
     () => params.productId,
-    (id) => Effect.runPromise(fetchProduct(id, isDev)),
+    (id) => fetchProduct(id),
   );
 
   const [isRedirecting, setIsRedirecting] = createSignal(false);
@@ -53,36 +52,19 @@ export default function Purchase() {
     setFormError("");
     setEmailError("");
 
-    const result = await Effect.runPromiseExit(
-      createCustomer(
-        {
-          email: email(),
-          name: name() || undefined,
-          externalId: crypto.randomUUID(),
-        },
-        isDev,
-      ),
-    );
+    try {
+      const customer = await createCustomer({
+        email: email(),
+        ...(name() ? { name: name() } : {}),
+        externalId: crypto.randomUUID(),
+      });
 
-    if (result._tag === "Failure") {
-      const errorResult = Cause.findError(result.cause);
-      const errorData = Result.isSuccess(errorResult) ? errorResult.success : null;
-      const apiError = errorData ? JSON.parse(errorData.message) : null;
-      const validationError = apiError?.detail?.find((d: { loc: string[]; msg: string }) =>
-        d.loc?.includes("email"),
-      );
-
-      if (validationError) {
-        setEmailError(validationError.msg);
-      } else {
-        setFormError("Failed to create customer");
-      }
+      const checkoutUrl = `${getAdapterBaseUrl()}/polar/checkout?products=${params.productId ?? ""}&customerId=${customer.id}`;
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : "Failed to create customer");
       setIsRedirecting(false);
-      return;
     }
-
-    const checkoutUrl = getCheckoutUrl(params.productId ?? "", result.value.id, isDev);
-    window.location.href = checkoutUrl;
   };
 
   return (

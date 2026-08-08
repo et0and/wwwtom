@@ -1,14 +1,12 @@
 import { PageLayout } from "~/layouts";
 import { BlurInSection, BlurInText } from "~/components";
 import { createResource, For, Suspense, ErrorBoundary, Show } from "solid-js";
-import { Effect } from "effect";
 import { Spinner } from "@tom/ui";
-import { fetchProducts, formatPrice } from "@tom/checkout";
-
-const isDev = import.meta.env.DEV;
+import { formatPrice } from "@tom/checkout";
+import { fetchProducts } from "~/server/adapter";
 
 export default function Checkout() {
-  const [products] = createResource(() => Effect.runPromise(fetchProducts(isDev)));
+  const [products] = createResource(() => fetchProducts());
 
   return (
     <>

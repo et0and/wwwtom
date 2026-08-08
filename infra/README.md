@@ -6,7 +6,8 @@ Effect V4.
 ## Managed apps
 
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
-- `apps/api`: Hono Worker
+- `apps/api`: Elysia Worker
+- `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
 
 The `production` stage adopts the existing resources instead of replacing
 them:
@@ -36,7 +37,17 @@ pnpm deploy:api
 pnpm deploy:web
 ```
 
-Deployment order is `shared -> api -> web`.
+Deployment order is `shared -> api -> adapter -> web`.
+
+Local dev for the adapter (workerd + real bindings from `alchemy dev`):
+
+```bash
+pnpm dev:adapter
+```
+
+The adapter runs on `http://localhost:8788`; local secrets are split out of the
+`TOM_SECRETS` bundle because Secrets Store bindings are not supported in local
+mode.
 
 `ALCHEMY_STAGE` is required. This prevents a command intended for production
 from silently creating a new stage-specific Worker.

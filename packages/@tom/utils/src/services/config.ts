@@ -2,6 +2,7 @@ import { Context, Layer, Redacted } from "effect";
 
 export interface AppConfigShape {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
+  readonly arenaBaseUrl: string | undefined;
   readonly payloadUrl: Redacted.Redacted<string>;
   readonly databaseUrl: Redacted.Redacted<string>;
   readonly telegramBotToken: Redacted.Redacted<string> | undefined;
@@ -19,6 +20,7 @@ const parseOptionalSecret = (value?: string): string | undefined => {
 
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
+  ARENA_API_URL?: string;
   PAYLOAD_URL?: string;
   DATABASE_URL?: string;
   HYPERDRIVE?: { connectionString: string };
@@ -61,6 +63,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareE
 export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("AppConfig") {
   static readonly Default = Layer.succeed(AppConfig, {
     arenaToken: undefined as Redacted.Redacted<string> | undefined,
+    arenaBaseUrl: undefined as string | undefined,
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
     telegramBotToken: undefined as Redacted.Redacted<string> | undefined,
@@ -73,14 +76,20 @@ export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("App
   }
 }
 
+export type PartialCloudflareEnv = {
+  [K in keyof CloudflareEnv]?: CloudflareEnv[K] | undefined;
+};
+
 /**
  * Create a config layer from a partial config object.
  * Useful for testing and API routes that only need subset of config.
  */
-export const makeAppConfigLayer = (config: Partial<CloudflareEnv>): Layer.Layer<AppConfig> => {
+export const makeAppConfigLayer = (config: PartialCloudflareEnv): Layer.Layer<AppConfig> => {
   const arenaToken = parseOptionalSecret(config.ARENA_TOKEN);
+  const arenaBaseUrl = parseOptionalSecret(config.ARENA_API_URL);
   return Layer.succeed(AppConfig, {
     arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
+    arenaBaseUrl,
     payloadUrl: Redacted.make(config.PAYLOAD_URL ?? ""),
     databaseUrl: Redacted.make(config.HYPERDRIVE?.connectionString ?? config.DATABASE_URL ?? ""),
     telegramBotToken: config.TELEGRAM_BOT_TOKEN

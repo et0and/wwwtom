@@ -1,7 +1,7 @@
 import { type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { useQuery } from "@tanstack/solid-query";
-import { getPosts } from "~/libs/actions/payload";
+import { fetchPosts } from "~/server/adapter";
 import { PageLayout } from "~/layouts";
 import { Suspense, Show, For } from "solid-js";
 import { Spinner, Link, BlurInSection, BlurInText } from "~/components";
@@ -12,7 +12,7 @@ export const route = {
     const page = Number(location.query.page) || 1;
     queryClient.prefetchQuery({
       queryKey: ["posts", page],
-      queryFn: () => getPosts(page),
+      queryFn: () => fetchPosts(page, 5),
     });
   },
 } satisfies RouteDefinition;
@@ -34,7 +34,7 @@ export default function PostsHome(props: RouteSectionProps) {
 
   const postsQuery = useQuery(() => ({
     queryKey: ["posts", currentPage()],
-    queryFn: () => getPosts(currentPage()),
+    queryFn: () => fetchPosts(currentPage(), 5),
   }));
 
   return (
