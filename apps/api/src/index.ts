@@ -7,8 +7,8 @@ import {
   getRequestEnv,
   sendErrorAlert,
   toErrorResponse,
-} from "@tom/utils/services";
-import type { CloudflareEnv } from "@tom/utils/services";
+} from "@tom/utils/services/worker";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 import { healthRoutes } from "./routes/health";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";

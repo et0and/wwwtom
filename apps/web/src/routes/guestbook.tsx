@@ -1,8 +1,10 @@
 import { type RouteDefinition } from "@solidjs/router";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Suspense, createSignal } from "solid-js";
-import { PageLayout } from "~/layouts";
-import { Spinner, BlurInSection, BlurInText } from "~/components";
+import { PageLayout } from "@tom/ui/PageLayout";
+import { Spinner } from "@tom/ui/Spinner";
+import { BlurInSection } from "~/components/BlurInSection";
+import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 

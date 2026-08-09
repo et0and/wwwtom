@@ -9,7 +9,7 @@ import {
   fetchWorkBySlug,
   fetchWorks,
 } from "~/server/adapter";
-import { HttpError } from "@tom/types";
+import { HttpError } from "@tom/types/errors";
 
 const fetchMock = vi.fn();
 

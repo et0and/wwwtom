@@ -2,9 +2,9 @@ import { Elysia } from "elysia";
 import { Schema } from "effect";
 import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import { Effect } from "effect";
-import { HttpStatus } from "@tom/constants";
-import { ImageError } from "@tom/types";
-import { runEffect, toErrorResponse } from "@tom/utils/services";
+import { HttpStatus } from "@tom/constants/http";
+import { ImageError } from "@tom/types/errors";
+import { runEffect, toErrorResponse } from "@tom/utils/services/worker";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 

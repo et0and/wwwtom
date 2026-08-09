@@ -1,7 +1,7 @@
 import RSS from "rss";
 import { Effect } from "effect";
 import { callAdapter, adapterRequest } from "~/libs/adapter";
-import { HttpStatus } from "@tom/constants";
+import { HttpStatus } from "@tom/constants/http";
 
 export function GET() {
   return Effect.runPromise(

@@ -1,4 +1,5 @@
-import type { CloudflareEnv, RequestWithEnv } from "@tom/utils/services";
+import type { CloudflareEnv } from "@tom/utils/services/config";
+import type { RequestWithEnv } from "@tom/utils/services/worker";
 
 /**
  * Build a Request with the Cloudflare env attached the same way the worker's

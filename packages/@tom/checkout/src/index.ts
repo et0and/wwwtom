@@ -1,4 +1,4 @@
-import type { Product } from "@tom/types";
+import type { Product } from "@tom/types/product";
 
 export const formatPrice = (product: Product): string => {
   const amt = product.prices?.[0]?.price_amount;

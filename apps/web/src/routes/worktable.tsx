@@ -1,5 +1,7 @@
-import { ArenaCarousel, BlurInSection, BlurInText } from "~/components";
-import { PageLayout } from "~/layouts";
+import { PageLayout } from "@tom/ui/PageLayout";
+import { ArenaCarousel } from "~/components/Arena";
+import { BlurInSection } from "~/components/BlurInSection";
+import { BlurInText } from "~/components/BlurInText";
 
 export default function Worktable() {
   return (

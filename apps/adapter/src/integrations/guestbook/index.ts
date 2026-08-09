@@ -1,7 +1,9 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { DatabaseService } from "@tom/db/service";
-import { checkProfanity, getRequestEnv, readCloudflareEnv, toErrorMessage } from "@tom/utils";
+import { checkProfanity } from "@tom/utils/profanity";
+import { readCloudflareEnv } from "@tom/utils/services/config";
+import { getRequestEnv, toErrorMessage } from "@tom/utils/services/worker";
 import {
   MissingFieldError,
   ProfanityError,
@@ -9,7 +11,7 @@ import {
   GuestbookValidationError,
   OAuthSessionError,
   HttpError,
-} from "@tom/types";
+} from "@tom/types/errors";
 import * as auth from "./auth";
 import { AdapterError, createDbLayer, runAdapter } from "../../config/effect";
 import {
@@ -22,7 +24,7 @@ import {
   messageBodySchema,
   successResponseSchema,
 } from "../../schemas";
-import type { CloudflareEnv } from "@tom/utils";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 
 type GuestbookError =
   | MissingFieldError

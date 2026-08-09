@@ -24,7 +24,6 @@
     "@tom/adapter": "workspace:*",
     "@tom/checkout": "workspace:*",
     "@tom/constants": "workspace:*",
-    "@tom/haptics": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
@@ -33,7 +32,8 @@
     "number-to-words": "1.2.4",
     "rss": "1.2.2",
     "solid-js": "catalog:",
-    "solid-mdx": "0.0.7"
+    "solid-mdx": "0.0.7",
+    "web-haptics": "0.0.6"
   },
   "devDependencies": {
     "@solidjs/testing-library": "0.8.10",

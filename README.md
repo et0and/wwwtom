@@ -24,15 +24,13 @@ Content is fetched from a headless [Payload CMS](https://payloadcms.com/) instan
 
 ## Deployment
 
-The main site is pretty cheap and bare bones. It uses Cloudflare Workers and Wrangler to build and deploy. All static media assets like images are hosted on a separate CDN to keep things lightweight and fast.
+The main site is pretty cheap and bare bones. It uses [Cloudflare Workers](https://workers.cloudflare.com) and [Alchemy](https://alchemy.run) to build and deploy. All static media assets like images are hosted on a separate CDN to keep things lightweight and fast.
 
-It will be fairly obvious looking through this project that I use a lot of Cloudflare specific services and products like the Worker runtime, Wrangler and KV. This means it probably isn't as "portable" as it could be, but it wouldn't be too difficult for someone to fork and replace Worker specific config for Node, Deno etc.
-
-In a future release I intend on moving to Alchemy V2 for IaC. 
+It will be fairly obvious looking through this project that I use a lot of Cloudflare specific services and products like the Worker runtime, Wrangler and KV. This means it probably isn't as "portable" as it could be, but with how Alchemy is used it shouldn't be that difficult to swap out to a different provider like AWS.
 
 ## Testing
 
-I use Vitest for snapshot and integration tests.
+I use Vitest for unit tests. No end to end tests yet but will do so soon.
 
 ## License
 

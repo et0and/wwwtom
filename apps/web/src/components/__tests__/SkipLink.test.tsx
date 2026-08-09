@@ -1,6 +1,6 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import { SkipLink } from "@tom/ui";
+import { SkipLink } from "@tom/ui/SkipLink";
 
 describe("SkipLink", () => {
   it("matches the snapshot", () => {

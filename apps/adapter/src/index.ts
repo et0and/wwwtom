@@ -6,8 +6,8 @@ import {
   getRequestEnv,
   sendErrorAlert,
   toErrorResponse,
-} from "@tom/utils/services";
-import type { CloudflareEnv } from "@tom/utils/services";
+} from "@tom/utils/services/worker";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 import { AdapterError } from "./config/effect";
 import { arenaIntegration } from "./integrations/arena";
 import { payloadIntegration } from "./integrations/payload";

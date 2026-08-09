@@ -1,6 +1,6 @@
 import generator from "megalodon";
 import { Effect, Schema } from "effect";
-import { retryPolicy } from "@tom/utils";
+import { retryPolicy } from "@tom/utils/retry";
 import { DatabaseService } from "@tom/db/service";
 import { detector } from "./detector";
 import {
@@ -8,8 +8,8 @@ import {
   OAuthSessionError,
   AuthenticationError,
   HttpError,
-} from "@tom/types";
-import { HttpStatus } from "@tom/constants";
+} from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
 
 export const fediverseUserSchema = Schema.Struct({
   username: Schema.String,

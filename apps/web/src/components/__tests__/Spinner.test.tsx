@@ -1,6 +1,6 @@
 import { render } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import { Spinner } from "@tom/ui";
+import { Spinner } from "@tom/ui/Spinner";
 
 describe("Spinner", () => {
   it("matches the snapshot", () => {

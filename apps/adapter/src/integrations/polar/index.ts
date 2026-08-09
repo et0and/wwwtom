@@ -1,12 +1,13 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import { PolarApiError } from "@tom/types";
-import { HttpStatus } from "@tom/constants";
-import type { Product, Customer, CustomerInput } from "@tom/types";
+import { PolarApiError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
+import type { Customer, CustomerInput } from "@tom/types/customer";
+import type { Product } from "@tom/types/product";
 import { callApi } from "../../callApi";
 import { customerBodySchema } from "../../schemas";
-import { getRequestEnv, runEffect, toErrorResponse } from "@tom/utils/services";
-import type { CloudflareEnv } from "@tom/utils/services";
+import { getRequestEnv, runEffect, toErrorResponse } from "@tom/utils/services/worker";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 import { AdapterError, runAdapter } from "../../config/effect";
 
 const authHeaders = (accessToken: string | undefined) => ({

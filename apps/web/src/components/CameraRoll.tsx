@@ -2,8 +2,8 @@ import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal } from "solid-js";
 import { fetchChannelContents } from "~/server/adapter";
-import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
-import { Spinner } from "@tom/ui";
+import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
+import { Spinner } from "@tom/ui/Spinner";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 
 interface CameraRollProps {

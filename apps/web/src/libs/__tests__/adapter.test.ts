@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getAdapterBaseUrl, unwrapAdapter } from "~/libs/adapter";
-import { HttpError } from "@tom/types";
+import { HttpError } from "@tom/types/errors";
 
 describe("getAdapterBaseUrl", () => {
   afterEach(() => {

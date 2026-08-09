@@ -1,5 +1,5 @@
 import { Effect } from "effect";
-import { NodeinfoError } from "@tom/types";
+import { NodeinfoError } from "@tom/types/errors";
 
 const NODEINFO_VERSIONS = {
   "1.0": "http://nodeinfo.diaspora.software/ns/schema/1.0",

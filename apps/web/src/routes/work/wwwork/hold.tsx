@@ -1,7 +1,7 @@
 import { createSignal, onMount, onCleanup, Show, createEffect } from "solid-js";
 import { Title, Meta } from "@solidjs/meta";
 import { Effect } from "effect";
-import { Spinner } from "~/components";
+import { Spinner } from "@tom/ui/Spinner";
 
 export default function Hold() {
   const [timer, setTimer] = createSignal(0);

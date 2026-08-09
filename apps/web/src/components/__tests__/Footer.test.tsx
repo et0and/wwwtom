@@ -1,6 +1,6 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import { Footer } from "@tom/ui";
+import { Footer } from "@tom/ui/Footer";
 
 describe("Footer", () => {
   it("matches the snapshot", () => {

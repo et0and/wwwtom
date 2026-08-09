@@ -3,8 +3,10 @@ import { useParams, type RouteDefinition } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { getRequestEvent } from "solid-js/web";
 import { fetchWorkBySlug } from "~/server/adapter";
-import { PageLayout } from "~/layouts";
-import { Spinner, BlurInSection, BlurInText } from "~/components";
+import { PageLayout } from "@tom/ui/PageLayout";
+import { Spinner } from "@tom/ui/Spinner";
+import { BlurInSection } from "~/components/BlurInSection";
+import { BlurInText } from "~/components/BlurInText";
 import { queryClient } from "~/libs/query-client";
 
 export const route = {
@@ -19,7 +21,7 @@ export const route = {
 } satisfies RouteDefinition;
 
 const ArenaCarousel = lazy(() =>
-  import("~/components").then((m) => ({ default: m.ArenaCarousel })),
+  import("~/components/Arena").then((m) => ({ default: m.ArenaCarousel })),
 );
 
 export default function WorkPage() {

@@ -1,10 +1,10 @@
 import { Effect, Schema } from "effect";
 import { ImageResponse } from "workers-og";
 import { ogImageQueryParamsSchema } from "@tom/schemas/og";
-import { OgTemplates, OgTemplateParams } from "@tom/ui";
-import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types";
-import { HttpStatus } from "@tom/constants";
-import { toErrorResponse } from "@tom/utils/services";
+import { OgTemplates, type OgTemplateParams } from "@tom/ui/OgImage";
+import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
+import { toErrorResponse } from "@tom/utils/services/worker";
 
 const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 

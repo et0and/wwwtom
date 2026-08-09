@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import { AppConfig } from "@tom/utils/services";
+import { AppConfig } from "@tom/utils/services/config";
 import { retryPolicy } from "@tom/utils/retry";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas/payload";
 

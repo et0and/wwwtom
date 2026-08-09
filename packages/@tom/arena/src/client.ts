@@ -19,8 +19,8 @@ import type {
   GetUserFollowingApiResponse,
   GetBlockCommentApiResponse,
 } from "@tom/schemas/arena";
-import { HttpError } from "@tom/types";
-import { HttpStatus } from "@tom/constants";
+import { HttpError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
 
 export interface ArenaBlockApi {
   get(): Effect.Effect<GetBlockApiResponse, HttpError>;

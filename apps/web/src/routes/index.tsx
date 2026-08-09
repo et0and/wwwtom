@@ -1,5 +1,6 @@
-import { PageLayout } from "~/layouts";
-import { BlurInSection, BlurInText } from "~/components";
+import { PageLayout } from "@tom/ui/PageLayout";
+import { BlurInSection } from "~/components/BlurInSection";
+import { BlurInText } from "~/components/BlurInText";
 
 export default function Home() {
   return (

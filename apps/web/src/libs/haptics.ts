@@ -1,4 +1,4 @@
-import { WebHaptics, defaultPatterns } from "@tom/haptics";
+import { WebHaptics, defaultPatterns } from "web-haptics";
 
 let hapticsInstance: WebHaptics | null = null;
 let listenerAdded = false;

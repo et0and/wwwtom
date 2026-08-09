@@ -1,6 +1,7 @@
 import { Effect, Layer } from "effect";
-import { AppConfig, makeAppConfigLayer, withLogging } from "@tom/utils/services";
-import type { CloudflareEnv } from "@tom/utils/services";
+import { AppConfig, makeAppConfigLayer } from "@tom/utils/services/config";
+import { withLogging } from "@tom/utils/services/worker";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 import { DatabaseService } from "@tom/db/service";
 import { PayloadService } from "@tom/payload/service";
 import { ArenaService } from "@tom/arena/service";

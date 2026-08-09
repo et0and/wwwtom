@@ -1,6 +1,6 @@
 import { render } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import { PageLayout } from "@tom/ui";
+import { PageLayout } from "@tom/ui/PageLayout";
 import { MetaProvider } from "@solidjs/meta";
 
 describe("PageLayout", () => {

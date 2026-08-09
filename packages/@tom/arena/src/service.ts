@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import { AppConfig } from "@tom/utils/services";
+import { AppConfig } from "@tom/utils/services/config";
 import { ArenaClient, type ArenaApi } from "./client";
 
 export interface ArenaServiceShape {

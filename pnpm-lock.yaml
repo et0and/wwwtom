@@ -542,9 +542,6 @@ importers:
       '@tom/constants':
         specifier: workspace:*
         version: link:../../packages/@tom/constants
-      '@tom/haptics':
-        specifier: workspace:*
-        version: link:../../packages/@tom/haptics
       '@tom/schemas':
         specifier: workspace:*
         version: link:../../packages/@tom/schemas
@@ -572,6 +569,9 @@ importers:
       solid-mdx:
         specifier: 0.0.7
         version: 0.0.7(solid-js@1.9.12)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.28.1)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.21.0)(yaml@2.9.0))
+      web-haptics:
+        specifier: 0.0.6
+        version: 0.0.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
     devDependencies:
       '@solidjs/testing-library':
         specifier: 0.8.10
@@ -729,16 +729,6 @@ importers:
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.9
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-
-  packages/@tom/haptics:
-    dependencies:
-      web-haptics:
-        specifier: 0.0.6
-        version: 0.0.6(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-    devDependencies:
       typescript:
         specifier: 5.9.3
         version: 5.9.3

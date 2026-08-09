@@ -1,7 +1,7 @@
-import { PageLayout } from "~/layouts";
-import { BlurInText } from "~/components";
+import { PageLayout } from "@tom/ui/PageLayout";
+import { BlurInText } from "~/components/BlurInText";
 import { Effect } from "effect";
-import { HttpStatus } from "@tom/constants";
+import { HttpStatus } from "@tom/constants/http";
 
 void Effect.runFork(Effect.logInfo("Page not found", HttpStatus.NotFound));
 

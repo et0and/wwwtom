@@ -2,9 +2,12 @@ import { type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPosts } from "~/server/adapter";
-import { PageLayout } from "~/layouts";
+import { PageLayout } from "@tom/ui/PageLayout";
 import { Suspense, Show, For } from "solid-js";
-import { Spinner, Link, BlurInSection, BlurInText } from "~/components";
+import { Link } from "@tom/ui/Link";
+import { Spinner } from "@tom/ui/Spinner";
+import { BlurInSection } from "~/components/BlurInSection";
+import { BlurInText } from "~/components/BlurInText";
 import { queryClient } from "~/libs/query-client";
 
 export const route = {

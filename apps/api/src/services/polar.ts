@@ -1,7 +1,7 @@
 import { Effect } from "effect";
-import { PolarApiError } from "@tom/types";
-import { HttpStatus } from "@tom/constants";
-import { toErrorResponse } from "@tom/utils/services";
+import { PolarApiError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
+import { toErrorResponse } from "@tom/utils/services/worker";
 
 const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,

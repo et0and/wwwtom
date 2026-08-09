@@ -3,7 +3,7 @@ import postgres from "postgres";
 import { Kysely } from "kysely";
 import { PostgresJSDialect } from "kysely-postgres-js";
 import { retryPolicy } from "@tom/utils/retry";
-import { AppConfig } from "@tom/utils/services";
+import { AppConfig } from "@tom/utils/services/config";
 import {
   DatabaseConnectionError,
   GuestbookValidationError,

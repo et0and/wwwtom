@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { errorResponseSchema } from "@tom/schemas/error";
-import { runEffect } from "@tom/utils/services";
+import { runEffect } from "@tom/utils/services/worker";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
 
 // Param validation (length limits) happens in the OG service via @tom/schemas.

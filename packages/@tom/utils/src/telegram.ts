@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import { TelegramError } from "@tom/types";
+import { TelegramError } from "@tom/types/errors";
 import { AppConfig } from "./services/config";
 
 export interface TelegramServiceShape {

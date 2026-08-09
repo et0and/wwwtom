@@ -3,8 +3,8 @@ import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal, createEffect, onCleanup } from "solid-js";
 import { Motion } from "solid-motionone";
 import { fetchChannelContents } from "~/server/adapter";
-import type { ArenaBlock, ArenaChannelContents } from "@tom/arena";
-import { Spinner } from "@tom/ui";
+import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
+import { Spinner } from "@tom/ui/Spinner";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 
 interface ArenaCarouselProps {

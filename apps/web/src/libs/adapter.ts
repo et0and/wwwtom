@@ -2,7 +2,7 @@ import { treaty } from "@elysiajs/eden";
 import type { AdapterApp } from "@tom/adapter";
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
-import { HttpError } from "@tom/types";
+import { HttpError } from "@tom/types/errors";
 
 const DEV_ADAPTER_URL = "http://localhost:8788";
 const PROD_ADAPTER_URL = "https://adapter.tom.so";

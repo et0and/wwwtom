@@ -1,9 +1,10 @@
-import { PageLayout } from "~/layouts";
-import { BlurInSection, BlurInText } from "~/components";
+import { PageLayout } from "@tom/ui/PageLayout";
+import { BlurInSection } from "~/components/BlurInSection";
+import { BlurInText } from "~/components/BlurInText";
 import { createResource, createSignal, Suspense, ErrorBoundary, Show, createMemo } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { formatPrice } from "@tom/checkout";
-import { Spinner } from "@tom/ui";
+import { Spinner } from "@tom/ui/Spinner";
 import { getAdapterBaseUrl } from "~/libs/adapter";
 import { fetchProduct, createCustomer } from "~/server/adapter";
 

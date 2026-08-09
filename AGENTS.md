@@ -12,7 +12,7 @@ Improve existing code; avoid new abstractions.
 - `apps/sophie` — Payload site, Next + OpenNext, Workers.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/@tom/*` — ui, utils, types, db, arena, payload, schemas, checkout, constants, haptics, email.
+- `packages/@tom/*` — ui, utils, types, db, arena, payload, schemas, checkout, constants, email.
 - `infra` — Alchemy 2.0.0-beta.63 + Effect 4.0.0-beta.99 stacks: shared, api, adapter, web.
 
 ## Working rules

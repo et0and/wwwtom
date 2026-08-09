@@ -1,10 +1,12 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": ["./.oxlint/plugins/no-barrel-file.mjs"],
   "plugins": ["typescript", "unicorn", "oxc"],
   "categories": {
     "correctness": "error"
   },
   "rules": {
+    "tom/no-barrel-file": "error",
     "typescript/no-restricted-types": [
       "error",
       {

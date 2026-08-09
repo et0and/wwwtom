@@ -1,7 +1,7 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
 import { Router, Route } from "@solidjs/router";
-import { Nav } from "@tom/ui";
+import { Nav } from "@tom/ui/Nav";
 
 describe("Nav", () => {
   it("matches the snapshot", () => {

@@ -16,11 +16,11 @@
     "@cloudflare/workers-types": "^4.20250408.0",
     "@effect/platform-bun": "4.0.0-beta.99",
     "@effect/platform-node": "4.0.0-beta.99",
+    "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "alchemy": "2.0.0-beta.63",
     "effect": "4.0.0-beta.99",
-    "vite": "^8.1.5",
-    "@tom/schemas": "workspace:*"
+    "vite": "^8.1.5"
   },
   "devDependencies": {
     "@types/node": "^24.9.1"

@@ -1,10 +1,6 @@
 import { Effect } from "effect";
-import type {
-  PayloadContentNode,
-  PayloadMedia,
-  PayloadMediaSize,
-  ArenaBlockData,
-} from "@tom/payload";
+import type { ArenaBlockData } from "@tom/schemas/arena";
+import type { PayloadContentNode, PayloadMedia, PayloadMediaSize } from "@tom/schemas/payload";
 
 import { highlightCodeBlock } from "./highlight";
 

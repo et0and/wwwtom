@@ -3,10 +3,15 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    "./Footer": "./src/Footer.tsx",
+    "./Link": "./src/Link.tsx",
+    "./Meta": "./src/layouts/Meta.tsx",
+    "./Nav": "./src/Nav.tsx",
+    "./OgImage": "./src/layouts/OgImage.tsx",
+    "./PageLayout": "./src/layouts/PageLayout.tsx",
+    "./SkipLink": "./src/SkipLink.tsx",
+    "./Spinner": "./src/Spinner.tsx"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -17,9 +22,9 @@
   "dependencies": {
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
+    "@tom/schemas": "workspace:*",
     "classnames": "catalog:",
-    "solid-js": "catalog:",
-    "@tom/schemas": "workspace:*"
+    "solid-js": "catalog:"
   },
   "devDependencies": {
     "typescript": "5.9.3"
