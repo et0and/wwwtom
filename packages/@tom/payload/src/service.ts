@@ -65,7 +65,6 @@ export interface PayloadServiceShape {
   readonly getPosts: (params?: {
     limit?: number;
     page?: number;
-    where?: Record<string, unknown>;
     sort?: string;
   }) => Effect.Effect<PayloadResponse<PayloadPost>, PayloadError>;
 
@@ -80,7 +79,6 @@ export interface PayloadServiceShape {
   readonly getWorks: (params?: {
     limit?: number;
     page?: number;
-    where?: Record<string, unknown>;
     sort?: string;
   }) => Effect.Effect<PayloadResponse<PayloadPost>, PayloadError>;
 
@@ -91,12 +89,7 @@ export interface PayloadServiceShape {
 }
 
 // Build query string from params
-const buildQuery = (params?: {
-  limit?: number;
-  page?: number;
-  where?: Record<string, unknown>;
-  sort?: string;
-}): string => {
+const buildQuery = (params?: { limit?: number; page?: number; sort?: string }): string => {
   if (!params) return "";
 
   const searchParams = new URLSearchParams();
@@ -104,9 +97,6 @@ const buildQuery = (params?: {
   if (params.limit) searchParams.set("limit", String(params.limit));
   if (params.page) searchParams.set("page", String(params.page));
   if (params.sort) searchParams.set("sort", params.sort);
-  if (params.where) {
-    searchParams.set("where", JSON.stringify(params.where));
-  }
 
   const query = searchParams.toString();
   return query ? `?${query}` : "";

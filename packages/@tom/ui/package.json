@@ -18,7 +18,8 @@
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
     "classnames": "catalog:",
-    "solid-js": "catalog:"
+    "solid-js": "catalog:",
+    "@tom/schemas": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3"

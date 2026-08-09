@@ -113,3 +113,8 @@ export class InfrastructureConfigError extends Schema.TaggedErrorClass<Infrastru
     cause: Schema.optional(Schema.Unknown),
   },
 ) {}
+
+export class SecretsError extends Schema.TaggedErrorClass<SecretsError>()("SecretsError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}

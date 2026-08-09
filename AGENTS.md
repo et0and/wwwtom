@@ -94,6 +94,13 @@
 - Module resolution is bundler-style.
 - The Effect language service plugin is enabled.
 - Parse unknown input at boundaries; keep internal types trusted.
+- NEVER use `Record<string, unknown>` or `Record<string, any>` — they drop all
+  type information. Enforced by `typescript/no-restricted-types` in
+  `.oxlintrc.json`. Model the shape with an Effect Schema (in `@tom/schemas`
+  when shared) instead. Fully-typed records like `Record<string, string>` are
+  fine.
+- Generated `**/worker-configuration.d.ts` and `**/cloudflare-env.d.ts` files
+  are excluded from oxlint via `ignorePatterns`; do not hand-edit them.
 
 ## Formatting and Imports
 

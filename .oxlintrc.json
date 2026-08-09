@@ -4,7 +4,18 @@
   "categories": {
     "correctness": "error"
   },
-  "rules": {},
+  "rules": {
+    "typescript/no-restricted-types": [
+      "error",
+      {
+        "types": {
+          "Record<string, unknown>": "Record<string, unknown> drops all type information. Model the shape with an Effect Schema instead.",
+          "Record<string, any>": "Record<string, any> drops all type information. Model the shape with an Effect Schema instead."
+        }
+      }
+    ]
+  },
+  "ignorePatterns": ["**/worker-configuration.d.ts", "**/cloudflare-env.d.ts"],
   "env": {
     "builtin": true
   }

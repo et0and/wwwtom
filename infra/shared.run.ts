@@ -3,6 +3,7 @@ import { Effect, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
 import { InfrastructureConfigError } from "@tom/types/errors";
+import { TomSecretsSchema } from "@tom/schemas";
 import { Stack } from "alchemy/Stack";
 
 export const readSecretBundle = (
@@ -17,29 +18,15 @@ export const readSecretBundle = (
       });
     }
 
-    const parsed = yield* Effect.try({
-      try: () => Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(value),
+    return yield* Effect.try({
+      try: () => Schema.decodeUnknownSync(TomSecretsSchema)(value),
       catch: (cause) =>
         new InfrastructureConfigError({
           variable: name,
-          message: `${name} must be a JSON object secret bundle`,
+          message: `${name} must be a JSON object of string values`,
           cause,
         }),
     });
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-      return yield* new InfrastructureConfigError({
-        variable: name,
-        message: `${name} must be a JSON object secret bundle`,
-      });
-    }
-
-    const bundle: Record<string, string> = {};
-    for (const [key, entry] of Object.entries(parsed as Record<string, unknown>)) {
-      if (typeof entry === "string") {
-        bundle[key] = entry;
-      }
-    }
-    return bundle;
   });
 
 export const requireJsonSecret = (name: string): Effect.Effect<string, InfrastructureConfigError> =>

@@ -3,7 +3,8 @@
   "compilerOptions": {
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "noEmit": true
+    "noEmit": true,
+    "composite": false
   },
   "include": ["src/**/*.ts", "src/**/*.tsx"],
   "exclude": ["src/storybook"]

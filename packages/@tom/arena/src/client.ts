@@ -158,13 +158,21 @@ function toSdkQuery(options: PaginationAttributes | undefined): {
   return result;
 }
 
+type ArenaSearchQuery = {
+  query: string;
+  page?: number;
+  per?: number;
+  sort?: string;
+  type?: Array<"User" | "Channel" | "Block">;
+};
+
 function toSdkSearchQuery(
   query: string,
   type: "users" | "channels" | "blocks" | undefined,
   options: PaginationAttributes | undefined,
-): Record<string, unknown> {
+): ArenaSearchQuery {
   const base = toSdkQuery(options);
-  const result: Record<string, unknown> = { query, ...base };
+  const result: ArenaSearchQuery = { query, ...base };
   if (type) {
     result.type = type === "users" ? ["User"] : type === "channels" ? ["Channel"] : ["Block"];
   }
@@ -353,7 +361,7 @@ export class ArenaClient implements ArenaApi {
       update: (data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError> =>
         Effect.tryPromise({
           try: () => {
-            const body: Record<string, unknown> = { title: data.title };
+            const body: { title: string; visibility?: ChannelStatus } = { title: data.title };
             if (data.status) body.visibility = data.status;
             return this.arena.channels.update(slug, body as any) as unknown as Promise<void>;
           },

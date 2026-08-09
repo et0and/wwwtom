@@ -1,5 +1,6 @@
 import type { Component, JSX, Accessor } from "solid-js";
 import { createMemo } from "solid-js";
+import type { JsonLd } from "@tom/schemas";
 import { Metadata } from "./Meta";
 
 interface PageLayoutProps {
@@ -12,7 +13,7 @@ interface PageLayoutProps {
     summary: string;
     publishedAt: string;
   };
-  jsonLd?: Record<string, unknown>;
+  jsonLd?: JsonLd;
   class?: string;
 }
 

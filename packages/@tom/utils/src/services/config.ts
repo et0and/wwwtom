@@ -1,4 +1,6 @@
-import { Context, Layer, Redacted } from "effect";
+import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import { TomSecretsSchema } from "@tom/schemas";
+import { SecretsError } from "@tom/types/errors";
 
 export interface AppConfigShape {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
@@ -45,15 +47,22 @@ const secretKeys = [
 export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareEnv> => {
   if (!env.TOM_SECRETS) return env;
 
-  const parsed: unknown = JSON.parse(await env.TOM_SECRETS.get());
-  if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
-    throw new Error("TOM_SECRETS must be a JSON object");
-  }
+  const raw = await env.TOM_SECRETS.get();
+  const parsed = Effect.runSync(
+    Effect.try({
+      try: () => Schema.decodeUnknownSync(TomSecretsSchema)(raw),
+      catch: (cause) =>
+        new SecretsError({
+          message: "TOM_SECRETS must be a JSON object of string values",
+          cause,
+        }),
+    }),
+  );
 
   const bundle = Object.fromEntries(
     secretKeys.flatMap((key) => {
-      const value = (parsed as Record<string, unknown>)[key];
-      return typeof value === "string" ? [[key, value]] : [];
+      const value = parsed[key];
+      return value === undefined ? [] : [[key, value]];
     }),
   );
 

@@ -5,6 +5,7 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
+import { TomSecretsSchema } from "@tom/schemas";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -18,12 +19,8 @@ export const adapter = Effect.gen(function* () {
   if (isAlchemyDev) {
     const bundle = process.env.TOM_SECRETS;
     if (bundle) {
-      const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(bundle);
-      if (Option.isSome(parsed)) {
-        for (const [key, value] of Object.entries(parsed.value as Record<string, unknown>)) {
-          if (typeof value === "string") devSecrets[key] = value;
-        }
-      }
+      const parsed = Schema.decodeUnknownOption(TomSecretsSchema)(bundle);
+      if (Option.isSome(parsed)) Object.assign(devSecrets, parsed.value);
     }
   }
 

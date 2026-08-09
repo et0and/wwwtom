@@ -769,6 +769,9 @@ importers:
       '@effect/platform-node':
         specifier: 4.0.0-beta.99
         version: 4.0.0-beta.99(effect@4.0.0-beta.99)(ioredis@5.10.1)
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../packages/@tom/schemas
       '@tom/types':
         specifier: workspace:*
         version: link:../packages/@tom/types
@@ -956,6 +959,9 @@ importers:
       '@solidjs/router':
         specifier: 'catalog:'
         version: 0.15.0(solid-js@1.9.12)
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       classnames:
         specifier: 'catalog:'
         version: 2.5.1
@@ -969,6 +975,9 @@ importers:
 
   packages/@tom/utils:
     dependencies:
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       '@tom/types':
         specifier: workspace:*
         version: link:../types

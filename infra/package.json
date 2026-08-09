@@ -19,7 +19,8 @@
     "@tom/types": "workspace:*",
     "alchemy": "2.0.0-beta.63",
     "effect": "4.0.0-beta.99",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "@tom/schemas": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^24.9.1"
