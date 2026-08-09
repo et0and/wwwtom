@@ -1,3 +1,11 @@
+## [1.92.2](https://github.com/et0and/wwwtom/compare/v1.92.1...v1.92.2) (2026-08-09)
+
+
+### Bug Fixes
+
+* **web:** fix work fetching ([570317a](https://github.com/et0and/wwwtom/commit/570317a7aac90f41d2940b51c9dc3c6867f652ae))
+* **web:** fix work fetching ([730c454](https://github.com/et0and/wwwtom/commit/730c454b92c9c7d212a282f506eb29d2f709bc56))
+
 ## [1.92.1](https://github.com/et0and/wwwtom/compare/v1.92.0...v1.92.1) (2026-08-09)
 
 
