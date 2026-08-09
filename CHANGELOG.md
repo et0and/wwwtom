@@ -1,3 +1,11 @@
+## [1.92.3](https://github.com/et0and/wwwtom/compare/v1.92.2...v1.92.3) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ci:** pass yes flag from shared ([b89a488](https://github.com/et0and/wwwtom/commit/b89a48861e621cf388b77c31413a6fe7eb4b4eb5))
+* rem ext deps ([16aeec8](https://github.com/et0and/wwwtom/commit/16aeec8d75e440ab9fbba435f0c55065a403e879))
+
 ## [1.92.2](https://github.com/et0and/wwwtom/compare/v1.92.1...v1.92.2) (2026-08-09)
 
 
