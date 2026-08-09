@@ -1,3 +1,15 @@
+# [1.92.0](https://github.com/et0and/wwwtom/compare/v1.91.5...v1.92.0) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ci:** deps ([5e4d392](https://github.com/et0and/wwwtom/commit/5e4d392f9f79eecd54e224d2f1a672ae75c63bc7))
+
+
+### Features
+
+* **adapter, api, web, packages:** enabled otel ([c1b1d05](https://github.com/et0and/wwwtom/commit/c1b1d053733db0abebc5437edc45c820b60aefdd))
+
 ## [1.91.5](https://github.com/et0and/wwwtom/compare/v1.91.4...v1.91.5) (2026-08-09)
 
 
