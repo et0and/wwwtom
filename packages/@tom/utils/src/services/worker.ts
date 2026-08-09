@@ -1,5 +1,5 @@
 import { Effect, Layer, Logger, References, Schema } from "effect";
-import { errorResponseSchema } from "@tom/schemas";
+import { errorResponseSchema } from "@tom/schemas/error";
 import { WorkerEnvMissingError } from "@tom/types/errors";
 import { TelegramService } from "../telegram";
 import { makeAppConfigLayer } from "./config";

@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect";
 import { ImageResponse } from "workers-og";
-import { ogImageQueryParamsSchema } from "@tom/schemas";
+import { ogImageQueryParamsSchema } from "@tom/schemas/og";
 import { OgTemplates, OgTemplateParams } from "@tom/ui";
 import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";

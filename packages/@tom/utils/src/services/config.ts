@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted, Schema } from "effect";
-import { TomSecretsSchema } from "@tom/schemas";
+import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { SecretsError } from "@tom/types/errors";
 
 export interface AppConfigShape {

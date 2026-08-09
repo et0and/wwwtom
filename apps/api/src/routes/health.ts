@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { healthResponseSchema } from "@tom/schemas";
+import { healthResponseSchema } from "@tom/schemas/health";
 import { Schema } from "effect";
 
 export const healthRoutes = new Elysia().get(

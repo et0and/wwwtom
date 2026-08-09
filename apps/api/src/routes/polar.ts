@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants";
-import { errorResponseSchema } from "@tom/schemas";
+import { errorResponseSchema } from "@tom/schemas/error";
 import { getRequestEnv, runEffect, toErrorResponse, toErrorMessage } from "@tom/utils/services";
 import { createPolarCheckout, createPolarCustomerSession } from "../services/polar";
 

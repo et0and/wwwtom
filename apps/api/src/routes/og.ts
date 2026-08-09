@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import { errorResponseSchema } from "@tom/schemas";
+import { errorResponseSchema } from "@tom/schemas/error";
 import { runEffect } from "@tom/utils/services";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
 

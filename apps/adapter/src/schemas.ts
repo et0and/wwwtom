@@ -1,5 +1,5 @@
 import { Schema } from "effect";
-import { errorResponseSchema as sharedErrorResponseSchema } from "@tom/schemas";
+import { errorResponseSchema as sharedErrorResponseSchema } from "@tom/schemas/error";
 
 export const PaginationQuerySchema = Schema.Struct({
   page: Schema.optional(Schema.NumberFromString),

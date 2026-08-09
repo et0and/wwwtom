@@ -3,7 +3,7 @@ import { Effect, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
 import { InfrastructureConfigError } from "@tom/types/errors";
-import { TomSecretsSchema } from "@tom/schemas";
+import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { Stack } from "alchemy/Stack";
 
 export const readSecretBundle = (

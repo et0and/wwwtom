@@ -1,4 +1,5 @@
-import type { PayloadContentNode, PayloadMedia, ArenaBlockData } from "@tom/schemas";
+import type { ArenaBlockData } from "@tom/schemas/arena";
+import type { PayloadContentNode, PayloadMedia } from "@tom/schemas/payload";
 
 function extractTextFromLexical(node: PayloadContentNode): string {
   if (!node) return "";

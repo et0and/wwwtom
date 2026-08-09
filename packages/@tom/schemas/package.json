@@ -3,10 +3,15 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    "./arena": "./src/arena.ts",
+    "./branded": "./src/branded.ts",
+    "./error": "./src/error.ts",
+    "./health": "./src/health.ts",
+    "./jsonld": "./src/jsonld.ts",
+    "./og": "./src/og.ts",
+    "./payload": "./src/payload.ts",
+    "./secrets": "./src/secrets.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit"

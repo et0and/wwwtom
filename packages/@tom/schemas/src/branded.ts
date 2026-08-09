@@ -6,7 +6,7 @@
  *
  * Usage:
  * ```typescript
- * import { ArenaUserId } from "@tom/schemas"
+ * import { ArenaUserId } from "@tom/schemas/branded"
  *
  * // Parse and validate
  * const result = Schema.decodeUnknownEffect(ArenaUserId)(123)

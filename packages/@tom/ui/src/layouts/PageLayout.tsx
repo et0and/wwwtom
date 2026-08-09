@@ -1,6 +1,6 @@
 import type { Component, JSX, Accessor } from "solid-js";
 import { createMemo } from "solid-js";
-import type { JsonLd } from "@tom/schemas";
+import type { JsonLd } from "@tom/schemas/jsonld";
 import { Metadata } from "./Meta";
 
 interface PageLayoutProps {

@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { PayloadService } from "@tom/payload/service";
-import type { PayloadPost, PayloadResponse } from "@tom/schemas";
+import type { PayloadPost, PayloadResponse } from "@tom/schemas/payload";
 import { getRequestEnv, readCloudflareEnv, toErrorMessage } from "@tom/utils/services";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { AdapterError, createPayloadLayer, runAdapter } from "../../config/effect";

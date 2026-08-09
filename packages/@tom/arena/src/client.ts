@@ -18,7 +18,7 @@ import type {
   GetUserFollowersApiResponse,
   GetUserFollowingApiResponse,
   GetBlockCommentApiResponse,
-} from "@tom/schemas";
+} from "@tom/schemas/arena";
 import { HttpError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";
 

@@ -5,7 +5,7 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
-import { TomSecretsSchema } from "@tom/schemas";
+import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
