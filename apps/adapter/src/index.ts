@@ -1,6 +1,14 @@
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { cors } from "@elysiajs/cors";
+import {
+  attachRequestEnv,
+  getRequestEnv,
+  sendErrorAlert,
+  toErrorResponse,
+} from "@tom/utils/services";
+import type { CloudflareEnv } from "@tom/utils/services";
+import { AdapterError } from "./config/effect";
 import { arenaIntegration } from "./integrations/arena";
 import { payloadIntegration } from "./integrations/payload";
 import { polarIntegration } from "./integrations/polar";
@@ -8,14 +16,6 @@ import { guestbookIntegration } from "./integrations/guestbook";
 import { githubIntegration } from "./integrations/github";
 import { imageIntegration } from "./integrations/image";
 import { ogIntegration } from "./integrations/og";
-import {
-  AdapterError,
-  getRequestEnv,
-  sendErrorAlert,
-  toJsonResponse,
-  type AdapterEnv,
-  type RequestWithEnv,
-} from "./config/effect";
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -44,16 +44,16 @@ export const app = new Elysia({
   .onError(({ code, error, set, request }) => {
     set.headers["content-type"] = "application/json";
     if (error instanceof AdapterError) {
-      return toJsonResponse(error.status, { error: error.message });
+      return toErrorResponse(error.status, error.message);
     }
     sendErrorAlert(getRequestEnv(request), "Unhandled adapter error", error);
     if (code === "NOT_FOUND") {
-      return toJsonResponse(404, { error: "Not found" });
+      return toErrorResponse(404, "Not found");
     }
     if (code === "VALIDATION") {
-      return toJsonResponse(400, { error: "Validation error" });
+      return toErrorResponse(400, "Validation error");
     }
-    return toJsonResponse(500, { error: "Internal server error" });
+    return toErrorResponse(500, "Internal server error");
   })
   .use(arenaIntegration)
   .use(payloadIntegration)
@@ -67,10 +67,7 @@ export const app = new Elysia({
 export type AdapterApp = typeof app;
 
 const worker = {
-  fetch: (request: Request, env: AdapterEnv) => {
-    (request as RequestWithEnv).env = env;
-    return app.fetch(request);
-  },
+  fetch: (request: Request, env: CloudflareEnv) => app.fetch(attachRequestEnv(request, env)),
 };
 
 export default worker;

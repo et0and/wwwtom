@@ -25,7 +25,6 @@
     "effect": "catalog:",
     "elysia": "catalog:",
     "megalodon": "10.2.0",
-    "obscenity": "catalog:",
     "shiki": "1.29.2"
   },
   "devDependencies": {

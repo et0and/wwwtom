@@ -5,14 +5,9 @@ import { HttpStatus } from "@tom/constants";
 import type { Product, Customer, CustomerInput } from "@tom/types";
 import { callApi } from "../../callApi";
 import { customerBodySchema } from "../../schemas";
-import {
-  AdapterError,
-  getRequestEnv,
-  runAdapter,
-  runEffect,
-  toJsonResponse,
-} from "../../config/effect";
-import type { AdapterEnv } from "../../config/effect";
+import { getRequestEnv, runEffect, toErrorResponse } from "@tom/utils/services";
+import type { CloudflareEnv } from "@tom/utils/services";
+import { AdapterError, runAdapter } from "../../config/effect";
 
 const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,
@@ -30,9 +25,9 @@ const parseJson = <T>(response: Response, operation: string): Effect.Effect<T, P
       }),
   });
 
-const polarBaseUrl = (env: AdapterEnv) => env.POLAR_API_URL ?? "https://api.polar.sh";
+const polarBaseUrl = (env: CloudflareEnv) => env.POLAR_API_URL ?? "https://api.polar.sh";
 
-const fetchPolarProducts = (env: AdapterEnv): Effect.Effect<Product[], PolarApiError> =>
+const fetchPolarProducts = (env: CloudflareEnv): Effect.Effect<Product[], PolarApiError> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("Fetching products from Polar API");
     const response = yield* Effect.tryPromise({
@@ -62,7 +57,7 @@ const fetchPolarProducts = (env: AdapterEnv): Effect.Effect<Product[], PolarApiE
   });
 
 const fetchPolarProduct = (
-  env: AdapterEnv,
+  env: CloudflareEnv,
   productId: string,
 ): Effect.Effect<Product, PolarApiError> =>
   Effect.gen(function* () {
@@ -95,7 +90,7 @@ const fetchPolarProduct = (
   });
 
 const createPolarCustomer = (
-  env: AdapterEnv,
+  env: CloudflareEnv,
   input: CustomerInput,
 ): Effect.Effect<Customer, PolarApiError> =>
   Effect.gen(function* () {
@@ -193,7 +188,7 @@ const proxyToApi = (call: Promise<EdenResult>, errorMessage: string): Promise<Re
     Effect.tryPromise(() => call).pipe(
       Effect.map((result) =>
         result.error
-          ? toJsonResponse(HttpStatus.InternalServerError, { error: errorMessage })
+          ? toErrorResponse(HttpStatus.InternalServerError, errorMessage)
           : result.response,
       ),
     ),

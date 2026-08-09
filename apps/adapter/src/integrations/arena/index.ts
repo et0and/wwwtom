@@ -3,17 +3,10 @@ import { Effect, Schema } from "effect";
 import { ArenaService } from "@tom/arena/service";
 import type { ArenaApi, PaginationAttributes } from "@tom/arena";
 import { HttpError } from "@tom/types";
-import { retryPolicy } from "@tom/utils";
-import {
-  AdapterError,
-  getRequestEnv,
-  resolveEnv,
-  createArenaLayer,
-  runAdapter,
-  toErrorMessage,
-} from "../../config/effect";
+import { getRequestEnv, readCloudflareEnv, retryPolicy, toErrorMessage } from "@tom/utils";
+import { AdapterError, createArenaLayer, runAdapter } from "../../config/effect";
 import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "../../schemas";
-import type { AdapterEnv } from "../../config/effect";
+import type { CloudflareEnv } from "@tom/utils";
 
 const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: Schema.String }));
 
@@ -51,12 +44,12 @@ const arenaOperation = <T>(
   });
 
 const runArena = <T>(
-  env: AdapterEnv,
+  env: CloudflareEnv,
   operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
   mode: "auth" | "public" = "auth",
 ): Promise<T> =>
   runAdapter(
-    Effect.tryPromise(() => resolveEnv(env)).pipe(
+    Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
       Effect.flatMap((resolved) =>
         arenaOperation(operation, mode).pipe(Effect.provide(createArenaLayer(resolved))),
       ),

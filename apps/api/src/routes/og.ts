@@ -1,7 +1,8 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
+import { errorResponseSchema } from "@tom/schemas";
+import { runEffect } from "@tom/utils/services";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
-import { runEffect } from "../config/effect";
 
 // Param validation (length limits) happens in the OG service via @tom/schemas.
 const OgQuerySchema = Schema.Struct({
@@ -53,11 +54,9 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
     query: ogQuerySchema,
     response: {
       200: Schema.toStandardSchemaV1(Schema.Unknown),
-      400: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
-      500: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
-      502: Schema.toStandardSchemaV1(
-        Schema.Struct({ error: Schema.String, cause: Schema.optional(Schema.String) }),
-      ),
+      400: Schema.toStandardSchemaV1(errorResponseSchema),
+      500: Schema.toStandardSchemaV1(errorResponseSchema),
+      502: Schema.toStandardSchemaV1(errorResponseSchema),
     },
     detail: {
       description: "OG image generation endpoint",

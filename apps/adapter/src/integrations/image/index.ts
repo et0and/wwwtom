@@ -4,7 +4,7 @@ import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
 import { ImageError } from "@tom/types";
-import { runEffect, toJsonResponse } from "../../config/effect";
+import { runEffect, toErrorResponse } from "@tom/utils/services";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -21,7 +21,7 @@ const imageQuerySchema = Schema.toStandardSchemaV1(ImageQuerySchema);
 
 const toImageError = (message: string, cause?: unknown): ImageError =>
   new ImageError({
-    response: toJsonResponse(HttpStatus.InternalServerError, { error: message }),
+    response: toErrorResponse(HttpStatus.InternalServerError, message),
     ...(cause ? { cause } : {}),
   });
 
@@ -38,13 +38,13 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
           try: () => new URL(urlStr),
           catch: () =>
             new ImageError({
-              response: toJsonResponse(HttpStatus.BadRequest, { error: "Invalid URL" }),
+              response: toErrorResponse(HttpStatus.BadRequest, "Invalid URL"),
             }),
         });
 
         if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
           return yield* new ImageError({
-            response: toJsonResponse(HttpStatus.Forbidden, { error: "Domain not allowed" }),
+            response: toErrorResponse(HttpStatus.Forbidden, "Domain not allowed"),
           });
         }
 

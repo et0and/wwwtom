@@ -1,8 +1,9 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants";
+import { errorResponseSchema } from "@tom/schemas";
+import { getRequestEnv, runEffect, toErrorResponse, toErrorMessage } from "@tom/utils/services";
 import { createPolarCheckout, createPolarCustomerSession } from "../services/polar";
-import { getRequestEnv, runEffect, toJsonResponse } from "../config/effect";
 
 const CheckoutQuerySchema = Schema.Struct({
   products: Schema.String,
@@ -21,7 +22,9 @@ const withErrorHandling = (effect: Effect.Effect<Response, unknown>, errorMessag
     Effect.catch((error) =>
       Effect.gen(function* () {
         yield* Effect.logError(errorMessage, error);
-        return yield* Effect.succeed(toJsonResponse(HttpStatus.InternalServerError, { error }));
+        return yield* Effect.succeed(
+          toErrorResponse(HttpStatus.InternalServerError, toErrorMessage(error)),
+        );
       }),
     ),
   );
@@ -60,8 +63,8 @@ export const polarRoutes = new Elysia({ name: "polar" })
       query: checkoutQuerySchema,
       response: {
         302: Schema.toStandardSchemaV1(Schema.Unknown),
-        400: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
-        500: Schema.toStandardSchemaV1(Schema.Unknown),
+        400: Schema.toStandardSchemaV1(errorResponseSchema),
+        500: Schema.toStandardSchemaV1(errorResponseSchema),
       },
       detail: {
         description: "Create a checkout session and redirect to Polar",
@@ -93,8 +96,8 @@ export const polarRoutes = new Elysia({ name: "polar" })
       query: portalQuerySchema,
       response: {
         302: Schema.toStandardSchemaV1(Schema.Unknown),
-        400: Schema.toStandardSchemaV1(Schema.Struct({ error: Schema.String })),
-        500: Schema.toStandardSchemaV1(Schema.Unknown),
+        400: Schema.toStandardSchemaV1(errorResponseSchema),
+        500: Schema.toStandardSchemaV1(errorResponseSchema),
       },
       detail: {
         description: "Redirect to Polar customer portal",

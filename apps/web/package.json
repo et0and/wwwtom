@@ -17,13 +17,10 @@
   "dependencies": {
     "@elysiajs/eden": "catalog:",
     "@mdx-js/rollup": "3.1.1",
-    "@oramacloud/client": "2.1.4",
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/start": "2.0.0-beta.9",
-    "@solidjs/vite-plugin-nitro-2": "0.3.2",
     "@tanstack/solid-query": "^5.101.4",
-    "@tanstack/solid-virtual": "3.13.12",
     "@tom/adapter": "workspace:*",
     "@tom/checkout": "workspace:*",
     "@tom/constants": "workspace:*",
@@ -32,9 +29,7 @@
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
     "blurhash": "2.0.5",
-    "classnames": "catalog:",
     "effect": "catalog:",
-    "marked": "16.4.0",
     "number-to-words": "1.2.4",
     "rss": "1.2.2",
     "solid-js": "catalog:",
@@ -44,7 +39,6 @@
     "@solidjs/testing-library": "0.8.10",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",
-    "@testing-library/user-event": "14.6.1",
     "@types/node": "24.9.1",
     "@types/number-to-words": "1.2.3",
     "@types/rss": "0.0.32",
@@ -52,7 +46,6 @@
     "tailwindcss": "4.3.3",
     "vite": "^8.1.5",
     "vite-plugin-solid": "^2.11.11",
-    "vitest": "4.1.10",
-    "wrangler": "4.76.0"
+    "vitest": "4.1.10"
   }
 }

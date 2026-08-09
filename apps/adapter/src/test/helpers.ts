@@ -1,17 +1,16 @@
-import type { AdapterEnv } from "../config/effect";
-import type { RequestWithEnv } from "../config/effect";
+import type { CloudflareEnv, RequestWithEnv } from "@tom/utils/services";
 
 /**
  * Build a Request with the Cloudflare env attached the same way the worker's
  * fetch wrapper does, so Elysia's getRequestEnv can read it back.
  */
-export const requestWithEnv = (url: string, env: AdapterEnv, init?: RequestInit): Request => {
+export const requestWithEnv = (url: string, env: CloudflareEnv, init?: RequestInit): Request => {
   const request = new Request(url, init);
   (request as RequestWithEnv).env = env;
   return request;
 };
 
-export const testEnv = (overrides: Partial<AdapterEnv> = {}): AdapterEnv => ({
+export const testEnv = (overrides: Partial<CloudflareEnv> = {}): CloudflareEnv => ({
   NODE_ENV: "test",
   PAYLOAD_URL: "https://cms.tom.so",
   DATABASE_URL: "postgres://test",

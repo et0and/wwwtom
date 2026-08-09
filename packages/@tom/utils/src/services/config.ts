@@ -30,6 +30,10 @@ export type CloudflareEnv = {
   TELEGRAM_CHAT_ID?: string;
   SUCCESS_URL?: string;
   POLAR_ACCESS_TOKEN?: string;
+  POLAR_API_URL?: string;
+  ADAPTER_URL?: string;
+  API_URL?: string;
+  GUESTBOOK_RETURN_URL?: string;
   NODE_ENV?: string;
   TOM_SECRETS?: { get(): Promise<string> };
 };

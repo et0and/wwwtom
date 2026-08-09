@@ -4,6 +4,7 @@ import { ogImageQueryParamsSchema } from "@tom/schemas";
 import { OgTemplates, OgTemplateParams } from "@tom/ui";
 import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";
+import { toErrorResponse } from "@tom/utils/services";
 
 const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 
@@ -100,24 +101,13 @@ export const handleOgError = (
   error: FontFetchError | ValidationError | ImageGenerationError,
 ): Response => {
   if (error instanceof FontFetchError) {
-    return new Response(JSON.stringify({ error: error.message, cause: error.cause }), {
-      status: HttpStatus.BadGateway,
-      headers: { "Content-Type": "application/json" },
-    });
+    return toErrorResponse(HttpStatus.BadGateway, error.message, error.cause);
   }
   if (error instanceof ValidationError) {
-    return new Response(
-      JSON.stringify({
-        error: `Validation error: ${error.field} - ${error.issue}`,
-      }),
-      {
-        status: HttpStatus.BadRequest,
-        headers: { "Content-Type": "application/json" },
-      },
+    return toErrorResponse(
+      HttpStatus.BadRequest,
+      `Validation error: ${error.field} - ${error.issue}`,
     );
   }
-  return new Response(JSON.stringify({ error: error.message }), {
-    status: HttpStatus.InternalServerError,
-    headers: { "Content-Type": "application/json" },
-  });
+  return toErrorResponse(HttpStatus.InternalServerError, error.message);
 };

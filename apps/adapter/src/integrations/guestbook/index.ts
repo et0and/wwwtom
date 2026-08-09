@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { DatabaseService } from "@tom/db/service";
-import { checkProfanity } from "@tom/utils";
+import { checkProfanity, getRequestEnv, readCloudflareEnv, toErrorMessage } from "@tom/utils";
 import {
   MissingFieldError,
   ProfanityError,
@@ -11,14 +11,7 @@ import {
   HttpError,
 } from "@tom/types";
 import * as auth from "./auth";
-import {
-  AdapterError,
-  getRequestEnv,
-  resolveEnv,
-  createDbLayer,
-  runAdapter,
-  toErrorMessage,
-} from "../../config/effect";
+import { AdapterError, createDbLayer, runAdapter } from "../../config/effect";
 import {
   authUrlResponseSchema,
   callbackQuerySchema,
@@ -29,7 +22,7 @@ import {
   messageBodySchema,
   successResponseSchema,
 } from "../../schemas";
-import type { AdapterEnv } from "../../config/effect";
+import type { CloudflareEnv } from "@tom/utils";
 
 type GuestbookError =
   | MissingFieldError
@@ -46,11 +39,11 @@ const guestbookStatus = (error: GuestbookError): number => {
 };
 
 const runGuestbook = <T>(
-  env: AdapterEnv,
+  env: CloudflareEnv,
   effect: Effect.Effect<T, GuestbookError, DatabaseService>,
 ): Promise<T> =>
   runAdapter(
-    Effect.tryPromise(() => resolveEnv(env)).pipe(
+    Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
       Effect.flatMap((resolved) => effect.pipe(Effect.provide(createDbLayer(resolved)))),
       Effect.mapError((error) =>
         error instanceof HttpError

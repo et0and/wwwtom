@@ -118,3 +118,10 @@ export class SecretsError extends Schema.TaggedErrorClass<SecretsError>()("Secre
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
+
+export class WorkerEnvMissingError extends Schema.TaggedErrorClass<WorkerEnvMissingError>()(
+  "WorkerEnvMissingError",
+  {
+    message: Schema.String,
+  },
+) {}

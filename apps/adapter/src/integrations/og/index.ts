@@ -3,8 +3,8 @@ import { Schema } from "effect";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants";
 import { ImageGenerationError } from "@tom/types";
+import { getRequestEnv, runEffect, toErrorResponse } from "@tom/utils/services";
 import { callApi } from "../../callApi";
-import { getRequestEnv, runEffect, toJsonResponse } from "../../config/effect";
 
 const OgQuerySchema = Schema.Struct({
   title: Schema.optional(Schema.String),
@@ -60,7 +60,7 @@ export const ogIntegration = new Elysia({ name: "og" }).get(
       Effect.catch(
         Effect.fn("ogErrorHandler")(function* (error: ImageGenerationError) {
           yield* Effect.logError("OG image proxy error", error);
-          return toJsonResponse(HttpStatus.InternalServerError, { error: error.message });
+          return toErrorResponse(HttpStatus.InternalServerError, error.message);
         }),
       ),
     );

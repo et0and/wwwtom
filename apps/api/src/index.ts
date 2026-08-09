@@ -1,21 +1,35 @@
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
+import { openapi } from "@elysiajs/openapi";
 import { Effect } from "effect";
+import {
+  attachRequestEnv,
+  getRequestEnv,
+  sendErrorAlert,
+  toErrorResponse,
+} from "@tom/utils/services";
+import type { CloudflareEnv } from "@tom/utils/services";
 import { healthRoutes } from "./routes/health";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
-import {
-  getRequestEnv,
-  sendErrorAlert,
-  toJsonResponse,
-  type Env,
-  type RequestWithEnv,
-} from "./config/effect";
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
   name: "tom-api",
 })
+  .use(
+    openapi({
+      path: "/",
+      specPath: "/openapi.json",
+      documentation: {
+        info: {
+          title: "Tom API",
+          version: "1.1.0",
+          description: "tom.so domain API — health, OG image generation, Polar checkout",
+        },
+      },
+    }),
+  )
   .derive(({ request }) => ({ env: getRequestEnv(request) }))
   .onRequest(({ set }) => {
     set.headers["x-request-id"] = crypto.randomUUID();
@@ -28,12 +42,12 @@ export const app = new Elysia({
       }),
     );
     if (code === "NOT_FOUND") {
-      return toJsonResponse(404, { error: "Not found" });
+      return toErrorResponse(404, "Not found");
     }
     if (code === "VALIDATION") {
-      return toJsonResponse(400, { error: "Validation error" });
+      return toErrorResponse(400, "Validation error");
     }
-    return toJsonResponse(500, { error: "Internal server error" });
+    return toErrorResponse(500, "Internal server error");
   })
   .use(healthRoutes)
   .use(ogRoutes)
@@ -43,10 +57,7 @@ export const app = new Elysia({
 export type ApiApp = typeof app;
 
 const worker = {
-  fetch: (request: Request, env: Env) => {
-    (request as RequestWithEnv).env = env;
-    return app.fetch(request);
-  },
+  fetch: (request: Request, env: CloudflareEnv) => app.fetch(attachRequestEnv(request, env)),
 };
 
 export default worker;

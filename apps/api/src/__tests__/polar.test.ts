@@ -88,8 +88,7 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body.error.message).toBe("Failed to create checkout");
-      expect(body.error.status).toBe(401);
+      expect(body).toEqual({ error: "Failed to create checkout" });
     });
 
     it("returns 500 JSON when Polar is unreachable", async () => {
@@ -99,7 +98,7 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body.error.message).toBe("Network error");
+      expect(body).toEqual({ error: "Network error" });
     });
   });
 
@@ -138,7 +137,7 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body.error.message).toBe("Failed to create customer session");
+      expect(body).toEqual({ error: "Failed to create customer session" });
     });
   });
 });

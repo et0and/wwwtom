@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { HttpError } from "@tom/types";
-import { runEffect } from "../../config/effect";
+import { runEffect } from "@tom/utils/services";
 
 const GITHUB_HEADERS = {
   Accept: "application/vnd.github.v3+json",

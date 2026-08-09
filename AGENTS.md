@@ -1,133 +1,83 @@
-# wwwtom Agent Instructions
+# wwwtom
 
-## Purpose
+pnpm + Turborepo monorepo: tom.so, api.tom.so, cms.tom.so, sophie.st.
+Smallest correct change, follow local patterns, verify before handoff.
+Improve existing code; avoid new abstractions.
 
-- This repo is a pnpm + Turborepo monorepo for tom.so, api.tom.so, cms.tom.so and sophie.st.
-- Make the smallest correct change, follow local patterns, and verify before
-  handoff.
-- Prefer improving existing code over introducing new abstractions.
+## Shape
 
-## Repo Shape
+- `apps/web` — SolidStart 2 (2.0.0-beta.9) + Vite, Workers. Solid rules: `apps/web/AGENTS.md`.
+- `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers.
+- `apps/cms` — Payload 3.75 + Next 16 + OpenNext, Workers (D1 SQLite, R2).
+- `apps/sophie` — Payload site, Next + OpenNext, Workers.
+- `apps/adapter` — fediverse adapter, Elysia + Effect, Workers.
+- `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
+- `packages/@tom/*` — ui, utils, types, db, arena, payload, schemas, checkout, constants, haptics, email.
+- `infra` — Alchemy 2.0.0-beta.63 + Effect 4.0.0-beta.99 stacks: shared, api, adapter, web.
 
-- `apps/web` — SolidStart app on Cloudflare Workers.
-- `apps/api` — Hono API on Cloudflare Workers.
-- `apps/cms` — Payload CMS on Next.js with Open Next.
-- `apps/(stores)` — Ecommerce stores running on Medusa.js (in progress).
-- `packages/@tom/*` — shared packages like `ui`, `utils`, `types`, `db`,
-  `arena`, `payload`, `schemas`, `checkout`, `constants`, `haptics`, and
-  other `@tom/*` workspaces present in the repo.
-- `infra` — Alchemy V2 + Effect V4 Cloudflare stacks for web and api.
+## Working rules
 
-## General Working Rules
+- one function unless composable/reusable
+- no unnecessary destructuring; no `else` unless needed; no `try`/`catch` — use Effect
+- no `any`; no `let` — prefer `const`; descriptive names
+- no Node-only APIs — Workers runtime; prefer web-standard/Worker-safe
+- improve existing files, don't rewrite patterns
 
-- Keep things in one function unless composable or reusable
-- AVOID unnecessary destructuring of variables
-- AVOID `else` statements unless necessary
-- AVOID `try`/`catch` - use Effect for error handling
-- AVOID using `any` type
-- AVOID `let` statements - prefer `const`
-- PREFER clear, descriptive variable names where possible
-- AVOID Node-specific APIs - this runs on Cloudflare Workers
-- Improve existing files instead of rewriting patterns arbitrarily.
+## Commands (root)
 
-## Runtime and Platform Constraints
+- `pnpm dev` (all via Turbo) | `dev:web` | `dev:api` | `dev:adapter` | `dev:cms` | `dev:sophie`
+- `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
+- `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
+- `pnpm test:update` — snapshot update (web, utils)
+- `pnpm deploy` = shared → api → adapter → web (Alchemy; `ALCHEMY_STAGE` required)
+- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web`
+- `pnpm deploy:cms` / `deploy:sophie` (OpenNext; `CLOUDFLARE_ENV` required)
+- `pnpm destroy` — destroy current Alchemy stage
 
-- All code run on Cloudflare Workers.
-- Avoid Node-only APIs unless the runtime boundary
-  already requires them.
-- Treat `packages/@tom/*` as portable across apps.
-- `apps/web` uses Wrangler with `nodejs_compat`, but still prefer web-standard
-  and Worker-safe APIs.
+## App scripts
 
-## Core Commands
+- web: `dev|build|start|typecheck|lint|test|test:ui|test:coverage`
+- api: `dev|build|deploy|test|typecheck|lint|cf-typegen`
+- cms: `dev|build|lint|lint:fix|generate:types|generate:importmap|payload|preview|deploy|deploy:app|deploy:database`
+- sophie: + `typecheck`
 
-### Root
+## Single tests
 
-- `pnpm dev` — run all dev tasks through Turbo.
-- `pnpm dev:web` — run only `@tom/web`.
-- `pnpm dev:api` — run only `@tom/api`.
-- `pnpm build` — Turbo build.
-- `pnpm lint` — Turbo lint.
-- `pnpm format` — `oxfmt --check .`.
-- `pnpm write` — `oxfmt --write .`.
-- `pnpm typecheck` — Turbo typecheck.
-- `pnpm test` — run tests via Turbo.
-- `pnpm test:update` — update snapshots in web and utils.
-- `pnpm deploy` — deploy shared secrets, API, then web through Alchemy.
-- `pnpm deploy:shared|deploy:api|deploy:web` — deploy an individual Alchemy stack.
-- `pnpm destroy` — destroy the current Alchemy stage.
+- root filter: `pnpm test -- Nav.test.tsx`
+- web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/components/__tests__/Nav.test.tsx`)
+- utils: `cd packages/@tom/utils && pnpm vitest run __tests__/telegram.test.ts`
+- cms: `cd apps/cms && pnpm vitest run tests/int/<name>.int.spec.ts`
 
-### App / Package Commands
+## Tests
 
-- `apps/web`: SolidStart 2 + Vite. `pnpm run dev|build|typecheck|lint|test|test:ui|test:coverage`
-- `apps/api`: `pnpm run dev|build|deploy|cf-typegen`
-- `apps/cms`: `pnpm run dev|build|lint|lint:fix|generate:types|preview`
-- `apps/docs`: `pnpm run dev|build|preview`
-- `packages/@tom/utils`: `pnpm run test|typecheck`
+- web: `apps/web/src/**/__tests__/*.test.tsx`; jsdom, globals, `src/test/setup.ts` (jest-dom, cleanup, matchMedia mock)
+- utils: `packages/@tom/utils/__tests__/*`
+- cms: `apps/cms/tests/int/**/*.int.spec.ts` (vitest + jsdom)
+- Solid UI: `@solidjs/testing-library`; wrap router deps in `Router`/`Route`; assert user-visible behavior; focused snapshots; narrowest relevant test first
 
-## Single-Test Commands
+## TypeScript
 
-- Root filename filter: `pnpm test -- Nav.test.tsx`
-- Web exact file: `cd apps/web && npx vitest run Nav.test.tsx`
-- Web exact path:
-  `cd apps/web && npx vitest run src/components/__tests__/Nav.test.tsx`
-- Utils exact file:
-  `cd packages/@tom/utils && pnpm vitest run __tests__/telegram.test.ts`
-- CMS integration file:
-  `cd apps/cms && pnpm vitest run tests/int/<name>.int.spec.ts`
+- strict; `exactOptionalPropertyTypes`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noUncheckedIndexedAccess`; bundler resolution
+- Effect language service plugin (root `prepare: effect-language-service patch`)
+- parse unknown input at boundaries; keep internal types trusted
+- NEVER `Record<string, unknown|any>` (oxlint `typescript/no-restricted-types`) — model with Effect Schema in `@tom/schemas`; fully-typed records like `Record<string, string>` fine
+- don't hand-edit generated `**/worker-configuration.d.ts` / `**/cloudflare-env.d.ts` (oxlint-ignored)
 
-## Test Locations and Setup
+## Format / imports
 
-- Web tests live in `apps/web/src/**/__tests__/*.test.tsx`.
-- Utils tests live in `packages/@tom/utils/__tests__/*`.
-- CMS tests live in `apps/cms/tests/int/**/*.int.spec.ts`.
-- Web Vitest uses `jsdom`, globals, and `apps/web/src/test/setup.ts`.
-- Web test setup includes `@testing-library/jest-dom`, cleanup, and a
-  `window.matchMedia` mock.
+- oxfmt + oxlint; tabs (width 2), 80 cols, double quotes, semicolons, trailing commas
+- external imports first, then internal; `@tom/*` for shared; `~/*` alias in web; tidy import blocks
 
-## TypeScript Rules
+## Naming / data flow
 
-- Use strict TypeScript.
-- Important enforced options: `exactOptionalPropertyTypes`,
-  `noImplicitReturns`, `noFallthroughCasesInSwitch`,
-  `noUncheckedIndexedAccess`.
-- Module resolution is bundler-style.
-- The Effect language service plugin is enabled.
-- Parse unknown input at boundaries; keep internal types trusted.
-- NEVER use `Record<string, unknown>` or `Record<string, any>` — they drop all
-  type information. Enforced by `typescript/no-restricted-types` in
-  `.oxlintrc.json`. Model the shape with an Effect Schema (in `@tom/schemas`
-  when shared) instead. Fully-typed records like `Record<string, string>` are
-  fine.
-- Generated `**/worker-configuration.d.ts` and `**/cloudflare-env.d.ts` files
-  are excluded from oxlint via `ignorePatterns`; do not hand-edit them.
+- names read like English; descriptive booleans (`isEnabled`, `hasAccess`); no multi-behavior flags
+- explicit return types at boundaries; make invalid states hard to represent
 
-## Formatting and Imports
+## Effect
 
-- Formatter/lint baseline comes from `oxfmt` and `oxlint`.
-- Use tabs with width 2, target 80 columns, double quotes, semicolons, and
-  trailing commas.
-- Order imports with external packages first, then internal modules.
-- Use workspace imports for shared code: `@tom/*`.
-- In `apps/web`, use the `~/*` alias for app-local imports.
-- Keep import blocks tidy; do not scatter equivalent imports.
-
-## Naming and Data Flow
-
-- Name functions and variables so the code reads like English.
-- Prefer descriptive booleans like `isEnabled` and `hasAccess`.
-- Avoid boolean flags that hide multiple behaviors inside one function.
-- Prefer explicit return types when they improve boundary readability.
-- Make invalid states hard to represent.
-
-## Error Handling and Effects
-
-- Prefer `Effect.gen`, `Effect.succeed`, `Effect.fail`, and `Effect.try`.
-- Define shared/custom errors in `@tom/types`.
-- Follow the logging API already used in the touched area; for example, CMS code
-  uses `payload.logger`.
-- Use `Redacted.make()` for secrets and tokens.
-- Do not swallow errors.
+- `Effect.gen` | `Effect.succeed` | `Effect.fail` | `Effect.try` / `Effect.tryPromise`
+- errors in `@tom/types/errors`; `Redacted.make()` for secrets/tokens; never swallow errors
+- match logging API in touched area (CMS: `payload.logger`)
 
 <!-- effect-solutions:start -->
 
@@ -145,76 +95,38 @@ Never guess at Effect patterns - check the guide first.
 
 <!-- effect-solutions:end -->
 
-## Repo Rule Files
+## Solid (full rules: `apps/web/AGENTS.md`)
 
-- No `.cursor/` rules directory was found.
-- No `.cursorrules` file was found.
-- No `.github/copilot-instructions.md` file was found.
-- No `CLAUDE.md` file was found.
+- components = setup fns, run once, not render loops
+- signals as fns: `count()`; one signal per value
+- derivations in `createMemo`/derived fns — never `createEffect` that sets state
+- `createEffect` side effects only; `onCleanup` inside effects
+- props via `props.x` (no destructure); `splitProps`/`mergeProps`
+- `<For>`/`<Index>`/`<Show>`, never `.map()` in JSX; `<Suspense>` for async
+- `class` not `className`; `classList` for reactive classes
 
-## Solid / SolidStart Rules
+## API / CMS
 
-- Components are setup functions, not render loops.
-- Access signals as functions: `count()`.
-- Put derivations in `createMemo`, not effects that set state.
-- Use `createEffect` only for side effects.
-- Call `onCleanup` inside effects when needed.
-- Access props via `props.x`; do not destructure component props.
-- Use `splitProps` for local vs passthrough props and `mergeProps` for
-  defaults.
-- Use `<For>`, `<Index>`, and `<Show>` instead of `.map()` in JSX.
-- Use `<Suspense>` for async UI.
-- Use `class`, not `className`; use `classList` for reactive classes.
+- api: Elysia + Effect, Worker runtime; tsconfig `jsxImportSource: "solid-js"` — preserve
+- cms/sophie: Next + Payload + React; don't force Solid patterns into CMS
+- cms has own `eslint.config.mjs`; follow stronger local app rules when they differ
 
-## API / CMS Notes
+## Infra
 
-- API code uses Hono and Worker runtime constraints.
-- `apps/api` uses `jsxImportSource: "hono/jsx"`; preserve that pattern.
-- CMS uses Next.js + Payload + React; do not force Solid patterns into CMS.
-- CMS has its own `eslint.config.mjs`; follow stronger local app rules when
-  they differ.
+- Alchemy deploy order shared → api → adapter → web; `ALCHEMY_STAGE` required
+- production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
+- `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
+- web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
 
-## Infrastructure
+## Rule files
 
-- Alchemy deploy order is `shared -> api -> web`; `ALCHEMY_STAGE` is required.
-  The `production` stage adopts the existing `wwwtom` and `apitom` Workers,
-  their custom domains, `TOM_RATE_LIMIT_KV`, and
-  `guestbook-hyperdrive`.
-- `TOM_SECRETS` is a JSON bundle seeded in the account-level Cloudflare
-  Secrets Store. Workers read the Store binding at runtime; do not add
-  individual production secrets to Wrangler config.
-- `apps/web` deploys through `Cloudflare.Website.Vite`; do not reintroduce
-  Vinxi or a web Wrangler deploy config.
+- no `.cursor/` rules, `.cursorrules`, `.github/copilot-instructions.md`, or `CLAUDE.md`
 
-## Testing Conventions
+## Commits
 
-- Prefer Vitest across the repo.
-- For Solid UI tests, use `@solidjs/testing-library`.
-- Wrap router-dependent components in `Router` / `Route` as needed.
-- Assert user-visible behavior first.
-- Keep snapshots focused.
-- Run the narrowest relevant test first, then broader verification if needed.
+- conventional commits: `feat|fix|chore|refactor(scope):`; breaking = `BREAKING CHANGE:` body or `!`; PR titles same format
 
-## Verification Expectations
+## Sites
 
-- Minimum: run targeted tests for changed code when tests exist.
-- For broader changes, also run relevant lint and typecheck commands.
-- Good defaults: `pnpm lint`, `pnpm typecheck`, and `pnpm test -- <file>` or a
-  package-local Vitest command.
-- If something cannot be verified locally, say so explicitly.
-
-## Commits and PR Titles
-
-- Use conventional commits because releases depend on them.
-- Valid prefixes: `feat(scope):`, `fix(scope):`, `chore(scope):`,
-  `refactor(scope):`.
-- Use `BREAKING CHANGE:` in the body, or `!`, for breaking changes.
-- PR titles should follow the same format.
-
-## Quick Reference
-
-- Production site: `https://tom.so` for web, `https://api.tom.so` for api, and `https://cms.tom.so` for cms.
-- Web deploy target: Cloudflare Workers.
-- API deploy target: Cloudflare Workers.
-- CMS deploy flow uses OpenNext + Cloudflare plus database migrations on Cloudflare Workers.
-- If unsure, read the nearest package or app config before changing patterns.
+- web `https://tom.so`, api `https://api.tom.so`, cms `https://cms.tom.so`
+- if unsure, read nearest package or app config before changing patterns

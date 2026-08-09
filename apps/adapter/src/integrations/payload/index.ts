@@ -2,16 +2,10 @@ import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas";
+import { getRequestEnv, readCloudflareEnv, toErrorMessage } from "@tom/utils/services";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
-import {
-  AdapterError,
-  getRequestEnv,
-  resolveEnv,
-  toErrorMessage,
-  createPayloadLayer,
-  runAdapter,
-} from "../../config/effect";
-import type { AdapterEnv } from "../../config/effect";
+import { AdapterError, createPayloadLayer, runAdapter } from "../../config/effect";
+import type { CloudflareEnv } from "@tom/utils/services";
 
 const emptyPostsResponse = {
   docs: [] as readonly PayloadPost[],
@@ -24,11 +18,11 @@ const emptyPostsResponse = {
 };
 
 const runPayload = <T>(
-  env: AdapterEnv,
+  env: CloudflareEnv,
   effect: Effect.Effect<T, unknown, PayloadService>,
 ): Promise<T> =>
   runAdapter(
-    Effect.tryPromise(() => resolveEnv(env)).pipe(
+    Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
       Effect.flatMap((resolved) => effect.pipe(Effect.provide(createPayloadLayer(resolved)))),
     ),
     (error) => new AdapterError(500, toErrorMessage(error)),

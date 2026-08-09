@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { PolarApiError } from "@tom/types";
 import { HttpStatus } from "@tom/constants";
+import { toErrorResponse } from "@tom/utils/services";
 
 const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,
@@ -101,9 +102,5 @@ export const createPolarCustomerSession = (
     return yield* parseJson<{ customer_portal_url: string }>(response, "create_customer_session");
   });
 
-export const handlePolarError = (error: PolarApiError): Response => {
-  return new Response(JSON.stringify({ error: error.message }), {
-    status: error.status,
-    headers: { "Content-Type": "application/json" },
-  });
-};
+export const handlePolarError = (error: PolarApiError): Response =>
+  toErrorResponse(error.status, error.message);

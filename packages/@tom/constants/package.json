@@ -12,8 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@tom/types": "workspace:*",
-    "effect": "catalog:"
+    "@tom/types": "workspace:*"
   },
   "devDependencies": {
     "typescript": "5.9.3"
