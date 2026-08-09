@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import mdx from "@mdx-js/rollup";
 import { solidStart } from "@solidjs/start/config";
 import tailwindcss from "@tailwindcss/vite";
@@ -8,7 +9,7 @@ if (process.cwd() !== import.meta.dirname) {
 }
 
 export default defineConfig(({ command }) => {
-  if (command === "serve") {
+  if (command === "serve" && existsSync(".dev.vars")) {
     process.loadEnvFile(".dev.vars");
   }
 

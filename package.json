@@ -4,7 +4,7 @@
   "scripts": {
     "prepare": "effect-language-service patch",
     "build": "turbo run build",
-    "dev": "turbo run dev --parallel",
+    "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@tom/web",
     "dev:api": "pnpm --filter @tom/infra run dev:api",
     "dev:adapter": "pnpm --filter @tom/infra run dev:adapter",

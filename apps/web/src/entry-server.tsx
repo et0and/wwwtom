@@ -52,7 +52,7 @@ type CloudflareContext = {
 
 export default {
   fetch: async (request: Request, env: unknown, ctx: unknown) => {
-    const cloudflareEnv = env as CloudflareEnv;
+    const cloudflareEnv = (env ?? {}) as CloudflareEnv;
     const otel = await otelConfigFromEnv(cloudflareEnv);
     (request as Request & { context?: CloudflareContext }).context = {
       cloudflare: { env, ctx },
