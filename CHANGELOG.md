@@ -1,3 +1,10 @@
+## [1.91.1](https://github.com/et0and/wwwtom/compare/v1.91.0...v1.91.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **infra, packages:** oxlint rule for no type dropping slop ([46a90d9](https://github.com/et0and/wwwtom/commit/46a90d971aa5436a30250729ec75b4276ee83a75))
+
 # [1.91.0](https://github.com/et0and/wwwtom/compare/v1.90.0...v1.91.0) (2026-08-03)
 
 
