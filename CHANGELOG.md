@@ -1,3 +1,10 @@
+## [1.91.4](https://github.com/et0and/wwwtom/compare/v1.91.3...v1.91.4) (2026-08-09)
+
+
+### Bug Fixes
+
+* oxlint rule no barrels ([067acc4](https://github.com/et0and/wwwtom/commit/067acc4f52957981b19c36fe036f92216670c590))
+
 ## [1.91.3](https://github.com/et0and/wwwtom/compare/v1.91.2...v1.91.3) (2026-08-09)
 
 
