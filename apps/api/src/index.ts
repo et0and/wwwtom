@@ -31,8 +31,8 @@ export const app = new Elysia({
         },
         servers: [
           { url: "https://api.tom.so", description: "Production API service" },
-          { url: "https://staging.api.tom.so", description: "Staging API service, pre-prod" },
-          { url: "https://dev.api.tom.so", description: "Development API service, unstable" },
+          { url: "https://staging-api.tom.so", description: "Staging API service, pre-prod" },
+          { url: "https://dev-api.tom.so", description: "Development API service, unstable" },
         ],
       },
     }),

@@ -1,4 +1,4 @@
-name: PR Preview
+name: PR preview
 
 on:
   pull_request:
@@ -38,7 +38,7 @@ jobs:
       # Deploys shared -> api -> adapter -> web. The web stack posts or
       # updates the preview comment via infra/utils/github/preview-comment.ts.
       - name: Deploy preview stage
-        run: pnpm deploy
+        run: pnpm deploy --yes
 
   destroy:
     if: github.event.action == 'closed'
@@ -62,4 +62,4 @@ jobs:
       # Tears down web -> adapter -> api -> shared so no preview resources
       # linger after the PR is merged or closed.
       - name: Destroy preview stage
-        run: pnpm destroy
+        run: pnpm destroy --yes
