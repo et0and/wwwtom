@@ -1,7 +1,8 @@
 import { Effect, Layer } from "effect";
 import { AppConfig, makeAppConfigLayer } from "@tom/utils/services/config";
-import { withLogging } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
+import { withLogging } from "@tom/utils/services/logging";
+import type { LogContext } from "@tom/utils/services/logging";
 import { DatabaseService } from "@tom/db/service";
 import { PayloadService } from "@tom/payload/service";
 import { ArenaService } from "@tom/arena/service";
@@ -57,4 +58,6 @@ export class AdapterError extends Error {
 export const runAdapter = <A, E>(
   effect: Effect.Effect<A, E>,
   toAdapterError: (error: E) => AdapterError,
-): Promise<A> => Effect.runPromise(withLogging(effect.pipe(Effect.mapError(toAdapterError))));
+  context: LogContext,
+): Promise<A> =>
+  Effect.runPromise(withLogging(effect.pipe(Effect.mapError(toAdapterError)), context));

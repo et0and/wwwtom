@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { errorResponseSchema } from "@tom/schemas/error";
 import { ValidationError } from "@tom/types/errors";
-import { runEffect } from "@tom/utils/services/worker";
+import { logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
 
@@ -95,6 +95,7 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
           });
         }),
       ),
+      logContextFromRequest(request, "tom-api"),
     );
 
     if (result instanceof Response) {

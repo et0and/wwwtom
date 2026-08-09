@@ -3,7 +3,12 @@ import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { errorResponseSchema } from "@tom/schemas/error";
 import { PolarApiError } from "@tom/types/errors";
-import { getRequestEnv, logApiFailure, runEffect } from "@tom/utils/services/worker";
+import {
+  getRequestEnv,
+  logApiFailure,
+  logContextFromRequest,
+  runEffect,
+} from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import {
   createPolarCheckout,
@@ -100,6 +105,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
           ),
           "Error creating Polar checkout",
         ),
+        logContextFromRequest(request, "tom-api"),
       );
 
       return result;
@@ -134,6 +140,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
           ),
           "Error creating Polar customer session",
         ),
+        logContextFromRequest(request, "tom-api"),
       );
 
       return result;

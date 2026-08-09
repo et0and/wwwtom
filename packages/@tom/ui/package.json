@@ -10,6 +10,8 @@
     "./Nav": "./src/Nav.tsx",
     "./OgImage": "./src/layouts/OgImage.tsx",
     "./PageLayout": "./src/layouts/PageLayout.tsx",
+    "./ProgressBar": "./src/ProgressBar.tsx",
+    "./progress.css": "./src/progress.css",
     "./SkipLink": "./src/SkipLink.tsx",
     "./Spinner": "./src/Spinner.tsx"
   },

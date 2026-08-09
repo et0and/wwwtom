@@ -9,10 +9,12 @@ import { customerBodySchema } from "../../schemas";
 import {
   getRequestEnv,
   logApiFailure,
+  logContextFromRequest,
   runEffect,
   toErrorResponse,
 } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
+import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, runAdapter } from "../../config/effect";
 
 const authHeaders = (accessToken: string | undefined) => ({
@@ -174,15 +176,20 @@ const createPolarCustomer = (
     return yield* parseJson<Customer>(response, "create_customer");
   });
 
-const runPolar = <T>(effect: Effect.Effect<T, PolarApiError>): Promise<T> =>
+const runPolar = <T>(effect: Effect.Effect<T, PolarApiError>, context: LogContext): Promise<T> =>
   runAdapter(
     effect,
     (error) => new AdapterError(error.status || HttpStatus.InternalServerError, error.message),
+    context,
   );
 
 type EdenResult = { error?: unknown; response: Response };
 
-const proxyToApi = (call: Promise<EdenResult>, errorMessage: string): Promise<Response> =>
+const proxyToApi = (
+  call: Promise<EdenResult>,
+  errorMessage: string,
+  context: LogContext,
+): Promise<Response> =>
   runEffect(
     Effect.tryPromise(() => call).pipe(
       Effect.map((result) =>
@@ -191,6 +198,7 @@ const proxyToApi = (call: Promise<EdenResult>, errorMessage: string): Promise<Re
           : result.response,
       ),
     ),
+    context,
   );
 
 const CheckoutQuerySchema = Schema.Struct({
@@ -214,7 +222,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
     "/polar/products",
     ({ request }) => {
       const env = getRequestEnv(request);
-      return runPolar(fetchPolarProducts(env));
+      return runPolar(fetchPolarProducts(env), logContextFromRequest(request, "tom-adapter"));
     },
     {
       detail: { description: "List purchasable Polar products", tags: ["polar"] },
@@ -224,7 +232,10 @@ export const polarIntegration = new Elysia({ name: "polar" })
     "/polar/products/:productId",
     ({ params, request }) => {
       const env = getRequestEnv(request);
-      return runPolar(fetchPolarProduct(env, params.productId));
+      return runPolar(
+        fetchPolarProduct(env, params.productId),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: ProductIdParamsSchema,
@@ -235,7 +246,10 @@ export const polarIntegration = new Elysia({ name: "polar" })
     "/polar/customers",
     ({ body, request }) => {
       const env = getRequestEnv(request);
-      return runPolar(createPolarCustomer(env, body));
+      return runPolar(
+        createPolarCustomer(env, body),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       body: customerBodySchema,
@@ -259,6 +273,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
           },
         }),
         "Failed to create checkout",
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -277,6 +292,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
       return proxyToApi(
         api.portal.get({ query: { customerId: query.customerId } }),
         "Failed to open customer portal",
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {

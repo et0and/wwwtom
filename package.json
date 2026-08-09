@@ -6,7 +6,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev --parallel",
     "dev:web": "turbo run dev --filter=@tom/web",
-    "dev:api": "turbo run dev --filter=@tom/api",
+    "dev:api": "pnpm --filter @tom/infra run dev:api",
     "dev:adapter": "pnpm --filter @tom/infra run dev:adapter",
     "dev:cms": "turbo run dev --filter=@tom/cms",
     "dev:sophie": "turbo run dev --filter=@tom/sophie",

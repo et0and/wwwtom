@@ -3,7 +3,8 @@ import { Effect, Schema } from "effect";
 import { DatabaseService } from "@tom/db/service";
 import { checkProfanity } from "@tom/utils/profanity";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, toErrorMessage } from "@tom/utils/services/worker";
+import { getRequestEnv, logContextFromRequest, toErrorMessage } from "@tom/utils/services/worker";
+import type { LogContext } from "@tom/utils/services/logging";
 import {
   MissingFieldError,
   ProfanityError,
@@ -43,6 +44,7 @@ const guestbookStatus = (error: GuestbookError): number => {
 const runGuestbook = <T>(
   env: CloudflareEnv,
   effect: Effect.Effect<T, GuestbookError, DatabaseService>,
+  context: LogContext,
 ): Promise<T> =>
   runAdapter(
     Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
@@ -54,6 +56,7 @@ const runGuestbook = <T>(
       ),
     ),
     (error) => new AdapterError(guestbookStatus(error), error.message ?? "Bad request"),
+    context,
   );
 
 const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
@@ -63,6 +66,12 @@ const readUserCookie = (raw: unknown): auth.FediverseUser | null => {
   const value = typeof raw === "string" ? raw : JSON.stringify(raw);
   const parsed = Schema.decodeUnknownOption(userCookieSchema)(value);
   return parsed._tag === "Some" ? parsed.value : null;
+};
+
+/** The signed-in guestbook user's handle (username@instance) from the cookie, if present. */
+export const readUserIdFromCookie = (raw: unknown): string | undefined => {
+  const user = readUserCookie(raw);
+  return user ? `${user.username}@${user.instance}` : undefined;
 };
 
 export const guestbookIntegration = new Elysia({ name: "guestbook" })
@@ -79,6 +88,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
           yield* Effect.logInfo("guestbook:entries:success");
           return data.results;
         }),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -115,19 +125,25 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
         Effect.gen(function* () {
           yield* Effect.logInfo("guestbook:auth:initiate:start");
           const authResult = yield* auth.initiateAuth(body.handle, redirectUri);
-          yield* Effect.sync(() => {
-            cookie.guestbook_session.value = authResult.sessionToken;
-            cookie.guestbook_session.update({
-              maxAge: 15 * 60,
-              httpOnly: true,
-              secure: env.NODE_ENV === "production",
-              sameSite: "lax",
-              path: "/",
+          const finishInitiate = Effect.gen(function* () {
+            yield* Effect.sync(() => {
+              cookie.guestbook_session.value = authResult.sessionToken;
+              cookie.guestbook_session.update({
+                maxAge: 15 * 60,
+                httpOnly: true,
+                secure: env.NODE_ENV === "production",
+                sameSite: "lax",
+                path: "/",
+              });
             });
+            yield* Effect.logInfo("guestbook:auth:initiate:success");
+            return { authUrl: authResult.authUrl };
           });
-          yield* Effect.logInfo("guestbook:auth:initiate:success");
-          return { authUrl: authResult.authUrl };
+          return yield* finishInitiate.pipe(
+            Effect.annotateLogs({ sessionId: authResult.sessionToken }),
+          );
         }),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -179,6 +195,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
             Effect.succeed(Response.redirect(`${returnUrl}?error=auth_failed`, 302)),
           ),
         ),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -220,6 +237,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
           yield* Effect.logInfo("guestbook:sign:success");
           return { success: true };
         }),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {

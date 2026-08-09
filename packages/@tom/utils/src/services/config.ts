@@ -35,6 +35,11 @@ export type CloudflareEnv = {
   API_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
   NODE_ENV?: string;
+  LOG_LEVEL?: string;
+  OTEL_ENDPOINT?: string;
+  AXIOM_TOKEN?: string;
+  OTEL_TRACES_DATASET?: string;
+  OTEL_LOGS_DATASET?: string;
   TOM_SECRETS?: { get(): Promise<string> };
 };
 
@@ -46,6 +51,10 @@ const secretKeys = [
   "TELEGRAM_CHAT_ID",
   "SUCCESS_URL",
   "POLAR_ACCESS_TOKEN",
+  "OTEL_ENDPOINT",
+  "AXIOM_TOKEN",
+  "OTEL_TRACES_DATASET",
+  "OTEL_LOGS_DATASET",
 ] as const;
 
 export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareEnv> => {

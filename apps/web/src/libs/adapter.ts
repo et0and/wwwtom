@@ -3,12 +3,15 @@ import type { AdapterApp } from "@tom/adapter";
 import { getRequestEvent } from "solid-js/web";
 import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
+import { withLogging } from "@tom/utils/services/logging";
+import type { LogContext } from "@tom/utils/services/logging";
 
 const DEV_ADAPTER_URL = "http://localhost:8788";
 const PROD_ADAPTER_URL = "https://adapter.tom.so";
 
 type RequestContext = {
   cloudflare?: { env?: { ADAPTER_URL?: string } };
+  logContext?: LogContext;
 };
 
 /**
@@ -92,5 +95,17 @@ export const adapterRequest = <T>(
   );
 
 /** Run an adapter request to completion, rejecting with HttpError on failure. */
-export const runAdapterRequest = <T>(request: () => Promise<EdenResult<T>>): Promise<T> =>
-  Effect.runPromise(adapterRequest(request));
+export const runAdapterRequest = <T>(request: () => Promise<EdenResult<T>>): Promise<T> => {
+  const context = getServerLogContext();
+  return Effect.runPromise(
+    withLogging(adapterRequest(request).pipe(Effect.withSpan("web.adapterRequest")), context),
+  );
+};
+
+/** Logging context for the current SSR request, if any. */
+const getServerLogContext = (): LogContext => {
+  if (!import.meta.env.SSR) return { serviceName: "tom-web" };
+  const event = getRequestEvent();
+  const logContext = (event?.nativeEvent.context as RequestContext | undefined)?.logContext;
+  return logContext ?? { serviceName: "tom-web" };
+};

@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
-import { logApiFailure, runEffect } from "@tom/utils/services/worker";
+import { logApiFailure, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 
 const GITHUB_HEADERS = {
   Accept: "application/vnd.github.v3+json",
@@ -75,7 +75,7 @@ const getLatestVersionWithFallback = () =>
 
 export const githubIntegration = new Elysia({ name: "github" }).get(
   "/version",
-  () =>
+  ({ request }) =>
     runEffect(
       Effect.gen(function* () {
         yield* Effect.logInfo("Version endpoint called");
@@ -95,6 +95,7 @@ export const githubIntegration = new Elysia({ name: "github" }).get(
           },
         });
       }),
+      logContextFromRequest(request, "tom-adapter"),
     ),
   {
     detail: {

@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "@tom/ui/progress.css";
 
 @source "../../../packages/@tom/ui/src/**/*.tsx";
 

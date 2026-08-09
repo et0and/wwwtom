@@ -1,19 +1,26 @@
-import { Effect, Layer, Logger, References, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import { errorResponseSchema } from "@tom/schemas/error";
 import { HttpStatus } from "@tom/constants/http";
 import { WorkerEnvMissingError } from "@tom/types/errors";
 import { TelegramService } from "../telegram";
+import { withLogging } from "./logging";
+import type { LogContext, OtelConfig } from "./logging";
 import { makeAppConfigLayer } from "./config";
 import type { CloudflareEnv } from "./config";
 
-export const withLogging = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  effect.pipe(
-    Effect.provideService(References.MinimumLogLevel, "Info"),
-    Effect.provide(Logger.layer([Logger.consoleStructured])),
-  );
+export type { LogContext, OtelConfig } from "./logging";
 
-export const runEffect = <A, E>(effect: Effect.Effect<A, E>) =>
-  Effect.runPromise(withLogging(effect));
+export const runEffect = <A, E>(effect: Effect.Effect<A, E>, context: LogContext): Promise<A> =>
+  Effect.runPromise(withLogging(effect, context));
+
+/**
+ * Build the logging context for a request from the requestId/sessionId/userId
+ * and OTEL config attached by the worker's onRequest middleware.
+ */
+export const logContextFromRequest = (request: Request, serviceName: string): LogContext => ({
+  serviceName,
+  ...getRequestContext(request),
+});
 
 const createTelegramLayer = (env: CloudflareEnv) => {
   const configLayer = makeAppConfigLayer({
@@ -55,6 +62,30 @@ export const getRequestEnv = (request: Request): CloudflareEnv => {
   }
   return env;
 };
+
+/**
+ * Per-request logging context (requestId, sessionId, userId, log level, OTEL
+ * config) attached by the worker entry's onRequest middleware and read back
+ * by route handlers so every log line is correlated. Mirrors the
+ * RequestWithEnv pattern.
+ */
+export type RequestContext = {
+  readonly requestId?: string;
+  readonly sessionId?: string;
+  readonly userId?: string;
+  readonly logLevel?: "Debug" | "Info";
+  readonly otel?: OtelConfig;
+};
+
+type RequestWithContext = Request & { requestContext?: RequestContext };
+
+export const attachRequestContext = (request: Request, context: RequestContext): Request => {
+  (request as RequestWithContext).requestContext = context;
+  return request;
+};
+
+export const getRequestContext = (request: Request): RequestContext =>
+  (request as RequestWithContext).requestContext ?? {};
 
 export const toErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);

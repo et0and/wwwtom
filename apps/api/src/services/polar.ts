@@ -61,7 +61,7 @@ export const createPolarCheckout = (
     }
 
     return yield* parseJson<{ url: string }>(response, "create_checkout");
-  });
+  }).pipe(Effect.withSpan("polar.checkout"));
 
 export const createPolarCustomerSession = (
   accessToken: string | undefined,
@@ -98,7 +98,7 @@ export const createPolarCustomerSession = (
     }
 
     return yield* parseJson<{ customer_portal_url: string }>(response, "create_customer_session");
-  });
+  }).pipe(Effect.withSpan("polar.customerSession"));
 
 export const handlePolarError = (error: PolarApiError): Response =>
   toErrorResponse(

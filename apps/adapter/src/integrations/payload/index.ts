@@ -3,7 +3,8 @@ import { Effect, Schema } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import type { PayloadPost, PayloadResponse } from "@tom/schemas/payload";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, toErrorMessage } from "@tom/utils/services/worker";
+import { getRequestEnv, logContextFromRequest, toErrorMessage } from "@tom/utils/services/worker";
+import type { LogContext } from "@tom/utils/services/logging";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { AdapterError, createPayloadLayer, runAdapter } from "../../config/effect";
 import type { CloudflareEnv } from "@tom/utils/services/config";
@@ -21,12 +22,14 @@ const emptyPostsResponse = {
 const runPayload = <T>(
   env: CloudflareEnv,
   effect: Effect.Effect<T, unknown, PayloadService>,
+  context: LogContext,
 ): Promise<T> =>
   runAdapter(
     Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
       Effect.flatMap((resolved) => effect.pipe(Effect.provide(createPayloadLayer(resolved)))),
     ),
     (error) => new AdapterError(500, toErrorMessage(error)),
+    context,
   );
 
 const fetchPosts = (page: number, pageSize: number) =>
@@ -291,7 +294,11 @@ export const payloadIntegration = new Elysia({ name: "payload" })
       const env = getRequestEnv(request);
       const page = query.page ?? 1;
       const pageSize = query.pageSize ?? 5;
-      return runPayload(env, fetchPosts(page, pageSize));
+      return runPayload(
+        env,
+        fetchPosts(page, pageSize),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       query: postQuerySchema,
@@ -303,7 +310,11 @@ export const payloadIntegration = new Elysia({ name: "payload" })
     ({ params, request }) => {
       const env = getRequestEnv(request);
       const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
-      return runPayload(env, fetchPostBySlug(params.slug, adapterUrl));
+      return runPayload(
+        env,
+        fetchPostBySlug(params.slug, adapterUrl),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: SlugParamsSchema,
@@ -315,7 +326,11 @@ export const payloadIntegration = new Elysia({ name: "payload" })
     ({ query, request }) => {
       const env = getRequestEnv(request);
       const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
-      return runPayload(env, fetchFeed(query.limit ?? 20, adapterUrl));
+      return runPayload(
+        env,
+        fetchFeed(query.limit ?? 20, adapterUrl),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       query: feedQuerySchema,
@@ -329,7 +344,7 @@ export const payloadIntegration = new Elysia({ name: "payload" })
     "/payload/works",
     ({ query, request }) => {
       const env = getRequestEnv(request);
-      return runPayload(env, fetchWorks(query.sort));
+      return runPayload(env, fetchWorks(query.sort), logContextFromRequest(request, "tom-adapter"));
     },
     {
       query: worksQuerySchema,
@@ -341,7 +356,11 @@ export const payloadIntegration = new Elysia({ name: "payload" })
     ({ params, request }) => {
       const env = getRequestEnv(request);
       const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
-      return runPayload(env, fetchWorkBySlug(params.slug, adapterUrl));
+      return runPayload(
+        env,
+        fetchWorkBySlug(params.slug, adapterUrl),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: SlugParamsSchema,

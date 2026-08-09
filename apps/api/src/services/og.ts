@@ -35,7 +35,7 @@ export const fontFetchEffect = Effect.gen(function* () {
   cachedFontData = data;
 
   return data;
-});
+}).pipe(Effect.withSpan("og.fetchFont"));
 
 export const getTemplate = (
   requester: string,
@@ -79,7 +79,7 @@ export const generateOgImageEffect = (
         },
       ],
     });
-  });
+  }).pipe(Effect.withSpan("og.generate"));
 
 export const validateOgParams = (title: string, summary: string) => {
   return Schema.decodeUnknownEffect(ogImageQueryParamsSchema)({

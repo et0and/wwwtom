@@ -7,6 +7,7 @@
     "./profanity": "./src/profanity.ts",
     "./retry": "./src/retry.ts",
     "./services/config": "./src/services/config.ts",
+    "./services/logging": "./src/services/logging.ts",
     "./services/worker": "./src/services/worker.ts",
     "./telegram": "./src/telegram.ts"
   },

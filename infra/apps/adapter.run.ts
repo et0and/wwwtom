@@ -31,6 +31,11 @@ export const adapter = Effect.gen(function* () {
       // Local workerd dev server via `alchemy dev`; ADAPTER_URL points back at it.
       port: 8788,
     },
+    observability: {
+      enabled: true,
+      logs: { enabled: true, invocationLogs: true },
+      traces: { enabled: true, headSamplingRate: 1 },
+    },
     // Every stage gets a deterministic worker name and custom domain so other
     // stacks can reference it (production adopts the existing worker).
     ...(stage === "production"

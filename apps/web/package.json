@@ -27,6 +27,7 @@
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
+    "@tom/utils": "workspace:*",
     "blurhash": "2.0.5",
     "effect": "catalog:",
     "number-to-words": "1.2.4",

@@ -5,6 +5,7 @@ import { MetaProvider } from "@solidjs/meta";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
+import { ProgressBar } from "@tom/ui/ProgressBar";
 import { SkipLink } from "@tom/ui/SkipLink";
 import { queryClient } from "~/libs/query-client";
 import { useGlobalHaptics } from "~/libs/haptics";
@@ -18,6 +19,7 @@ function RootLayout(props: { children?: import("solid-js").JSX.Element }) {
   return (
     <div class="min-h-screen flex flex-col">
       <SkipLink />
+      <ProgressBar />
       <Nav />
       <div class="flex-1">
         <Suspense>{props.children}</Suspense>

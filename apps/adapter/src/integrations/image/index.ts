@@ -4,7 +4,12 @@ import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ImageError } from "@tom/types/errors";
-import { logApiFailure, runEffect, toErrorResponse } from "@tom/utils/services/worker";
+import {
+  logApiFailure,
+  logContextFromRequest,
+  runEffect,
+  toErrorResponse,
+} from "@tom/utils/services/worker";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -27,7 +32,7 @@ const toImageError = (message: string, cause?: unknown): ImageError =>
 
 export const imageIntegration = new Elysia({ name: "image" }).get(
   "/image",
-  ({ query }) => {
+  ({ query, request }) => {
     const width = query.width ?? 800;
     const quality = query.quality ?? 85;
     const requestedFormat = query.format;
@@ -117,7 +122,7 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
       ),
     );
 
-    return runEffect(program);
+    return runEffect(program, logContextFromRequest(request, "tom-adapter"));
   },
   {
     query: imageQuerySchema,

@@ -12,6 +12,15 @@ export const api = Effect.gen(function* () {
   return yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
+    dev: {
+      // Local workerd dev server via `alchemy dev`; API_URL points back at it.
+      port: 8787,
+    },
+    observability: {
+      enabled: true,
+      logs: { enabled: true, invocationLogs: true },
+      traces: { enabled: true, headSamplingRate: 1 },
+    },
     // Every stage gets a deterministic worker name and custom domain so other
     // stacks can reference it (production adopts the existing worker).
     ...(stage === "production"

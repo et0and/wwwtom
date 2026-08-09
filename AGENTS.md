@@ -79,6 +79,17 @@ Improve existing code; avoid new abstractions.
 - errors in `@tom/types/errors`; `Redacted.make()` for secrets/tokens; never swallow errors
 - match logging API in touched area (CMS: `payload.logger`)
 
+## Logging (Effect apps)
+
+Standard lives in `@tom/utils/services/logging` (`withLogging`/`LogContext`); worker entries attach context in `onRequest`.
+
+- log via `Effect.log*`; never `console.*` in app code
+- every effect run goes through `runEffect`/`runAdapter` with a `LogContext` from `logContextFromRequest(request, "<service>")` — annotations `requestId`, `sessionId` (guestbook token, else visitor `tom_session` cookie), `userId` (signed-in guestbook handle)
+- spans via `Effect.fn` (`Service.operation`) / `Effect.withSpan("<service>.<operation>")` — named effects are the span standard
+- output: `Logger.consoleStructured` always (Workers Logs); when `OTEL_ENDPOINT` + `AXIOM_TOKEN` are set, spans + logs export to Axiom (traces/logs datasets, default `tom-traces`/`tom-logs`, override with `OTEL_TRACES_DATASET`/`OTEL_LOGS_DATASET`)
+- level defaults to Info; `LOG_LEVEL=Debug` for verbose output
+- never log secrets or tokens; tokens stay in `Redacted`
+
 <!-- effect-solutions:start -->
 
 ## Effect Best Practices

@@ -3,7 +3,12 @@ import { Schema } from "effect";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ImageGenerationError } from "@tom/types/errors";
-import { getRequestEnv, runEffect, toErrorResponse } from "@tom/utils/services/worker";
+import {
+  getRequestEnv,
+  logContextFromRequest,
+  runEffect,
+  toErrorResponse,
+} from "@tom/utils/services/worker";
 import { callApi } from "../../callApi";
 
 const OgQuerySchema = Schema.Struct({
@@ -65,7 +70,7 @@ export const ogIntegration = new Elysia({ name: "og" }).get(
       ),
     );
 
-    return runEffect(program);
+    return runEffect(program, logContextFromRequest(request, "tom-adapter"));
   },
   {
     query: ogQuerySchema,

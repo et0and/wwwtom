@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/solid-query";
 import { getRequestEvent } from "solid-js/web";
 import { fetchPostBySlug } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
-import { Spinner } from "@tom/ui/Spinner";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { queryClient } from "~/libs/query-client";
@@ -50,7 +49,7 @@ export default function PostPage() {
   }));
 
   return (
-    <Show when={postQuery.data} fallback={<Spinner color="grey" />}>
+    <Show when={postQuery.data}>
       {(data) => {
         const d = data();
         return (

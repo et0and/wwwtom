@@ -2,7 +2,9 @@ import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { openapi } from "@elysiajs/openapi";
 import { Effect } from "effect";
+import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging";
 import {
+  attachRequestContext,
   attachRequestEnv,
   getRequestEnv,
   sendErrorAlert,
@@ -36,8 +38,16 @@ export const app = new Elysia({
     }),
   )
   .derive(({ request }) => ({ env: getRequestEnv(request) }))
-  .onRequest(({ set }) => {
-    set.headers["x-request-id"] = crypto.randomUUID();
+  .onRequest(async ({ set, request }) => {
+    const requestId = crypto.randomUUID();
+    set.headers["x-request-id"] = requestId;
+    const env = getRequestEnv(request);
+    const otel = await otelConfigFromEnv(env);
+    attachRequestContext(request, {
+      requestId,
+      logLevel: logLevelFromEnv(env),
+      ...(otel ? { otel } : {}),
+    });
   })
   .onError(({ code, error, set, request }) => {
     set.headers["content-type"] = "application/json";

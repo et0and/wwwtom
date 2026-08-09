@@ -6,7 +6,8 @@ import type { PaginationAttributes } from "@tom/schemas/arena";
 import { HttpError } from "@tom/types/errors";
 import { retryPolicy } from "@tom/utils/retry";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, toErrorMessage } from "@tom/utils/services/worker";
+import { getRequestEnv, logContextFromRequest, toErrorMessage } from "@tom/utils/services/worker";
+import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, createArenaLayer, runAdapter } from "../../config/effect";
 import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "../../schemas";
 import type { CloudflareEnv } from "@tom/utils/services/config";
@@ -49,6 +50,7 @@ const arenaOperation = <T>(
 const runArena = <T>(
   env: CloudflareEnv,
   operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
+  context: LogContext,
   mode: "auth" | "public" = "auth",
 ): Promise<T> =>
   runAdapter(
@@ -63,6 +65,7 @@ const runArena = <T>(
       ),
     ),
     (error) => new AdapterError(error.status, error.message),
+    context,
   );
 
 export const arenaIntegration = new Elysia({ name: "arena" })
@@ -70,7 +73,11 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/channels",
     ({ query, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => client.channels(toPaginationAttributes(query)));
+      return runArena(
+        env,
+        (client) => client.channels(toPaginationAttributes(query)),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       query: paginationQuerySchema,
@@ -84,6 +91,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
       return runArena(
         env,
         (client) => client.channel(params.slug).get(toPaginationAttributes(query)),
+        logContextFromRequest(request, "tom-adapter"),
         "public",
       );
     },
@@ -100,6 +108,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
       return runArena(
         env,
         (client) => client.channel(params.slug).contents(toPaginationAttributes(query)),
+        logContextFromRequest(request, "tom-adapter"),
         "public",
       );
     },
@@ -113,7 +122,12 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/channels/:slug/thumb",
     ({ params, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => client.channel(params.slug).thumb(), "public");
+      return runArena(
+        env,
+        (client) => client.channel(params.slug).thumb(),
+        logContextFromRequest(request, "tom-adapter"),
+        "public",
+      );
     },
     {
       params: ChannelSlugParamsSchema,
@@ -124,7 +138,11 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/users/:id",
     ({ params, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => client.user(params.id).get());
+      return runArena(
+        env,
+        (client) => client.user(params.id).get(),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: IdOrSlugParamsSchema,
@@ -135,8 +153,10 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/users/:id/channels",
     ({ params, query, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) =>
-        client.user(params.id).channels(toPaginationAttributes(query)),
+      return runArena(
+        env,
+        (client) => client.user(params.id).channels(toPaginationAttributes(query)),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -149,7 +169,11 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/users/:id/following",
     ({ params, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => client.user(params.id).following());
+      return runArena(
+        env,
+        (client) => client.user(params.id).following(),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: IdOrSlugParamsSchema,
@@ -160,7 +184,11 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/users/:id/followers",
     ({ params, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => client.user(params.id).followers());
+      return runArena(
+        env,
+        (client) => client.user(params.id).followers(),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: IdOrSlugParamsSchema,
@@ -171,7 +199,11 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/blocks/:id",
     ({ params, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => client.block(params.id).get());
+      return runArena(
+        env,
+        (client) => client.block(params.id).get(),
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       params: BlockIdParamsSchema,
@@ -182,8 +214,10 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/blocks/:id/channels",
     ({ params, query, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) =>
-        client.block(params.id).channels(toPaginationAttributes(query)),
+      return runArena(
+        env,
+        (client) => client.block(params.id).channels(toPaginationAttributes(query)),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -196,8 +230,10 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/blocks/:id/comments",
     ({ params, query, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) =>
-        client.block(params.id).comments(toPaginationAttributes(query)),
+      return runArena(
+        env,
+        (client) => client.block(params.id).comments(toPaginationAttributes(query)),
+        logContextFromRequest(request, "tom-adapter"),
       );
     },
     {
@@ -210,19 +246,23 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     "/arena/search",
     ({ query, request }) => {
       const env = getRequestEnv(request);
-      return runArena(env, (client) => {
-        const options = toPaginationAttributes(query);
-        switch (query.type) {
-          case "channels":
-            return client.search.channels(query.query, options);
-          case "blocks":
-            return client.search.blocks(query.query, options);
-          case "users":
-            return client.search.users(query.query, options);
-          default:
-            return client.search.everything(query.query, options);
-        }
-      });
+      return runArena(
+        env,
+        (client) => {
+          const options = toPaginationAttributes(query);
+          switch (query.type) {
+            case "channels":
+              return client.search.channels(query.query, options);
+            case "blocks":
+              return client.search.blocks(query.query, options);
+            case "users":
+              return client.search.users(query.query, options);
+            default:
+              return client.search.everything(query.query, options);
+          }
+        },
+        logContextFromRequest(request, "tom-adapter"),
+      );
     },
     {
       query: searchQuerySchema,
