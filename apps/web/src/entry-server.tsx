@@ -52,6 +52,7 @@ type CloudflareContext = {
 
 export default {
   fetch: async (request: Request, env: unknown, ctx: unknown) => {
+    queryClient.clear();
     const cloudflareEnv = (env ?? {}) as CloudflareEnv;
     const otel = await otelConfigFromEnv(cloudflareEnv);
     (request as Request & { context?: CloudflareContext }).context = {

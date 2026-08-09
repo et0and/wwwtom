@@ -14,7 +14,7 @@ export const route = {
   preload: () => {
     queryClient.prefetchQuery({
       queryKey: ["works"],
-      queryFn: fetchWorks,
+      queryFn: () => fetchWorks(),
     });
   },
 } satisfies RouteDefinition;
@@ -35,7 +35,7 @@ export default function WorkHome() {
 
   const worksQuery = useQuery(() => ({
     queryKey: ["works"],
-    queryFn: fetchWorks,
+    queryFn: () => fetchWorks(),
   }));
 
   return (
@@ -57,6 +57,12 @@ export default function WorkHome() {
       </BlurInSection>
       <BlurInSection delay={0.5}>
         <Suspense fallback={<Spinner color="grey" />}>
+          <Show when={worksQuery.isError}>
+            <div class="banner" role="alert">
+              <p class="banner-title">Error loading works</p>
+              <p>{worksQuery.error?.message}</p>
+            </div>
+          </Show>
           <Show when={worksQuery.data}>
             {(worksData) => (
               <For each={worksData()}>
