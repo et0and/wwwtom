@@ -1,3 +1,10 @@
+## [1.91.5](https://github.com/et0and/wwwtom/compare/v1.91.4...v1.91.5) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ci:** new oxlint rules ([817c156](https://github.com/et0and/wwwtom/commit/817c156f192e4b58a0d7d315a8022ab7e98afce4))
+
 ## [1.91.4](https://github.com/et0and/wwwtom/compare/v1.91.3...v1.91.4) (2026-08-09)
 
 
