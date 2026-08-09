@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { cors } from "@elysiajs/cors";
+import { Effect } from "effect";
 import {
   attachRequestEnv,
   getRequestEnv,
@@ -46,13 +47,15 @@ export const app = new Elysia({
     if (error instanceof AdapterError) {
       return toErrorResponse(error.status, error.message);
     }
-    sendErrorAlert(getRequestEnv(request), "Unhandled adapter error", error);
     if (code === "NOT_FOUND") {
+      Effect.runFork(Effect.logWarning("Not found", { path: request.url }));
       return toErrorResponse(404, "Not found");
     }
     if (code === "VALIDATION") {
+      Effect.runFork(Effect.logWarning("Validation error", { path: request.url }));
       return toErrorResponse(400, "Validation error");
     }
+    sendErrorAlert(getRequestEnv(request), "Unhandled adapter error", error);
     return toErrorResponse(500, "Internal server error");
   })
   .use(arenaIntegration)

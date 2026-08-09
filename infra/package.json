@@ -10,6 +10,9 @@
     "deploy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/web.run.ts --stage $ALCHEMY_STAGE",
     "dev:adapter": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/adapter.run.ts",
     "destroy": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy shared.run.ts --stage $ALCHEMY_STAGE",
+    "destroy:api": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/api.run.ts --stage $ALCHEMY_STAGE",
+    "destroy:adapter": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/adapter.run.ts --stage $ALCHEMY_STAGE",
+    "destroy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/web.run.ts --stage $ALCHEMY_STAGE",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

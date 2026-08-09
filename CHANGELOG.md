@@ -1,99 +1,86 @@
 ## [1.91.3](https://github.com/et0and/wwwtom/compare/v1.91.2...v1.91.3) (2026-08-09)
 
-
 ### Bug Fixes
 
-* fix ci deploys ([bc26819](https://github.com/et0and/wwwtom/commit/bc268190dd5f6552701bc463b0034c3bc4d23275))
-* fix ci deploys ([40bae3e](https://github.com/et0and/wwwtom/commit/40bae3e128983c898d8b35866c624779db1c7992))
+- fix ci deploys ([bc26819](https://github.com/et0and/wwwtom/commit/bc268190dd5f6552701bc463b0034c3bc4d23275))
+- fix ci deploys ([40bae3e](https://github.com/et0and/wwwtom/commit/40bae3e128983c898d8b35866c624779db1c7992))
 
 ## [1.91.2](https://github.com/et0and/wwwtom/compare/v1.91.1...v1.91.2) (2026-08-09)
 
-
 ### Bug Fixes
 
-* hanging deps ([2003795](https://github.com/et0and/wwwtom/commit/20037955cf23c13962132b6b8e6d3ea5d4769631))
+- hanging deps ([2003795](https://github.com/et0and/wwwtom/commit/20037955cf23c13962132b6b8e6d3ea5d4769631))
 
 ## [1.91.1](https://github.com/et0and/wwwtom/compare/v1.91.0...v1.91.1) (2026-08-09)
 
-
 ### Bug Fixes
 
-* **infra, packages:** oxlint rule for no type dropping slop ([46a90d9](https://github.com/et0and/wwwtom/commit/46a90d971aa5436a30250729ec75b4276ee83a75))
+- **infra, packages:** oxlint rule for no type dropping slop ([46a90d9](https://github.com/et0and/wwwtom/commit/46a90d971aa5436a30250729ec75b4276ee83a75))
 
 # [1.91.0](https://github.com/et0and/wwwtom/compare/v1.90.0...v1.91.0) (2026-08-03)
 
-
 ### Bug Fixes
 
-* **ci:** misspell ([8a2b1f1](https://github.com/et0and/wwwtom/commit/8a2b1f1573ae91305943e408e9b641d299e45996))
-
+- **ci:** misspell ([8a2b1f1](https://github.com/et0and/wwwtom/commit/8a2b1f1573ae91305943e408e9b641d299e45996))
 
 ### Features
 
-* **ci:** automatic deploys with alchemy ([70d7a1c](https://github.com/et0and/wwwtom/commit/70d7a1c19ab1671a04075f1d0fefdd7f09dc417f))
+- **ci:** automatic deploys with alchemy ([70d7a1c](https://github.com/et0and/wwwtom/commit/70d7a1c19ab1671a04075f1d0fefdd7f09dc417f))
 
 # [1.90.0](https://github.com/et0and/wwwtom/compare/v1.89.0...v1.90.0) (2026-08-02)
 
-
 ### Bug Fixes
 
-* **ci:** correct ALCHEMY_STAGE env in manual deploy workflow ([7088db5](https://github.com/et0and/wwwtom/commit/7088db5ef02f5a038a02bbc8370c19b09b4f531f))
-* **margaret:** no per project pnpm vers ([f15059b](https://github.com/et0and/wwwtom/commit/f15059b6b1c61c3ed705d846983dcbe48d672793))
-* pnpm action ([53d1f4d](https://github.com/et0and/wwwtom/commit/53d1f4d5154d470c88959fc3f114e38a467847ab))
-* **web:** expose cloudflare env bindings to solidstart handler ([d7e5f92](https://github.com/et0and/wwwtom/commit/d7e5f92c1cf785838b746976a7c623e99dc17eb0))
-* **web:** fix tests ([cf3d1a4](https://github.com/et0and/wwwtom/commit/cf3d1a439af70ce742f62e33aeca9c7345a4b1c8))
-* **web:** further clean up of deps ([155dbc9](https://github.com/et0and/wwwtom/commit/155dbc980718db3191a8b0ebb46f7a52a1a6258e))
-* **web:** register solidstart middleware for cloudflare env ([d6a7b15](https://github.com/et0and/wwwtom/commit/d6a7b156aaa0f2c6d4e1d4aa4c0e6e31d9f2f77e))
-* whoops pnpm vers ([c803b23](https://github.com/et0and/wwwtom/commit/c803b237b2eaf12df81111ecf75b7dd1baa72f96))
-
+- **ci:** correct ALCHEMY_STAGE env in manual deploy workflow ([7088db5](https://github.com/et0and/wwwtom/commit/7088db5ef02f5a038a02bbc8370c19b09b4f531f))
+- **margaret:** no per project pnpm vers ([f15059b](https://github.com/et0and/wwwtom/commit/f15059b6b1c61c3ed705d846983dcbe48d672793))
+- pnpm action ([53d1f4d](https://github.com/et0and/wwwtom/commit/53d1f4d5154d470c88959fc3f114e38a467847ab))
+- **web:** expose cloudflare env bindings to solidstart handler ([d7e5f92](https://github.com/et0and/wwwtom/commit/d7e5f92c1cf785838b746976a7c623e99dc17eb0))
+- **web:** fix tests ([cf3d1a4](https://github.com/et0and/wwwtom/commit/cf3d1a439af70ce742f62e33aeca9c7345a4b1c8))
+- **web:** further clean up of deps ([155dbc9](https://github.com/et0and/wwwtom/commit/155dbc980718db3191a8b0ebb46f7a52a1a6258e))
+- **web:** register solidstart middleware for cloudflare env ([d6a7b15](https://github.com/et0and/wwwtom/commit/d6a7b156aaa0f2c6d4e1d4aa4c0e6e31d9f2f77e))
+- whoops pnpm vers ([c803b23](https://github.com/et0and/wwwtom/commit/c803b237b2eaf12df81111ecf75b7dd1baa72f96))
 
 ### Features
 
-* **api, web, infra:** init alchemy, update effect v4 ([43bf56f](https://github.com/et0and/wwwtom/commit/43bf56fad033d9141242203dfe330e54a7454156))
-* **ci:** setup deployment pipeline ([5037def](https://github.com/et0and/wwwtom/commit/5037def530bff5d1d73bf1f6650c30177f0e4513))
+- **api, web, infra:** init alchemy, update effect v4 ([43bf56f](https://github.com/et0and/wwwtom/commit/43bf56fad033d9141242203dfe330e54a7454156))
+- **ci:** setup deployment pipeline ([5037def](https://github.com/et0and/wwwtom/commit/5037def530bff5d1d73bf1f6650c30177f0e4513))
 
 # [1.89.0](https://github.com/et0and/wwwtom/compare/v1.88.1...v1.89.0) (2026-07-18)
 
-
 ### Bug Fixes
 
-* **ci:** rem hardcoded pnpm ver from release ([e9bd4ad](https://github.com/et0and/wwwtom/commit/e9bd4add2076b4b2ba0e3aea1db737e5373a7b4a))
-* **web:** rem random windows files ([a9b96fb](https://github.com/et0and/wwwtom/commit/a9b96fb808f20ba832933751209ca11dbbc9ce4c))
-
+- **ci:** rem hardcoded pnpm ver from release ([e9bd4ad](https://github.com/et0and/wwwtom/commit/e9bd4add2076b4b2ba0e3aea1db737e5373a7b4a))
+- **web:** rem random windows files ([a9b96fb](https://github.com/et0and/wwwtom/commit/a9b96fb808f20ba832933751209ca11dbbc9ce4c))
 
 ### Features
 
-* **web:** add signature ([6087a46](https://github.com/et0and/wwwtom/commit/6087a4619d08dcac7d3d9cdbfdba0f425c2f8983))
+- **web:** add signature ([6087a46](https://github.com/et0and/wwwtom/commit/6087a4619d08dcac7d3d9cdbfdba0f425c2f8983))
 
 ## [1.88.1](https://github.com/et0and/wwwtom/compare/v1.88.0...v1.88.1) (2026-05-22)
 
-
 ### Bug Fixes
 
-* **web:** defer stream for post and work detail routes to ensure OG meta tags render in SSR head ([7f85c09](https://github.com/et0and/wwwtom/commit/7f85c0900c6e2fb29952784dab40d38cc12576df))
+- **web:** defer stream for post and work detail routes to ensure OG meta tags render in SSR head ([7f85c09](https://github.com/et0and/wwwtom/commit/7f85c0900c6e2fb29952784dab40d38cc12576df))
 
 # [1.88.0](https://github.com/et0and/wwwtom/compare/v1.87.0...v1.88.0) (2026-05-21)
 
-
 ### Features
 
-* **web:** apply text-animation blur-in skill ([d3ffb52](https://github.com/et0and/wwwtom/commit/d3ffb52a006b3394512c24b64e2c34fb2d0e451a))
+- **web:** apply text-animation blur-in skill ([d3ffb52](https://github.com/et0and/wwwtom/commit/d3ffb52a006b3394512c24b64e2c34fb2d0e451a))
 
 # [1.87.0](https://github.com/et0and/wwwtom/compare/v1.86.0...v1.87.0) (2026-05-17)
 
-
 ### Bug Fixes
 
-* **apps:** big refactor ([7198b90](https://github.com/et0and/wwwtom/commit/7198b904a7c168988fdc1d202c68195fb98a6318))
-* **ci:** set allowBuilds to true in pnpm-workspace.yaml ([dd6f592](https://github.com/et0and/wwwtom/commit/dd6f59232ec8bbbd5d3fff88e2d8234ef7da5735))
-* **web:** add missing workspace dependencies to fix Cloudflare build ([21ad153](https://github.com/et0and/wwwtom/commit/21ad153db2589528cdd1e1e511362738f78e96e7))
-* **web:** arena client sdk update ([b23358d](https://github.com/et0and/wwwtom/commit/b23358d3eed173a2def374c9a06aa90a50ba7d91))
-* **web:** update deps, fix build ([500f2d8](https://github.com/et0and/wwwtom/commit/500f2d8f6bee1780f23ea733cec0a89df3e6e139))
-
+- **apps:** big refactor ([7198b90](https://github.com/et0and/wwwtom/commit/7198b904a7c168988fdc1d202c68195fb98a6318))
+- **ci:** set allowBuilds to true in pnpm-workspace.yaml ([dd6f592](https://github.com/et0and/wwwtom/commit/dd6f59232ec8bbbd5d3fff88e2d8234ef7da5735))
+- **web:** add missing workspace dependencies to fix Cloudflare build ([21ad153](https://github.com/et0and/wwwtom/commit/21ad153db2589528cdd1e1e511362738f78e96e7))
+- **web:** arena client sdk update ([b23358d](https://github.com/et0and/wwwtom/commit/b23358d3eed173a2def374c9a06aa90a50ba7d91))
+- **web:** update deps, fix build ([500f2d8](https://github.com/et0and/wwwtom/commit/500f2d8f6bee1780f23ea733cec0a89df3e6e139))
 
 ### Features
 
-* **all:** migrate to pnpm ([48def83](https://github.com/et0and/wwwtom/commit/48def8325a3075af29197dd2ebf1a807d65048c4))
+- **all:** migrate to pnpm ([48def83](https://github.com/et0and/wwwtom/commit/48def8325a3075af29197dd2ebf1a807d65048c4))
 
 # [1.86.0](https://github.com/et0and/wwwtom/compare/v1.85.0...v1.86.0) (2026-05-10)
 

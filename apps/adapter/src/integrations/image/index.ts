@@ -4,7 +4,7 @@ import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ImageError } from "@tom/types/errors";
-import { runEffect, toErrorResponse } from "@tom/utils/services/worker";
+import { logApiFailure, runEffect, toErrorResponse } from "@tom/utils/services/worker";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -111,7 +111,7 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
       ),
       Effect.catch(
         Effect.fn("imageErrorHandler")(function* (error: ImageError) {
-          yield* Effect.logError("image:error", error.cause);
+          yield* logApiFailure("image:error", (error.response as Response).status, error.cause);
           return error.response;
         }),
       ),

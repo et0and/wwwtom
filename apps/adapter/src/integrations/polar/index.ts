@@ -6,7 +6,12 @@ import type { Customer, CustomerInput } from "@tom/types/customer";
 import type { Product } from "@tom/types/product";
 import { callApi } from "../../callApi";
 import { customerBodySchema } from "../../schemas";
-import { getRequestEnv, runEffect, toErrorResponse } from "@tom/utils/services/worker";
+import {
+  getRequestEnv,
+  logApiFailure,
+  runEffect,
+  toErrorResponse,
+} from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { AdapterError, runAdapter } from "../../config/effect";
 
@@ -45,7 +50,7 @@ const fetchPolarProducts = (env: CloudflareEnv): Effect.Effect<Product[], PolarA
     });
 
     if (!response.ok) {
-      yield* Effect.logError("Failed to fetch Polar products", { status: response.status });
+      yield* logApiFailure("Failed to fetch Polar products", response.status);
       return yield* new PolarApiError({
         message: "Failed to fetch products",
         status: response.status,
@@ -77,9 +82,7 @@ const fetchPolarProduct = (
     });
 
     if (!response.ok) {
-      yield* Effect.logError(`Failed to fetch Polar product ${productId}`, {
-        status: response.status,
-      });
+      yield* logApiFailure(`Failed to fetch Polar product ${productId}`, response.status);
       return yield* new PolarApiError({
         message: "Failed to fetch product",
         status: response.status,
@@ -145,9 +148,7 @@ const createPolarCustomer = (
         });
 
         if (!listResponse.ok) {
-          yield* Effect.logError("Failed to find existing Polar customer", {
-            status: listResponse.status,
-          });
+          yield* logApiFailure("Failed to find existing Polar customer", listResponse.status);
           return yield* new PolarApiError({
             message: "Failed to find existing customer",
             status: listResponse.status,
@@ -162,10 +163,7 @@ const createPolarCustomer = (
         }
       }
 
-      yield* Effect.logError("Failed to create Polar customer", {
-        status: response.status,
-        error: errorData,
-      });
+      yield* logApiFailure("Failed to create Polar customer", response.status, errorData);
       return yield* new PolarApiError({
         message: `Failed to create customer: ${errorData}`,
         status: response.status,

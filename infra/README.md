@@ -39,6 +39,9 @@ pnpm deploy:web
 
 Deployment order is `shared -> api -> adapter -> web`.
 
+`pnpm destroy` tears down the current stage in reverse order
+(`web -> adapter -> api -> shared`).
+
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 
 ```bash

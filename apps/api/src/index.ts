@@ -25,8 +25,13 @@ export const app = new Elysia({
         info: {
           title: "Tom API",
           version: "1.1.0",
-          description: "tom.so domain API — health, OG image generation, Polar checkout",
+          description: "A multi faceted API service",
         },
+        servers: [
+          { url: "https://api.tom.so", description: "Production API service" },
+          { url: "https://staging.api.tom.so", description: "Staging API service, pre-prod" },
+          { url: "https://dev.api.tom.so", description: "Development API service, unstable" },
+        ],
       },
     }),
   )
@@ -36,17 +41,19 @@ export const app = new Elysia({
   })
   .onError(({ code, error, set, request }) => {
     set.headers["content-type"] = "application/json";
+    if (code === "NOT_FOUND") {
+      Effect.runFork(Effect.logWarning("Not found", { path: request.url }));
+      return toErrorResponse(404, "Not found");
+    }
+    if (code === "VALIDATION") {
+      Effect.runFork(Effect.logWarning("Validation error", { path: request.url }));
+      return toErrorResponse(400, "Validation error");
+    }
     Effect.runFork(
       Effect.sync(() => {
         void sendErrorAlert(getRequestEnv(request), "Unhandled API error", error);
       }),
     );
-    if (code === "NOT_FOUND") {
-      return toErrorResponse(404, "Not found");
-    }
-    if (code === "VALIDATION") {
-      return toErrorResponse(400, "Validation error");
-    }
     return toErrorResponse(500, "Internal server error");
   })
   .use(healthRoutes)

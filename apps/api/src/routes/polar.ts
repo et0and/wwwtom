@@ -2,34 +2,74 @@ import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { errorResponseSchema } from "@tom/schemas/error";
+import { PolarApiError } from "@tom/types/errors";
+import { getRequestEnv, logApiFailure, runEffect } from "@tom/utils/services/worker";
+import { toOpenApiSchema } from "../openapi";
 import {
-  getRequestEnv,
-  runEffect,
-  toErrorResponse,
-  toErrorMessage,
-} from "@tom/utils/services/worker";
-import { createPolarCheckout, createPolarCustomerSession } from "../services/polar";
+  createPolarCheckout,
+  createPolarCustomerSession,
+  handlePolarError,
+} from "../services/polar";
+
+const productsSchema = Schema.String.pipe(
+  Schema.annotate({
+    description: "Product IDs to purchase (comma-separated)",
+    examples: ["cheese-stack"],
+  }),
+);
+
+const customerIdSchema = Schema.optional(Schema.String).pipe(
+  Schema.annotate({ description: "Existing customer ID", examples: ["cus_123"] }),
+);
+
+const customerEmailSchema = Schema.optional(Schema.String).pipe(
+  Schema.annotate({
+    description: "Customer email address",
+    examples: ["tom@tom.so"],
+  }),
+);
 
 const CheckoutQuerySchema = Schema.Struct({
-  products: Schema.String,
-  customerId: Schema.optional(Schema.String),
-  customerEmail: Schema.optional(Schema.String),
+  products: productsSchema,
+  customerId: customerIdSchema,
+  customerEmail: customerEmailSchema,
 });
 
-const checkoutQuerySchema = Schema.toStandardSchemaV1(CheckoutQuerySchema);
+const checkoutQuerySchema = toOpenApiSchema(CheckoutQuerySchema);
 
-const PortalQuerySchema = Schema.Struct({ customerId: Schema.String });
+const portalCustomerIdSchema = Schema.String.pipe(
+  Schema.annotate({ description: "Polar customer ID (uuid)", format: "uuid" }),
+);
 
-const portalQuerySchema = Schema.toStandardSchemaV1(PortalQuerySchema);
+const PortalQuerySchema = Schema.Struct({ customerId: portalCustomerIdSchema });
 
-const withErrorHandling = (effect: Effect.Effect<Response, unknown>, errorMessage: string) =>
+const portalQuerySchema = toOpenApiSchema(PortalQuerySchema);
+
+const redirectSchema = (description: string) =>
+  Schema.Unknown.pipe(Schema.annotate({ description }));
+
+const missingCustomerSchema = errorResponseSchema.pipe(
+  Schema.annotate({ description: "Missing products and/or customerId parameter" }),
+);
+
+const missingPortalSchema = errorResponseSchema.pipe(
+  Schema.annotate({ description: "Missing customerId parameter" }),
+);
+
+const checkoutFailedSchema = errorResponseSchema.pipe(
+  Schema.annotate({ description: "Failed to create checkout" }),
+);
+
+const productNotFoundSchema = errorResponseSchema.pipe(
+  Schema.annotate({ description: "Product not found" }),
+);
+
+const withErrorHandling = (effect: Effect.Effect<Response, PolarApiError>, errorMessage: string) =>
   effect.pipe(
     Effect.catch((error) =>
       Effect.gen(function* () {
-        yield* Effect.logError(errorMessage, error);
-        return yield* Effect.succeed(
-          toErrorResponse(HttpStatus.InternalServerError, toErrorMessage(error)),
-        );
+        yield* logApiFailure(errorMessage, error.status, error);
+        return yield* Effect.succeed(handlePolarError(error));
       }),
     ),
   );
@@ -67,9 +107,10 @@ export const polarRoutes = new Elysia({ name: "polar" })
     {
       query: checkoutQuerySchema,
       response: {
-        302: Schema.toStandardSchemaV1(Schema.Unknown),
-        400: Schema.toStandardSchemaV1(errorResponseSchema),
-        500: Schema.toStandardSchemaV1(errorResponseSchema),
+        302: toOpenApiSchema(redirectSchema("Redirect to Polar checkout")),
+        400: toOpenApiSchema(missingCustomerSchema),
+        404: toOpenApiSchema(productNotFoundSchema),
+        500: toOpenApiSchema(checkoutFailedSchema),
       },
       detail: {
         description: "Create a checkout session and redirect to Polar",
@@ -100,9 +141,9 @@ export const polarRoutes = new Elysia({ name: "polar" })
     {
       query: portalQuerySchema,
       response: {
-        302: Schema.toStandardSchemaV1(Schema.Unknown),
-        400: Schema.toStandardSchemaV1(errorResponseSchema),
-        500: Schema.toStandardSchemaV1(errorResponseSchema),
+        302: toOpenApiSchema(redirectSchema("Redirect to Polar customer portal")),
+        400: toOpenApiSchema(missingPortalSchema),
+        500: toOpenApiSchema(checkoutFailedSchema),
       },
       detail: {
         description: "Redirect to Polar customer portal",

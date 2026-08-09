@@ -1,5 +1,6 @@
 import { Effect, Layer, Logger, References, Schema } from "effect";
 import { errorResponseSchema } from "@tom/schemas/error";
+import { HttpStatus } from "@tom/constants/http";
 import { WorkerEnvMissingError } from "@tom/types/errors";
 import { TelegramService } from "../telegram";
 import { makeAppConfigLayer } from "./config";
@@ -57,6 +58,15 @@ export const getRequestEnv = (request: Request): CloudflareEnv => {
 
 export const toErrorMessage = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
+
+/**
+ * Log an API failure at the level that matches its status: expected client
+ * errors (4xx) are warnings, unexpected failures are errors.
+ */
+export const logApiFailure = (message: string, status: number, data?: unknown) =>
+  status >= HttpStatus.BadRequest && status < HttpStatus.InternalServerError
+    ? Effect.logWarning(message, data === undefined ? { status } : { status, data })
+    : Effect.logError(message, data === undefined ? { status } : { status, data });
 
 export const toErrorResponse = (status: number, error: string, cause?: string): Response =>
   new Response(

@@ -65,7 +65,7 @@ const initiateAuth_ = Effect.fn("initiateAuth")(function* (
   const state = generateState();
 
   const mapRegisterAppError = Effect.fn("mapRegisterAppError")(function* (error: unknown) {
-    yield* Effect.logError("Megalodon registerApp error:", error);
+    yield* Effect.logWarning("Megalodon registerApp error:", error);
 
     const code = readErrorCode(error);
     const nestedCode = error instanceof AggregateError ? readErrorCode(error.errors[0]) : undefined;

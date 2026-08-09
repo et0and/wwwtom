@@ -15,6 +15,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "effect": "catalog:",

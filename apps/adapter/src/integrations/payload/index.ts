@@ -42,7 +42,7 @@ const fetchPosts = (page: number, pageSize: number) =>
       .pipe(
         Effect.catch(
           Effect.fn("getPostsErrorHandler")(function* (error: unknown) {
-            yield* Effect.logError("payload:posts:error", error);
+            yield* Effect.logWarning("payload:posts:error", error);
             return emptyPostsResponse;
           }),
         ),
@@ -77,12 +77,12 @@ const fetchPostBySlug = (slug: string, adapterUrl: string) =>
     const response = yield* fetchBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
       Effect.catch(
         Effect.fn("getPostBySlugErrorHandler")(function* (error: unknown) {
-          yield* Effect.logError("payload:post:error", error);
+          yield* Effect.logWarning("payload:post:error", error);
           yield* Effect.logInfo(`payload:post:${slug}:retry-no-cache`);
           return yield* fetchBySlug({ useCache: false }).pipe(
             Effect.catch(
               Effect.fn("getPostBySlugRetryErrorHandler")(function* (retryError: unknown) {
-                yield* Effect.logError("payload:post:retry-error", retryError);
+                yield* Effect.logWarning("payload:post:retry-error", retryError);
                 return null;
               }),
             ),
@@ -149,7 +149,7 @@ const fetchWorks = (sort?: string) =>
       .pipe(
         Effect.catch(
           Effect.fn("getWorksErrorHandler")(function* (error: unknown) {
-            yield* Effect.logError("payload:works:error", error);
+            yield* Effect.logWarning("payload:works:error", error);
             return { docs: [] as readonly PayloadPost[] };
           }),
         ),
@@ -173,12 +173,12 @@ const fetchWorkBySlug = (slug: string, adapterUrl: string) =>
     const response = yield* fetchBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
       Effect.catch(
         Effect.fn("getWorkBySlugErrorHandler")(function* (error: unknown) {
-          yield* Effect.logError("payload:work:error", error);
+          yield* Effect.logWarning("payload:work:error", error);
           yield* Effect.logInfo(`payload:work:${slug}:retry-no-cache`);
           return yield* fetchBySlug({ useCache: false }).pipe(
             Effect.catch(
               Effect.fn("getWorkBySlugRetryErrorHandler")(function* (retryError: unknown) {
-                yield* Effect.logError("payload:work:retry-error", retryError);
+                yield* Effect.logWarning("payload:work:retry-error", retryError);
                 return null;
               }),
             ),
@@ -234,7 +234,7 @@ const fetchFeed = (limit: number, adapterUrl: string) =>
       .pipe(
         Effect.catch(
           Effect.fn("getFeedErrorHandler")(function* (error: unknown) {
-            yield* Effect.logError("payload:feed:error", error);
+            yield* Effect.logWarning("payload:feed:error", error);
             return emptyPostsResponse;
           }),
         ),

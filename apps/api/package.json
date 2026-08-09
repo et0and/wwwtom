@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@elysiajs/openapi": "catalog:",
+    "@standard-schema/spec": "catalog:",
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",

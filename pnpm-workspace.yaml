@@ -19,6 +19,7 @@ catalog:
   "@elysiajs/eden": 1.4.9
   "@elysiajs/cors": 1.4.2
   "@elysiajs/openapi": 1.4.15
+  "@standard-schema/spec": 1.0.0
   "@solidjs/meta": 0.29.4
   "@solidjs/router": 0.15.0
   classnames: 2.5.1

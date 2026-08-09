@@ -40,13 +40,4 @@ const rule = {
   },
 };
 
-const plugin = {
-  meta: {
-    name: "tom",
-  },
-  rules: {
-    "no-barrel-file": rule,
-  },
-};
-
-export default plugin;
+export default rule;

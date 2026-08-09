@@ -81,8 +81,18 @@ describe("polar routes", () => {
       expect(await response.json()).toEqual({ error: "Validation error" });
     });
 
-    it("returns 500 JSON when Polar fails", async () => {
-      fetchMock.mockResolvedValue(new Response("unauthorized", { status: 401 }));
+    it("returns Polar's 4xx status when the product doesn't exist", async () => {
+      fetchMock.mockResolvedValue(new Response("not found", { status: 404 }));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/checkout?products=prod_missing", env),
+      );
+      expect(response.status).toBe(404);
+      const body = await response.json();
+      expect(body).toEqual({ error: "Failed to create checkout" });
+    });
+
+    it("returns 500 JSON when Polar fails with a server error", async () => {
+      fetchMock.mockResolvedValue(new Response("nope", { status: 502 }));
       const response = await app.fetch(
         requestWithEnv("http://localhost/checkout?products=prod_1", env),
       );
@@ -131,7 +141,7 @@ describe("polar routes", () => {
     });
 
     it("returns 500 JSON when Polar fails", async () => {
-      fetchMock.mockResolvedValue(new Response("nope", { status: 403 }));
+      fetchMock.mockResolvedValue(new Response("nope", { status: 503 }));
       const response = await app.fetch(
         requestWithEnv("http://localhost/portal?customerId=cust_1", env),
       );

@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
-import { runEffect } from "@tom/utils/services/worker";
+import { logApiFailure, runEffect } from "@tom/utils/services/worker";
 
 const GITHUB_HEADERS = {
   Accept: "application/vnd.github.v3+json",
@@ -48,7 +48,7 @@ const getLatestCommitHashWithFallback = () =>
   getLatestCommitHash().pipe(
     Effect.catch(
       Effect.fn("getLatestCommitHashErrorHandler")(function* (error: HttpError) {
-        yield* Effect.logError("Failed to fetch commit from GitHub API", error);
+        yield* logApiFailure("Failed to fetch commit from GitHub API", error.status, error);
         return yield* Effect.succeed("unknown");
       }),
     ),
@@ -67,7 +67,7 @@ const getLatestVersionWithFallback = () =>
   getLatestVersion().pipe(
     Effect.catch(
       Effect.fn("getLatestVersionErrorHandler")(function* (error: HttpError) {
-        yield* Effect.logError("Failed to fetch version from GitHub API", error);
+        yield* logApiFailure("Failed to fetch version from GitHub API", error.status, error);
         return yield* Effect.succeed("0.0.0");
       }),
     ),

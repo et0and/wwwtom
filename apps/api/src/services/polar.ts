@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { PolarApiError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
-import { toErrorResponse } from "@tom/utils/services/worker";
+import { logApiFailure, toErrorResponse } from "@tom/utils/services/worker";
 
 const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,
@@ -52,7 +52,7 @@ export const createPolarCheckout = (
     });
 
     if (!response.ok) {
-      yield* Effect.logError("Failed to create Polar checkout", { status: response.status });
+      yield* logApiFailure("Failed to create Polar checkout", response.status);
       return yield* new PolarApiError({
         message: "Failed to create checkout",
         status: response.status,
@@ -89,9 +89,7 @@ export const createPolarCustomerSession = (
     });
 
     if (!response.ok) {
-      yield* Effect.logError("Failed to create Polar customer session", {
-        status: response.status,
-      });
+      yield* logApiFailure("Failed to create Polar customer session", response.status);
       return yield* new PolarApiError({
         message: "Failed to create customer session",
         status: response.status,
@@ -103,4 +101,9 @@ export const createPolarCustomerSession = (
   });
 
 export const handlePolarError = (error: PolarApiError): Response =>
-  toErrorResponse(error.status, error.message);
+  toErrorResponse(
+    error.status >= HttpStatus.BadRequest && error.status < HttpStatus.InternalServerError
+      ? error.status
+      : HttpStatus.InternalServerError,
+    error.message,
+  );

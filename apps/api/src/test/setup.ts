@@ -12,6 +12,6 @@ vi.mock("workers-og", () => ({
 
 // @tom/ui ships Solid JSX source; the og service only reads the template map,
 // so provide a stub instead of pulling the Solid toolchain into node tests.
-vi.mock("@tom/ui", () => ({
+vi.mock("@tom/ui/OgImage", () => ({
   OgTemplates: {},
 }));
