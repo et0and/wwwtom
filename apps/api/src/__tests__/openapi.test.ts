@@ -21,8 +21,41 @@ describe("openapi docs", () => {
       description: "Production API service",
     });
     expect(Object.keys(spec.paths)).toEqual(
-      expect.arrayContaining(["/health", "/checkout", "/portal", "/og"]),
+      expect.arrayContaining([
+        "/health",
+        "/checkout",
+        "/portal",
+        "/og",
+        "/challenge",
+        "/request-key",
+        "/ingest-init",
+        "/v1/addresses",
+        "/v1/addresses/{id}",
+        "/v1/search",
+        "/v1/reverse",
+        "/v1/meta",
+      ]),
     );
+  });
+
+  it("documents the address endpoints with their tags", async () => {
+    const response = await app.fetch(requestWithEnv("http://localhost/openapi.json", testEnv()));
+    const { paths } = await response.json();
+    const searchParams = paths["/v1/search"].get.parameters as {
+      name: string;
+      required?: boolean;
+      schema: { description?: string; anyOf?: Array<{ description?: string }> };
+    }[];
+    expect(paths["/v1/search"].get.tags).toEqual(["address"]);
+    const qParam = searchParams.find((parameter) => parameter.name === "q");
+    expect(qParam?.required).toBe(true);
+    expect(qParam?.schema.description).toBe("Search query string");
+    const bboxParam = searchParams.find((parameter) => parameter.name === "bbox");
+    expect(bboxParam?.schema.anyOf?.[0]?.description).toBe(
+      "Bounding box filter as minLng,minLat,maxLng,maxLat",
+    );
+    expect(paths["/challenge"].get.tags).toEqual(["address"]);
+    expect(paths["/ingest-init"].post.tags).toEqual(["address"]);
   });
 
   it("documents the og query parameters with descriptions and examples", async () => {

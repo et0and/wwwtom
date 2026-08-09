@@ -5,6 +5,8 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
+import { addressHyperdrive } from "../hyperdrive/address.hyperdrive.ts";
+import { apiKv } from "../kv/api.kv.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -25,7 +27,7 @@ export const api = Effect.gen(function* () {
 
   return yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
-    compatibility: { date: "2025-12-10" },
+    compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
     dev: {
       // Local workerd dev server via `alchemy dev`; API_URL points back at it.
       port: 8787,
@@ -44,6 +46,8 @@ export const api = Effect.gen(function* () {
       NODE_ENV: "production",
       ...devSecrets,
       ...(isAlchemyDev ? {} : { TOM_SECRETS: tomSecrets }),
+      TOM_RATE_LIMIT_KV: apiKv,
+      HYPERDRIVE: addressHyperdrive,
     },
   });
 });

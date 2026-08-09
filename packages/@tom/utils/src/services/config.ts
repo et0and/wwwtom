@@ -20,6 +20,15 @@ const parseOptionalSecret = (value?: string): string | undefined => {
   return v;
 };
 
+export type KvNamespaceLike = {
+  readonly get: (key: string) => Promise<string | null>;
+  readonly put: (
+    key: string,
+    value: string,
+    options?: { readonly expirationTtl?: number },
+  ) => Promise<void>;
+};
+
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
   ARENA_API_URL?: string;
@@ -34,6 +43,12 @@ export type CloudflareEnv = {
   ADAPTER_URL?: string;
   API_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
+  ADDRESS_DB?: string;
+  ADDRESS_ADMIN_KEY?: string;
+  ADDRESS_LINZ_API_KEY?: string;
+  ADDRESS_API_KEY_SALT?: string;
+  ADDRESS_POW_SECRET?: string;
+  TOM_RATE_LIMIT_KV?: KvNamespaceLike;
   NODE_ENV?: string;
   LOG_LEVEL?: string;
   OTEL_ENDPOINT?: string;
@@ -51,6 +66,11 @@ const secretKeys = [
   "TELEGRAM_CHAT_ID",
   "SUCCESS_URL",
   "POLAR_ACCESS_TOKEN",
+  "ADDRESS_DB",
+  "ADDRESS_ADMIN_KEY",
+  "ADDRESS_LINZ_API_KEY",
+  "ADDRESS_API_KEY_SALT",
+  "ADDRESS_POW_SECRET",
   "OTEL_ENDPOINT",
   "AXIOM_TOKEN",
   "OTEL_TRACES_DATASET",

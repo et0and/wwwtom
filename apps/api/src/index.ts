@@ -9,11 +9,13 @@ import {
   getRequestEnv,
   sendErrorAlert,
   toErrorResponse,
+  type WorkerExecutionContext,
 } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { healthRoutes } from "./routes/health";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
+import { addressRoutes } from "./routes/addresses";
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -69,12 +71,14 @@ export const app = new Elysia({
   .use(healthRoutes)
   .use(ogRoutes)
   .use(polarRoutes)
+  .use(addressRoutes)
   .compile();
 
 export type ApiApp = typeof app;
 
 const worker = {
-  fetch: (request: Request, env: CloudflareEnv) => app.fetch(attachRequestEnv(request, env)),
+  fetch: (request: Request, env: CloudflareEnv, ctx?: WorkerExecutionContext) =>
+    app.fetch(attachRequestEnv(request, env, ctx)),
 };
 
 export default worker;

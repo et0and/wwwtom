@@ -12,7 +12,10 @@ onlyBuiltDependencies:
   - "workerd"
 catalog:
   effect: 4.0.0-beta.99
+  "@effect/sql-pg": 4.0.0-beta.99
+  drizzle-orm: 1.0.0-rc.4
   kysely: 0.28.9
+  pg: 8.22.0
   postgres: 3.4.7
   solid-js: 1.9.12
   elysia: 1.4.29

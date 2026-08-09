@@ -48,10 +48,22 @@ export const sendErrorAlert = (env: CloudflareEnv, message: string, error?: unkn
  * Elysia only forwards the Request, so the env is attached to the request
  * by the default export wrapper and read back here.
  */
-export type RequestWithEnv = Request & { env: CloudflareEnv };
+export type WorkerExecutionContext = {
+  readonly waitUntil: (promise: Promise<unknown>) => void;
+};
 
-export const attachRequestEnv = (request: Request, env: CloudflareEnv): RequestWithEnv => {
+export type RequestWithEnv = Request & {
+  env: CloudflareEnv;
+  ctx?: WorkerExecutionContext | undefined;
+};
+
+export const attachRequestEnv = (
+  request: Request,
+  env: CloudflareEnv,
+  ctx?: WorkerExecutionContext,
+): RequestWithEnv => {
   (request as RequestWithEnv).env = env;
+  (request as RequestWithEnv).ctx = ctx;
   return request as RequestWithEnv;
 };
 
