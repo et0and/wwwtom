@@ -1,3 +1,10 @@
+## [1.92.1](https://github.com/et0and/wwwtom/compare/v1.92.0...v1.92.1) (2026-08-09)
+
+
+### Bug Fixes
+
+* **ci:** fix deploys ([a12d130](https://github.com/et0and/wwwtom/commit/a12d130a221d64fa05cf68e4ee8c378757ce7e4f))
+
 # [1.92.0](https://github.com/et0and/wwwtom/compare/v1.91.5...v1.92.0) (2026-08-09)
 
 
