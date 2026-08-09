@@ -47,4 +47,8 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Deploy infrastructure
-        run: pnpm deploy --yes
+        run: >
+          pnpm deploy:shared --yes &&
+          pnpm deploy:api --yes &&
+          pnpm deploy:adapter --yes &&
+          pnpm deploy:web --yes
