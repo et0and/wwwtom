@@ -48,7 +48,7 @@ jobs:
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
-          model: opencode/kimi-k2.5-free
+          model: deepseek/deepseek-v4-flash-0731
           prompt: |
             Respond to this comment on PR #${{ steps.pr.outputs.pr_number }}.
 
