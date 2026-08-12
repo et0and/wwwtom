@@ -11,7 +11,8 @@
     "./search": "./src/search.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
   },
   "dependencies": {
     "effect": "catalog:",

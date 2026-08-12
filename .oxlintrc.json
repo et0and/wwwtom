@@ -1,6 +1,12 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "jsPlugins": ["./.oxlint/plugins/tom.mjs"],
+  "jsPlugins": [
+    "./.oxlint/plugins/tom.mjs",
+    {
+      "name": "anti-slop",
+      "specifier": "./.oxlint/anti-slop/index.ts"
+    }
+  ],
   "plugins": ["typescript", "unicorn", "oxc"],
   "categories": {
     "correctness": "error"
@@ -8,6 +14,16 @@
   "rules": {
     "tom/no-barrel-file": "error",
     "tom/no-re-export": "error",
+    "anti-slop/no-chained-type-assertions": "error",
+    "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-known-value-widening": "error",
+    "anti-slop/no-object-parameters": "error",
+    "anti-slop/no-runtime-typeof": "error",
+    "anti-slop/no-shape-in-symbol-names": "error",
+    "anti-slop/no-unknown-parameters": "error",
+    "anti-slop/no-unknown-type-aliases": "error",
+    "anti-slop/no-unsafe-dictionary-type": "error",
+    "anti-slop/no-widen-then-assert": "error",
     "typescript/no-restricted-types": [
       "error",
       {

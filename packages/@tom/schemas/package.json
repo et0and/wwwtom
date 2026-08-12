@@ -15,6 +15,7 @@
     "./secrets": "./src/secrets.ts"
   },
   "scripts": {
+    "lint": "oxlint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
