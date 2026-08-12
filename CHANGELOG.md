@@ -1,3 +1,10 @@
+# [1.94.0](https://github.com/et0and/wwwtom/compare/v1.93.0...v1.94.0) (2026-08-12)
+
+
+### Features
+
+* **lint:** add anti-slop oxlint plugin and lint every package ([e572466](https://github.com/et0and/wwwtom/commit/e5724667c8afc63ed683078923c89767aac78910))
+
 # [1.93.0](https://github.com/et0and/wwwtom/compare/v1.92.3...v1.93.0) (2026-08-12)
 
 
