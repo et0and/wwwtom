@@ -26,15 +26,11 @@ describe("TomWorkMessage", () => {
   });
 
   it("rejects an unknown kind", () => {
-    expect(() =>
-      Schema.decodeUnknownSync(TomWorkMessage)({ kind: "nope" }),
-    ).toThrow();
+    expect(() => Schema.decodeUnknownSync(TomWorkMessage)({ kind: "nope" })).toThrow();
   });
 
   it("rejects a message missing required fields", () => {
-    expect(() =>
-      Schema.decodeUnknownSync(TomWorkMessage)({ kind: "publish-post" }),
-    ).toThrow();
+    expect(() => Schema.decodeUnknownSync(TomWorkMessage)({ kind: "publish-post" })).toThrow();
   });
 });
 
