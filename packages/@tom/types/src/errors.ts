@@ -125,3 +125,8 @@ export class WorkerEnvMissingError extends Schema.TaggedErrorClass<WorkerEnvMiss
     message: Schema.String,
   },
 ) {}
+
+export class QueueError extends Schema.TaggedErrorClass<QueueError>()("QueueError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}

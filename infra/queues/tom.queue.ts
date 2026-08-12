@@ -17,6 +17,10 @@ import { Stage } from "alchemy/Stage";
  * // infra/apps/api.run.ts binds WORK_QUEUE: tomQueue into the api worker env.
  * import { Effect } from "effect";
  * import {
+ *   makeTomQueueLayer,
+ *   TomQueueService,
+ * } from "@tom/utils/services/queue";
+ * import {
  *   getRequestEnv,
  *   logContextFromRequest,
  *   runEffect,
@@ -24,14 +28,15 @@ import { Stage } from "alchemy/Stage";
  *
  * const env = getRequestEnv(request);
  * await runEffect(
- *   Effect.tryPromise(() =>
- *     env.WORK_QUEUE!.send({ kind: "publish-post", postId, at: Date.now() }),
- *   ),
+ *   Effect.gen(function* () {
+ *     const queue = yield* TomQueueService;
+ *     yield* queue.send({ kind: "publish-post", postId, publishAt: Date.now() });
+ *   }).pipe(Effect.provide(makeTomQueueLayer(env))),
  *   logContextFromRequest(request, "tom-api"),
  * );
  * ```
- * Messages can be any JSON-serializable value; `sendBatch` exists for several
- * at once.
+ * Message bodies are `TomWorkMessage` (@tom/schemas/queue) — a tagged union
+ * keyed on `kind`; `sendBatch` exists for several at once.
  *
  * @example Drain the queue from a consumer worker
  * ```ts
@@ -49,11 +54,23 @@ import { Stage } from "alchemy/Stage";
  * });
  * ```
  * ```ts
- * // apps/worker/src/index.ts — message bodies arrive parsed (json default).
+ * // apps/worker/src/index.ts — bodies arrive as unknown JSON; parse at the
+ * // boundary with the TomWorkMessage schema, then switch on `kind`.
+ * import { Schema } from "effect";
+ * import { TomWorkMessage } from "@tom/schemas/queue";
+ *
  * export default {
  *   queue: async (batch) => {
  *     for (const message of batch.messages) {
- *       await handleJob(message.body);
+ *       const job = Schema.decodeUnknownSync(TomWorkMessage)(message.body);
+ *       switch (job.kind) {
+ *         case "publish-post":
+ *           await publishPost(job.postId);
+ *           break;
+ *         case "render-og":
+ *           await renderOg(job.url);
+ *           break;
+ *       }
  *     }
  *   },
  * };
