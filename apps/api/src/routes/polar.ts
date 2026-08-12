@@ -51,7 +51,7 @@ const PortalQuerySchema = Schema.Struct({ customerId: portalCustomerIdSchema });
 const portalQuerySchema = toOpenApiSchema(PortalQuerySchema);
 
 const redirectSchema = (description: string) =>
-  Schema.Unknown.pipe(Schema.annotate({ description }));
+  Schema.String.pipe(Schema.annotate({ description }));
 
 const missingCustomerSchema = errorResponseSchema.pipe(
   Schema.annotate({ description: "Missing products and/or customerId parameter" }),
