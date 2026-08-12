@@ -12,8 +12,8 @@ const createConfigLayer = (config: TestConfig) => {
   const token = config.telegramBotToken;
   const chatId = config.telegramChatId;
   return Layer.succeed(AppConfig, {
-    _tag: "AppConfig",
     arenaToken: Redacted.make(""),
+    arenaBaseUrl: undefined,
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
     telegramBotToken: token ? Redacted.make(token) : undefined,
@@ -59,8 +59,8 @@ const runTestResult = <A, E>(
 const sendAlertEffect = (message: string) =>
   Effect.flatMap(TelegramService, (service) => service.sendAlert(message));
 
-const sendErrorEffect = (message: string, error?: unknown) =>
-  Effect.flatMap(TelegramService, (service) => service.sendError(message, error));
+const sendErrorEffect = (message: string, cause?: unknown) =>
+  Effect.flatMap(TelegramService, (service) => service.sendError(message, cause));
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -70,7 +70,7 @@ afterEach(() => {
 describe("TelegramService", () => {
   it("returns a no-op service when config missing", async () => {
     const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (input: string, init?: RequestInit) => response);
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
     await runTestEffect(sendAlertEffect("Hello"), {});
@@ -79,7 +79,7 @@ describe("TelegramService", () => {
 
   it("sends alerts with expected payload", async () => {
     const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (input: string, init?: RequestInit) => response);
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
     await runTestEffect(sendAlertEffect("Hello"), {
@@ -93,9 +93,6 @@ describe("TelegramService", () => {
       throw new Error("Expected fetch to be called");
     }
     const url = call[0];
-    if (typeof url !== "string") {
-      throw new Error("Expected fetch url");
-    }
     const options = call[1];
     if (!options) {
       throw new Error("Expected fetch options");
@@ -104,10 +101,8 @@ describe("TelegramService", () => {
     expect(url).toBe("https://api.telegram.org/bottoken/sendMessage");
     expect(options.method).toBe("POST");
     expect(options.headers).toEqual({ "Content-Type": "application/json" });
-    if (typeof options.body !== "string") {
-      throw new Error("Expected fetch body");
-    }
-    const body = JSON.parse(options.body);
+    expect(options.body).toBeTypeOf("string");
+    const body = JSON.parse(options.body as string);
 
     expect(body.chat_id).toBe("123");
     expect(body.text).toBe("Hello");
@@ -116,7 +111,7 @@ describe("TelegramService", () => {
 
   it("formats errors in alert payloads", async () => {
     const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (input: string, init?: RequestInit) => response);
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
     const error = new Error("Boom");
@@ -135,10 +130,8 @@ describe("TelegramService", () => {
     if (!options) {
       throw new Error("Expected fetch options");
     }
-    if (typeof options.body !== "string") {
-      throw new Error("Expected fetch body");
-    }
-    const body = JSON.parse(options.body);
+    expect(options.body).toBeTypeOf("string");
+    const body = JSON.parse(options.body as string);
     const text = body.text as string;
 
     expect(text).toContain("*ERROR*");
@@ -149,7 +142,7 @@ describe("TelegramService", () => {
   });
 
   it("surfaces fetch errors as TelegramError", async () => {
-    const fetcher = vi.fn(async (input: string, init?: RequestInit) => {
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => {
       throw new Error("Network down");
     });
     vi.stubGlobal("fetch", fetcher);
@@ -176,7 +169,7 @@ describe("TelegramService", () => {
       status: 500,
       statusText: "Bad Gateway",
     } as Response;
-    const fetcher = vi.fn(async (input: string, init?: RequestInit) => response);
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
     const result = await runTestResult(sendAlertEffect("Hello"), {

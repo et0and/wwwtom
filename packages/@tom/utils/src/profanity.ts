@@ -9,7 +9,12 @@ export const hasProfanity = (text: string): boolean => {
   return matcher.hasMatch(text);
 };
 
-export const checkProfanity = (text: string): { hasProfanity: boolean; message?: string } => {
+export type ProfanityResult = {
+  hasProfanity: boolean;
+  message?: string;
+};
+
+export const checkProfanity = (text: string): ProfanityResult => {
   if (matcher.hasMatch(text)) {
     return {
       hasProfanity: true,

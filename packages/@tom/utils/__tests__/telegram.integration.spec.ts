@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Effect, Layer, Redacted } from "effect";
+import { Effect, Layer, Option, Redacted, Schema } from "effect";
 import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
 
@@ -8,8 +8,8 @@ const chatId = process.env.TELEGRAM_CHAT_ID;
 
 const createConfigLayer = (botToken: string, chat: string) =>
   Layer.succeed(AppConfig, {
-    _tag: "AppConfig",
     arenaToken: Redacted.make(""),
+    arenaBaseUrl: undefined,
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
     telegramBotToken: Redacted.make(botToken),
@@ -43,19 +43,13 @@ const runTestResult = <A, E>(
   return Effect.runPromise(mapped);
 };
 
-const getErrorMessage = (error: unknown): string | undefined => {
-  if (!error || typeof error !== "object") {
-    return undefined;
-  }
-  if (!("message" in error)) {
-    return undefined;
-  }
-  const message = (error as { message?: unknown }).message;
-  if (typeof message === "string") {
-    return message;
-  }
-  return undefined;
-};
+const ErrorWithMessage = Schema.Struct({ message: Schema.String });
+
+const getErrorMessage = (cause: unknown): string | undefined =>
+  Option.getOrElse(
+    Option.map(Schema.decodeUnknownOption(ErrorWithMessage)(cause), (parsed) => parsed.message),
+    () => undefined,
+  );
 
 describe("Telegram integration", () => {
   it("sends a live alert", async () => {

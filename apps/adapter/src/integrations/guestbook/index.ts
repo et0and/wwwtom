@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { DatabaseService } from "@tom/db/service";
 import { checkProfanity } from "@tom/utils/profanity";
 import { readCloudflareEnv } from "@tom/utils/services/config";
@@ -9,8 +9,8 @@ import {
   MissingFieldError,
   ProfanityError,
   AuthenticationError,
-  GuestbookValidationError,
-  OAuthSessionError,
+  type GuestbookValidationError,
+  type OAuthSessionError,
   HttpError,
 } from "@tom/types/errors";
 import * as auth from "./auth";
@@ -59,20 +59,7 @@ const runGuestbook = <T>(
     context,
   );
 
-const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
-
-const readUserCookie = (raw: unknown): auth.FediverseUser | null => {
-  if (!raw) return null;
-  const value = typeof raw === "string" ? raw : JSON.stringify(raw);
-  const parsed = Schema.decodeUnknownOption(userCookieSchema)(value);
-  return parsed._tag === "Some" ? parsed.value : null;
-};
-
-/** The signed-in guestbook user's handle (username@instance) from the cookie, if present. */
-export const readUserIdFromCookie = (raw: unknown): string | undefined => {
-  const user = readUserCookie(raw);
-  return user ? `${user.username}@${user.instance}` : undefined;
-};
+export const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
 
 export const guestbookIntegration = new Elysia({ name: "guestbook" })
   .get(
@@ -98,7 +85,11 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
   .get(
     "/guestbook/me",
     ({ cookie }) => {
-      return readUserCookie(cookie.guestbook_user.value);
+      const userJson = Option.getOrElse(
+        Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user.value),
+        () => JSON.stringify(cookie.guestbook_user.value),
+      );
+      return Option.getOrElse(Schema.decodeUnknownOption(userCookieSchema)(userJson), () => null);
     },
     {
       cookie: guestbookUserCookieSchema,
@@ -211,7 +202,14 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
     "/guestbook/sign",
     ({ body, cookie, request, set }) => {
       const env = getRequestEnv(request);
-      const user = readUserCookie(cookie.guestbook_user.value);
+      const userJson = Option.getOrElse(
+        Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user.value),
+        () => JSON.stringify(cookie.guestbook_user.value),
+      );
+      const user = Option.getOrElse(
+        Schema.decodeUnknownOption(userCookieSchema)(userJson),
+        () => null,
+      );
       if (!user) {
         set.status = 401;
         return { error: "Not authenticated" };

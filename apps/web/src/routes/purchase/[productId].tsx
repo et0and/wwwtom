@@ -56,7 +56,7 @@ export default function Purchase() {
     try {
       const customer = await createCustomer({
         email: email(),
-        ...(name() ? { name: name() } : {}),
+        ...(name() && { name: name() }),
         externalId: crypto.randomUUID(),
       });
 

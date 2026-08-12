@@ -33,7 +33,7 @@ export type OAuthSessionParams = {
 export type GuestbookEntry = Selectable<Database["guestbook_entries"]>;
 export type OAuthSession = Selectable<Database["oauth_sessions"]>;
 
-export interface DatabaseServiceShape {
+export interface DatabaseServiceContract {
   readonly createGuestbookEntry: (
     params: GuestbookEntryParams,
   ) => Effect.Effect<GuestbookEntry, GuestbookValidationError>;
@@ -82,7 +82,7 @@ const createConnection = (
       }),
   });
 
-export class DatabaseService extends Context.Service<DatabaseService, DatabaseServiceShape>()(
+export class DatabaseService extends Context.Service<DatabaseService, DatabaseServiceContract>()(
   "DatabaseService",
 ) {
   static readonly Default = Layer.effect(

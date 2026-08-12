@@ -46,7 +46,7 @@ export const app = new Elysia({
     attachRequestContext(request, {
       requestId,
       logLevel: logLevelFromEnv(env),
-      ...(otel ? { otel } : {}),
+      ...(otel && { otel }),
     });
   })
   .onError(({ code, error, set, request }) => {

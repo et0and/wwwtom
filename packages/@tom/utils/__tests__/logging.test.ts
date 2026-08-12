@@ -2,12 +2,16 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
 import { otelConfigFromResolvedEnv, withLogging } from "../src/services/logging";
 
+type ConsoleLogRecord = {
+  level: string;
+  message: string;
+  annotations: Record<string, string>;
+};
+
 const captureLogs = () => {
-  const logs: Array<Record<string, unknown>> = [];
-  vi.spyOn(console, "log").mockImplementation((arg: unknown) => {
-    if (typeof arg === "object" && arg !== null) {
-      logs.push(arg as Record<string, unknown>);
-    }
+  const logs: Array<ConsoleLogRecord> = [];
+  vi.spyOn(console, "log").mockImplementation((arg: ConsoleLogRecord) => {
+    logs.push(arg);
   });
   return logs;
 };

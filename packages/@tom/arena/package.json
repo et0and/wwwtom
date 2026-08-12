@@ -10,7 +10,8 @@
   },
   "scripts": {
     "test": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@aredotna/sdk": "0.0.4",

@@ -1,3 +1,4 @@
+import { Option, Schema } from "effect";
 import type { ArenaBlockData } from "@tom/schemas/arena";
 import type { PayloadContentNode, PayloadMedia } from "@tom/schemas/payload";
 
@@ -92,7 +93,7 @@ export function convertLexicalToHTML(node: PayloadContentNode, skipArena = false
 
 function formatText(node: PayloadContentNode): string {
   const text = node.text || "";
-  const format = typeof node.format === "number" ? node.format : 0;
+  const format = Option.getOrElse(Schema.decodeUnknownOption(Schema.Number)(node.format), () => 0);
   let result = text;
   if (format & 1) result = `<strong>${result}</strong>`;
   if (format & 2) result = `<em>${result}</em>`;

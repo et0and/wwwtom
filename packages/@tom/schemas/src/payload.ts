@@ -95,7 +95,9 @@ export const PayloadMediaSchema: Schema.Codec<PayloadMediaType> = Schema.Struct(
   focalX: Schema.Number,
   focalY: Schema.Number,
   sizes: PayloadMediaSizesSchema,
+  // oxlint-disable anti-slop/no-chained-type-assertions -- required: recursive schema types do not overlap the Codec type without an unknown bridge
 }) as unknown as Schema.Codec<PayloadMediaType>;
+// oxlint-enable anti-slop/no-chained-type-assertions
 
 export const PayloadBlockFieldsSchema: Schema.Codec<PayloadBlockFieldsType> = Schema.Struct({
   id: Schema.optional(Schema.String),
@@ -114,7 +116,9 @@ export const PayloadBlockFieldsSchema: Schema.Codec<PayloadBlockFieldsType> = Sc
   language: Schema.optional(Schema.String),
   fileName: Schema.optional(Schema.String),
   showLineNumbers: Schema.optional(Schema.Boolean),
+  // oxlint-disable anti-slop/no-chained-type-assertions -- required: recursive schema types do not overlap the Codec type without an unknown bridge
 }) as unknown as Schema.Codec<PayloadBlockFieldsType>;
+// oxlint-enable anti-slop/no-chained-type-assertions
 
 export const PayloadContentNodeSchema: Schema.Codec<PayloadContentNodeType> = Schema.suspend(
   () =>

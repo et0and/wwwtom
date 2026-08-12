@@ -56,10 +56,16 @@ export const otelConfigFromEnv = (env: CloudflareEnv): Promise<OtelConfig | unde
 export const logLevelFromEnv = (env: CloudflareEnv): "Debug" | "Info" =>
   env.LOG_LEVEL === "Debug" ? "Debug" : "Info";
 
-const logAnnotations = (context: LogContext): Record<string, string> => ({
-  ...(context.requestId ? { requestId: context.requestId } : {}),
-  ...(context.sessionId ? { sessionId: context.sessionId } : {}),
-  ...(context.userId ? { userId: context.userId } : {}),
+type LogAnnotations = {
+  requestId?: string;
+  sessionId?: string;
+  userId?: string;
+};
+
+const logAnnotations = (context: LogContext): LogAnnotations => ({
+  ...(context.requestId && { requestId: context.requestId }),
+  ...(context.sessionId && { sessionId: context.sessionId }),
+  ...(context.userId && { userId: context.userId }),
 });
 
 /**

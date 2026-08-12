@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { errorResponseSchema } from "@tom/schemas/error";
 import { PolarApiError } from "@tom/types/errors";
@@ -87,7 +87,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
       const successUrl = env.SUCCESS_URL
         ? `${env.SUCCESS_URL}?checkoutId={CHECKOUT_ID}`
         : undefined;
-      const products = query.products.split(",").filter(Boolean);
+      const products = (query.products ?? "").split(",").filter(Boolean);
 
       const result = await runEffect(
         withErrorHandling(
@@ -97,11 +97,23 @@ export const polarRoutes = new Elysia({ name: "polar" })
             customerId: query.customerId,
             customerEmail: query.customerEmail,
           }).pipe(
-            Effect.map((data) => {
-              const redirectUrl = new URL(data.url);
-              redirectUrl.searchParams.set("theme", "light");
-              return Response.redirect(redirectUrl.toString(), HttpStatus.Found);
-            }),
+            Effect.flatMap((data) =>
+              Option.match(Schema.decodeUnknownOption(Schema.URLFromString)(data.url), {
+                onNone: () =>
+                  Effect.fail(
+                    new PolarApiError({
+                      message: "Polar returned an invalid checkout URL",
+                      status: 502,
+                      operation: "checkout",
+                    }),
+                  ),
+                onSome: (redirectUrl) =>
+                  Effect.sync(() => {
+                    redirectUrl.searchParams.set("theme", "light");
+                    return Response.redirect(redirectUrl.toString(), HttpStatus.Found);
+                  }),
+              }),
+            ),
           ),
           "Error creating Polar checkout",
         ),
@@ -134,7 +146,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
           createPolarCustomerSession(
             env.POLAR_ACCESS_TOKEN,
             env.POLAR_API_URL ?? "https://api.polar.sh",
-            { customerId: query.customerId, returnUrl: "https://tom.so/products" },
+            { customerId: query.customerId ?? "", returnUrl: "https://tom.so/products" },
           ).pipe(
             Effect.map((data) => Response.redirect(data.customer_portal_url, HttpStatus.Found)),
           ),
