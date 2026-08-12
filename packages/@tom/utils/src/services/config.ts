@@ -26,6 +26,14 @@ export type CloudflareEnv = {
   PAYLOAD_URL?: string;
   DATABASE_URL?: string;
   HYPERDRIVE?: { connectionString: string };
+  // Raw Cloudflare queue binding — app code should go through
+  // TomQueueService (@tom/utils/services/queue) for schema-typed sends.
+  WORK_QUEUE?: {
+    send(body: unknown, options?: { contentType?: "json" | "text" }): Promise<void>;
+    sendBatch(
+      messages: ReadonlyArray<{ body: unknown; contentType?: "json" | "text" }>,
+    ): Promise<void>;
+  };
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
   SUCCESS_URL?: string;
