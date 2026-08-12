@@ -4,6 +4,7 @@ import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
+import { tomQueue } from "../queues/tom.queue.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -44,6 +45,7 @@ export const api = Effect.gen(function* () {
       NODE_ENV: "production",
       ...devSecrets,
       ...(isAlchemyDev ? {} : { TOM_SECRETS: tomSecrets }),
+      WORK_QUEUE: tomQueue,
     },
   });
 });
