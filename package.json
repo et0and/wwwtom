@@ -2,7 +2,7 @@
   "name": "@tom/monorepo",
   "private": true,
   "scripts": {
-    "prepare": "effect-language-service patch",
+    "prepare": "effect-language-service patch && husky",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@tom/web",
@@ -45,6 +45,7 @@
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
     "@turbo/gen": "2.8.5",
+    "husky": "^9.1.7",
     "oxfmt": "0.50.0",
     "oxlint": "1.65.0",
     "semantic-release": "24.2.3",
