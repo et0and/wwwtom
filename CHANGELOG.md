@@ -1,3 +1,11 @@
+# [1.93.0](https://github.com/et0and/wwwtom/compare/v1.92.3...v1.93.0) (2026-08-12)
+
+
+### Features
+
+* **infra:** add generic tom work queue with DLQ ([64be7e4](https://github.com/et0and/wwwtom/commit/64be7e47aa245ab9919bf72b26eae1bc299289df))
+* **queue:** type work queue messages with Effect Schema ([e6d20ed](https://github.com/et0and/wwwtom/commit/e6d20ed613dcd7c9e4fdcfdf7344928f41f4e0d3))
+
 ## [1.92.3](https://github.com/et0and/wwwtom/compare/v1.92.2...v1.92.3) (2026-08-09)
 
 
