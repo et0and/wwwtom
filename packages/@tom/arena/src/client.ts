@@ -42,6 +42,8 @@ export interface ArenaUserApi {
 
 export type ChannelStatus = "public" | "closed" | "private";
 
+type ChannelUpdateBody = { title: string; visibility?: ChannelStatus };
+
 export interface ArenaGroupApi {
   get(): Effect.Effect<GetGroupApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetGroupChannelsApiResponse, HttpError>;
@@ -96,6 +98,14 @@ export type Fetch = (
   },
 ) => Promise<Response>;
 
+/**
+ * Bridge @aredotna/sdk responses to the local schema types. The SDK's own
+ * response types don't overlap the schema types, so every SDK call needs a
+ * type bridge; a single-assertion helper keeps that in one place instead of
+ * chained `as unknown as` casts at each call site.
+ */
+const toLocal = <T>(promise: Promise<unknown>): Promise<T> => promise as Promise<T>;
+
 export type DateProvider = { now(): number };
 
 export const defaultPaginationOptions: PaginationAttributes = {
@@ -125,29 +135,27 @@ export function paginationQueryString(
   return attrs.join("&");
 }
 
-function mapArenaError(error: unknown): HttpError {
-  if (error instanceof ArenaApiError) {
-    return new HttpError({ message: error.message, status: error.status });
+function mapArenaError(cause: unknown): HttpError {
+  if (cause instanceof ArenaApiError) {
+    return new HttpError({ message: cause.message, status: cause.status });
   }
-  if (error instanceof ArenaNetworkError) {
-    return new HttpError({ message: error.message, status: 0 });
+  if (cause instanceof ArenaNetworkError) {
+    return new HttpError({ message: cause.message, status: 0 });
   }
   return new HttpError({
-    message: error instanceof Error ? error.message : String(error),
+    message: cause instanceof Error ? cause.message : String(cause),
     status: HttpStatus.InternalServerError,
   });
 }
 
-function toSdkQuery(options: PaginationAttributes | undefined): {
-  page?: number;
-  per?: number;
-  sort?: string;
-} {
+type SdkQuery = { page?: number; per?: number; sort?: string };
+
+function toSdkQuery(options: PaginationAttributes | undefined): SdkQuery {
   const { page, per, sort, direction } = {
     ...defaultPaginationOptions,
     ...options,
   };
-  const result: { page?: number; per?: number; sort?: string } = {};
+  const result: SdkQuery = {};
   if (page) result.page = page;
   if (per) result.per = per;
   if (sort && direction) {
@@ -187,7 +195,7 @@ export class ArenaClient implements ArenaApi {
   private readonly arena: Arena;
 
   private static normalizeToken(token?: string | null): string | null {
-    if (typeof token !== "string") return null;
+    if (token === null || token === undefined) return null;
     const normalized = token.trim();
     if (!normalized) return null;
     if (normalized === "undefined") return null;
@@ -212,14 +220,14 @@ export class ArenaClient implements ArenaApi {
       return h;
     }
     if (Array.isArray(headers)) return headers.filter(([key]) => key !== "Authorization");
-    const h = { ...headers } as Record<string, string>;
+    const h = { ...headers };
     delete h.Authorization;
     return h;
   }
 
   private createCachedFetch(fetchImpl: Fetch): Fetch {
     return async (input, init) => {
-      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      const url = input instanceof URL ? input.href : input instanceof Request ? input.url : input;
       const method = init?.method ?? "GET";
       const hasAuth = ArenaClient.hasAuthorizationHeader(init?.headers);
       const shouldUseEdgeCache = method === "GET" && !hasAuth;
@@ -263,7 +271,7 @@ export class ArenaClient implements ArenaApi {
     this.domain = `${config?.baseUrl ?? "https://api.are.na"}/v3/`;
     this.headers = {
       "Content-Type": "application/json",
-      ...(normalizedToken ? { Authorization: `Bearer ${normalizedToken}` } : {}),
+      ...(normalizedToken && { Authorization: `Bearer ${normalizedToken}` }),
     };
     const wrappedFetch = this.createCachedFetch(config?.fetch || fetch.bind(globalThis));
     this.rawFetch = wrappedFetch;
@@ -271,13 +279,13 @@ export class ArenaClient implements ArenaApi {
     this.arena = createArena({
       fetch: wrappedFetch as typeof fetch,
       baseUrl: config?.baseUrl ?? "https://api.are.na",
-      ...(normalizedToken ? { token: normalizedToken } : {}),
+      ...(normalizedToken && { token: normalizedToken }),
     });
   }
 
   me(): Effect.Effect<MeApiResponse, HttpError> {
     return Effect.tryPromise({
-      try: () => this.arena.me() as unknown as Promise<MeApiResponse>,
+      try: () => toLocal<MeApiResponse>(this.arena.me()),
       catch: mapArenaError,
     });
   }
@@ -290,7 +298,7 @@ export class ArenaClient implements ArenaApi {
     return {
       get: (): Effect.Effect<GetUserApiResponse, HttpError> =>
         Effect.tryPromise({
-          try: () => this.arena.users.get(id) as unknown as Promise<GetUserApiResponse>,
+          try: () => toLocal<GetUserApiResponse>(this.arena.users.get(id)),
           catch: mapArenaError,
         }),
       channels: (
@@ -299,14 +307,12 @@ export class ArenaClient implements ArenaApi {
         this.getJsonWithPaginationQuery(`users/${id}/channels`, options),
       following: (): Effect.Effect<GetUserFollowingApiResponse, HttpError> =>
         Effect.tryPromise({
-          try: () =>
-            this.arena.users.following(id) as unknown as Promise<GetUserFollowingApiResponse>,
+          try: () => toLocal<GetUserFollowingApiResponse>(this.arena.users.following(id)),
           catch: mapArenaError,
         }),
       followers: (): Effect.Effect<GetUserFollowersApiResponse, HttpError> =>
         Effect.tryPromise({
-          try: () =>
-            this.arena.users.followers(id) as unknown as Promise<GetUserFollowersApiResponse>,
+          try: () => toLocal<GetUserFollowersApiResponse>(this.arena.users.followers(id)),
           catch: mapArenaError,
         }),
     };
@@ -316,7 +322,7 @@ export class ArenaClient implements ArenaApi {
     return {
       get: (): Effect.Effect<GetGroupApiResponse, HttpError> =>
         Effect.tryPromise({
-          try: () => this.arena.groups.get(slug) as unknown as Promise<GetGroupApiResponse>,
+          try: () => toLocal<GetGroupApiResponse>(this.arena.groups.get(slug)),
           catch: mapArenaError,
         }),
       channels: (
@@ -333,10 +339,9 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.channels.contents(
-              slug,
-              toSdkQuery(options) as any,
-            ) as unknown as Promise<GetChannelContentsApiResponse>,
+            toLocal<GetChannelContentsApiResponse>(
+              this.arena.channels.contents(slug, toSdkQuery(options) as any),
+            ),
           catch: mapArenaError,
         }),
       connections: (
@@ -344,41 +349,42 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<GetConnectionsApiResponse[], HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.channels.connections(slug, toSdkQuery(options) as any) as unknown as Promise<
-              GetConnectionsApiResponse[]
-            >,
+            toLocal<GetConnectionsApiResponse[]>(
+              this.arena.channels.connections(slug, toSdkQuery(options) as any),
+            ),
           catch: mapArenaError,
         }),
       create: (status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.channels.create({
-              title: slug,
-              visibility: status as "public" | "private" | "closed",
-            } as any) as unknown as Promise<CreateChannelApiResponse>,
+            toLocal<CreateChannelApiResponse>(
+              this.arena.channels.create({
+                title: slug,
+                visibility: status as "public" | "private" | "closed",
+              } as any),
+            ),
           catch: mapArenaError,
         }),
       update: (data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError> =>
         Effect.tryPromise({
           try: () => {
-            const body: { title: string; visibility?: ChannelStatus } = { title: data.title };
+            const body: ChannelUpdateBody = { title: data.title };
             if (data.status) body.visibility = data.status;
-            return this.arena.channels.update(slug, body as any) as unknown as Promise<void>;
+            return toLocal<void>(this.arena.channels.update(slug, body as any));
           },
           catch: mapArenaError,
         }),
       get: (options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.channels.get(
-              slug,
-              toSdkQuery(options) as any,
-            ) as unknown as Promise<GetChannelsApiResponse>,
+            toLocal<GetChannelsApiResponse>(
+              this.arena.channels.get(slug, toSdkQuery(options) as any),
+            ),
           catch: mapArenaError,
         }),
       delete: (): Effect.Effect<void, HttpError> =>
         Effect.tryPromise({
-          try: () => this.arena.channels.delete(slug) as unknown as Promise<void>,
+          try: () => toLocal<void>(this.arena.channels.delete(slug)),
           catch: mapArenaError,
         }),
       thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
@@ -393,15 +399,14 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<GetBlockChannelsApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.blocks.connections(
-              id,
-              toSdkQuery(options) as any,
-            ) as unknown as Promise<GetBlockChannelsApiResponse>,
+            toLocal<GetBlockChannelsApiResponse>(
+              this.arena.blocks.connections(id, toSdkQuery(options) as any),
+            ),
           catch: mapArenaError,
         }),
       get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
         Effect.tryPromise({
-          try: () => this.arena.blocks.get(id) as unknown as Promise<GetBlockApiResponse>,
+          try: () => toLocal<GetBlockApiResponse>(this.arena.blocks.get(id)),
           catch: mapArenaError,
         }),
       update: (data: {
@@ -410,7 +415,7 @@ export class ArenaClient implements ArenaApi {
         content?: string;
       }): Effect.Effect<void, HttpError> =>
         Effect.tryPromise({
-          try: () => this.arena.blocks.update(id, data as any) as unknown as Promise<void>,
+          try: () => toLocal<void>(this.arena.blocks.update(id, data as any)),
           catch: mapArenaError,
         }),
       comments: (
@@ -418,10 +423,9 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<GetBlockCommentApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.blocks.comments(
-              id,
-              toSdkQuery(options) as any,
-            ) as unknown as Promise<GetBlockCommentApiResponse>,
+            toLocal<GetBlockCommentApiResponse>(
+              this.arena.blocks.comments(id, toSdkQuery(options) as any),
+            ),
           catch: mapArenaError,
         }),
     };
@@ -435,9 +439,9 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.search.query(
-              toSdkSearchQuery(query, undefined, options) as any,
-            ) as unknown as Promise<SearchApiResponse>,
+            toLocal<SearchApiResponse>(
+              this.arena.search.query(toSdkSearchQuery(query, undefined, options) as any),
+            ),
           catch: mapArenaError,
         }),
       blocks: (
@@ -446,9 +450,9 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.search.query(
-              toSdkSearchQuery(query, "blocks", options) as any,
-            ) as unknown as Promise<SearchApiResponse>,
+            toLocal<SearchApiResponse>(
+              this.arena.search.query(toSdkSearchQuery(query, "blocks", options) as any),
+            ),
           catch: mapArenaError,
         }),
       channels: (
@@ -457,9 +461,9 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.search.query(
-              toSdkSearchQuery(query, "channels", options) as any,
-            ) as unknown as Promise<SearchApiResponse>,
+            toLocal<SearchApiResponse>(
+              this.arena.search.query(toSdkSearchQuery(query, "channels", options) as any),
+            ),
           catch: mapArenaError,
         }),
       users: (
@@ -468,9 +472,9 @@ export class ArenaClient implements ArenaApi {
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         Effect.tryPromise({
           try: () =>
-            this.arena.search.query(
-              toSdkSearchQuery(query, "users", options) as any,
-            ) as unknown as Promise<SearchApiResponse>,
+            toLocal<SearchApiResponse>(
+              this.arena.search.query(toSdkSearchQuery(query, "users", options) as any),
+            ),
           catch: mapArenaError,
         }),
     };
@@ -487,10 +491,8 @@ export class ArenaClient implements ArenaApi {
   private makeRequest<T>(
     endpoint: string,
     method: "GET" | "POST" | "PUT" | "DELETE",
-    data?: unknown,
   ): Effect.Effect<T, HttpError> {
     const url = `${this.domain}${endpoint}`;
-    const isGet = method === "GET";
     const rawFetch = this.rawFetch;
     const headers = this.headers;
 
@@ -500,7 +502,7 @@ export class ArenaClient implements ArenaApi {
           rawFetch(url, {
             method,
             headers,
-            body: data && !isGet ? JSON.stringify(data) : null,
+            body: null,
           }),
         catch: () => new HttpError({ message: "Network request failed", status: 0 }),
       });

@@ -46,22 +46,22 @@ const app = createHandler(() => {
 });
 
 type CloudflareContext = {
-  cloudflare?: { env?: unknown; ctx?: unknown };
+  cloudflare?: { env?: CloudflareEnv };
   logContext?: LogContext;
 };
 
 export default {
-  fetch: async (request: Request, env: unknown, ctx: unknown) => {
+  fetch: async (request: Request, env: CloudflareEnv) => {
     queryClient.clear();
-    const cloudflareEnv = (env ?? {}) as CloudflareEnv;
+    const cloudflareEnv = env ?? {};
     const otel = await otelConfigFromEnv(cloudflareEnv);
     (request as Request & { context?: CloudflareContext }).context = {
-      cloudflare: { env, ctx },
+      cloudflare: { env: cloudflareEnv },
       logContext: {
         serviceName: "tom-web",
         requestId: crypto.randomUUID(),
         logLevel: logLevelFromEnv(cloudflareEnv),
-        ...(otel ? { otel } : {}),
+        ...(otel && { otel }),
       },
     };
     return app.fetch(request);

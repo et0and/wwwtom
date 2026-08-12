@@ -50,7 +50,7 @@ export class PayloadError extends Error {
   }
 }
 
-export interface PayloadServiceShape {
+export interface PayloadServiceContract {
   /**
    * Fetch data from a Payload endpoint with optional caching
    */
@@ -102,7 +102,7 @@ const buildQuery = (params?: { limit?: number; page?: number; sort?: string }): 
   return query ? `?${query}` : "";
 };
 
-export class PayloadService extends Context.Service<PayloadService, PayloadServiceShape>()(
+export class PayloadService extends Context.Service<PayloadService, PayloadServiceContract>()(
   "PayloadService",
 ) {
   static readonly Default = Layer.effect(
@@ -200,7 +200,7 @@ export class PayloadService extends Context.Service<PayloadService, PayloadServi
           }).pipe(Effect.retry(retryPolicy)),
       );
 
-      const service: PayloadServiceShape = {
+      const service: PayloadServiceContract = {
         fetch: doFetch,
 
         getPosts: (params) => {

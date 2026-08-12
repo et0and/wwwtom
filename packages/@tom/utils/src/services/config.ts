@@ -1,8 +1,9 @@
 import { Context, Effect, Layer, Redacted, Schema } from "effect";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
+import type { TomWorkMessageEncoded } from "@tom/schemas/queue";
 import { SecretsError } from "@tom/types/errors";
 
-export interface AppConfigShape {
+export interface AppConfigContract {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
   readonly arenaBaseUrl: string | undefined;
   readonly payloadUrl: Redacted.Redacted<string>;
@@ -29,9 +30,12 @@ export type CloudflareEnv = {
   // Raw Cloudflare queue binding — app code should go through
   // TomQueueService (@tom/utils/services/queue) for schema-typed sends.
   WORK_QUEUE?: {
-    send(body: unknown, options?: { contentType?: "json" | "text" }): Promise<void>;
+    send(body: TomWorkMessageEncoded, options?: { contentType?: "json" | "text" }): Promise<void>;
     sendBatch(
-      messages: ReadonlyArray<{ body: unknown; contentType?: "json" | "text" }>,
+      messages: ReadonlyArray<{
+        body: TomWorkMessageEncoded;
+        contentType?: "json" | "text";
+      }>,
     ): Promise<void>;
   };
   TELEGRAM_BOT_TOKEN?: string;
@@ -90,7 +94,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareE
   return { ...env, ...bundle };
 };
 
-export class AppConfig extends Context.Service<AppConfig, AppConfigShape>()("AppConfig") {
+export class AppConfig extends Context.Service<AppConfig, AppConfigContract>()("AppConfig") {
   static readonly Default = Layer.succeed(AppConfig, {
     arenaToken: undefined as Redacted.Redacted<string> | undefined,
     arenaBaseUrl: undefined as string | undefined,

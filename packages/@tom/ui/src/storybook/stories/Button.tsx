@@ -1,4 +1,4 @@
-import { mergeProps, onCleanup, splitProps } from "solid-js";
+import { mergeProps, splitProps } from "solid-js";
 import "./button.css";
 
 export interface ButtonProps {
@@ -6,7 +6,6 @@ export interface ButtonProps {
   backgroundColor?: string;
   size?: "small" | "medium" | "large";
   label: string;
-  [key: string]: any;
 }
 
 /** Primary UI component for user interaction */

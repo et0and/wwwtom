@@ -1,7 +1,12 @@
 import { Elysia } from "elysia";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { PayloadService } from "@tom/payload/service";
-import type { PayloadPost, PayloadResponse } from "@tom/schemas/payload";
+import {
+  PayloadContentNodeSchema,
+  type PayloadContentNode,
+  type PayloadPost,
+  type PayloadResponse,
+} from "@tom/schemas/payload";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest, toErrorMessage } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -18,6 +23,19 @@ const emptyPostsResponse = {
   hasNextPage: false,
   hasPrevPage: false,
 };
+
+const RichTextBody = Schema.Struct({ root: PayloadContentNodeSchema });
+
+/** The rich-text root of a payload content field, when it is a rich-text object. */
+const richTextRoot = (content: PayloadPost["content"]): PayloadContentNode | undefined =>
+  Option.getOrElse(
+    Option.map(Schema.decodeUnknownOption(RichTextBody)(content), (rich) => rich.root),
+    () => undefined,
+  );
+
+/** The plain-text form of a payload content field, when it is a string. */
+const richTextContent = (content: PayloadPost["content"]): string | undefined =>
+  Option.getOrElse(Schema.decodeUnknownOption(Schema.String)(content), () => undefined);
 
 const runPayload = <T>(
   env: CloudflareEnv,
@@ -44,8 +62,8 @@ const fetchPosts = (page: number, pageSize: number) =>
       )
       .pipe(
         Effect.catch(
-          Effect.fn("getPostsErrorHandler")(function* (error: unknown) {
-            yield* Effect.logWarning("payload:posts:error", error);
+          Effect.fn("getPostsErrorHandler")(function* (cause: unknown) {
+            yield* Effect.logWarning("payload:posts:error", cause);
             return emptyPostsResponse;
           }),
         ),
@@ -79,13 +97,13 @@ const fetchPostBySlug = (slug: string, adapterUrl: string) =>
 
     const response = yield* fetchBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
       Effect.catch(
-        Effect.fn("getPostBySlugErrorHandler")(function* (error: unknown) {
-          yield* Effect.logWarning("payload:post:error", error);
+        Effect.fn("getPostBySlugErrorHandler")(function* (cause: unknown) {
+          yield* Effect.logWarning("payload:post:error", cause);
           yield* Effect.logInfo(`payload:post:${slug}:retry-no-cache`);
           return yield* fetchBySlug({ useCache: false }).pipe(
             Effect.catch(
-              Effect.fn("getPostBySlugRetryErrorHandler")(function* (retryError: unknown) {
-                yield* Effect.logWarning("payload:post:retry-error", retryError);
+              Effect.fn("getPostBySlugRetryErrorHandler")(function* (cause: unknown) {
+                yield* Effect.logWarning("payload:post:retry-error", cause);
                 return null;
               }),
             ),
@@ -99,25 +117,14 @@ const fetchPostBySlug = (slug: string, adapterUrl: string) =>
     const post = response.docs[0];
     if (!post) return null;
 
-    const arenaBlocks =
-      post.content &&
-      typeof post.content === "object" &&
-      "root" in post.content &&
-      post.content.root
-        ? extractArenaBlocks(post.content.root)
-        : [];
+    const arenaRoot = richTextRoot(post.content);
+    const arenaBlocks = arenaRoot ? extractArenaBlocks(arenaRoot) : [];
 
-    const content =
-      post.content &&
-      typeof post.content === "object" &&
-      "root" in post.content &&
-      post.content.root
-        ? yield* convertLexicalToHTML(post.content.root, adapterUrl).pipe(
-            Effect.catch(() => Effect.succeed("<p>Error rendering content</p>")),
-          )
-        : typeof post.content === "string"
-          ? post.content
-          : "<p>No content available</p>";
+    const content = arenaRoot
+      ? yield* convertLexicalToHTML(arenaRoot, adapterUrl).pipe(
+          Effect.catch(() => Effect.succeed("<p>Error rendering content</p>")),
+        )
+      : (richTextContent(post.content) ?? "<p>No content available</p>");
 
     yield* Effect.logInfo(`payload:post:${slug}:success`);
 
@@ -151,8 +158,8 @@ const fetchWorks = (sort?: string) =>
       })
       .pipe(
         Effect.catch(
-          Effect.fn("getWorksErrorHandler")(function* (error: unknown) {
-            yield* Effect.logWarning("payload:works:error", error);
+          Effect.fn("getWorksErrorHandler")(function* (cause: unknown) {
+            yield* Effect.logWarning("payload:works:error", cause);
             return { docs: [] as readonly PayloadPost[] };
           }),
         ),
@@ -175,13 +182,13 @@ const fetchWorkBySlug = (slug: string, adapterUrl: string) =>
 
     const response = yield* fetchBySlug({ useCache: true, cacheTTL: 3600 }).pipe(
       Effect.catch(
-        Effect.fn("getWorkBySlugErrorHandler")(function* (error: unknown) {
-          yield* Effect.logWarning("payload:work:error", error);
+        Effect.fn("getWorkBySlugErrorHandler")(function* (cause: unknown) {
+          yield* Effect.logWarning("payload:work:error", cause);
           yield* Effect.logInfo(`payload:work:${slug}:retry-no-cache`);
           return yield* fetchBySlug({ useCache: false }).pipe(
             Effect.catch(
-              Effect.fn("getWorkBySlugRetryErrorHandler")(function* (retryError: unknown) {
-                yield* Effect.logWarning("payload:work:retry-error", retryError);
+              Effect.fn("getWorkBySlugRetryErrorHandler")(function* (cause: unknown) {
+                yield* Effect.logWarning("payload:work:retry-error", cause);
                 return null;
               }),
             ),
@@ -195,25 +202,14 @@ const fetchWorkBySlug = (slug: string, adapterUrl: string) =>
     const work = response.docs[0];
     if (!work) return null;
 
-    const arenaBlocks =
-      work.content &&
-      typeof work.content === "object" &&
-      "root" in work.content &&
-      work.content.root
-        ? extractArenaBlocks(work.content.root)
-        : [];
+    const arenaRoot = richTextRoot(work.content);
+    const arenaBlocks = arenaRoot ? extractArenaBlocks(arenaRoot) : [];
 
-    const content =
-      work.content &&
-      typeof work.content === "object" &&
-      "root" in work.content &&
-      work.content.root
-        ? yield* convertLexicalToHTML(work.content.root, adapterUrl, true).pipe(
-            Effect.catch(() => Effect.succeed("<p>Error rendering content</p>")),
-          )
-        : typeof work.content === "string"
-          ? work.content
-          : "<p>No content available</p>";
+    const content = arenaRoot
+      ? yield* convertLexicalToHTML(arenaRoot, adapterUrl, true).pipe(
+          Effect.catch(() => Effect.succeed("<p>Error rendering content</p>")),
+        )
+      : (richTextContent(work.content) ?? "<p>No content available</p>");
 
     yield* Effect.logInfo(`payload:work:${slug}:success`);
 
@@ -236,8 +232,8 @@ const fetchFeed = (limit: number, adapterUrl: string) =>
       })
       .pipe(
         Effect.catch(
-          Effect.fn("getFeedErrorHandler")(function* (error: unknown) {
-            yield* Effect.logWarning("payload:feed:error", error);
+          Effect.fn("getFeedErrorHandler")(function* (cause: unknown) {
+            yield* Effect.logWarning("payload:feed:error", cause);
             return emptyPostsResponse;
           }),
         ),
@@ -245,17 +241,14 @@ const fetchFeed = (limit: number, adapterUrl: string) =>
 
     const docs = [];
     for (const post of response.docs) {
+      const arenaRoot = richTextRoot(post.content);
       const content =
-        typeof post.content === "string"
-          ? post.content
-          : post.content &&
-              typeof post.content === "object" &&
-              "root" in post.content &&
-              post.content.root
-            ? yield* convertLexicalToHTML(post.content.root, adapterUrl).pipe(
-                Effect.catch(() => Effect.succeed("")),
-              )
-            : "";
+        richTextContent(post.content) ??
+        (arenaRoot
+          ? yield* convertLexicalToHTML(arenaRoot, adapterUrl).pipe(
+              Effect.catch(() => Effect.succeed("")),
+            )
+          : "");
       docs.push({
         id: String(post.id),
         title: post.title,

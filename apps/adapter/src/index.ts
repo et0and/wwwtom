@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { cors } from "@elysiajs/cors";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging";
 import {
   attachRequestContext,
@@ -15,7 +15,7 @@ import { AdapterError } from "./config/effect";
 import { arenaIntegration } from "./integrations/arena";
 import { payloadIntegration } from "./integrations/payload";
 import { polarIntegration } from "./integrations/polar";
-import { guestbookIntegration, readUserIdFromCookie } from "./integrations/guestbook";
+import { guestbookIntegration, userCookieSchema } from "./integrations/guestbook";
 import { githubIntegration } from "./integrations/github";
 import { imageIntegration } from "./integrations/image";
 import { ogIntegration } from "./integrations/og";
@@ -48,9 +48,9 @@ export const app = new Elysia({
     set.headers["x-request-id"] = requestId;
     const env = getRequestEnv(request);
 
-    const sessionCookie = cookie.tom_session?.value;
-    const visitorId = typeof sessionCookie === "string" ? sessionCookie : crypto.randomUUID();
-    if (typeof sessionCookie !== "string") {
+    const sessionValue = Schema.decodeUnknownOption(Schema.String)(cookie.tom_session?.value);
+    const visitorId = Option.getOrElse(sessionValue, () => crypto.randomUUID());
+    if (Option.isNone(sessionValue)) {
       cookie.tom_session?.set({
         value: visitorId,
         maxAge: VISITOR_SESSION_MAX_AGE,
@@ -62,14 +62,27 @@ export const app = new Elysia({
     }
 
     const guestbookSession = cookie.guestbook_session?.value;
-    const userId = readUserIdFromCookie(cookie.guestbook_user?.value);
+    const userJson = Option.getOrElse(
+      Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user?.value),
+      () => JSON.stringify(cookie.guestbook_user?.value),
+    );
+    const userId = Option.getOrElse(
+      Option.map(
+        Schema.decodeUnknownOption(userCookieSchema)(userJson),
+        (user) => `${user.username}@${user.instance}`,
+      ),
+      () => undefined,
+    );
     const otel = await otelConfigFromEnv(env);
     attachRequestContext(request, {
       requestId,
-      sessionId: typeof guestbookSession === "string" ? guestbookSession : visitorId,
-      ...(userId ? { userId } : {}),
+      sessionId: Option.getOrElse(
+        Schema.decodeUnknownOption(Schema.String)(guestbookSession),
+        () => visitorId,
+      ),
+      ...(userId && { userId }),
       logLevel: logLevelFromEnv(env),
-      ...(otel ? { otel } : {}),
+      ...(otel && { otel }),
     });
   })
   .onError(({ code, error, set, request }) => {

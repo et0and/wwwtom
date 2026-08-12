@@ -2,7 +2,7 @@ import { Context, Effect, Layer, Redacted } from "effect";
 import { AppConfig } from "@tom/utils/services/config";
 import { ArenaClient, type ArenaApi } from "./client";
 
-export interface ArenaServiceShape {
+export interface ArenaServiceContract {
   /**
    * Get the Arena API client configured with the token from AppConfig
    */
@@ -10,7 +10,7 @@ export interface ArenaServiceShape {
   readonly publicClient: ArenaApi;
 }
 
-export class ArenaService extends Context.Service<ArenaService, ArenaServiceShape>()(
+export class ArenaService extends Context.Service<ArenaService, ArenaServiceContract>()(
   "ArenaService",
 ) {
   static readonly Default = Layer.effect(

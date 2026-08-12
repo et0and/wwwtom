@@ -3,6 +3,9 @@ import { createMemo } from "solid-js";
 import type { JsonLd } from "@tom/schemas/jsonld";
 import { Metadata } from "./Meta";
 
+const resolveProp = (value: string | Accessor<string> | undefined): string | undefined =>
+  value instanceof Function ? value() : value;
+
 interface PageLayoutProps {
   children: JSX.Element;
   title?: string | Accessor<string>;
@@ -18,21 +21,12 @@ interface PageLayoutProps {
 }
 
 export const PageLayout: Component<PageLayoutProps> = (props) => {
-  const title = createMemo(
-    () =>
-      props.frontmatter?.title ??
-      (typeof props.title === "function" ? props.title() : props.title) ??
-      "",
-  );
+  const title = createMemo(() => props.frontmatter?.title ?? resolveProp(props.title) ?? "");
   const description = createMemo(
-    () =>
-      props.frontmatter?.summary ??
-      (typeof props.description === "function" ? props.description() : props.description) ??
-      "",
+    () => props.frontmatter?.summary ?? resolveProp(props.description) ?? "",
   );
-  const canonical = createMemo(() =>
-    typeof props.canonical === "function" ? props.canonical() : props.canonical,
-  );
+  const canonical = createMemo(() => resolveProp(props.canonical));
+  const canonicalUrl = canonical();
 
   return (
     <div class={props.class}>
@@ -40,7 +34,7 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
         title={title()}
         metaType="description"
         metaContent={description()}
-        {...(canonical() ? { canonical: canonical() } : {})}
+        {...(canonicalUrl && { canonical: canonicalUrl })}
       />
       {props.jsonLd && (
         <script type="application/ld+json" innerHTML={JSON.stringify(props.jsonLd)} />

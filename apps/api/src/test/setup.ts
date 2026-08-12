@@ -4,8 +4,8 @@ import { vi } from "vitest";
 // service imports it at module scope, so provide a stub.
 vi.mock("workers-og", () => ({
   ImageResponse: class ImageResponse extends Response {
-    constructor(body: unknown, init?: ResponseInit) {
-      super(body as BodyInit, init);
+    constructor(body: BodyInit, init?: ResponseInit) {
+      super(body, init);
     }
   },
 }));

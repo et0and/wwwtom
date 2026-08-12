@@ -15,9 +15,7 @@ const server = createServer((req, res) => {
     method: req.method,
     headers: req.headers as HeadersInit,
     body:
-      req.method === "GET" || req.method === "HEAD"
-        ? undefined
-        : (Readable.toWeb(req) as unknown as BodyInit),
+      req.method === "GET" || req.method === "HEAD" ? undefined : (Readable.toWeb(req) as BodyInit),
     duplex: "half",
   };
   const request = new Request(url, requestInit);
@@ -33,9 +31,9 @@ const server = createServer((req, res) => {
       ),
     );
 
-  const sendError = (error: unknown) =>
+  const sendError = (cause: unknown) =>
     Effect.sync(() => {
-      console.error("Simulator request failed", error);
+      console.error("Simulator request failed", cause);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Simulator error" }));
     });

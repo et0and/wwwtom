@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
 import { Show, Index, createMemo, createSignal, createEffect, onCleanup } from "solid-js";
+import { isServer } from "solid-js/web";
 import { Motion } from "solid-motionone";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
@@ -69,7 +70,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
   };
 
   createEffect(() => {
-    if (typeof document === "undefined") return;
+    if (isServer) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === "Escape" && expandedBlock() && !isClosing()) {
         closeLightbox();

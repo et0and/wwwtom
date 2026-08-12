@@ -1,7 +1,6 @@
 import { Elysia } from "elysia";
-import { Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
-import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ImageError } from "@tom/types/errors";
 import {
@@ -24,11 +23,13 @@ const ImageQuerySchema = Schema.Struct({
 
 const imageQuerySchema = Schema.toStandardSchemaV1(ImageQuerySchema);
 
-const toImageError = (message: string, cause?: unknown): ImageError =>
-  new ImageError({
+const toImageError = (message: string, cause?: unknown): ImageError => {
+  const fields = cause === undefined ? {} : { cause };
+  return new ImageError({
     response: toErrorResponse(HttpStatus.InternalServerError, message),
-    ...(cause ? { cause } : {}),
+    ...fields,
   });
+};
 
 export const imageIntegration = new Elysia({ name: "image" }).get(
   "/image",
@@ -39,13 +40,18 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
 
     const validateUrl = (urlStr: string): Effect.Effect<URL, ImageError> =>
       Effect.gen(function* () {
-        const parsed = yield* Effect.try({
-          try: () => new URL(urlStr),
-          catch: () =>
-            new ImageError({
-              response: toErrorResponse(HttpStatus.BadRequest, "Invalid URL"),
-            }),
-        });
+        const parsed = yield* Option.match(
+          Schema.decodeUnknownOption(Schema.URLFromString)(urlStr),
+          {
+            onNone: () =>
+              Effect.fail(
+                new ImageError({
+                  response: toErrorResponse(HttpStatus.BadRequest, "Invalid URL"),
+                }),
+              ),
+            onSome: (url) => Effect.succeed(url),
+          },
+        );
 
         if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
           return yield* new ImageError({

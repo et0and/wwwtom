@@ -1,7 +1,7 @@
 import { treaty } from "@elysiajs/eden";
 import type { AdapterApp } from "@tom/adapter";
 import { getRequestEvent } from "solid-js/web";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { HttpError } from "@tom/types/errors";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -50,13 +50,14 @@ type EdenResult<T> = {
   error: { status: unknown; value: unknown } | null;
 };
 
-export const toErrorMessage = (value: unknown): string => {
-  if (value && typeof value === "object" && "error" in value) {
-    const error = (value as { error: unknown }).error;
-    if (typeof error === "string") return error;
-  }
-  return "Adapter request failed";
-};
+/** The adapter's error responses are `{ error: string }`; parse at the boundary. */
+const AdapterErrorBody = Schema.Struct({ error: Schema.String });
+
+const errorMessage = (error: NonNullable<EdenResult<unknown>["error"]>): string =>
+  Option.getOrElse(
+    Option.map(Schema.decodeUnknownOption(AdapterErrorBody)(error.value), (body) => body.error),
+    () => "Adapter request failed",
+  );
 
 /**
  * Unwrap an Eden treaty result, throwing an HttpError with the adapter's
@@ -65,7 +66,7 @@ export const toErrorMessage = (value: unknown): string => {
 export const unwrapAdapter = <T>(result: EdenResult<T>): T => {
   if (result.error) {
     throw new HttpError({
-      message: toErrorMessage(result.error.value),
+      message: errorMessage(result.error),
       status: Number(result.error.status) || 500,
     });
   }
@@ -86,7 +87,7 @@ export const adapterRequest = <T>(
       result.error
         ? Effect.fail(
             new HttpError({
-              message: toErrorMessage(result.error.value),
+              message: errorMessage(result.error),
               status: Number(result.error.status) || 500,
             }),
           )

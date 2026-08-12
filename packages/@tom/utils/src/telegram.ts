@@ -2,12 +2,12 @@ import { Context, Effect, Layer, Redacted } from "effect";
 import { TelegramError } from "@tom/types/errors";
 import { AppConfig } from "./services/config";
 
-export interface TelegramServiceShape {
+export interface TelegramServiceContract {
   readonly sendAlert: (message: string) => Effect.Effect<void, TelegramError>;
-  readonly sendError: (message: string, error?: unknown) => Effect.Effect<void, TelegramError>;
+  readonly sendError: (message: string, cause?: unknown) => Effect.Effect<void, TelegramError>;
 }
 
-export class TelegramService extends Context.Service<TelegramService, TelegramServiceShape>()(
+export class TelegramService extends Context.Service<TelegramService, TelegramServiceContract>()(
   "TelegramService",
 ) {
   static readonly Default = Layer.effect(
@@ -15,9 +15,8 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
     Effect.gen(function* () {
       const config = yield* AppConfig;
 
-      // Return no-op service if not configured
       if (!config.telegramBotToken || !config.telegramChatId) {
-        const service: TelegramServiceShape = {
+        const service: TelegramServiceContract = {
           sendAlert: Effect.fn("TelegramService.sendAlert")(
             (): Effect.Effect<void, TelegramError> => Effect.void,
           ),
@@ -31,15 +30,15 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
       const token = Redacted.value(config.telegramBotToken);
       const chatId = config.telegramChatId;
 
-      const formatErrorMessage = (level: string, message: string, error?: unknown): string => {
+      const formatErrorMessage = (level: string, message: string, cause?: unknown): string => {
         const timestamp = new Date().toISOString();
         let text = `*${level}*\n\n`;
         text += `*Time:* ${timestamp}\n`;
         text += `*Message:* ${message}`;
 
-        if (error) {
-          const errorStr = error instanceof Error ? error.message : String(error);
-          const stack = error instanceof Error ? error.stack : undefined;
+        if (cause) {
+          const errorStr = cause instanceof Error ? cause.message : String(cause);
+          const stack = cause instanceof Error ? cause.stack : undefined;
           text += `\n\n*Error:* \`${errorStr}\``;
           if (stack) {
             text += `\n\n*Stack:* \n\`\`\`\n${stack}\n\`\`\``;
@@ -77,12 +76,12 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
         }
       });
 
-      const service: TelegramServiceShape = {
+      const service: TelegramServiceContract = {
         sendAlert: Effect.fn("TelegramService.sendAlert")((message: string) =>
           doSendTelegramAlert(message),
         ),
-        sendError: Effect.fn("TelegramService.sendError")((message: string, error?: unknown) =>
-          doSendTelegramAlert(formatErrorMessage("ERROR", message, error)),
+        sendError: Effect.fn("TelegramService.sendError")((message: string, cause?: unknown) =>
+          doSendTelegramAlert(formatErrorMessage("ERROR", message, cause)),
         ),
       };
       return service;

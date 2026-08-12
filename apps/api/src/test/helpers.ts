@@ -16,7 +16,7 @@ export const testEnv = (overrides: Partial<CloudflareEnv> = {}): CloudflareEnv =
   ...overrides,
 });
 
-export const jsonResponse = (body: unknown, status = 200): Response =>
+export const jsonResponse = <T>(body: T, status = 200): Response =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },

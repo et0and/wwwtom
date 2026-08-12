@@ -268,8 +268,8 @@ export const polarIntegration = new Elysia({ name: "polar" })
         api.checkout.get({
           query: {
             products: query.products,
-            ...(query.customerId ? { customerId: query.customerId } : {}),
-            ...(query.customerEmail ? { customerEmail: query.customerEmail } : {}),
+            ...(query.customerId && { customerId: query.customerId }),
+            ...(query.customerEmail && { customerEmail: query.customerEmail }),
           },
         }),
         "Failed to create checkout",

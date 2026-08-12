@@ -30,10 +30,10 @@ const toPaginationAttributes = (query: PaginationQuery): PaginationAttributes | 
     query.direction !== undefined;
   if (!hasAny) return undefined;
   return {
-    ...(query.page !== undefined ? { page: query.page } : {}),
-    ...(query.per !== undefined ? { per: query.per } : {}),
-    ...(query.sort !== undefined ? { sort: query.sort } : {}),
-    ...(query.direction !== undefined ? { direction: query.direction } : {}),
+    ...(query.page !== undefined && { page: query.page }),
+    ...(query.per !== undefined && { per: query.per }),
+    ...(query.sort !== undefined && { sort: query.sort }),
+    ...(query.direction !== undefined && { direction: query.direction }),
   };
 };
 

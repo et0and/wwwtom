@@ -1,5 +1,5 @@
 import generator from "megalodon";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { retryPolicy } from "@tom/utils/retry";
 import { DatabaseService } from "@tom/db/service";
 import { detector } from "./detector";
@@ -33,12 +33,13 @@ const generateState = () => {
   return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
-const readErrorCode = (candidate: unknown): string | undefined => {
-  if (candidate && typeof candidate === "object" && "code" in candidate) {
-    return (candidate as { code: string }).code;
-  }
-  return undefined;
-};
+const ErrorCodeBody = Schema.Struct({ code: Schema.String });
+
+const readErrorCode = (cause: unknown): string | undefined =>
+  Option.getOrElse(
+    Option.map(Schema.decodeUnknownOption(ErrorCodeBody)(cause), (parsed) => parsed.code),
+    () => undefined,
+  );
 
 const initiateAuth_ = Effect.fn("initiateAuth")(function* (
   fediverseHandle: string,
@@ -64,11 +65,11 @@ const initiateAuth_ = Effect.fn("initiateAuth")(function* (
   const client = generator(snsType, instanceUrl);
   const state = generateState();
 
-  const mapRegisterAppError = Effect.fn("mapRegisterAppError")(function* (error: unknown) {
-    yield* Effect.logWarning("Megalodon registerApp error:", error);
+  const mapRegisterAppError = Effect.fn("mapRegisterAppError")(function* (cause: unknown) {
+    yield* Effect.logWarning("Megalodon registerApp error:", cause);
 
-    const code = readErrorCode(error);
-    const nestedCode = error instanceof AggregateError ? readErrorCode(error.errors[0]) : undefined;
+    const code = readErrorCode(cause);
+    const nestedCode = cause instanceof AggregateError ? readErrorCode(cause.errors[0]) : undefined;
 
     if (code === "ETIMEDOUT" || code === "ECONNABORTED") {
       return yield* new HttpError({
