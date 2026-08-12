@@ -589,3 +589,14 @@ a.page:hover {
 ::view-transition-new(*) {
   animation: none;
 }
+
+/* Are.na carousel embeds: force third-party embed iframes (fixed 640x360
+   attributes from are.na) to fill their aspect-ratio container. */
+.embed-container .embed-html,
+.embed-container .embed-html iframe {
+  position: absolute;
+  inset: 0;
+  width: 100% !important;
+  height: 100% !important;
+  border: 0;
+}

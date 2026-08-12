@@ -1,7 +1,6 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
-import { Show, Index, createMemo, createSignal, createEffect, onCleanup } from "solid-js";
-import { Motion } from "solid-motionone";
+import { Show, Index, createMemo, createSignal } from "solid-js";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
 import { Spinner } from "@tom/ui/Spinner";
@@ -11,8 +10,6 @@ interface ArenaCarouselProps {
   slug: string;
   title?: string;
 }
-
-type ArenaImageBlock = Extract<ArenaBlock, { type: "Image" }>;
 
 const asBlock = <T extends ArenaBlock["type"]>(
   block: ArenaBlock,
@@ -25,6 +22,16 @@ const formatFileSize = (bytes?: number | null): string => {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
+const AUDIO_EXTENSIONS = new Set(["mp3", "wav", "ogg", "m4a", "aac", "flac", "opus"]);
+const VIDEO_EXTENSIONS = new Set(["mp4", "webm", "mov", "m4v", "mpg4"]);
+
+const DEFAULT_EMBED_ASPECT_RATIO = "16 / 9";
+
+const embedAspectRatio = (width?: number | null, height?: number | null): string => {
+  if (width && height && width > 0 && height > 0) return `${width} / ${height}`;
+  return DEFAULT_EMBED_ASPECT_RATIO;
 };
 
 export function ArenaCarousel(props: ArenaCarouselProps) {
@@ -48,37 +55,6 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);
   });
-  const [expandedBlock, setExpandedBlock] = createSignal<ArenaImageBlock | null>(null);
-  const [isClosing, setIsClosing] = createSignal(false);
-
-  const openLightbox = (block: ArenaBlock) => {
-    const image = asBlock(block, "Image");
-    if (!image) return;
-    setExpandedBlock(image);
-  };
-
-  const closeLightbox = () => {
-    setIsClosing(true);
-  };
-
-  const handleAnimationComplete = () => {
-    if (isClosing()) {
-      setExpandedBlock(null);
-      setIsClosing(false);
-    }
-  };
-
-  createEffect(() => {
-    if (typeof document === "undefined") return;
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && expandedBlock() && !isClosing()) {
-        closeLightbox();
-      }
-    };
-    document.addEventListener("keydown", handler);
-    onCleanup(() => document.removeEventListener("keydown", handler));
-  });
-
   return (
     <Show when={!isLoading()} fallback={<Spinner />}>
       <Show
@@ -94,18 +70,12 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
           </>
         }
       >
-        <ImageLightbox
-          block={expandedBlock()}
-          isClosing={isClosing()}
-          onClose={closeLightbox}
-          onAnimationComplete={handleAnimationComplete}
-        />
         <div class="overflow-x-auto whitespace-nowrap border border-black">
           <div class="carousel-container inline-flex gap-4 p-4">
             <Index each={activeContents()?.data || []}>
               {(item) => (
                 <div class="carousel-item flex-shrink-0 w-80">
-                  <ArenaItem item={item()} onExpand={openLightbox} />
+                  <ArenaItem item={item()} />
                 </div>
               )}
             </Index>
@@ -122,73 +92,8 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
   );
 }
 
-interface ImageLightboxProps {
-  block: ArenaImageBlock | null;
-  isClosing: boolean;
-  onClose: () => void;
-  onAnimationComplete: () => void;
-}
-
-function ImageLightbox(props: ImageLightboxProps) {
-  const [isLoading, setIsLoading] = createSignal(true);
-
-  const handleBackdropClick = (e: MouseEvent) => {
-    if (e.target === e.currentTarget && !props.isClosing) {
-      props.onClose();
-    }
-  };
-
-  const handleImageLoad = () => {
-    setIsLoading(false);
-  };
-
-  return (
-    <Show when={props.block} keyed>
-      {(block) => (
-        <div
-          class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
-          onClick={handleBackdropClick}
-        >
-          <Show when={isLoading()}>
-            <div class="absolute inset-0 flex items-center justify-center z-10">
-              <Spinner color="white" class="h-8 w-8" />
-            </div>
-          </Show>
-          <Motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={props.isClosing ? { opacity: 0, scale: 0.9 } : { opacity: 1, scale: 1 }}
-            transition={{ duration: 0.3, easing: "ease-out" }}
-            onMotionComplete={props.onAnimationComplete}
-            class="relative max-w-[90vw] max-h-[90vh]"
-          >
-            <div class="relative">
-              <img
-                ref={(el) => {
-                  if (el?.complete) {
-                    handleImageLoad();
-                  }
-                }}
-                src={block.image?.large.src}
-                srcset={
-                  block.image?.large.src_2x
-                    ? `${block.image?.large.src} 1x, ${block.image?.large.src_2x} 2x`
-                    : undefined
-                }
-                alt={block.title || ""}
-                class="max-w-full max-h-[90vh] w-auto h-auto object-contain"
-                onLoad={handleImageLoad}
-              />
-            </div>
-          </Motion.div>
-        </div>
-      )}
-    </Show>
-  );
-}
-
 interface ArenaItemProps {
   item: ArenaChannelContents;
-  onExpand: (block: ArenaBlock, imgElement: HTMLImageElement) => void;
 }
 
 function ArenaItem(props: ArenaItemProps) {
@@ -196,35 +101,23 @@ function ArenaItem(props: ArenaItemProps) {
 
   return (
     <Show when={"base_type" in item()}>
-      <ArenaBlockItem block={item() as ArenaBlock} onExpand={props.onExpand} />
+      <ArenaBlockItem block={item() as ArenaBlock} />
     </Show>
   );
 }
 
 interface ImageBlockProps {
-  block: ArenaImageBlock;
-  onExpand: (block: ArenaImageBlock, imgElement: HTMLImageElement) => void;
+  block: Extract<ArenaBlock, { type: "Image" }>;
 }
 
 function ImageBlock(props: ImageBlockProps) {
   const block = () => props.block;
-  let imgRef: HTMLImageElement | undefined;
   const [loaded, setLoaded] = createSignal(false);
 
   const blurhashDataUrl = createMemo(() => Effect.runSync(decodeBlurhash(block().image?.blurhash)));
 
-  const handleClick = () => {
-    if (imgRef) {
-      props.onExpand(block(), imgRef);
-    }
-  };
-
   return (
-    <div
-      class="image-block relative w-full h-60 bg-gray-100 cursor-pointer pointer-events-auto"
-      data-block-id={block().id}
-      onClick={handleClick}
-    >
+    <div class="image-block relative w-full h-60 bg-gray-100" data-block-id={block().id}>
       <Show when={blurhashDataUrl() && !loaded()}>
         <img
           src={blurhashDataUrl()!}
@@ -233,9 +126,6 @@ function ImageBlock(props: ImageBlockProps) {
         />
       </Show>
       <img
-        ref={(el) => {
-          imgRef = el;
-        }}
         src={block().image?.medium.src}
         srcset={
           block().image?.medium.src_2x
@@ -243,7 +133,7 @@ function ImageBlock(props: ImageBlockProps) {
             : undefined
         }
         alt={block().image?.alt_text || block().title || ""}
-        class="w-full h-full object-cover pointer-events-none"
+        class="w-full h-full object-cover"
         classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
         onLoad={() => setLoaded(true)}
         loading="lazy"
@@ -254,7 +144,6 @@ function ImageBlock(props: ImageBlockProps) {
 
 interface ArenaBlockItemProps {
   block: ArenaBlock;
-  onExpand: (block: ArenaBlock, imgElement: HTMLImageElement) => void;
 }
 
 function ArenaBlockItem(props: ArenaBlockItemProps) {
@@ -262,9 +151,7 @@ function ArenaBlockItem(props: ArenaBlockItemProps) {
 
   return (
     <div class="arena-block p-4">
-      <Show when={asBlock(block(), "Image")}>
-        {(img) => <ImageBlock block={img()} onExpand={props.onExpand} />}
-      </Show>
+      <Show when={asBlock(block(), "Image")}>{(img) => <ImageBlock block={img()} />}</Show>
       <Show when={asBlock(block(), "Text")}>
         {(text) =>
           text().content?.html ? (
@@ -282,29 +169,87 @@ function ArenaBlockItem(props: ArenaBlockItemProps) {
       <Show when={asBlock(block(), "Attachment")}>
         {(attachment) => <AttachmentBlock block={attachment()} />}
       </Show>
-      <Show when={asBlock(block(), "Embed")}>
-        {(embed) => (
-          <div class="media-content">
-            {(() => {
-              const embedData = embed().embed;
-              if (embedData?.html) {
-                return <div innerHTML={embedData.html} />;
-              }
-              return (
-                <a
-                  href={embed().source?.url || ""}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="block no-underline hover:underline"
-                >
-                  {embed().title}
-                </a>
-              );
-            })()}
+      <Show when={asBlock(block(), "Embed")}>{(embed) => <EmbedBlock block={embed()} />}</Show>
+    </div>
+  );
+}
+
+interface EmbedBlockProps {
+  block: Extract<ArenaBlock, { type: "Embed" }>;
+}
+
+function EmbedBlock(props: EmbedBlockProps) {
+  const block = () => props.block;
+  const [isPlaying, setIsPlaying] = createSignal(false);
+
+  const embed = () => block().embed;
+  const embedHtml = () => embed().html ?? "";
+  const thumbnail = () => block().image;
+  const fallbackUrl = () => embed().source_url || embed().url || block().source?.url || "";
+
+  return (
+    <div class="media-content">
+      <Show
+        when={embed().html}
+        fallback={<EmbedFallbackLink url={fallbackUrl()} title={block().title} />}
+      >
+        <Show when={isPlaying() || !thumbnail()}>
+          <div
+            class="embed-container relative w-full bg-black overflow-hidden"
+            style={{ "aspect-ratio": embedAspectRatio(embed().width, embed().height) }}
+          >
+            <div class="embed-html" innerHTML={embedHtml()} />
           </div>
-        )}
+        </Show>
+        <Show when={!isPlaying() && thumbnail()}>
+          <button
+            type="button"
+            class="embed-poster relative block w-full p-0 border-0 cursor-pointer"
+            onClick={() => setIsPlaying(true)}
+            aria-label={`Play ${block().title || "video"}`}
+          >
+            <div class="relative w-full h-60 bg-gray-100">
+              <img
+                src={thumbnail()?.medium.src}
+                srcset={
+                  thumbnail()?.medium.src_2x
+                    ? `${thumbnail()?.medium.src} 1x, ${thumbnail()?.medium.src_2x} 2x`
+                    : undefined
+                }
+                alt={block().title || ""}
+                class="w-full h-full object-cover"
+                loading="lazy"
+              />
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="play-button flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white">
+                  <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current" aria-hidden="true">
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </button>
+        </Show>
       </Show>
     </div>
+  );
+}
+
+interface EmbedFallbackLinkProps {
+  url: string;
+  title?: string | null | undefined;
+}
+
+function EmbedFallbackLink(props: EmbedFallbackLinkProps) {
+  return (
+    <a
+      href={props.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="block no-underline hover:underline break-words whitespace-normal"
+    >
+      {props.title}
+    </a>
   );
 }
 
@@ -352,10 +297,16 @@ interface AttachmentBlockProps {
 function AttachmentBlock(props: AttachmentBlockProps) {
   const block = () => props.block;
 
-  const fileName = () => block().attachment?.filename || "";
-  const fileUrl = () => block().attachment?.url || "";
-  const isAudio = () => fileName().toLowerCase().endsWith(".mp3");
-  const isVideo = () => fileName().toLowerCase().endsWith(".mp4");
+  const attachment = () => block().attachment;
+  const fileExtension = () => (attachment()?.file_extension || "").toLowerCase();
+  const displayName = () => block().title || attachment()?.filename || "";
+  const fileUrl = () => attachment()?.url || "";
+  const isAudio = () =>
+    AUDIO_EXTENSIONS.has(fileExtension()) ||
+    (attachment()?.content_type || "").startsWith("audio/");
+  const isVideo = () =>
+    VIDEO_EXTENSIONS.has(fileExtension()) ||
+    (attachment()?.content_type || "").startsWith("video/");
 
   return (
     <div class="attachment-block">
@@ -378,16 +329,32 @@ function AttachmentBlock(props: AttachmentBlockProps) {
       <Show when={!isAudio() && !isVideo()}>
         <a
           href={fileUrl()}
-          download={fileName()}
+          target="_blank"
+          rel="noopener noreferrer"
           class="block no-underline hover:underline"
-          onError={() =>
-            void Effect.runFork(Effect.logError("Failed to load arena media attachment"))
-          }
         >
-          <div class="attachment p-2 border border-gray-300 text-sm">
-            {fileName()}
+          <Show when={block().image}>
+            <div class="relative w-full h-60 bg-gray-100">
+              <img
+                src={block().image?.medium.src}
+                srcset={
+                  block().image?.medium.src_2x
+                    ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
+                    : undefined
+                }
+                alt={displayName()}
+                class="w-full h-full object-cover"
+                onError={() =>
+                  void Effect.runFork(Effect.logError("Failed to load arena attachment thumbnail"))
+                }
+                loading="lazy"
+              />
+            </div>
+          </Show>
+          <div class="attachment p-2 border border-gray-300 text-sm break-words whitespace-normal">
+            {displayName()}
             <div class="file-size text-xs text-gray-600">
-              {formatFileSize(block().attachment?.file_size)}
+              {formatFileSize(attachment()?.file_size)}
             </div>
           </div>
         </a>
