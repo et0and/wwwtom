@@ -12,8 +12,9 @@ export function Metadata(props: MetaProps) {
     props.metaContent || "Tom Hackshaw is a design engineer from Aotearoa New Zealand.";
 
   // Absolute URL: crawlers resolve og:image against the page, and tom.so
-  // doesn't serve /api/og — only api.tom.so does.
-  const ogImageUrl = `https://api.tom.so/og?title=${encodeURIComponent(
+  // doesn't serve /api/og — go through the public adapter proxy, like all
+  // other web → backend calls.
+  const ogImageUrl = `https://adapter.tom.so/og?title=${encodeURIComponent(
     props.title.toString(),
   )}&summary=${encodeURIComponent(description)}`;
 
