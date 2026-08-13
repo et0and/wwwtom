@@ -1,3 +1,10 @@
+## [1.94.2](https://github.com/et0and/wwwtom/compare/v1.94.1...v1.94.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* **ci:** only mirror to SourceHut on dev pushes ([4c85c97](https://github.com/et0and/wwwtom/commit/4c85c975007a5d4601020cd7fd7a44ac3f8755f0))
+
 ## [1.94.1](https://github.com/et0and/wwwtom/compare/v1.94.0...v1.94.1) (2026-08-13)
 
 
