@@ -1,3 +1,10 @@
+## [1.95.2](https://github.com/et0and/wwwtom/compare/v1.95.1...v1.95.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* **web:** render og/title meta on post and work pages ([9690a03](https://github.com/et0and/wwwtom/commit/9690a036f32a9fb869223c181c749871dd67a9f4))
+
 ## [1.95.1](https://github.com/et0and/wwwtom/compare/v1.95.0...v1.95.1) (2026-08-13)
 
 
