@@ -51,6 +51,9 @@ export default function WorkPage() {
       if (!s) return Promise.reject(new Error("No slug"));
       return fetchWorkBySlug(s);
     },
+    // Hold the SSR stream until the work resolves, so the <head> is flushed
+    // with title/og meta instead of an empty head.
+    deferStream: true,
   }));
 
   return (

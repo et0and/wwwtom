@@ -51,6 +51,9 @@ export default function PostPage() {
       if (!s) return Promise.reject(new Error("No slug"));
       return fetchPostBySlug(s);
     },
+    // Hold the SSR stream until the post resolves, so the <head> is flushed
+    // with title/og meta instead of an empty head.
+    deferStream: true,
   }));
 
   return (
