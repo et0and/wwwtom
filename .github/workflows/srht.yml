@@ -2,7 +2,7 @@ name: Mirror to SourceHut
 
 on:
   push:
-    branches: ["*"]
+    branches: [dev]
 
 jobs:
   mirror:
@@ -19,7 +19,9 @@ jobs:
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts
+          # ssh-keyscan can flake on git.sr.ht egress; retry once before
+          # giving up (the step still fails if both attempts fail).
+          ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts || { sleep 5; ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts; }
 
       - name: Mirror to SourceHut
         run: |
