@@ -1,3 +1,10 @@
+## [1.94.4](https://github.com/et0and/wwwtom/compare/v1.94.3...v1.94.4) (2026-08-13)
+
+
+### Bug Fixes
+
+* **infra:** retain shared TOM_SECRETS secret on destroy ([2b90f3d](https://github.com/et0and/wwwtom/commit/2b90f3d042a51ba9ad26a25ebc9193805b7ed733))
+
 ## [1.94.3](https://github.com/et0and/wwwtom/compare/v1.94.2...v1.94.3) (2026-08-13)
 
 
