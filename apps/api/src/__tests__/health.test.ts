@@ -8,7 +8,7 @@ describe("health endpoint", () => {
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body).toMatchObject({ status: "healthy" });
-    expect(typeof body.timestamp).toBe("number");
+    expect(body.timestamp).toBeTypeOf("number");
   });
 
   it("sets a request id header on every response", async () => {

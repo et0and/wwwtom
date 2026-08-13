@@ -1,3 +1,25 @@
+## [1.94.1](https://github.com/et0and/wwwtom/compare/v1.94.0...v1.94.1) (2026-08-13)
+
+
+### Bug Fixes
+
+* **infra:** bump alchemy to 2.0.0-beta.72 for effect beta.105 compat ([6ebfa72](https://github.com/et0and/wwwtom/commit/6ebfa72142075ea212910f25e399e0253a1149ab))
+
+# [1.94.0](https://github.com/et0and/wwwtom/compare/v1.93.0...v1.94.0) (2026-08-12)
+
+
+### Features
+
+* **lint:** add anti-slop oxlint plugin and lint every package ([e572466](https://github.com/et0and/wwwtom/commit/e5724667c8afc63ed683078923c89767aac78910))
+
+# [1.93.0](https://github.com/et0and/wwwtom/compare/v1.92.3...v1.93.0) (2026-08-12)
+
+
+### Features
+
+* **infra:** add generic tom work queue with DLQ ([64be7e4](https://github.com/et0and/wwwtom/commit/64be7e47aa245ab9919bf72b26eae1bc299289df))
+* **queue:** type work queue messages with Effect Schema ([e6d20ed](https://github.com/et0and/wwwtom/commit/e6d20ed613dcd7c9e4fdcfdf7344928f41f4e0d3))
+
 ## [1.92.3](https://github.com/et0and/wwwtom/compare/v1.92.2...v1.92.3) (2026-08-09)
 
 

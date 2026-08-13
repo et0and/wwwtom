@@ -19,7 +19,8 @@
     "typecheck": "tsc --noEmit",
     "storybook": "cd src/storybook && pnpm run storybook",
     "storybook:build": "cd src/storybook && pnpm run build",
-    "storybook:deploy": "cd src/storybook && pnpm run deploy"
+    "storybook:deploy": "cd src/storybook && pnpm run deploy",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@solidjs/meta": "catalog:",

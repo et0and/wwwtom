@@ -22,7 +22,7 @@ const detectFromNodeinfo = (
   software: NodeinfoData["software"],
   metadata: NodeinfoData["metadata"],
 ): Effect.Effect<SNSType, NodeinfoError> => {
-  const softwareMap: Record<string, SNSType> = {
+  const softwareMap = {
     akkoma: "pleroma",
     firefish: "firefish",
     friendica: "friendica",
@@ -33,9 +33,9 @@ const detectFromNodeinfo = (
     pixelfed: "pixelfed",
     pleroma: "pleroma",
     sharkey: "mastodon",
-  };
+  } as const;
 
-  const detected = softwareMap[software.name];
+  const detected = softwareMap[software.name as keyof typeof softwareMap];
   if (detected) return Effect.succeed(detected);
 
   if (metadata.upstream?.name?.toLowerCase() === "mastodon") {

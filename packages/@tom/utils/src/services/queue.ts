@@ -3,14 +3,14 @@ import type { TomWorkMessageEncoded } from "@tom/schemas/queue";
 import { QueueError } from "@tom/types/errors";
 import type { CloudflareEnv } from "./config";
 
-export interface TomQueueServiceShape {
+export interface TomQueueServiceContract {
   readonly send: (message: TomWorkMessageEncoded) => Effect.Effect<void, QueueError>;
   readonly sendBatch: (
     messages: ReadonlyArray<TomWorkMessageEncoded>,
   ) => Effect.Effect<void, QueueError>;
 }
 
-export class TomQueueService extends Context.Service<TomQueueService, TomQueueServiceShape>()(
+export class TomQueueService extends Context.Service<TomQueueService, TomQueueServiceContract>()(
   "TomQueueService",
 ) {}
 

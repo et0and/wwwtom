@@ -1,6 +1,11 @@
-import { Effect, Layer, Logger, References } from "effect";
+import { Effect, Layer, Logger, References, Tracer } from "effect";
 import { FetchHttpClient } from "effect/unstable/http";
-import { OtlpLogger, OtlpSerialization, OtlpTracer } from "effect/unstable/observability";
+import {
+  OtlpExporter,
+  OtlpLogger,
+  OtlpSerialization,
+  OtlpTracer,
+} from "effect/unstable/observability";
 import { readCloudflareEnv, type CloudflareEnv } from "./config";
 
 /**
@@ -56,10 +61,16 @@ export const otelConfigFromEnv = (env: CloudflareEnv): Promise<OtelConfig | unde
 export const logLevelFromEnv = (env: CloudflareEnv): "Debug" | "Info" =>
   env.LOG_LEVEL === "Debug" ? "Debug" : "Info";
 
-const logAnnotations = (context: LogContext): Record<string, string> => ({
-  ...(context.requestId ? { requestId: context.requestId } : {}),
-  ...(context.sessionId ? { sessionId: context.sessionId } : {}),
-  ...(context.userId ? { userId: context.userId } : {}),
+type LogAnnotations = {
+  requestId?: string;
+  sessionId?: string;
+  userId?: string;
+};
+
+const logAnnotations = (context: LogContext): LogAnnotations => ({
+  ...(context.requestId && { requestId: context.requestId }),
+  ...(context.sessionId && { sessionId: context.sessionId }),
+  ...(context.userId && { userId: context.userId }),
 });
 
 /**
@@ -86,13 +97,20 @@ const makeLoggingLayer = (context: LogContext) => {
         exportInterval: "1 second",
       }),
     ]),
-    OtlpTracer.layer({
-      url: otel.tracesUrl,
-      resource,
-      headers: { ...commonHeaders, "X-Axiom-Dataset": otel.tracesDataset },
-      exportInterval: "1 second",
-    }),
-  ).pipe(Layer.provide(OtlpSerialization.layerJson), Layer.provide(FetchHttpClient.layer));
+    Layer.effect(
+      Tracer.Tracer,
+      OtlpTracer.make({
+        url: otel.tracesUrl,
+        resource,
+        headers: { ...commonHeaders, "X-Axiom-Dataset": otel.tracesDataset },
+        exportInterval: "1 second",
+      }),
+    ),
+  ).pipe(
+    Layer.provideMerge(OtlpExporter.layerFlusher),
+    Layer.provide(OtlpSerialization.layerJson),
+    Layer.provide(FetchHttpClient.layer),
+  );
 };
 
 export const withLogging = <A, E, R>(effect: Effect.Effect<A, E, R>, context: LogContext) =>

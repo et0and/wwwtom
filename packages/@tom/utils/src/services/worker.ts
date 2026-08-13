@@ -8,8 +8,6 @@ import type { LogContext, OtelConfig } from "./logging";
 import { makeAppConfigLayer } from "./config";
 import type { CloudflareEnv } from "./config";
 
-export type { LogContext, OtelConfig } from "./logging";
-
 export const runEffect = <A, E>(effect: Effect.Effect<A, E>, context: LogContext): Promise<A> =>
   Effect.runPromise(withLogging(effect, context));
 
@@ -30,12 +28,12 @@ const createTelegramLayer = (env: CloudflareEnv) => {
   return Layer.provide(TelegramService.Default, configLayer);
 };
 
-export const sendErrorAlert = (env: CloudflareEnv, message: string, error?: unknown) => {
+export const sendErrorAlert = (env: CloudflareEnv, message: string, cause?: unknown) => {
   const layer = createTelegramLayer(env);
   Effect.runFork(
     Effect.gen(function* () {
       const telegram = yield* TelegramService;
-      yield* telegram.sendError(message, error);
+      yield* telegram.sendError(message, cause);
     }).pipe(
       Effect.provide(layer),
       Effect.catch(() => Effect.void),
@@ -87,17 +85,17 @@ export const attachRequestContext = (request: Request, context: RequestContext):
 export const getRequestContext = (request: Request): RequestContext =>
   (request as RequestWithContext).requestContext ?? {};
 
-export const toErrorMessage = (error: unknown): string =>
-  error instanceof Error ? error.message : String(error);
+export const toErrorMessage = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);
 
 /**
  * Log an API failure at the level that matches its status: expected client
  * errors (4xx) are warnings, unexpected failures are errors.
  */
-export const logApiFailure = (message: string, status: number, data?: unknown) =>
+export const logApiFailure = (message: string, status: number, cause?: unknown) =>
   status >= HttpStatus.BadRequest && status < HttpStatus.InternalServerError
-    ? Effect.logWarning(message, data === undefined ? { status } : { status, data })
-    : Effect.logError(message, data === undefined ? { status } : { status, data });
+    ? Effect.logWarning(message, cause === undefined ? { status } : { status, cause })
+    : Effect.logError(message, cause === undefined ? { status } : { status, cause });
 
 export const toErrorResponse = (status: number, error: string, cause?: string): Response =>
   new Response(

@@ -9,7 +9,8 @@
     ".": "./src/index.tsx"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@react-email/components": "0.0.39",

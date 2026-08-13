@@ -12,6 +12,7 @@
     "dev:adapter": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/adapter.run.ts",
     "dev:api": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/api.run.ts",
     "destroy": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy shared.run.ts --stage $ALCHEMY_STAGE",
+    "destroy:shared": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy shared.run.ts --stage $ALCHEMY_STAGE",
     "destroy:api": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/api.run.ts --stage $ALCHEMY_STAGE",
     "destroy:adapter": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/adapter.run.ts --stage $ALCHEMY_STAGE",
     "destroy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/web.run.ts --stage $ALCHEMY_STAGE",
@@ -19,12 +20,12 @@
   },
   "dependencies": {
     "@cloudflare/workers-types": "^4.20250408.0",
-    "@effect/platform-bun": "4.0.0-beta.99",
-    "@effect/platform-node": "4.0.0-beta.99",
+    "@effect/platform-bun": "4.0.0-beta.105",
+    "@effect/platform-node": "4.0.0-beta.105",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
-    "alchemy": "2.0.0-beta.63",
-    "effect": "4.0.0-beta.99",
+    "alchemy": "2.0.0-beta.72",
+    "effect": "4.0.0-beta.105",
     "vite": "^8.1.5"
   },
   "devDependencies": {

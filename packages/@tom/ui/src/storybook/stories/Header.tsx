@@ -1,4 +1,4 @@
-import { mergeProps, onCleanup, onMount } from "solid-js";
+import { mergeProps } from "solid-js";
 
 import { Button } from "./Button";
 import "./header.css";
@@ -8,7 +8,6 @@ export interface HeaderProps {
   onLogin: () => void;
   onLogout: () => void;
   onCreateAccount: () => void;
-  [key: string]: any;
 }
 
 export const Header = (_props: HeaderProps) => {

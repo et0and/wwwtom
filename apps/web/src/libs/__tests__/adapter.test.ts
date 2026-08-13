@@ -29,9 +29,14 @@ describe("unwrapAdapter", () => {
   });
 
   it("throws an HttpError with the adapter message and status", () => {
-    expect(() =>
-      unwrapAdapter({ data: null, error: { status: 404, value: { error: "Not found" } } }),
-    ).toThrow(expect.objectContaining({ message: "Not found", status: 404 }) as unknown as Error);
+    let error: unknown;
+    try {
+      unwrapAdapter({ data: null, error: { status: 404, value: { error: "Not found" } } });
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(HttpError);
+    expect(error).toMatchObject({ message: "Not found", status: 404 });
   });
 
   it("falls back to a generic message when the error body has no message", () => {
@@ -41,9 +46,14 @@ describe("unwrapAdapter", () => {
   });
 
   it("falls back to status 500 when the error status is missing", () => {
-    expect(() =>
-      unwrapAdapter({ data: null, error: { status: null, value: { error: "boom" } } }),
-    ).toThrow(expect.objectContaining({ status: 500 }) as unknown as Error);
+    let error: unknown;
+    try {
+      unwrapAdapter({ data: null, error: { status: null, value: { error: "boom" } } });
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(HttpError);
+    expect(error).toMatchObject({ status: 500 });
   });
 
   it("throws an HttpError instance", () => {

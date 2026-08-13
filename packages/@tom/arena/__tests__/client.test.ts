@@ -23,9 +23,7 @@ const createDateProvider = (timestamp: number): DateProvider => ({
 
 const getRequestUrl = (call: unknown[]): string => {
   const input = call[0];
-  if (input instanceof Request) return input.url;
-  if (typeof input === "string") return input;
-  return String(input);
+  return input instanceof Request ? input.url : String(input);
 };
 
 const getRequestHeaders = (call: unknown[]): Headers => {

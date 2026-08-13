@@ -13,7 +13,7 @@ import { HttpError } from "@tom/types/errors";
 
 const fetchMock = vi.fn();
 
-const jsonResponse = (body: unknown, status = 200): Response =>
+const jsonResponse = <T>(body: T, status = 200): Response =>
   new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json" },

@@ -1,33 +1,30 @@
 import { Schema } from "effect";
 
-export class ImageError extends Schema.TaggedErrorClass<ImageError>()("ImageError", {
+export class ImageError extends Schema.TaggedError<ImageError>()("ImageError", {
   response: Schema.Unknown,
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
-export class PolarApiError extends Schema.TaggedErrorClass<PolarApiError>()("PolarApiError", {
+export class PolarApiError extends Schema.TaggedError<PolarApiError>()("PolarApiError", {
   message: Schema.String,
   status: Schema.Number,
   operation: Schema.String,
 }) {}
 
-export class ArenaConfigError extends Schema.TaggedErrorClass<ArenaConfigError>()(
-  "ArenaConfigError",
-  {
-    message: Schema.String,
-  },
-) {}
-
-export class SearchError extends Schema.TaggedErrorClass<SearchError>()("SearchError", {
+export class ArenaConfigError extends Schema.TaggedError<ArenaConfigError>()("ArenaConfigError", {
   message: Schema.String,
 }) {}
 
-export class HttpError extends Schema.TaggedErrorClass<HttpError>()("HttpError", {
+export class SearchError extends Schema.TaggedError<SearchError>()("SearchError", {
+  message: Schema.String,
+}) {}
+
+export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
   message: Schema.String,
   status: Schema.Number,
 }) {}
 
-export class DatabaseConnectionError extends Schema.TaggedErrorClass<DatabaseConnectionError>()(
+export class DatabaseConnectionError extends Schema.TaggedError<DatabaseConnectionError>()(
   "DatabaseConnectionError",
   {
     message: Schema.String,
@@ -35,7 +32,7 @@ export class DatabaseConnectionError extends Schema.TaggedErrorClass<DatabaseCon
   },
 ) {}
 
-export class StoredProcedureError extends Schema.TaggedErrorClass<StoredProcedureError>()(
+export class StoredProcedureError extends Schema.TaggedError<StoredProcedureError>()(
   "StoredProcedureError",
   {
     procedure: Schema.String,
@@ -44,7 +41,7 @@ export class StoredProcedureError extends Schema.TaggedErrorClass<StoredProcedur
   },
 ) {}
 
-export class GuestbookValidationError extends Schema.TaggedErrorClass<GuestbookValidationError>()(
+export class GuestbookValidationError extends Schema.TaggedError<GuestbookValidationError>()(
   "GuestbookValidationError",
   {
     message: Schema.String,
@@ -52,7 +49,7 @@ export class GuestbookValidationError extends Schema.TaggedErrorClass<GuestbookV
   },
 ) {}
 
-export class OAuthSessionError extends Schema.TaggedErrorClass<OAuthSessionError>()(
+export class OAuthSessionError extends Schema.TaggedError<OAuthSessionError>()(
   "OAuthSessionError",
   {
     message: Schema.String,
@@ -60,52 +57,52 @@ export class OAuthSessionError extends Schema.TaggedErrorClass<OAuthSessionError
   },
 ) {}
 
-export class MissingFieldError extends Schema.TaggedErrorClass<MissingFieldError>()(
+export class MissingFieldError extends Schema.TaggedError<MissingFieldError>()(
   "MissingFieldError",
   {
     field: Schema.String,
   },
 ) {}
 
-export class ProfanityError extends Schema.TaggedErrorClass<ProfanityError>()("ProfanityError", {
+export class ProfanityError extends Schema.TaggedError<ProfanityError>()("ProfanityError", {
   message: Schema.String,
 }) {}
 
-export class AuthenticationError extends Schema.TaggedErrorClass<AuthenticationError>()(
+export class AuthenticationError extends Schema.TaggedError<AuthenticationError>()(
   "AuthenticationError",
   {
     message: Schema.String,
   },
 ) {}
 
-export class NodeinfoError extends Schema.TaggedErrorClass<NodeinfoError>()("NodeinfoError", {
+export class NodeinfoError extends Schema.TaggedError<NodeinfoError>()("NodeinfoError", {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
-export class FontFetchError extends Schema.TaggedErrorClass<FontFetchError>()("FontFetchError", {
+export class FontFetchError extends Schema.TaggedError<FontFetchError>()("FontFetchError", {
   message: Schema.String,
   cause: Schema.String,
 }) {}
 
-export class ValidationError extends Schema.TaggedErrorClass<ValidationError>()("ValidationError", {
+export class ValidationError extends Schema.TaggedError<ValidationError>()("ValidationError", {
   field: Schema.String,
   issue: Schema.String,
 }) {}
 
-export class ImageGenerationError extends Schema.TaggedErrorClass<ImageGenerationError>()(
+export class ImageGenerationError extends Schema.TaggedError<ImageGenerationError>()(
   "ImageGenerationError",
   {
     message: Schema.String,
   },
 ) {}
 
-export class TelegramError extends Schema.TaggedErrorClass<TelegramError>()("TelegramError", {
+export class TelegramError extends Schema.TaggedError<TelegramError>()("TelegramError", {
   message: Schema.String,
   status: Schema.optional(Schema.Number),
 }) {}
 
-export class InfrastructureConfigError extends Schema.TaggedErrorClass<InfrastructureConfigError>()(
+export class InfrastructureConfigError extends Schema.TaggedError<InfrastructureConfigError>()(
   "InfrastructureConfigError",
   {
     variable: Schema.String,
@@ -114,19 +111,19 @@ export class InfrastructureConfigError extends Schema.TaggedErrorClass<Infrastru
   },
 ) {}
 
-export class SecretsError extends Schema.TaggedErrorClass<SecretsError>()("SecretsError", {
+export class SecretsError extends Schema.TaggedError<SecretsError>()("SecretsError", {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
-export class WorkerEnvMissingError extends Schema.TaggedErrorClass<WorkerEnvMissingError>()(
+export class WorkerEnvMissingError extends Schema.TaggedError<WorkerEnvMissingError>()(
   "WorkerEnvMissingError",
   {
     message: Schema.String,
   },
 ) {}
 
-export class QueueError extends Schema.TaggedErrorClass<QueueError>()("QueueError", {
+export class QueueError extends Schema.TaggedError<QueueError>()("QueueError", {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}

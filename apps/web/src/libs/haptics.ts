@@ -1,10 +1,11 @@
 import { WebHaptics, defaultPatterns } from "web-haptics";
+import { isServer } from "solid-js/web";
 
 let hapticsInstance: WebHaptics | null = null;
 let listenerAdded = false;
 
 function isTouchDevice(): boolean {
-  return typeof navigator !== "undefined" && navigator.maxTouchPoints > 0;
+  return !isServer && navigator.maxTouchPoints > 0;
 }
 
 function shouldTriggerHaptic(target: HTMLElement, event: MouseEvent | TouchEvent): boolean {
@@ -50,7 +51,7 @@ function getPatternForElement(target: HTMLElement): keyof typeof defaultPatterns
 }
 
 export function useGlobalHaptics() {
-  if (typeof window === "undefined") return;
+  if (isServer) return;
   if (listenerAdded) return;
   listenerAdded = true;
 

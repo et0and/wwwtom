@@ -9,7 +9,8 @@
     "./service": "./src/service.ts"
   },
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
   },
   "dependencies": {
     "@tom/arena": "workspace:*",
