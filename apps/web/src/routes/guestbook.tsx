@@ -1,4 +1,4 @@
-import { type RouteDefinition } from "@solidjs/router";
+import type { RouteDefinition } from "@solidjs/router";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Suspense, createSignal } from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
@@ -37,10 +37,15 @@ const logout = async () => {
 
 export const route = {
   preload: () => {
-    queryClient.prefetchQuery({
-      queryKey: ["guestbook-entries"],
-      queryFn: fetchEntries,
-    });
+    queryClient
+      .prefetchQuery({
+        queryKey: ["guestbook-entries"],
+        queryFn: fetchEntries,
+      })
+      .catch(() => {
+        // A failed prefetch surfaces through the query's error state — don't
+        // let the rejection fail the SSR request.
+      });
   },
 } satisfies RouteDefinition;
 

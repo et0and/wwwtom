@@ -1,4 +1,3 @@
-import generator from "megalodon";
 import { Effect, Option, Schema } from "effect";
 import { retryPolicy } from "@tom/utils/retry";
 import { DatabaseService } from "@tom/db/service";
@@ -33,6 +32,22 @@ const generateState = () => {
   return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
+// Megalodon is only needed for Fediverse OAuth; load it lazily so the heavy
+// client stays out of the adapter's cold-start module graph.
+const loadGenerator = Effect.fn("loadMegalodon")(function* () {
+  const mod = yield* Effect.tryPromise({
+    try: () => import("megalodon"),
+    catch: (cause) =>
+      new HttpError({
+        message: `Failed to load the fediverse client: ${
+          cause instanceof Error ? cause.message : "unknown error"
+        }`,
+        status: HttpStatus.InternalServerError,
+      }),
+  });
+  return mod.default;
+});
+
 const ErrorCodeBody = Schema.Struct({ code: Schema.String });
 
 const readErrorCode = (cause: unknown): string | undefined =>
@@ -62,6 +77,7 @@ const initiateAuth_ = Effect.fn("initiateAuth")(function* (
     Effect.catch(() => Effect.succeed("mastodon" as const)),
   );
 
+  const generator = yield* loadGenerator();
   const client = generator(snsType, instanceUrl);
   const state = generateState();
 
@@ -171,6 +187,7 @@ const handleCallback_ = Effect.fn("handleCallback")(function* (params: {
     Effect.catch(() => Effect.succeed("mastodon" as const)),
   );
 
+  const generator = yield* loadGenerator();
   const client = generator(snsType, instanceUrl);
 
   const tokenData = yield* Effect.tryPromise({

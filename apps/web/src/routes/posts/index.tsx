@@ -1,4 +1,4 @@
-import { type RouteDefinition, type RouteSectionProps } from "@solidjs/router";
+import type { RouteDefinition, RouteSectionProps } from "@solidjs/router";
 import { getRequestEvent } from "solid-js/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPosts } from "~/server/adapter";
@@ -13,10 +13,15 @@ import { queryClient } from "~/libs/query-client";
 export const route = {
   preload: ({ location }) => {
     const page = Number(location.query.page) || 1;
-    queryClient.prefetchQuery({
-      queryKey: ["posts", page],
-      queryFn: () => fetchPosts(page, 5),
-    });
+    queryClient
+      .prefetchQuery({
+        queryKey: ["posts", page],
+        queryFn: () => fetchPosts(page, 5),
+      })
+      .catch(() => {
+        // A failed prefetch surfaces through the query's error state — don't
+        // let the rejection fail the SSR request.
+      });
   },
 } satisfies RouteDefinition;
 

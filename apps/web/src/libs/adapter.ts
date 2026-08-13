@@ -73,6 +73,9 @@ export const unwrapAdapter = <T>(result: EdenResult<T>): T => {
   return result.data as T;
 };
 
+/** Upper bound for a single adapter round-trip; guards against a hung worker. */
+const ADAPTER_TIMEOUT_MS = 5_000;
+
 /**
  * Adapter request as an Effect: network failures and non-2xx responses
  * surface as tagged HttpErrors in the error channel instead of thrown
@@ -93,6 +96,11 @@ export const adapterRequest = <T>(
           )
         : Effect.succeed(result.data as T),
     ),
+    Effect.timeoutOrElse({
+      duration: ADAPTER_TIMEOUT_MS,
+      orElse: () =>
+        Effect.fail(new HttpError({ message: "Adapter request timed out", status: 504 })),
+    }),
   );
 
 /** Run an adapter request to completion, rejecting with HttpError on failure. */

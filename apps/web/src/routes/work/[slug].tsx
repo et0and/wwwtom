@@ -11,10 +11,15 @@ import { queryClient } from "~/libs/query-client";
 export const route = {
   preload: ({ params }) => {
     if (params.slug) {
-      queryClient.prefetchQuery({
-        queryKey: ["work", params.slug],
-        queryFn: () => fetchWorkBySlug(params.slug!),
-      });
+      queryClient
+        .prefetchQuery({
+          queryKey: ["work", params.slug],
+          queryFn: () => fetchWorkBySlug(params.slug!),
+        })
+        .catch(() => {
+          // A failed prefetch surfaces through the query's error state — don't
+          // let the rejection fail the SSR request.
+        });
     }
   },
 } satisfies RouteDefinition;

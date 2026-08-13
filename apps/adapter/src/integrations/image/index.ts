@@ -1,6 +1,5 @@
 import { Elysia } from "elysia";
 import { Effect, Option, Schema } from "effect";
-import { PhotonImage, resize, SamplingFilter } from "@cf-wasm/photon";
 import { HttpStatus } from "@tom/constants/http";
 import { ImageError } from "@tom/types/errors";
 import {
@@ -73,39 +72,46 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
       );
 
     const processImage = (response: Response) =>
-      Effect.tryPromise({
-        try: () => response.arrayBuffer(),
-        catch: (cause) => toImageError("Failed to read image data", cause),
-      }).pipe(
-        Effect.flatMap((buffer) =>
-          Effect.try({
-            try: () => {
-              const originalFormat = response.headers.get("content-type");
-              const photonImage = PhotonImage.new_from_byteslice(new Uint8Array(buffer));
+      Effect.gen(function* () {
+        const buffer = yield* Effect.tryPromise({
+          try: () => response.arrayBuffer(),
+          catch: (cause) => toImageError("Failed to read image data", cause),
+        });
 
-              const aspectRatio = photonImage.get_height() / photonImage.get_width();
-              const height = Math.round(width * aspectRatio);
-              const resizedImage = resize(photonImage, width, height, SamplingFilter.Lanczos3);
+        // Load the Photon WASM image processor lazily so it stays out of the
+        // adapter's cold-start module graph (the /image route is its only user).
+        const { PhotonImage, resize, SamplingFilter } = yield* Effect.tryPromise({
+          try: () => import("@cf-wasm/photon"),
+          catch: (cause) => toImageError("Failed to load image processor", cause),
+        });
 
-              const format = requestedFormat || originalFormat?.split("/")[1] || "jpeg";
-              const encoded =
-                format === "png"
-                  ? { buffer: resizedImage.get_bytes(), contentType: "image/png" }
-                  : format === "webp"
-                    ? { buffer: resizedImage.get_bytes_webp(), contentType: "image/webp" }
-                    : { buffer: resizedImage.get_bytes_jpeg(quality), contentType: "image/jpeg" };
+        return yield* Effect.try({
+          try: () => {
+            const originalFormat = response.headers.get("content-type");
+            const photonImage = PhotonImage.new_from_byteslice(new Uint8Array(buffer));
 
-              return new Response(new Uint8Array(encoded.buffer), {
-                headers: {
-                  "Content-Type": encoded.contentType,
-                  "Cache-Control": "public, max-age=31536000, immutable",
-                },
-              });
-            },
-            catch: (cause) => toImageError("Failed to process image", cause),
-          }),
-        ),
-      );
+            const aspectRatio = photonImage.get_height() / photonImage.get_width();
+            const height = Math.round(width * aspectRatio);
+            const resizedImage = resize(photonImage, width, height, SamplingFilter.Lanczos3);
+
+            const format = requestedFormat || originalFormat?.split("/")[1] || "jpeg";
+            const encoded =
+              format === "png"
+                ? { buffer: resizedImage.get_bytes(), contentType: "image/png" }
+                : format === "webp"
+                  ? { buffer: resizedImage.get_bytes_webp(), contentType: "image/webp" }
+                  : { buffer: resizedImage.get_bytes_jpeg(quality), contentType: "image/jpeg" };
+
+            return new Response(new Uint8Array(encoded.buffer), {
+              headers: {
+                "Content-Type": encoded.contentType,
+                "Cache-Control": "public, max-age=31536000, immutable",
+              },
+            });
+          },
+          catch: (cause) => toImageError("Failed to process image", cause),
+        });
+      });
 
     const program = validateUrl(query.url).pipe(
       Effect.tap(() =>
