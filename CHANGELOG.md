@@ -1,3 +1,11 @@
+## [1.95.1](https://github.com/et0and/wwwtom/compare/v1.95.0...v1.95.1) (2026-08-13)
+
+
+### Bug Fixes
+
+* **api:** make OG image route public ([8a95577](https://github.com/et0and/wwwtom/commit/8a955776c7012e3be5d41eeed2da423999333859))
+* **web:** point og:image at the public adapter proxy ([27015be](https://github.com/et0and/wwwtom/commit/27015beb44b2d14e40207dba0c8aa3bbbcc03afa))
+
 # [1.95.0](https://github.com/et0and/wwwtom/compare/v1.94.5...v1.95.0) (2026-08-13)
 
 
