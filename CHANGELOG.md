@@ -1,3 +1,10 @@
+## [1.94.1](https://github.com/et0and/wwwtom/compare/v1.94.0...v1.94.1) (2026-08-13)
+
+
+### Bug Fixes
+
+* **infra:** bump alchemy to 2.0.0-beta.72 for effect beta.105 compat ([6ebfa72](https://github.com/et0and/wwwtom/commit/6ebfa72142075ea212910f25e399e0253a1149ab))
+
 # [1.94.0](https://github.com/et0and/wwwtom/compare/v1.93.0...v1.94.0) (2026-08-12)
 
 
