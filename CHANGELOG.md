@@ -1,3 +1,10 @@
+## [1.94.5](https://github.com/et0and/wwwtom/compare/v1.94.4...v1.94.5) (2026-08-13)
+
+
+### Bug Fixes
+
+* **web:** bound adapter SSR latency and lazy-load heavy adapter deps ([ee8ea53](https://github.com/et0and/wwwtom/commit/ee8ea53b159982dbd60136555e16290963057ba5))
+
 ## [1.94.4](https://github.com/et0and/wwwtom/compare/v1.94.3...v1.94.4) (2026-08-13)
 
 
