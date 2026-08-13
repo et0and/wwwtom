@@ -43,6 +43,7 @@ export type CloudflareEnv = {
   SUCCESS_URL?: string;
   POLAR_ACCESS_TOKEN?: string;
   POLAR_API_URL?: string;
+  INTERNAL_API_TOKEN?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
@@ -63,6 +64,7 @@ const secretKeys = [
   "TELEGRAM_CHAT_ID",
   "SUCCESS_URL",
   "POLAR_ACCESS_TOKEN",
+  "INTERNAL_API_TOKEN",
   "OTEL_ENDPOINT",
   "AXIOM_TOKEN",
   "OTEL_TRACES_DATASET",

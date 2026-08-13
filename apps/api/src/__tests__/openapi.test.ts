@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { app } from "../index";
 import { requestWithEnv, testEnv } from "../test/helpers";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 
 describe("openapi docs", () => {
   it("serves the Scalar docs UI from the root", async () => {
@@ -59,6 +60,20 @@ describe("openapi docs", () => {
         }),
       ]),
     );
+  });
+
+  it("documents the internal token security scheme on protected routes", async () => {
+    const response = await app.fetch(requestWithEnv("http://localhost/openapi.json", testEnv()));
+    const spec = await response.json();
+    expect(spec.components.securitySchemes.InternalToken).toMatchObject({
+      type: "apiKey",
+      in: "header",
+      name: INTERNAL_TOKEN_HEADER,
+    });
+    expect(spec.paths["/checkout"].get.security).toEqual([{ InternalToken: [] }]);
+    expect(spec.paths["/portal"].get.security).toEqual([{ InternalToken: [] }]);
+    expect(spec.paths["/og"].get.security).toEqual([{ InternalToken: [] }]);
+    expect(spec.paths["/health"].get.security).toBeUndefined();
   });
 
   it("documents responses with descriptions", async () => {

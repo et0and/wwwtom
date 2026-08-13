@@ -13,7 +13,7 @@ import {
   runEffect,
   toErrorResponse,
 } from "@tom/utils/services/worker";
-import type { CloudflareEnv } from "@tom/utils/services/config";
+import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
 import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, runAdapter } from "../../config/effect";
 
@@ -261,9 +261,9 @@ export const polarIntegration = new Elysia({ name: "polar" })
   )
   .get(
     "/polar/checkout",
-    ({ query, request }) => {
-      const env = getRequestEnv(request);
-      const api = callApi(env.API_URL ?? "http://localhost:8787");
+    async ({ query, request }) => {
+      const env = await readCloudflareEnv(getRequestEnv(request));
+      const api = callApi(env.API_URL ?? "http://localhost:8787", env.INTERNAL_API_TOKEN);
       return proxyToApi(
         api.checkout.get({
           query: {
@@ -286,9 +286,9 @@ export const polarIntegration = new Elysia({ name: "polar" })
   )
   .get(
     "/polar/portal",
-    ({ query, request }) => {
-      const env = getRequestEnv(request);
-      const api = callApi(env.API_URL ?? "http://localhost:8787");
+    async ({ query, request }) => {
+      const env = await readCloudflareEnv(getRequestEnv(request));
+      const api = callApi(env.API_URL ?? "http://localhost:8787", env.INTERNAL_API_TOKEN);
       return proxyToApi(
         api.portal.get({ query: { customerId: query.customerId } }),
         "Failed to open customer portal",

@@ -75,9 +75,15 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "TELEGRAM_BOT_TOKEN": "...",
   "TELEGRAM_CHAT_ID": "...",
   "POLAR_ACCESS_TOKEN": "...",
-  "SUCCESS_URL": "https://tom.so/thanks"
+  "SUCCESS_URL": "https://tom.so/thanks",
+  "INTERNAL_API_TOKEN": "..."
 }
 ```
+
+`INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
+`x-internal-token` header when calling the API's protected routes
+(`/og`, `/checkout`, `/portal`). Generate a long random value; requests
+without a matching token are rejected with 401.
 
 `DATABASE_URL` is also used to configure the Hyperdrive origin. At runtime,
 web code prefers the `HYPERDRIVE` binding’s connection string.

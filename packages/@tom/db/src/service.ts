@@ -1,7 +1,4 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import postgres from "postgres";
-import { Kysely } from "kysely";
-import { PostgresJSDialect } from "kysely-postgres-js";
 import { retryPolicy } from "@tom/utils/retry";
 import { AppConfig } from "@tom/utils/services/config";
 import {
@@ -10,6 +7,7 @@ import {
   OAuthSessionError,
 } from "@tom/types/errors";
 import type { Database } from "@tom/types/db";
+import type { Kysely } from "kysely";
 import type { Selectable } from "kysely";
 
 export type GuestbookEntryParams = {
@@ -69,17 +67,29 @@ export interface DatabaseServiceContract {
 const createConnection = (
   connectionString: string,
 ): Effect.Effect<Kysely<Database>, DatabaseConnectionError> =>
-  Effect.try({
-    try: () =>
-      new Kysely<Database>({
-        dialect: new PostgresJSDialect({
-          postgres: postgres(connectionString),
+  Effect.gen(function* () {
+    // Load the Postgres driver stack lazily so it stays out of the adapter's
+    // cold-start module graph (only the guestbook integration uses the DB).
+    const [{ default: postgres }, { Kysely }, { PostgresJSDialect }] = yield* Effect.tryPromise({
+      try: () => Promise.all([import("postgres"), import("kysely"), import("kysely-postgres-js")]),
+      catch: (error) =>
+        new DatabaseConnectionError({
+          message: `Failed to load database driver: ${error}`,
         }),
-      }),
-    catch: (error) =>
-      new DatabaseConnectionError({
-        message: `Failed to create database connection: ${error}`,
-      }),
+    });
+
+    return yield* Effect.try({
+      try: () =>
+        new Kysely<Database>({
+          dialect: new PostgresJSDialect({
+            postgres: postgres(connectionString),
+          }),
+        }),
+      catch: (error) =>
+        new DatabaseConnectionError({
+          message: `Failed to create database connection: ${error}`,
+        }),
+    });
   });
 
 export class DatabaseService extends Context.Service<DatabaseService, DatabaseServiceContract>()(

@@ -13,6 +13,7 @@ export const requestWithEnv = (url: string, env: CloudflareEnv, init?: RequestIn
 
 export const testEnv = (overrides: Partial<CloudflareEnv> = {}): CloudflareEnv => ({
   NODE_ENV: "test",
+  INTERNAL_API_TOKEN: "test-internal-token",
   ...overrides,
 });
 

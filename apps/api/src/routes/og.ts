@@ -116,6 +116,7 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
     detail: {
       description: "OG image generation endpoint",
       tags: ["images"],
+      security: [{ InternalToken: [] }],
     },
   },
 );

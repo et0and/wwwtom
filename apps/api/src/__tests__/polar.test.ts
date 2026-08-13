@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index";
 import { requestWithEnv, testEnv } from "../test/helpers";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 
 const fetchMock = vi.fn();
 
@@ -15,6 +17,12 @@ afterEach(() => {
 
 const env = testEnv({ POLAR_ACCESS_TOKEN: "test-token" });
 
+/** Request with the internal token header, as the adapter would send it. */
+const internalRequest = (url: string, env: CloudflareEnv) =>
+  requestWithEnv(url, env, {
+    headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token" },
+  });
+
 describe("polar routes", () => {
   describe("GET /checkout", () => {
     it("redirects to the Polar checkout URL with the light theme", async () => {
@@ -25,7 +33,7 @@ describe("polar routes", () => {
         }),
       );
       const response = await app.fetch(
-        requestWithEnv("http://localhost/checkout?products=prod_1", env),
+        internalRequest("http://localhost/checkout?products=prod_1", env),
       );
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe(
@@ -57,7 +65,7 @@ describe("polar routes", () => {
         SUCCESS_URL: "https://tom.so/thanks",
       });
       await app.fetch(
-        requestWithEnv(
+        internalRequest(
           "http://localhost/checkout?products=prod_1&customerId=cust_1&customerEmail=tom%40example.com",
           successEnv,
         ),
@@ -76,7 +84,7 @@ describe("polar routes", () => {
     });
 
     it("returns 400 when products are missing", async () => {
-      const response = await app.fetch(requestWithEnv("http://localhost/checkout", env));
+      const response = await app.fetch(internalRequest("http://localhost/checkout", env));
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: "Validation error" });
     });
@@ -84,7 +92,7 @@ describe("polar routes", () => {
     it("returns Polar's 4xx status when the product doesn't exist", async () => {
       fetchMock.mockResolvedValue(new Response("not found", { status: 404 }));
       const response = await app.fetch(
-        requestWithEnv("http://localhost/checkout?products=prod_missing", env),
+        internalRequest("http://localhost/checkout?products=prod_missing", env),
       );
       expect(response.status).toBe(404);
       const body = await response.json();
@@ -94,7 +102,7 @@ describe("polar routes", () => {
     it("returns 500 JSON when Polar fails with a server error", async () => {
       fetchMock.mockResolvedValue(new Response("nope", { status: 502 }));
       const response = await app.fetch(
-        requestWithEnv("http://localhost/checkout?products=prod_1", env),
+        internalRequest("http://localhost/checkout?products=prod_1", env),
       );
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -104,7 +112,7 @@ describe("polar routes", () => {
     it("returns 500 JSON when Polar is unreachable", async () => {
       fetchMock.mockRejectedValue(new TypeError("fetch failed"));
       const response = await app.fetch(
-        requestWithEnv("http://localhost/checkout?products=prod_1", env),
+        internalRequest("http://localhost/checkout?products=prod_1", env),
       );
       expect(response.status).toBe(500);
       const body = await response.json();
@@ -121,7 +129,7 @@ describe("polar routes", () => {
         }),
       );
       const response = await app.fetch(
-        requestWithEnv("http://localhost/portal?customerId=cust_1", env),
+        internalRequest("http://localhost/portal?customerId=cust_1", env),
       );
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe("https://polar.sh/portal/cust_1");
@@ -135,7 +143,7 @@ describe("polar routes", () => {
     });
 
     it("returns 400 when customerId is missing", async () => {
-      const response = await app.fetch(requestWithEnv("http://localhost/portal", env));
+      const response = await app.fetch(internalRequest("http://localhost/portal", env));
       expect(response.status).toBe(400);
       expect(await response.json()).toEqual({ error: "Validation error" });
     });
@@ -143,7 +151,7 @@ describe("polar routes", () => {
     it("returns 500 JSON when Polar fails", async () => {
       fetchMock.mockResolvedValue(new Response("nope", { status: 503 }));
       const response = await app.fetch(
-        requestWithEnv("http://localhost/portal?customerId=cust_1", env),
+        internalRequest("http://localhost/portal?customerId=cust_1", env),
       );
       expect(response.status).toBe(500);
       const body = await response.json();

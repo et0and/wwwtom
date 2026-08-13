@@ -2,14 +2,15 @@ import { Elysia } from "elysia";
 import { Schema } from "effect";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ImageGenerationError } from "@tom/types/errors";
+import { readCloudflareEnv } from "@tom/utils/services/config";
 import {
   getRequestEnv,
   logContextFromRequest,
   runEffect,
   toErrorResponse,
 } from "@tom/utils/services/worker";
-import { callApi } from "../../callApi";
 
 const OgQuerySchema = Schema.Struct({
   title: Schema.optional(Schema.String),
@@ -20,30 +21,34 @@ const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
 
 export const ogIntegration = new Elysia({ name: "og" }).get(
   "/og",
-  ({ query, request }) => {
-    const env = getRequestEnv(request);
-    const api = callApi(env.API_URL ?? "http://localhost:8787");
+  async ({ query, request }) => {
+    const env = await readCloudflareEnv(getRequestEnv(request));
+    const apiUrl = env.API_URL ?? "http://localhost:8787";
 
     const program = Effect.gen(function* () {
-      const result = yield* Effect.tryPromise({
+      const params = new URLSearchParams();
+      if (query.title) params.set("title", query.title);
+      if (query.summary) params.set("summary", query.summary);
+      params.set("template", "default");
+
+      const headers = new Headers();
+      if (env.INTERNAL_API_TOKEN) headers.set(INTERNAL_TOKEN_HEADER, env.INTERNAL_API_TOKEN);
+
+      const response = yield* Effect.tryPromise({
+        // A plain fetch, not the treaty client: the API answers with a PNG
+        // and treaty consumes the body while parsing, so the image bytes
+        // wouldn't be readable afterwards.
         try: () =>
-          api.og.get({
-            query: {
-              title: query.title,
-              summary: query.summary,
-              template: "default",
+          fetch(`${apiUrl}/og?${params}`, {
+            headers,
+            cf: {
+              cacheTtl: 31536000,
+              cacheEverything: true,
             },
-            fetch: {
-              cf: {
-                cacheTtl: 31536000,
-                cacheEverything: true,
-              },
-            } as RequestInit,
-          }),
+          } as RequestInit),
         catch: () => new ImageGenerationError({ message: "Failed to fetch OG image" }),
       });
 
-      const response = result.response;
       if (!response.ok) {
         return yield* new ImageGenerationError({ message: "Failed to generate OG image" });
       }

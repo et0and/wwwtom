@@ -12,6 +12,8 @@ import {
 } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { healthRoutes } from "./routes/health";
+import { requireInternalTokenBeforeHandle } from "./internal";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
 
@@ -34,6 +36,16 @@ export const app = new Elysia({
           { url: "https://staging-api.tom.so", description: "Staging API service, pre-prod" },
           { url: "https://dev-api.tom.so", description: "Development API service, unstable" },
         ],
+        components: {
+          securitySchemes: {
+            InternalToken: {
+              type: "apiKey",
+              in: "header",
+              name: INTERNAL_TOKEN_HEADER,
+              description: "Shared secret the adapter presents to the API's protected routes",
+            },
+          },
+        },
       },
     }),
   )
@@ -67,8 +79,9 @@ export const app = new Elysia({
     return toErrorResponse(500, "Internal server error");
   })
   .use(healthRoutes)
-  .use(ogRoutes)
-  .use(polarRoutes)
+  .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) =>
+    app.use(ogRoutes).use(polarRoutes),
+  )
   .compile();
 
 export type ApiApp = typeof app;

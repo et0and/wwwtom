@@ -133,6 +133,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
       detail: {
         description: "Create a checkout session and redirect to Polar",
         tags: ["polar"],
+        security: [{ InternalToken: [] }],
       },
     },
   )
@@ -167,6 +168,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
       detail: {
         description: "Redirect to Polar customer portal",
         tags: ["polar"],
+        security: [{ InternalToken: [] }],
       },
     },
   );
