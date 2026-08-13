@@ -21,12 +21,18 @@ describe("internal token auth", () => {
     expect(response.status).toBe(401);
   });
 
-  it("protects /og and /portal too", async () => {
+  it("leaves /og public for social crawlers", async () => {
+    // The OG image route must be reachable without the token — Twitter,
+    // Slack and iMessage fetch og:image URLs with no auth headers. (The
+    // route then generates or 502s on font fetch, but never 401s.)
     const og = await app.fetch(requestWithEnv("http://localhost/og", testEnv()));
+    expect(og.status).not.toBe(401);
+  });
+
+  it("protects /portal", async () => {
     const portal = await app.fetch(
       requestWithEnv("http://localhost/portal?customerId=cust_1", testEnv()),
     );
-    expect(og.status).toBe(401);
     expect(portal.status).toBe(401);
   });
 

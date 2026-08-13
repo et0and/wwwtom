@@ -11,7 +11,9 @@ export function Metadata(props: MetaProps) {
   const description =
     props.metaContent || "Tom Hackshaw is a design engineer from Aotearoa New Zealand.";
 
-  const ogImageUrl = `/api/og?title=${encodeURIComponent(
+  // Absolute URL: crawlers resolve og:image against the page, and tom.so
+  // doesn't serve /api/og — only api.tom.so does.
+  const ogImageUrl = `https://api.tom.so/og?title=${encodeURIComponent(
     props.title.toString(),
   )}&summary=${encodeURIComponent(description)}`;
 

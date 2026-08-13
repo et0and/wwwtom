@@ -72,7 +72,7 @@ describe("openapi docs", () => {
     });
     expect(spec.paths["/checkout"].get.security).toEqual([{ InternalToken: [] }]);
     expect(spec.paths["/portal"].get.security).toEqual([{ InternalToken: [] }]);
-    expect(spec.paths["/og"].get.security).toEqual([{ InternalToken: [] }]);
+    expect(spec.paths["/og"].get.security).toBeUndefined();
     expect(spec.paths["/health"].get.security).toBeUndefined();
   });
 

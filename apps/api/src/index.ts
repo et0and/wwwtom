@@ -79,9 +79,10 @@ export const app = new Elysia({
     return toErrorResponse(500, "Internal server error");
   })
   .use(healthRoutes)
-  .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) =>
-    app.use(ogRoutes).use(polarRoutes),
-  )
+  // OG image generation is a public route: social crawlers (Twitter, Slack,
+  // iMessage) fetch the image URL without any auth headers.
+  .use(ogRoutes)
+  .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) => app.use(polarRoutes))
   .compile();
 
 export type ApiApp = typeof app;
