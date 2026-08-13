@@ -1,4 +1,5 @@
 import * as Cloudflare from "alchemy/Cloudflare";
+import { retain } from "alchemy/RemovalPolicy";
 import { Effect, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
@@ -51,11 +52,16 @@ export const stageWebHost = (stage: string): string =>
 export const tomSecrets = Effect.gen(function* () {
   const store = yield* secretsStore;
 
+  // The Secrets Store is account-level (one per account) and shared by
+  // every stage, so this bundle is NOT stage-scoped. Retain it on teardown
+  // so a per-stage `alchemy destroy` (e.g. the PR-preview cleanup) never
+  // deletes the production TOM_SECRETS secret. The Store itself is already
+  // never deleted by its provider.
   return yield* Cloudflare.SecretsStore.Secret("TOM_SECRETS", {
     store,
     value: Redacted.make(yield* requireJsonSecret("TOM_SECRETS")),
     comment: "wwwtom secret bundle as a JSON object",
-  });
+  }).pipe(retain());
 });
 
 export default Stack(
