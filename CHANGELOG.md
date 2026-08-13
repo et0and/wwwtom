@@ -1,3 +1,10 @@
+# [1.95.0](https://github.com/et0and/wwwtom/compare/v1.94.5...v1.95.0) (2026-08-13)
+
+
+### Features
+
+* auth on api ([72d3537](https://github.com/et0and/wwwtom/commit/72d353777be9256f80e84563f87465b21118b93f))
+
 ## [1.94.5](https://github.com/et0and/wwwtom/compare/v1.94.4...v1.94.5) (2026-08-13)
 
 
