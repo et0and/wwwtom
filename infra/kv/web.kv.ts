@@ -7,6 +7,6 @@ export const webKv = Effect.gen(function* () {
 
   return yield* Cloudflare.KV.Namespace("wwwtom-web-kv", {
     // Adopt the existing production namespace; other stages get their own.
-    ...(stage === "production" ? { title: "TOM_RATE_LIMIT_KV" } : {}),
+    ...(stage === "production" ? { title: "TOM_RATE_LIMIT_KV" } : undefined),
   });
 });

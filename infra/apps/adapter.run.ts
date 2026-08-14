@@ -47,7 +47,7 @@ export const adapter = Effect.gen(function* () {
       ...devSecrets,
       WORK_QUEUE: tomQueue,
       ...(isAlchemyDev
-        ? {}
+        ? undefined
         : {
             TOM_SECRETS: tomSecrets,
             HYPERDRIVE: webHyperdrive,

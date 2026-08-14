@@ -45,7 +45,7 @@ export const webHyperdrive = Effect.gen(function* () {
 
   return yield* Cloudflare.Hyperdrive.Connection("wwwtom-web-hyperdrive", {
     // Adopt the existing production config; other stages get their own.
-    ...(stage === "production" ? { name: "guestbook-hyperdrive" } : {}),
+    ...(stage === "production" ? { name: "guestbook-hyperdrive" } : undefined),
     origin: yield* parseDatabaseUrl(databaseUrl),
   });
 });

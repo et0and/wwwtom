@@ -8,6 +8,7 @@ Effect V4.
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/api`: Elysia Worker
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
+- `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
 The `production` stage adopts the existing resources instead of replacing
 them:
@@ -35,9 +36,24 @@ ALCHEMY_STAGE=staging pnpm deploy
 pnpm deploy:shared
 pnpm deploy:api
 pnpm deploy:web
+pnpm deploy:runner
 ```
 
 Deployment order is `shared -> api -> adapter -> web`.
+
+The `runner` stack is on-demand infrastructure, not part of the default
+`deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
+
+```sh
+curl --fail-with-body \
+  --request POST \
+  --header "Authorization: Bearer $CONTROL_TOKEN" \
+  https://runner.tom.so/runners
+```
+
+Target it from a workflow with `runs-on: cloudflare-sandbox`. Each runner
+registers with GitHub, accepts one job, then calls back to destroy its own
+sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
 (`web -> adapter -> api -> shared`).
@@ -76,9 +92,16 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "TELEGRAM_CHAT_ID": "...",
   "POLAR_ACCESS_TOKEN": "...",
   "SUCCESS_URL": "https://tom.so/thanks",
-  "INTERNAL_API_TOKEN": "..."
+  "INTERNAL_API_TOKEN": "...",
+  "GITHUB_TOKEN": "...",
+  "CONTROL_TOKEN": "..."
 }
 ```
+
+`GITHUB_TOKEN` is a fine-grained PAT scoped to the target repository with
+**Administration: write** permission (used to mint runner registration
+tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
+random value of at least 32 characters.
 
 `INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
 `x-internal-token` header when calling the API's protected routes

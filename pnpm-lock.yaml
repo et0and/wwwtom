@@ -621,6 +621,9 @@ importers:
 
   infra:
     dependencies:
+      '@cloudflare/sandbox':
+        specifier: 0.12.5
+        version: 0.12.5
       '@cloudflare/workers-types':
         specifier: ^4.20250408.0
         version: 4.20260702.1
@@ -630,12 +633,18 @@ importers:
       '@effect/platform-node':
         specifier: 4.0.0-beta.105
         version: 4.0.0-beta.105(effect@4.0.0-beta.105)(ioredis@5.10.1)
+      '@tom/constants':
+        specifier: workspace:*
+        version: link:../packages/@tom/constants
       '@tom/schemas':
         specifier: workspace:*
         version: link:../packages/@tom/schemas
       '@tom/types':
         specifier: workspace:*
         version: link:../packages/@tom/types
+      '@tom/utils':
+        specifier: workspace:*
+        version: link:../packages/@tom/utils
       alchemy:
         specifier: 2.0.0-beta.72
         version: 2.0.0-beta.72(@effect/platform-bun@4.0.0-beta.105(effect@4.0.0-beta.105))(@effect/platform-node@4.0.0-beta.105(effect@4.0.0-beta.105)(ioredis@5.10.1))(@types/react@19.2.9)(effect@4.0.0-beta.105)(typescript@5.9.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.21.0)(yaml@2.9.0))(vitest@4.1.10(@types/node@24.9.1)(jsdom@28.0.0(@noble/hashes@1.8.0))(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(sass@1.77.4)(terser@5.16.9)(tsx@4.21.0)(yaml@2.9.0)))(ws@8.21.1)
@@ -1374,9 +1383,26 @@ packages:
     resolution: {integrity: sha512-y7/yvZ2TPAnR9+jnc00klvNNLkJiXFFrQA/hlLCcxA9a2A4zQIOimyFQ9XfwYKiGD1fb5GY8vbKIIgO8d5Tb2A==}
     engines: {node: '>= 20.12.0'}
 
+  '@cloudflare/containers@0.3.7':
+    resolution: {integrity: sha512-DM9dm3FnIBSyiSJ1FLavKwl/lk3oAmTaynCzZQ9pZR0ncRPquSxkxd8Nu2MFILxmDDsPkxKsSNEh9mHHMty4Fw==}
+
   '@cloudflare/kv-asset-handler@0.4.2':
     resolution: {integrity: sha512-SIOD2DxrRRwQ+jgzlXCqoEFiKOFqaPjhnNTGKXSRLvp1HiOvapLaFG2kEr9dYQTYe8rKrd9uvDUzmAITeNyaHQ==}
     engines: {node: '>=18.0.0'}
+
+  '@cloudflare/sandbox@0.12.5':
+    resolution: {integrity: sha512-D+EvqrpnJHmEaIbFMf5HefavBLMEbUcz7XdhbBfaJzFMma0sjKoN8JuQ5VNlMmPvwKx+Rj7mw5djSg9YMZVbeA==}
+    peerDependencies:
+      '@openai/agents': ^0.3.3
+      '@opencode-ai/sdk': ^1.1.40
+      '@xterm/xterm': '>=5.0.0'
+    peerDependenciesMeta:
+      '@openai/agents':
+        optional: true
+      '@opencode-ai/sdk':
+        optional: true
+      '@xterm/xterm':
+        optional: true
 
   '@cloudflare/unenv-preset@2.16.0':
     resolution: {integrity: sha512-8ovsRpwzPoEqPUzoErAYVv8l3FMZNeBVQfJTvtzP4AgLSRGZISRfuChFxHWUQd3n6cnrwkuTGxT+2cGo8EsyYg==}
@@ -6100,6 +6126,9 @@ packages:
   capnweb@0.6.1:
     resolution: {integrity: sha512-fmhV26QPd1ewf5R74h55oVZnGwIcSaRMzbfLQUy8+zOBjuTmT3KXoT8wxHvnp1m9Ht9BoUUS5ZwNLoVLfQTyBg==}
 
+  capnweb@0.8.0:
+    resolution: {integrity: sha512-BK/TuXUiyfLSKsmjojn70yN7oYG/JJzoURZ3tckjg5Zj2KcygPm0A5jyOlswK7SYB4f0Gh9tt+RZ132b80iLfA==}
+
   ccount@2.0.1:
     resolution: {integrity: sha512-eyrF0jiFpY+3drT6383f1qhkbGsLSifNAjA61IUjZjmLCWjItY6LB9ft9YhoDgwfmclB2zhu51Lc7+95b8NRAg==}
 
@@ -7657,6 +7686,10 @@ packages:
 
   hono@4.11.4:
     resolution: {integrity: sha512-U7tt8JsyrxSRKspfhtLET79pU8K+tInj5QZXs1jSugO1Vq5dFj3kmZsRldo29mTBfcjDRVRXrEZ6LS63Cog9ZA==}
+    engines: {node: '>=16.9.0'}
+
+  hono@4.13.1:
+    resolution: {integrity: sha512-kdJoFVv2xmayw6cY09H7AbMJMt8Jn5jdlEdXsP7AGBdF2DIptVlKlOLKXP41yPip4/a3yQPv9gVcJYI8YY04dw==}
     engines: {node: '>=16.9.0'}
 
   hook-std@3.0.0:
@@ -12608,7 +12641,16 @@ snapshots:
       fast-wrap-ansi: 0.2.2
       sisteransi: 1.0.5
 
+  '@cloudflare/containers@0.3.7': {}
+
   '@cloudflare/kv-asset-handler@0.4.2': {}
+
+  '@cloudflare/sandbox@0.12.5':
+    dependencies:
+      '@cloudflare/containers': 0.3.7
+      aws4fetch: 1.0.20
+      capnweb: 0.8.0
+      hono: 4.13.1
 
   '@cloudflare/unenv-preset@2.16.0(unenv@2.0.0-rc.24)(workerd@1.20260317.1)':
     dependencies:
@@ -17111,6 +17153,8 @@ snapshots:
 
   capnweb@0.6.1: {}
 
+  capnweb@0.8.0: {}
+
   ccount@2.0.1: {}
 
   chai@5.3.3:
@@ -19141,6 +19185,8 @@ snapshots:
       parse-passwd: 1.0.0
 
   hono@4.11.4: {}
+
+  hono@4.13.1: {}
 
   hook-std@3.0.0: {}
 
