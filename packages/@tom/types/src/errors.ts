@@ -127,3 +127,14 @@ export class QueueError extends Schema.TaggedError<QueueError>()("QueueError", {
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
+
+export class RunnerError extends Schema.TaggedError<RunnerError>()("RunnerError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}
+
+export class GitHubApiError extends Schema.TaggedError<GitHubApiError>()("GitHubApiError", {
+  message: Schema.String,
+  status: Schema.optional(Schema.Number),
+  cause: Schema.optional(Schema.Unknown),
+}) {}

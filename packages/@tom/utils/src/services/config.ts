@@ -69,6 +69,8 @@ const secretKeys = [
   "AXIOM_TOKEN",
   "OTEL_TRACES_DATASET",
   "OTEL_LOGS_DATASET",
+  "GITHUB_TOKEN",
+  "CONTROL_TOKEN",
 ] as const;
 
 export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareEnv> => {

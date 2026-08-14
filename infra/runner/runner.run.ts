@@ -4,12 +4,9 @@ import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
-import { tomQueue } from "../queues/tom.queue.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
-const rootDir = `${import.meta.dirname}/../..`;
-
-export const api = Effect.gen(function* () {
+export const runner = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
 
@@ -24,40 +21,48 @@ export const api = Effect.gen(function* () {
     }
   }
 
-  return yield* Cloudflare.Worker("wwwtom-api", {
-    main: `${rootDir}/apps/api/src/index.ts`,
-    compatibility: { date: "2025-12-10" },
+  return yield* Cloudflare.Worker("wwwtom-runner", {
+    main: `${import.meta.dirname}/src/index.ts`,
+    compatibility: { date: "2026-08-12", flags: ["nodejs_compat"] },
     dev: {
-      // Local workerd dev server via `alchemy dev`; API_URL points back at it.
-      port: 8787,
+      // Local workerd dev server via `alchemy dev`; POST /runners to test.
+      // Requires Docker locally — the container image is built from ./image.
+      port: 8789,
     },
     observability: {
       enabled: true,
       logs: { enabled: true, invocationLogs: true },
-      traces: { enabled: true, headSamplingRate: 1 },
+      traces: { enabled: true, headSamplingRate: 0.01 },
     },
-    // Every stage gets a deterministic worker name and custom domain so other
-    // stacks can reference it (production adopts the existing worker).
+    // Every stage gets a deterministic worker name and custom domain.
     ...(stage === "production"
-      ? { name: "apitom", domain: stageHost(stage, "api") }
-      : { name: `wwwtom-api-${stage}`, domain: stageHost(stage, "api") }),
+      ? { name: "wwwtom-runner", domain: stageHost(stage, "runner") }
+      : { name: `wwwtom-runner-${stage}`, domain: stageHost(stage, "runner") }),
     env: {
       NODE_ENV: "production",
       ...devSecrets,
+      // The container-backed DO class exported by src/index.ts; className
+      // defaults to the binding name, so the env key must match the export.
+      Sandbox: Cloudflare.Container("Sandbox", {
+        context: `${import.meta.dirname}/image`,
+        instanceType: "standard-1",
+        maxInstances: 5,
+      }),
+      GITHUB_REPOSITORY: "et0and/wwwtom",
+      RUNNER_LABELS: "cloudflare-sandbox",
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
-      WORK_QUEUE: tomQueue,
     },
   });
 });
 
 export default Stack(
-  "wwwtom-api",
+  "wwwtom-runner",
   {
     providers: Cloudflare.providers() as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
-    const worker = yield* api;
+    const worker = yield* runner;
 
     return {
       url: worker.url,

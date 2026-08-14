@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Pre-existing failures: @tom/cms (16 oxlint errors) and @tom/sophie
 # (`next lint` was removed in Next 16). Exclude until fixed.
 pnpm exec turbo run lint --filter=!@tom/cms --filter=!@tom/sophie
