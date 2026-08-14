@@ -11,7 +11,6 @@ import {
 
 import { authenticated } from "../../access/authenticated";
 import { authenticatedOrPublished } from "../../access/authenticatedOrPublished";
-import { frontendOnly } from "../../access/frontendOnly";
 import { Arena } from "../../blocks/Arena/config";
 import { Banner } from "../../blocks/Banner/config";
 import { Code } from "../../blocks/Code/config";

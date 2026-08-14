@@ -1,5 +1,6 @@
 "use client";
 import type { FormFieldBlock, Form as FormType } from "@payloadcms/plugin-form-builder/types";
+import { Effect, Option, Schema } from "effect";
 
 import { useRouter } from "next/navigation";
 import React, { useCallback, useState } from "react";
@@ -10,6 +11,11 @@ import type { DefaultTypedEditorState } from "@payloadcms/richtext-lexical";
 
 import { fields } from "./fields";
 import { getClientSideURL } from "@/utilities/getURL";
+
+// Payload rejects invalid submissions with `{ errors: [{ message }] }`.
+const FormSubmissionError = Schema.Struct({
+  errors: Schema.Array(Schema.Struct({ message: Schema.String })),
+});
 
 export type FormBlockType = {
   blockName?: string;
@@ -48,7 +54,6 @@ export const FormBlock: React.FC<
 
   const onSubmit = useCallback(
     (data: FormFieldBlock[]) => {
-      let loadingTimerID: ReturnType<typeof setTimeout>;
       const submitForm = async () => {
         setError(undefined);
 
@@ -58,66 +63,64 @@ export const FormBlock: React.FC<
         }));
 
         // delay loading indicator by 1s
-        loadingTimerID = setTimeout(() => {
+        const loadingTimerID = setTimeout(() => {
           setIsLoading(true);
         }, 1000);
 
-        try {
-          const req = await fetch(`${getClientSideURL()}/api/form-submissions`, {
-            body: JSON.stringify({
-              form: formID,
-              submissionData: dataToSend,
-            }),
-            headers: {
-              "Content-Type": "application/json",
-            },
-            method: "POST",
-          });
+        await Effect.runPromise(
+          Effect.gen(function* () {
+            const req = yield* Effect.tryPromise(() =>
+              fetch(`${getClientSideURL()}/api/form-submissions`, {
+                body: JSON.stringify({
+                  form: formID,
+                  submissionData: dataToSend,
+                }),
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                method: "POST",
+              }),
+            );
 
-          const res = await req.json();
+            const res = yield* Effect.tryPromise(() => req.json());
 
-          clearTimeout(loadingTimerID);
+            clearTimeout(loadingTimerID);
 
-          if (req.status >= 400) {
-            const message =
-              typeof res === "object" &&
-              res !== null &&
-              "errors" in res &&
-              Array.isArray(res.errors) &&
-              typeof res.errors[0] === "object" &&
-              res.errors[0] !== null &&
-              "message" in res.errors[0] &&
-              typeof res.errors[0].message === "string"
-                ? res.errors[0].message
+            if (req.status >= 400) {
+              const parsed = Schema.decodeUnknownOption(FormSubmissionError)(res);
+              const message = Option.isSome(parsed)
+                ? (parsed.value.errors[0]?.message ?? "Internal Server Error")
                 : "Internal Server Error";
 
+              setIsLoading(false);
+
+              setError({
+                message,
+                status: String(req.status),
+              });
+
+              return;
+            }
+
             setIsLoading(false);
+            setHasSubmitted(true);
 
-            setError({
-              message,
-              status: String(req.status),
-            });
-
-            return;
-          }
-
-          setIsLoading(false);
-          setHasSubmitted(true);
-
-          if (confirmationType === "redirect" && redirect) {
-            const { url } = redirect;
-
-            const redirectUrl = url;
-
-            if (redirectUrl) router.push(redirectUrl);
-          }
-        } catch (err) {
-          console.warn(err);
-          setIsLoading(false);
-          setError({
-            message: "Something went wrong.",
-          });
-        }
+            if (confirmationType === "redirect" && redirect?.url) {
+              router.push(redirect.url);
+            }
+          }).pipe(
+            Effect.catch((error) =>
+              Effect.gen(function* () {
+                clearTimeout(loadingTimerID);
+                setIsLoading(false);
+                yield* Effect.logError("Form submission failed", error);
+                setError({
+                  message: "Something went wrong.",
+                });
+              }),
+            ),
+          ),
+        );
       };
 
       void submitForm();

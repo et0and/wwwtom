@@ -15,16 +15,21 @@ const nextConfig = {
   // see https://opennext.js.org/cloudflare/howtos/workerd
   serverExternalPackages: ["jose", "pg-cloudflare", "typescript"],
   images: {
-    remotePatterns: [
-      ...[NEXT_PUBLIC_SERVER_URL, "https://cdn.tom.so"].filter(Boolean).map((item) => {
+    remotePatterns: [NEXT_PUBLIC_SERVER_URL, "https://cdn.tom.so"].flatMap((item) => {
+      try {
         const url = new URL(item);
 
-        return {
-          hostname: url.hostname,
-          protocol: url.protocol.replace(":", "") as "http" | "https",
-        };
-      }),
-    ],
+        return [
+          {
+            hostname: url.hostname,
+            protocol: url.protocol.replace(":", "") as "http" | "https",
+          },
+        ];
+      } catch {
+        // Invalid URL — skip the pattern rather than failing the build.
+        return [];
+      }
+    }),
   },
   reactStrictMode: true,
   redirects,

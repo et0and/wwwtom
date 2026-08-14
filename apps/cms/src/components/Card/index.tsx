@@ -39,7 +39,7 @@ export const Card: React.FC<{
     >
       <div className="relative w-full ">
         {!metaImage && <div className="">No image</div>}
-        {metaImage && typeof metaImage === "object" && <Media resource={metaImage} size="33vw" />}
+        {metaImage instanceof Object && <Media resource={metaImage} size="33vw" />}
       </div>
       <div className="p-4">
         {showCategories && hasCategories && (
@@ -47,7 +47,7 @@ export const Card: React.FC<{
             {showCategories && hasCategories && (
               <div>
                 {categories?.map((category, index) => {
-                  if (typeof category === "object") {
+                  if (category instanceof Object) {
                     const { title: titleFromCategory } = category;
 
                     const categoryTitle = titleFromCategory || "Untitled category";

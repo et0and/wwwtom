@@ -1,3 +1,5 @@
+// The merge generics below are deliberately loose (template util); the
+// object check itself is typed.
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
 
@@ -6,8 +8,8 @@
  * @param item
  * @returns {boolean}
  */
-export function isObject(item: unknown): item is object {
-  return typeof item === "object" && !Array.isArray(item);
+function isObject<T>(item: T): item is Extract<T, object> {
+  return Object.prototype.toString.call(item) === "[object Object]";
 }
 
 /**

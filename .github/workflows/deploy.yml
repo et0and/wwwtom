@@ -51,4 +51,6 @@ jobs:
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
-          pnpm deploy:web --yes
+          pnpm deploy:web --yes &&
+          pnpm deploy:cms --yes &&
+          pnpm deploy:sophie --yes

@@ -33,7 +33,6 @@
     "redirects.ts",
     "next-env.d.ts",
     "next.config.ts",
-    "next-sitemap.config.cjs",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules", "scripts"]

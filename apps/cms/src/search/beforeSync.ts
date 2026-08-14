@@ -26,7 +26,7 @@ export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searc
         continue;
       }
 
-      if (typeof category === "object") {
+      if (category instanceof Object) {
         populatedCategories.push(category);
         continue;
       }

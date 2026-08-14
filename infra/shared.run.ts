@@ -1,6 +1,6 @@
 import * as Cloudflare from "alchemy/Cloudflare";
 import { retain } from "alchemy/RemovalPolicy";
-import { Effect, Redacted, Schema } from "effect";
+import { Effect, Option, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
 import { InfrastructureConfigError } from "@tom/types/errors";
@@ -32,6 +32,25 @@ export const readSecretBundle = (
 
 export const requireJsonSecret = (name: string): Effect.Effect<string, InfrastructureConfigError> =>
   Effect.map(readSecretBundle(name), () => process.env[name]!);
+
+/**
+ * Secrets Store bindings are not supported in local workerd mode, so under
+ * `alchemy dev` the TOM_SECRETS bundle is split into plain vars instead.
+ * Pass the keys an app reads from process.env; omit keys for the whole
+ * bundle.
+ */
+export const devSecretVars = (keys?: readonly string[]): Record<string, string> => {
+  const bundle = process.env.TOM_SECRETS;
+  if (!bundle) return {};
+  const parsed = Schema.decodeUnknownOption(TomSecretsSchema)(bundle);
+  if (Option.isNone(parsed)) return {};
+  return Object.fromEntries(
+    (keys ?? Object.keys(parsed.value)).flatMap((key) => {
+      const value = parsed.value[key];
+      return value ? ([[key, value]] as const) : [];
+    }),
+  );
+};
 
 export const secretsStore = Cloudflare.SecretsStore.Store("wwwtom-secrets");
 

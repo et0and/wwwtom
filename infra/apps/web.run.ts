@@ -16,6 +16,8 @@ export const web = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
   const adapterHost = stageHost(stage, "adapter");
+  // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
+  const viteEnv = isAlchemyDev ? {} : { VITE_ADAPTER_URL: `https://${adapterHost}` };
 
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
@@ -33,7 +35,7 @@ export const web = Effect.gen(function* () {
       WORK_QUEUE: tomQueue,
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
       // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
-      ...(isAlchemyDev ? {} : { VITE_ADAPTER_URL: `https://${adapterHost}` }),
+      ...viteEnv,
     },
   });
 });

@@ -50,10 +50,8 @@ export default async function PostsPage(props: PostsPageProps) {
                   </Link>
                   {post.excerpt && <p className="mt-2 text-gray-600">{post.excerpt}</p>}
                   <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-500">
-                    {post.author && typeof post.author !== "number" && (
-                      <span>By {post.author.name}</span>
-                    )}
-                    {post.category && typeof post.category !== "number" && (
+                    {post.author instanceof Object && <span>By {post.author.name}</span>}
+                    {post.category instanceof Object && (
                       <span>
                         <Link
                           href={`/posts?category=${post.category.slug}`}

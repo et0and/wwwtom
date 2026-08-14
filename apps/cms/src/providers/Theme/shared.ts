@@ -7,7 +7,7 @@ export const defaultTheme = "light";
 export const getImplicitPreference = (): Theme | null => {
   const mediaQuery = "(prefers-color-scheme: dark)";
   const mql = window.matchMedia(mediaQuery);
-  const hasImplicitPreference = typeof mql.matches === "boolean";
+  const hasImplicitPreference = mql.matches !== undefined;
 
   if (hasImplicitPreference) {
     return mql.matches ? "dark" : "light";

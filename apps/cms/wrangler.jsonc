@@ -34,5 +34,7 @@
   "vars": {
     "NEXT_PUBLIC_SERVER_URL": "https://cms.tom.so",
     "CDN_URL": "https://cdn.tom.so",
+    // JSON bundle from the account-level Secrets Store (Alchemy-managed)
+    "TOM_SECRETS": "",
   },
 }

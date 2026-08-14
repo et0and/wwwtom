@@ -1,11 +1,10 @@
 import * as Cloudflare from "alchemy/Cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost, tomSecrets } from "../shared.run.ts";
+import { devSecretVars, stageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -15,14 +14,8 @@ export const api = Effect.gen(function* () {
 
   // Secrets Store bindings are not supported in local workerd mode, so under
   // `alchemy dev` the TOM_SECRETS bundle is split into plain vars instead.
-  const devSecrets: Record<string, string> = {};
-  if (isAlchemyDev) {
-    const bundle = process.env.TOM_SECRETS;
-    if (bundle) {
-      const parsed = Schema.decodeUnknownOption(TomSecretsSchema)(bundle);
-      if (Option.isSome(parsed)) Object.assign(devSecrets, parsed.value);
-    }
-  }
+  const devSecrets = isAlchemyDev ? devSecretVars() : {};
+  const secretEnv = isAlchemyDev ? devSecrets : { TOM_SECRETS: tomSecrets };
 
   return yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
@@ -43,8 +36,7 @@ export const api = Effect.gen(function* () {
       : { name: `wwwtom-api-${stage}`, domain: stageHost(stage, "api") }),
     env: {
       NODE_ENV: "production",
-      ...devSecrets,
-      ...(isAlchemyDev ? {} : { TOM_SECRETS: tomSecrets }),
+      ...secretEnv,
       WORK_QUEUE: tomQueue,
     },
   });

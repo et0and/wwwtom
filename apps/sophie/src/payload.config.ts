@@ -2,6 +2,8 @@ import fs from "fs";
 import path from "path";
 import { sqliteD1Adapter } from "@payloadcms/db-d1-sqlite";
 import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import { TomSecretsSchema } from "@tom/schemas/secrets";
+import { Option, Schema } from "effect";
 import { buildConfig } from "payload";
 import { fileURLToPath } from "url";
 import { CloudflareContext, getCloudflareContext } from "@opennextjs/cloudflare";
@@ -33,14 +35,20 @@ const isBuild =
   process.env.npm_lifecycle_event === "build" ||
   process.argv.includes("build");
 
-const createLog =
-  (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
-    if (typeof objOrMsg === "string") {
-      fn(JSON.stringify({ level, msg: objOrMsg }));
-    } else {
-      fn(JSON.stringify({ level, ...objOrMsg, msg: msg ?? (objOrMsg as { msg?: string }).msg }));
-    }
-  };
+type LogValue = string | number | boolean | null | undefined;
+
+// Pino-style log entry: either a bare message string or a key/value payload.
+type LogEntry = string | { readonly [key: string]: LogValue };
+
+const isMessage = (entry: LogEntry): entry is string => entry === String(entry);
+
+const createLog = (level: string, fn: typeof console.log) => (entry: LogEntry, msg?: string) => {
+  if (isMessage(entry)) {
+    fn(JSON.stringify({ level, msg: entry }));
+  } else {
+    fn(JSON.stringify({ level, ...entry, msg: msg ?? entry.msg }));
+  }
+};
 
 const cloudflareLogger = {
   level: process.env.PAYLOAD_LOG_LEVEL || "info",
@@ -58,14 +66,31 @@ const cloudflare =
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
-const payloadSecretBinding = Reflect.get(cloudflare.env, "PAYLOAD_SECRET");
-const payloadSecret =
-  process.env.PAYLOAD_SECRET ||
-  (typeof payloadSecretBinding === "string" ? payloadSecretBinding : "");
-
-if (!process.env.PAYLOAD_SECRET && payloadSecret) {
-  process.env.PAYLOAD_SECRET = payloadSecret;
+// The TOM_SECRETS bundle is bound as a single JSON secret (Secrets Store);
+// hydrate the env vars Payload reads. The bundle is absent on the
+// CLI/wrangler-proxy paths (migrate, build), where process.env is set
+// explicitly.
+const secretBundle = Schema.decodeUnknownOption(TomSecretsSchema)(cloudflare.env.TOM_SECRETS);
+if (Option.isSome(secretBundle)) {
+  const payloadSecret = secretBundle.value.PAYLOAD_SECRET;
+  if (payloadSecret) process.env.PAYLOAD_SECRET = payloadSecret;
 }
+
+const payloadSecret = process.env.PAYLOAD_SECRET || "";
+
+// workers-types `R2Bucket.get` overloads require `options`, which is stricter
+// than the storage-r2 contract; adapt the binding to it explicitly.
+const storageBucket: R2StorageOptions["bucket"] = {
+  createMultipartUpload: (key, options) => cloudflare.env.R2.createMultipartUpload(key, options),
+  delete: (keys) => cloudflare.env.R2.delete(keys),
+  // The storage-r2 `R2GetOptions.range` is looser than the workers one;
+  // the runtime shapes match (both are HTTP range requests).
+  get: (key, options) => cloudflare.env.R2.get(key, options as R2GetOptions | undefined),
+  head: (key) => cloudflare.env.R2.head(key),
+  list: (options) => cloudflare.env.R2.list(options),
+  put: (key, value, options) => cloudflare.env.R2.put(key, value, options),
+  resumeMultipartUpload: (key, uploadId) => cloudflare.env.R2.resumeMultipartUpload(key, uploadId),
+};
 
 export default buildConfig({
   admin: {
@@ -85,7 +110,7 @@ export default buildConfig({
   plugins: [
     ...plugins,
     r2Storage({
-      bucket: cloudflare.env.R2 as unknown as R2StorageOptions["bucket"],
+      bucket: storageBucket,
       collections: { media: true },
     }),
   ],

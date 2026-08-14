@@ -1,12 +1,11 @@
 import * as Cloudflare from "alchemy/Cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
+import { devSecretVars, stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -16,14 +15,10 @@ export const adapter = Effect.gen(function* () {
 
   // Secrets Store bindings are not supported in local workerd mode, so under
   // `alchemy dev` the TOM_SECRETS bundle is split into plain vars instead.
-  const devSecrets: Record<string, string> = {};
-  if (isAlchemyDev) {
-    const bundle = process.env.TOM_SECRETS;
-    if (bundle) {
-      const parsed = Schema.decodeUnknownOption(TomSecretsSchema)(bundle);
-      if (Option.isSome(parsed)) Object.assign(devSecrets, parsed.value);
-    }
-  }
+  const devSecrets = isAlchemyDev ? devSecretVars() : {};
+  const secretEnv = isAlchemyDev
+    ? devSecrets
+    : { TOM_SECRETS: tomSecrets, HYPERDRIVE: webHyperdrive };
 
   return yield* Cloudflare.Worker("wwwtom-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
@@ -44,14 +39,8 @@ export const adapter = Effect.gen(function* () {
       : { name: `wwwtom-adapter-${stage}`, domain: stageHost(stage, "adapter") }),
     env: {
       NODE_ENV: "production",
-      ...devSecrets,
+      ...secretEnv,
       WORK_QUEUE: tomQueue,
-      ...(isAlchemyDev
-        ? {}
-        : {
-            TOM_SECRETS: tomSecrets,
-            HYPERDRIVE: webHyperdrive,
-          }),
       ...(isAlchemyDev
         ? {
             ADAPTER_URL: "http://localhost:8788",

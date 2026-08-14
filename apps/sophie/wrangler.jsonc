@@ -40,6 +40,8 @@
   "vars": {
     //"NEXT_PUBLIC_SERVER_URL": "https://sophie.st",
     "CDN_URL": "https://cdn.sophie.st",
+    // JSON bundle from the account-level Secrets Store (Alchemy-managed)
+    "TOM_SECRETS": "",
   },
   "observability": {
     "logs": {

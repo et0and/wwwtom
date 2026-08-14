@@ -1,6 +1,8 @@
 import fs from "fs";
 import { sqliteD1Adapter } from "@payloadcms/db-d1-sqlite";
 import { s3Storage } from "@payloadcms/storage-s3";
+import { TomSecretsSchema } from "@tom/schemas/secrets";
+import { Option, Schema } from "effect";
 
 import path from "path";
 import { buildConfig, PayloadRequest } from "payload";
@@ -41,14 +43,27 @@ const cloudflare =
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
-const payloadSecretBinding = Reflect.get(cloudflare.env, "PAYLOAD_SECRET");
-const payloadSecret =
-  process.env.PAYLOAD_SECRET ||
-  (typeof payloadSecretBinding === "string" ? payloadSecretBinding : "");
-
-if (!process.env.PAYLOAD_SECRET && payloadSecret) {
-  process.env.PAYLOAD_SECRET = payloadSecret;
+// The TOM_SECRETS bundle is bound as a single JSON secret (Secrets Store);
+// hydrate the env vars Payload reads. The bundle is absent on the
+// CLI/wrangler-proxy paths (migrate, build), where process.env is set
+// explicitly.
+const secretBundle = Schema.decodeUnknownOption(TomSecretsSchema)(cloudflare.env.TOM_SECRETS);
+if (Option.isSome(secretBundle)) {
+  for (const key of [
+    "PAYLOAD_SECRET",
+    "CRON_SECRET",
+    "S3_BUCKET",
+    "S3_ENDPOINT",
+    "S3_REGION",
+    "S3_ACCESS_KEY_ID",
+    "S3_SECRET_ACCESS_KEY",
+  ]) {
+    const value = secretBundle.value[key];
+    if (value) process.env[key] = value;
+  }
 }
+
+const payloadSecret = process.env.PAYLOAD_SECRET || "";
 
 export default buildConfig({
   admin: {

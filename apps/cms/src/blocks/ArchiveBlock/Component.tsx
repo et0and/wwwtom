@@ -21,10 +21,9 @@ export const ArchiveBlock: React.FC<
   if (populateBy === "collection") {
     const payload = await getPayload({ config: configPromise });
 
-    const flattenedCategories = categories?.map((category) => {
-      if (typeof category === "object") return category.id;
-      else return category;
-    });
+    const flattenedCategories = categories?.map((category) =>
+      category instanceof Object ? category.id : category,
+    );
 
     const fetchedPosts = await payload.find({
       collection: "posts",
@@ -38,18 +37,12 @@ export const ArchiveBlock: React.FC<
               },
             },
           }
-        : {}),
+        : undefined),
     });
 
     posts = fetchedPosts.docs;
-  } else {
-    if (selectedDocs?.length) {
-      const filteredSelectedPosts = selectedDocs.map((post) => {
-        if (typeof post.value === "object") return post.value;
-      }) as Post[];
-
-      posts = filteredSelectedPosts;
-    }
+  } else if (selectedDocs?.length) {
+    posts = selectedDocs.flatMap((post) => (post.value instanceof Object ? [post.value] : []));
   }
 
   return (
