@@ -1,3 +1,15 @@
+# [1.96.0](https://github.com/et0and/wwwtom/compare/v1.95.2...v1.96.0) (2026-08-14)
+
+
+### Bug Fixes
+
+* tidy husky ([4402122](https://github.com/et0and/wwwtom/commit/4402122ecde14b9bb13fe1ab9ae53443c1e413fc))
+
+
+### Features
+
+* **infra:** enable self hosted runner on cloudflare ([39da99f](https://github.com/et0and/wwwtom/commit/39da99fde5bb9716880183979d8faee9f8994171))
+
 ## [1.95.2](https://github.com/et0and/wwwtom/compare/v1.95.1...v1.95.2) (2026-08-13)
 
 
