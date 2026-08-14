@@ -23,6 +23,7 @@
     "deploy:sophie": "pnpm --filter @tom/infra run deploy:sophie",
     "deploy:api": "pnpm --filter @tom/infra run deploy:api",
     "deploy:adapter": "pnpm --filter @tom/infra run deploy:adapter",
+    "deploy:runner": "pnpm --filter @tom/infra run deploy:runner",
     "destroy": "pnpm run destroy:sophie && pnpm run destroy:cms && pnpm run destroy:web && pnpm run destroy:adapter && pnpm run destroy:api && pnpm run destroy:shared",
     "destroy:shared": "pnpm --filter @tom/infra run destroy",
     "destroy:api": "pnpm --filter @tom/infra run destroy:api",

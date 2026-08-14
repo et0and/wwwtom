@@ -10,6 +10,7 @@ Effect V4.
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
 - `apps/cms`: Payload 3 CMS on Next 16, built by `Cloudflare.Website.Nextjs` (OpenNext)
 - `apps/sophie`: Payload CMS on Next 16, built by `Cloudflare.Website.Nextjs` (OpenNext)
+- `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
 The `production` stage adopts the existing resources instead of replacing
 them:
@@ -43,9 +44,24 @@ pnpm deploy:api
 pnpm deploy:web
 pnpm deploy:cms
 pnpm deploy:sophie
+pnpm deploy:runner
 ```
 
 Deployment order is `shared -> api -> adapter -> web -> cms -> sophie`.
+
+The `runner` stack is on-demand infrastructure, not part of the default
+`deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
+
+```sh
+curl --fail-with-body \
+  --request POST \
+  --header "Authorization: Bearer $CONTROL_TOKEN" \
+  https://runner.tom.so/runners
+```
+
+Target it from a workflow with `runs-on: cloudflare-sandbox`. Each runner
+registers with GitHub, accepts one job, then calls back to destroy its own
+sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
 (`sophie -> cms -> web -> adapter -> api -> shared`).
@@ -96,9 +112,16 @@ Cloudflare Secrets Store exposes it to every Worker as `TOM_SECRETS`.
   "S3_ENDPOINT": "https://s3.us-west-000.backblazeb2.com",
   "S3_REGION": "us-west-000",
   "S3_ACCESS_KEY_ID": "...",
-  "S3_SECRET_ACCESS_KEY": "..."
+  "S3_SECRET_ACCESS_KEY": "...",
+  "GITHUB_TOKEN": "...",
+  "CONTROL_TOKEN": "..."
 }
 ```
+
+`GITHUB_TOKEN` is a fine-grained PAT scoped to the target repository with
+**Administration: write** permission (used to mint runner registration
+tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
+random value of at least 32 characters.
 
 `INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
 `x-internal-token` header when calling the API's protected routes
