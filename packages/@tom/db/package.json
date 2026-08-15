@@ -8,7 +8,9 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint"
+    "lint": "oxlint",
+    "test": "vitest run",
+    "migrate": "tsx src/migrate.ts"
   },
   "dependencies": {
     "@tom/types": "workspace:*",
@@ -19,6 +21,11 @@
     "postgres": "catalog:"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "@electric-sql/pglite": "0.5.5",
+    "@types/node": "^26.1.2",
+    "pglite-server": "0.1.5",
+    "tsx": "4.20.3",
+    "typescript": "5.9.3",
+    "vitest": "catalog:"
   }
 }

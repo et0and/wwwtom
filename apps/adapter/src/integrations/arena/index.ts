@@ -6,7 +6,7 @@ import type { PaginationAttributes } from "@tom/schemas/arena";
 import { HttpError } from "@tom/types/errors";
 import { retryPolicy } from "@tom/utils/retry";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, logContextFromRequest, toErrorMessage } from "@tom/utils/services/worker";
+import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, createArenaLayer, runAdapter } from "../../config/effect";
 import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "../../schemas";
@@ -61,7 +61,7 @@ const runArena = <T>(
       Effect.mapError((error) =>
         error instanceof HttpError
           ? error
-          : new HttpError({ message: toErrorMessage(error), status: 500 }),
+          : new HttpError({ message: error.message, status: 500, cause: error }),
       ),
     ),
     (error) => new AdapterError(error.status, error.message),

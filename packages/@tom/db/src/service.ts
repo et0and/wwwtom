@@ -63,6 +63,8 @@ export interface DatabaseServiceContract {
   readonly cleanupExpiredSessions: () => Effect.Effect<number, OAuthSessionError>;
 }
 
+type DbFailure = GuestbookValidationError | OAuthSessionError;
+
 // Create Kysely connection from connection string
 const createConnection = (
   connectionString: string,
@@ -92,6 +94,66 @@ const createConnection = (
     });
   });
 
+/**
+ * One Kysely instance (with its postgres.js pool) per connection string,
+ * kept for the isolate's lifetime. Built lazily on the first query, so
+ * building the service layer never touches the network.
+ */
+const dbCache = new Map<string, Kysely<Database>>();
+
+const getDb = (
+  connectionString: string,
+): Effect.Effect<Kysely<Database>, DatabaseConnectionError> =>
+  Effect.gen(function* () {
+    const cached = dbCache.get(connectionString);
+    if (cached) return cached;
+    const db = yield* createConnection(connectionString);
+    dbCache.set(connectionString, db);
+    return db;
+  });
+
+/**
+ * Close the cached connection for a connection string and drop it from the
+ * cache. Used by tests (and any shutdown path) to release the pool.
+ */
+export const closeDb = (connectionString: string): Effect.Effect<void, DatabaseConnectionError> =>
+  Effect.gen(function* () {
+    const db = dbCache.get(connectionString);
+    if (!db) return;
+    dbCache.delete(connectionString);
+    yield* Effect.tryPromise({
+      try: () => db.destroy(),
+      catch: (cause) =>
+        new DatabaseConnectionError({
+          message: `Failed to close database connection: ${cause}`,
+          cause,
+        }),
+    });
+  });
+
+/**
+ * Run one statement against the shared connection. Connection setup retries
+ * transient failures (exponential backoff); statement failures map to the
+ * contract error and fail fast — constraint violations are not retried.
+ */
+const query =
+  (connectionString: string) =>
+  <A, E extends DbFailure>(
+    label: string,
+    build: (db: Kysely<Database>) => Promise<A>,
+    toError: (cause: unknown) => E,
+  ): Effect.Effect<A, E> =>
+    Effect.gen(function* () {
+      const db = yield* getDb(connectionString).pipe(
+        Effect.retry({
+          while: (error) => error._tag === "DatabaseConnectionError",
+          schedule: retryPolicy,
+        }),
+        Effect.mapError(toError),
+      );
+      return yield* Effect.tryPromise({ try: () => build(db), catch: toError });
+    }).pipe(Effect.withSpan(`db.${label}`));
+
 export class DatabaseService extends Context.Service<DatabaseService, DatabaseServiceContract>()(
   "DatabaseService",
 ) {
@@ -107,31 +169,42 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
         });
       }
 
-      const db = yield* createConnection(connectionString);
+      const run = query(connectionString);
+
+      const guestbookFailure =
+        (operation: string) =>
+        (cause: unknown): GuestbookValidationError =>
+          new GuestbookValidationError({ message: `Failed to ${operation}`, cause });
+
+      const oauthFailure =
+        (operation: string, sessionToken?: string) =>
+        (cause: unknown): OAuthSessionError =>
+          new OAuthSessionError({
+            message: `Failed to ${operation}`,
+            ...(sessionToken && { sessionToken }),
+            cause,
+          });
 
       return {
-        createGuestbookEntry: Effect.fn("DatabaseService.createGuestbookEntry")(function* (
-          params: GuestbookEntryParams,
-        ) {
-          return yield* Effect.tryPromise({
-            try: async () =>
-              await db
-                .insertInto("guestbook_entries")
-                .values({
-                  fediverse_username: params.fediverse_username,
-                  fediverse_instance: params.fediverse_instance,
-                  display_name: params.display_name,
-                  avatar_url: params.avatar_url,
-                  message: params.message,
-                })
-                .returningAll()
-                .executeTakeFirstOrThrow(),
-            catch: (error) =>
-              new GuestbookValidationError({
-                message: `Failed to create guestbook entry: ${error}`,
-              }),
-          }).pipe(Effect.retry(retryPolicy));
-        }),
+        createGuestbookEntry: Effect.fn("DatabaseService.createGuestbookEntry")(
+          (params: GuestbookEntryParams) =>
+            run(
+              "createGuestbookEntry",
+              (db) =>
+                db
+                  .insertInto("guestbook_entries")
+                  .values({
+                    fediverse_username: params.fediverse_username,
+                    fediverse_instance: params.fediverse_instance,
+                    display_name: params.display_name,
+                    avatar_url: params.avatar_url,
+                    message: params.message,
+                  })
+                  .returningAll()
+                  .executeTakeFirstOrThrow(),
+              guestbookFailure("create guestbook entry"),
+            ),
+        ),
 
         getGuestbookEntries: Effect.fn("DatabaseService.getGuestbookEntries")(function* (params: {
           page?: number;
@@ -142,32 +215,28 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           const offset = (page - 1) * pageSize;
 
           const [results, totalCountResult] = yield* Effect.all([
-            Effect.tryPromise({
-              try: async () =>
-                await db
+            run(
+              "getGuestbookEntries",
+              (db) =>
+                db
                   .selectFrom("guestbook_entries")
                   .selectAll()
                   .orderBy("created_at", "desc")
                   .limit(pageSize)
                   .offset(offset)
                   .execute(),
-              catch: (error) =>
-                new GuestbookValidationError({
-                  message: `Failed to get guestbook entries: ${error}`,
-                }),
-            }),
-            Effect.tryPromise({
-              try: async () =>
-                await db
+              guestbookFailure("get guestbook entries"),
+            ),
+            run(
+              "getGuestbookCount",
+              (db) =>
+                db
                   .selectFrom("guestbook_entries")
                   .select(({ fn }) => [fn.count("id").as("count")])
                   .executeTakeFirstOrThrow(),
-              catch: (error) =>
-                new GuestbookValidationError({
-                  message: `Failed to get guestbook count: ${error}`,
-                }),
-            }),
-          ]).pipe(Effect.retry(retryPolicy));
+              guestbookFailure("get guestbook count"),
+            ),
+          ]);
 
           return {
             results,
@@ -180,28 +249,26 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
         hasUserSigned: Effect.fn("DatabaseService.hasUserSigned")(function* (
           fediverse_username: string,
         ) {
-          return yield* Effect.tryPromise({
-            try: async () => {
-              const result = await db
+          const result = yield* run(
+            "hasUserSigned",
+            (db) =>
+              db
                 .selectFrom("guestbook_entries")
                 .select(({ fn }) => [fn.count("id").as("count")])
                 .where("fediverse_username", "=", fediverse_username)
-                .executeTakeFirstOrThrow();
-              return Number(result.count) > 0;
-            },
-            catch: (error) =>
-              new GuestbookValidationError({
-                message: `Failed to check if user signed: ${error}`,
-              }),
-          }).pipe(Effect.retry(retryPolicy));
+                .executeTakeFirstOrThrow(),
+            guestbookFailure("check if user signed"),
+          );
+          return Number(result.count) > 0;
         }),
 
         createOAuthSession: Effect.fn("DatabaseService.createOAuthSession")(function* (
           params: OAuthSessionParams,
         ) {
-          return yield* Effect.tryPromise({
-            try: async () =>
-              await db
+          return yield* run(
+            "createOAuthSession",
+            (db) =>
+              db
                 .insertInto("oauth_sessions")
                 .values({
                   session_token: params.session_token,
@@ -214,69 +281,54 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
                 })
                 .returningAll()
                 .executeTakeFirstOrThrow(),
-            catch: (error) =>
-              new OAuthSessionError({
-                message: `Failed to create OAuth session: ${error}`,
-                sessionToken: params.session_token,
-              }),
-          }).pipe(Effect.retry(retryPolicy));
+            oauthFailure("create OAuth session", params.session_token),
+          );
         }),
 
         getOAuthSession: Effect.fn("DatabaseService.getOAuthSession")(function* (
           session_token: string,
         ) {
-          return yield* Effect.tryPromise({
-            try: async () => {
-              const result = await db
+          const session = yield* run(
+            "getOAuthSession",
+            (db) =>
+              db
                 .selectFrom("oauth_sessions")
                 .selectAll()
                 .where("session_token", "=", session_token)
                 .where("expires_at", ">", new Date())
                 .limit(1)
-                .executeTakeFirst();
-              return result ?? null;
-            },
-            catch: (error) =>
-              new OAuthSessionError({
-                message: `Failed to get OAuth session: ${error}`,
-                sessionToken: session_token,
-              }),
-          }).pipe(Effect.retry(retryPolicy));
+                .executeTakeFirst(),
+            oauthFailure("get OAuth session", session_token),
+          );
+          return session ?? null;
         }),
 
         deleteOAuthSession: Effect.fn("DatabaseService.deleteOAuthSession")(function* (
           session_token: string,
         ) {
-          return yield* Effect.tryPromise({
-            try: async () => {
-              const result = await db
+          const result = yield* run(
+            "deleteOAuthSession",
+            (db) =>
+              db
                 .deleteFrom("oauth_sessions")
                 .where("session_token", "=", session_token)
-                .executeTakeFirst();
-              return Number(result.numDeletedRows);
-            },
-            catch: (error) =>
-              new OAuthSessionError({
-                message: `Failed to delete OAuth session: ${error}`,
-                sessionToken: session_token,
-              }),
-          }).pipe(Effect.retry(retryPolicy));
+                .executeTakeFirst(),
+            oauthFailure("delete OAuth session", session_token),
+          );
+          return Number(result.numDeletedRows);
         }),
 
         cleanupExpiredSessions: Effect.fn("DatabaseService.cleanupExpiredSessions")(function* () {
-          return yield* Effect.tryPromise({
-            try: async () => {
-              const result = await db
+          const result = yield* run(
+            "cleanupExpiredSessions",
+            (db) =>
+              db
                 .deleteFrom("oauth_sessions")
                 .where("expires_at", "<", new Date())
-                .executeTakeFirst();
-              return Number(result.numDeletedRows);
-            },
-            catch: (error) =>
-              new OAuthSessionError({
-                message: `Failed to cleanup expired sessions: ${error}`,
-              }),
-          }).pipe(Effect.retry(retryPolicy));
+                .executeTakeFirst(),
+            oauthFailure("cleanup expired sessions"),
+          );
+          return Number(result.numDeletedRows);
         }),
       };
     }),
