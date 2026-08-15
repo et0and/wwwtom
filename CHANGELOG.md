@@ -1,3 +1,10 @@
+# [1.97.0](https://github.com/et0and/wwwtom/compare/v1.96.1...v1.97.0) (2026-08-15)
+
+
+### Features
+
+* **infra:** manage Axiom datasets and ingest token via shared stack ([de6329c](https://github.com/et0and/wwwtom/commit/de6329cb10a714aba7c8b5e7b96819d185dac955))
+
 ## [1.96.1](https://github.com/et0and/wwwtom/compare/v1.96.0...v1.96.1) (2026-08-15)
 
 
