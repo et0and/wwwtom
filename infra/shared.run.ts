@@ -1,11 +1,14 @@
+import { adopt } from "alchemy/AdoptPolicy";
+import * as Axiom from "alchemy/Axiom";
 import * as Cloudflare from "alchemy/Cloudflare";
 import { retain } from "alchemy/RemovalPolicy";
-import { Effect, Option, Redacted, Schema } from "effect";
+import { Effect, Layer, Option, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
 import { InfrastructureConfigError } from "@tom/types/errors";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { Stack } from "alchemy/Stack";
+import { Stage } from "alchemy/Stage";
 
 export const readSecretBundle = (
   name: string,
@@ -68,6 +71,41 @@ export const stageHost = (stage: string, sub: string): string =>
 export const stageWebHost = (stage: string): string =>
   stage === "production" ? "tom.so" : `${stage}-web.tom.so`;
 
+/**
+ * Axiom datasets and ingest token for OpenTelemetry shipping, owned by the
+ * production stage (see the shared stack below).
+ *
+ * Datasets and API tokens are org-level (one Axiom org), not stage-scoped.
+ * Fixed names match the runtime defaults (`tom-traces` / `tom-logs`) so the
+ * provider adopts the existing datasets instead of recreating them.
+ * `adopt(true)` takes over resources a previous run (manual or another
+ * stage) already owns, so the first production deploy does not fail with
+ * `OwnedBySomeoneElse`. Retained on teardown: a production `alchemy destroy`
+ * must never delete observability data or the token workers ingest with.
+ */
+export const axiomResources = Effect.gen(function* () {
+  const traces = yield* Axiom.Dataset("tom-traces", {
+    name: "tom-traces",
+    kind: "otel:traces:v1",
+    description: "OpenTelemetry traces from wwwtom workers",
+  }).pipe(retain());
+  const logs = yield* Axiom.Dataset("tom-logs", {
+    name: "tom-logs",
+    kind: "otel:logs:v1",
+    description: "OpenTelemetry logs from wwwtom workers",
+  }).pipe(retain());
+  const ingestToken = yield* Axiom.ApiToken("wwwtom-otel-ingest", {
+    name: "wwwtom-otel-ingest",
+    description: "OTLP ingest for the wwwtom traces and logs datasets",
+    datasetCapabilities: {
+      "tom-traces": { ingest: ["create"] },
+      "tom-logs": { ingest: ["create"] },
+    },
+  }).pipe(retain());
+
+  return { traces, logs, ingestToken };
+}).pipe(adopt(true));
+
 export const tomSecrets = Effect.gen(function* () {
   const store = yield* secretsStore;
 
@@ -86,15 +124,29 @@ export const tomSecrets = Effect.gen(function* () {
 export default Stack(
   "wwwtom",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Layer.mergeAll(Cloudflare.providers(), Axiom.providers()) as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
+    const stage = yield* Stage;
     const [store, secrets] = yield* Effect.all([secretsStore, tomSecrets]);
+
+    // The Axiom resources are org-level and can only have one owner, so only
+    // production registers them; other stages would fight over ownership on
+    // every deploy (and per-stage teardown could adopt-or-fail non-
+    // production runs). Production additionally adopts pre-existing datasets.
+    const axiom = stage === "production" ? yield* axiomResources : undefined;
 
     return {
       secretsStore: store.storeName,
       tomSecrets: secrets.secretName,
+      ...(axiom && {
+        axiom: {
+          traces: axiom.traces.name,
+          logs: axiom.logs.name,
+          ingestToken: axiom.ingestToken.name,
+        },
+      }),
     };
   }).pipe(
     Effect.mapError(

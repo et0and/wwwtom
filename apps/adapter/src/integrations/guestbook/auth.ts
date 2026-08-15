@@ -1,5 +1,4 @@
 import { Effect, Option, Schema } from "effect";
-import { retryPolicy } from "@tom/utils/retry";
 import { DatabaseService } from "@tom/db/service";
 import { detector } from "./detector";
 import {
@@ -56,7 +55,7 @@ const readErrorCode = (cause: unknown): string | undefined =>
     () => undefined,
   );
 
-const initiateAuth_ = Effect.fn("initiateAuth")(function* (
+export const initiateAuth = Effect.fn("initiateAuth")(function* (
   fediverseHandle: string,
   redirectUri: string,
 ) {
@@ -163,10 +162,7 @@ const initiateAuth_ = Effect.fn("initiateAuth")(function* (
   };
 });
 
-export const initiateAuth = (fediverseHandle: string, redirectUri: string) =>
-  initiateAuth_(fediverseHandle, redirectUri).pipe(Effect.retry(retryPolicy));
-
-const handleCallback_ = Effect.fn("handleCallback")(function* (params: {
+export const handleCallback = Effect.fn("handleCallback")(function* (params: {
   code: string;
   session_token: string;
   redirectUri: string;
@@ -227,13 +223,7 @@ const handleCallback_ = Effect.fn("handleCallback")(function* (params: {
   return user;
 });
 
-export const handleCallback = (params: {
-  code: string;
-  session_token: string;
-  redirectUri: string;
-}) => handleCallback_(params).pipe(Effect.retry(retryPolicy));
-
-const signGuestbook_ = Effect.fn("signGuestbook")(function* (params: {
+export const signGuestbook = Effect.fn("signGuestbook")(function* (params: {
   user: FediverseUser;
   message: string;
 }) {
@@ -256,6 +246,3 @@ const signGuestbook_ = Effect.fn("signGuestbook")(function* (params: {
 
   return entry;
 });
-
-export const signGuestbook = (params: { user: FediverseUser; message: string }) =>
-  signGuestbook_(params).pipe(Effect.retry(retryPolicy));

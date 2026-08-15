@@ -85,9 +85,6 @@ export const attachRequestContext = (request: Request, context: RequestContext):
 export const getRequestContext = (request: Request): RequestContext =>
   (request as RequestWithContext).requestContext ?? {};
 
-export const toErrorMessage = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : String(cause);
-
 /**
  * Log an API failure at the level that matches its status: expected client
  * errors (4xx) are warnings, unexpected failures are errors.

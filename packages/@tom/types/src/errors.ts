@@ -22,6 +22,7 @@ export class SearchError extends Schema.TaggedError<SearchError>()("SearchError"
 export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
   message: Schema.String,
   status: Schema.Number,
+  cause: Schema.optional(Schema.Unknown),
 }) {}
 
 export class DatabaseConnectionError extends Schema.TaggedError<DatabaseConnectionError>()(
@@ -46,6 +47,7 @@ export class GuestbookValidationError extends Schema.TaggedError<GuestbookValida
   {
     message: Schema.String,
     field: Schema.optional(Schema.String),
+    cause: Schema.optional(Schema.Unknown),
   },
 ) {}
 
@@ -54,6 +56,7 @@ export class OAuthSessionError extends Schema.TaggedError<OAuthSessionError>()(
   {
     message: Schema.String,
     sessionToken: Schema.optional(Schema.String),
+    cause: Schema.optional(Schema.Unknown),
   },
 ) {}
 

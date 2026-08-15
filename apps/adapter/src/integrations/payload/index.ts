@@ -8,7 +8,7 @@ import {
   type PayloadResponse,
 } from "@tom/schemas/payload";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, logContextFromRequest, toErrorMessage } from "@tom/utils/services/worker";
+import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { AdapterError, createPayloadLayer, runAdapter } from "../../config/effect";
@@ -39,14 +39,14 @@ const richTextContent = (content: PayloadPost["content"]): string | undefined =>
 
 const runPayload = <T>(
   env: CloudflareEnv,
-  effect: Effect.Effect<T, unknown, PayloadService>,
+  effect: Effect.Effect<T, never, PayloadService>,
   context: LogContext,
 ): Promise<T> =>
   runAdapter(
     Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
       Effect.flatMap((resolved) => effect.pipe(Effect.provide(createPayloadLayer(resolved)))),
     ),
-    (error) => new AdapterError(500, toErrorMessage(error)),
+    (error) => new AdapterError(500, error.message),
     context,
   );
 

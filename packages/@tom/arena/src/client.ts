@@ -143,8 +143,9 @@ function mapArenaError(cause: unknown): HttpError {
     return new HttpError({ message: cause.message, status: 0 });
   }
   return new HttpError({
-    message: cause instanceof Error ? cause.message : String(cause),
+    message: "Arena request failed",
     status: HttpStatus.InternalServerError,
+    cause,
   });
 }
 
