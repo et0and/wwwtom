@@ -76,8 +76,13 @@ export const stageWebHost = (stage: string): string =>
  * production stage (see the shared stack below).
  *
  * Datasets and API tokens are org-level (one Axiom org), not stage-scoped.
- * Fixed names match the runtime defaults (`tom-traces` / `tom-logs`) so the
- * provider adopts the existing datasets instead of recreating them.
+ * Fixed names match the runtime defaults (`tom-traces` / `tom-logs`). The
+ * declared kind is `axiom:events:v1` because that is what the pre-existing
+ * datasets are — Axiom accepts OTLP ingest into event-kind datasets (the
+ * runtime has been shipping into them all along), and `kind` is immutable,
+ * so declaring an `otel:*` kind would force a destructive replace (delete
+ * every event and recreate).
+ *
  * `adopt(true)` takes over resources a previous run (manual or another
  * stage) already owns, so the first production deploy does not fail with
  * `OwnedBySomeoneElse`. Retained on teardown: a production `alchemy destroy`
@@ -86,12 +91,12 @@ export const stageWebHost = (stage: string): string =>
 export const axiomResources = Effect.gen(function* () {
   const traces = yield* Axiom.Dataset("tom-traces", {
     name: "tom-traces",
-    kind: "otel:traces:v1",
+    kind: "axiom:events:v1",
     description: "OpenTelemetry traces from wwwtom workers",
   }).pipe(retain());
   const logs = yield* Axiom.Dataset("tom-logs", {
     name: "tom-logs",
-    kind: "otel:logs:v1",
+    kind: "axiom:events:v1",
     description: "OpenTelemetry logs from wwwtom workers",
   }).pipe(retain());
   const ingestToken = yield* Axiom.ApiToken("wwwtom-otel-ingest", {
