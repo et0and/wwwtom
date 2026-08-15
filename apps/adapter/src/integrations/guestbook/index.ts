@@ -35,6 +35,75 @@ type GuestbookError =
   | OAuthSessionError
   | HttpError;
 
+const TURNSTILE_SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
+const TURNSTILE_ACTION = "guestbook-sign";
+
+const TurnstileVerifySchema = Schema.Struct({
+  success: Schema.Boolean,
+  action: Schema.optional(Schema.String),
+  hostname: Schema.optional(Schema.String),
+});
+
+/**
+ * Hostnames that may legitimately embed the guestbook widget. Subdomains of
+ * `tom.so` are covered by the widget's domain registration, so the check is
+ * apex + subdomains + the local-dev hostnames.
+ */
+const isExpectedTurnstileHostname = (hostname: string): boolean =>
+  hostname === "tom.so" ||
+  hostname.endsWith(".tom.so") ||
+  hostname === "localhost" ||
+  hostname === "127.0.0.1";
+
+/**
+ * Verify a Turnstile token against the canonical siteverify endpoint. Fails
+ * closed: a missing token, transport error, non-2xx response, malformed
+ * body, or action/hostname mismatch all reject the sign. Tokens are
+ * single-use — the widget must render fresh before the next attempt.
+ */
+const verifyTurnstileToken = (
+  token: string | undefined,
+  secret: string,
+): Effect.Effect<boolean, never> =>
+  Effect.gen(function* () {
+    if (!token) return false;
+
+    const response = yield* Effect.tryPromise(() =>
+      fetch(TURNSTILE_SITEVERIFY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ secret, response: token }),
+        signal: AbortSignal.timeout(10_000),
+      }),
+    ).pipe(
+      Effect.catch(
+        Effect.fn("turnstileSiteverifyErrorHandler")(function* (cause: unknown) {
+          yield* Effect.logWarning("guestbook:sign:turnstile-siteverify-error", cause);
+          return undefined;
+        }),
+      ),
+    );
+    if (!response || !response.ok) return false;
+
+    const body = yield* Effect.tryPromise(() => response.json()).pipe(
+      Effect.catch(
+        Effect.fn("turnstileJsonErrorHandler")(function* () {
+          yield* Effect.logWarning("guestbook:sign:turnstile-body-error");
+          return undefined as unknown;
+        }),
+      ),
+    );
+    const result = Option.getOrNull(Schema.decodeUnknownOption(TurnstileVerifySchema)(body));
+    if (!result) return false;
+
+    return (
+      result.success === true &&
+      result.action === TURNSTILE_ACTION &&
+      result.hostname !== undefined &&
+      isExpectedTurnstileHostname(result.hostname)
+    );
+  });
+
 const guestbookStatus = (error: GuestbookError): number => {
   if (error instanceof HttpError) return error.status;
   if (error instanceof AuthenticationError) return 401;
@@ -229,6 +298,23 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
               message:
                 profanityCheck.message ?? "Your message contains profanity. Please keep it clean!",
             });
+          }
+
+          // Turnstile gates the sign: the web client embeds the widget and
+          // sends the token with the request. The secret binding is absent
+          // only in local dev / tests — deployed stacks always enforce.
+          const turnstileSecret = env.TURNSTILE_SECRET;
+          if (turnstileSecret) {
+            const verified = yield* verifyTurnstileToken(body.token, turnstileSecret);
+            if (!verified) {
+              yield* Effect.logWarning("guestbook:sign:turnstile-rejected");
+              return yield* new HttpError({
+                message: "Verification failed. Please try again.",
+                status: 400,
+              });
+            }
+          } else {
+            yield* Effect.logWarning("guestbook:sign:turnstile-disabled");
           }
 
           yield* auth.signGuestbook({ user, message: body.message });

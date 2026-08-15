@@ -5,6 +5,7 @@ import { PageLayout } from "@tom/ui/PageLayout";
 import { Spinner } from "@tom/ui/Spinner";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
+import { Turnstile, getTurnstileSitekey } from "~/components/Turnstile";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 
@@ -25,8 +26,8 @@ const initiateAuth = async (handle: string) => {
   return unwrapAdapter(result);
 };
 
-const signGuestbook = async (message: string) => {
-  const result = await callAdapter().guestbook.sign.post({ message });
+const signGuestbook = async (message: string, token?: string) => {
+  const result = await callAdapter().guestbook.sign.post({ message, token });
   return unwrapAdapter(result);
 };
 
@@ -62,6 +63,10 @@ export default function Guestbook() {
 
   const [message, setMessage] = createSignal("");
   const [handle, setHandle] = createSignal("");
+  const [turnstileToken, setTurnstileToken] = createSignal<string>();
+  const [turnstileAttempt, setTurnstileAttempt] = createSignal(0);
+  const [verificationError, setVerificationError] = createSignal("");
+  const turnstileSitekey = getTurnstileSitekey();
 
   const authMutation = useMutation(() => ({
     mutationFn: (inputHandle: string) => initiateAuth(inputHandle),
@@ -71,10 +76,17 @@ export default function Guestbook() {
   }));
 
   const signMutation = useMutation(() => ({
-    mutationFn: (inputMessage: string) => signGuestbook(inputMessage),
+    mutationFn: (input: { message: string; token?: string | undefined }) =>
+      signGuestbook(input.message, input.token),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["guestbook-entries"] });
       setMessage("");
+    },
+    onSettled: () => {
+      // Tokens are single-use (redeemed at siteverify) — render a fresh
+      // widget after every attempt.
+      setTurnstileAttempt((attempt) => attempt + 1);
+      setTurnstileToken(undefined);
     },
   }));
 
@@ -184,7 +196,14 @@ export default function Guestbook() {
                         e.preventDefault();
                         const formData = new FormData(e.currentTarget);
                         const inputMessage = formData.get("message")?.toString();
-                        if (inputMessage) signMutation.mutate(inputMessage);
+                        if (!inputMessage) return;
+                        const token = turnstileToken();
+                        if (turnstileSitekey && !token) {
+                          setVerificationError("Complete the verification to sign the guestbook.");
+                          return;
+                        }
+                        setVerificationError("");
+                        signMutation.mutate({ message: inputMessage, token });
                       }}
                     >
                       <textarea
@@ -197,6 +216,19 @@ export default function Guestbook() {
                         disabled={signMutation.isPending}
                         class="input w-full min-h-32 mb-2"
                       />
+                      <Show when={turnstileSitekey}>
+                        <div class="mb-2">
+                          <Turnstile
+                            action="guestbook-sign"
+                            attempt={turnstileAttempt()}
+                            onToken={setTurnstileToken}
+                            onExpire={() => setTurnstileToken(undefined)}
+                          />
+                        </div>
+                      </Show>
+                      <Show when={verificationError()}>
+                        <div class="mb-2 text-sm alert-error">{verificationError()}</div>
+                      </Show>
                       <div class="flex justify-between items-center">
                         <span class="text-sm text-muted">{message().length}/500</span>
                         <button
