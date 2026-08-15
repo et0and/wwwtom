@@ -47,6 +47,10 @@ export type CloudflareEnv = {
   ADAPTER_URL?: string;
   API_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
+  // Server-side Turnstile siteverify secret (guestbook sign flow). Set by
+  // Alchemy from the shared widget; absent in local dev, where the adapter
+  // skips verification.
+  TURNSTILE_SECRET?: string;
   NODE_ENV?: string;
   LOG_LEVEL?: string;
   OTEL_ENDPOINT?: string;

@@ -58,7 +58,12 @@ export const guestbookUserCookieSchema = Schema.toStandardSchemaV1(
 export const handleBodySchema = Schema.toStandardSchemaV1(Schema.Struct({ handle: Schema.String }));
 
 export const messageBodySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ message: Schema.String }),
+  Schema.Struct({
+    message: Schema.String,
+    // Turnstile widget token; absent in local dev, where the adapter skips
+    // verification because TURNSTILE_SECRET is not bound.
+    token: Schema.optional(Schema.String),
+  }),
 );
 
 export const callbackQuerySchema = Schema.toStandardSchemaV1(

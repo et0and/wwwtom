@@ -6,6 +6,7 @@ import { Stage } from "alchemy/Stage";
 import { devSecretVars, stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
+import { turnstileWidget } from "../turnstile/widget.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -19,6 +20,15 @@ export const adapter = Effect.gen(function* () {
   const secretEnv = isAlchemyDev
     ? devSecrets
     : { TOM_SECRETS: tomSecrets, HYPERDRIVE: webHyperdrive };
+
+  // Turnstile resolves only on deploys — local dev runs without it. The
+  // widget secret backs the server-side siteverify in the guestbook sign
+  // handler (deployed as a secret binding, never plain text).
+  const turnstileEnv = isAlchemyDev
+    ? {}
+    : yield* Effect.map(turnstileWidget, (turnstile) => ({
+        TURNSTILE_SECRET: turnstile.secret,
+      }));
 
   return yield* Cloudflare.Worker("wwwtom-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
@@ -40,6 +50,7 @@ export const adapter = Effect.gen(function* () {
     env: {
       NODE_ENV: "production",
       ...secretEnv,
+      ...turnstileEnv,
       WORK_QUEUE: tomQueue,
       ...(isAlchemyDev
         ? {

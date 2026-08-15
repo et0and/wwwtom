@@ -8,6 +8,7 @@ import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
 import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
+import { turnstileWidget } from "../turnstile/widget.ts";
 import { previewComment } from "../utils/github/preview-comment.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
@@ -16,8 +17,16 @@ export const web = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
   const adapterHost = stageHost(stage, "adapter");
-  // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
-  const viteEnv = isAlchemyDev ? {} : { VITE_ADAPTER_URL: `https://${adapterHost}` };
+
+  // Turnstile resolves only on deploys — local dev runs without it. The
+  // sitekey is inlined into the client bundle at build time (Alchemy VITE_
+  // prefix).
+  const viteEnv = isAlchemyDev
+    ? {}
+    : yield* Effect.map(turnstileWidget, (turnstile) => ({
+        VITE_ADAPTER_URL: `https://${adapterHost}`,
+        VITE_TURNSTILE_SITEKEY: turnstile.sitekey,
+      }));
 
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
