@@ -1,3 +1,10 @@
+## [1.96.1](https://github.com/et0and/wwwtom/compare/v1.96.0...v1.96.1) (2026-08-15)
+
+
+### Bug Fixes
+
+* more slop removal around err handling ([79cafcb](https://github.com/et0and/wwwtom/commit/79cafcb36480c33f338b767ec58e3d95ae519615))
+
 # [1.96.0](https://github.com/et0and/wwwtom/compare/v1.95.2...v1.96.0) (2026-08-14)
 
 
