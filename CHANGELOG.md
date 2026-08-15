@@ -1,3 +1,10 @@
+## [1.97.2](https://github.com/et0and/wwwtom/compare/v1.97.1...v1.97.2) (2026-08-15)
+
+
+### Bug Fixes
+
+* **infra:** declare Axiom datasets as axiom:events:v1 to match reality ([78596d5](https://github.com/et0and/wwwtom/commit/78596d52d8861c4f0c57700ea0c0aa073b6ebaf2))
+
 ## [1.97.1](https://github.com/et0and/wwwtom/compare/v1.97.0...v1.97.1) (2026-08-15)
 
 
