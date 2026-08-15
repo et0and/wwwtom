@@ -32,6 +32,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
+      AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
 
     steps:

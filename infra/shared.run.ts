@@ -1,6 +1,7 @@
+import * as Axiom from "alchemy/Axiom";
 import * as Cloudflare from "alchemy/Cloudflare";
 import { retain } from "alchemy/RemovalPolicy";
-import { Effect, Redacted, Schema } from "effect";
+import { Effect, Layer, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
 import { InfrastructureConfigError } from "@tom/types/errors";
@@ -49,6 +50,39 @@ export const stageHost = (stage: string, sub: string): string =>
 export const stageWebHost = (stage: string): string =>
   stage === "production" ? "tom.so" : `${stage}-web.tom.so`;
 
+/**
+ * Axiom datasets and ingest token for OpenTelemetry shipping.
+ *
+ * Datasets and API tokens are org-level (one Axiom org), not stage-scoped,
+ * so like the Secrets Store they are shared by every stage. Fixed names match
+ * the runtime defaults (`tom-traces` / `tom-logs`) so the provider adopts the
+ * existing datasets instead of recreating them. Retained on teardown: a
+ * per-stage `alchemy destroy` (e.g. PR-preview cleanup) must never delete
+ * observability data or the token workers ingest with.
+ */
+export const axiomResources = Effect.gen(function* () {
+  const traces = yield* Axiom.Dataset("tom-traces", {
+    name: "tom-traces",
+    kind: "otel:traces:v1",
+    description: "OpenTelemetry traces from wwwtom workers",
+  }).pipe(retain());
+  const logs = yield* Axiom.Dataset("tom-logs", {
+    name: "tom-logs",
+    kind: "otel:logs:v1",
+    description: "OpenTelemetry logs from wwwtom workers",
+  }).pipe(retain());
+  const ingestToken = yield* Axiom.ApiToken("wwwtom-otel-ingest", {
+    name: "wwwtom-otel-ingest",
+    description: "OTLP ingest for the wwwtom traces and logs datasets",
+    datasetCapabilities: {
+      "tom-traces": { ingest: ["create"] },
+      "tom-logs": { ingest: ["create"] },
+    },
+  }).pipe(retain());
+
+  return { traces, logs, ingestToken };
+});
+
 export const tomSecrets = Effect.gen(function* () {
   const store = yield* secretsStore;
 
@@ -67,15 +101,20 @@ export const tomSecrets = Effect.gen(function* () {
 export default Stack(
   "wwwtom",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Layer.mergeAll(Cloudflare.providers(), Axiom.providers()) as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
-    const [store, secrets] = yield* Effect.all([secretsStore, tomSecrets]);
+    const [store, secrets, axiom] = yield* Effect.all([secretsStore, tomSecrets, axiomResources]);
 
     return {
       secretsStore: store.storeName,
       tomSecrets: secrets.secretName,
+      axiom: {
+        traces: axiom.traces.name,
+        logs: axiom.logs.name,
+        ingestToken: axiom.ingestToken.name,
+      },
     };
   }).pipe(
     Effect.mapError(
