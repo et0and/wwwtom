@@ -1,3 +1,10 @@
+## [1.97.3](https://github.com/et0and/wwwtom/compare/v1.97.2...v1.97.3) (2026-08-15)
+
+
+### Bug Fixes
+
+* **infra:** declare Axiom datasets as otel kinds (deliberate one-time replace) ([329ac41](https://github.com/et0and/wwwtom/commit/329ac41c140d76abfe37af27b79c9cab89e5d4a7))
+
 ## [1.97.2](https://github.com/et0and/wwwtom/compare/v1.97.1...v1.97.2) (2026-08-15)
 
 

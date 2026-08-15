@@ -79,27 +79,29 @@ export const stageWebHost = (stage: string): string =>
  * Fixed names match the runtime defaults (`tom-traces` / `tom-logs`).
  * Declared as `otel:*` kinds: the datasets were originally created as
  * `axiom:events:v1`, but `kind` is immutable and OTLP datasets should be
- * otel-kind for proper schema/trace UI, so the first production deploy
- * deliberately replaces them — the old event-kind datasets and their
- * events are deleted once. After that the datasets are alchemy-owned and
- * no replacement is planned.
+ * otel-kind for proper schema/trace UI, so production deploys deliberately
+ * replace them — the legacy event-kind datasets and their events are
+ * deleted once, then the datasets are alchemy-owned and no replacement is
+ * planned. Do NOT add `retain()` to the datasets: the engine then skips
+ * the delete and the kind change never happens (the replacement is
+ * absorbed into a sync of the existing events-kind dataset). The ingest
+ * token stays retained so teardown never orphans a live credential.
  *
  * `adopt(true)` takes over resources a previous run (manual or another
  * stage) already owns, so the first production deploy does not fail with
- * `OwnedBySomeoneElse`. Retained on teardown: a production `alchemy destroy`
- * must never delete observability data or the token workers ingest with.
+ * `OwnedBySomeoneElse`.
  */
 export const axiomResources = Effect.gen(function* () {
   const traces = yield* Axiom.Dataset("tom-traces", {
     name: "tom-traces",
     kind: "otel:traces:v1",
     description: "OpenTelemetry traces from wwwtom workers",
-  }).pipe(retain());
+  });
   const logs = yield* Axiom.Dataset("tom-logs", {
     name: "tom-logs",
     kind: "otel:logs:v1",
     description: "OpenTelemetry logs from wwwtom workers",
-  }).pipe(retain());
+  });
   const ingestToken = yield* Axiom.ApiToken("wwwtom-otel-ingest", {
     name: "wwwtom-otel-ingest",
     description: "OTLP ingest for the wwwtom traces and logs datasets",
