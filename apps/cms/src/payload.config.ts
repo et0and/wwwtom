@@ -110,8 +110,8 @@ export default buildConfig({
     s3Storage({
       bucket: process.env.S3_BUCKET || "your-bucket-name",
       config: {
-        endpoint: process.env.S3_ENDPOINT || "https://s3.us-west-000.backblazeb2.com",
-        region: process.env.S3_REGION || "us-west-000",
+        endpoint: process.env.S3_ENDPOINT || "https://s3.us-east-005.backblazeb2.com",
+        region: process.env.S3_REGION || "us-east-005",
         credentials: {
           accessKeyId: process.env.S3_ACCESS_KEY_ID || "",
           secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "",
