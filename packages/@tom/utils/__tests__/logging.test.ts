@@ -130,6 +130,18 @@ describe("readCloudflareEnv", () => {
     expect(env.AXIOM_TOKEN).toBe("minted-token");
   });
 
+  it("resolves a binding that carries extra platform properties", async () => {
+    // The real secrets_store_secret binding is not a bare { get } object;
+    // Struct rejects unknown keys in this Effect version, so the boundary
+    // schema models the binding as any object.
+    const binding = {
+      get: async () => "minted-token",
+      somethingInternal: "present",
+    } as const;
+    const env = await readCloudflareEnv({ AXIOM_TOKEN: binding });
+    expect(env.AXIOM_TOKEN).toBe("minted-token");
+  });
+
   it("keeps a plain string AXIOM_TOKEN (local dev) as-is", async () => {
     const env = await readCloudflareEnv({ AXIOM_TOKEN: "dev-token" });
     expect(env.AXIOM_TOKEN).toBe("dev-token");

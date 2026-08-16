@@ -27,11 +27,11 @@ export type SecretBinding = {
 
 // AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
 // Secrets Store binding (production; minted by the Axiom provider). Decode
-// the union at the env boundary instead of narrowing with typeof.
-const SecretSourceSchema = Schema.Union([
-  Schema.String,
-  Schema.Struct({ get: Schema.instanceOf(Function) }),
-]);
+// the union at the env boundary instead of narrowing with typeof. The
+// binding is modeled as any object, not a Struct — Struct rejects unknown
+// keys in this Effect version and the platform binding carries properties
+// beyond `get`.
+const SecretSourceSchema = Schema.Union([Schema.String, Schema.instanceOf(Object)]);
 
 export const resolveSecretValue = (
   value: string | SecretBinding | undefined,
