@@ -21,6 +21,26 @@ const parseOptionalSecret = (value?: string): string | undefined => {
   return v;
 };
 
+export type SecretBinding = {
+  get(): Promise<string>;
+};
+
+// AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
+// Secrets Store binding (production; minted by the Axiom provider). Decode
+// the union at the env boundary instead of narrowing with typeof.
+const SecretSourceSchema = Schema.Union([
+  Schema.String,
+  Schema.Struct({ get: Schema.instanceOf(Function) }),
+]);
+
+export const resolveSecretValue = (
+  value: string | SecretBinding | undefined,
+): Promise<string | undefined> => {
+  if (value === undefined) return Promise.resolve(undefined);
+  Schema.decodeUnknownSync(SecretSourceSchema)(value);
+  return Schema.is(Schema.String)(value) ? Promise.resolve(value) : value.get();
+};
+
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
   ARENA_API_URL?: string;
@@ -49,13 +69,22 @@ export type CloudflareEnv = {
   GUESTBOOK_RETURN_URL?: string;
   NODE_ENV?: string;
   LOG_LEVEL?: string;
+  // Axiom OTLP ingest token: a Secrets Store binding in production (minted
+  // by the Axiom provider in infra/shared.run.ts), a plain string in local
+  // dev / tests. Resolved to a string by readCloudflareEnv.
+  AXIOM_TOKEN?: string | SecretBinding;
+  // Optional overrides; default to Axiom cloud + tom-traces/tom-logs in
+  // otelConfigFromResolvedEnv.
   OTEL_ENDPOINT?: string;
-  AXIOM_TOKEN?: string;
   OTEL_TRACES_DATASET?: string;
   OTEL_LOGS_DATASET?: string;
   TOM_SECRETS?: { get(): Promise<string> };
 };
 
+// Keys seeded into the TOM_SECRETS bundle. AXIOM_TOKEN and the OTEL_*
+// overrides are deliberately absent: the ingest token is an IaC-minted
+// Secrets Store secret (see infra/shared.run.ts) and the OTLP endpoint +
+// dataset names default in otelConfigFromResolvedEnv.
 const secretKeys = [
   "ARENA_TOKEN",
   "PAYLOAD_URL",
@@ -65,16 +94,18 @@ const secretKeys = [
   "SUCCESS_URL",
   "POLAR_ACCESS_TOKEN",
   "INTERNAL_API_TOKEN",
-  "OTEL_ENDPOINT",
-  "AXIOM_TOKEN",
-  "OTEL_TRACES_DATASET",
-  "OTEL_LOGS_DATASET",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
 ] as const;
 
-export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareEnv> => {
-  if (!env.TOM_SECRETS) return env;
+export type ResolvedCloudflareEnv = CloudflareEnv & { AXIOM_TOKEN?: string };
+
+export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedCloudflareEnv> => {
+  const { AXIOM_TOKEN: axiomBinding, ...rest } = env;
+  const axiomToken = await resolveSecretValue(axiomBinding);
+  if (!env.TOM_SECRETS) {
+    return axiomToken ? { ...rest, AXIOM_TOKEN: axiomToken } : rest;
+  }
 
   const raw = await env.TOM_SECRETS.get();
   const parsed = Effect.runSync(
@@ -95,7 +126,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<CloudflareE
     }),
   );
 
-  return { ...env, ...bundle };
+  return { ...rest, ...bundle, ...(axiomToken && { AXIOM_TOKEN: axiomToken }) };
 };
 
 export class AppConfig extends Context.Service<AppConfig, AppConfigContract>()("AppConfig") {

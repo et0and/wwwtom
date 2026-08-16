@@ -24,6 +24,15 @@ export const api = Effect.gen(function* () {
     }
   }
 
+  // The Axiom ingest token is minted by the shared stack (production only);
+  // reference it there instead of re-registering, which would fight over
+  // dataset ownership. Secrets Store bindings are unsupported in local
+  // workerd mode, so skip the ref under `alchemy dev`.
+  const axiomToken =
+    stage === "production" && !isAlchemyDev
+      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
+      : undefined;
+
   return yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
@@ -45,6 +54,7 @@ export const api = Effect.gen(function* () {
       NODE_ENV: "production",
       ...devSecrets,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
+      ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       WORK_QUEUE: tomQueue,
     },
   });

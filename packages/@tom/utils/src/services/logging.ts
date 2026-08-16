@@ -6,15 +6,18 @@ import {
   OtlpSerialization,
   OtlpTracer,
 } from "effect/unstable/observability";
-import { readCloudflareEnv, type CloudflareEnv } from "./config";
+import { readCloudflareEnv, type CloudflareEnv, type ResolvedCloudflareEnv } from "./config";
 
 /**
  * Structured logging standard for Effect code.
  *
  * - Console always writes structured JSON (captured by Workers Logs).
- * - When OTEL_ENDPOINT + AXIOM_TOKEN are configured, spans and log records
- *   also export to the OTLP endpoint (Axiom) so requestId/sessionId/userId
- *   annotations and Effect spans are queryable alongside the console output.
+ * - With an AXIOM_TOKEN present, spans and log records export to the OTLP
+ *   endpoint (Axiom cloud by default) so requestId/sessionId/userId
+ *   annotations and Effect spans are queryable alongside the console
+ *   output. The ingest token is an IaC-minted Secrets Store binding in
+ *   production (see infra/shared.run.ts); OTEL_ENDPOINT / OTEL_*_DATASET
+ *   remain optional overrides.
  * - Levels default to Info; set LOG_LEVEL=Debug for verbose local output.
  */
 export type OtelConfig = {
@@ -42,10 +45,15 @@ const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
   return endpoint ? endpoint : undefined;
 };
 
-export const otelConfigFromResolvedEnv = (env: CloudflareEnv): OtelConfig | undefined => {
-  const endpoint = parseOtelEndpoint(env.OTEL_ENDPOINT);
+// Axiom cloud OTLP base. The datasets are the runtime defaults
+// (tom-traces / tom-logs), so with just an ingest token the exporters
+// target Axiom without any endpoint wiring.
+const AXIOM_OTEL_ENDPOINT = "https://api.axiom.co";
+
+export const otelConfigFromResolvedEnv = (env: ResolvedCloudflareEnv): OtelConfig | undefined => {
+  const endpoint = parseOtelEndpoint(env.OTEL_ENDPOINT) ?? AXIOM_OTEL_ENDPOINT;
   const token = env.AXIOM_TOKEN?.trim();
-  if (!endpoint || !token) return undefined;
+  if (!token) return undefined;
   return {
     tracesUrl: `${endpoint}/v1/traces`,
     logsUrl: `${endpoint}/v1/logs`,
