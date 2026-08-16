@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
 import { otelConfigFromResolvedEnv, withLogging } from "../src/services/logging";
+import { readCloudflareEnv } from "../src/services/config";
 
 type ConsoleLogRecord = {
   level: string;
@@ -103,8 +104,34 @@ describe("otelConfigFromResolvedEnv", () => {
     });
   });
 
-  it("returns undefined when the endpoint or token is missing", () => {
+  it("defaults to the Axiom cloud endpoint and dataset names when only the token is present", () => {
+    const otel = otelConfigFromResolvedEnv({ AXIOM_TOKEN: "secret" });
+    expect(otel).toEqual({
+      tracesUrl: "https://api.axiom.co/v1/traces",
+      logsUrl: "https://api.axiom.co/v1/logs",
+      authorization: "Bearer secret",
+      tracesDataset: "tom-traces",
+      logsDataset: "tom-logs",
+    });
+  });
+
+  it("returns undefined when the token is missing", () => {
     expect(otelConfigFromResolvedEnv({})).toBeUndefined();
     expect(otelConfigFromResolvedEnv({ OTEL_ENDPOINT: "https://example.com" })).toBeUndefined();
+  });
+});
+
+describe("readCloudflareEnv", () => {
+  it("resolves the AXIOM_TOKEN Secrets Store binding to its value", async () => {
+    const env = await readCloudflareEnv({
+      AXIOM_TOKEN: { get: async () => "minted-token" },
+      OTEL_TRACES_DATASET: "tom-traces",
+    });
+    expect(env.AXIOM_TOKEN).toBe("minted-token");
+  });
+
+  it("keeps a plain string AXIOM_TOKEN (local dev) as-is", async () => {
+    const env = await readCloudflareEnv({ AXIOM_TOKEN: "dev-token" });
+    expect(env.AXIOM_TOKEN).toBe("dev-token");
   });
 });

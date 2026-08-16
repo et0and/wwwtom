@@ -1,4 +1,4 @@
-import { getSandbox, Sandbox } from "@cloudflare/sandbox";
+import { getSandbox, type Sandbox } from "@cloudflare/sandbox";
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { GitHubApiError, RunnerError } from "@tom/types/errors";
@@ -345,12 +345,14 @@ const handleRequestWithAlerts = (
 const worker = {
   fetch: async (request: Request, rawEnv: RunnerEnv): Promise<Response> => {
     // Resolve the TOM_SECRETS bundle into plain env vars (GITHUB_TOKEN,
-    // CONTROL_TOKEN, OTEL_*, telegram alert vars) before anything else. The
-    // spread preserves the Sandbox binding and the plain vars.
-    const env = (await readCloudflareEnv(rawEnv)) as RunnerEnv;
+    // CONTROL_TOKEN, telegram alert vars) and the AXIOM_TOKEN Secrets Store
+    // binding before anything else. The spread preserves the Sandbox
+    // binding and the plain vars.
+    const resolvedEnv = await readCloudflareEnv(rawEnv);
+    const env = resolvedEnv as RunnerEnv;
 
     const requestId = crypto.randomUUID();
-    const otel = otelConfigFromResolvedEnv(env);
+    const otel = otelConfigFromResolvedEnv(resolvedEnv);
     attachRequestContext(request, {
       requestId,
       logLevel: logLevelFromEnv(env),

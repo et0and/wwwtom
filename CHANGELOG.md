@@ -1,3 +1,10 @@
+## [1.97.4](https://github.com/et0and/wwwtom/compare/v1.97.3...v1.97.4) (2026-08-15)
+
+
+### Bug Fixes
+
+* **infra:** let Axiom dataset replacement actually delete legacy datasets ([49c8ee4](https://github.com/et0and/wwwtom/commit/49c8ee4d72582381a6d863b281b91c8452064824))
+
 ## [1.97.3](https://github.com/et0and/wwwtom/compare/v1.97.2...v1.97.3) (2026-08-15)
 
 

@@ -92,6 +92,7 @@ export const stageWebHost = (stage: string): string =>
  * `OwnedBySomeoneElse`.
  */
 export const axiomResources = Effect.gen(function* () {
+  const store = yield* secretsStore;
   const traces = yield* Axiom.Dataset("tom-traces", {
     name: "tom-traces",
     kind: "otel:traces:v1",
@@ -110,8 +111,17 @@ export const axiomResources = Effect.gen(function* () {
       "tom-logs": { ingest: ["create"] },
     },
   }).pipe(retain());
+  // Workers bind this same store key across stacks via
+  // Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" });
+  // the runtime resolves the binding in readCloudflareEnv. AXIOM_TOKEN no
+  // longer lives in the TOM_SECRETS bundle.
+  const axiomToken = yield* Cloudflare.SecretsStore.Secret("AXIOM_TOKEN", {
+    store,
+    value: ingestToken.token,
+    comment: "wwwtom OTLP ingest token minted by the Axiom provider",
+  }).pipe(retain());
 
-  return { traces, logs, ingestToken };
+  return { traces, logs, ingestToken, axiomToken };
 }).pipe(adopt(true));
 
 export const tomSecrets = Effect.gen(function* () {
@@ -153,6 +163,7 @@ export default Stack(
           traces: axiom.traces.name,
           logs: axiom.logs.name,
           ingestToken: axiom.ingestToken.name,
+          axiomToken: axiom.axiomToken.secretName,
         },
       }),
     };

@@ -19,6 +19,15 @@ export const web = Effect.gen(function* () {
   // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
   const viteEnv = isAlchemyDev ? {} : { VITE_ADAPTER_URL: `https://${adapterHost}` };
 
+  // The Axiom ingest token is minted by the shared stack (production only);
+  // reference it there instead of re-registering, which would fight over
+  // dataset ownership. Secrets Store bindings are unsupported in local
+  // workerd mode, so skip the ref under `alchemy dev`.
+  const axiomToken =
+    stage === "production" && !isAlchemyDev
+      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
+      : undefined;
+
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
     compatibility: { flags: ["nodejs_compat"] },
@@ -30,6 +39,7 @@ export const web = Effect.gen(function* () {
     env: {
       NODE_ENV: "production",
       TOM_SECRETS: tomSecrets,
+      ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       TOM_RATE_LIMIT_KV: webKv,
       HYPERDRIVE: webHyperdrive,
       WORK_QUEUE: tomQueue,

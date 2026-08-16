@@ -102,3 +102,7 @@ export const toErrorResponse = (status: number, error: string, cause?: string): 
       headers: { "Content-Type": "application/json" },
     },
   );
+
+/** Human-readable message from an unknown failure (Error or string). */
+export const toErrorMessage = (cause: unknown): string =>
+  cause instanceof Error ? cause.message : String(cause);

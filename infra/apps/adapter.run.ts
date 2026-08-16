@@ -20,6 +20,15 @@ export const adapter = Effect.gen(function* () {
     ? devSecrets
     : { TOM_SECRETS: tomSecrets, HYPERDRIVE: webHyperdrive };
 
+  // The Axiom ingest token is minted by the shared stack (production only);
+  // reference it there instead of re-registering, which would fight over
+  // dataset ownership. Secrets Store bindings are unsupported in local
+  // workerd mode, so skip the ref under `alchemy dev`.
+  const axiomToken =
+    stage === "production" && !isAlchemyDev
+      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
+      : undefined;
+
   return yield* Cloudflare.Worker("wwwtom-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
@@ -40,6 +49,7 @@ export const adapter = Effect.gen(function* () {
     env: {
       NODE_ENV: "production",
       ...secretEnv,
+      ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       WORK_QUEUE: tomQueue,
       ...(isAlchemyDev
         ? {
