@@ -1,3 +1,10 @@
+## [1.98.1](https://github.com/et0and/wwwtom/compare/v1.98.0...v1.98.1) (2026-08-16)
+
+
+### Bug Fixes
+
+* **utils:** accept secrets-store bindings with extra properties ([dfd6f1f](https://github.com/et0and/wwwtom/commit/dfd6f1fec0791ccdbc18017631b575f4dfc8dcd1))
+
 # [1.98.0](https://github.com/et0and/wwwtom/compare/v1.97.4...v1.98.0) (2026-08-16)
 
 
