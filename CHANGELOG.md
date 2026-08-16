@@ -1,3 +1,10 @@
+# [1.98.0](https://github.com/et0and/wwwtom/compare/v1.97.4...v1.98.0) (2026-08-16)
+
+
+### Features
+
+* **infra,utils:** wire IaC-minted Axiom ingest token into workers ([722a105](https://github.com/et0and/wwwtom/commit/722a10569b87b537570b317577a2c4e1d8e71b8b))
+
 ## [1.97.4](https://github.com/et0and/wwwtom/compare/v1.97.3...v1.97.4) (2026-08-15)
 
 
