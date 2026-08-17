@@ -1,0 +1,62 @@
+name: E2E (nightly)
+
+on:
+  schedule:
+    # 02:17 UTC daily — after the deploy pipeline has settled.
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: e2e-nightly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  playwright:
+    name: Playwright (tom.so fixture store)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Check pnpm version
+        run: pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install
+
+      # The web server under test is `vite dev` (not preview — see
+      # apps/e2e/playwright.config.ts for why), so no production build is
+      # needed; dev compiles on demand and is functionally identical for the
+      # suite's purposes.
+      - name: Install Playwright browsers
+        run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
+
+      - name: Run e2e suite
+        env:
+          CI: "true"
+          SIMULATOR_URL: http://127.0.0.1:8789
+        run: pnpm --filter @tom/e2e test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: test-results
+          path: apps/e2e/test-results/
+          retention-days: 7

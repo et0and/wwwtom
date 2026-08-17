@@ -4,13 +4,13 @@ import { ArenaService } from "@tom/arena/service";
 import type { ArenaApi } from "@tom/arena/client";
 import type { PaginationAttributes } from "@tom/schemas/arena";
 import { HttpError } from "@tom/types/errors";
+import { simulatorEnv } from "../../simulator";
 import { retryPolicy } from "@tom/utils/retry";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, createArenaLayer, runAdapter } from "../../config/effect";
 import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "../../schemas";
-import type { CloudflareEnv } from "@tom/utils/services/config";
 
 const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: Schema.String }));
 
@@ -48,15 +48,17 @@ const arenaOperation = <T>(
   });
 
 const runArena = <T>(
-  env: CloudflareEnv,
+  request: Request,
   operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
   context: LogContext,
   mode: "auth" | "public" = "auth",
 ): Promise<T> =>
   runAdapter(
-    Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
+    Effect.tryPromise(() => readCloudflareEnv(getRequestEnv(request))).pipe(
       Effect.flatMap((resolved) =>
-        arenaOperation(operation, mode).pipe(Effect.provide(createArenaLayer(resolved))),
+        arenaOperation(operation, mode).pipe(
+          Effect.provide(createArenaLayer(simulatorEnv(resolved, request))),
+        ),
       ),
       Effect.mapError((error) =>
         error instanceof HttpError
@@ -72,9 +74,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/channels",
     ({ query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.channels(toPaginationAttributes(query)),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -87,9 +88,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/channels/:slug",
     ({ params, query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.channel(params.slug).get(toPaginationAttributes(query)),
         logContextFromRequest(request, "tom-adapter"),
         "public",
@@ -104,9 +104,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/channels/:slug/contents",
     ({ params, query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.channel(params.slug).contents(toPaginationAttributes(query)),
         logContextFromRequest(request, "tom-adapter"),
         "public",
@@ -121,9 +120,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/channels/:slug/thumb",
     ({ params, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.channel(params.slug).thumb(),
         logContextFromRequest(request, "tom-adapter"),
         "public",
@@ -137,9 +135,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/users/:id",
     ({ params, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.user(params.id).get(),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -152,9 +149,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/users/:id/channels",
     ({ params, query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.user(params.id).channels(toPaginationAttributes(query)),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -168,9 +164,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/users/:id/following",
     ({ params, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.user(params.id).following(),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -183,9 +178,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/users/:id/followers",
     ({ params, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.user(params.id).followers(),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -198,9 +192,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/blocks/:id",
     ({ params, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.block(params.id).get(),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -213,9 +206,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/blocks/:id/channels",
     ({ params, query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.block(params.id).channels(toPaginationAttributes(query)),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -229,9 +221,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/blocks/:id/comments",
     ({ params, query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => client.block(params.id).comments(toPaginationAttributes(query)),
         logContextFromRequest(request, "tom-adapter"),
       );
@@ -245,9 +236,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .get(
     "/arena/search",
     ({ query, request }) => {
-      const env = getRequestEnv(request);
       return runArena(
-        env,
+        request,
         (client) => {
           const options = toPaginationAttributes(query);
           switch (query.type) {

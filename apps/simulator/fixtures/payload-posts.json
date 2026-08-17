@@ -1,0 +1,208 @@
+[
+  {
+    "id": 1,
+    "title": "The Holy Grail War of the modern web",
+    "summary": "Seven systems, one grail. Why the modern web is a ritual you cannot opt out of.",
+    "publishedAt": "2025-02-10T09:00:00.000Z",
+    "slug": "the-holy-grail-war-of-the-modern-web",
+    "content": {
+      "root": {
+        "type": "root",
+        "version": 1,
+        "indent": 0,
+        "direction": "ltr",
+        "format": "",
+        "children": [
+          {
+            "type": "paragraph",
+            "version": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "Every web project is a grail war: seven servants, one wish, and someone is always running a nightly e2e ritual.",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "heroImage": {
+      "url": "https://cdn.tom.so/holy-grail-war.jpg",
+      "alt": "A chalk summoning circle on a whiteboard"
+    },
+    "arenaSlug": "toms-place",
+    "arenaTitle": "Tom's Place",
+    "createdAt": "2025-02-10T09:00:00.000Z",
+    "updatedAt": "2025-02-10T09:00:00.000Z",
+    "meta": {
+      "title": "The Holy Grail War of the modern web",
+      "description": "Seven systems, one grail. Why the modern web is a ritual you cannot opt out of.",
+      "image": "https://cdn.tom.so/holy-grail-war.jpg"
+    }
+  },
+  {
+    "id": 2,
+    "title": "Unlimited Blade Works and the craft of building",
+    "summary": "Trace: On — what Shirou's reality marble teaches us about shipping.",
+    "publishedAt": "2025-01-22T08:30:00.000Z",
+    "slug": "unlimited-blade-works-and-the-craft-of-building",
+    "content": {
+      "root": {
+        "type": "root",
+        "version": 1,
+        "indent": 0,
+        "direction": "ltr",
+        "format": "",
+        "children": [
+          {
+            "type": "paragraph",
+            "version": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "Projection is just copying a form you have already understood — deployment pipelines are the same spell.",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "createdAt": "2025-01-22T08:30:00.000Z",
+    "updatedAt": "2025-01-22T08:30:00.000Z",
+    "meta": { "description": "Trace: On — what Shirou's reality marble teaches us about shipping." }
+  },
+  {
+    "id": 3,
+    "title": "Rin Tohsaka would be a great engineering manager",
+    "summary": "Precise gem economy management, zero tolerance for sloppy joins.",
+    "publishedAt": "2024-12-05T15:00:00.000Z",
+    "slug": "rin-tohsaka-would-be-a-great-engineering-manager",
+    "content": {
+      "root": {
+        "type": "root",
+        "version": 1,
+        "indent": 0,
+        "direction": "ltr",
+        "format": "",
+        "children": [
+          {
+            "type": "paragraph",
+            "version": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "She budgets her magic circuits like a principal engineer budgets capacity, and she never misses the second Sunday ritual.",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "createdAt": "2024-12-05T15:00:00.000Z",
+    "updatedAt": "2024-12-05T15:00:00.000Z",
+    "meta": { "description": "Precise gem economy management, zero tolerance for sloppy joins." }
+  },
+  {
+    "id": 4,
+    "title": "A command seal for your dependency injection",
+    "summary": "Three commands. Use them sparingly — they do not come back.",
+    "publishedAt": "2024-10-18T10:00:00.000Z",
+    "slug": "a-command-seal-for-your-dependency-injection",
+    "content": {
+      "root": {
+        "type": "root",
+        "version": 1,
+        "indent": 0,
+        "direction": "ltr",
+        "format": "",
+        "children": [
+          {
+            "type": "paragraph",
+            "version": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "First seal: the container resolves. Second seal: the layer provides. Third seal: burn it all and start the ritual again.",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "createdAt": "2024-10-18T10:00:00.000Z",
+    "updatedAt": "2024-10-18T10:00:00.000Z",
+    "meta": { "description": "Three commands. Use them sparingly — they do not come back." }
+  },
+  {
+    "id": 5,
+    "title": "Avalon: the ideal e2e environment",
+    "summary": "A fixture store is a sheath that heals every wound the real world inflicts.",
+    "publishedAt": "2024-08-30T12:00:00.000Z",
+    "slug": "avalon-the-ideal-e2e-environment",
+    "content": {
+      "root": {
+        "type": "root",
+        "version": 1,
+        "indent": 0,
+        "direction": "ltr",
+        "format": "",
+        "children": [
+          {
+            "type": "paragraph",
+            "version": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "The Everdistant Utopia is a place where no test flakes, no service drifts and the data never changes overnight.",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "createdAt": "2024-08-30T12:00:00.000Z",
+    "updatedAt": "2024-08-30T12:00:00.000Z",
+    "meta": {
+      "description": "A fixture store is a sheath that heals every wound the real world inflicts."
+    }
+  },
+  {
+    "id": 6,
+    "title": "Servant classes as system architecture",
+    "summary": "Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker — and your CI runner.",
+    "publishedAt": "2023-03-14T07:00:00.000Z",
+    "slug": "servant-classes-as-system-architecture",
+    "content": {
+      "root": {
+        "type": "root",
+        "version": 1,
+        "indent": 0,
+        "direction": "ltr",
+        "format": "",
+        "children": [
+          {
+            "type": "paragraph",
+            "version": 1,
+            "children": [
+              {
+                "type": "text",
+                "text": "Berserker is a monolith with no retries. The Archer class just wanted to be the cool job queue.",
+                "version": 1
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "createdAt": "2023-03-14T07:00:00.000Z",
+    "updatedAt": "2023-03-14T07:00:00.000Z",
+    "meta": {
+      "description": "Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker — and your CI runner."
+    }
+  }
+]

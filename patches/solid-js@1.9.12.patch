@@ -1,0 +1,16 @@
+--- a/dist/server.js
++++ b/dist/server.js
+@@ -533,7 +533,12 @@
+   }
+   const prepareResource = () => {
+     if (error) throw error;
+-    const resolved = options.ssrLoadFrom !== "initial" && sharedConfig.context.async && "data" in sharedConfig.context.resources[id];
++    // patched: concurrent async SSR renders swap sharedConfig.context between
++    // awaits, so resources[id] can be undefined here; treat a missing resource
++    // as unresolved instead of crashing the whole server.
++    const resource = sharedConfig.context.resources && sharedConfig.context.resources[id];
++    const resolved =
++      options.ssrLoadFrom !== "initial" && sharedConfig.context.async && resource && "data" in resource;
+     if (!resolved && resourceContext) resourceContext.push(id);
+     if (!resolved && read._loading) {
+       const ctx = useContext(SuspenseContext);

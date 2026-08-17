@@ -1,0 +1,32 @@
+[
+  {
+    "id": 1,
+    "fediverse_username": "saber@fateverse.town",
+    "fediverse_instance": "fateverse.town",
+    "display_name": "Saber",
+    "avatar_url": null,
+    "message": "So that is my summoning: a nightly e2e run that never sleeps.",
+    "created_at": "2025-01-05T12:00:00.000Z",
+    "updated_at": "2025-01-05T12:00:00.000Z"
+  },
+  {
+    "id": 2,
+    "fediverse_username": "rin@fuyuki.dev",
+    "fediverse_instance": "fuyuki.dev",
+    "display_name": "Rin Tohsaka",
+    "avatar_url": "https://cdn.tom.so/rin.jpg",
+    "message": "A proper magus trials their spells nightly. Amateurs skip the ritual.",
+    "created_at": "2025-01-06T09:30:00.000Z",
+    "updated_at": "2025-01-06T09:30:00.000Z"
+  },
+  {
+    "id": 3,
+    "fediverse_username": "shirou@emiya.kitchen",
+    "fediverse_instance": "emiya.kitchen",
+    "display_name": "Emiya Shirou",
+    "avatar_url": "https://cdn.tom.so/shirou.jpg",
+    "message": "People die when they are flaky. I, for one, keep my tests deterministic.",
+    "created_at": "2025-01-07T18:15:00.000Z",
+    "updated_at": "2025-01-07T18:15:00.000Z"
+  }
+]

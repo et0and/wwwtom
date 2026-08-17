@@ -38,12 +38,22 @@ export const getAdapterBaseUrl = (): string => {
  * Typed client to the Tom adapter (the BFF). All backend data flows through
  * callAdapter — the web app has no direct service integrations of its own.
  * Credentials are included so the guestbook cookies set by the adapter are
- * sent on browser calls.
+ * sent on browser calls. On the server, an incoming `x-use-simulator` header
+ * (set by the e2e suite) is forwarded so the adapter routes its upstreams to
+ * the fixture simulator.
  */
-export const callAdapter = () =>
-  treaty<AdapterApp>(getAdapterBaseUrl(), {
-    fetch: { credentials: "include" },
-  });
+export const callAdapter = () => {
+  const headers: Record<string, string> = {};
+  if (import.meta.env.SSR) {
+    const simulatorHeader = getRequestEvent()?.request.headers.get("x-use-simulator");
+    if (simulatorHeader) headers["x-use-simulator"] = simulatorHeader;
+  }
+  const fetchOptions: { credentials: "include" } & { headers?: Record<string, string> } = {
+    credentials: "include",
+  };
+  if (Object.keys(headers).length > 0) fetchOptions.headers = headers;
+  return treaty<AdapterApp>(getAdapterBaseUrl(), { fetch: fetchOptions });
+};
 
 type EdenResult<T> = {
   data: T | null;

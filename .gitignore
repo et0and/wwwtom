@@ -46,3 +46,8 @@ Thumbs.db
 
 # sst
 .sst
+
+# Playwright e2e artifacts (apps/e2e)
+playwright-report/
+test-results/
+blob-report/

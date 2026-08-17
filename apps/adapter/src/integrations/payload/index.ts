@@ -12,6 +12,7 @@ import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker
 import type { LogContext } from "@tom/utils/services/logging";
 import { convertLexicalToHTML, extractArenaBlocks } from "./content-converter";
 import { AdapterError, createPayloadLayer, runAdapter } from "../../config/effect";
+import { simulatorEnv } from "../../simulator";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 
 const emptyPostsResponse = {
@@ -41,10 +42,13 @@ const runPayload = <T>(
   env: CloudflareEnv,
   effect: Effect.Effect<T, never, PayloadService>,
   context: LogContext,
+  request: Request,
 ): Promise<T> =>
   runAdapter(
     Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
-      Effect.flatMap((resolved) => effect.pipe(Effect.provide(createPayloadLayer(resolved)))),
+      Effect.flatMap((resolved) =>
+        effect.pipe(Effect.provide(createPayloadLayer(simulatorEnv(resolved, request)))),
+      ),
     ),
     (error) => new AdapterError(500, error.message),
     context,
@@ -291,6 +295,7 @@ export const payloadIntegration = new Elysia({ name: "payload" })
         env,
         fetchPosts(page, pageSize),
         logContextFromRequest(request, "tom-adapter"),
+        request,
       );
     },
     {
@@ -307,6 +312,7 @@ export const payloadIntegration = new Elysia({ name: "payload" })
         env,
         fetchPostBySlug(params.slug, adapterUrl),
         logContextFromRequest(request, "tom-adapter"),
+        request,
       );
     },
     {
@@ -323,6 +329,7 @@ export const payloadIntegration = new Elysia({ name: "payload" })
         env,
         fetchFeed(query.limit ?? 20, adapterUrl),
         logContextFromRequest(request, "tom-adapter"),
+        request,
       );
     },
     {
@@ -337,7 +344,12 @@ export const payloadIntegration = new Elysia({ name: "payload" })
     "/payload/works",
     ({ query, request }) => {
       const env = getRequestEnv(request);
-      return runPayload(env, fetchWorks(query.sort), logContextFromRequest(request, "tom-adapter"));
+      return runPayload(
+        env,
+        fetchWorks(query.sort),
+        logContextFromRequest(request, "tom-adapter"),
+        request,
+      );
     },
     {
       query: worksQuerySchema,
@@ -353,6 +365,7 @@ export const payloadIntegration = new Elysia({ name: "payload" })
         env,
         fetchWorkBySlug(params.slug, adapterUrl),
         logContextFromRequest(request, "tom-adapter"),
+        request,
       );
     },
     {

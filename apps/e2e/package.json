@@ -1,0 +1,22 @@
+{
+  "name": "@tom/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Nightly Playwright e2e suite for tom.so, running against the fixture simulator (apps/simulator) via the x-use-simulator header.",
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed",
+    "report": "playwright show-report",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "catalog:",
+    "@tom/adapter": "workspace:*",
+    "@tom/utils": "workspace:*",
+    "@types/node": "^24.9.1",
+    "tsx": "4.20.3",
+    "typescript": "6.0.3"
+  }
+}
