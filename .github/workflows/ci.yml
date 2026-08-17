@@ -12,27 +12,28 @@ permissions:
   contents: read
 
 jobs:
-  # Fork PRs (public repo) run CI only for authors listed in CONTRIBUTORS.
-  # The file is read from the BASE repo via the API — a fork PR runs the
-  # fork's workflow file, so checking out would let a fork edit the list.
-  # Same-repo PRs and pushes are inherently trusted (push access required)
-  # and skip this gate.
+  # CONTRIBUTORS is the single allowlist for who may consume CI compute:
+  # fork PRs, same-repo PRs, and pushes to dev all require the actor to be
+  # listed. The file is read from the BASE repo via the API — a fork PR runs
+  # the fork's workflow file, so checking out would let a fork edit the list.
+  # Note this is policy, not a security boundary: fork PRs get no secrets
+  # (CONTROL_TOKEN unavailable) and never match the same-repo condition, so
+  # they cannot spawn the self-hosted runner regardless of this gate.
   check-contributor:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
     name: Check contributor
     runs-on: ubuntu-latest
     outputs:
       is-contributor: ${{ steps.check.outputs.is-contributor }}
     steps:
-      - name: Check author against CONTRIBUTORS
+      - name: Check actor against CONTRIBUTORS
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          ACTOR: ${{ github.event_name == 'push' && github.event.pusher.login || github.event.pull_request.user.login }}
           REPO: ${{ github.repository }}
         run: |
           LIST=$(gh api "repos/$REPO/contents/CONTRIBUTORS" --jq '.content' | base64 -d)
-          if echo "$LIST" | grep -qx "$PR_AUTHOR"; then
+          if echo "$LIST" | grep -qx "$ACTOR"; then
             echo "is-contributor=true" >> "$GITHUB_OUTPUT"
           else
             echo "is-contributor=false" >> "$GITHUB_OUTPUT"
@@ -44,7 +45,11 @@ jobs:
   # ephemeral runner is registered and listening, then the test job (queued
   # with runs-on: cloudflare-sandbox) is picked up.
   spawn:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    if: >
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository) &&
+      needs.check-contributor.outputs.is-contributor == 'true'
+    needs: check-contributor
     name: Spawn Cloudflare runner
     runs-on: ubuntu-latest
     steps:
@@ -57,8 +62,11 @@ jobs:
             https://wwwtom-runner.yufugumi.workers.dev/runners
 
   test:
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    needs: spawn
+    if: >
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository) &&
+      needs.check-contributor.outputs.is-contributor == 'true'
+    needs: [spawn, check-contributor]
     name: Test
     runs-on: cloudflare-sandbox
 
