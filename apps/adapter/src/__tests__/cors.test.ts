@@ -28,7 +28,9 @@ describe("adapter CORS", () => {
     expect(response.headers.get("access-control-allow-origin")).toBe(origin);
     expect(response.headers.get("access-control-allow-credentials")).toBe("true");
     expect(response.headers.get("access-control-allow-methods")).toBe("GET, POST, OPTIONS");
-    expect(response.headers.get("access-control-allow-headers")).toBe("Content-Type");
+    expect(response.headers.get("access-control-allow-headers")).toBe(
+      "Content-Type, x-use-simulator",
+    );
   });
 
   it.each(["https://evil.example.com", "https://tom.so.attacker.io"])(
