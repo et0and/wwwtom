@@ -118,10 +118,10 @@ Dev also keeps Solid Meta's head injection faithful (the production build
 served under plain Node produces an empty `<head>`, breaking titles/meta and
 client hydration). A custom-node harness is deliberately not used.
 
-Concurrency is safe only because `solid-js` is patched via
-`pnpm.patchedDependencies` — see `patches/solid-js@1.9.12.patch` (handles the
-shared `sharedConfig.context` SSR race). Re-apply with `pnpm install` if the
-lockfile regenerates.
+The suite runs with serial workers because SolidJS SSR isn't concurrency-safe
+within one process (parallel renders share the module-level
+`sharedConfig.context` and can crash or hang). Bump `workers` once SolidJS
+supports concurrent SSR.
 
 CI sets `CI=true` so `webServer` entries **fail fast** if a port isn't up, and
 retries once on failure.
@@ -154,11 +154,9 @@ suite — it's nightly-only. Use `pnpm --filter @tom/e2e typecheck` locally.
   sr-only accessible text they hide is preserved, so `getByRole("heading")`
   still resolves.
 - Single browser project; serial workers. SolidJS SSR shares a module-level
-  `sharedConfig.context`, so parallel renders race it. The repo patches
-  `solid-js` via `pnpm.patchedDependencies` (`patches/solid-js@1.9.12.patch`)
-  to make the `prepareResource` crash safe, but heavier client-hydrated routes
-  (guestbook) still hang under parallel load — a nightly values reliability
-  over wall-clock. Bump `workers` once SolidJS supports concurrent SSR.
+  `sharedConfig.context`, so parallel renders race it and can crash or hang —
+  a nightly values reliability over wall-clock. Bump `workers` once SolidJS
+  supports concurrent SSR.
 - Expected-failure deltas for a11y (serious/critical only) are triaged via the
   HTML report, not silently skipped.
 

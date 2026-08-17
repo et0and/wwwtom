@@ -25,12 +25,10 @@ const IS_CI = process.env.CI === "true" || process.env.CI === "1";
 export default defineConfig({
   testDir: "./tests",
   // Serial workers: SolidJS SSR is not concurrency-safe within one process —
-  // parallel renders share the module-level sharedConfig.context. pnpm
-  // patchedDependencies (patches/solid-js@1.9.12.patch) fixes the hard crash
-  // (prepareResource "Cannot use 'in' operator"), but heavier client-hydrated
-  // routes (guestbook) still hang under parallel load. A nightly values
-  // reliability over wall-clock; bump `workers` once SolidJS supports
-  // concurrent SSR.
+  // parallel renders share the module-level sharedConfig.context and can
+  // crash (prepareResource "Cannot use 'in' operator") or hang heavier
+  // client-hydrated routes. A nightly values reliability over wall-clock;
+  // bump `workers` once SolidJS supports concurrent SSR.
   fullyParallel: false,
   forbidOnly: IS_CI,
   retries: IS_CI ? 1 : 0,
@@ -64,9 +62,8 @@ export default defineConfig({
     {
       // `vite dev`: vite (unlike our custom-node serving) drives Solid Meta's
       // head injection, so titles/meta/hydration are faithful (verified on
-      // live tom.so). Concurrency is safe because solid-js is patched via
-      // pnpm.patchedDependencies (prepareResource handles the shared
-      // sharedConfig.context SSR race) — see patches/solid-js@1.9.12.patch.
+      // live tom.so). Runs with serial workers (SolidJS SSR isn't
+      // concurrency-safe), so no framework patch is needed.
       // --host 127.0.0.1: vite binds to ::1 (IPv6) by default on macOS;
       // Playwright probes and drives 127.0.0.1.
       command: "pnpm --filter @tom/web exec vite dev --host 127.0.0.1 --port 3000 --strictPort",
