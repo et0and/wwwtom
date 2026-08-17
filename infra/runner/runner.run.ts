@@ -59,7 +59,9 @@ export const runner = Effect.gen(function* () {
       Sandbox: Cloudflare.Container("SandboxContainer", {
         className: "Sandbox",
         context: `${import.meta.dirname}/image`,
-        instanceType: "standard-1",
+        // 1 vCPU / 6 GiB — matches the ubuntu-slim runner CI previously
+        // used (standard-1's 0.5 vCPU made the whole suite slower).
+        instanceType: "standard-2",
         maxInstances: 5,
         observability: { logs: { enabled: true } },
       }),

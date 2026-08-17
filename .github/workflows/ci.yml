@@ -8,15 +8,41 @@ on:
     branches:
       - dev
 
+permissions:
+  contents: read
+
 jobs:
+  # Fork PRs (public repo) run CI only for authors listed in CONTRIBUTORS.
+  # The file is read from the BASE repo via the API — a fork PR runs the
+  # fork's workflow file, so checking out would let a fork edit the list.
+  # Same-repo PRs and pushes are inherently trusted (push access required)
+  # and skip this gate.
+  check-contributor:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    name: Check contributor
+    runs-on: ubuntu-latest
+    outputs:
+      is-contributor: ${{ steps.check.outputs.is-contributor }}
+    steps:
+      - name: Check author against CONTRIBUTORS
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          REPO: ${{ github.repository }}
+        run: |
+          LIST=$(gh api "repos/$REPO/contents/CONTRIBUTORS" --jq '.content' | base64 -d)
+          if echo "$LIST" | grep -qx "$PR_AUTHOR"; then
+            echo "is-contributor=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "is-contributor=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # Trusted events (push to dev, same-repo PRs) run on the self-hosted
   # Cloudflare runner. GitHub doesn't wake self-hosted runners, so this job
   # POSTs to the runner control plane first — the call blocks until the
   # ephemeral runner is registered and listening, then the test job (queued
   # with runs-on: cloudflare-sandbox) is picked up.
-  #
-  # Fork PRs (public repo) never reach the self-hosted runner: they have no
-  # CONTROL_TOKEN secret and run on a GitHub-hosted runner instead.
   spawn:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     name: Spawn Cloudflare runner
@@ -47,6 +73,21 @@ jobs:
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
 
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "store-path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      # pnpm's content-addressed store: restore from GitHub's cache service
+      # (keyed by lockfile) so a fresh ephemeral runner hard-links instead of
+      # re-downloading. Saves in a post step before the runner self-destructs.
+      - name: Cache pnpm store
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ steps.pnpm-store.outputs.store-path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
       - name: Check pnpm version
         run: pnpm --version
 
@@ -62,9 +103,14 @@ jobs:
         run: pnpm turbo run test
 
   # Fork PRs keep CI on a GitHub-hosted runner (free for public repos, and
-  # untrusted code never touches the self-hosted runner).
+  # untrusted code never touches the self-hosted runner). Gated to authors
+  # listed in CONTRIBUTORS.
   test-fork:
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      needs.check-contributor.outputs.is-contributor == 'true'
+    needs: check-contributor
     name: Test (fork PR)
     runs-on: ubuntu-slim
 
@@ -77,6 +123,18 @@ jobs:
           node-version: 22
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "store-path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ steps.pnpm-store.outputs.store-path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Check pnpm version
         run: pnpm --version
