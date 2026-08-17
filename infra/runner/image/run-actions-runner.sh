@@ -48,23 +48,27 @@ runuser --user runner --preserve-environment -- /bin/bash -c '
 
   # Run in the background so an idle watchdog can monitor for job
   # assignment. The runner spawns a Runner.Worker process only when GitHub
-  # assigns a job; if none appears within 10 minutes the listener is killed
+  # assigns a job; if none appears within 5 minutes the listener is killed
   # and the cleanup trap fires DELETE, destroying the sandbox. This is the
   # first line of defense against idle instances billing forever — the
   # sandbox sleepAfter is the backstop. stdout stays untouched so the
   # waitForLog listening-for-jobs check still sees it.
+  #
+  # pgrep -x matches the exact process name, so the watchdog never matches
+  # its own shell (unlike -f, which would see the script text in its own
+  # cmdline and never fire).
   ./run.sh &
   runner_pid=$!
 
-  for _ in $(seq 1 60); do
+  for _ in $(seq 1 30); do
     sleep 10
-    if pgrep -f Runner.Worker >/dev/null 2>&1; then
+    if pgrep -x Runner.Worker >/dev/null 2>&1; then
       break
     fi
   done
 
-  if ! pgrep -f Runner.Worker >/dev/null 2>&1; then
-    echo "No job assigned within 10 minutes; shutting down" >&2
+  if ! pgrep -x Runner.Worker >/dev/null 2>&1; then
+    echo "No job assigned within 5 minutes; shutting down" >&2
     kill "$runner_pid" 2>/dev/null || true
   fi
   wait "$runner_pid"
