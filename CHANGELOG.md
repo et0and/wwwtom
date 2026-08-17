@@ -1,3 +1,15 @@
+# [1.99.0](https://github.com/et0and/wwwtom/compare/v1.98.1...v1.99.0) (2026-08-17)
+
+
+### Bug Fixes
+
+* **web:** restore single solid-js@1.9.12 in the lockfile ([4e92eff](https://github.com/et0and/wwwtom/commit/4e92eff20570204563f1bab52d8821e7d802d42c))
+
+
+### Features
+
+* **e2e:** add nightly Playwright fixture-store suite ([03ac5b2](https://github.com/et0and/wwwtom/commit/03ac5b251196142ae53bdf0bcca9637c9d72823a))
+
 ## [1.98.1](https://github.com/et0and/wwwtom/compare/v1.98.0...v1.98.1) (2026-08-16)
 
 
