@@ -200,7 +200,12 @@ const startRunner = (
 
     const sandbox = getSandbox(env.Sandbox, sandboxId, {
       enableDefaultSession: false,
-      keepAlive: true,
+      // No keepAlive: the container must be able to sleep. The runner image
+      // exits itself after 10min without a job (watchdog in
+      // run-actions-runner.sh) and the cleanup trap then destroys the
+      // sandbox, but sleepAfter is the billing backstop if the watchdog ever
+      // fails — an idle container sleeps and stops being billed.
+      sleepAfter: "30m",
       normalizeId: true,
       transport: "rpc",
       labels: {
