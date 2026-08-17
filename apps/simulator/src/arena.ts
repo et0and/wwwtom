@@ -5,6 +5,7 @@ import arenaFixtures from "../fixtures/arena.json" with { type: "json" };
 type ArenaFixture = typeof arenaFixtures;
 
 const channel = arenaFixtures.channel as ArenaFixture["channel"];
+const worktable = arenaFixtures.worktable as ArenaFixture["worktable"];
 const user = arenaFixtures.user as ArenaFixture["user"];
 const textBlock = arenaFixtures.textBlock as ArenaFixture["textBlock"];
 const imageBlock = arenaFixtures.imageBlock as ArenaFixture["imageBlock"];
@@ -29,7 +30,26 @@ const blockWithConnection = (
   connection: ArenaFixture["connections"]["text"] | ArenaFixture["connections"]["image"],
 ) => ({ ...block, connection });
 
-const matchesChannelId = (id: string) => id === channel.slug || String(id) === String(channel.id);
+const channels = [channel, worktable.channel];
+
+const matchesChannelId = (id: string) =>
+  channels.some((c) => id === c.slug || String(id) === String(c.id));
+
+const contentsFor = (id: string) => {
+  if (id === worktable.channel.slug || String(id) === String(worktable.channel.id)) {
+    return [
+      blockWithConnection(worktable.textBlock, worktable.connections.text),
+      blockWithConnection(worktable.imageBlock, worktable.connections.image),
+    ];
+  }
+  if (matchesChannelId(id)) {
+    return [
+      blockWithConnection(textBlock, textConnection),
+      blockWithConnection(imageBlock, imageConnection),
+    ];
+  }
+  return undefined;
+};
 
 // Legacy Are.na wire shape (the @tom/arena client raw-fetches these endpoints).
 const legacyChannelDetails = {
@@ -62,10 +82,10 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
         return notFound;
       }
       const per = query.per ?? 10;
-      const data = [
-        blockWithConnection(textBlock, textConnection),
-        blockWithConnection(imageBlock, imageConnection),
-      ];
+      const data = contentsFor(params.id);
+      if (!data) {
+        return notFound;
+      }
       return { data, meta: paginationMeta(data.length, per, query.page ?? 1) };
     },
     {
@@ -84,11 +104,12 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
   .get(
     "/v3/channels/:id",
     ({ params, set }) => {
-      if (!matchesChannelId(params.id)) {
+      const found = channels.find((c) => c.slug === params.id || String(c.id) === params.id);
+      if (!found) {
         set.status = 404;
         return notFound;
       }
-      return channel;
+      return found;
     },
     {
       params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.String })),

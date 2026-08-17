@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Option, Schema } from "effect";
-import { DatabaseService } from "@tom/db/service";
+import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import { checkProfanity } from "@tom/utils/profanity";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
@@ -15,6 +15,7 @@ import {
 } from "@tom/types/errors";
 import * as auth from "./auth";
 import { AdapterError, createDbLayer, runAdapter } from "../../config/effect";
+import { isSimulatorRequest } from "../../simulator";
 import {
   authUrlResponseSchema,
   callbackQuerySchema,
@@ -59,24 +60,73 @@ const runGuestbook = <T>(
     context,
   );
 
-export const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
+/**
+ * In simulator mode (x-use-simulator + SIMULATOR_URL) entries come from the
+ * fixture store instead of D1; the simulator mirrors DatabaseService's
+ * { results, page, page_size, total_count } response shape.
+ */
+const simulatorEntries = (
+  request: Request,
+): Effect.Effect<readonly GuestbookEntry[], GuestbookError, never> | undefined => {
+  const env = getRequestEnv(request);
+  const simulatorUrl = env.SIMULATOR_URL;
+  if (!isSimulatorRequest(request) || !simulatorUrl) return undefined;
+  return Effect.gen(function* () {
+    yield* Effect.logInfo("guestbook:entries:simulator");
+    const response = yield* Effect.tryPromise({
+      try: () => fetch(`${simulatorUrl}/guestbook/entries`),
+      catch: (cause) =>
+        new HttpError({
+          message: "Guestbook simulator unavailable",
+          status: 502,
+          cause,
+        }),
+    });
+    if (!response.ok) {
+      return yield* new HttpError({
+        message: "Guestbook simulator error",
+        status: 502,
+      });
+    }
+    const body = yield* Effect.tryPromise({
+      try: () => response.json() as Promise<{ results: readonly GuestbookEntry[] }>,
+      catch: () => new HttpError({ message: "Guestbook simulator parse error", status: 502 }),
+    });
+    yield* Effect.logInfo("guestbook:entries:simulator:success");
+    return body.results;
+  });
+};
 
+const dbEntries = (): Effect.Effect<readonly GuestbookEntry[], GuestbookError, DatabaseService> =>
+  Effect.gen(function* () {
+    yield* Effect.logInfo("guestbook:entries:start");
+    const db = yield* DatabaseService;
+    const data = yield* db.getGuestbookEntries({ page: 1, page_size: 100 });
+    yield* Effect.logInfo("guestbook:entries:success");
+    return data.results;
+  });
+
+export const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
 export const guestbookIntegration = new Elysia({ name: "guestbook" })
   .get(
     "/guestbook/entries",
     ({ request }) => {
       const env = getRequestEnv(request);
-      return runGuestbook(
-        env,
-        Effect.gen(function* () {
-          yield* Effect.logInfo("guestbook:entries:start");
-          const db = yield* DatabaseService;
-          const data = yield* db.getGuestbookEntries({ page: 1, page_size: 100 });
-          yield* Effect.logInfo("guestbook:entries:success");
-          return data.results;
-        }),
-        logContextFromRequest(request, "tom-adapter"),
-      );
+      const context = logContextFromRequest(request, "tom-adapter");
+      // The simulator path fetches the fixture store directly and needs no DB
+      // layer; runGuestbook always provisions DatabaseService, which is
+      // unconfigured here (no D1), so route around it.
+      if (isSimulatorRequest(request) && env.SIMULATOR_URL) {
+        const effect = simulatorEntries(request);
+        if (effect) {
+          return runAdapter(
+            effect,
+            (error) => new AdapterError(guestbookStatus(error), error.message ?? "Bad request"),
+            context,
+          );
+        }
+      }
+      return runGuestbook(env, dbEntries(), context);
     },
     {
       detail: { description: "List guestbook entries", tags: ["guestbook"] },
@@ -89,10 +139,19 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
         Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user.value),
         () => JSON.stringify(cookie.guestbook_user.value),
       );
-      return Option.getOrElse(Schema.decodeUnknownOption(userCookieSchema)(userJson), () => null);
+      const user = Option.getOrElse(
+        Schema.decodeUnknownOption(userCookieSchema)(userJson),
+        // Signed out: return JSON null. A bare null makes Elysia send an empty
+        // body, which Eden treaty parses as {} — a truthy "ghost" user that
+        // flips the guestbook to the signed-in UI. The response schema keeps
+        // the typed contract as FediverseUser | null for the web client.
+        () => null,
+      );
+      return Response.json(user);
     },
     {
       cookie: guestbookUserCookieSchema,
+      response: { 200: Schema.toStandardSchemaV1(Schema.NullOr(auth.fediverseUserSchema)) },
       detail: {
         description: "Get the signed-in guestbook user from the session cookie",
         tags: ["guestbook"],

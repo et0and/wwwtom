@@ -34,13 +34,15 @@ export const app = new Elysia({
         return (
           origin === "http://localhost:5173" ||
           origin === "http://localhost:3000" ||
+          // Local e2e (apps/e2e) serves the web app from 127.0.0.1.
+          origin === "http://127.0.0.1:3000" ||
           origin === "https://tom.so" ||
           origin.endsWith(".tom.so")
         );
       },
       credentials: true,
       methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type"],
+      allowedHeaders: ["Content-Type", "x-use-simulator"],
     }),
   )
   .derive(async ({ set, request, cookie }) => {

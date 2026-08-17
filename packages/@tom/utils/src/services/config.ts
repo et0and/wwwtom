@@ -67,6 +67,10 @@ export type CloudflareEnv = {
   ADAPTER_URL?: string;
   API_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
+  // When set, requests carrying the `x-use-simulator` header have their
+  // upstream service URLs (payload/arena/polar/api) rewritten to this base
+  // URL — the e2e fixture simulator (apps/simulator).
+  SIMULATOR_URL?: string;
   NODE_ENV?: string;
   LOG_LEVEL?: string;
   // Axiom OTLP ingest token: a Secrets Store binding in production (minted

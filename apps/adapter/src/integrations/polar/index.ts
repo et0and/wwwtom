@@ -16,6 +16,7 @@ import {
 import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
 import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, runAdapter } from "../../config/effect";
+import { simulatorEnv } from "../../simulator";
 
 const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,
@@ -192,11 +193,19 @@ const proxyToApi = (
 ): Promise<Response> =>
   runEffect(
     Effect.tryPromise(() => call).pipe(
-      Effect.map((result) =>
-        result.error
-          ? toErrorResponse(HttpStatus.InternalServerError, errorMessage)
-          : result.response,
-      ),
+      Effect.map((result) => {
+        const upstream = result.response;
+        // The API's checkout/portal handlers redirect (302) to Polar. Return a
+        // fresh redirect (returning the upstream undici Response directly is
+        // dropped by Elysia), so the browser follows it. callApi uses manual
+        // redirects so the upstream Response's Location is preserved.
+        // Everything else is an upstream failure — wrap it.
+        if (upstream && upstream.status >= 300 && upstream.status < HttpStatus.BadRequest) {
+          const location = upstream.headers.get("location");
+          if (location) return Response.redirect(location, upstream.status);
+        }
+        return toErrorResponse(HttpStatus.InternalServerError, errorMessage);
+      }),
     ),
     context,
   );
@@ -221,7 +230,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
   .get(
     "/polar/products",
     ({ request }) => {
-      const env = getRequestEnv(request);
+      const env = simulatorEnv(getRequestEnv(request), request);
       return runPolar(fetchPolarProducts(env), logContextFromRequest(request, "tom-adapter"));
     },
     {
@@ -231,7 +240,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
   .get(
     "/polar/products/:productId",
     ({ params, request }) => {
-      const env = getRequestEnv(request);
+      const env = simulatorEnv(getRequestEnv(request), request);
       return runPolar(
         fetchPolarProduct(env, params.productId),
         logContextFromRequest(request, "tom-adapter"),
@@ -245,7 +254,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
   .post(
     "/polar/customers",
     ({ body, request }) => {
-      const env = getRequestEnv(request);
+      const env = simulatorEnv(getRequestEnv(request), request);
       return runPolar(
         createPolarCustomer(env, body),
         logContextFromRequest(request, "tom-adapter"),
@@ -262,7 +271,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
   .get(
     "/polar/checkout",
     async ({ query, request }) => {
-      const env = await readCloudflareEnv(getRequestEnv(request));
+      const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
       const api = callApi(env.API_URL ?? "http://localhost:8787", env.INTERNAL_API_TOKEN);
       return proxyToApi(
         api.checkout.get({
@@ -287,7 +296,7 @@ export const polarIntegration = new Elysia({ name: "polar" })
   .get(
     "/polar/portal",
     async ({ query, request }) => {
-      const env = await readCloudflareEnv(getRequestEnv(request));
+      const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
       const api = callApi(env.API_URL ?? "http://localhost:8787", env.INTERNAL_API_TOKEN);
       return proxyToApi(
         api.portal.get({ query: { customerId: query.customerId } }),

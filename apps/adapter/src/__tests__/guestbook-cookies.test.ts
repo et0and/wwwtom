@@ -55,20 +55,20 @@ describe("guestbook cookie handling", () => {
       });
     });
 
-    it("returns an empty body when no guestbook_user cookie is present", async () => {
+    it("returns JSON null when no guestbook_user cookie is present", async () => {
       const response = await app.fetch(requestWithEnv("http://localhost/guestbook/me", env));
       expect(response.status).toBe(200);
-      expect(await response.text()).toBe("");
+      await expect(response.json()).resolves.toBeNull();
     });
 
-    it("returns an empty body when the cookie is not valid user JSON", async () => {
+    it("returns JSON null when the cookie is not valid user JSON", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/guestbook/me", env, {
           headers: { Cookie: "guestbook_user=not-json" },
         }),
       );
       expect(response.status).toBe(200);
-      expect(await response.text()).toBe("");
+      await expect(response.json()).resolves.toBeNull();
     });
   });
 

@@ -30,6 +30,9 @@ describe("DatabaseService", () => {
   let connectionString = "";
   let db: Kysely<Database>;
 
+  // Booting an in-process Postgres engine and running the migrations can take
+  // well over the default 10s hook timeout on a cold CI runner, so give the
+  // one-time bootstrap an explicit generous budget.
   beforeAll(async () => {
     pg = new PGlite();
     await pg.waitReady;
@@ -61,7 +64,7 @@ describe("DatabaseService", () => {
     const result = await migrator.migrateToLatest();
     expect(result.error).toBeUndefined();
     expect(result.results?.map((migration) => migration.status)).toEqual(["Success"]);
-  });
+  }, 60_000);
 
   afterAll(async () => {
     await db.destroy();

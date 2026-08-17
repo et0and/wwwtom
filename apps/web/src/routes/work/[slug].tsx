@@ -28,6 +28,17 @@ const ArenaCarousel = lazy(() =>
   import("~/components/Arena").then((m) => ({ default: m.ArenaCarousel })),
 );
 
+const WorkNotFound = ({ slug }: { slug: string | undefined }) => (
+  <PageLayout title="Not found" description="The page you are looking for does not exist.">
+    <article>
+      <BlurInText text="Not found" tag="h1" baseDelay={0.1} step={0.025} />
+      <BlurInSection delay={0.3}>
+        <p>The work "{slug}" does not exist.</p>
+      </BlurInSection>
+    </article>
+  </PageLayout>
+);
+
 export default function WorkPage() {
   const params = useParams();
   const slug = createMemo(() => params.slug);
@@ -57,9 +68,13 @@ export default function WorkPage() {
   }));
 
   return (
-    <Show when={workQuery.data}>
+    // Unknown slugs resolve the work query to null; without a fallback the
+    // page renders nothing (or crashes on a missing title) instead of a
+    // not-found state.
+    <Show when={workQuery.data} fallback={<WorkNotFound slug={slug()} />}>
       {(data) => {
         const d = data();
+        if (!d.title) return <WorkNotFound slug={slug()} />;
         return (
           <PageLayout
             title={d.title}
