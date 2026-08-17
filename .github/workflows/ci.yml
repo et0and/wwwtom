@@ -32,12 +32,13 @@ jobs:
           ACTOR: ${{ github.event_name == 'push' && github.event.pusher.login || github.event.pull_request.user.login }}
           REPO: ${{ github.repository }}
         run: |
-          # Read from the merge ref (base + head): on a PR that introduces
-          # CONTRIBUTORS itself the file exists there before it reaches the
-          # default branch. If it's genuinely absent, fall back to
-          # author_association — OWNER/MEMBER/COLLABORATOR have repo access,
-          # which is a stronger trust signal than the file anyway.
-          LIST=$(gh api "repos/$REPO/contents/CONTRIBUTORS?ref=merge" --jq '.content' 2>/dev/null | base64 -d)
+          # Read from GITHUB_SHA — the merge commit on pull_request, the
+          # pushed commit on push — so a PR that introduces CONTRIBUTORS
+          # itself is honored before it reaches the default branch. If the
+          # file is genuinely absent, fall back to author_association:
+          # OWNER/MEMBER/COLLABORATOR have repo access, which is a stronger
+          # trust signal than the file anyway.
+          LIST=$(gh api "repos/$REPO/contents/CONTRIBUTORS?ref=$GITHUB_SHA" --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || true)
           if echo "$LIST" | grep -qx "$ACTOR"; then
             echo "is-contributor=true" >> "$GITHUB_OUTPUT"
             exit 0
