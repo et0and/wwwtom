@@ -28,7 +28,7 @@ jobs:
             --max-time 180 \
             --request POST \
             --header "Authorization: Bearer ${{ secrets.CONTROL_TOKEN }}" \
-            https://runner.tom.so/runners
+            https://wwwtom-runner.yufugumi.workers.dev/runners
 
   test:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
