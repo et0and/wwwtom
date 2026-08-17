@@ -9,13 +9,41 @@ on:
       - dev
 
 jobs:
+  # Trusted events (push to dev, same-repo PRs) run on the self-hosted
+  # Cloudflare runner. GitHub doesn't wake self-hosted runners, so this job
+  # POSTs to the runner control plane first — the call blocks until the
+  # ephemeral runner is registered and listening, then the test job (queued
+  # with runs-on: cloudflare-sandbox) is picked up.
+  #
+  # Fork PRs (public repo) never reach the self-hosted runner: they have no
+  # CONTROL_TOKEN secret and run on a GitHub-hosted runner instead.
+  spawn:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    name: Spawn Cloudflare runner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start ephemeral runner
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --max-time 180 \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.CONTROL_TOKEN }}" \
+            https://runner.tom.so/runners
+
   test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: spawn
     name: Test
-    runs-on: ubuntu-slim
+    runs-on: cloudflare-sandbox
 
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+
+      # The sandbox image ships Node 20; pnpm 11 requires >= 22.13.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
 
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
 
@@ -28,6 +56,34 @@ jobs:
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
       # package's workspace dependencies first.
+      - name: Run unit tests
+        env:
+          ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
+        run: pnpm turbo run test
+
+  # Fork PRs keep CI on a GitHub-hosted runner (free for public repos, and
+  # untrusted code never touches the self-hosted runner).
+  test-fork:
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository
+    name: Test (fork PR)
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Check pnpm version
+        run: pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Run unit tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}

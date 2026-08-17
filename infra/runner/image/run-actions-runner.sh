@@ -32,7 +32,7 @@ done
 
 if ! runuser --user runner --preserve-environment -- \
 	/usr/local/bin/docker version >/dev/null 2>&1; then
-	echo "Rootless Docker is unavailable" >&2
+	echo "Docker is unavailable" >&2
 	exit 1
 fi
 

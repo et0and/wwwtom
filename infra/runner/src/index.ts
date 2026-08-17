@@ -1,5 +1,9 @@
-import { getSandbox, type Sandbox } from "@cloudflare/sandbox";
+import { getSandbox, Sandbox } from "@cloudflare/sandbox";
 import { Effect, Schema } from "effect";
+
+// The container-backed DO class must be exported from the worker entry so
+// the runtime can route the binding's DurableObjectNamespace to it.
+export { Sandbox };
 import { HttpStatus } from "@tom/constants/http";
 import { GitHubApiError, RunnerError } from "@tom/types/errors";
 import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/services/logging";
@@ -215,7 +219,9 @@ const startRunner = (
           autoCleanup: false,
           env: {
             ACTIONS_RUNNER_PRINT_LOG_TO_STDOUT: "1",
-            DOCKER_HOST: "unix:///run/user/1001/docker.sock",
+            // Rootful dockerd listens on the default socket; the `runner`
+            // user reaches it via the docker group.
+            DOCKER_HOST: "unix:///var/run/docker.sock",
             HOME: "/home/runner",
             LOGNAME: "runner",
             RUNNER_CLEANUP_TOKEN: cleanupToken,
@@ -225,7 +231,6 @@ const startRunner = (
             RUNNER_TOKEN: registration.token,
             RUNNER_URL: `https://github.com/${env.GITHUB_REPOSITORY}`,
             USER: "runner",
-            XDG_RUNTIME_DIR: "/run/user/1001",
           },
         });
         await process.waitForLog(RUNNER_READY, 120_000);
