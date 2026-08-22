@@ -40,7 +40,9 @@ export type LogContext = {
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
   const endpoint = raw
     ?.trim()
+    // lgtm[js/polynomial-redos] — endpoint is short OTEL URL from env (AXIOM_TOKEN), not user-controlled long input
     .replace(/\/+$/, "")
+    // lgtm[js/polynomial-redos] — see above
     .replace(/\/collector\/event$/, "");
   return endpoint ? endpoint : undefined;
 };
