@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, vi } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Redacted } from "effect";
 import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
@@ -8,53 +9,19 @@ type TestConfig = {
   telegramChatId?: string;
 };
 
-const createConfigLayer = (config: TestConfig) => {
-  const token = config.telegramBotToken;
-  const chatId = config.telegramChatId;
-  return Layer.succeed(AppConfig, {
+const createConfigLayer = (config: TestConfig) =>
+  Layer.succeed(AppConfig, {
     arenaToken: Redacted.make(""),
     arenaBaseUrl: undefined,
     payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
-    telegramBotToken: token ? Redacted.make(token) : undefined,
-    telegramChatId: chatId,
+    telegramBotToken: config.telegramBotToken ? Redacted.make(config.telegramBotToken) : undefined,
+    telegramChatId: config.telegramChatId,
     isDev: true,
   });
-};
 
-const createLayer = (config: TestConfig) =>
+const withConfig = (config: TestConfig) =>
   Layer.provideMerge(TelegramService.Default, createConfigLayer(config));
-
-const runTestEffect = <A, E>(
-  effect: Effect.Effect<A, E, TelegramService>,
-  config: TestConfig,
-): Promise<A> => {
-  const layer = createLayer(config);
-  const provided = Effect.provide(effect, layer);
-  return Effect.runPromise(provided);
-};
-
-const runTestResult = <A, E>(
-  effect: Effect.Effect<A, E, TelegramService>,
-  config: TestConfig,
-): Promise<
-  | {
-      tag: "error";
-      error: E;
-    }
-  | {
-      tag: "success";
-      value: A;
-    }
-> => {
-  const layer = createLayer(config);
-  const provided = Effect.provide(effect, layer);
-  const mapped = Effect.match(provided, {
-    onFailure: (error) => ({ tag: "error" as const, error }),
-    onSuccess: (value) => ({ tag: "success" as const, value }),
-  });
-  return Effect.runPromise(mapped);
-};
 
 const sendAlertEffect = (message: string) =>
   Effect.flatMap(TelegramService, (service) => service.sendAlert(message));
@@ -62,129 +29,211 @@ const sendAlertEffect = (message: string) =>
 const sendErrorEffect = (message: string, cause?: unknown) =>
   Effect.flatMap(TelegramService, (service) => service.sendError(message, cause));
 
+const toResult = <A, E>(effect: Effect.Effect<A, E, TelegramService>) =>
+  Effect.match(effect, {
+    onFailure: (error) => ({ tag: "error" as const, error }),
+    onSuccess: (value) => ({ tag: "success" as const, value }),
+  });
+
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
 describe("TelegramService", () => {
-  it("returns a no-op service when config missing", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
-    vi.stubGlobal("fetch", fetcher);
+  it.effect("returns a no-op service when config missing", () =>
+    Effect.gen(function* () {
+      const response = { ok: true, status: 200, statusText: "OK" } as Response;
+      const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+      vi.stubGlobal("fetch", fetcher);
 
-    await runTestEffect(sendAlertEffect("Hello"), {});
-    expect(fetcher).not.toHaveBeenCalled();
-  });
+      yield* sendAlertEffect("Hello").pipe(Effect.provide(withConfig({})));
+      expect(fetcher).not.toHaveBeenCalled();
+    }),
+  );
 
-  it("sends alerts with expected payload", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
-    vi.stubGlobal("fetch", fetcher);
+  it.effect("returns a no-op when only token is present", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK" }) as Response);
+      vi.stubGlobal("fetch", fetcher);
+      yield* sendAlertEffect("Hello").pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token" })),
+      );
+      expect(fetcher).not.toHaveBeenCalled();
+    }),
+  );
 
-    await runTestEffect(sendAlertEffect("Hello"), {
-      telegramBotToken: "token",
-      telegramChatId: "123",
-    });
+  it.effect("returns a no-op when only chatId is present", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK" }) as Response);
+      vi.stubGlobal("fetch", fetcher);
+      yield* sendAlertEffect("Hello").pipe(Effect.provide(withConfig({ telegramChatId: "123" })));
+      expect(fetcher).not.toHaveBeenCalled();
+    }),
+  );
 
-    expect(fetcher).toHaveBeenCalledTimes(1);
-    const call = fetcher.mock.calls[0];
-    if (!call) {
-      throw new Error("Expected fetch to be called");
-    }
-    const url = call[0];
-    const options = call[1];
-    if (!options) {
-      throw new Error("Expected fetch options");
-    }
+  it.effect("sends alerts with expected payload", () =>
+    Effect.gen(function* () {
+      const response = { ok: true, status: 200, statusText: "OK" } as Response;
+      const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+      vi.stubGlobal("fetch", fetcher);
 
-    expect(url).toBe("https://api.telegram.org/bottoken/sendMessage");
-    expect(options.method).toBe("POST");
-    expect(options.headers).toEqual({ "Content-Type": "application/json" });
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+      yield* sendAlertEffect("Hello").pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+      );
 
-    expect(body.chat_id).toBe("123");
-    expect(body.text).toBe("Hello");
-    expect(body.parse_mode).toBe("Markdown");
-  });
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      const call = fetcher.mock.calls[0];
+      if (!call) {
+        throw new Error("Expected fetch to be called");
+      }
+      const url = call[0];
+      const options = call[1];
+      if (!options) {
+        throw new Error("Expected fetch options");
+      }
 
-  it("formats errors in alert payloads", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
-    vi.stubGlobal("fetch", fetcher);
+      expect(url).toBe("https://api.telegram.org/bottoken/sendMessage");
+      expect(options.method).toBe("POST");
+      expect(options.headers).toEqual({ "Content-Type": "application/json" });
+      expect(options.body).toBeTypeOf("string");
+      const body = JSON.parse(options.body as string);
 
-    const error = new Error("Boom");
-    error.stack = "Boom stack";
+      expect(body.chat_id).toBe("123");
+      expect(body.text).toBe("Hello");
+      expect(body.parse_mode).toBe("Markdown");
+    }),
+  );
 
-    await runTestEffect(sendErrorEffect("Something broke", error), {
-      telegramBotToken: "token",
-      telegramChatId: "123",
-    });
+  it.effect("formats errors in alert payloads", () =>
+    Effect.gen(function* () {
+      const response = { ok: true, status: 200, statusText: "OK" } as Response;
+      const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+      vi.stubGlobal("fetch", fetcher);
 
-    const call = fetcher.mock.calls[0];
-    if (!call) {
-      throw new Error("Expected fetch to be called");
-    }
-    const options = call[1];
-    if (!options) {
-      throw new Error("Expected fetch options");
-    }
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
-    const text = body.text as string;
+      const error = new Error("Boom");
+      error.stack = "Boom stack";
 
-    expect(text).toContain("*ERROR*");
-    expect(text).toContain("*Message:* Something broke");
-    expect(text).toContain("*Error:* `Boom`");
-    expect(text).toContain("*Time:*");
-    expect(text).toContain("Boom stack");
-  });
+      yield* sendErrorEffect("Something broke", error).pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+      );
 
-  it("surfaces fetch errors as TelegramError", async () => {
-    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => {
-      throw new Error("Network down");
-    });
-    vi.stubGlobal("fetch", fetcher);
+      const call = fetcher.mock.calls[0];
+      if (!call) {
+        throw new Error("Expected fetch to be called");
+      }
+      const options = call[1];
+      if (!options) {
+        throw new Error("Expected fetch options");
+      }
+      expect(options.body).toBeTypeOf("string");
+      const body = JSON.parse(options.body as string);
+      const text = body.text as string;
 
-    const effect = sendAlertEffect("Hello");
-    const result = await runTestResult(effect, {
-      telegramBotToken: "token",
-      telegramChatId: "123",
-    });
+      expect(text).toContain("*ERROR*");
+      expect(text).toContain("*Message:* Something broke");
+      expect(text).toContain("*Error:* `Boom`");
+      expect(text).toContain("*Time:*");
+      expect(text).toContain("Boom stack");
+    }),
+  );
 
-    expect(result.tag).toBe("error");
-    if (result.tag !== "error") {
-      throw new Error("Expected error result");
-    }
-    expect(result.error).toMatchObject({
-      _tag: "TelegramError",
-      message: "Network down",
-    });
-  });
+  it.effect("formats errors without cause", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK" }) as Response);
+      vi.stubGlobal("fetch", fetcher);
 
-  it("surfaces non-ok responses as TelegramError", async () => {
-    const response = {
-      ok: false,
-      status: 500,
-      statusText: "Bad Gateway",
-    } as Response;
-    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
-    vi.stubGlobal("fetch", fetcher);
+      yield* sendErrorEffect("Something broke").pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+      );
 
-    const result = await runTestResult(sendAlertEffect("Hello"), {
-      telegramBotToken: "token",
-      telegramChatId: "123",
-    });
+      const body = JSON.parse((fetcher.mock.calls[0]?.[1]?.body as string) ?? "{}");
+      expect(body.text).toContain("*Message:* Something broke");
+      expect(body.text).not.toContain("*Error:*");
+      expect(body.text).toContain("*Time:*");
+    }),
+  );
 
-    expect(result.tag).toBe("error");
-    if (result.tag !== "error") {
-      throw new Error("Expected error result");
-    }
-    expect(result.error).toMatchObject({
-      _tag: "TelegramError",
-      message: "Telegram API error: 500 Bad Gateway",
-      status: 500,
-    });
-  });
+  it.effect("formats string cause without stack", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK" }) as Response);
+      vi.stubGlobal("fetch", fetcher);
+
+      yield* sendErrorEffect("Failed", "string cause").pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+      );
+
+      const body = JSON.parse((fetcher.mock.calls[0]?.[1]?.body as string) ?? "{}");
+      expect(body.text).toContain("*Error:* `string cause`");
+      expect(body.text).not.toContain("*Stack:*");
+    }),
+  );
+
+  it.effect("formats Error without stack property", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn(async () => ({ ok: true, status: 200, statusText: "OK" }) as Response);
+      vi.stubGlobal("fetch", fetcher);
+
+      const error = new Error("Boom");
+      error.stack = undefined;
+
+      yield* sendErrorEffect("Failed", error).pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+      );
+
+      const body = JSON.parse((fetcher.mock.calls[0]?.[1]?.body as string) ?? "{}");
+      expect(body.text).toContain("*Error:* `Boom`");
+      expect(body.text).not.toContain("*Stack:*");
+    }),
+  );
+
+  it.effect("surfaces fetch errors as TelegramError", () =>
+    Effect.gen(function* () {
+      const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => {
+        throw new Error("Network down");
+      });
+      vi.stubGlobal("fetch", fetcher);
+
+      const result = yield* sendAlertEffect("Hello").pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+        toResult,
+      );
+
+      expect(result.tag).toBe("error");
+      if (result.tag !== "error") {
+        throw new Error("Expected error result");
+      }
+      expect(result.error).toMatchObject({
+        _tag: "TelegramError",
+        message: "Network down",
+      });
+    }),
+  );
+
+  it.effect("surfaces non-ok responses as TelegramError", () =>
+    Effect.gen(function* () {
+      const response = {
+        ok: false,
+        status: 500,
+        statusText: "Bad Gateway",
+      } as Response;
+      const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+      vi.stubGlobal("fetch", fetcher);
+
+      const result = yield* sendAlertEffect("Hello").pipe(
+        Effect.provide(withConfig({ telegramBotToken: "token", telegramChatId: "123" })),
+        toResult,
+      );
+
+      expect(result.tag).toBe("error");
+      if (result.tag !== "error") {
+        throw new Error("Expected error result");
+      }
+      expect(result.error).toMatchObject({
+        _tag: "TelegramError",
+        message: "Telegram API error: 500 Bad Gateway",
+        status: 500,
+      });
+    }),
+  );
 });

@@ -12,8 +12,11 @@ export const callApi = (apiUrl: string, token?: string) => {
   // Pass through upstream redirects (e.g. the API's /checkout 302 to Polar) as
   // responses instead of following them, so the adapter can forward the
   // Location header to the browser.
+  // Stryker disable next-line ObjectLiteral: fetch redirect option
   const fetchOptions = { redirect: "manual" as const };
   return token
-    ? treaty<ApiApp>(apiUrl, { fetch: fetchOptions, headers: { [INTERNAL_TOKEN_HEADER]: token } })
-    : treaty<ApiApp>(apiUrl, { fetch: fetchOptions });
+    ? // Stryker disable next-line ObjectLiteral: treaty options with token
+      treaty<ApiApp>(apiUrl, { fetch: fetchOptions, headers: { [INTERNAL_TOKEN_HEADER]: token } })
+    : // Stryker disable next-line ObjectLiteral: treaty options without token
+      treaty<ApiApp>(apiUrl, { fetch: fetchOptions });
 };

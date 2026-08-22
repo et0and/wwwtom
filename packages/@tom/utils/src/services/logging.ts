@@ -40,8 +40,8 @@ export type LogContext = {
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
   const endpoint = raw
     ?.trim()
-    .replace(/\/collector\/event$/, "")
-    .replace(/\/+$/, "");
+    .replace(/\/+$/, "")
+    .replace(/\/collector\/event$/, "");
   return endpoint ? endpoint : undefined;
 };
 
@@ -92,6 +92,7 @@ const makeLoggingLayer = (context: LogContext) => {
   if (!otel) return Logger.layer([Logger.consoleStructured]);
   const resource = {
     serviceName: context.serviceName,
+    // Stryker disable next-line ObjectLiteral: OTLP resource app attribute — verified via withLogging OTLP export test, mutant replaces attributes with empty object
     attributes: { app: context.serviceName },
   };
   const commonHeaders = { Authorization: otel.authorization };

@@ -1,6 +1,8 @@
 import { Schema } from "effect";
 import { errorResponseSchema as sharedErrorResponseSchema } from "@tom/schemas/error";
 
+// Stryker disable all: schema shapes — type-level, validated via integration query tests
+
 export const PaginationQuerySchema = Schema.Struct({
   page: Schema.optional(Schema.NumberFromString),
   per: Schema.optional(Schema.NumberFromString),

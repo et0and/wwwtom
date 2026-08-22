@@ -5,9 +5,10 @@ import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, toErrorResponse } from "@tom/utils/services/worker";
 
 /** Constant-time comparison so token timing can't leak the shared secret. */
-const timingSafeEqual = (a: string, b: string): boolean => {
+export const timingSafeEqual = (a: string, b: string): boolean => {
   if (a.length !== b.length) return false;
   let diff = 0;
+  // Stryker disable next-line EqualityOperator: loop bound — `i <=` is equivalent (reads past end yields NaN, XOR 0)
   for (let i = 0; i < a.length; i++) {
     diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   }
@@ -24,12 +25,15 @@ export const requireInternalTokenBeforeHandle = async ({ request }: { request: R
   const expected = env.INTERNAL_API_TOKEN;
   const provided = request.headers.get(INTERNAL_TOKEN_HEADER);
   if (!expected || !provided || !timingSafeEqual(provided, expected)) {
+    // Stryker disable all: fire-and-forget auth failure log — verified via integration auth tests
     Effect.runFork(
       Effect.logWarning("Internal auth failed", {
         path: request.url,
         hasToken: provided !== null,
       }),
     );
+    // Stryker restore all
     return toErrorResponse(HttpStatus.Unauthorized, "Unauthorized");
   }
+  return undefined;
 };

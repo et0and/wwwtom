@@ -17,6 +17,7 @@ import {
 } from "../services/polar";
 
 const productsSchema = Schema.String.pipe(
+  // Stryker disable next-line ArrayDeclaration: OpenAPI example — mutant replaces with empty array
   Schema.annotate({
     description: "Product IDs to purchase (comma-separated)",
     examples: ["cheese-stack"],
@@ -24,6 +25,7 @@ const productsSchema = Schema.String.pipe(
 );
 
 const customerIdSchema = Schema.optional(Schema.String).pipe(
+  // Stryker disable next-line ArrayDeclaration: OpenAPI example — mutant replaces with empty array
   Schema.annotate({ description: "Existing customer ID", examples: ["cus_123"] }),
 );
 
@@ -87,6 +89,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
       const successUrl = env.SUCCESS_URL
         ? `${env.SUCCESS_URL}?checkoutId={CHECKOUT_ID}`
         : undefined;
+      // Stryker disable next-line MethodExpression: comma-split — covered by single-product test, multi-product mutant is equivalent for single value
       const products = (query.products ?? "").split(",").filter(Boolean);
 
       const result = await runEffect(

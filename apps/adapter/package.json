@@ -8,7 +8,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint"
+    "lint": "oxlint",
+    "mutate": "stryker run"
   },
   "dependencies": {
     "@cf-wasm/photon": "0.1.31",
@@ -28,6 +29,10 @@
     "shiki": "1.29.2"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@vitest/coverage-v8": "4.1.10",
     "vitest": "catalog:"
   }
 }

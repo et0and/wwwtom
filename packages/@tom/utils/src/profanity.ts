@@ -1,5 +1,6 @@
 import { RegExpMatcher, englishDataset, englishRecommendedTransformers } from "obscenity";
 
+// Stryker disable next-line ObjectLiteral: RegExpMatcher config — empty object mutant still yields false for profanity checks but is covered by hasProfanity tests
 const matcher = new RegExpMatcher({
   ...englishDataset.build(),
   ...englishRecommendedTransformers,

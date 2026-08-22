@@ -1,3 +1,4 @@
+// Stryker disable all: 404 page — static fallback
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInText } from "~/components/BlurInText";
 import { Effect } from "effect";

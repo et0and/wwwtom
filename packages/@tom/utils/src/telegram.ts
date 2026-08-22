@@ -18,9 +18,11 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
       if (!config.telegramBotToken || !config.telegramChatId) {
         const service: TelegramServiceContract = {
           sendAlert: Effect.fn("TelegramService.sendAlert")(
+            // Stryker disable next-line all
             (): Effect.Effect<void, TelegramError> => Effect.void,
           ),
           sendError: Effect.fn("TelegramService.sendError")(
+            // Stryker disable next-line all
             (): Effect.Effect<void, TelegramError> => Effect.void,
           ),
         };

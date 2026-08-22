@@ -1,4 +1,5 @@
 /// <reference types="vitest" />
+import { resolve } from "node:path";
 import { defineConfig, loadEnv } from "vite";
 import solid from "vite-plugin-solid";
 
@@ -24,7 +25,10 @@ export default defineConfig(({ mode }) => {
     resolve: {
       conditions: ["development", "browser"],
       alias: {
-        "~/": new URL("./src/", import.meta.url).pathname,
+        // Resolved from cwd (not import.meta.url, which Vite rewrites to the
+        // original config location) so tools that run against a copied
+        // sandbox — Stryker mutation testing — still resolve into their copy.
+        "~/": `${resolve(process.cwd(), "src")}/`,
       },
     },
     define: {
