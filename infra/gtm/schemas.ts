@@ -1,6 +1,5 @@
-// Tag Manager v2 discovery document revision pinned: 20260817
-// Hand-written types derived from the discovery doc; deliberately minimal for
-// ticket 1 (Account / Container / Workspace). Later tickets extend this file.
+// Tag Manager v2 discovery document revision: 2025-03-06 (Last updated)
+// Verified against https://tagmanager.googleapis.com/$discovery/rest?version=v2
 
 export type Account = {
   path: string;
@@ -8,9 +7,34 @@ export type Account = {
   name: string;
   tagManagerUrl: string;
   fingerprint?: string;
+  // Read-only (returned by get/list, not sent on create/update)
+  shareData?: boolean;
+  features?: AccountFeatures;
+};
+
+export type AccountFeatures = {
+  supportUserPermissions?: boolean;
+  supportMultipleContainers?: boolean;
 };
 
 export type ContainerUsageContext = "WEB" | "ANDROID" | "IOS" | (string & {});
+
+export type ContainerFeatures = {
+  supportUserPermissions?: boolean;
+  supportEnvironments?: boolean;
+  supportWorkspaces?: boolean;
+  supportGtagConfigs?: boolean;
+  supportBuiltInVariables?: boolean;
+  supportClients?: boolean;
+  supportFolders?: boolean;
+  supportTags?: boolean;
+  supportTemplates?: boolean;
+  supportTriggers?: boolean;
+  supportVariables?: boolean;
+  supportVersions?: boolean;
+  supportZones?: boolean;
+  supportTransformations?: boolean;
+};
 
 export type Container = {
   path: string;
@@ -23,6 +47,10 @@ export type Container = {
   fingerprint?: string;
   tagManagerUrl?: string;
   notes?: string;
+  // Read-only (returned by get/list)
+  tagIds?: string[];
+  features?: ContainerFeatures;
+  taggingServerUrls?: string[];
 };
 
 export type Workspace = {
@@ -36,17 +64,19 @@ export type Workspace = {
   tagManagerUrl?: string;
 };
 
-// Discovery list envelopes
+// Discovery list envelopes (paginated)
 export type ListContainersResponse = {
   container?: Container[];
+  nextPageToken?: string;
 };
 
 export type ListWorkspacesResponse = {
   workspace?: Workspace[];
+  nextPageToken?: string;
 };
 
 // ---------------------------------------------------------------------------
-// Ticket 2: Tags + Triggers
+// Tags + Triggers
 // ---------------------------------------------------------------------------
 
 export type ParameterType =
@@ -127,16 +157,37 @@ export type Trigger = {
   parameter?: Parameter[];
   filter?: Condition[];
   customEventFilter?: Condition[];
+  autoEventFilter?: Condition[];
   fingerprint?: string;
   parentFolderId?: string;
   notes?: string;
   tagManagerUrl?: string;
+  // Trigger-type-specific Parameter fields (all optional, validated server-side per type)
+  waitForTags?: Parameter;
+  checkValidation?: Parameter;
+  waitForTagsTimeout?: Parameter;
+  uniqueTriggerId?: Parameter;
+  eventName?: Parameter;
+  interval?: Parameter;
+  limit?: Parameter;
+  selector?: Parameter;
+  intervalSeconds?: Parameter;
+  maxTimerLengthSeconds?: Parameter;
+  verticalScrollPercentageList?: Parameter;
+  horizontalScrollPercentageList?: Parameter;
+  visibilitySelector?: Parameter;
+  visiblePercentageMin?: Parameter;
+  visiblePercentageMax?: Parameter;
+  continuousTimeMinMilliseconds?: Parameter;
+  totalTimeMinMilliseconds?: Parameter;
 };
 
 export type ListTagsResponse = {
   tag?: Tag[];
+  nextPageToken?: string;
 };
 
 export type ListTriggersResponse = {
   trigger?: Trigger[];
+  nextPageToken?: string;
 };

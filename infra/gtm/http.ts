@@ -534,8 +534,35 @@ export const makeFakeGtmHttpLayer = (state: FakeState): Layer.Layer<GtmHttp> =>
         if (body.filter !== undefined) trigger.filter = body.filter;
         if (body.customEventFilter !== undefined)
           trigger.customEventFilter = body.customEventFilter;
+        if (body.autoEventFilter !== undefined) trigger.autoEventFilter = body.autoEventFilter;
         if (body.parentFolderId !== undefined) trigger.parentFolderId = body.parentFolderId;
         if (body.notes !== undefined) trigger.notes = body.notes;
+        if (body.waitForTags !== undefined) trigger.waitForTags = body.waitForTags;
+        if (body.checkValidation !== undefined) trigger.checkValidation = body.checkValidation;
+        if (body.waitForTagsTimeout !== undefined)
+          trigger.waitForTagsTimeout = body.waitForTagsTimeout;
+        if (body.uniqueTriggerId !== undefined) trigger.uniqueTriggerId = body.uniqueTriggerId;
+        if (body.eventName !== undefined) trigger.eventName = body.eventName;
+        if (body.interval !== undefined) trigger.interval = body.interval;
+        if (body.limit !== undefined) trigger.limit = body.limit;
+        if (body.selector !== undefined) trigger.selector = body.selector;
+        if (body.intervalSeconds !== undefined) trigger.intervalSeconds = body.intervalSeconds;
+        if (body.maxTimerLengthSeconds !== undefined)
+          trigger.maxTimerLengthSeconds = body.maxTimerLengthSeconds;
+        if (body.verticalScrollPercentageList !== undefined)
+          trigger.verticalScrollPercentageList = body.verticalScrollPercentageList;
+        if (body.horizontalScrollPercentageList !== undefined)
+          trigger.horizontalScrollPercentageList = body.horizontalScrollPercentageList;
+        if (body.visibilitySelector !== undefined)
+          trigger.visibilitySelector = body.visibilitySelector;
+        if (body.visiblePercentageMin !== undefined)
+          trigger.visiblePercentageMin = body.visiblePercentageMin;
+        if (body.visiblePercentageMax !== undefined)
+          trigger.visiblePercentageMax = body.visiblePercentageMax;
+        if (body.continuousTimeMinMilliseconds !== undefined)
+          trigger.continuousTimeMinMilliseconds = body.continuousTimeMinMilliseconds;
+        if (body.totalTimeMinMilliseconds !== undefined)
+          trigger.totalTimeMinMilliseconds = body.totalTimeMinMilliseconds;
         state.triggers.set(path, trigger);
         return trigger;
       }),

@@ -8,7 +8,7 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { GtmHttp } from "./http.ts";
 import { augmentNotes, buildMarker, isOwnedMarker, stripMarker } from "./ownership.ts";
-import type { Container as ContainerSchema } from "./schemas.ts";
+import type { Container as ContainerSchema, ContainerFeatures } from "./schemas.ts";
 
 export type ContainerProps = {
   accountPath: string;
@@ -29,6 +29,9 @@ export type ContainerAttributes = {
   notes: string;
   fingerprint: string;
   tagManagerUrl: string;
+  tagIds?: string[];
+  features?: ContainerFeatures;
+  taggingServerUrls?: string[];
 };
 
 export interface Container extends Resource<"Gtm.Container", ContainerProps, ContainerAttributes> {}
@@ -50,6 +53,9 @@ const toAttrs = (c: ContainerSchema, notesWithoutMarker: string): ContainerAttri
   };
   if (c.usageContext !== undefined) attrs.usageContext = c.usageContext;
   if (c.domainName !== undefined) attrs.domainName = c.domainName;
+  if (c.tagIds !== undefined) attrs.tagIds = c.tagIds;
+  if (c.features !== undefined) attrs.features = c.features;
+  if (c.taggingServerUrls !== undefined) attrs.taggingServerUrls = c.taggingServerUrls;
   return attrs;
 };
 

@@ -4,7 +4,7 @@ import { isResolved } from "alchemy/Diff";
 import { Resource } from "alchemy/Resource";
 import type { ResourceClassLike } from "alchemy/Resource";
 import { GtmHttp } from "./http.ts";
-import type { Account as AccountSchema } from "./schemas.ts";
+import type { Account as AccountSchema, AccountFeatures } from "./schemas.ts";
 
 export type AccountProps = {
   path: string;
@@ -15,6 +15,9 @@ export type AccountAttributes = {
   path: string;
   name: string;
   tagManagerUrl: string;
+  fingerprint: string;
+  shareData?: boolean;
+  features?: AccountFeatures;
 };
 
 export interface Account extends Resource<"Gtm.Account", AccountProps, AccountAttributes> {}
@@ -27,12 +30,18 @@ export const AccountProvider = () =>
     Effect.gen(function* () {
       const http = yield* GtmHttp;
 
-      const toAttrs = (acc: AccountSchema): AccountAttributes => ({
-        accountId: acc.accountId,
-        path: acc.path,
-        name: acc.name,
-        tagManagerUrl: acc.tagManagerUrl,
-      });
+      const toAttrs = (acc: AccountSchema): AccountAttributes => {
+        const attrs: AccountAttributes = {
+          accountId: acc.accountId,
+          path: acc.path,
+          name: acc.name,
+          tagManagerUrl: acc.tagManagerUrl,
+          fingerprint: acc.fingerprint ?? "",
+        };
+        if (acc.shareData !== undefined) attrs.shareData = acc.shareData;
+        if (acc.features !== undefined) attrs.features = acc.features;
+        return attrs;
+      };
 
       return {
         list: () => Effect.succeed([] as AccountAttributes[]),
