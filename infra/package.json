@@ -19,7 +19,8 @@
     "destroy:adapter": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/adapter.run.ts --stage $ALCHEMY_STAGE",
     "destroy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/web.run.ts --stage $ALCHEMY_STAGE",
     "destroy:runner": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy runner/runner.run.ts --stage $ALCHEMY_STAGE",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@cloudflare/sandbox": "0.12.5",
@@ -35,6 +36,7 @@
     "vite": "^8.1.5"
   },
   "devDependencies": {
-    "@types/node": "^24.9.1"
+    "@types/node": "^24.9.1",
+    "vitest": "catalog:"
   }
 }
