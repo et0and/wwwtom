@@ -10,6 +10,7 @@ import type { Props as MediaProps } from "../types";
 
 import { cssVariables } from "@/cssVariables";
 import { getMediaUrl } from "@/utilities/getMediaUrl";
+import { isPopulated } from "@/utilities/isPopulated";
 
 const { breakpoints } = cssVariables;
 
@@ -35,7 +36,7 @@ export const ImageMedia: React.FC<MediaProps> = (props) => {
   let alt = altFromProps;
   let src: StaticImageData | string = srcFromProps || "";
 
-  if (!src && resource && typeof resource === "object") {
+  if (!src && isPopulated(resource)) {
     const { alt: altFromResource, height: fullHeight, url, width: fullWidth } = resource;
 
     width = fullWidth!;

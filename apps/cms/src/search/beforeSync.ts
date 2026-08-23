@@ -1,4 +1,5 @@
 import { BeforeSync, DocToSync } from "@payloadcms/plugin-search/types";
+import { isPopulated } from "@/utilities/isPopulated";
 
 export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searchDoc }) => {
   const {
@@ -26,7 +27,7 @@ export const beforeSyncWithSearch: BeforeSync = async ({ req, originalDoc, searc
         continue;
       }
 
-      if (typeof category === "object") {
+      if (isPopulated(category)) {
         populatedCategories.push(category);
         continue;
       }

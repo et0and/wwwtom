@@ -4,6 +4,7 @@ import Link from "next/link";
 import React from "react";
 
 import type { Page, Post } from "@/payload-types";
+import { isPopulated } from "@/utilities/isPopulated";
 
 type CMSLinkType = {
   appearance?: "inline" | ButtonProps["variant"];
@@ -33,12 +34,13 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
     url,
   } = props;
 
-  const href =
-    type === "reference" && typeof reference?.value === "object" && reference.value.slug
-      ? `${reference?.relationTo !== "pages" ? `/${reference?.relationTo}` : ""}/${
-          reference.value.slug
-        }`
-      : url;
+  const referenceValue = reference?.value;
+  const populatedValue =
+    type === "reference" && isPopulated<Page | Post>(referenceValue) ? referenceValue : undefined;
+
+  const href = populatedValue
+    ? `${reference?.relationTo !== "pages" ? `/${reference?.relationTo}` : ""}/${populatedValue.slug}`
+    : url;
 
   if (!href) return null;
 
@@ -49,8 +51,8 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   if (appearance === "inline") {
     return (
       <Link className={cn(className)} href={href || url || ""} {...newTabProps}>
-        {label && label}
-        {children && children}
+        {label}
+        {children}
       </Link>
     );
   }
@@ -58,8 +60,8 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
   return (
     <Button asChild className={className} size={size} variant={appearance}>
       <Link className={cn(className)} href={href || url || ""} {...newTabProps}>
-        {label && label}
-        {children && children}
+        {label}
+        {children}
       </Link>
     </Button>
   );

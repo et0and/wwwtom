@@ -21,6 +21,7 @@ import type {
 import { BannerBlock } from "@/blocks/Banner/Component";
 import { CallToActionBlock } from "@/blocks/CallToAction/Component";
 import { cn } from "@/utilities/ui";
+import { isPopulated } from "@/utilities/isPopulated";
 
 type NodeTypes =
   | DefaultNodeTypes
@@ -28,7 +29,7 @@ type NodeTypes =
 
 const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
   const { value, relationTo } = linkNode.fields.doc!;
-  if (typeof value === "number") {
+  if (!isPopulated(value)) {
     throw new Error(
       "Internal link document is not populated — ensure rich text is fetched with sufficient depth to resolve link targets",
     );

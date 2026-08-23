@@ -2,6 +2,7 @@ import { SideBySide } from "../../../components/SideBySide";
 import Link from "next/link";
 import { siteNav } from "../site-config";
 import { getPublishedPostsPage } from "./post-data";
+import { isPopulated } from "../../../utilities/isPopulated";
 
 interface PostsPageProps {
   searchParams: Promise<{
@@ -50,10 +51,8 @@ export default async function PostsPage(props: PostsPageProps) {
                   </Link>
                   {post.excerpt && <p className="mt-2 text-gray-600">{post.excerpt}</p>}
                   <div className="mt-3 flex flex-wrap gap-3 text-sm text-gray-500">
-                    {post.author && typeof post.author !== "number" && (
-                      <span>By {post.author.name}</span>
-                    )}
-                    {post.category && typeof post.category !== "number" && (
+                    {post.author && isPopulated(post.author) && <span>By {post.author.name}</span>}
+                    {post.category && isPopulated(post.category) && (
                       <span>
                         <Link
                           href={`/posts?category=${post.category.slug}`}

@@ -10,6 +10,7 @@ import type { DefaultTypedEditorState } from "@payloadcms/richtext-lexical";
 
 import { fields } from "./fields";
 import { getClientSideURL } from "@/utilities/getURL";
+import { firstErrorMessage } from "@/utilities/firstErrorMessage";
 
 export type FormBlockType = {
   blockName?: string;
@@ -79,17 +80,7 @@ export const FormBlock: React.FC<
           clearTimeout(loadingTimerID);
 
           if (req.status >= 400) {
-            const message =
-              typeof res === "object" &&
-              res !== null &&
-              "errors" in res &&
-              Array.isArray(res.errors) &&
-              typeof res.errors[0] === "object" &&
-              res.errors[0] !== null &&
-              "message" in res.errors[0] &&
-              typeof res.errors[0].message === "string"
-                ? res.errors[0].message
-                : "Internal Server Error";
+            const message = firstErrorMessage(res);
 
             setIsLoading(false);
 

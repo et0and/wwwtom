@@ -4,6 +4,7 @@ import type { Page, Post } from "@/payload-types";
 import { getCachedDocument } from "@/utilities/getDocument";
 import { getCachedRedirects } from "@/utilities/getRedirects";
 import { notFound, redirect } from "next/navigation";
+import { isPopulated } from "@/utilities/isPopulated";
 
 interface Props {
   disableNotFound?: boolean;
@@ -21,21 +22,19 @@ export const PayloadRedirects: React.FC<Props> = async ({ disableNotFound, url }
       redirect(redirectItem.to.url);
     }
 
+    const reference = redirectItem.to?.reference;
+
     let redirectUrl: string;
 
-    if (typeof redirectItem.to?.reference?.value === "string") {
-      const collection = redirectItem.to?.reference?.relationTo;
-      const id = redirectItem.to?.reference?.value;
-
-      const document = (await getCachedDocument(collection, id)()) as Page | Post;
-      redirectUrl = `${redirectItem.to?.reference?.relationTo !== "pages" ? `/${redirectItem.to?.reference?.relationTo}` : ""}/${
-        document?.slug
-      }`;
+    if (reference && !isPopulated<Page | Post>(reference.value)) {
+      const document = (await getCachedDocument(
+        reference.relationTo,
+        String(reference.value),
+      )()) as Page | Post;
+      redirectUrl = `${reference.relationTo !== "pages" ? `/${reference.relationTo}` : ""}/${document?.slug}`;
     } else {
-      redirectUrl = `${redirectItem.to?.reference?.relationTo !== "pages" ? `/${redirectItem.to?.reference?.relationTo}` : ""}/${
-        typeof redirectItem.to?.reference?.value === "object"
-          ? redirectItem.to?.reference?.value?.slug
-          : ""
+      redirectUrl = `${reference?.relationTo !== "pages" ? `/${reference?.relationTo}` : ""}/${
+        reference && isPopulated(reference.value) ? reference.value.slug : ""
       }`;
     }
 

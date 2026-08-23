@@ -7,6 +7,7 @@ import type { Page } from "@/payload-types";
 import { CMSLink } from "@/components/Link";
 import { Media } from "@/components/Media";
 import RichText from "@/components/RichText";
+import { isPopulated } from "@/utilities/isPopulated";
 
 export const HighImpactHero: React.FC<Page["hero"]> = ({ links, media, richText }) => {
   const { setHeaderTheme } = useHeaderTheme();
@@ -37,7 +38,7 @@ export const HighImpactHero: React.FC<Page["hero"]> = ({ links, media, richText 
         </div>
       </div>
       <div className="min-h-[80vh] select-none">
-        {media && typeof media === "object" && (
+        {media && isPopulated(media) && (
           <Media fill imgClassName="-z-10 object-cover" priority resource={media} />
         )}
       </div>
