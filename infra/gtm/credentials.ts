@@ -1,13 +1,13 @@
 import * as Context from "effect/Context";
-import * as Data from "effect/Data";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import { Schema } from "effect";
 
-export class CredentialsError extends Data.TaggedError("CredentialsError")<{
-  message: string;
-  cause?: unknown;
-}> {}
+export class CredentialsError extends Schema.TaggedError<CredentialsError>()("CredentialsError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}
 
 export type GtmCredentialsValue = {
   clientId: string;

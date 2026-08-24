@@ -8,23 +8,23 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { GtmHttp } from "./http.ts";
 import { augmentNotes, buildMarker, isOwnedMarker, stripMarker } from "./ownership.ts";
-import type { Workspace as WorkspaceSchema } from "./schemas.ts";
+import type { Workspace as WorkspaceSchema, WorkspaceDraft } from "./schemas.ts";
 
 export type WorkspaceProps = {
-  containerPath: string;
-  name: string;
-  description?: string;
+  readonly containerPath: string;
+  readonly name: string;
+  readonly description?: string;
 };
 
 export type WorkspaceAttributes = {
-  accountId: string;
-  containerId: string;
-  workspaceId: string;
-  path: string;
-  name: string;
-  description: string;
-  fingerprint: string;
-  tagManagerUrl: string;
+  readonly accountId: string;
+  readonly containerId: string;
+  readonly workspaceId: string;
+  readonly path: string;
+  readonly name: string;
+  readonly description: string;
+  readonly fingerprint: string;
+  readonly tagManagerUrl: string;
 };
 
 export interface Workspace extends Resource<"Gtm.Workspace", WorkspaceProps, WorkspaceAttributes> {}
@@ -33,16 +33,13 @@ export const Workspace = Resource<Workspace>("Gtm.Workspace");
 
 const parentOf = (path: string): string => path.split("/workspaces/")[0] ?? "";
 
-const toAttrs = (w: WorkspaceSchema, descWithoutMarker: string): WorkspaceAttributes => ({
-  accountId: w.accountId,
-  containerId: w.containerId,
-  workspaceId: w.workspaceId,
-  path: w.path,
-  name: w.name,
-  description: descWithoutMarker,
-  fingerprint: w.fingerprint ?? "",
-  tagManagerUrl: w.tagManagerUrl ?? "",
-});
+const toAttrs = (w: WorkspaceSchema, descWithoutMarker: string): WorkspaceAttributes =>
+  ({
+    ...w,
+    description: descWithoutMarker,
+    fingerprint: w.fingerprint ?? "",
+    tagManagerUrl: w.tagManagerUrl ?? "",
+  }) as WorkspaceAttributes;
 
 export const WorkspaceProvider = () =>
   Provider.effect(
@@ -72,12 +69,9 @@ export const WorkspaceProvider = () =>
               return { action: "replace" } as const;
             }
 
-            if (output && news.name !== output.name) {
-              return { action: "update" } as const;
-            }
-
             const oldDesc = output ? stripMarker(output.description) : (o.description ?? "");
-            if (oldDesc !== (news.description ?? "")) {
+            const oldName = output?.name ?? o.name;
+            if (oldDesc !== (news.description ?? "") || oldName !== news.name) {
               return { action: "update" } as const;
             }
             return undefined;
@@ -105,16 +99,19 @@ export const WorkspaceProvider = () =>
             news.description,
             buildMarker(stack.name, stage, id),
           );
+          const { containerPath, ...rest } = news;
+          const draft: WorkspaceDraft = {
+            ...rest,
+            description: desiredDescription,
+            name: news.name,
+          };
 
-          const observed = yield* findByName(news.containerPath, news.name).pipe(
+          const observed = yield* findByName(containerPath, news.name).pipe(
             Effect.catchTag("NotFound", () => Effect.void),
           );
 
           if (!observed) {
-            const created = yield* http.createWorkspace(news.containerPath, {
-              name: news.name,
-              description: desiredDescription,
-            });
+            const created = yield* http.createWorkspace(containerPath, draft);
             return toAttrs(created, stripMarker(created.description));
           }
 
@@ -128,11 +125,7 @@ export const WorkspaceProvider = () =>
             return toAttrs(observed, observedDescStripped);
           }
 
-          const updateBody: Partial<WorkspaceSchema> = {
-            name: news.name,
-            description: desiredDescription,
-          };
-          if (observed.fingerprint !== undefined) updateBody.fingerprint = observed.fingerprint;
+          const updateBody: WorkspaceDraft = { ...draft, fingerprint: observed.fingerprint };
           const updated = yield* http.updateWorkspace(observed.path, updateBody);
           return toAttrs(updated, stripMarker(updated.description));
         }),

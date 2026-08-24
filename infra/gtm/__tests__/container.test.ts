@@ -8,7 +8,7 @@ import {
   type ContainerAttributes,
   type ContainerProps,
 } from "../container.ts";
-import { makeFakeState } from "../http.ts";
+import { makeFakeState } from "../fake.ts";
 import { findGtmProvider, makeTestLayer, testSession } from "./driver.ts";
 
 const withProvider = (state: ReturnType<typeof makeFakeState>) =>

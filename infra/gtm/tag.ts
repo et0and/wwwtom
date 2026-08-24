@@ -8,58 +8,52 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { GtmHttp } from "./http.ts";
 import { augmentNotes, buildMarker, isOwnedMarker, stripMarker } from "./ownership.ts";
-import type {
-  ConsentSettings,
-  Parameter,
-  SetupTag,
-  Tag as TagSchema,
-  TeardownTag,
-} from "./schemas.ts";
+import type { Tag as TagSchema, TagDraft } from "./schemas.ts";
 
 export type TagProps = {
-  workspacePath: string;
-  name: string;
-  type: string;
-  parameter?: Parameter[];
-  firingTriggerId?: string[];
-  blockingTriggerId?: string[];
-  setupTag?: SetupTag[];
-  teardownTag?: TeardownTag[];
-  parentFolderId?: string;
-  tagFiringOption?: "oncePerEvent" | "oncePerLoad" | "unlimited" | "tagFiringOptionUnspecified";
-  paused?: boolean;
-  notes?: string;
-  scheduleStartMs?: string;
-  scheduleEndMs?: string;
-  liveOnly?: boolean;
-  priority?: Parameter;
-  consentSettings?: ConsentSettings;
+  readonly workspacePath: string;
+  readonly name: string;
+  readonly type: string;
+  readonly parameter?: TagDraft["parameter"];
+  readonly firingTriggerId?: readonly string[];
+  readonly blockingTriggerId?: readonly string[];
+  readonly setupTag?: TagDraft["setupTag"];
+  readonly teardownTag?: TagDraft["teardownTag"];
+  readonly parentFolderId?: string;
+  readonly tagFiringOption?: TagDraft["tagFiringOption"];
+  readonly paused?: boolean;
+  readonly notes?: string;
+  readonly scheduleStartMs?: string;
+  readonly scheduleEndMs?: string;
+  readonly liveOnly?: boolean;
+  readonly priority?: TagDraft["priority"];
+  readonly consentSettings?: TagDraft["consentSettings"];
 };
 
 export type TagAttributes = {
-  accountId: string;
-  containerId: string;
-  workspaceId: string;
-  tagId: string;
-  path: string;
-  name: string;
-  type: string;
-  parameter?: Parameter[];
-  firingTriggerId?: string[];
-  blockingTriggerId?: string[];
-  setupTag?: SetupTag[];
-  teardownTag?: TeardownTag[];
-  parentFolderId?: string;
-  tagFiringOption?: TagProps["tagFiringOption"];
-  paused?: boolean;
-  notes: string;
-  scheduleStartMs?: string;
-  scheduleEndMs?: string;
-  liveOnly?: boolean;
-  priority?: Parameter;
-  consentSettings?: ConsentSettings;
-  fingerprint: string;
-  tagManagerUrl: string;
+  readonly accountId: string;
+  readonly containerId: string;
+  readonly workspaceId: string;
+  readonly tagId: string;
+  readonly path: string;
+  readonly name: string;
+  readonly type: string;
+  readonly parameter?: TagDraft["parameter"];
+  readonly firingTriggerId?: readonly string[];
+  readonly blockingTriggerId?: readonly string[];
+  readonly setupTag?: TagDraft["setupTag"];
+  readonly teardownTag?: TagDraft["teardownTag"];
+  readonly parentFolderId?: string;
+  readonly tagFiringOption?: TagProps["tagFiringOption"];
+  readonly paused?: boolean;
+  readonly notes: string;
+  readonly scheduleStartMs?: string;
+  readonly scheduleEndMs?: string;
+  readonly liveOnly?: boolean;
+  readonly priority?: TagDraft["priority"];
+  readonly consentSettings?: TagDraft["consentSettings"];
+  readonly fingerprint: string;
+  readonly tagManagerUrl: string;
 };
 
 export interface Tag extends Resource<"Gtm.Tag", TagProps, TagAttributes> {}
@@ -68,51 +62,13 @@ export const Tag = Resource<Tag>("Gtm.Tag");
 
 const parentOf = (path: string): string => path.split("/tags/")[0] ?? "";
 
-const toAttrs = (t: TagSchema, notesWithoutMarker: string): TagAttributes => {
-  const attrs: TagAttributes = {
-    accountId: t.accountId,
-    containerId: t.containerId,
-    workspaceId: t.workspaceId,
-    tagId: t.tagId,
-    path: t.path,
-    name: t.name,
-    type: t.type,
+const toAttrs = (t: TagSchema, notesWithoutMarker: string): TagAttributes =>
+  ({
+    ...t,
     notes: notesWithoutMarker,
     fingerprint: t.fingerprint ?? "",
     tagManagerUrl: t.tagManagerUrl ?? "",
-  };
-  if (t.parameter !== undefined) attrs.parameter = t.parameter;
-  if (t.firingTriggerId !== undefined) attrs.firingTriggerId = t.firingTriggerId;
-  if (t.blockingTriggerId !== undefined) attrs.blockingTriggerId = t.blockingTriggerId;
-  if (t.setupTag !== undefined) attrs.setupTag = t.setupTag;
-  if (t.teardownTag !== undefined) attrs.teardownTag = t.teardownTag;
-  if (t.parentFolderId !== undefined) attrs.parentFolderId = t.parentFolderId;
-  if (t.tagFiringOption !== undefined) attrs.tagFiringOption = t.tagFiringOption;
-  if (t.paused !== undefined) attrs.paused = t.paused;
-  if (t.scheduleStartMs !== undefined) attrs.scheduleStartMs = t.scheduleStartMs;
-  if (t.scheduleEndMs !== undefined) attrs.scheduleEndMs = t.scheduleEndMs;
-  if (t.liveOnly !== undefined) attrs.liveOnly = t.liveOnly;
-  if (t.priority !== undefined) attrs.priority = t.priority;
-  if (t.consentSettings !== undefined) attrs.consentSettings = t.consentSettings;
-  return attrs;
-};
-
-const withOptionalProps = (body: Partial<TagSchema>, props: TagProps): Partial<TagSchema> => {
-  if (props.parameter !== undefined) body.parameter = props.parameter;
-  if (props.firingTriggerId !== undefined) body.firingTriggerId = props.firingTriggerId;
-  if (props.blockingTriggerId !== undefined) body.blockingTriggerId = props.blockingTriggerId;
-  if (props.setupTag !== undefined) body.setupTag = props.setupTag;
-  if (props.teardownTag !== undefined) body.teardownTag = props.teardownTag;
-  if (props.parentFolderId !== undefined) body.parentFolderId = props.parentFolderId;
-  if (props.tagFiringOption !== undefined) body.tagFiringOption = props.tagFiringOption;
-  if (props.paused !== undefined) body.paused = props.paused;
-  if (props.scheduleStartMs !== undefined) body.scheduleStartMs = props.scheduleStartMs;
-  if (props.scheduleEndMs !== undefined) body.scheduleEndMs = props.scheduleEndMs;
-  if (props.liveOnly !== undefined) body.liveOnly = props.liveOnly;
-  if (props.priority !== undefined) body.priority = props.priority;
-  if (props.consentSettings !== undefined) body.consentSettings = props.consentSettings;
-  return body;
-};
+  }) as TagAttributes;
 
 export const TagProvider = () =>
   Provider.effect(
@@ -142,37 +98,43 @@ export const TagProvider = () =>
               return { action: "replace" } as const;
             }
 
-            const oldNotes = output ? stripMarker(output.notes) : (o.notes ?? "");
-            if (oldNotes !== (news.notes ?? "")) return { action: "update" } as const;
-            if (output && news.name !== output.name) return { action: "update" } as const;
-            if (output && news.type !== output.type) return { action: "update" } as const;
-            if (!deepEqual(o.parameter ?? output?.parameter, news.parameter))
-              return { action: "update" } as const;
-            if (!deepEqual(o.firingTriggerId ?? output?.firingTriggerId, news.firingTriggerId))
-              return { action: "update" } as const;
-            if (
-              !deepEqual(o.blockingTriggerId ?? output?.blockingTriggerId, news.blockingTriggerId)
-            )
-              return { action: "update" } as const;
-            if (!deepEqual(o.setupTag ?? output?.setupTag, news.setupTag))
-              return { action: "update" } as const;
-            if (!deepEqual(o.teardownTag ?? output?.teardownTag, news.teardownTag))
-              return { action: "update" } as const;
-            if ((o.parentFolderId ?? output?.parentFolderId) !== news.parentFolderId)
-              return { action: "update" } as const;
-            if ((o.tagFiringOption ?? output?.tagFiringOption) !== news.tagFiringOption)
-              return { action: "update" } as const;
-            if ((o.paused ?? output?.paused) !== news.paused) return { action: "update" } as const;
-            if ((o.scheduleStartMs ?? output?.scheduleStartMs) !== news.scheduleStartMs)
-              return { action: "update" } as const;
-            if ((o.scheduleEndMs ?? output?.scheduleEndMs) !== news.scheduleEndMs)
-              return { action: "update" } as const;
-            if ((o.liveOnly ?? output?.liveOnly) !== news.liveOnly)
-              return { action: "update" } as const;
-            if (!deepEqual(o.priority ?? output?.priority, news.priority))
-              return { action: "update" } as const;
-            if (!deepEqual(o.consentSettings ?? output?.consentSettings, news.consentSettings))
-              return { action: "update" } as const;
+            const oldComparable = {
+              notes: output ? stripMarker(output.notes) : (o.notes ?? ""),
+              name: output?.name ?? o.name,
+              type: output?.type ?? o.type,
+              parameter: o.parameter ?? output?.parameter,
+              firingTriggerId: o.firingTriggerId ?? output?.firingTriggerId,
+              blockingTriggerId: o.blockingTriggerId ?? output?.blockingTriggerId,
+              setupTag: o.setupTag ?? output?.setupTag,
+              teardownTag: o.teardownTag ?? output?.teardownTag,
+              parentFolderId: o.parentFolderId ?? output?.parentFolderId,
+              tagFiringOption: o.tagFiringOption ?? output?.tagFiringOption,
+              paused: o.paused ?? output?.paused,
+              scheduleStartMs: o.scheduleStartMs ?? output?.scheduleStartMs,
+              scheduleEndMs: o.scheduleEndMs ?? output?.scheduleEndMs,
+              liveOnly: o.liveOnly ?? output?.liveOnly,
+              priority: o.priority ?? output?.priority,
+              consentSettings: o.consentSettings ?? output?.consentSettings,
+            };
+            const newComparable = {
+              notes: news.notes ?? "",
+              name: news.name,
+              type: news.type,
+              parameter: news.parameter,
+              firingTriggerId: news.firingTriggerId,
+              blockingTriggerId: news.blockingTriggerId,
+              setupTag: news.setupTag,
+              teardownTag: news.teardownTag,
+              parentFolderId: news.parentFolderId,
+              tagFiringOption: news.tagFiringOption,
+              paused: news.paused,
+              scheduleStartMs: news.scheduleStartMs,
+              scheduleEndMs: news.scheduleEndMs,
+              liveOnly: news.liveOnly,
+              priority: news.priority,
+              consentSettings: news.consentSettings,
+            };
+            if (!deepEqual(oldComparable, newComparable)) return { action: "update" } as const;
             return undefined;
           }),
 
@@ -193,16 +155,15 @@ export const TagProvider = () =>
 
         reconcile: Effect.fn(function* ({ id, news }) {
           const desiredNotes = augmentNotes(news.notes, buildMarker(stack.name, stage, id));
+          const { workspacePath, ...rest } = news;
+          const draft: TagDraft = { ...rest, notes: desiredNotes };
 
-          const observed = yield* findByName(news.workspacePath, news.name).pipe(
+          const observed = yield* findByName(workspacePath, news.name).pipe(
             Effect.catchTag("NotFound", () => Effect.void),
           );
 
           if (!observed) {
-            const created = yield* http.createTag(
-              news.workspacePath,
-              withOptionalProps({ name: news.name, type: news.type, notes: desiredNotes }, news),
-            );
+            const created = yield* http.createTag(workspacePath, draft);
             return toAttrs(created, stripMarker(created.notes));
           }
 
@@ -230,11 +191,7 @@ export const TagProvider = () =>
             return toAttrs(observed, observedNotesStripped);
           }
 
-          const updateBody = withOptionalProps(
-            { name: news.name, type: news.type, notes: desiredNotes },
-            news,
-          );
-          if (observed.fingerprint !== undefined) updateBody.fingerprint = observed.fingerprint;
+          const updateBody: TagDraft = { ...draft, fingerprint: observed.fingerprint };
           const updated = yield* http.updateTag(observed.path, updateBody);
           return toAttrs(updated, stripMarker(updated.notes));
         }),

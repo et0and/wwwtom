@@ -5,7 +5,7 @@ import type { ResourceClass, ResourceClassLike, ResourceLike } from "alchemy/Res
 import { Stack } from "alchemy/Stack";
 import type { StackSpec } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { makeFakeGtmHttpLayer, makeFakeState, type FakeState } from "../http.ts";
+import { makeFakeGtmHttpLayer, makeFakeState, type FakeState } from "../fake.ts";
 
 const testStack: Omit<StackSpec, "output"> = {
   name: "wwwtom-gtm",

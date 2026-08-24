@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import { Unowned } from "alchemy/AdoptPolicy";
 import { Tag, TagProvider, type TagProps } from "../tag.ts";
 import { Trigger, TriggerProvider, type TriggerProps } from "../trigger.ts";
-import { makeFakeState } from "../http.ts";
+import { makeFakeState } from "../fake.ts";
 import { findGtmProvider, makeTestLayer, testSession } from "./driver.ts";
 
 const withTagProvider = (state: ReturnType<typeof makeFakeState>) =>

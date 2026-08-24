@@ -8,70 +8,70 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { GtmHttp } from "./http.ts";
 import { augmentNotes, buildMarker, isOwnedMarker, stripMarker } from "./ownership.ts";
-import type { Condition, Parameter, Trigger as TriggerSchema } from "./schemas.ts";
+import type { Trigger as TriggerSchema, TriggerDraft } from "./schemas.ts";
 
 export type TriggerProps = {
-  workspacePath: string;
-  name: string;
-  type: string;
-  parameter?: Parameter[];
-  filter?: Condition[];
-  customEventFilter?: Condition[];
-  autoEventFilter?: Condition[];
-  parentFolderId?: string;
-  notes?: string;
-  waitForTags?: Parameter;
-  checkValidation?: Parameter;
-  waitForTagsTimeout?: Parameter;
-  uniqueTriggerId?: Parameter;
-  eventName?: Parameter;
-  interval?: Parameter;
-  limit?: Parameter;
-  selector?: Parameter;
-  intervalSeconds?: Parameter;
-  maxTimerLengthSeconds?: Parameter;
-  verticalScrollPercentageList?: Parameter;
-  horizontalScrollPercentageList?: Parameter;
-  visibilitySelector?: Parameter;
-  visiblePercentageMin?: Parameter;
-  visiblePercentageMax?: Parameter;
-  continuousTimeMinMilliseconds?: Parameter;
-  totalTimeMinMilliseconds?: Parameter;
+  readonly workspacePath: string;
+  readonly name: string;
+  readonly type: string;
+  readonly parameter?: TriggerDraft["parameter"];
+  readonly filter?: TriggerDraft["filter"];
+  readonly customEventFilter?: TriggerDraft["customEventFilter"];
+  readonly autoEventFilter?: TriggerDraft["autoEventFilter"];
+  readonly parentFolderId?: string;
+  readonly notes?: string;
+  readonly waitForTags?: TriggerDraft["waitForTags"];
+  readonly checkValidation?: TriggerDraft["checkValidation"];
+  readonly waitForTagsTimeout?: TriggerDraft["waitForTagsTimeout"];
+  readonly uniqueTriggerId?: TriggerDraft["uniqueTriggerId"];
+  readonly eventName?: TriggerDraft["eventName"];
+  readonly interval?: TriggerDraft["interval"];
+  readonly limit?: TriggerDraft["limit"];
+  readonly selector?: TriggerDraft["selector"];
+  readonly intervalSeconds?: TriggerDraft["intervalSeconds"];
+  readonly maxTimerLengthSeconds?: TriggerDraft["maxTimerLengthSeconds"];
+  readonly verticalScrollPercentageList?: TriggerDraft["verticalScrollPercentageList"];
+  readonly horizontalScrollPercentageList?: TriggerDraft["horizontalScrollPercentageList"];
+  readonly visibilitySelector?: TriggerDraft["visibilitySelector"];
+  readonly visiblePercentageMin?: TriggerDraft["visiblePercentageMin"];
+  readonly visiblePercentageMax?: TriggerDraft["visiblePercentageMax"];
+  readonly continuousTimeMinMilliseconds?: TriggerDraft["continuousTimeMinMilliseconds"];
+  readonly totalTimeMinMilliseconds?: TriggerDraft["totalTimeMinMilliseconds"];
 };
 
 export type TriggerAttributes = {
-  accountId: string;
-  containerId: string;
-  workspaceId: string;
-  triggerId: string;
-  path: string;
-  name: string;
-  type: string;
-  parameter?: Parameter[];
-  filter?: Condition[];
-  customEventFilter?: Condition[];
-  autoEventFilter?: Condition[];
-  parentFolderId?: string;
-  notes: string;
-  fingerprint: string;
-  tagManagerUrl: string;
-  waitForTags?: Parameter;
-  checkValidation?: Parameter;
-  waitForTagsTimeout?: Parameter;
-  uniqueTriggerId?: Parameter;
-  eventName?: Parameter;
-  interval?: Parameter;
-  limit?: Parameter;
-  selector?: Parameter;
-  intervalSeconds?: Parameter;
-  maxTimerLengthSeconds?: Parameter;
-  verticalScrollPercentageList?: Parameter;
-  horizontalScrollPercentageList?: Parameter;
-  visibilitySelector?: Parameter;
-  visiblePercentageMin?: Parameter;
-  visiblePercentageMax?: Parameter;
-  continuousTimeMinMilliseconds?: Parameter;
-  totalTimeMinMilliseconds?: Parameter;
+  readonly accountId: string;
+  readonly containerId: string;
+  readonly workspaceId: string;
+  readonly triggerId: string;
+  readonly path: string;
+  readonly name: string;
+  readonly type: string;
+  readonly parameter?: TriggerDraft["parameter"];
+  readonly filter?: TriggerDraft["filter"];
+  readonly customEventFilter?: TriggerDraft["customEventFilter"];
+  readonly autoEventFilter?: TriggerDraft["autoEventFilter"];
+  readonly parentFolderId?: string;
+  readonly notes: string;
+  readonly fingerprint: string;
+  readonly tagManagerUrl: string;
+  readonly waitForTags?: TriggerDraft["waitForTags"];
+  readonly checkValidation?: TriggerDraft["checkValidation"];
+  readonly waitForTagsTimeout?: TriggerDraft["waitForTagsTimeout"];
+  readonly uniqueTriggerId?: TriggerDraft["uniqueTriggerId"];
+  readonly eventName?: TriggerDraft["eventName"];
+  readonly interval?: TriggerDraft["interval"];
+  readonly limit?: TriggerDraft["limit"];
+  readonly selector?: TriggerDraft["selector"];
+  readonly intervalSeconds?: TriggerDraft["intervalSeconds"];
+  readonly maxTimerLengthSeconds?: TriggerDraft["maxTimerLengthSeconds"];
+  readonly verticalScrollPercentageList?: TriggerDraft["verticalScrollPercentageList"];
+  readonly horizontalScrollPercentageList?: TriggerDraft["horizontalScrollPercentageList"];
+  readonly visibilitySelector?: TriggerDraft["visibilitySelector"];
+  readonly visiblePercentageMin?: TriggerDraft["visiblePercentageMin"];
+  readonly visiblePercentageMax?: TriggerDraft["visiblePercentageMax"];
+  readonly continuousTimeMinMilliseconds?: TriggerDraft["continuousTimeMinMilliseconds"];
+  readonly totalTimeMinMilliseconds?: TriggerDraft["totalTimeMinMilliseconds"];
 };
 
 export interface Trigger extends Resource<"Gtm.Trigger", TriggerProps, TriggerAttributes> {}
@@ -80,83 +80,13 @@ export const Trigger = Resource<Trigger>("Gtm.Trigger");
 
 const parentOf = (path: string): string => path.split("/triggers/")[0] ?? "";
 
-const toAttrs = (t: TriggerSchema, notesWithoutMarker: string): TriggerAttributes => {
-  const attrs: TriggerAttributes = {
-    accountId: t.accountId,
-    containerId: t.containerId,
-    workspaceId: t.workspaceId,
-    triggerId: t.triggerId,
-    path: t.path,
-    name: t.name,
-    type: t.type,
+const toAttrs = (t: TriggerSchema, notesWithoutMarker: string): TriggerAttributes =>
+  ({
+    ...t,
     notes: notesWithoutMarker,
     fingerprint: t.fingerprint ?? "",
     tagManagerUrl: t.tagManagerUrl ?? "",
-  };
-  if (t.parameter !== undefined) attrs.parameter = t.parameter;
-  if (t.filter !== undefined) attrs.filter = t.filter;
-  if (t.customEventFilter !== undefined) attrs.customEventFilter = t.customEventFilter;
-  if (t.autoEventFilter !== undefined) attrs.autoEventFilter = t.autoEventFilter;
-  if (t.parentFolderId !== undefined) attrs.parentFolderId = t.parentFolderId;
-  if (t.waitForTags !== undefined) attrs.waitForTags = t.waitForTags;
-  if (t.checkValidation !== undefined) attrs.checkValidation = t.checkValidation;
-  if (t.waitForTagsTimeout !== undefined) attrs.waitForTagsTimeout = t.waitForTagsTimeout;
-  if (t.uniqueTriggerId !== undefined) attrs.uniqueTriggerId = t.uniqueTriggerId;
-  if (t.eventName !== undefined) attrs.eventName = t.eventName;
-  if (t.interval !== undefined) attrs.interval = t.interval;
-  if (t.limit !== undefined) attrs.limit = t.limit;
-  if (t.selector !== undefined) attrs.selector = t.selector;
-  if (t.intervalSeconds !== undefined) attrs.intervalSeconds = t.intervalSeconds;
-  if (t.maxTimerLengthSeconds !== undefined) attrs.maxTimerLengthSeconds = t.maxTimerLengthSeconds;
-  if (t.verticalScrollPercentageList !== undefined)
-    attrs.verticalScrollPercentageList = t.verticalScrollPercentageList;
-  if (t.horizontalScrollPercentageList !== undefined)
-    attrs.horizontalScrollPercentageList = t.horizontalScrollPercentageList;
-  if (t.visibilitySelector !== undefined) attrs.visibilitySelector = t.visibilitySelector;
-  if (t.visiblePercentageMin !== undefined) attrs.visiblePercentageMin = t.visiblePercentageMin;
-  if (t.visiblePercentageMax !== undefined) attrs.visiblePercentageMax = t.visiblePercentageMax;
-  if (t.continuousTimeMinMilliseconds !== undefined)
-    attrs.continuousTimeMinMilliseconds = t.continuousTimeMinMilliseconds;
-  if (t.totalTimeMinMilliseconds !== undefined)
-    attrs.totalTimeMinMilliseconds = t.totalTimeMinMilliseconds;
-  return attrs;
-};
-
-const withOptionalProps = (
-  body: Partial<TriggerSchema>,
-  props: TriggerProps,
-): Partial<TriggerSchema> => {
-  if (props.parameter !== undefined) body.parameter = props.parameter;
-  if (props.filter !== undefined) body.filter = props.filter;
-  if (props.customEventFilter !== undefined) body.customEventFilter = props.customEventFilter;
-  if (props.autoEventFilter !== undefined) body.autoEventFilter = props.autoEventFilter;
-  if (props.parentFolderId !== undefined) body.parentFolderId = props.parentFolderId;
-  if (props.waitForTags !== undefined) body.waitForTags = props.waitForTags;
-  if (props.checkValidation !== undefined) body.checkValidation = props.checkValidation;
-  if (props.waitForTagsTimeout !== undefined) body.waitForTagsTimeout = props.waitForTagsTimeout;
-  if (props.uniqueTriggerId !== undefined) body.uniqueTriggerId = props.uniqueTriggerId;
-  if (props.eventName !== undefined) body.eventName = props.eventName;
-  if (props.interval !== undefined) body.interval = props.interval;
-  if (props.limit !== undefined) body.limit = props.limit;
-  if (props.selector !== undefined) body.selector = props.selector;
-  if (props.intervalSeconds !== undefined) body.intervalSeconds = props.intervalSeconds;
-  if (props.maxTimerLengthSeconds !== undefined)
-    body.maxTimerLengthSeconds = props.maxTimerLengthSeconds;
-  if (props.verticalScrollPercentageList !== undefined)
-    body.verticalScrollPercentageList = props.verticalScrollPercentageList;
-  if (props.horizontalScrollPercentageList !== undefined)
-    body.horizontalScrollPercentageList = props.horizontalScrollPercentageList;
-  if (props.visibilitySelector !== undefined) body.visibilitySelector = props.visibilitySelector;
-  if (props.visiblePercentageMin !== undefined)
-    body.visiblePercentageMin = props.visiblePercentageMin;
-  if (props.visiblePercentageMax !== undefined)
-    body.visiblePercentageMax = props.visiblePercentageMax;
-  if (props.continuousTimeMinMilliseconds !== undefined)
-    body.continuousTimeMinMilliseconds = props.continuousTimeMinMilliseconds;
-  if (props.totalTimeMinMilliseconds !== undefined)
-    body.totalTimeMinMilliseconds = props.totalTimeMinMilliseconds;
-  return body;
-};
+  }) as TriggerAttributes;
 
 export const TriggerProvider = () =>
   Provider.effect(
@@ -186,101 +116,65 @@ export const TriggerProvider = () =>
               return { action: "replace" } as const;
             }
 
-            const oldNotes = output ? stripMarker(output.notes) : (o.notes ?? "");
-            if (oldNotes !== (news.notes ?? "")) return { action: "update" } as const;
-            if (output && news.name !== output.name) return { action: "update" } as const;
-            if (output && news.type !== output.type) return { action: "update" } as const;
-            if (!deepEqual(o.parameter ?? output?.parameter, news.parameter))
-              return { action: "update" } as const;
-            if (!deepEqual(o.filter ?? output?.filter, news.filter))
-              return { action: "update" } as const;
-            if (
-              !deepEqual(o.customEventFilter ?? output?.customEventFilter, news.customEventFilter)
-            )
-              return { action: "update" } as const;
-            if (!deepEqual(o.autoEventFilter ?? output?.autoEventFilter, news.autoEventFilter))
-              return { action: "update" } as const;
-            if ((o.parentFolderId ?? output?.parentFolderId) !== news.parentFolderId)
-              return { action: "update" } as const;
-            if (!deepEqual(o.waitForTags ?? output?.waitForTags, news.waitForTags))
-              return { action: "update" } as const;
-            if (!deepEqual(o.checkValidation ?? output?.checkValidation, news.checkValidation))
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
-                o.waitForTagsTimeout ?? output?.waitForTagsTimeout,
-                news.waitForTagsTimeout,
-              )
-            )
-              return { action: "update" } as const;
-            if (!deepEqual(o.uniqueTriggerId ?? output?.uniqueTriggerId, news.uniqueTriggerId))
-              return { action: "update" } as const;
-            if (!deepEqual(o.eventName ?? output?.eventName, news.eventName))
-              return { action: "update" } as const;
-            if (!deepEqual(o.interval ?? output?.interval, news.interval))
-              return { action: "update" } as const;
-            if (!deepEqual(o.limit ?? output?.limit, news.limit))
-              return { action: "update" } as const;
-            if (!deepEqual(o.selector ?? output?.selector, news.selector))
-              return { action: "update" } as const;
-            if (!deepEqual(o.intervalSeconds ?? output?.intervalSeconds, news.intervalSeconds))
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
-                o.maxTimerLengthSeconds ?? output?.maxTimerLengthSeconds,
-                news.maxTimerLengthSeconds,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
+            const oldComparable = {
+              notes: output ? stripMarker(output.notes) : (o.notes ?? ""),
+              name: output?.name ?? o.name,
+              type: output?.type ?? o.type,
+              parameter: o.parameter ?? output?.parameter,
+              filter: o.filter ?? output?.filter,
+              customEventFilter: o.customEventFilter ?? output?.customEventFilter,
+              autoEventFilter: o.autoEventFilter ?? output?.autoEventFilter,
+              parentFolderId: o.parentFolderId ?? output?.parentFolderId,
+              waitForTags: o.waitForTags ?? output?.waitForTags,
+              checkValidation: o.checkValidation ?? output?.checkValidation,
+              waitForTagsTimeout: o.waitForTagsTimeout ?? output?.waitForTagsTimeout,
+              uniqueTriggerId: o.uniqueTriggerId ?? output?.uniqueTriggerId,
+              eventName: o.eventName ?? output?.eventName,
+              interval: o.interval ?? output?.interval,
+              limit: o.limit ?? output?.limit,
+              selector: o.selector ?? output?.selector,
+              intervalSeconds: o.intervalSeconds ?? output?.intervalSeconds,
+              maxTimerLengthSeconds: o.maxTimerLengthSeconds ?? output?.maxTimerLengthSeconds,
+              verticalScrollPercentageList:
                 o.verticalScrollPercentageList ?? output?.verticalScrollPercentageList,
-                news.verticalScrollPercentageList,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
+              horizontalScrollPercentageList:
                 o.horizontalScrollPercentageList ?? output?.horizontalScrollPercentageList,
-                news.horizontalScrollPercentageList,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
-                o.visibilitySelector ?? output?.visibilitySelector,
-                news.visibilitySelector,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
-                o.visiblePercentageMin ?? output?.visiblePercentageMin,
-                news.visiblePercentageMin,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
-                o.visiblePercentageMax ?? output?.visiblePercentageMax,
-                news.visiblePercentageMax,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
+              visibilitySelector: o.visibilitySelector ?? output?.visibilitySelector,
+              visiblePercentageMin: o.visiblePercentageMin ?? output?.visiblePercentageMin,
+              visiblePercentageMax: o.visiblePercentageMax ?? output?.visiblePercentageMax,
+              continuousTimeMinMilliseconds:
                 o.continuousTimeMinMilliseconds ?? output?.continuousTimeMinMilliseconds,
-                news.continuousTimeMinMilliseconds,
-              )
-            )
-              return { action: "update" } as const;
-            if (
-              !deepEqual(
+              totalTimeMinMilliseconds:
                 o.totalTimeMinMilliseconds ?? output?.totalTimeMinMilliseconds,
-                news.totalTimeMinMilliseconds,
-              )
-            )
-              return { action: "update" } as const;
+            };
+            const newComparable = {
+              notes: news.notes ?? "",
+              name: news.name,
+              type: news.type,
+              parameter: news.parameter,
+              filter: news.filter,
+              customEventFilter: news.customEventFilter,
+              autoEventFilter: news.autoEventFilter,
+              parentFolderId: news.parentFolderId,
+              waitForTags: news.waitForTags,
+              checkValidation: news.checkValidation,
+              waitForTagsTimeout: news.waitForTagsTimeout,
+              uniqueTriggerId: news.uniqueTriggerId,
+              eventName: news.eventName,
+              interval: news.interval,
+              limit: news.limit,
+              selector: news.selector,
+              intervalSeconds: news.intervalSeconds,
+              maxTimerLengthSeconds: news.maxTimerLengthSeconds,
+              verticalScrollPercentageList: news.verticalScrollPercentageList,
+              horizontalScrollPercentageList: news.horizontalScrollPercentageList,
+              visibilitySelector: news.visibilitySelector,
+              visiblePercentageMin: news.visiblePercentageMin,
+              visiblePercentageMax: news.visiblePercentageMax,
+              continuousTimeMinMilliseconds: news.continuousTimeMinMilliseconds,
+              totalTimeMinMilliseconds: news.totalTimeMinMilliseconds,
+            };
+            if (!deepEqual(oldComparable, newComparable)) return { action: "update" } as const;
             return undefined;
           }),
 
@@ -301,16 +195,15 @@ export const TriggerProvider = () =>
 
         reconcile: Effect.fn(function* ({ id, news }) {
           const desiredNotes = augmentNotes(news.notes, buildMarker(stack.name, stage, id));
+          const { workspacePath, ...rest } = news;
+          const draft: TriggerDraft = { ...rest, notes: desiredNotes };
 
-          const observed = yield* findByName(news.workspacePath, news.name).pipe(
+          const observed = yield* findByName(workspacePath, news.name).pipe(
             Effect.catchTag("NotFound", () => Effect.void),
           );
 
           if (!observed) {
-            const created = yield* http.createTrigger(
-              news.workspacePath,
-              withOptionalProps({ name: news.name, type: news.type, notes: desiredNotes }, news),
-            );
+            const created = yield* http.createTrigger(workspacePath, draft);
             return toAttrs(created, stripMarker(created.notes));
           }
 
@@ -353,11 +246,7 @@ export const TriggerProvider = () =>
             return toAttrs(observed, observedNotesStripped);
           }
 
-          const updateBody = withOptionalProps(
-            { name: news.name, type: news.type, notes: desiredNotes },
-            news,
-          );
-          if (observed.fingerprint !== undefined) updateBody.fingerprint = observed.fingerprint;
+          const updateBody: TriggerDraft = { ...draft, fingerprint: observed.fingerprint };
           const updated = yield* http.updateTrigger(observed.path, updateBody);
           return toAttrs(updated, stripMarker(updated.notes));
         }),

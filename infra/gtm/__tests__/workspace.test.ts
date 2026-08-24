@@ -3,7 +3,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { Unowned } from "alchemy/AdoptPolicy";
 import { Workspace, WorkspaceProvider, type WorkspaceProps } from "../workspace.ts";
-import { makeFakeState } from "../http.ts";
+import { makeFakeState } from "../fake.ts";
 import { findGtmProvider, makeTestLayer, testSession } from "./driver.ts";
 
 const withProvider = (state: ReturnType<typeof makeFakeState>) =>

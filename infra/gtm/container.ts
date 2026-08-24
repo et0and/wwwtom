@@ -8,30 +8,30 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { GtmHttp } from "./http.ts";
 import { augmentNotes, buildMarker, isOwnedMarker, stripMarker } from "./ownership.ts";
-import type { Container as ContainerSchema, ContainerFeatures } from "./schemas.ts";
+import type { Container as ContainerSchema, ContainerDraft } from "./schemas.ts";
 
 export type ContainerProps = {
-  accountPath: string;
-  name: string;
-  usageContext?: string[];
-  domainName?: string[];
-  notes?: string;
+  readonly accountPath: string;
+  readonly name: string;
+  readonly usageContext?: readonly string[];
+  readonly domainName?: readonly string[];
+  readonly notes?: string;
 };
 
 export type ContainerAttributes = {
-  accountId: string;
-  containerId: string;
-  path: string;
-  publicId: string;
-  name: string;
-  usageContext?: string[];
-  domainName?: string[];
-  notes: string;
-  fingerprint: string;
-  tagManagerUrl: string;
-  tagIds?: string[];
-  features?: ContainerFeatures;
-  taggingServerUrls?: string[];
+  readonly accountId: string;
+  readonly containerId: string;
+  readonly path: string;
+  readonly publicId: string;
+  readonly name: string;
+  readonly usageContext?: readonly string[];
+  readonly domainName?: readonly string[];
+  readonly notes: string;
+  readonly fingerprint: string;
+  readonly tagManagerUrl: string;
+  readonly tagIds?: readonly string[];
+  readonly features?: ContainerSchema["features"];
+  readonly taggingServerUrls?: readonly string[];
 };
 
 export interface Container extends Resource<"Gtm.Container", ContainerProps, ContainerAttributes> {}
@@ -40,33 +40,14 @@ export const Container = Resource<Container>("Gtm.Container");
 
 const parentOf = (path: string): string => path.split("/containers/")[0] ?? "";
 
-const toAttrs = (c: ContainerSchema, notesWithoutMarker: string): ContainerAttributes => {
-  const attrs: ContainerAttributes = {
-    accountId: c.accountId,
-    containerId: c.containerId,
-    path: c.path,
-    publicId: c.publicId ?? "",
-    name: c.name,
+const toAttrs = (c: ContainerSchema, notesWithoutMarker: string): ContainerAttributes =>
+  ({
+    ...c,
     notes: notesWithoutMarker,
+    publicId: c.publicId ?? "",
     fingerprint: c.fingerprint ?? "",
     tagManagerUrl: c.tagManagerUrl ?? "",
-  };
-  if (c.usageContext !== undefined) attrs.usageContext = c.usageContext;
-  if (c.domainName !== undefined) attrs.domainName = c.domainName;
-  if (c.tagIds !== undefined) attrs.tagIds = c.tagIds;
-  if (c.features !== undefined) attrs.features = c.features;
-  if (c.taggingServerUrls !== undefined) attrs.taggingServerUrls = c.taggingServerUrls;
-  return attrs;
-};
-
-const withOptionalProps = (
-  body: Partial<ContainerSchema>,
-  props: ContainerProps,
-): Partial<ContainerSchema> => {
-  if (props.usageContext !== undefined) body.usageContext = props.usageContext;
-  if (props.domainName !== undefined) body.domainName = props.domainName;
-  return body;
-};
+  }) as ContainerAttributes;
 
 export const ContainerProvider = () =>
   Provider.effect(
@@ -96,18 +77,19 @@ export const ContainerProvider = () =>
               return { action: "replace" } as const;
             }
 
-            if (output && news.name !== output.name) {
-              return { action: "update" } as const;
-            }
-
-            const oldNotesStripped = output ? stripMarker(output.notes) : (o.notes ?? "");
-            if (
-              oldNotesStripped !== (news.notes ?? "") ||
-              !deepEqual(o.usageContext ?? output?.usageContext, news.usageContext) ||
-              !deepEqual(o.domainName ?? output?.domainName, news.domainName)
-            ) {
-              return { action: "update" } as const;
-            }
+            const oldComparable = {
+              name: output?.name ?? o.name,
+              notes: output ? stripMarker(output.notes) : (o.notes ?? ""),
+              usageContext: o.usageContext ?? output?.usageContext,
+              domainName: o.domainName ?? output?.domainName,
+            };
+            const newComparable = {
+              name: news.name,
+              notes: news.notes ?? "",
+              usageContext: news.usageContext,
+              domainName: news.domainName,
+            };
+            if (!deepEqual(oldComparable, newComparable)) return { action: "update" } as const;
             return undefined;
           }),
 
@@ -128,16 +110,15 @@ export const ContainerProvider = () =>
 
         reconcile: Effect.fn(function* ({ id, news }) {
           const desiredNotes = augmentNotes(news.notes, buildMarker(stack.name, stage, id));
+          const { accountPath, ...rest } = news;
+          const draft: ContainerDraft = { ...rest, notes: desiredNotes, name: news.name };
 
-          const observed = yield* findByName(news.accountPath, news.name).pipe(
+          const observed = yield* findByName(accountPath, news.name).pipe(
             Effect.catchTag("NotFound", () => Effect.void),
           );
 
           if (!observed) {
-            const created = yield* http.createContainer(
-              news.accountPath,
-              withOptionalProps({ name: news.name, notes: desiredNotes }, news),
-            );
+            const created = yield* http.createContainer(accountPath, draft);
             return toAttrs(created, stripMarker(created.notes));
           }
 
@@ -153,8 +134,7 @@ export const ContainerProvider = () =>
             return toAttrs(observed, observedNotesStripped);
           }
 
-          const updateBody = withOptionalProps({ name: news.name, notes: desiredNotes }, news);
-          if (observed.fingerprint !== undefined) updateBody.fingerprint = observed.fingerprint;
+          const updateBody: ContainerDraft = { ...draft, fingerprint: observed.fingerprint };
           const updated = yield* http.updateContainer(observed.path, updateBody);
           return toAttrs(updated, stripMarker(updated.notes));
         }),

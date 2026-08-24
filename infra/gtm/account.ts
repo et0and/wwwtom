@@ -4,20 +4,20 @@ import { isResolved } from "alchemy/Diff";
 import { Resource } from "alchemy/Resource";
 import type { ResourceClassLike } from "alchemy/Resource";
 import { GtmHttp } from "./http.ts";
-import type { Account as AccountSchema, AccountFeatures } from "./schemas.ts";
+import type { Account as AccountSchema } from "./schemas.ts";
 
 export type AccountProps = {
-  path: string;
+  readonly path: string;
 };
 
 export type AccountAttributes = {
-  accountId: string;
-  path: string;
-  name: string;
-  tagManagerUrl: string;
-  fingerprint: string;
-  shareData?: boolean;
-  features?: AccountFeatures;
+  readonly accountId: string;
+  readonly path: string;
+  readonly name: string;
+  readonly tagManagerUrl: string;
+  readonly fingerprint: string;
+  readonly shareData?: boolean;
+  readonly features?: AccountSchema["features"];
 };
 
 export interface Account extends Resource<"Gtm.Account", AccountProps, AccountAttributes> {}
@@ -30,24 +30,15 @@ export const AccountProvider = () =>
     Effect.gen(function* () {
       const http = yield* GtmHttp;
 
-      const toAttrs = (acc: AccountSchema): AccountAttributes => {
-        const attrs: AccountAttributes = {
-          accountId: acc.accountId,
-          path: acc.path,
-          name: acc.name,
-          tagManagerUrl: acc.tagManagerUrl,
+      const toAttrs = (acc: AccountSchema): AccountAttributes =>
+        ({
+          ...acc,
           fingerprint: acc.fingerprint ?? "",
-        };
-        if (acc.shareData !== undefined) attrs.shareData = acc.shareData;
-        if (acc.features !== undefined) attrs.features = acc.features;
-        return attrs;
-      };
+        }) as AccountAttributes;
 
       return {
         list: () => Effect.succeed([] as AccountAttributes[]),
 
-        // Path is the only prop and it is immutable upstream: changing it
-        // means pointing at a different Google account, so replace.
         diff: ({ olds, news, output }) =>
           Effect.sync(() => {
             if (!isResolved(news)) return undefined;

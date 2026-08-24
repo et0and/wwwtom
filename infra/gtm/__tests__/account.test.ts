@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { Account, AccountProvider } from "../account.ts";
-import { makeFakeState } from "../http.ts";
+import { makeFakeState } from "../fake.ts";
 import { findGtmProvider, makeTestLayer, testSession } from "./driver.ts";
 
 const withProvider = (state: ReturnType<typeof makeFakeState>) =>
