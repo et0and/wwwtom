@@ -295,3 +295,172 @@ export const ListTriggersResponseSchema = Schema.Struct({
   nextPageToken: Schema.optional(Schema.String),
 });
 export type ListTriggersResponse = Schema.Schema.Type<typeof ListTriggersResponseSchema>;
+
+// Variables / Folders
+
+export const VariableFormatValueSchema = Schema.Struct({
+  caseConversionType: Schema.optional(Schema.Literals(["none", "lowercase", "uppercase"])),
+  convertNullToValue: Schema.optional(ParameterSchema),
+  convertUndefinedToValue: Schema.optional(ParameterSchema),
+  convertTrueToValue: Schema.optional(ParameterSchema),
+  convertFalseToValue: Schema.optional(ParameterSchema),
+  convertToBoolean: Schema.optional(Schema.Boolean),
+  convertToNumber: Schema.optional(
+    Schema.Literals(["decimalSeparatorTypeUnspecified", "period", "comma", "automatic"]),
+  ),
+});
+export type VariableFormatValue = Schema.Schema.Type<typeof VariableFormatValueSchema>;
+
+export const VariableSchema = Schema.Struct({
+  path: Schema.String,
+  accountId: Schema.String,
+  containerId: Schema.String,
+  workspaceId: Schema.String,
+  variableId: Schema.String,
+  name: Schema.String,
+  type: Schema.String,
+  parameter: Schema.optional(Schema.Array(ParameterSchema)),
+  fingerprint: Schema.optional(Schema.String),
+  parentFolderId: Schema.optional(Schema.String),
+  notes: Schema.optional(Schema.String),
+  tagManagerUrl: Schema.optional(Schema.String),
+  scheduleStartMs: Schema.optional(Schema.String),
+  scheduleEndMs: Schema.optional(Schema.String),
+  formatValue: Schema.optional(VariableFormatValueSchema),
+  enablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
+  disablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
+});
+export type Variable = Schema.Schema.Type<typeof VariableSchema>;
+
+export const VariableDraftSchema = Schema.Struct({
+  name: Schema.String,
+  type: Schema.String,
+  parameter: Schema.optional(Schema.Array(ParameterSchema)),
+  parentFolderId: Schema.optional(Schema.String),
+  notes: Schema.optional(Schema.String),
+  scheduleStartMs: Schema.optional(Schema.String),
+  scheduleEndMs: Schema.optional(Schema.String),
+  formatValue: Schema.optional(VariableFormatValueSchema),
+  enablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
+  disablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
+  fingerprint: Schema.optional(Schema.String),
+});
+export type VariableDraft = Schema.Schema.Type<typeof VariableDraftSchema>;
+
+export const ListVariablesResponseSchema = Schema.Struct({
+  variable: Schema.optional(Schema.Array(VariableSchema)),
+  nextPageToken: Schema.optional(Schema.String),
+});
+export type ListVariablesResponse = Schema.Schema.Type<typeof ListVariablesResponseSchema>;
+
+export const FolderSchema = Schema.Struct({
+  path: Schema.String,
+  accountId: Schema.String,
+  containerId: Schema.String,
+  workspaceId: Schema.String,
+  folderId: Schema.String,
+  name: Schema.String,
+  notes: Schema.optional(Schema.String),
+  fingerprint: Schema.optional(Schema.String),
+  tagManagerUrl: Schema.optional(Schema.String),
+});
+export type Folder = Schema.Schema.Type<typeof FolderSchema>;
+
+export const FolderDraftSchema = Schema.Struct({
+  name: Schema.String,
+  notes: Schema.optional(Schema.String),
+  fingerprint: Schema.optional(Schema.String),
+});
+export type FolderDraft = Schema.Schema.Type<typeof FolderDraftSchema>;
+
+export const ListFoldersResponseSchema = Schema.Struct({
+  folder: Schema.optional(Schema.Array(FolderSchema)),
+  nextPageToken: Schema.optional(Schema.String),
+});
+export type ListFoldersResponse = Schema.Schema.Type<typeof ListFoldersResponseSchema>;
+
+// Versions
+
+export const ContainerVersionHeaderSchema = Schema.Struct({
+  path: Schema.String,
+  accountId: Schema.String,
+  containerId: Schema.String,
+  containerVersionId: Schema.String,
+  name: Schema.optional(Schema.String),
+  deleted: Schema.optional(Schema.Boolean),
+  numTags: Schema.optional(Schema.String),
+  numTriggers: Schema.optional(Schema.String),
+  numVariables: Schema.optional(Schema.String),
+});
+export type ContainerVersionHeader = Schema.Schema.Type<typeof ContainerVersionHeaderSchema>;
+
+export const ContainerVersionSchema = Schema.Struct({
+  path: Schema.String,
+  accountId: Schema.String,
+  containerId: Schema.String,
+  containerVersionId: Schema.String,
+  name: Schema.optional(Schema.String),
+  description: Schema.optional(Schema.String),
+  fingerprint: Schema.optional(Schema.String),
+  tagManagerUrl: Schema.optional(Schema.String),
+  container: Schema.optional(ContainerSchema),
+  tag: Schema.optional(Schema.Array(TagSchema)),
+  trigger: Schema.optional(Schema.Array(TriggerSchema)),
+  variable: Schema.optional(Schema.Array(VariableSchema)),
+  folder: Schema.optional(Schema.Array(FolderSchema)),
+});
+export type ContainerVersion = Schema.Schema.Type<typeof ContainerVersionSchema>;
+
+export const CreateContainerVersionRequestVersionOptionsSchema = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  notes: Schema.optional(Schema.String),
+});
+export type CreateContainerVersionRequestVersionOptions = Schema.Schema.Type<
+  typeof CreateContainerVersionRequestVersionOptionsSchema
+>;
+
+export const CreateContainerVersionResponseSchema = Schema.Struct({
+  containerVersion: Schema.optional(ContainerVersionSchema),
+  compilerError: Schema.optional(Schema.Boolean),
+  syncStatus: Schema.optional(
+    Schema.Struct({
+      syncError: Schema.optional(Schema.Boolean),
+      mergeConflict: Schema.optional(Schema.Boolean),
+    }),
+  ),
+  newWorkspacePath: Schema.optional(Schema.String),
+});
+export type CreateContainerVersionResponse = Schema.Schema.Type<
+  typeof CreateContainerVersionResponseSchema
+>;
+
+export const GetWorkspaceStatusResponseSchema = Schema.Struct({
+  workspaceChange: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        type: Schema.optional(Schema.String),
+        resource: Schema.optional(Schema.Unknown),
+      }),
+    ),
+  ),
+  mergeConflict: Schema.optional(Schema.Array(Schema.Unknown)),
+});
+export type GetWorkspaceStatusResponse = Schema.Schema.Type<
+  typeof GetWorkspaceStatusResponseSchema
+>;
+
+export const ListContainerVersionsResponseSchema = Schema.Struct({
+  containerVersionHeader: Schema.optional(Schema.Array(ContainerVersionHeaderSchema)),
+  nextPageToken: Schema.optional(Schema.String),
+});
+export type ListContainerVersionsResponse = Schema.Schema.Type<
+  typeof ListContainerVersionsResponseSchema
+>;
+
+export const PublishContainerVersionResponseSchema = Schema.Struct({
+  containerVersion: Schema.optional(ContainerVersionSchema),
+  compilerError: Schema.optional(Schema.Boolean),
+});
+export type PublishContainerVersionResponse = Schema.Schema.Type<
+  typeof PublishContainerVersionResponseSchema
+>;

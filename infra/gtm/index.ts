@@ -5,12 +5,15 @@ import type { ResourceClassLike } from "alchemy/Resource";
 import { Account, AccountProvider } from "./account.ts";
 import { Container, ContainerProvider } from "./container.ts";
 import { GtmCredentialsLive } from "./credentials.ts";
+import { Folder, FolderProvider } from "./folder.ts";
 import { GtmHttpLive } from "./http.ts";
 import { Tag, TagProvider } from "./tag.ts";
 import { Trigger, TriggerProvider } from "./trigger.ts";
+import { Variable, VariableProvider } from "./variable.ts";
+import { Version, VersionProvider } from "./version.ts";
 import { Workspace, WorkspaceProvider } from "./workspace.ts";
 
-type GtmResource = Account | Container | Workspace | Tag | Trigger;
+type GtmResource = Account | Container | Workspace | Tag | Trigger | Variable | Folder | Version;
 
 class GtmProviders extends Provider.ProviderCollection<GtmProviders>()("Gtm") {}
 
@@ -23,6 +26,9 @@ export const providers = () =>
       Workspace,
       Tag,
       Trigger,
+      Variable,
+      Folder,
+      Version,
     ] as ResourceClassLike<GtmResource>[]),
   ).pipe(
     Layer.provide(
@@ -32,6 +38,9 @@ export const providers = () =>
         WorkspaceProvider(),
         TagProvider(),
         TriggerProvider(),
+        VariableProvider(),
+        FolderProvider(),
+        VersionProvider(),
       ),
     ),
     Layer.provideMerge(GtmHttpLive),

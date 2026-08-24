@@ -8,26 +8,47 @@ import type { HttpMethodError } from "./errors.ts";
 import {
   AccountSchema,
   ContainerSchema,
+  ContainerVersionHeaderSchema,
+  ContainerVersionSchema,
+  CreateContainerVersionResponseSchema,
+  FolderSchema,
+  GetWorkspaceStatusResponseSchema,
   ListContainersResponseSchema,
+  ListFoldersResponseSchema,
   ListTagsResponseSchema,
   ListTriggersResponseSchema,
+  ListVariablesResponseSchema,
   ListWorkspacesResponseSchema,
+  PublishContainerVersionResponseSchema,
   TagSchema,
   TriggerSchema,
+  VariableSchema,
   WorkspaceSchema,
 } from "./schemas.ts";
 import type {
   Account,
   Container,
   ContainerDraft,
+  ContainerVersion,
+  ContainerVersionHeader,
+  CreateContainerVersionRequestVersionOptions,
+  CreateContainerVersionResponse,
+  Folder,
+  FolderDraft,
+  GetWorkspaceStatusResponse,
   ListContainersResponse,
+  ListFoldersResponse,
   ListTagsResponse,
   ListTriggersResponse,
+  ListVariablesResponse,
   ListWorkspacesResponse,
+  PublishContainerVersionResponse,
   Tag,
   TagDraft,
   Trigger,
   TriggerDraft,
+  Variable,
+  VariableDraft,
   Workspace,
   WorkspaceDraft,
 } from "./schemas.ts";
@@ -108,7 +129,72 @@ export type TriggerApi = {
   readonly deleteTrigger: (path: string) => Effect.Effect<void, HttpMethodError | CredentialsError>;
 };
 
-export type GtmHttpApi = AccountApi & ContainerApi & WorkspaceApi & TagApi & TriggerApi;
+export type VariableApi = {
+  readonly listVariables: (
+    workspacePath: string,
+  ) => Effect.Effect<ListVariablesResponse, HttpMethodError | CredentialsError>;
+  readonly getVariable: (
+    path: string,
+  ) => Effect.Effect<Variable, HttpMethodError | CredentialsError>;
+  readonly createVariable: (
+    workspacePath: string,
+    body: VariableDraft,
+  ) => Effect.Effect<Variable, HttpMethodError | CredentialsError>;
+  readonly updateVariable: (
+    path: string,
+    body: VariableDraft,
+  ) => Effect.Effect<Variable, HttpMethodError | CredentialsError>;
+  readonly deleteVariable: (
+    path: string,
+  ) => Effect.Effect<void, HttpMethodError | CredentialsError>;
+};
+
+export type FolderApi = {
+  readonly listFolders: (
+    workspacePath: string,
+  ) => Effect.Effect<ListFoldersResponse, HttpMethodError | CredentialsError>;
+  readonly getFolder: (path: string) => Effect.Effect<Folder, HttpMethodError | CredentialsError>;
+  readonly createFolder: (
+    workspacePath: string,
+    body: FolderDraft,
+  ) => Effect.Effect<Folder, HttpMethodError | CredentialsError>;
+  readonly updateFolder: (
+    path: string,
+    body: FolderDraft,
+  ) => Effect.Effect<Folder, HttpMethodError | CredentialsError>;
+  readonly deleteFolder: (path: string) => Effect.Effect<void, HttpMethodError | CredentialsError>;
+};
+
+export type VersionApi = {
+  readonly getWorkspaceStatus: (
+    workspacePath: string,
+  ) => Effect.Effect<GetWorkspaceStatusResponse, HttpMethodError | CredentialsError>;
+  readonly createContainerVersion: (
+    workspacePath: string,
+    body: CreateContainerVersionRequestVersionOptions,
+  ) => Effect.Effect<CreateContainerVersionResponse, HttpMethodError | CredentialsError>;
+  readonly getLiveContainerVersion: (
+    containerPath: string,
+  ) => Effect.Effect<ContainerVersion, HttpMethodError | CredentialsError>;
+  readonly getLatestContainerVersionHeader: (
+    containerPath: string,
+  ) => Effect.Effect<ContainerVersionHeader, HttpMethodError | CredentialsError>;
+  readonly publishContainerVersion: (
+    path: string,
+  ) => Effect.Effect<PublishContainerVersionResponse, HttpMethodError | CredentialsError>;
+  readonly getContainerVersion: (
+    path: string,
+  ) => Effect.Effect<ContainerVersion, HttpMethodError | CredentialsError>;
+};
+
+export type GtmHttpApi = AccountApi &
+  ContainerApi &
+  WorkspaceApi &
+  TagApi &
+  TriggerApi &
+  VariableApi &
+  FolderApi &
+  VersionApi;
 
 export class GtmHttp extends Context.Service<GtmHttp, GtmHttpApi>()("GtmHttp") {}
 
@@ -244,6 +330,49 @@ export const GtmHttpLive = Layer.effect(
       updateTrigger: (path, body) =>
         authedJson(TriggerSchema, path, { method: "PUT", body: JSON.stringify(body) }),
       deleteTrigger: (path) => authedVoid(path, { method: "DELETE" }),
+
+      listVariables: (workspacePath) =>
+        authedJson(ListVariablesResponseSchema, `${workspacePath}/variables`, { method: "GET" }),
+      getVariable: (path) => authedJson(VariableSchema, path, { method: "GET" }),
+      createVariable: (workspacePath, body) =>
+        authedJson(VariableSchema, `${workspacePath}/variables`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      updateVariable: (path, body) =>
+        authedJson(VariableSchema, path, { method: "PUT", body: JSON.stringify(body) }),
+      deleteVariable: (path) => authedVoid(path, { method: "DELETE" }),
+
+      listFolders: (workspacePath) =>
+        authedJson(ListFoldersResponseSchema, `${workspacePath}/folders`, { method: "GET" }),
+      getFolder: (path) => authedJson(FolderSchema, path, { method: "GET" }),
+      createFolder: (workspacePath, body) =>
+        authedJson(FolderSchema, `${workspacePath}/folders`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      updateFolder: (path, body) =>
+        authedJson(FolderSchema, path, { method: "PUT", body: JSON.stringify(body) }),
+      deleteFolder: (path) => authedVoid(path, { method: "DELETE" }),
+
+      getWorkspaceStatus: (workspacePath) =>
+        authedJson(GetWorkspaceStatusResponseSchema, `${workspacePath}/status`, {
+          method: "GET",
+        }),
+      createContainerVersion: (workspacePath, body) =>
+        authedJson(CreateContainerVersionResponseSchema, `${workspacePath}:create_version`, {
+          method: "POST",
+          body: JSON.stringify(body),
+        }),
+      getLiveContainerVersion: (containerPath) =>
+        authedJson(ContainerVersionSchema, `${containerPath}/versions:live`, { method: "GET" }),
+      getLatestContainerVersionHeader: (containerPath) =>
+        authedJson(ContainerVersionHeaderSchema, `${containerPath}/version_headers:latest`, {
+          method: "GET",
+        }),
+      publishContainerVersion: (path) =>
+        authedJson(PublishContainerVersionResponseSchema, `${path}:publish`, { method: "POST" }),
+      getContainerVersion: (path) => authedJson(ContainerVersionSchema, path, { method: "GET" }),
     } satisfies GtmHttpApi;
   }),
 );
