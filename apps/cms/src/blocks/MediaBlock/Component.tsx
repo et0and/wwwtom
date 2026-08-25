@@ -7,7 +7,6 @@ import RichText from "@/components/RichText";
 import type { MediaBlock as MediaBlockProps } from "@/payload-types";
 
 import { Media } from "../../components/Media";
-import { isPopulated } from "@/utilities/isPopulated";
 
 type Props = MediaBlockProps & {
   breakout?: boolean;
@@ -31,7 +30,7 @@ export const MediaBlock: React.FC<Props> = (props) => {
   } = props;
 
   let caption;
-  if (isPopulated(media)) caption = media.caption;
+  if (media instanceof Object) caption = media.caption;
 
   return (
     <div

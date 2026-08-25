@@ -1,6 +1,5 @@
 import type { CollectionAfterReadHook } from "payload";
 import { User } from "src/payload-types";
-import { isPopulated } from "@/utilities/isPopulated";
 
 // The `user` collection has access control locked so that users are not publicly accessible
 // This means that we need to populate the authors manually here to protect user privacy
@@ -13,7 +12,7 @@ export const populateAuthors: CollectionAfterReadHook = async ({ doc, req: { pay
     for (const author of doc.authors) {
       try {
         const authorDoc = await payload.findByID({
-          id: isPopulated(author) ? author.id : author,
+          id: author instanceof Object ? author.id : author,
           collection: "users",
           depth: 0,
         });

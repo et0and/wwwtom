@@ -5,7 +5,6 @@ import type { Page } from "@/payload-types";
 import { CMSLink } from "@/components/Link";
 import { Media } from "@/components/Media";
 import RichText from "@/components/RichText";
-import { isPopulated } from "@/utilities/isPopulated";
 
 export const MediumImpactHero: React.FC<Page["hero"]> = ({ links, media, richText }) => {
   return (
@@ -26,7 +25,7 @@ export const MediumImpactHero: React.FC<Page["hero"]> = ({ links, media, richTex
         )}
       </div>
       <div className="container ">
-        {media && isPopulated(media) && (
+        {media && media instanceof Object && (
           <div>
             <Media
               className="-mx-4 md:-mx-8 2xl:-mx-16"

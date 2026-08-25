@@ -6,7 +6,6 @@ import type { Post } from "@/payload-types";
 
 import { Card } from "../../components/Card";
 import { DefaultTypedEditorState } from "@payloadcms/richtext-lexical";
-import { isPopulated } from "@/utilities/isPopulated";
 
 export type RelatedPostsProps = {
   className?: string;
@@ -23,7 +22,7 @@ export const RelatedPosts: React.FC<RelatedPostsProps> = (props) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-stretch">
         {docs?.map((doc, index) => {
-          if (!isPopulated(doc)) return null;
+          if (!(doc instanceof Object)) return null;
 
           return <Card key={index} doc={doc} relationTo="posts" showCategories />;
         })}

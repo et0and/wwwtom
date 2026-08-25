@@ -7,7 +7,6 @@ import React, { Fragment } from "react";
 import type { Post } from "@/payload-types";
 
 import { Media } from "@/components/Media";
-import { isPopulated } from "@/utilities/isPopulated";
 
 export type CardPostData = Pick<Post, "slug" | "categories" | "meta" | "title">;
 
@@ -40,7 +39,7 @@ export const Card: React.FC<{
     >
       <div className="relative w-full ">
         {!metaImage && <div className="">No image</div>}
-        {metaImage && isPopulated(metaImage) && <Media resource={metaImage} size="33vw" />}
+        {metaImage && metaImage instanceof Object && <Media resource={metaImage} size="33vw" />}
       </div>
       <div className="p-4">
         {showCategories && hasCategories && (
@@ -48,7 +47,7 @@ export const Card: React.FC<{
             {showCategories && hasCategories && (
               <div>
                 {categories?.map((category, index) => {
-                  if (isPopulated(category)) {
+                  if (category instanceof Object) {
                     const { title: titleFromCategory } = category;
 
                     const categoryTitle = titleFromCategory || "Untitled category";

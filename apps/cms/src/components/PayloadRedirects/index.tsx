@@ -4,7 +4,6 @@ import type { Page, Post } from "@/payload-types";
 import { getCachedDocument } from "@/utilities/getDocument";
 import { getCachedRedirects } from "@/utilities/getRedirects";
 import { notFound, redirect } from "next/navigation";
-import { isPopulated } from "@/utilities/isPopulated";
 
 interface Props {
   disableNotFound?: boolean;
@@ -26,7 +25,7 @@ export const PayloadRedirects: React.FC<Props> = async ({ disableNotFound, url }
 
     let redirectUrl: string;
 
-    if (reference && !isPopulated<Page | Post>(reference.value)) {
+    if (reference && !(reference.value instanceof Object)) {
       const document = (await getCachedDocument(
         reference.relationTo,
         String(reference.value),
@@ -34,7 +33,7 @@ export const PayloadRedirects: React.FC<Props> = async ({ disableNotFound, url }
       redirectUrl = `${reference.relationTo !== "pages" ? `/${reference.relationTo}` : ""}/${document?.slug}`;
     } else {
       redirectUrl = `${reference?.relationTo !== "pages" ? `/${reference?.relationTo}` : ""}/${
-        reference && isPopulated(reference.value) ? reference.value.slug : ""
+        reference && reference.value instanceof Object ? reference.value.slug : ""
       }`;
     }
 

@@ -5,7 +5,6 @@ import type { Post } from "@/payload-types";
 
 import { Media } from "@/components/Media";
 import { formatAuthors } from "@/utilities/formatAuthors";
-import { isPopulated } from "@/utilities/isPopulated";
 
 export const PostHero: React.FC<{
   post: Post;
@@ -21,7 +20,7 @@ export const PostHero: React.FC<{
         <div className="col-start-1 col-span-1 md:col-start-2 md:col-span-2">
           <div className="uppercase text-sm mb-6">
             {categories?.map((category, index) => {
-              if (isPopulated(category)) {
+              if (category instanceof Object) {
                 const { title: categoryTitle } = category;
 
                 const titleToUse = categoryTitle || "Untitled category";
@@ -64,7 +63,7 @@ export const PostHero: React.FC<{
         </div>
       </div>
       <div className="min-h-[80vh] select-none">
-        {heroImage && isPopulated(heroImage) && (
+        {heroImage && heroImage instanceof Object && (
           <Media fill priority imgClassName="-z-10 object-cover" resource={heroImage} />
         )}
         <div className="absolute pointer-events-none left-0 bottom-0 w-full h-1/2 bg-gradient-to-t from-black to-transparent" />

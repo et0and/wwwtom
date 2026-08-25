@@ -6,7 +6,6 @@ import React, { useEffect, useRef } from "react";
 import type { Props as MediaProps } from "../types";
 
 import { getMediaUrl } from "@/utilities/getMediaUrl";
-import { isPopulated } from "@/utilities/isPopulated";
 
 export const VideoMedia: React.FC<MediaProps> = (props) => {
   const { onClick, resource, videoClassName } = props;
@@ -24,7 +23,7 @@ export const VideoMedia: React.FC<MediaProps> = (props) => {
     }
   }, []);
 
-  if (isPopulated(resource)) {
+  if (resource instanceof Object) {
     const { filename } = resource;
 
     return (

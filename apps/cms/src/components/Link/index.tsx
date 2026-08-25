@@ -4,7 +4,6 @@ import Link from "next/link";
 import React from "react";
 
 import type { Page, Post } from "@/payload-types";
-import { isPopulated } from "@/utilities/isPopulated";
 
 type CMSLinkType = {
   appearance?: "inline" | ButtonProps["variant"];
@@ -36,7 +35,7 @@ export const CMSLink: React.FC<CMSLinkType> = (props) => {
 
   const referenceValue = reference?.value;
   const populatedValue =
-    type === "reference" && isPopulated<Page | Post>(referenceValue) ? referenceValue : undefined;
+    type === "reference" && referenceValue instanceof Object ? referenceValue : undefined;
 
   const href = populatedValue
     ? `${reference?.relationTo !== "pages" ? `/${reference?.relationTo}` : ""}/${populatedValue.slug}`

@@ -1,4 +1,4 @@
-import type { Post, Category, ArchiveBlock as ArchiveBlockProps } from "@/payload-types";
+import type { Post, ArchiveBlock as ArchiveBlockProps } from "@/payload-types";
 
 import configPromise from "@payload-config";
 import { getPayload } from "payload";
@@ -6,7 +6,6 @@ import React from "react";
 import RichText from "@/components/RichText";
 
 import { CollectionArchive } from "@/components/CollectionArchive";
-import { isPopulated } from "@/utilities/isPopulated";
 
 export const ArchiveBlock: React.FC<
   ArchiveBlockProps & {
@@ -23,7 +22,7 @@ export const ArchiveBlock: React.FC<
     const payload = await getPayload({ config: configPromise });
 
     const flattenedCategories = categories?.map((category) =>
-      isPopulated<Category>(category) ? category.id : category,
+      category instanceof Object ? category.id : category,
     );
 
     const where =
@@ -47,7 +46,7 @@ export const ArchiveBlock: React.FC<
     if (selectedDocs?.length) {
       posts = selectedDocs
         .map((doc) => doc.value)
-        .filter((value): value is Post => isPopulated(value));
+        .filter((value): value is Post => value instanceof Object);
     }
   }
 
