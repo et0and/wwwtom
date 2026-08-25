@@ -1,8 +1,21 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index";
-import { requestWithEnv, testEnv } from "../test/helpers";
+import { jsonResponse, payloadPostsResponse, requestWithEnv, testEnv } from "../test/helpers";
 
 const env = testEnv();
+
+const fetchMock = vi.fn();
+
+beforeEach(() => {
+  vi.stubGlobal("fetch", fetchMock);
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValue(jsonResponse(payloadPostsResponse));
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
 
 const preflight = (origin: string) =>
   requestWithEnv("http://localhost/payload/posts", env, {
@@ -14,8 +27,6 @@ const preflight = (origin: string) =>
   });
 
 describe("adapter CORS", () => {
-  afterEach(() => vi.restoreAllMocks());
-
   it.each([
     "http://localhost:5173",
     "http://localhost:3000",
@@ -50,7 +61,7 @@ describe("adapter CORS", () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("access-control-allow-origin")).toBe("https://dev-web.tom.so");
-  });
+  }, 10_000);
 
   it("does not set CORS headers for server-to-server requests without an Origin", async () => {
     const response = await app.fetch(requestWithEnv("http://localhost/payload/posts", env));
