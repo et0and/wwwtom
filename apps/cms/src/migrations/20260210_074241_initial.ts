@@ -1,6 +1,6 @@
 import { MigrateUpArgs, MigrateDownArgs, sql } from "@payloadcms/db-d1-sqlite";
 
-export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
+export async function up({ db, payload: _payload, req: _req }: MigrateUpArgs): Promise<void> {
   await db.run(sql`CREATE TABLE \`pages_hero_links\` (
   	\`_order\` integer NOT NULL,
   	\`_parent_id\` integer NOT NULL,
@@ -1519,7 +1519,7 @@ export async function up({ db, payload, req }: MigrateUpArgs): Promise<void> {
   await db.run(sql`CREATE INDEX \`footer_rels_posts_id_idx\` ON \`footer_rels\` (\`posts_id\`);`);
 }
 
-export async function down({ db, payload, req }: MigrateDownArgs): Promise<void> {
+export async function down({ db, payload: _payload, req: _req }: MigrateDownArgs): Promise<void> {
   await db.run(sql`DROP TABLE \`pages_hero_links\`;`);
   await db.run(sql`DROP TABLE \`pages_blocks_arena\`;`);
   await db.run(sql`DROP TABLE \`pages_blocks_cta_links\`;`);

@@ -7,6 +7,7 @@ import { fileURLToPath } from "url";
 import { CloudflareContext, getCloudflareContext } from "@opennextjs/cloudflare";
 import { GetPlatformProxyOptions } from "wrangler";
 import { r2Storage } from "@payloadcms/storage-r2";
+import type { R2StorageOptions } from "@payloadcms/storage-r2";
 
 import { Users } from "./collections/Users";
 import { Media } from "./collections/Media";
@@ -14,8 +15,6 @@ import { Categories } from "./collections/Categories";
 import { Tags } from "./collections/Tags";
 import { Posts } from "./collections/Posts";
 import { plugins } from "./plugins";
-
-type R2StorageOptions = Parameters<typeof r2Storage>[0];
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -34,11 +33,16 @@ const isBuild =
   process.argv.includes("build");
 
 const createLog =
-  (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
+  (level: string, fn: typeof console.log) =>
+  (objOrMsg: string | { msg?: string }, msg?: string) => {
+    // Payload's Logger contract invokes each level with either a message
+    // string or a structured object; this adapter is the boundary between
+    // that contract and our JSON line format, so the shape check lives here.
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- required: discriminating payload's two logger call shapes at the boundary
     if (typeof objOrMsg === "string") {
       fn(JSON.stringify({ level, msg: objOrMsg }));
     } else {
-      fn(JSON.stringify({ level, ...objOrMsg, msg: msg ?? (objOrMsg as { msg?: string }).msg }));
+      fn(JSON.stringify({ level, ...objOrMsg, msg: msg ?? objOrMsg.msg }));
     }
   };
 
@@ -58,10 +62,7 @@ const cloudflare =
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
-const payloadSecretBinding = Reflect.get(cloudflare.env, "PAYLOAD_SECRET");
-const payloadSecret =
-  process.env.PAYLOAD_SECRET ||
-  (typeof payloadSecretBinding === "string" ? payloadSecretBinding : "");
+const payloadSecret = process.env.PAYLOAD_SECRET || cloudflare.env.PAYLOAD_SECRET || "";
 
 if (!process.env.PAYLOAD_SECRET && payloadSecret) {
   process.env.PAYLOAD_SECRET = payloadSecret;
@@ -85,7 +86,7 @@ export default buildConfig({
   plugins: [
     ...plugins,
     r2Storage({
-      bucket: cloudflare.env.R2 as unknown as R2StorageOptions["bucket"],
+      bucket: cloudflare.env.R2 as R2StorageOptions["bucket"],
       collections: { media: true },
     }),
   ],

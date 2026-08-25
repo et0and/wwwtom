@@ -41,10 +41,7 @@ const cloudflare =
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true });
 
-const payloadSecretBinding = Reflect.get(cloudflare.env, "PAYLOAD_SECRET");
-const payloadSecret =
-  process.env.PAYLOAD_SECRET ||
-  (typeof payloadSecretBinding === "string" ? payloadSecretBinding : "");
+const payloadSecret = process.env.PAYLOAD_SECRET || cloudflare.env.PAYLOAD_SECRET || "";
 
 if (!process.env.PAYLOAD_SECRET && payloadSecret) {
   process.env.PAYLOAD_SECRET = payloadSecret;

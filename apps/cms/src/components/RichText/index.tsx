@@ -28,7 +28,7 @@ type NodeTypes =
 
 const internalDocToHref = ({ linkNode }: { linkNode: SerializedLinkNode }) => {
   const { value, relationTo } = linkNode.fields.doc!;
-  if (typeof value === "number") {
+  if (!(value instanceof Object)) {
     throw new Error(
       "Internal link document is not populated — ensure rich text is fetched with sufficient depth to resolve link targets",
     );
