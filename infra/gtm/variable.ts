@@ -58,6 +58,66 @@ const toAttrs = (v: VariableSchema, notesWithoutMarker: string): VariableAttribu
     tagManagerUrl: v.tagManagerUrl ?? "",
   }) as VariableAttributes;
 
+const variableOldNotes = (
+  output: VariableAttributes | undefined,
+  oldNotes: string | undefined,
+): string => (output ? stripMarker(output.notes) : (oldNotes ?? ""));
+
+const preferOldVar = <T>(oldVal: T | undefined, outputVal: T | undefined): T | undefined =>
+  oldVal ?? outputVal;
+
+const preferOutputVar = <T>(outputVal: T | undefined, oldVal: T | undefined): T | undefined =>
+  outputVal ?? oldVal;
+
+const buildVariableOldComparable = (
+  output: VariableAttributes | undefined,
+  o: Partial<VariableProps>,
+) => ({
+  notes: variableOldNotes(output, o.notes),
+  name: preferOutputVar(output?.name, o.name),
+  type: preferOutputVar(output?.type, o.type),
+  parameter: preferOldVar(o.parameter, output?.parameter),
+  parentFolderId: preferOldVar(o.parentFolderId, output?.parentFolderId),
+  scheduleStartMs: preferOldVar(o.scheduleStartMs, output?.scheduleStartMs),
+  scheduleEndMs: preferOldVar(o.scheduleEndMs, output?.scheduleEndMs),
+  formatValue: preferOldVar(o.formatValue, output?.formatValue),
+  enablingTriggerId: preferOldVar(o.enablingTriggerId, output?.enablingTriggerId),
+  disablingTriggerId: preferOldVar(o.disablingTriggerId, output?.disablingTriggerId),
+});
+
+const buildVariableNewComparable = (news: VariableProps) => ({
+  notes: news.notes ?? "",
+  name: news.name,
+  type: news.type,
+  parameter: news.parameter,
+  parentFolderId: news.parentFolderId,
+  scheduleStartMs: news.scheduleStartMs,
+  scheduleEndMs: news.scheduleEndMs,
+  formatValue: news.formatValue,
+  enablingTriggerId: news.enablingTriggerId,
+  disablingTriggerId: news.disablingTriggerId,
+});
+
+const isVariableNeedsUpdate = (
+  observed: VariableSchema,
+  news: VariableProps,
+  observedNotesStripped: string,
+  desiredNotes: string,
+): boolean =>
+  [
+    observed.name !== news.name,
+    observed.type !== news.type,
+    observedNotesStripped !== stripMarker(news.notes ?? ""),
+    !deepEqual(observed.parameter, news.parameter),
+    observed.parentFolderId !== news.parentFolderId,
+    observed.scheduleStartMs !== news.scheduleStartMs,
+    observed.scheduleEndMs !== news.scheduleEndMs,
+    !deepEqual(observed.formatValue, news.formatValue),
+    !deepEqual(observed.enablingTriggerId, news.enablingTriggerId),
+    !deepEqual(observed.disablingTriggerId, news.disablingTriggerId),
+    observed.notes !== desiredNotes,
+  ].some(Boolean);
+
 export const VariableProvider = () =>
   Provider.effect(
     Variable as ResourceClassLike<Variable>,
@@ -86,30 +146,8 @@ export const VariableProvider = () =>
               return { action: "replace" } as const;
             }
 
-            const oldComparable = {
-              notes: output ? stripMarker(output.notes) : (o.notes ?? ""),
-              name: output?.name ?? o.name,
-              type: output?.type ?? o.type,
-              parameter: o.parameter ?? output?.parameter,
-              parentFolderId: o.parentFolderId ?? output?.parentFolderId,
-              scheduleStartMs: o.scheduleStartMs ?? output?.scheduleStartMs,
-              scheduleEndMs: o.scheduleEndMs ?? output?.scheduleEndMs,
-              formatValue: o.formatValue ?? output?.formatValue,
-              enablingTriggerId: o.enablingTriggerId ?? output?.enablingTriggerId,
-              disablingTriggerId: o.disablingTriggerId ?? output?.disablingTriggerId,
-            };
-            const newComparable = {
-              notes: news.notes ?? "",
-              name: news.name,
-              type: news.type,
-              parameter: news.parameter,
-              parentFolderId: news.parentFolderId,
-              scheduleStartMs: news.scheduleStartMs,
-              scheduleEndMs: news.scheduleEndMs,
-              formatValue: news.formatValue,
-              enablingTriggerId: news.enablingTriggerId,
-              disablingTriggerId: news.disablingTriggerId,
-            };
+            const oldComparable = buildVariableOldComparable(output, o);
+            const newComparable = buildVariableNewComparable(news);
             if (!deepEqual(oldComparable, newComparable)) return { action: "update" } as const;
             return undefined;
           }),
@@ -144,18 +182,12 @@ export const VariableProvider = () =>
           }
 
           const observedNotesStripped = stripMarker(observed.notes);
-          const needsUpdate =
-            observed.name !== news.name ||
-            observed.type !== news.type ||
-            observedNotesStripped !== stripMarker(news.notes ?? "") ||
-            !deepEqual(observed.parameter, news.parameter) ||
-            observed.parentFolderId !== news.parentFolderId ||
-            observed.scheduleStartMs !== news.scheduleStartMs ||
-            observed.scheduleEndMs !== news.scheduleEndMs ||
-            !deepEqual(observed.formatValue, news.formatValue) ||
-            !deepEqual(observed.enablingTriggerId, news.enablingTriggerId) ||
-            !deepEqual(observed.disablingTriggerId, news.disablingTriggerId) ||
-            observed.notes !== desiredNotes;
+          const needsUpdate = isVariableNeedsUpdate(
+            observed,
+            news,
+            observedNotesStripped,
+            desiredNotes,
+          );
 
           if (!needsUpdate) {
             return toAttrs(observed, observedNotesStripped);

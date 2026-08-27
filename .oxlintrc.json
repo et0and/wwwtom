@@ -35,7 +35,23 @@
       }
     ]
   },
-  "ignorePatterns": ["**/worker-configuration.d.ts", "**/cloudflare-env.d.ts"],
+  "ignorePatterns": [
+    "**/worker-configuration.d.ts",
+    "**/cloudflare-env.d.ts",
+    "**/.stryker-tmp/**",
+    "**/reports/**",
+    "**/.turbo/**",
+    "**/dist/**",
+    "**/.agents/**"
+  ],
+  "overrides": [
+    {
+      "files": [".oxlint/**/*"],
+      "rules": {
+        "complexity": ["error", 30]
+      }
+    }
+  ],
   "env": {
     "builtin": true
   }

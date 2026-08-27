@@ -70,6 +70,79 @@ const toAttrs = (t: TagSchema, notesWithoutMarker: string): TagAttributes =>
     tagManagerUrl: t.tagManagerUrl ?? "",
   }) as TagAttributes;
 
+const tagOldNotes = (output: TagAttributes | undefined, oldNotes: string | undefined): string =>
+  output ? stripMarker(output.notes) : (oldNotes ?? "");
+
+const preferOld = <T>(oldVal: T | undefined, outputVal: T | undefined): T | undefined =>
+  oldVal ?? outputVal;
+
+const preferOutput = <T>(outputVal: T | undefined, oldVal: T | undefined): T | undefined =>
+  outputVal ?? oldVal;
+
+const buildTagOldComparable = (output: TagAttributes | undefined, o: Partial<TagProps>) => ({
+  notes: tagOldNotes(output, o.notes),
+  name: preferOutput(output?.name, o.name),
+  type: preferOutput(output?.type, o.type),
+  parameter: preferOld(o.parameter, output?.parameter),
+  firingTriggerId: preferOld(o.firingTriggerId, output?.firingTriggerId),
+  blockingTriggerId: preferOld(o.blockingTriggerId, output?.blockingTriggerId),
+  setupTag: preferOld(o.setupTag, output?.setupTag),
+  teardownTag: preferOld(o.teardownTag, output?.teardownTag),
+  parentFolderId: preferOld(o.parentFolderId, output?.parentFolderId),
+  tagFiringOption: preferOld(o.tagFiringOption, output?.tagFiringOption),
+  paused: preferOld(o.paused, output?.paused),
+  scheduleStartMs: preferOld(o.scheduleStartMs, output?.scheduleStartMs),
+  scheduleEndMs: preferOld(o.scheduleEndMs, output?.scheduleEndMs),
+  liveOnly: preferOld(o.liveOnly, output?.liveOnly),
+  priority: preferOld(o.priority, output?.priority),
+  consentSettings: preferOld(o.consentSettings, output?.consentSettings),
+});
+
+const buildTagNewComparable = (news: TagProps) => ({
+  notes: news.notes ?? "",
+  name: news.name,
+  type: news.type,
+  parameter: news.parameter,
+  firingTriggerId: news.firingTriggerId,
+  blockingTriggerId: news.blockingTriggerId,
+  setupTag: news.setupTag,
+  teardownTag: news.teardownTag,
+  parentFolderId: news.parentFolderId,
+  tagFiringOption: news.tagFiringOption,
+  paused: news.paused,
+  scheduleStartMs: news.scheduleStartMs,
+  scheduleEndMs: news.scheduleEndMs,
+  liveOnly: news.liveOnly,
+  priority: news.priority,
+  consentSettings: news.consentSettings,
+});
+
+const isTagNeedsUpdate = (
+  observed: TagSchema,
+  news: TagProps,
+  observedNotesStripped: string,
+  desiredNotes: string,
+): boolean =>
+  [
+    observed.name !== news.name,
+    observed.type !== news.type,
+    observedNotesStripped !== stripMarker(news.notes ?? ""),
+    !deepEqual(observed.parameter, news.parameter),
+    !deepEqual(observed.firingTriggerId, news.firingTriggerId),
+    !deepEqual(observed.blockingTriggerId, news.blockingTriggerId),
+    !deepEqual(observed.setupTag, news.setupTag),
+    !deepEqual(observed.teardownTag, news.teardownTag),
+    observed.parentFolderId !== news.parentFolderId,
+    observed.tagFiringOption !== news.tagFiringOption,
+    observed.paused !== news.paused,
+    observed.scheduleStartMs !== news.scheduleStartMs,
+    observed.scheduleEndMs !== news.scheduleEndMs,
+    observed.liveOnly !== news.liveOnly,
+    !deepEqual(observed.priority, news.priority),
+    !deepEqual(observed.consentSettings, news.consentSettings),
+    observed.notes !== desiredNotes,
+  ].some(Boolean);
+
 export const TagProvider = () =>
   Provider.effect(
     Tag as ResourceClassLike<Tag>,
@@ -98,42 +171,8 @@ export const TagProvider = () =>
               return { action: "replace" } as const;
             }
 
-            const oldComparable = {
-              notes: output ? stripMarker(output.notes) : (o.notes ?? ""),
-              name: output?.name ?? o.name,
-              type: output?.type ?? o.type,
-              parameter: o.parameter ?? output?.parameter,
-              firingTriggerId: o.firingTriggerId ?? output?.firingTriggerId,
-              blockingTriggerId: o.blockingTriggerId ?? output?.blockingTriggerId,
-              setupTag: o.setupTag ?? output?.setupTag,
-              teardownTag: o.teardownTag ?? output?.teardownTag,
-              parentFolderId: o.parentFolderId ?? output?.parentFolderId,
-              tagFiringOption: o.tagFiringOption ?? output?.tagFiringOption,
-              paused: o.paused ?? output?.paused,
-              scheduleStartMs: o.scheduleStartMs ?? output?.scheduleStartMs,
-              scheduleEndMs: o.scheduleEndMs ?? output?.scheduleEndMs,
-              liveOnly: o.liveOnly ?? output?.liveOnly,
-              priority: o.priority ?? output?.priority,
-              consentSettings: o.consentSettings ?? output?.consentSettings,
-            };
-            const newComparable = {
-              notes: news.notes ?? "",
-              name: news.name,
-              type: news.type,
-              parameter: news.parameter,
-              firingTriggerId: news.firingTriggerId,
-              blockingTriggerId: news.blockingTriggerId,
-              setupTag: news.setupTag,
-              teardownTag: news.teardownTag,
-              parentFolderId: news.parentFolderId,
-              tagFiringOption: news.tagFiringOption,
-              paused: news.paused,
-              scheduleStartMs: news.scheduleStartMs,
-              scheduleEndMs: news.scheduleEndMs,
-              liveOnly: news.liveOnly,
-              priority: news.priority,
-              consentSettings: news.consentSettings,
-            };
+            const oldComparable = buildTagOldComparable(output, o);
+            const newComparable = buildTagNewComparable(news);
             if (!deepEqual(oldComparable, newComparable)) return { action: "update" } as const;
             return undefined;
           }),
@@ -168,24 +207,7 @@ export const TagProvider = () =>
           }
 
           const observedNotesStripped = stripMarker(observed.notes);
-          const needsUpdate =
-            observed.name !== news.name ||
-            observed.type !== news.type ||
-            observedNotesStripped !== stripMarker(news.notes ?? "") ||
-            !deepEqual(observed.parameter, news.parameter) ||
-            !deepEqual(observed.firingTriggerId, news.firingTriggerId) ||
-            !deepEqual(observed.blockingTriggerId, news.blockingTriggerId) ||
-            !deepEqual(observed.setupTag, news.setupTag) ||
-            !deepEqual(observed.teardownTag, news.teardownTag) ||
-            observed.parentFolderId !== news.parentFolderId ||
-            observed.tagFiringOption !== news.tagFiringOption ||
-            observed.paused !== news.paused ||
-            observed.scheduleStartMs !== news.scheduleStartMs ||
-            observed.scheduleEndMs !== news.scheduleEndMs ||
-            observed.liveOnly !== news.liveOnly ||
-            !deepEqual(observed.priority, news.priority) ||
-            !deepEqual(observed.consentSettings, news.consentSettings) ||
-            observed.notes !== desiredNotes;
+          const needsUpdate = isTagNeedsUpdate(observed, news, observedNotesStripped, desiredNotes);
 
           if (!needsUpdate) {
             return toAttrs(observed, observedNotesStripped);

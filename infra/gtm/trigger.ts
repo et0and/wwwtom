@@ -88,6 +88,130 @@ const toAttrs = (t: TriggerSchema, notesWithoutMarker: string): TriggerAttribute
     tagManagerUrl: t.tagManagerUrl ?? "",
   }) as TriggerAttributes;
 
+const triggerOldNotes = (
+  output: TriggerAttributes | undefined,
+  oldNotes: string | undefined,
+): string => (output ? stripMarker(output.notes) : (oldNotes ?? ""));
+
+const preferOldTrigger = <T>(oldVal: T | undefined, outputVal: T | undefined): T | undefined =>
+  oldVal ?? outputVal;
+
+const preferOutputTrigger = <T>(outputVal: T | undefined, oldVal: T | undefined): T | undefined =>
+  outputVal ?? oldVal;
+
+const buildTriggerOldComparable = (
+  output: TriggerAttributes | undefined,
+  o: Partial<TriggerProps>,
+) => {
+  const getOut = <K extends keyof TriggerAttributes>(key: K): TriggerAttributes[K] | undefined =>
+    output ? output[key] : undefined;
+  return {
+    notes: triggerOldNotes(output, o.notes),
+    name: preferOutputTrigger(getOut("name"), o.name),
+    type: preferOutputTrigger(getOut("type"), o.type),
+    parameter: preferOldTrigger(o.parameter, getOut("parameter")),
+    filter: preferOldTrigger(o.filter, getOut("filter")),
+    customEventFilter: preferOldTrigger(o.customEventFilter, getOut("customEventFilter")),
+    autoEventFilter: preferOldTrigger(o.autoEventFilter, getOut("autoEventFilter")),
+    parentFolderId: preferOldTrigger(o.parentFolderId, getOut("parentFolderId")),
+    waitForTags: preferOldTrigger(o.waitForTags, getOut("waitForTags")),
+    checkValidation: preferOldTrigger(o.checkValidation, getOut("checkValidation")),
+    waitForTagsTimeout: preferOldTrigger(o.waitForTagsTimeout, getOut("waitForTagsTimeout")),
+    uniqueTriggerId: preferOldTrigger(o.uniqueTriggerId, getOut("uniqueTriggerId")),
+    eventName: preferOldTrigger(o.eventName, getOut("eventName")),
+    interval: preferOldTrigger(o.interval, getOut("interval")),
+    limit: preferOldTrigger(o.limit, getOut("limit")),
+    selector: preferOldTrigger(o.selector, getOut("selector")),
+    intervalSeconds: preferOldTrigger(o.intervalSeconds, getOut("intervalSeconds")),
+    maxTimerLengthSeconds: preferOldTrigger(
+      o.maxTimerLengthSeconds,
+      getOut("maxTimerLengthSeconds"),
+    ),
+    verticalScrollPercentageList: preferOldTrigger(
+      o.verticalScrollPercentageList,
+      getOut("verticalScrollPercentageList"),
+    ),
+    horizontalScrollPercentageList: preferOldTrigger(
+      o.horizontalScrollPercentageList,
+      getOut("horizontalScrollPercentageList"),
+    ),
+    visibilitySelector: preferOldTrigger(o.visibilitySelector, getOut("visibilitySelector")),
+    visiblePercentageMin: preferOldTrigger(o.visiblePercentageMin, getOut("visiblePercentageMin")),
+    visiblePercentageMax: preferOldTrigger(o.visiblePercentageMax, getOut("visiblePercentageMax")),
+    continuousTimeMinMilliseconds: preferOldTrigger(
+      o.continuousTimeMinMilliseconds,
+      getOut("continuousTimeMinMilliseconds"),
+    ),
+    totalTimeMinMilliseconds: preferOldTrigger(
+      o.totalTimeMinMilliseconds,
+      getOut("totalTimeMinMilliseconds"),
+    ),
+  };
+};
+
+const buildTriggerNewComparable = (news: TriggerProps) => ({
+  notes: news.notes ?? "",
+  name: news.name,
+  type: news.type,
+  parameter: news.parameter,
+  filter: news.filter,
+  customEventFilter: news.customEventFilter,
+  autoEventFilter: news.autoEventFilter,
+  parentFolderId: news.parentFolderId,
+  waitForTags: news.waitForTags,
+  checkValidation: news.checkValidation,
+  waitForTagsTimeout: news.waitForTagsTimeout,
+  uniqueTriggerId: news.uniqueTriggerId,
+  eventName: news.eventName,
+  interval: news.interval,
+  limit: news.limit,
+  selector: news.selector,
+  intervalSeconds: news.intervalSeconds,
+  maxTimerLengthSeconds: news.maxTimerLengthSeconds,
+  verticalScrollPercentageList: news.verticalScrollPercentageList,
+  horizontalScrollPercentageList: news.horizontalScrollPercentageList,
+  visibilitySelector: news.visibilitySelector,
+  visiblePercentageMin: news.visiblePercentageMin,
+  visiblePercentageMax: news.visiblePercentageMax,
+  continuousTimeMinMilliseconds: news.continuousTimeMinMilliseconds,
+  totalTimeMinMilliseconds: news.totalTimeMinMilliseconds,
+});
+
+const isTriggerNeedsUpdate = (
+  observed: TriggerSchema,
+  news: TriggerProps,
+  observedNotesStripped: string,
+  desiredNotes: string,
+): boolean =>
+  [
+    observed.name !== news.name,
+    observed.type !== news.type,
+    observedNotesStripped !== stripMarker(news.notes ?? ""),
+    !deepEqual(observed.parameter, news.parameter),
+    !deepEqual(observed.filter, news.filter),
+    !deepEqual(observed.customEventFilter, news.customEventFilter),
+    !deepEqual(observed.autoEventFilter, news.autoEventFilter),
+    observed.parentFolderId !== news.parentFolderId,
+    !deepEqual(observed.waitForTags, news.waitForTags),
+    !deepEqual(observed.checkValidation, news.checkValidation),
+    !deepEqual(observed.waitForTagsTimeout, news.waitForTagsTimeout),
+    !deepEqual(observed.uniqueTriggerId, news.uniqueTriggerId),
+    !deepEqual(observed.eventName, news.eventName),
+    !deepEqual(observed.interval, news.interval),
+    !deepEqual(observed.limit, news.limit),
+    !deepEqual(observed.selector, news.selector),
+    !deepEqual(observed.intervalSeconds, news.intervalSeconds),
+    !deepEqual(observed.maxTimerLengthSeconds, news.maxTimerLengthSeconds),
+    !deepEqual(observed.verticalScrollPercentageList, news.verticalScrollPercentageList),
+    !deepEqual(observed.horizontalScrollPercentageList, news.horizontalScrollPercentageList),
+    !deepEqual(observed.visibilitySelector, news.visibilitySelector),
+    !deepEqual(observed.visiblePercentageMin, news.visiblePercentageMin),
+    !deepEqual(observed.visiblePercentageMax, news.visiblePercentageMax),
+    !deepEqual(observed.continuousTimeMinMilliseconds, news.continuousTimeMinMilliseconds),
+    !deepEqual(observed.totalTimeMinMilliseconds, news.totalTimeMinMilliseconds),
+    observed.notes !== desiredNotes,
+  ].some(Boolean);
+
 export const TriggerProvider = () =>
   Provider.effect(
     Trigger as ResourceClassLike<Trigger>,
@@ -116,64 +240,8 @@ export const TriggerProvider = () =>
               return { action: "replace" } as const;
             }
 
-            const oldComparable = {
-              notes: output ? stripMarker(output.notes) : (o.notes ?? ""),
-              name: output?.name ?? o.name,
-              type: output?.type ?? o.type,
-              parameter: o.parameter ?? output?.parameter,
-              filter: o.filter ?? output?.filter,
-              customEventFilter: o.customEventFilter ?? output?.customEventFilter,
-              autoEventFilter: o.autoEventFilter ?? output?.autoEventFilter,
-              parentFolderId: o.parentFolderId ?? output?.parentFolderId,
-              waitForTags: o.waitForTags ?? output?.waitForTags,
-              checkValidation: o.checkValidation ?? output?.checkValidation,
-              waitForTagsTimeout: o.waitForTagsTimeout ?? output?.waitForTagsTimeout,
-              uniqueTriggerId: o.uniqueTriggerId ?? output?.uniqueTriggerId,
-              eventName: o.eventName ?? output?.eventName,
-              interval: o.interval ?? output?.interval,
-              limit: o.limit ?? output?.limit,
-              selector: o.selector ?? output?.selector,
-              intervalSeconds: o.intervalSeconds ?? output?.intervalSeconds,
-              maxTimerLengthSeconds: o.maxTimerLengthSeconds ?? output?.maxTimerLengthSeconds,
-              verticalScrollPercentageList:
-                o.verticalScrollPercentageList ?? output?.verticalScrollPercentageList,
-              horizontalScrollPercentageList:
-                o.horizontalScrollPercentageList ?? output?.horizontalScrollPercentageList,
-              visibilitySelector: o.visibilitySelector ?? output?.visibilitySelector,
-              visiblePercentageMin: o.visiblePercentageMin ?? output?.visiblePercentageMin,
-              visiblePercentageMax: o.visiblePercentageMax ?? output?.visiblePercentageMax,
-              continuousTimeMinMilliseconds:
-                o.continuousTimeMinMilliseconds ?? output?.continuousTimeMinMilliseconds,
-              totalTimeMinMilliseconds:
-                o.totalTimeMinMilliseconds ?? output?.totalTimeMinMilliseconds,
-            };
-            const newComparable = {
-              notes: news.notes ?? "",
-              name: news.name,
-              type: news.type,
-              parameter: news.parameter,
-              filter: news.filter,
-              customEventFilter: news.customEventFilter,
-              autoEventFilter: news.autoEventFilter,
-              parentFolderId: news.parentFolderId,
-              waitForTags: news.waitForTags,
-              checkValidation: news.checkValidation,
-              waitForTagsTimeout: news.waitForTagsTimeout,
-              uniqueTriggerId: news.uniqueTriggerId,
-              eventName: news.eventName,
-              interval: news.interval,
-              limit: news.limit,
-              selector: news.selector,
-              intervalSeconds: news.intervalSeconds,
-              maxTimerLengthSeconds: news.maxTimerLengthSeconds,
-              verticalScrollPercentageList: news.verticalScrollPercentageList,
-              horizontalScrollPercentageList: news.horizontalScrollPercentageList,
-              visibilitySelector: news.visibilitySelector,
-              visiblePercentageMin: news.visiblePercentageMin,
-              visiblePercentageMax: news.visiblePercentageMax,
-              continuousTimeMinMilliseconds: news.continuousTimeMinMilliseconds,
-              totalTimeMinMilliseconds: news.totalTimeMinMilliseconds,
-            };
+            const oldComparable = buildTriggerOldComparable(output, o);
+            const newComparable = buildTriggerNewComparable(news);
             if (!deepEqual(oldComparable, newComparable)) return { action: "update" } as const;
             return undefined;
           }),
@@ -208,39 +276,12 @@ export const TriggerProvider = () =>
           }
 
           const observedNotesStripped = stripMarker(observed.notes);
-          const needsUpdate =
-            observed.name !== news.name ||
-            observed.type !== news.type ||
-            observedNotesStripped !== stripMarker(news.notes ?? "") ||
-            !deepEqual(observed.parameter, news.parameter) ||
-            !deepEqual(observed.filter, news.filter) ||
-            !deepEqual(observed.customEventFilter, news.customEventFilter) ||
-            !deepEqual(observed.autoEventFilter, news.autoEventFilter) ||
-            observed.parentFolderId !== news.parentFolderId ||
-            !deepEqual(observed.waitForTags, news.waitForTags) ||
-            !deepEqual(observed.checkValidation, news.checkValidation) ||
-            !deepEqual(observed.waitForTagsTimeout, news.waitForTagsTimeout) ||
-            !deepEqual(observed.uniqueTriggerId, news.uniqueTriggerId) ||
-            !deepEqual(observed.eventName, news.eventName) ||
-            !deepEqual(observed.interval, news.interval) ||
-            !deepEqual(observed.limit, news.limit) ||
-            !deepEqual(observed.selector, news.selector) ||
-            !deepEqual(observed.intervalSeconds, news.intervalSeconds) ||
-            !deepEqual(observed.maxTimerLengthSeconds, news.maxTimerLengthSeconds) ||
-            !deepEqual(observed.verticalScrollPercentageList, news.verticalScrollPercentageList) ||
-            !deepEqual(
-              observed.horizontalScrollPercentageList,
-              news.horizontalScrollPercentageList,
-            ) ||
-            !deepEqual(observed.visibilitySelector, news.visibilitySelector) ||
-            !deepEqual(observed.visiblePercentageMin, news.visiblePercentageMin) ||
-            !deepEqual(observed.visiblePercentageMax, news.visiblePercentageMax) ||
-            !deepEqual(
-              observed.continuousTimeMinMilliseconds,
-              news.continuousTimeMinMilliseconds,
-            ) ||
-            !deepEqual(observed.totalTimeMinMilliseconds, news.totalTimeMinMilliseconds) ||
-            observed.notes !== desiredNotes;
+          const needsUpdate = isTriggerNeedsUpdate(
+            observed,
+            news,
+            observedNotesStripped,
+            desiredNotes,
+          );
 
           if (!needsUpdate) {
             return toAttrs(observed, observedNotesStripped);
