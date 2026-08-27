@@ -1,3 +1,10 @@
+## [1.100.1](https://github.com/et0and/wwwtom/compare/v1.100.0...v1.100.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **lint:** reduce gtm provider complexity and ignore generated paths ([1a8ebe9](https://github.com/et0and/wwwtom/commit/1a8ebe9e6fd40eb78c50bc90b0734a3b5a09d98c))
+
 # [1.100.0](https://github.com/et0and/wwwtom/compare/v1.99.0...v1.100.0) (2026-08-25)
 
 
