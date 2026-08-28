@@ -102,11 +102,7 @@ const toTsQuery = (match: string): string =>
     .replace(/\bOR\b/g, "|");
 
 const dbError = (operation: string, cause: unknown): HttpError =>
-  new HttpError({
-    message: `Search error during ${operation}: ${cause instanceof Error ? cause.message : globalThis.String(cause)}`,
-    status: 500,
-    cause,
-  });
+  new HttpError({ message: `Search error during ${operation}`, status: 500, cause });
 
 type AliasRow = { expansion: string };
 type TermRow = { normalized_term: string; frequency: number | string | bigint };
