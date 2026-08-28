@@ -20,9 +20,9 @@ export async function generateMetadata(props: {
   const metaTitle = post.meta?.title ?? post.title;
   const metaDescription = post.meta?.description ?? post.excerpt;
   const metaImage =
-    typeof post.meta?.image === "object"
+    post.meta?.image instanceof Object
       ? post.meta.image
-      : typeof post.featuredImage === "object"
+      : post.featuredImage instanceof Object
         ? post.featuredImage
         : null;
 
@@ -85,7 +85,7 @@ const getLayoutClasses = (layout: "full" | "wide" | "centered" | null | undefine
 };
 
 function PostImageBlock({ block }: { block: ImageBlock }) {
-  const image = typeof block.image === "number" ? null : block.image;
+  const image = block.image instanceof Object ? block.image : null;
   if (!image) return null;
 
   return (
@@ -164,10 +164,10 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
         <header className="space-y-4">
           <h1 className="text-3xl font-medium">{post.title}</h1>
           <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-            {post.author && typeof post.author !== "number" && (
+            {post.author && post.author instanceof Object && (
               <span>By {post.author.name || post.author.email}</span>
             )}
-            {post.category && typeof post.category !== "number" && (
+            {post.category && post.category instanceof Object && (
               <span>
                 <Link
                   href={`/posts?category=${post.category.slug}`}
@@ -190,11 +190,10 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {post.tags.map((tag) => {
-                const tagObj = typeof tag === "number" ? null : tag;
-                if (!tagObj) return null;
+                if (!(tag instanceof Object)) return null;
                 return (
-                  <span key={tagObj.id} className="px-2 py-1 text-xs bg-gray-100 rounded">
-                    {tagObj.title}
+                  <span key={tag.id} className="px-2 py-1 text-xs bg-gray-100 rounded">
+                    {tag.title}
                   </span>
                 );
               })}
@@ -202,7 +201,7 @@ export default async function PostPage(props: { params: Promise<{ slug: string }
           )}
         </header>
 
-        {post.featuredImage && typeof post.featuredImage !== "number" && (
+        {post.featuredImage && post.featuredImage instanceof Object && (
           <figure className="py-4">
             <img
               src={post.featuredImage.url ?? ""}

@@ -8,6 +8,7 @@ Effect V4.
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/api`: Elysia Worker
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
+- `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
 The `production` stage adopts the existing resources instead of replacing
@@ -37,9 +38,10 @@ pnpm deploy:shared
 pnpm deploy:api
 pnpm deploy:web
 pnpm deploy:runner
+pnpm deploy:gtm
 ```
 
-Deployment order is `shared -> api -> adapter -> web`.
+Deployment order is `shared -> api -> adapter -> web`. `gtm` is independent and can be deployed at any time.
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:

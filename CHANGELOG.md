@@ -1,3 +1,25 @@
+## [1.100.1](https://github.com/et0and/wwwtom/compare/v1.100.0...v1.100.1) (2026-08-27)
+
+
+### Bug Fixes
+
+* **lint:** reduce gtm provider complexity and ignore generated paths ([1a8ebe9](https://github.com/et0and/wwwtom/commit/1a8ebe9e6fd40eb78c50bc90b0734a3b5a09d98c))
+
+# [1.100.0](https://github.com/et0and/wwwtom/compare/v1.99.0...v1.100.0) (2026-08-25)
+
+
+### Bug Fixes
+
+* **adapter:** harden CORS tests against timing flake ([6694eea](https://github.com/et0and/wwwtom/commit/6694eead253878677dd34f6a71cbc0cc0f7fad61))
+* **lint:** resolve oxlint failures across cms and sophie ([4cbd1f7](https://github.com/et0and/wwwtom/commit/4cbd1f714e5fb2435d8c11b75b959aa0e9ae056b))
+
+
+### Features
+
+* **infra/gtm:** add Variable, Folder and Version providers ([e4c5661](https://github.com/et0and/wwwtom/commit/e4c5661f6d302848e7ab5d62544246014cfa2846)), closes [#108](https://github.com/et0and/wwwtom/issues/108) [#109](https://github.com/et0and/wwwtom/issues/109)
+* **infra/gtm:** expose read-only fields and expand Trigger per discovery ([cd79db6](https://github.com/et0and/wwwtom/commit/cd79db682204dfbbbe80f82fbb1230236e34de3d))
+* **infra:** add GTM alchemy resource providers (foundation slice) ([8f0367d](https://github.com/et0and/wwwtom/commit/8f0367d5bd4949b6ce204ec80bfdb84fe84e810b))
+
 # [1.99.0](https://github.com/et0and/wwwtom/compare/v1.98.1...v1.99.0) (2026-08-17)
 
 

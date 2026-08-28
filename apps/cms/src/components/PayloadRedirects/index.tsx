@@ -21,21 +21,19 @@ export const PayloadRedirects: React.FC<Props> = async ({ disableNotFound, url }
       redirect(redirectItem.to.url);
     }
 
+    const reference = redirectItem.to?.reference;
+
     let redirectUrl: string;
 
-    if (typeof redirectItem.to?.reference?.value === "string") {
-      const collection = redirectItem.to?.reference?.relationTo;
-      const id = redirectItem.to?.reference?.value;
-
-      const document = (await getCachedDocument(collection, id)()) as Page | Post;
-      redirectUrl = `${redirectItem.to?.reference?.relationTo !== "pages" ? `/${redirectItem.to?.reference?.relationTo}` : ""}/${
-        document?.slug
-      }`;
+    if (reference && !(reference.value instanceof Object)) {
+      const document = (await getCachedDocument(
+        reference.relationTo,
+        String(reference.value),
+      )()) as Page | Post;
+      redirectUrl = `${reference.relationTo !== "pages" ? `/${reference.relationTo}` : ""}/${document?.slug}`;
     } else {
-      redirectUrl = `${redirectItem.to?.reference?.relationTo !== "pages" ? `/${redirectItem.to?.reference?.relationTo}` : ""}/${
-        typeof redirectItem.to?.reference?.value === "object"
-          ? redirectItem.to?.reference?.value?.slug
-          : ""
+      redirectUrl = `${reference?.relationTo !== "pages" ? `/${reference?.relationTo}` : ""}/${
+        reference && reference.value instanceof Object ? reference.value.slug : ""
       }`;
     }
 

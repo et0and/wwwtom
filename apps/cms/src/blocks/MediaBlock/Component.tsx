@@ -30,7 +30,7 @@ export const MediaBlock: React.FC<Props> = (props) => {
   } = props;
 
   let caption;
-  if (media && typeof media === "object") caption = media.caption;
+  if (media instanceof Object) caption = media.caption;
 
   return (
     <div
