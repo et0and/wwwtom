@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Stryker 10 + vitest 4.1.10. Mutates src/; tests live in __tests__/ and are discovered via the vitest config.",
+  "packageManager": "pnpm",
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "vitest",
+  "coverageAnalysis": "perTest",
+  "plugins": ["@stryker-mutator/vitest-runner", "@stryker-mutator/typescript-checker"],
+  "tsconfigFile": "tsconfig.json",
+  "mutate": ["src/**/*.ts"],
+  "mutator": {
+    "excludedMutations": ["StringLiteral"]
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/reports/**",
+    "src/**/*.test.ts",
+    "src/**/*.spec.ts"
+  ]
+}

@@ -8,7 +8,8 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint"
+    "lint": "oxlint",
+    "mutate": "stryker run"
   },
   "dependencies": {
     "@elysiajs/openapi": "catalog:",
@@ -23,6 +24,10 @@
     "workers-og": "0.0.27"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
+    "@vitest/coverage-v8": "4.1.10",
     "vitest": "catalog:"
   }
 }

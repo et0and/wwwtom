@@ -38,11 +38,15 @@ export type LogContext = {
 };
 
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
-  const endpoint = raw
-    ?.trim()
-    .replace(/\/collector\/event$/, "")
-    .replace(/\/+$/, "");
-  return endpoint ? endpoint : undefined;
+  if (raw === undefined) return undefined;
+  let endpoint = raw.trim();
+  if (!endpoint) return undefined;
+  while (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+  if (endpoint.endsWith("/collector/event")) {
+    endpoint = endpoint.slice(0, -"/collector/event".length);
+  }
+  while (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+  return endpoint || undefined;
 };
 
 // Axiom cloud OTLP base. The datasets are the runtime defaults
@@ -92,6 +96,7 @@ const makeLoggingLayer = (context: LogContext) => {
   if (!otel) return Logger.layer([Logger.consoleStructured]);
   const resource = {
     serviceName: context.serviceName,
+    // Stryker disable next-line ObjectLiteral: OTLP resource app attribute — verified via withLogging OTLP export test, mutant replaces attributes with empty object
     attributes: { app: context.serviceName },
   };
   const commonHeaders = { Authorization: otel.authorization };

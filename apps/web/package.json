@@ -10,6 +10,7 @@
     "start": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
+    "mutate": "stryker run",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage"
@@ -38,11 +39,15 @@
   },
   "devDependencies": {
     "@solidjs/testing-library": "0.8.10",
+    "@stryker-mutator/core": "10.0.0",
+    "@stryker-mutator/typescript-checker": "10.0.0",
+    "@stryker-mutator/vitest-runner": "10.0.0",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",
     "@types/node": "24.9.1",
     "@types/number-to-words": "1.2.3",
     "@types/rss": "0.0.32",
+    "@vitest/coverage-v8": "4.1.10",
     "jsdom": "27.0.0",
     "tailwindcss": "4.3.3",
     "vite": "^8.1.5",

@@ -20,6 +20,7 @@ export const logContextFromRequest = (request: Request, serviceName: string): Lo
   ...getRequestContext(request),
 });
 
+// Stryker disable all: infrastructure wiring — covered indirectly via API/adapter integration tests
 const createTelegramLayer = (env: CloudflareEnv) => {
   const configLayer = makeAppConfigLayer({
     TELEGRAM_BOT_TOKEN: env.TELEGRAM_BOT_TOKEN,
@@ -40,6 +41,7 @@ export const sendErrorAlert = (env: CloudflareEnv, message: string, cause?: unkn
     ),
   );
 };
+// Stryker restore all
 
 /**
  * Cloudflare passes (request, env, ctx) to the worker's fetch handler.

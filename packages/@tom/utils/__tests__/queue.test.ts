@@ -1,4 +1,5 @@
-import { describe, expect, it, vi } from "vitest";
+import { vi } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Schema } from "effect";
 import { TomWorkMessage } from "@tom/schemas/queue";
 import { makeTomQueueLayer, TomQueueService } from "../src/services/queue";
@@ -39,49 +40,40 @@ const testEnv = (queue: CloudflareEnv["WORK_QUEUE"]): CloudflareEnv => ({
 });
 
 describe("TomQueueService", () => {
-  it("sends a message through the WORK_QUEUE binding", async () => {
+  it.effect("sends a message through the WORK_QUEUE binding", () => {
     const send = vi.fn().mockResolvedValue(undefined);
-    const env = testEnv({
-      send,
-      sendBatch: vi.fn().mockResolvedValue(undefined),
-    });
+    const env = testEnv({ send, sendBatch: vi.fn().mockResolvedValue(undefined) });
+    return Effect.gen(function* () {
+      const queue = yield* TomQueueService;
+      yield* queue.send({ kind: "publish-post", postId: 1, publishAt: Date.now() });
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const queue = yield* TomQueueService;
-        yield* queue.send({ kind: "publish-post", postId: 1, publishAt: Date.now() });
-      }).pipe(Effect.provide(makeTomQueueLayer(env))),
-    );
-
-    expect(send).toHaveBeenCalledOnce();
-    expect(send.mock.calls[0]?.[0]).toMatchObject({ kind: "publish-post", postId: 1 });
+      expect(send).toHaveBeenCalledOnce();
+      expect(send.mock.calls[0]?.[0]).toMatchObject({ kind: "publish-post", postId: 1 });
+    }).pipe(Effect.provide(makeTomQueueLayer(env)));
   });
 
-  it("sends a batch through the WORK_QUEUE binding", async () => {
+  it.effect("sends a batch through the WORK_QUEUE binding", () => {
     const sendBatch = vi.fn().mockResolvedValue(undefined);
     const env = testEnv({ send: vi.fn(), sendBatch });
+    return Effect.gen(function* () {
+      const queue = yield* TomQueueService;
+      yield* queue.sendBatch([
+        { kind: "publish-post", postId: 1, publishAt: Date.now() },
+        { kind: "render-og", url: "https://tom.so" },
+      ]);
 
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const queue = yield* TomQueueService;
-        yield* queue.sendBatch([
-          { kind: "publish-post", postId: 1, publishAt: Date.now() },
-          { kind: "render-og", url: "https://tom.so" },
-        ]);
-      }).pipe(Effect.provide(makeTomQueueLayer(env))),
-    );
-
-    expect(sendBatch).toHaveBeenCalledOnce();
-    const messages = sendBatch.mock.calls[0]?.[0] as Array<{ body: unknown }>;
-    expect(messages.map((m) => m.body)).toEqual([
-      { kind: "publish-post", postId: 1, publishAt: expect.any(Number) },
-      { kind: "render-og", url: "https://tom.so" },
-    ]);
+      expect(sendBatch).toHaveBeenCalledOnce();
+      const messages = sendBatch.mock.calls[0]?.[0] as Array<{ body: unknown }>;
+      expect(messages.map((m) => m.body)).toEqual([
+        { kind: "publish-post", postId: 1, publishAt: expect.any(Number) },
+        { kind: "render-og", url: "https://tom.so" },
+      ]);
+    }).pipe(Effect.provide(makeTomQueueLayer(env)));
   });
 
-  it("fails with a missing WORK_QUEUE binding", async () => {
-    const result = await Effect.runPromise(
-      Effect.match(
+  it.effect("fails with a missing WORK_QUEUE binding", () =>
+    Effect.gen(function* () {
+      const result = yield* Effect.match(
         Effect.gen(function* () {
           const queue = yield* TomQueueService;
           yield* queue.send({
@@ -94,15 +86,66 @@ describe("TomQueueService", () => {
           onFailure: (error) => ({ tag: "error" as const, error }),
           onSuccess: (value) => ({ tag: "success" as const, value }),
         },
-      ),
-    );
+      );
 
-    expect(result.tag).toBe("error");
-    if (result.tag === "error") {
-      expect(result.error).toMatchObject({
-        _tag: "QueueError",
-        message: "WORK_QUEUE binding missing from worker env",
-      });
-    }
-  });
+      expect(result.tag).toBe("error");
+      if (result.tag === "error") {
+        expect(result.error).toMatchObject({
+          _tag: "QueueError",
+          message: "WORK_QUEUE binding missing from worker env",
+        });
+      }
+    }),
+  );
+
+  it.effect("wraps queue send failures as QueueError", () =>
+    Effect.gen(function* () {
+      const cause = new Error("queue down");
+      const send = vi.fn().mockRejectedValue(cause);
+      const env = testEnv({ send, sendBatch: vi.fn() });
+      const result = yield* Effect.match(
+        Effect.gen(function* () {
+          const queue = yield* TomQueueService;
+          yield* queue.send({ kind: "publish-post", postId: 1, publishAt: Date.now() });
+        }).pipe(Effect.provide(makeTomQueueLayer(env))),
+        {
+          onFailure: (error) => ({ tag: "error" as const, error }),
+          onSuccess: (value) => ({ tag: "success" as const, value }),
+        },
+      );
+      expect(result.tag).toBe("error");
+      if (result.tag === "error") {
+        expect(result.error).toMatchObject({
+          _tag: "QueueError",
+          message: "Failed to send to tom work queue",
+          cause,
+        });
+      }
+    }),
+  );
+
+  it.effect("wraps sendBatch failures as QueueError", () =>
+    Effect.gen(function* () {
+      const cause = new Error("batch down");
+      const sendBatch = vi.fn().mockRejectedValue(cause);
+      const env = testEnv({ send: vi.fn(), sendBatch });
+      const result = yield* Effect.match(
+        Effect.gen(function* () {
+          const queue = yield* TomQueueService;
+          yield* queue.sendBatch([{ kind: "render-og", url: "https://tom.so" }]);
+        }).pipe(Effect.provide(makeTomQueueLayer(env))),
+        {
+          onFailure: (error) => ({ tag: "error" as const, error }),
+          onSuccess: (value) => ({ tag: "success" as const, value }),
+        },
+      );
+      expect(result.tag).toBe("error");
+      if (result.tag === "error") {
+        expect(result.error).toMatchObject({
+          _tag: "QueueError",
+          message: "Failed to send to tom work queue",
+        });
+      }
+    }),
+  );
 });

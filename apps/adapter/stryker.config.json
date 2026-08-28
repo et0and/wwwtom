@@ -1,0 +1,32 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "_comment": "Stryker 10 + vitest 4.1.10. Mutates src/; tests in src/__tests__/ are auto-excluded via ignorePatterns and discovered via the vitest config.",
+  "packageManager": "pnpm",
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "vitest",
+  "vitest": {
+    "related": false
+  },
+  "coverageAnalysis": "perTest",
+  "plugins": ["@stryker-mutator/vitest-runner", "@stryker-mutator/typescript-checker"],
+  "tsconfigFile": "tsconfig.json",
+  "mutate": [
+    "src/**/*.ts",
+    "!src/**/*.test.ts",
+    "!src/**/*.spec.ts",
+    "!src/**/__tests__/**",
+    "!src/test/**",
+    "!src/integrations/arena/**",
+    "!src/integrations/github/**",
+    "!src/integrations/guestbook/**",
+    "!src/integrations/image/**",
+    "!src/integrations/payload/content-converter.ts",
+    "!src/integrations/payload/highlight.ts",
+    "!src/integrations/polar/**",
+    "!src/integrations/og/**",
+    "!src/simulator.ts"
+  ],
+  "mutator": { "excludedMutations": ["StringLiteral"] },
+  "ignorePatterns": ["**/node_modules/**", "**/dist/**", "**/reports/**"],
+  "thresholds": { "high": 30, "low": 15, "break": 10 }
+}

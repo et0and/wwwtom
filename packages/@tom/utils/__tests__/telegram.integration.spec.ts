@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "@effect/vitest";
 import { Effect, Layer, Option, Redacted, Schema } from "effect";
 import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
@@ -20,29 +20,6 @@ const createConfigLayer = (botToken: string, chat: string) =>
 const createLayer = (botToken: string, chat: string) =>
   Layer.provideMerge(TelegramService.Default, createConfigLayer(botToken, chat));
 
-const runTestResult = <A, E>(
-  effect: Effect.Effect<A, E, TelegramService>,
-  botToken: string,
-  chat: string,
-): Promise<
-  | {
-      tag: "error";
-      error: E;
-    }
-  | {
-      tag: "success";
-      value: A;
-    }
-> => {
-  const layer = createLayer(botToken, chat);
-  const provided = Effect.provide(effect, layer);
-  const mapped = Effect.match(provided, {
-    onFailure: (error) => ({ tag: "error" as const, error }),
-    onSuccess: (value) => ({ tag: "success" as const, value }),
-  });
-  return Effect.runPromise(mapped);
-};
-
 const ErrorWithMessage = Schema.Struct({ message: Schema.String });
 
 const getErrorMessage = (cause: unknown): string | undefined =>
@@ -52,30 +29,31 @@ const getErrorMessage = (cause: unknown): string | undefined =>
   );
 
 describe("Telegram integration", () => {
-  it("sends a live alert", async () => {
-    if (!token || !chatId) {
-      void Effect.runFork(
-        Effect.logWarning("TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID missing, skipping"),
-      );
-      return;
-    }
-
-    const message = `Telegram integration test ${new Date().toISOString()}`;
-    const effect = Effect.flatMap(TelegramService, (service) => service.sendAlert(message));
-    const result = await runTestResult(effect, token, chatId);
-    if (result.tag === "error") {
-      const errorMessage = getErrorMessage(result.error);
-      // Skip test if Telegram API is unavailable or token/chat is invalid
-      if (errorMessage?.includes("fetch failed") || errorMessage?.includes("404")) {
-        void Effect.runFork(
-          Effect.logWarning(
-            "Telegram API unavailable or invalid config, skipping integration test",
-          ),
-        );
+  it.effect("sends a live alert", () =>
+    Effect.gen(function* () {
+      if (!token || !chatId) {
+        yield* Effect.logWarning("TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID missing, skipping");
         return;
       }
-      throw result.error;
-    }
-    expect(result.value).toBeUndefined();
-  });
+
+      const message = `Telegram integration test ${new Date().toISOString()}`;
+      const effect = Effect.flatMap(TelegramService, (service) => service.sendAlert(message));
+      const result = yield* Effect.match(Effect.provide(effect, createLayer(token, chatId)), {
+        onFailure: (error) => ({ tag: "error" as const, error }),
+        onSuccess: (value) => ({ tag: "success" as const, value }),
+      });
+
+      if (result.tag === "error") {
+        const errorMessage = getErrorMessage(result.error);
+        if (errorMessage?.includes("fetch failed") || errorMessage?.includes("404")) {
+          yield* Effect.logWarning(
+            "Telegram API unavailable or invalid config, skipping integration test",
+          );
+          return;
+        }
+        throw result.error;
+      }
+      expect(result.value).toBeUndefined();
+    }),
+  );
 });
