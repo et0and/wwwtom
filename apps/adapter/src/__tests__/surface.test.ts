@@ -98,15 +98,14 @@ describe("adapter surface", () => {
       expect(response.headers.get("content-type")).toContain("application/json");
     });
 
-    it("returns 400 JSON for validation errors", async () => {
+    it("handles invalid pagination query without crashing", async () => {
       const response = await app.fetch(
         requestWithEnv(
           "http://localhost/payload/posts?page=not-a-number&pageSize=not-a-number",
           env,
         ),
       );
-      // Elysia validation or payload handling should not crash — returns JSON error or page
-      expect([200, 400].includes(response.status)).toBe(true);
+      expect(response.status).toBe(200);
       expect(response.headers.get("content-type")).toContain("application/json");
     });
   });

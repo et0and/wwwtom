@@ -38,13 +38,15 @@ export type LogContext = {
 };
 
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
-  const endpoint = raw
-    ?.trim()
-    // lgtm[js/polynomial-redos] — endpoint is short OTEL URL from env (AXIOM_TOKEN), not user-controlled long input
-    .replace(/\/+$/, "")
-    // lgtm[js/polynomial-redos] — see above
-    .replace(/\/collector\/event$/, "");
-  return endpoint ? endpoint : undefined;
+  if (raw === undefined) return undefined;
+  let endpoint = raw.trim();
+  if (!endpoint) return undefined;
+  while (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+  if (endpoint.endsWith("/collector/event")) {
+    endpoint = endpoint.slice(0, -"/collector/event".length);
+  }
+  while (endpoint.endsWith("/")) endpoint = endpoint.slice(0, -1);
+  return endpoint || undefined;
 };
 
 // Axiom cloud OTLP base. The datasets are the runtime defaults
