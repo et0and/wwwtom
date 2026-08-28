@@ -105,8 +105,11 @@ const dbError = (operation: string, cause: unknown): HttpError =>
   new HttpError({ message: `Search error during ${operation}`, status: 500, cause });
 
 type AliasRow = { expansion: string };
-type TermRow = { normalized_term: string; frequency: number };
-type CountRow = { search_term_count: number; address_count: number };
+type TermRow = { normalized_term: string; frequency: number | string | bigint };
+type CountRow = {
+  search_term_count: number | string | bigint;
+  address_count: number | string | bigint;
+};
 
 export const makeSearchService = (db: AddressDbService): SearchService => {
   const getAliasExpansions = (
@@ -150,19 +153,20 @@ export const makeSearchService = (db: AddressDbService): SearchService => {
       let bestFrequency = -1;
 
       for (const candidate of rows) {
+        const frequency = Number(candidate.frequency);
         const distance = levenshtein(token, candidate.normalized_term);
         if (distance === 0 || distance > correctionThreshold(token)) continue;
 
         if (
           distance < bestDistance ||
-          (distance === bestDistance && candidate.frequency > bestFrequency) ||
+          (distance === bestDistance && frequency > bestFrequency) ||
           (distance === bestDistance &&
-            candidate.frequency === bestFrequency &&
+            frequency === bestFrequency &&
             candidate.normalized_term < (bestToken ?? "~"))
         ) {
           bestToken = candidate.normalized_term;
           bestDistance = distance;
-          bestFrequency = candidate.frequency;
+          bestFrequency = frequency;
         }
       }
       return bestToken;
@@ -174,7 +178,9 @@ export const makeSearchService = (db: AddressDbService): SearchService => {
       try: () => sql.unsafe<CountRow>(SQL.selectSearchCounts),
       catch: (cause) => dbError("ensureSearchTermsReady", cause),
     });
-    if (rows[0]?.search_term_count === 0 && (rows[0]?.address_count ?? 0) > 0) {
+    const searchTermCount = Number(rows[0]?.search_term_count ?? 0);
+    const addressCount = Number(rows[0]?.address_count ?? 0);
+    if (searchTermCount === 0 && addressCount > 0) {
       yield* db.rebuildSearchTerms;
     }
   });

@@ -63,8 +63,6 @@ export const addressRoutes = new Elysia({ name: "address" })
         }
       }
 
-      set.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60";
-
       const services = await addressServicesFromRequest(request);
       const effect = services
         .searchAddresses(trimmed, limit, bbox)
@@ -76,6 +74,7 @@ export const addressRoutes = new Elysia({ name: "address" })
 
       const result = await runEffect(effect, logContextFromRequest(request, "tom-api"));
       if (result instanceof Response) return result;
+      set.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60";
       return result;
     },
     {

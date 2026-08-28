@@ -8,7 +8,7 @@ import type { Address, AddressFilters, Meta } from "@tom/types/address";
 const dbError = (operation: string, cause: unknown): HttpError =>
   new HttpError({ message: `Database error during ${operation}`, status: 500, cause });
 
-type CountRow = { count: number };
+type CountRow = { count: number | string | bigint };
 type MetaRow = { updated_at: string | null; ingested_at: string | null };
 
 export const getAddressById = (
@@ -120,7 +120,7 @@ export const getMeta = (db: AddressDbService): Effect.Effect<Meta, HttpError> =>
       try: () => sql.unsafe<CountRow>(SQL.countAddresses),
       catch: (cause) => dbError("getMeta", cause),
     });
-    const total = countRows[0]?.count ?? 0;
+    const total = Number(countRows[0]?.count ?? 0);
     const metaRows = yield* Effect.tryPromise({
       try: () => sql.unsafe<MetaRow>(SQL.selectMeta),
       catch: (): Promise<readonly MetaRow[]> => Promise.resolve([]),

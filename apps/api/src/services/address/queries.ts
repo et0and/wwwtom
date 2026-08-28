@@ -54,7 +54,7 @@ export const buildRebuildTermsQuery = (kind: string, columnName: string): string
         FROM (
           SELECT value, COUNT(*) AS weight
           FROM (
-            SELECT lower(regexp_replace(trim(${columnName}), '[^a-z0-9]+', ' ', 'g')) AS value
+            SELECT regexp_replace(lower(trim(${columnName})), '[^a-z0-9]+', ' ', 'g') AS value
             FROM addresses
             WHERE ${columnName} IS NOT NULL AND trim(${columnName}) != ''
           ) grouped

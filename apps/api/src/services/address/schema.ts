@@ -69,27 +69,33 @@ export const ADDRESS_SCHEMA_STATEMENTS: readonly string[] = [
     lat DOUBLE PRECISION,
     lng DOUBLE PRECISION,
     source_version TEXT,
-    search_vector tsvector GENERATED ALWAYS AS (
-      to_tsvector(
-        'simple',
-        concat_ws(
-          ' ',
-          coalesce(full_address, ''),
-          coalesce(full_address_ascii, ''),
-          coalesce(full_road_name, ''),
-          coalesce(full_road_name_ascii, ''),
-          coalesce(road_name, ''),
-          coalesce(road_name_ascii, ''),
-          coalesce(road_type_name, ''),
-          coalesce(road_type_name_ascii, ''),
-          coalesce(suburb_locality, ''),
-          coalesce(suburb_locality_ascii, ''),
-          coalesce(town_city, ''),
-          coalesce(town_city_ascii, '')
-        )
-      )
-    ) STORED
+    search_vector tsvector
   )`,
+  `CREATE OR REPLACE FUNCTION addresses_search_vector_update() RETURNS trigger AS $$
+BEGIN
+  NEW.search_vector := to_tsvector(
+    'simple',
+    concat_ws(
+      ' ',
+      coalesce(NEW.full_address, ''),
+      coalesce(NEW.full_address_ascii, ''),
+      coalesce(NEW.full_road_name, ''),
+      coalesce(NEW.full_road_name_ascii, ''),
+      coalesce(NEW.road_name, ''),
+      coalesce(NEW.road_name_ascii, ''),
+      coalesce(NEW.road_type_name, ''),
+      coalesce(NEW.road_type_name_ascii, ''),
+      coalesce(NEW.suburb_locality, ''),
+      coalesce(NEW.suburb_locality_ascii, ''),
+      coalesce(NEW.town_city, ''),
+      coalesce(NEW.town_city_ascii, '')
+    )
+  );
+  RETURN NEW;
+END
+$$ LANGUAGE plpgsql`,
+  "DROP TRIGGER IF EXISTS addresses_search_vector_trigger ON addresses",
+  "CREATE TRIGGER addresses_search_vector_trigger BEFORE INSERT OR UPDATE ON addresses FOR EACH ROW EXECUTE FUNCTION addresses_search_vector_update()",
   "CREATE INDEX IF NOT EXISTS addresses_search_idx ON addresses USING GIN (search_vector)",
   "CREATE INDEX IF NOT EXISTS idx_addresses_town_city ON addresses (town_city)",
   "CREATE INDEX IF NOT EXISTS idx_addresses_suburb_locality ON addresses (suburb_locality)",
@@ -166,8 +172,11 @@ export const AddressRowSchema = Schema.Struct({
 
 export type AddressRow = Schema.Schema.Type<typeof AddressRowSchema>;
 
+const toNumber = (value: string | number | bigint): number => Number(value);
+
 export const mapAddressRow = (row: AddressRow) => ({
-  addressId: row.address_id,
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- postgres returns BIGINT as string at runtime; Schema types narrow to number, so coerce boundary value
+  addressId: toNumber(row.address_id as unknown as string | number | bigint),
   fullAddress: row.full_address,
   fullAddressNumber: row.full_address_number,
   fullAddressRoad: row.full_road_name,
@@ -176,6 +185,8 @@ export const mapAddressRow = (row: AddressRow) => ({
   territorialAuthority: row.territorial_authority,
   region: row.region ?? null,
   postcode: row.postcode ?? null,
-  longitude: row.lng,
-  latitude: row.lat,
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- lat/lng are DOUBLE PRECISION but driver may return string
+  longitude: toNumber(row.lng as unknown as string | number | bigint),
+  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- same
+  latitude: toNumber(row.lat as unknown as string | number | bigint),
 });
