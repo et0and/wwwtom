@@ -2,32 +2,22 @@ import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { HttpError } from "@tom/types/errors";
 import { errorResponseSchema } from "@tom/schemas/error";
+import {
+  AddressListSchema,
+  AddressSchema,
+  AddressSearchQuerySchema,
+  AddressListQuerySchema,
+  MetaSchema,
+  ParamsSchema,
+  ReverseQuerySchema,
+} from "@tom/schemas/address";
 import { logContextFromRequest, runEffect, toErrorResponse } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { addressServicesFromRequest } from "../services/address";
 
-const addressSchema = Schema.Struct({
-  addressId: Schema.Number,
-  fullAddress: Schema.String,
-  fullAddressNumber: Schema.String,
-  fullAddressRoad: Schema.NullishOr(Schema.String),
-  suburb: Schema.String,
-  townCity: Schema.String,
-  territorialAuthority: Schema.String,
-  region: Schema.NullishOr(Schema.String),
-  postcode: Schema.NullishOr(Schema.String),
-  longitude: Schema.Number,
-  latitude: Schema.Number,
-});
-
-const addressListSchema = Schema.Array(addressSchema);
-
-const metaSchema = Schema.Struct({
-  version: Schema.String,
-  totalAddresses: Schema.Number,
-  lastUpdated: Schema.String,
-});
-
+const addressSchema = AddressSchema;
+const addressListSchema = AddressListSchema;
+const metaSchema = MetaSchema;
 const errorSchema = errorResponseSchema;
 
 const parseLimit = (raw: string | undefined, fallback: number, max: number): number => {
@@ -44,70 +34,16 @@ const parseBbox = (value: string): readonly [number, number, number, number] => 
   return [minLng, minLat, maxLng, maxLat];
 };
 
-const BboxParamSchema = Schema.String.pipe(
-  Schema.annotate({
-    description: "Bounding box filter as minLng,minLat,maxLng,maxLat",
-    examples: ["174.77,-41.29,174.79,-41.28"],
-  }),
-);
-
-const SearchQuerySchema = Schema.Struct({
-  q: Schema.String.pipe(
-    Schema.annotate({
-      description: "Search query string (min 3 chars)",
-      examples: ["lambton quay"],
-    }),
-  ),
-  bbox: Schema.optional(BboxParamSchema),
-  limit: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Maximum results (default: 100, max: 1000)" }),
-  ),
-});
-
-const searchQuerySchema = toOpenApiSchema(SearchQuerySchema);
-
-const ReverseQuerySchema = Schema.Struct({
-  lat: Schema.String.pipe(
-    Schema.annotate({ description: "Latitude in decimal degrees", examples: ["-41.2865"] }),
-  ),
-  lng: Schema.String.pipe(
-    Schema.annotate({ description: "Longitude in decimal degrees", examples: ["174.7762"] }),
-  ),
-  limit: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Maximum results (default: 10, max: 100)" }),
-  ),
-});
-
+const searchQuerySchema = toOpenApiSchema(AddressSearchQuerySchema);
 const reverseQuerySchema = toOpenApiSchema(ReverseQuerySchema);
-
-const ListQuerySchema = Schema.Struct({
-  limit: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Maximum results (default: 100, max: 1000)" }),
-  ),
-  offset: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Number of results to skip" }),
-  ),
-  town_city: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Filter by town/city name", examples: ["Wellington"] }),
-  ),
-  suburb_locality: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Filter by suburb/locality", examples: ["Te Aro"] }),
-  ),
-  road_name: Schema.optional(Schema.String).pipe(
-    Schema.annotate({ description: "Filter by road/street name", examples: ["Lambton Quay"] }),
-  ),
-  bbox: Schema.optional(BboxParamSchema),
-});
-
-const listQuerySchema = toOpenApiSchema(ListQuerySchema);
-
-const ParamsSchema = Schema.Struct({ id: Schema.String });
+const listQuerySchema = toOpenApiSchema(AddressListQuerySchema);
+const paramsSchema = toOpenApiSchema(ParamsSchema);
 
 export const addressRoutes = new Elysia({ name: "address" })
   .get(
     "/v1/search",
     async ({ query, request, set }) => {
-      const decoded = Schema.decodeUnknownSync(SearchQuerySchema)(query);
+      const decoded = Schema.decodeUnknownSync(AddressSearchQuerySchema)(query);
       const trimmed = decoded.q.trim();
       if (trimmed.length < 3) {
         set.status = 400;
@@ -182,6 +118,7 @@ export const addressRoutes = new Elysia({ name: "address" })
       return result;
     },
     {
+      params: paramsSchema,
       response: {
         200: toOpenApiSchema(addressSchema),
         400: toOpenApiSchema(errorSchema),
@@ -198,7 +135,7 @@ export const addressRoutes = new Elysia({ name: "address" })
   .get(
     "/v1/addresses",
     async ({ query, request }) => {
-      const decoded = Schema.decodeUnknownSync(ListQuerySchema)(query);
+      const decoded = Schema.decodeUnknownSync(AddressListQuerySchema)(query);
       const limit = parseLimit(decoded.limit, 100, 1000);
       const offset = parseLimit(decoded.offset, 0, 1_000_000);
       const bboxValue = decoded.bbox;

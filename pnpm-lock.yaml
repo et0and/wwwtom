@@ -839,6 +839,9 @@ importers:
 
   packages/@tom/types:
     dependencies:
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       effect:
         specifier: 'catalog:'
         version: 4.0.0-beta.105

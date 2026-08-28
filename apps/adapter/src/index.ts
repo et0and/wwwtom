@@ -12,6 +12,7 @@ import {
 } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { AdapterError } from "./config/effect";
+import { addressIntegration } from "./integrations/address";
 import { arenaIntegration } from "./integrations/arena";
 import { payloadIntegration } from "./integrations/payload";
 import { polarIntegration } from "./integrations/polar";
@@ -103,6 +104,7 @@ export const app = new Elysia({
     sendErrorAlert(getRequestEnv(request), "Unhandled adapter error", error);
     return toErrorResponse(500, "Internal server error");
   })
+  .use(addressIntegration)
   .use(arenaIntegration)
   .use(payloadIntegration)
   .use(polarIntegration)

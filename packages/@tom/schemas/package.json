@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./address": "./src/address.ts",
     "./arena": "./src/arena.ts",
     "./branded": "./src/branded.ts",
     "./error": "./src/error.ts",

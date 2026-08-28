@@ -1,16 +1,7 @@
-export type Address = {
-  addressId: number;
-  fullAddress: string;
-  fullAddressNumber: string;
-  fullAddressRoad: string | null;
-  suburb: string;
-  townCity: string;
-  territorialAuthority: string;
-  region: string | null;
-  postcode: string | null;
-  longitude: number;
-  latitude: number;
-};
+import { Schema } from "effect";
+import { AddressSchema, MetaSchema } from "@tom/schemas/address";
+
+export type Address = Schema.Schema.Type<typeof AddressSchema>;
 
 export type AddressFilters = {
   limit?: number;
@@ -23,8 +14,4 @@ export type AddressFilters = {
 
 export type Bbox = readonly [number, number, number, number];
 
-export type Meta = {
-  version: string;
-  totalAddresses: number;
-  lastUpdated: string;
-};
+export type Meta = Schema.Schema.Type<typeof MetaSchema>;

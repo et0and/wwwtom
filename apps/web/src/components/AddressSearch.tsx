@@ -7,20 +7,10 @@ import {
   onCleanup,
   Show,
 } from "solid-js";
-
-type Address = {
-  addressId: number;
-  fullAddress: string;
-  fullAddressNumber: string;
-  fullAddressRoad: string | null;
-  suburb: string;
-  townCity: string;
-  territorialAuthority: string;
-  region: string | null;
-  postcode: string | null;
-  longitude: number;
-  latitude: number;
-};
+import { Schema } from "effect";
+import { AddressListSchema } from "@tom/schemas/address";
+import type { Address } from "@tom/types/address";
+import { HttpError } from "@tom/types/errors";
 
 const getApiBaseUrl = (): string => {
   const buildUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -35,9 +25,13 @@ const fetchAddresses = async (query: string): Promise<readonly Address[]> => {
   const response = await fetch(url.toString());
   if (!response.ok) {
     const body = await response.text();
-    throw new Error(body || `Search failed: ${response.status}`);
+    throw new HttpError({
+      message: body || `Search failed: ${response.status}`,
+      status: response.status,
+    });
   }
-  return (await response.json()) as readonly Address[];
+  const json = await response.json();
+  return Schema.decodeUnknownSync(AddressListSchema)(json);
 };
 
 export function AddressSearch() {
@@ -57,7 +51,7 @@ export function AddressSearch() {
   const isActive = createMemo(() => debounced().length >= 3);
 
   const [results] = createResource(debounced, (search) => {
-    if (!search) return Promise.resolve([] as readonly Address[]);
+    if (!search) return Promise.resolve([] satisfies readonly Address[]);
     return fetchAddresses(search);
   });
 
@@ -89,7 +83,16 @@ export function AddressSearch() {
         </div>
       </Show>
       <Show when={results.error}>
-        <p class="text-sm text-red-600">Search failed: {(results.error as Error).message}</p>
+        {(error) => {
+          const err = error() as unknown;
+          const message =
+            err instanceof HttpError
+              ? `${err.message} (${err.status})`
+              : err instanceof Error
+                ? err.message
+                : String(err);
+          return <p class="text-sm text-red-600">Search failed: {message}</p>;
+        }}
       </Show>
       <Show when={results()}>
         {(data) => (
