@@ -11,15 +11,11 @@ type PostgresSql = {
   end: () => Promise<void>;
 } & ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<readonly unknown[]>);
 
-const postgresCache = new Map<string, PostgresSql>();
-
 const getPostgres = (connectionString: string): Effect.Effect<PostgresSql, HttpError> =>
   Effect.gen(function* () {
     if (!connectionString) {
       return yield* new HttpError({ message: "Address database URL not configured", status: 500 });
     }
-    const cached = postgresCache.get(connectionString);
-    if (cached) return cached;
 
     const postgresMod = yield* Effect.tryPromise({
       try: () => import("postgres"),
@@ -35,15 +31,12 @@ const getPostgres = (connectionString: string): Effect.Effect<PostgresSql, HttpE
     ) => PostgresSql;
 
     const sql = yield* Effect.try({
-      try: () => {
-        const created = postgresFn(connectionString, {
-          max: 10,
+      try: () =>
+        postgresFn(connectionString, {
+          max: 1,
           idle_timeout: 20,
           connect_timeout: 5,
-        });
-        postgresCache.set(connectionString, created);
-        return created;
-      },
+        }),
       catch: (cause) => dbError("create postgres connection", cause),
     });
 
@@ -70,8 +63,21 @@ export const makeAddressDb = (params: {
   const primaryConn = params.primaryConnectionString;
   const replicaConn = params.replicaConnectionString ?? params.primaryConnectionString;
 
-  const primary = getPostgres(primaryConn);
-  const replica = getPostgres(replicaConn);
+  let primaryMemo: PostgresSql | undefined;
+  let replicaMemo: PostgresSql | undefined;
+
+  const primary = Effect.gen(function* () {
+    if (primaryMemo) return primaryMemo;
+    const sql = yield* getPostgres(primaryConn);
+    primaryMemo = sql;
+    return sql;
+  });
+  const replica = Effect.gen(function* () {
+    if (replicaMemo) return replicaMemo;
+    const sql = yield* getPostgres(replicaConn);
+    replicaMemo = sql;
+    return sql;
+  });
 
   let schemaReady = false;
 
@@ -159,13 +165,5 @@ export const makeAddressDb = (params: {
   };
 };
 
-export const closeAddressDb = (connectionString: string): Effect.Effect<void, HttpError> =>
-  Effect.gen(function* () {
-    const sql = postgresCache.get(connectionString);
-    if (!sql) return;
-    postgresCache.delete(connectionString);
-    yield* Effect.tryPromise({
-      try: () => sql.end(),
-      catch: (cause) => dbError("closeAddressDb", cause),
-    });
-  });
+export const closeAddressDb = (_connectionString: string): Effect.Effect<void, HttpError> =>
+  Effect.void;
