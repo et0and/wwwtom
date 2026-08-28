@@ -19,7 +19,11 @@ const timingSafeEqual = (a: string, b: string): boolean => {
  * {@link INTERNAL_TOKEN_HEADER} value against `INTERNAL_API_TOKEN` (from
  * TOM_SECRETS); fail-closed when the secret isn't configured.
  */
-export const requireInternalTokenBeforeHandle = async ({ request }: { request: Request }) => {
+export const requireInternalTokenBeforeHandle = async ({
+  request,
+}: {
+  request: Request;
+}): Promise<void | Response> => {
   const env = await readCloudflareEnv(getRequestEnv(request));
   const expected = env.INTERNAL_API_TOKEN;
   const provided = request.headers.get(INTERNAL_TOKEN_HEADER);
@@ -32,4 +36,5 @@ export const requireInternalTokenBeforeHandle = async ({ request }: { request: R
     );
     return toErrorResponse(HttpStatus.Unauthorized, "Unauthorized");
   }
+  return undefined;
 };

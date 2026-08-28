@@ -20,6 +20,9 @@
     "@tom/utils": "workspace:*",
     "effect": "catalog:",
     "elysia": "catalog:",
+    "kysely": "catalog:",
+    "kysely-postgres-js": "3.0.0",
+    "postgres": "catalog:",
     "workers-og": "0.0.27"
   },
   "devDependencies": {

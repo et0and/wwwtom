@@ -83,9 +83,9 @@ wwwtom already routes `DATABASE_URL` through Hyperdrive (`packages/@tom/utils/sr
 - Code: `AddressDbService` holds two Pools/Kysely instances:
 
 ```ts
-const primary = getDb(ADDRESS_DB);    // writes: ingest, migrations, api_keys
+const primary = getDb(ADDRESS_DB); // writes: ingest, migrations, api_keys
 const replica = getDb(ADDRESS_DB_REPLICA); // reads: search, list, getById, reverse, meta
-const runRead  = query(replicaConnectionString);
+const runRead = query(replicaConnectionString);
 const runWrite = query(primaryConnectionString);
 ```
 
@@ -100,6 +100,7 @@ Cost/perf: Neon autosuspends idle replica; Hyperdrive pools across isolates and 
 Requirement: 3 char minimum before search, with debounce.
 
 Frontend (SolidStart, `apps/web`):
+
 - Use `createSignal` + `createEffect` + `createMemo` pattern (`apps/web/AGENTS.md`). Do not use `createEffect` to set state; use debounce via `setTimeout` + `onCleanup`.
 - Minimal primitive:
 
@@ -108,19 +109,24 @@ const [query, setQuery] = createSignal("");
 const [debounced, setDebounced] = createSignal("");
 createEffect(() => {
   const q = query();
-  if (q.trim().length < 3) { setDebounced(""); return; }
+  if (q.trim().length < 3) {
+    setDebounced("");
+    return;
+  }
   const id = setTimeout(() => setDebounced(q.trim()), 250);
   onCleanup(() => clearTimeout(id));
 });
-const results = createResource(debounced, (q) => q ? fetchSearch(q) : Promise.resolve([]));
+const results = createResource(debounced, (q) => (q ? fetchSearch(q) : Promise.resolve([])));
 ```
 
 - Use `@tanstack/solid-query` (already in `apps/web/package.json`) with `enabled: debounced().length >= 3` as alternative.
 
 API guard:
+
 - In `routes/addresses.ts`, validate `q.trim().length >= 3`; return `400 ValidationError` if shorter. This prevents replica load from single-char prefix scans (`a:*` would match ~50% of tsvector). Keep `limit` clamp `parseLimit` already present.
 
 Cache:
+
 - Add `Cache-Control: public, max-age=300, stale-while-revalidate=60` for `GET /v1/search` when `q` hits; Cloudflare caches at edge and reduces replica QPS.
 
 ### 3.4 Effect + Elysia alignment (wwwtom)

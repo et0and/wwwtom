@@ -5,6 +5,8 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
+import { addressHyperdrive, addressReplicaHyperdrive } from "../hyperdrive/address.hyperdrive.ts";
+import { webKv } from "../kv/web.kv.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -33,6 +35,10 @@ export const api = Effect.gen(function* () {
       ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
       : undefined;
 
+  const addressReplicaEnv = yield* addressReplicaHyperdrive.pipe(
+    Effect.map((replica) => (replica ? { ADDRESS_HYPERDRIVE_REPLICA: replica } : {})),
+  );
+
   return yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
@@ -56,6 +62,9 @@ export const api = Effect.gen(function* () {
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       WORK_QUEUE: tomQueue,
+      TOM_RATE_LIMIT_KV: webKv,
+      ADDRESS_HYPERDRIVE: addressHyperdrive,
+      ...addressReplicaEnv,
     },
   });
 });

@@ -47,6 +47,10 @@ export type CloudflareEnv = {
   PAYLOAD_URL?: string;
   DATABASE_URL?: string;
   HYPERDRIVE?: { connectionString: string };
+  ADDRESS_DB?: string;
+  ADDRESS_DB_REPLICA?: string;
+  ADDRESS_HYPERDRIVE?: { connectionString: string };
+  ADDRESS_HYPERDRIVE_REPLICA?: { connectionString: string };
   // Raw Cloudflare queue binding — app code should go through
   // TomQueueService (@tom/utils/services/queue) for schema-typed sends.
   WORK_QUEUE?: {
@@ -93,6 +97,8 @@ const secretKeys = [
   "ARENA_TOKEN",
   "PAYLOAD_URL",
   "DATABASE_URL",
+  "ADDRESS_DB",
+  "ADDRESS_DB_REPLICA",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
   "SUCCESS_URL",

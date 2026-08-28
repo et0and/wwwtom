@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./address": "./src/address.ts",
     "./customer": "./src/customer.ts",
     "./db": "./src/db.ts",
     "./errors": "./src/errors.ts",

@@ -16,6 +16,7 @@ export const web = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
   const adapterHost = stageHost(stage, "adapter");
+  const apiHost = stageHost(stage, "api");
 
   // The Axiom ingest token is minted by the shared stack (production only);
   // reference it there instead of re-registering, which would fight over
@@ -43,7 +44,9 @@ export const web = Effect.gen(function* () {
       WORK_QUEUE: tomQueue,
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
       // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
-      ...(isAlchemyDev ? undefined : { VITE_ADAPTER_URL: `https://${adapterHost}` }),
+      ...(isAlchemyDev
+        ? undefined
+        : { VITE_ADAPTER_URL: `https://${adapterHost}`, VITE_API_URL: `https://${apiHost}` }),
     },
   });
 });
