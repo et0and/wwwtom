@@ -34,6 +34,18 @@ export const SQL = {
   countAddresses: `SELECT COUNT(*)::int AS count FROM addresses`,
 
   selectMeta: `SELECT updated_at, ingested_at FROM dataset_version ORDER BY ingested_at DESC LIMIT 1`,
+
+  insertDatasetVersion: `INSERT INTO dataset_version (update_sequence, updated_at, ingested_at) VALUES ($1, $2, $3) ON CONFLICT (update_sequence) DO UPDATE SET updated_at = EXCLUDED.updated_at, ingested_at = EXCLUDED.ingested_at`,
+
+  insertIngestionRun: `INSERT INTO ingestion_runs (run_id, update_sequence, status, started_at, total_features, processed_features) VALUES ($1, $2, $3, $4, $5, 0) ON CONFLICT (run_id) DO NOTHING`,
+
+  updateIngestionRun: `UPDATE ingestion_runs SET processed_features = processed_features + $1 WHERE run_id = $2`,
+
+  finalizeIngestionRun: `UPDATE ingestion_runs SET status = $1, finished_at = $2 WHERE run_id = $3`,
+
+  selectIngestionRun: `SELECT processed_features FROM ingestion_runs WHERE run_id = $1`,
+
+  deleteOldAddresses: `DELETE FROM addresses WHERE source_version IS DISTINCT FROM $1 AND address_id IN (SELECT address_id FROM addresses WHERE source_version IS DISTINCT FROM $1 LIMIT 10000) RETURNING address_id`,
 } as const;
 
 const ALLOWED_REBUILD_COLUMNS = new Set([

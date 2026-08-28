@@ -37,6 +37,14 @@ export interface AddressDbService {
   readonly ensureSchema: Effect.Effect<void, HttpError>;
   readonly rebuildSearchTerms: Effect.Effect<void, HttpError>;
   readonly getDatasetVersion: Effect.Effect<string | null, HttpError>;
+  readonly setDatasetVersion: (version: string) => Effect.Effect<void, HttpError>;
+  readonly createIngestionRun: (
+    runId: string,
+    version: string,
+    total: number,
+  ) => Effect.Effect<void, HttpError>;
+  readonly updateIngestionRun: (runId: string, processed: number) => Effect.Effect<void, HttpError>;
+  readonly finalizeIngestionRun: (runId: string, status: string) => Effect.Effect<void, HttpError>;
   readonly hasApiKey: (keyHash: string) => Effect.Effect<boolean, HttpError>;
   readonly insertApiKey: (keyHash: string) => Effect.Effect<void, HttpError>;
 }
@@ -123,6 +131,56 @@ export const makeAddressDb = (params: {
     return rows[0]?.update_sequence ?? null;
   });
 
+  const setDatasetVersion: (version: string) => Effect.Effect<void, HttpError> = (version) =>
+    Effect.gen(function* () {
+      const sql = yield* primary;
+      const now = new Date().toISOString();
+      yield* Effect.tryPromise({
+        try: () => sql.unsafe<unknown>(SQL.insertDatasetVersion, [version, now, now]),
+        catch: (cause) => dbError("setDatasetVersion", cause),
+      });
+    });
+
+  const createIngestionRun: (
+    runId: string,
+    version: string,
+    total: number,
+  ) => Effect.Effect<void, HttpError> = (runId, version, total) =>
+    Effect.gen(function* () {
+      const sql = yield* primary;
+      const now = new Date().toISOString();
+      yield* Effect.tryPromise({
+        try: () =>
+          sql.unsafe<unknown>(SQL.insertIngestionRun, [runId, version, "running", now, total]),
+        catch: (cause) => dbError("createIngestionRun", cause),
+      });
+    });
+
+  const updateIngestionRun: (runId: string, processed: number) => Effect.Effect<void, HttpError> = (
+    runId,
+    processed,
+  ) =>
+    Effect.gen(function* () {
+      const sql = yield* primary;
+      yield* Effect.tryPromise({
+        try: () => sql.unsafe<unknown>(SQL.updateIngestionRun, [processed, runId]),
+        catch: (cause) => dbError("updateIngestionRun", cause),
+      });
+    });
+
+  const finalizeIngestionRun: (runId: string, status: string) => Effect.Effect<void, HttpError> = (
+    runId,
+    status,
+  ) =>
+    Effect.gen(function* () {
+      const sql = yield* primary;
+      const now = new Date().toISOString();
+      yield* Effect.tryPromise({
+        try: () => sql.unsafe<unknown>(SQL.finalizeIngestionRun, [status, now, runId]),
+        catch: (cause) => dbError("finalizeIngestionRun", cause),
+      });
+    });
+
   const hasApiKey: (keyHash: string) => Effect.Effect<boolean, HttpError> = (keyHash) =>
     Effect.gen(function* () {
       const sql = yield* replica;
@@ -148,6 +206,10 @@ export const makeAddressDb = (params: {
     ensureSchema,
     rebuildSearchTerms,
     getDatasetVersion,
+    setDatasetVersion,
+    createIngestionRun,
+    updateIngestionRun,
+    finalizeIngestionRun,
     hasApiKey,
     insertApiKey,
   };
