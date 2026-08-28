@@ -3,7 +3,7 @@ import { HttpError } from "@tom/types/errors";
 import type { AddressDbService } from "./db";
 import { SQL } from "./queries";
 
-const LINZ_LAYER = "data.linz.govt.nz:layer-105689";
+const LINZ_LAYER = "data.linz.govt.nz:layer-123113";
 const WFS_VERSION = "2.0.0";
 const PAGE_SIZE = 1000;
 const MAX_PAGES_PER_INGEST = 900;
@@ -67,11 +67,17 @@ const LinzPropertiesSchema = Schema.Struct({
   road_name_ascii: nullishText,
   road_type_name: nullishText,
   road_type_name_ascii: nullishText,
+  // New layer 123113 uses road_name_type instead of road_type_name
+  road_name_type: nullishText,
+  road_id: nullishNumber,
+  unit: nullishText,
+  is_land: Schema.optional(Schema.Boolean),
   suburb_locality: nullishText,
   suburb_locality_ascii: nullishText,
   town_city: nullishText,
   town_city_ascii: nullishText,
   territorial_authority: nullishText,
+  territorial_authority_ascii: nullishText,
   unit_type: nullishText,
   unit_type_ascii: nullishText,
   unit_value: nullishText,
@@ -83,6 +89,7 @@ const LinzPropertiesSchema = Schema.Struct({
   address_number_suffix: nullishText,
   address_number_high: nullishNumber,
   road_name_prefix: nullishText,
+  road_name_suffix: nullishText,
   road_suffix: nullishText,
   water_name: nullishText,
   water_name_ascii: nullishText,
@@ -188,6 +195,10 @@ const featureToValues = (
   const get = <K extends keyof typeof props>(key: K): string | number | null =>
     (props[key] as string | number | null | undefined) ?? null;
 
+  const roadTypeName = props.road_name_type ?? props.road_type_name ?? null;
+  const roadTypeNameAscii = props.road_type_name_ascii ?? props.road_name_type ?? null;
+  const roadSuffix = props.road_suffix ?? props.road_name_suffix ?? null;
+
   return [
     addressId,
     get("source_dataset"),
@@ -199,8 +210,8 @@ const featureToValues = (
     get("full_road_name_ascii"),
     get("road_name"),
     get("road_name_ascii"),
-    get("road_type_name"),
-    get("road_type_name_ascii"),
+    roadTypeName,
+    roadTypeNameAscii,
     get("suburb_locality"),
     get("suburb_locality_ascii"),
     get("town_city"),
@@ -208,7 +219,7 @@ const featureToValues = (
     get("territorial_authority"),
     get("unit_type"),
     get("unit_type_ascii"),
-    get("unit_value"),
+    props.unit ?? get("unit_value"),
     get("level_type"),
     get("level_type_ascii"),
     get("level_value"),
@@ -217,7 +228,7 @@ const featureToValues = (
     get("address_number_suffix"),
     get("address_number_high"),
     get("road_name_prefix"),
-    get("road_suffix"),
+    roadSuffix,
     get("water_name"),
     get("water_name_ascii"),
     get("water_body_name"),
