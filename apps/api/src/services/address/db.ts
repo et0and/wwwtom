@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import postgres from "postgres";
 import { HttpError } from "@tom/types/errors";
 import { buildRebuildTermsQuery, SQL } from "./queries";
 import { ADDRESS_SCHEMA_STATEMENTS, SEARCH_ALIASES } from "./schema";
@@ -17,26 +18,13 @@ const getPostgres = (connectionString: string): Effect.Effect<PostgresSql, HttpE
       return yield* new HttpError({ message: "Address database URL not configured", status: 500 });
     }
 
-    const postgresMod = yield* Effect.tryPromise({
-      try: () => import("postgres"),
-      catch: (cause) => dbError("load postgres driver", cause),
-    });
-
-    // postgres package exports a function as default; handle both ESM and CJS interop
-    // oxlint-disable-next-line anti-slop/no-unsafe-dictionary-type -- dynamic import boundary for postgres ESM/CJS interop, single optional key check
-    const maybeDefault = (postgresMod as { default?: unknown }).default;
-    const postgresFn = (maybeDefault ?? postgresMod) as (
-      connectionString: string,
-      options: { max: number; idle_timeout: number; connect_timeout: number },
-    ) => PostgresSql;
-
     const sql = yield* Effect.try({
       try: () =>
-        postgresFn(connectionString, {
+        postgres(connectionString, {
           max: 1,
           idle_timeout: 20,
           connect_timeout: 5,
-        }),
+        }) as PostgresSql,
       catch: (cause) => dbError("create postgres connection", cause),
     });
 

@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
 import type { AddressDbService } from "./db";
 import { SQL } from "./queries";
-import { mapAddressRow, type AddressRow } from "./schema";
+import { mapAddressRow, type RawAddressRow } from "./schema";
 import type { Address, AddressFilters, Meta } from "@tom/types/address";
 
 const dbError = (operation: string, cause: unknown): HttpError =>
@@ -18,7 +18,7 @@ export const getAddressById = (
   Effect.gen(function* () {
     const sql = yield* db.replica;
     const rows = yield* Effect.tryPromise({
-      try: () => sql.unsafe<AddressRow>(SQL.selectAddressById, [id]),
+      try: () => sql.unsafe<RawAddressRow>(SQL.selectAddressById, [id]),
       catch: (cause) => dbError("getAddressById", cause),
     });
     const first = rows[0];
@@ -34,18 +34,18 @@ export const listAddresses = (
     const limit = Math.min(Math.max(filters.limit ?? 100, 1), 1000);
     const offset = Math.max(filters.offset ?? 0, 0);
 
-    let rows: readonly AddressRow[] = [];
+    let rows: readonly RawAddressRow[] = [];
 
     if (filters.townCity) {
       rows = yield* Effect.tryPromise({
         try: () =>
-          sql.unsafe<AddressRow>(SQL.selectAddressesByTown, [filters.townCity, limit, offset]),
+          sql.unsafe<RawAddressRow>(SQL.selectAddressesByTown, [filters.townCity, limit, offset]),
         catch: (cause) => dbError("listAddresses", cause),
       });
     } else if (filters.suburbLocality) {
       rows = yield* Effect.tryPromise({
         try: () =>
-          sql.unsafe<AddressRow>(SQL.selectAddressesBySuburb, [
+          sql.unsafe<RawAddressRow>(SQL.selectAddressesBySuburb, [
             filters.suburbLocality,
             limit,
             offset,
@@ -55,7 +55,7 @@ export const listAddresses = (
     } else if (filters.roadName) {
       rows = yield* Effect.tryPromise({
         try: () =>
-          sql.unsafe<AddressRow>(SQL.selectAddressesByRoad, [filters.roadName, limit, offset]),
+          sql.unsafe<RawAddressRow>(SQL.selectAddressesByRoad, [filters.roadName, limit, offset]),
         catch: (cause) => dbError("listAddresses", cause),
       });
     } else if (filters.bbox) {
@@ -63,7 +63,7 @@ export const listAddresses = (
       const [minLng, minLat, maxLng, maxLat] = bbox;
       rows = yield* Effect.tryPromise({
         try: () =>
-          sql.unsafe<AddressRow>(SQL.selectAddressesByBbox, [
+          sql.unsafe<RawAddressRow>(SQL.selectAddressesByBbox, [
             minLng,
             maxLng,
             minLat,
@@ -75,7 +75,7 @@ export const listAddresses = (
       });
     } else {
       rows = yield* Effect.tryPromise({
-        try: () => sql.unsafe<AddressRow>(SQL.selectAddressesOrdered, [limit, offset]),
+        try: () => sql.unsafe<RawAddressRow>(SQL.selectAddressesOrdered, [limit, offset]),
         catch: (cause) => dbError("listAddresses", cause),
       });
     }
@@ -88,7 +88,11 @@ export const listAddresses = (
       const bbox = filters.bbox;
       const [minLng, minLat, maxLng, maxLat] = bbox;
       const filtered = rows.filter(
-        (row) => row.lng >= minLng && row.lng <= maxLng && row.lat >= minLat && row.lat <= maxLat,
+        (row) =>
+          Number(row.lng) >= minLng &&
+          Number(row.lng) <= maxLng &&
+          Number(row.lat) >= minLat &&
+          Number(row.lat) <= maxLat,
       );
       return filtered.map(mapAddressRow);
     }
@@ -106,7 +110,7 @@ export const reverseGeocode = (
     const sql = yield* db.replica;
     const safeLimit = Math.min(Math.max(limit, 1), 100);
     const rows = yield* Effect.tryPromise({
-      try: () => sql.unsafe<AddressRow>(SQL.selectReverseGeocode, [lng, lat, safeLimit]),
+      try: () => sql.unsafe<RawAddressRow>(SQL.selectReverseGeocode, [lng, lat, safeLimit]),
       catch: (cause) => dbError("reverseGeocode", cause),
     });
     return rows.map(mapAddressRow);

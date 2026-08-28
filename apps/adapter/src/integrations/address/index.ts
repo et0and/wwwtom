@@ -14,6 +14,12 @@ const SearchQuerySchema = Schema.Struct({
   bbox: Schema.optional(Schema.String),
 });
 
+const RawMetaSchema = Schema.Struct({
+  version: Schema.String,
+  totalAddresses: Schema.Number,
+  lastUpdated: Schema.Union([Schema.String, Schema.Date]),
+});
+
 const searchQuerySchema = Schema.toStandardSchemaV1(SearchQuerySchema);
 const addressSearchResponseSchema = Schema.toStandardSchemaV1(Schema.Array(AddressSchema));
 const metaResponseSchema = Schema.toStandardSchemaV1(MetaSchema);
@@ -38,10 +44,10 @@ export const addressIntegration = new Elysia({ name: "address" })
           bbox: query.bbox,
         });
 
-        // oxlint-disable-next-line anti-slop/no-known-value-widening -- Eden treaty query contract requires optional limit/bbox
-        const apiQuery: { q: string; limit?: string; bbox?: string } = { q: query.q };
-        if (query.limit !== undefined) apiQuery.limit = query.limit;
-        if (query.bbox !== undefined) apiQuery.bbox = query.bbox;
+        const baseQuery = { q: query.q };
+        const withLimit =
+          query.limit !== undefined ? { ...baseQuery, limit: query.limit } : baseQuery;
+        const apiQuery = query.bbox !== undefined ? { ...withLimit, bbox: query.bbox } : withLimit;
 
         const result = yield* Effect.tryPromise({
           try: () => api.v1.search.get({ query: apiQuery }),
@@ -107,15 +113,37 @@ export const addressIntegration = new Elysia({ name: "address" })
       const api = callApi(apiUrl, env.INTERNAL_API_TOKEN);
 
       const program = Effect.gen(function* () {
+        yield* Effect.logInfo("address:meta:proxy", { apiUrl });
         const result = yield* Effect.tryPromise({
           try: () => api.v1.meta.get(),
           catch: (cause) =>
             new HttpError({ message: "Failed to proxy address meta", status: 502, cause }),
         });
         if (result.error) {
-          return yield* new HttpError({ message: "Address meta failed", status: 502 });
+          yield* Effect.logError("address:meta:proxy:error", {
+            status: result.status,
+            error: result.error,
+          });
+          return yield* new HttpError({
+            message: "Address meta failed",
+            status: 502,
+            cause: result.error,
+          });
         }
-        return Schema.decodeUnknownSync(MetaSchema)(result.data);
+        const raw = yield* Effect.try({
+          try: () => Schema.decodeUnknownSync(RawMetaSchema)(result.data),
+          catch: (cause) =>
+            new HttpError({
+              message: "Meta decode failed",
+              status: 502,
+              cause,
+            }),
+        });
+        const normalized =
+          raw.lastUpdated instanceof Date
+            ? { ...raw, lastUpdated: raw.lastUpdated.toISOString() }
+            : raw;
+        return Schema.decodeUnknownSync(MetaSchema)(normalized);
       });
 
       return runAdapter(

@@ -172,11 +172,29 @@ export const AddressRowSchema = Schema.Struct({
 
 export type AddressRow = Schema.Schema.Type<typeof AddressRowSchema>;
 
+const DbNumber = Schema.Union([Schema.Number, Schema.String, Schema.BigInt]);
+
+export const RawAddressRowSchema = Schema.Struct({
+  address_id: DbNumber,
+  full_address: Schema.String,
+  full_address_number: Schema.String,
+  full_road_name: Schema.NullOr(Schema.String),
+  suburb_locality: Schema.String,
+  town_city: Schema.String,
+  territorial_authority: Schema.String,
+  lat: DbNumber,
+  lng: DbNumber,
+  postcode: Schema.optional(Schema.NullOr(Schema.String)),
+  source_version: Schema.optional(Schema.NullOr(Schema.String)),
+  region: Schema.optional(Schema.NullOr(Schema.String)),
+});
+
+export type RawAddressRow = Schema.Schema.Type<typeof RawAddressRowSchema>;
+
 const toNumber = (value: string | number | bigint): number => Number(value);
 
-export const mapAddressRow = (row: AddressRow) => ({
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- postgres returns BIGINT as string at runtime; Schema types narrow to number, so coerce boundary value
-  addressId: toNumber(row.address_id as unknown as string | number | bigint),
+export const mapAddressRow = (row: RawAddressRow) => ({
+  addressId: toNumber(row.address_id),
   fullAddress: row.full_address,
   fullAddressNumber: row.full_address_number,
   fullAddressRoad: row.full_road_name,
@@ -185,8 +203,6 @@ export const mapAddressRow = (row: AddressRow) => ({
   territorialAuthority: row.territorial_authority,
   region: row.region ?? null,
   postcode: row.postcode ?? null,
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- lat/lng are DOUBLE PRECISION but driver may return string
-  longitude: toNumber(row.lng as unknown as string | number | bigint),
-  // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- same
-  latitude: toNumber(row.lat as unknown as string | number | bigint),
+  longitude: toNumber(row.lng),
+  latitude: toNumber(row.lat),
 });

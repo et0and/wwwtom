@@ -2,7 +2,7 @@ import { Array as Arr, Effect, pipe, String } from "effect";
 import { HttpError } from "@tom/types/errors";
 import type { AddressDbService } from "./db";
 import { SQL } from "./queries";
-import { mapAddressRow, type AddressRow } from "./schema";
+import { mapAddressRow, type RawAddressRow } from "./schema";
 
 const MAX_ALIAS_EXPANSIONS = 3;
 const MAX_CORRECTION_CANDIDATES = 50;
@@ -244,7 +244,7 @@ export const makeSearchService = (db: AddressDbService): SearchService => {
       for (const plan of plans) {
         const tsQuery = toTsQuery(plan.match);
         const rows = yield* Effect.tryPromise({
-          try: () => sql.unsafe<AddressRow>(SQL.searchAddresses, [tsQuery, limit]),
+          try: () => sql.unsafe<RawAddressRow>(SQL.searchAddresses, [tsQuery, limit]),
           catch: (cause) => dbError("search", cause),
         });
         if (rows.length) return rows.map(mapAddressRow);
