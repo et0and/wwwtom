@@ -50,12 +50,20 @@ export const runner = Effect.gen(function* () {
     env: {
       NODE_ENV: "production",
       ...devSecrets,
-      // The container-backed DO class exported by src/index.ts; className
-      // defaults to the binding name, so the env key must match the export.
-      Sandbox: Cloudflare.Container("Sandbox", {
+      // The container-backed DO class exported by src/index.ts. The binding
+      // name (env key) and the container's LogicalId must differ: alchemy
+      // registers the durable_object_namespace binding and the `containers`
+      // metadata under the same sid, and dedupeBindings keeps only the last
+      // one — an equal LogicalId would drop the DO binding entirely (#953).
+      // `className` names the exported class (Sandbox) explicitly.
+      Sandbox: Cloudflare.Container("SandboxContainer", {
+        className: "Sandbox",
         context: `${import.meta.dirname}/image`,
-        instanceType: "standard-1",
+        // 1 vCPU / 6 GiB — matches the ubuntu-slim runner CI previously
+        // used (standard-1's 0.5 vCPU made the whole suite slower).
+        instanceType: "standard-2",
         maxInstances: 5,
+        observability: { logs: { enabled: true } },
       }),
       GITHUB_REPOSITORY: "et0and/wwwtom",
       RUNNER_LABELS: "cloudflare-sandbox",

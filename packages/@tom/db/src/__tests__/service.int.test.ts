@@ -61,6 +61,9 @@ describe("DatabaseService", () => {
         migrationFolder: path.join(import.meta.dirname, "../migrations"),
       }),
     });
+
+    // PGlite is WASM — a fresh sandbox instance cold-compiles it, and the
+    // migration run follows; the default 10s hook timeout is too tight.
     const result = await migrator.migrateToLatest();
     expect(result.error).toBeUndefined();
     expect(result.results?.map((migration) => migration.status)).toEqual(["Success"]);

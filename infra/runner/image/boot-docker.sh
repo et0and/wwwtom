@@ -12,25 +12,27 @@ stop_docker() {
 }
 trap stop_docker EXIT INT TERM
 
-runuser --user runner -- \
-	env \
-	DOCKER_HOST="$DOCKER_HOST" \
-	HOME=/home/runner \
-	LOGNAME=runner \
-	USER=runner \
-	XDG_RUNTIME_DIR="$XDG_RUNTIME_DIR" \
-	/usr/local/bin/dockerd-rootless.sh \
+# Cloudflare Containers run in Firecracker microVMs: no user namespaces and
+# no /dev/fuse, so rootless dockerd (rootlesskit + fuse-overlayfs) cannot
+# start. Run ROOTFUL dockerd instead (the documented Cloudflare DinD
+# pattern), with iptables disabled — the platform does not support iptables
+# manipulation — and let the storage driver auto-detect (falls back to vfs).
+# The docker group on the socket gives the `runner` user access. `--bridge=none`
+# skips docker0 creation (the platform forbids netlink bridge setup); job
+# containers reach the network via `--network=host` (docker-shim.sh).
+/usr/local/bin/dockerd \
 	--host="$DOCKER_HOST" \
+	--group=docker \
+	--bridge=none \
 	--iptables=false \
-	--ip6tables=false \
-	--storage-driver=fuse-overlayfs &
+	--ip6tables=false &
 daemon_pid=$!
 
 for _ in {1..150}; do
 	if runuser --user runner -- \
 		env DOCKER_HOST="$DOCKER_HOST" /usr/local/bin/docker-real version \
 		>/dev/null 2>&1; then
-		echo "Rootless Docker is ready"
+		echo "Docker is ready"
 		wait "$daemon_pid"
 		exit $?
 	fi
@@ -42,5 +44,5 @@ for _ in {1..150}; do
 	sleep 0.2
 done
 
-echo "Rootless Docker did not become ready within 30 seconds" >&2
+echo "Docker did not become ready within 30 seconds" >&2
 exit 1

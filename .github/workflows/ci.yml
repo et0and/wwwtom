@@ -8,16 +8,106 @@ on:
     branches:
       - dev
 
+permissions:
+  contents: read
+
 jobs:
+  # CONTRIBUTORS is the single allowlist for who may consume CI compute:
+  # fork PRs, same-repo PRs, and pushes to dev all require the actor to be
+  # listed. The file is read from the BASE repo via the API — a fork PR runs
+  # the fork's workflow file, so checking out would let a fork edit the list.
+  # Note this is policy, not a security boundary: fork PRs get no secrets
+  # (CONTROL_TOKEN unavailable) and never match the same-repo condition, so
+  # they cannot spawn the self-hosted runner regardless of this gate.
+  check-contributor:
+    name: Check contributor
+    runs-on: ubuntu-latest
+    outputs:
+      is-contributor: ${{ steps.check.outputs.is-contributor }}
+    steps:
+      - name: Check actor against CONTRIBUTORS
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ACTOR: ${{ github.event_name == 'push' && github.event.pusher.login || github.event.pull_request.user.login }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Read from GITHUB_SHA — the merge commit on pull_request, the
+          # pushed commit on push — so a PR that introduces CONTRIBUTORS
+          # itself is honored before it reaches the default branch. If the
+          # file is genuinely absent, fall back to author_association:
+          # OWNER/MEMBER/COLLABORATOR have repo access, which is a stronger
+          # trust signal than the file anyway.
+          LIST=$(gh api "repos/$REPO/contents/CONTRIBUTORS?ref=$GITHUB_SHA" --jq '.content' 2>/dev/null | base64 -d 2>/dev/null || true)
+          if echo "$LIST" | grep -qx "$ACTOR"; then
+            echo "is-contributor=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          ASSOC=$(gh api "repos/$REPO/pulls/${{ github.event.pull_request.number }}" --jq '.author_association' 2>/dev/null || echo "")
+          case "$ASSOC" in
+            OWNER|MEMBER|COLLABORATOR)
+              echo "is-contributor=true" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "is-contributor=false" >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+  # Trusted events (push to dev, same-repo PRs) run on the self-hosted
+  # Cloudflare runner. GitHub doesn't wake self-hosted runners, so this job
+  # POSTs to the runner control plane first — the call blocks until the
+  # ephemeral runner is registered and listening, then the test job (queued
+  # with runs-on: cloudflare-sandbox) is picked up.
+  spawn:
+    if: >
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository) &&
+      needs.check-contributor.outputs.is-contributor == 'true'
+    needs: check-contributor
+    name: Spawn Cloudflare runner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start ephemeral runner
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --max-time 180 \
+            --request POST \
+            --header "Authorization: Bearer ${{ secrets.CONTROL_TOKEN }}" \
+            https://wwwtom-runner.yufugumi.workers.dev/runners
+
   test:
+    if: >
+      (github.event_name == 'push' ||
+       github.event.pull_request.head.repo.full_name == github.repository) &&
+      needs.check-contributor.outputs.is-contributor == 'true'
+    needs: [spawn, check-contributor]
     name: Test
-    runs-on: ubuntu-slim
+    runs-on: cloudflare-sandbox
 
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
 
+      # The sandbox image ships Node 20; pnpm 11 requires >= 22.13.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+
       - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "store-path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      # pnpm's content-addressed store: restore from GitHub's cache service
+      # (keyed by lockfile) so a fresh ephemeral runner hard-links instead of
+      # re-downloading. Saves in a post step before the runner self-destructs.
+      - name: Cache pnpm store
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ steps.pnpm-store.outputs.store-path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
 
       - name: Check pnpm version
         run: pnpm --version
@@ -28,6 +118,51 @@ jobs:
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
       # package's workspace dependencies first.
+      - name: Run unit tests
+        env:
+          ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
+        run: pnpm turbo run test
+
+  # Fork PRs keep CI on a GitHub-hosted runner (free for public repos, and
+  # untrusted code never touches the self-hosted runner). Gated to authors
+  # listed in CONTRIBUTORS.
+  test-fork:
+    if: >
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name != github.repository &&
+      needs.check-contributor.outputs.is-contributor == 'true'
+    needs: check-contributor
+    name: Test (fork PR)
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 22
+
+      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+      - name: Get pnpm store path
+        id: pnpm-store
+        run: echo "store-path=$(pnpm store path)" >> "$GITHUB_OUTPUT"
+
+      - name: Cache pnpm store
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+        with:
+          path: ${{ steps.pnpm-store.outputs.store-path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Check pnpm version
+        run: pnpm --version
+
+      - name: Install dependencies
+        run: pnpm install
+
       - name: Run unit tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
