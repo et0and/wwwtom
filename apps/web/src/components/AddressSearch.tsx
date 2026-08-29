@@ -11,6 +11,7 @@ import { Schema } from "effect";
 import { AddressListSchema } from "@tom/schemas/address";
 import type { Address } from "@tom/types/address";
 import { HttpError } from "@tom/types/errors";
+import { Spinner } from "@tom/ui/Spinner";
 
 const getApiBaseUrl = (): string => {
   const buildUrl = import.meta.env.VITE_API_URL as string | undefined;
@@ -60,15 +61,22 @@ export function AddressSearch() {
       <label class="block mb-2 font-medium" for="address-search-input">
         Search NZ addresses
       </label>
-      <input
-        id="address-search-input"
-        type="search"
-        placeholder="Try lambton quay..."
-        value={query()}
-        onInput={(event) => setQuery(event.currentTarget.value)}
-        class="input w-full mb-2"
-        autocomplete="off"
-      />
+      <div class="relative w-full mb-2">
+        <input
+          id="address-search-input"
+          type="search"
+          placeholder="Try lambton quay..."
+          value={query()}
+          onInput={(event) => setQuery(event.currentTarget.value)}
+          class="input w-full pr-10"
+          autocomplete="off"
+        />
+        <Show when={results.loading}>
+          <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+            <Spinner />
+          </div>
+        </Show>
+      </div>
       <Show when={query().trim().length > 0 && query().trim().length < 3}>
         <p class="text-sm text-muted mb-2">Enter at least 3 characters</p>
       </Show>
