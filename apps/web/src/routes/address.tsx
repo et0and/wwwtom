@@ -56,11 +56,6 @@ export default function AddressPage() {
           Demo — research branch with partial Neon seed. `tsvector` on read replica, 250ms debounce,
           3-char guard. Full NZ set is 2.1M.
         </div>
-        <p class="mb-4 text-muted">
-          Typed <code>callAdapter().address.search.get</code> → <code>api.v1.search.get</code> via
-          Eden Treaty. Postgres <code>tsvector</code> + <code>GIN</code> on Neon read replica, 250ms
-          debounce, 3-char guard.
-        </p>
         <Suspense fallback={<Spinner />}>
           <Show when={metaQuery.data}>
             {(meta) => (
