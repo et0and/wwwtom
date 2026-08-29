@@ -39,6 +39,14 @@ export const api = Effect.gen(function* () {
     Effect.map((replica) => (replica ? { ADDRESS_HYPERDRIVE_REPLICA: replica } : {})),
   );
 
+  // Better Auth D1 database for multi-tenant auth (users, orgs, api keys,
+  // usage). Migrations in apps/api/src/db/migrations apply on deploy.
+  const authDb = yield* Cloudflare.D1.Database("wwwtom-auth-d1", {
+    name: stage === "production" ? "wwwtom-auth-d1" : `wwwtom-auth-d1-${stage}`,
+    primaryLocationHint: "oc",
+    migrationsDir: `${rootDir}/apps/api/src/db/migrations`,
+  });
+
   return yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
@@ -65,6 +73,7 @@ export const api = Effect.gen(function* () {
       TOM_RATE_LIMIT_KV: webKv,
       ADDRESS_HYPERDRIVE: addressHyperdrive,
       ...addressReplicaEnv,
+      AUTH_DB: authDb,
     },
   });
 });

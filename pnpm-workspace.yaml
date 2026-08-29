@@ -58,3 +58,6 @@ minimumReleaseAgeExclude:
   - "@distilled.cloud/neon@1.0.0-rc.4"
   - "@distilled.cloud/planetscale@1.0.0-rc.4"
   - alchemy@2.0.0-beta.72
+overrides:
+  "@better-auth/core": 1.7.2
+  "@better-auth/utils": 0.4.2

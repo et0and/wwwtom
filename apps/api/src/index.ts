@@ -17,6 +17,7 @@ import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
 import { addressRoutes } from "./routes/addresses";
+import { authRoutes } from "./routes/auth";
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -80,6 +81,7 @@ export const app = new Elysia({
     return toErrorResponse(500, "Internal server error");
   })
   .use(healthRoutes)
+  .use(authRoutes)
   .use(addressRoutes)
   // OG image generation is a public route: social crawlers (Twitter, Slack,
   // iMessage) fetch the image URL without any auth headers.

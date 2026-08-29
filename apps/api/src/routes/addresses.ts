@@ -14,6 +14,8 @@ import {
 import { logContextFromRequest, runEffect, toErrorResponse } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { addressServicesFromRequest } from "../services/address";
+import { recordUsage, verifyApiKeyRecord } from "../services/auth";
+import { isRegionAllowed } from "../services/address/regions";
 
 const addressSchema = AddressSchema;
 const addressListSchema = AddressListSchema;
@@ -75,13 +77,39 @@ export const addressRoutes = new Elysia({ name: "address" })
       }
 
       const services = await addressServicesFromRequest(request);
-      const effect = services
-        .searchAddresses(trimmed, limit, bbox)
-        .pipe(
-          Effect.catch((error: HttpError) =>
-            Effect.succeed(toErrorResponse(error.status, error.message)),
-          ),
-        );
+      const effect = Effect.gen(function* () {
+        const rows = yield* services.searchAddresses(trimmed, limit, bbox);
+        const apiKeyHeader = request.headers.get("x-api-key");
+        if (!apiKeyHeader) return rows;
+
+        const verified = yield* Effect.tryPromise({
+          try: () => verifyApiKeyRecord(request, apiKeyHeader),
+          catch: (cause) =>
+            new HttpError({ message: "Failed to verify API key", status: 500, cause }),
+        });
+        if (!verified) {
+          return yield* new HttpError({ message: "Invalid API key", status: 401 });
+        }
+
+        const scopeMetadata = verified.metadata;
+        void recordUsage(request, {
+          apikeyId: verified.id,
+          userId: verified.referenceId,
+        });
+
+        const scoped =
+          scopeMetadata && scopeMetadata.scope !== "all"
+            ? rows.filter((row) => isRegionAllowed(row.territorialAuthority, scopeMetadata.regions))
+            : rows;
+        if (scopeMetadata && scopeMetadata.postcodes === false) {
+          return scoped.map((row) => ({ ...row, postcode: null }));
+        }
+        return scoped;
+      }).pipe(
+        Effect.catch((error: HttpError) =>
+          Effect.succeed(toErrorResponse(error.status, error.message)),
+        ),
+      );
 
       const result = await runEffect(effect, logContextFromRequest(request, "tom-api"));
       if (result instanceof Response) return result;

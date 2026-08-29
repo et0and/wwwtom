@@ -13,6 +13,7 @@ import {
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { AdapterError } from "./config/effect";
 import { addressIntegration } from "./integrations/address";
+import { authIntegration } from "./integrations/auth";
 import { arenaIntegration } from "./integrations/arena";
 import { payloadIntegration } from "./integrations/payload";
 import { polarIntegration } from "./integrations/polar";
@@ -105,6 +106,7 @@ export const app = new Elysia({
     return toErrorResponse(500, "Internal server error");
   })
   .use(addressIntegration)
+  .use(authIntegration)
   .use(arenaIntegration)
   .use(payloadIntegration)
   .use(polarIntegration)

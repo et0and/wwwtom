@@ -88,7 +88,14 @@ export type CloudflareEnv = {
   OTEL_TRACES_DATASET?: string;
   OTEL_LOGS_DATASET?: string;
   TOM_SECRETS?: { get(): Promise<string> };
+  // Better Auth: secret/url are read from the TOM_SECRETS bundle by
+  // readCloudflareEnv (secretKeys); AUTH_DB is the D1 binding.
+  BETTER_AUTH_SECRET?: string;
+  BETTER_AUTH_URL?: string;
+  AUTH_DB?: D1Database;
 };
+
+type D1Database = import("@cloudflare/workers-types").D1Database;
 
 // Keys seeded into the TOM_SECRETS bundle. AXIOM_TOKEN and the OTEL_*
 // overrides are deliberately absent: the ingest token is an IaC-minted
@@ -108,6 +115,8 @@ const secretKeys = [
   "INTERNAL_API_TOKEN",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
+  "BETTER_AUTH_SECRET",
+  "BETTER_AUTH_URL",
 ] as const;
 
 export type ResolvedCloudflareEnv = CloudflareEnv & { AXIOM_TOKEN?: string };
