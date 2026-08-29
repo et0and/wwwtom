@@ -23,12 +23,6 @@ type Usage = { hour: number; day: number; week: number; month: number; year: num
 
 const EMPTY_USAGE: Usage = { hour: 0, day: 0, week: 0, month: 0, year: 0 };
 
-const getAdapterUrl = (): string => {
-  const buildUrl = import.meta.env.VITE_ADAPTER_URL as string | undefined;
-  if (buildUrl) return buildUrl;
-  return import.meta.env.PROD ? "https://adapter.tom.so" : "http://localhost:8788";
-};
-
 const NZ_REGIONS = [
   "Northland",
   "Auckland",
@@ -127,7 +121,7 @@ export default function Dashboard() {
     try {
       const result = await callAdapter().auth["sign-in"].social.post({
         provider: "github",
-        callbackURL: `${getAdapterUrl()}/auth/callback/github`,
+        callbackURL: `${window.location.origin}/dashboard`,
       });
       const social = unwrapAdapter(result);
       if (social.redirect && social.url) {

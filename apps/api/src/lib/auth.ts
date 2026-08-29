@@ -55,6 +55,7 @@ export const createAuth = (db: D1Database, env: AuthEnv) => {
     trustedOrigins: [
       "http://localhost:5173",
       "http://localhost:3000",
+      "http://localhost:8788",
       "http://127.0.0.1:3000",
       "https://tom.so",
       "https://*.tom.so",

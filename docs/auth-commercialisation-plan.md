@@ -47,10 +47,11 @@ Purpose: add SAML SSO, OAuth2, and API key management for commercial use of the 
 5. **OAuth2**
    - Enable `socialProviders: { github: { clientId, clientSecret } }` (GitHub wired on dev).
    - Clients use PKCE; GitHub OAuth app must allowlist the exact `redirect_uri` Better Auth emits = `BETTER_AUTH_URL/api/auth/callback/github`.
-   - Redirect URIs to register in the GitHub OAuth app per environment (do not use a dashboard/page URL — it must be the callback path):
-     - local dev (api worker): `http://localhost:8787/api/auth/callback/github`
-     - dev stage (this branch): `https://dev-api.tom.so/api/auth/callback/github`
-     - production: `https://api.tom.so/api/auth/callback/github`
+   - Redirect URIs to register in the GitHub OAuth app per environment (do not use a dashboard/page URL — it must be the callback path). Auth runs on the API worker but is surfaced via the adapter, so the origin is the adapter host:
+     - dev stage (this branch): `https://dev-adapter.tom.so/api/auth/callback/github`
+     - production: `https://adapter.tom.so/api/auth/callback/github`
+     - local dev (api worker, alchemy dev): `http://localhost:8787/api/auth/callback/github`
+   - Post-login redirect is the `callbackURL` sent in the social sign-in body (the dashboard sends `<web origin>/dashboard`); the GitHub app only constrains the callback path, not the post-login URL.
    - If the auth base path changes, update the registered redirect URIs accordingly.
 
 6. **API key generation**
