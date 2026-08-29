@@ -92,9 +92,13 @@ export const addressRoutes = new Elysia({ name: "address" })
         }
 
         const scopeMetadata = verified.metadata;
-        void recordUsage(request, {
-          apikeyId: verified.id,
-          userId: verified.referenceId,
+        yield* Effect.tryPromise({
+          try: () =>
+            recordUsage(request, {
+              apikeyId: verified.id,
+              userId: verified.referenceId,
+            }),
+          catch: () => Promise.resolve(),
         });
 
         const scoped =
