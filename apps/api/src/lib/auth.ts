@@ -38,6 +38,7 @@ export const createAuth = (db: D1Database, env: AuthEnv) => {
       }),
       sso(),
     ] as never[],
+    onAPIError: { throw: true },
     trustedOrigins: [
       "http://localhost:5173",
       "http://localhost:3000",
