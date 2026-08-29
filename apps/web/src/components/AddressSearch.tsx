@@ -105,13 +105,14 @@ export function AddressSearch() {
       <Show when={results()}>
         {(data) => (
           <Show when={data().length > 0} fallback={<p class="text-sm text-muted">No results</p>}>
-            <ul class="space-y-2">
+            <ul class="space-y-2 list-none pl-0">
               <For each={data()}>
                 {(item) => (
-                  <li class="p-3 border rounded">
+                  <li class="p-3 border rounded list-none">
                     <div class="font-medium">{item.fullAddress}</div>
                     <div class="text-sm text-muted">
-                      {item.suburb}, {item.townCity} {item.postcode ?? ""}
+                      {item.suburb}, {item.townCity}
+                      <Show when={item.postcode}>{(postcode) => <span> · {postcode()}</span>}</Show>
                     </div>
                     <div class="text-xs text-subtle">
                       {item.longitude.toFixed(4)}, {item.latitude.toFixed(4)}
