@@ -116,8 +116,14 @@ export const reverseGeocode = (
     return rows.map(mapAddressRow);
   });
 
+let metaCache: { value: Meta; expiresAt: number } | null = null;
+const META_CACHE_TTL_MS = 60_000;
+
 export const getMeta = (db: AddressDbService): Effect.Effect<Meta, HttpError> =>
   Effect.gen(function* () {
+    const now = Date.now();
+    if (metaCache && metaCache.expiresAt > now) return metaCache.value;
+
     const sql = yield* db.replica;
     const version = yield* db.getDatasetVersion;
     const countRows = yield* Effect.tryPromise({
@@ -133,9 +139,11 @@ export const getMeta = (db: AddressDbService): Effect.Effect<Meta, HttpError> =>
     const lastUpdated =
       metaRows[0]?.ingested_at ?? metaRows[0]?.updated_at ?? new Date().toISOString();
 
-    return {
+    const value: Meta = {
       version: version ?? "unknown",
       totalAddresses: total,
       lastUpdated,
     };
+    metaCache = { value, expiresAt: now + META_CACHE_TTL_MS };
+    return value;
   });

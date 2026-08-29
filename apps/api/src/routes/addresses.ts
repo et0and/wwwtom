@@ -220,7 +220,7 @@ export const addressRoutes = new Elysia({ name: "address" })
   )
   .get(
     "/v1/meta",
-    async ({ request }) => {
+    async ({ request, set }) => {
       const services = await addressServicesFromRequest(request);
       const effect = services
         .getMeta()
@@ -231,6 +231,7 @@ export const addressRoutes = new Elysia({ name: "address" })
         );
       const result = await runEffect(effect, logContextFromRequest(request, "tom-api"));
       if (result instanceof Response) return result;
+      set.headers["Cache-Control"] = "public, max-age=60, stale-while-revalidate=30";
       return result;
     },
     {

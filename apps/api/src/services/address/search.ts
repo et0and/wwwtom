@@ -106,10 +106,6 @@ const dbError = (operation: string, cause: unknown): HttpError =>
 
 type AliasRow = { expansion: string };
 type TermRow = { normalized_term: string; frequency: number | string | bigint };
-type CountRow = {
-  search_term_count: number | string | bigint;
-  address_count: number | string | bigint;
-};
 
 export const makeSearchService = (db: AddressDbService): SearchService => {
   const getAliasExpansions = (
@@ -172,18 +168,7 @@ export const makeSearchService = (db: AddressDbService): SearchService => {
       return bestToken;
     });
 
-  const ensureSearchTermsReady: Effect.Effect<void, HttpError> = Effect.gen(function* () {
-    const sql = yield* db.replica;
-    const rows = yield* Effect.tryPromise({
-      try: () => sql.unsafe<CountRow>(SQL.selectSearchCounts),
-      catch: (cause) => dbError("ensureSearchTermsReady", cause),
-    });
-    const searchTermCount = Number(rows[0]?.search_term_count ?? 0);
-    const addressCount = Number(rows[0]?.address_count ?? 0);
-    if (searchTermCount === 0 && addressCount > 0) {
-      yield* db.rebuildSearchTerms;
-    }
-  });
+  const ensureSearchTermsReady: Effect.Effect<void, HttpError> = Effect.void;
 
   const buildPlans = (query: string): Effect.Effect<readonly SearchPlan[], HttpError> =>
     Effect.gen(function* () {
