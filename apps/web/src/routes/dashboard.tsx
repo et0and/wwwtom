@@ -52,6 +52,17 @@ const fetchSession = async (): Promise<SessionResult> => {
   return unwrapAdapter(result) as SessionResult;
 };
 
+type AppAccount = { providerId?: string | undefined };
+
+const fetchAccounts = async (): Promise<readonly AppAccount[]> => {
+  try {
+    const result = await callAdapter().auth.accounts.get();
+    return unwrapAdapter(result) as readonly AppAccount[];
+  } catch {
+    return [];
+  }
+};
+
 const fetchKeys = async (): Promise<readonly ApiKey[]> => {
   try {
     const result = await callAdapter().auth.keys.get();
@@ -73,6 +84,9 @@ const fetchUsage = async (keyId: string): Promise<Usage> => {
 export default function Dashboard() {
   const [session, { refetch: refetchSession }] = createResource(fetchSession);
   const [keys, { refetch: refetchKeys }] = createResource(fetchKeys);
+  const [accounts] = createResource(() =>
+    session()?.session ? fetchAccounts() : Promise.resolve([]),
+  );
   const [name, setName] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
@@ -181,6 +195,10 @@ export default function Dashboard() {
   };
 
   const currentUser = () => session()?.session?.user;
+  const signInMethod = () => {
+    const provider = accounts()?.find((account) => account.providerId !== "credential")?.providerId;
+    return provider ?? "email + password";
+  };
 
   return (
     <PageLayout
@@ -203,7 +221,7 @@ export default function Dashboard() {
         <h2 class="text-lg font-medium mb-2">1. Account</h2>
         <Show when={currentUser()} fallback={<p class="text-sm text-muted mb-2">Signed out.</p>}>
           <p class="text-sm text-muted mb-2">
-            Signed in as {currentUser()?.name ?? currentUser()?.email}.
+            Signed in as {currentUser()?.name ?? currentUser()?.email} · via {signInMethod()}.
           </p>
           <button class="button-secondary" onClick={handleSignOut}>
             Sign out

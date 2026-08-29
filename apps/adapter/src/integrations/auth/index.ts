@@ -117,6 +117,11 @@ export const authIntegration = new Elysia({ name: "auth" })
       },
     },
   )
+  .get("/auth/accounts", async ({ request }) => {
+    const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
+    const apiUrl = env.API_URL ?? "http://localhost:8787";
+    return proxyToApi(request, apiUrl, "GET", "/api/auth/list-accounts");
+  })
   .post(
     "/auth/sign-in/email",
     async ({ body, request }) => {
