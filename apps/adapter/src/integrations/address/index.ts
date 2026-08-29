@@ -9,9 +9,9 @@ import { AdapterError, runAdapter } from "../../config/effect";
 import { simulatorEnv } from "../../simulator";
 
 const SearchQuerySchema = Schema.Struct({
-  q: Schema.String,
+  q: Schema.Union([Schema.String, Schema.Array(Schema.String)]),
   limit: Schema.optional(Schema.String),
-  bbox: Schema.optional(Schema.String),
+  bbox: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
 });
 
 const RawMetaSchema = Schema.Struct({
@@ -38,16 +38,21 @@ export const addressIntegration = new Elysia({ name: "address" })
       const api = callApi(apiUrl, env.INTERNAL_API_TOKEN);
 
       const program = Effect.gen(function* () {
+        const qValue = Array.isArray(query.q) ? query.q.join(",") : query.q;
+        const limitValue =
+          query.limit && Array.isArray(query.limit) ? query.limit.join(",") : query.limit;
+        const bboxValue =
+          query.bbox && Array.isArray(query.bbox) ? query.bbox.join(",") : query.bbox;
         yield* Effect.logInfo("address:search:proxy", {
-          q: query.q,
-          limit: query.limit,
-          bbox: query.bbox,
+          q: qValue,
+          limit: limitValue,
+          bbox: bboxValue,
         });
 
-        const baseQuery = { q: query.q };
+        const baseQuery = { q: qValue };
         const withLimit =
-          query.limit !== undefined ? { ...baseQuery, limit: query.limit } : baseQuery;
-        const apiQuery = query.bbox !== undefined ? { ...withLimit, bbox: query.bbox } : withLimit;
+          limitValue !== undefined ? { ...baseQuery, limit: limitValue } : baseQuery;
+        const apiQuery = bboxValue !== undefined ? { ...withLimit, bbox: bboxValue } : withLimit;
 
         const result = yield* Effect.tryPromise({
           try: () => api.v1.search.get({ query: apiQuery }),

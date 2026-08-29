@@ -23,9 +23,9 @@ export const MetaSchema = Schema.Struct({
 });
 
 export const AddressSearchQuerySchema = Schema.Struct({
-  q: Schema.String,
+  q: Schema.Union([Schema.String, Schema.Array(Schema.String)]),
   limit: Schema.optional(Schema.String),
-  bbox: Schema.optional(Schema.String),
+  bbox: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
 });
 
 export const AddressListQuerySchema = Schema.Struct({
@@ -34,7 +34,7 @@ export const AddressListQuerySchema = Schema.Struct({
   town_city: Schema.optional(Schema.String),
   suburb_locality: Schema.optional(Schema.String),
   road_name: Schema.optional(Schema.String),
-  bbox: Schema.optional(Schema.String),
+  bbox: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
 });
 
 export const ReverseQuerySchema = Schema.Struct({

@@ -43,7 +43,18 @@ export const addressRoutes = new Elysia({ name: "address" })
   .get(
     "/v1/search",
     async ({ query, request, set }) => {
-      const decoded = Schema.decodeUnknownSync(AddressSearchQuerySchema)(query);
+      const raw = Schema.decodeUnknownSync(AddressSearchQuerySchema)(query);
+      const qValue: string = Array.isArray(raw.q) ? raw.q.join(",") : (raw.q as string);
+      const bboxRaw: string | undefined = raw.bbox
+        ? Array.isArray(raw.bbox)
+          ? (raw.bbox as readonly string[]).join(",")
+          : (raw.bbox as string)
+        : undefined;
+      const decoded = {
+        q: qValue,
+        limit: raw.limit as string | undefined,
+        bbox: bboxRaw,
+      } satisfies { q: string; limit?: string; bbox?: string };
       const trimmed = decoded.q.trim();
       if (trimmed.length < 3) {
         set.status = 400;
@@ -134,7 +145,27 @@ export const addressRoutes = new Elysia({ name: "address" })
   .get(
     "/v1/addresses",
     async ({ query, request }) => {
-      const decoded = Schema.decodeUnknownSync(AddressListQuerySchema)(query);
+      const raw = Schema.decodeUnknownSync(AddressListQuerySchema)(query);
+      const bboxRaw: string | undefined = raw.bbox
+        ? Array.isArray(raw.bbox)
+          ? (raw.bbox as readonly string[]).join(",")
+          : (raw.bbox as string)
+        : undefined;
+      const decoded = {
+        limit: raw.limit as string | undefined,
+        offset: raw.offset as string | undefined,
+        town_city: raw.town_city as string | undefined,
+        suburb_locality: raw.suburb_locality as string | undefined,
+        road_name: raw.road_name as string | undefined,
+        bbox: bboxRaw,
+      } satisfies {
+        limit?: string;
+        offset?: string;
+        town_city?: string;
+        suburb_locality?: string;
+        road_name?: string;
+        bbox?: string;
+      };
       const limit = parseLimit(decoded.limit, 100, 1000);
       const offset = parseLimit(decoded.offset, 0, 1_000_000);
       const bboxValue = decoded.bbox;
