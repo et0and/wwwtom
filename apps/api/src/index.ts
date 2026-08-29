@@ -1,6 +1,5 @@
 import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
-import { cors } from "@elysiajs/cors";
 import { openapi } from "@elysiajs/openapi";
 import { Effect } from "effect";
 import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging";
@@ -23,23 +22,6 @@ export const app = new Elysia({
   adapter: CloudflareAdapter,
   name: "tom-api",
 })
-  .use(
-    cors({
-      origin: (request) => {
-        const origin = request.headers.get("origin");
-        if (!origin) return false;
-        return (
-          origin === "http://localhost:5173" ||
-          origin === "http://localhost:3000" ||
-          origin === "http://127.0.0.1:3000" ||
-          origin === "https://tom.so" ||
-          origin.endsWith(".tom.so")
-        );
-      },
-      methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type"],
-    }),
-  )
   .use(
     openapi({
       path: "/",

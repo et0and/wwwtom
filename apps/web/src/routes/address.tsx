@@ -47,11 +47,15 @@ export default function AddressPage() {
 
   return (
     <PageLayout
-      title="Address Search"
-      description="NZ addresses via Neon tsvector — adapter → api Eden treaty"
+      title="Address Search — Demo"
+      description="Demo: NZ addresses via Neon tsvector — research branch with partial seed via adapter treaty"
     >
       <BlurInText text="Address Search" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.2}>
+        <div class="mb-4 p-3 border border-dashed rounded bg-gray-50 dark:bg-white/5 text-sm">
+          Demo — research branch with partial Neon seed. `tsvector` on read replica, 250ms debounce,
+          3-char guard. Full NZ set is 2.1M.
+        </div>
         <p class="mb-4 text-muted">
           Typed <code>callAdapter().address.search.get</code> → <code>api.v1.search.get</code> via
           Eden Treaty. Postgres <code>tsvector</code> + <code>GIN</code> on Neon read replica, 250ms
@@ -61,7 +65,8 @@ export default function AddressPage() {
           <Show when={metaQuery.data}>
             {(meta) => (
               <p class="mb-6 text-sm text-subtle">
-                {meta().totalAddresses} addresses · v{meta().version} · updated{" "}
+                {meta().totalAddresses.toLocaleString()} addresses ·{" "}
+                {meta().version === "unknown" ? "demo" : `v${meta().version}`} · updated{" "}
                 {new Date(meta().lastUpdated).toLocaleDateString("en-NZ")}
               </p>
             )}
