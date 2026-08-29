@@ -109,7 +109,13 @@ export const authIntegration = new Elysia({ name: "auth" })
     async ({ request }) => {
       const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
       const apiUrl = env.API_URL ?? "http://localhost:8787";
-      return proxyToApi(request, apiUrl, "GET", "/api/auth/get-session");
+      const response = await proxyToApi(request, apiUrl, "GET", "/api/auth/get-session");
+      const cookie = request.headers.get("cookie") ?? "";
+      response.headers.set(
+        "x-auth-cookie-token",
+        cookie.includes("better-auth.session_token") ? "present" : "absent",
+      );
+      return response;
     },
     {
       response: {

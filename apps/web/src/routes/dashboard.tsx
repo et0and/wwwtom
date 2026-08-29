@@ -10,7 +10,7 @@ import {
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInText } from "~/components/BlurInText";
 import { BlurInSection } from "~/components/BlurInSection";
-import { callAdapter, unwrapAdapter } from "~/libs/adapter";
+import { callAdapter, getAdapterBaseUrl, unwrapAdapter } from "~/libs/adapter";
 
 type Scope = "all" | "one" | "multiple";
 
@@ -55,6 +55,17 @@ const NZ_REGIONS = [
   "Southland",
 ];
 
+const fetchCookieProbe = async (): Promise<{ cookieState: string; sessionSeen: boolean }> => {
+  try {
+    const res = await fetch(`${getAdapterBaseUrl()}/auth/session`, { credentials: "include" });
+    const cookieState = res.headers.get("x-auth-cookie-token") ?? "no-header";
+    const body = (await res.json()) as { session?: unknown };
+    return { cookieState, sessionSeen: Boolean(body.session) };
+  } catch {
+    return { cookieState: "fetch-failed", sessionSeen: false };
+  }
+};
+
 const fetchSession = async (): Promise<SessionResult> => {
   const result = await callAdapter().auth.session.get();
   return unwrapAdapter(result) as SessionResult;
@@ -95,9 +106,13 @@ export default function Dashboard() {
   const [accounts] = createResource(() =>
     session()?.session ? fetchAccounts() : Promise.resolve([]),
   );
+  const [probe, { refetch: refetchProbe }] = createResource(fetchCookieProbe);
 
   createEffect(() => {
-    const refreshOnVisible = () => void refetchSession();
+    const refreshOnVisible = () => {
+      void refetchSession();
+      void refetchProbe();
+    };
     window.addEventListener("focus", refreshOnVisible);
     document.addEventListener("visibilitychange", refreshOnVisible);
     onCleanup(() => {
@@ -246,7 +261,7 @@ export default function Dashboard() {
           </button>
         </Show>
         <pre class="text-xs whitespace-pre-wrap overflow-x-auto bg-black/5 p-3 rounded mb-3">
-          {`session: ${JSON.stringify(session()?.session ?? null, null, 2)}\n\naccounts: ${JSON.stringify(accounts() ?? [], null, 2)}`}
+          {`session: ${JSON.stringify(session()?.session ?? null, null, 2)}\n\naccounts: ${JSON.stringify(accounts() ?? [], null, 2)}\n\ncookieProbe: ${JSON.stringify(probe() ?? null, null, 2)}`}
         </pre>
         <Show when={!currentUser()}>
           <div class="space-y-2 max-w-md">
