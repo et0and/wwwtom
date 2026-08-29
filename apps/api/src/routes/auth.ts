@@ -44,7 +44,13 @@ export const authRoutes = new Elysia({ name: "auth" })
         headers: { "content-type": "application/json" },
       });
     }
-    return auth.handler(request);
+    return auth.handler(request).catch((error: Error) => {
+      const message = error.message;
+      return new Response(JSON.stringify({ error: message }), {
+        status: 500,
+        headers: { "content-type": "application/json" },
+      });
+    });
   })
   .post("/v1/keys", async ({ body, request, set }) => {
     const decoded = Schema.decodeUnknownSync(CreateKeyBodySchema)(body ?? {});
