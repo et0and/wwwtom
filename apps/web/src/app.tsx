@@ -1,8 +1,7 @@
 import { Router } from "@solidjs/router";
 import { FileRoutes } from "@solidjs/start/router";
 import { Suspense, onMount } from "solid-js";
-import { Meta, MetaProvider } from "@solidjs/meta";
-import { getAdapterBaseUrl } from "~/libs/adapter";
+import { MetaProvider } from "@solidjs/meta";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
@@ -34,7 +33,6 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <MetaProvider>
-        {import.meta.env.SSR && <Meta name="x-adapter-url" content={getAdapterBaseUrl()} />}
         <Router root={RootLayout}>
           <FileRoutes />
         </Router>

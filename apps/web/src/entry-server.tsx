@@ -23,6 +23,8 @@ const DehydratedQueryState = () => {
   );
 };
 
+let adapterUrlForDocument = "";
+
 const app = createHandler(() => {
   return (
     <StartServer
@@ -31,6 +33,7 @@ const app = createHandler(() => {
           <head>
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta name="x-adapter-url" content={adapterUrlForDocument} />
             <link rel="icon" href="/favicon.ico" />
             {assets}
           </head>
@@ -54,6 +57,7 @@ export default {
   fetch: async (request: Request, env: CloudflareEnv) => {
     queryClient.clear();
     const cloudflareEnv = env ?? {};
+    adapterUrlForDocument = cloudflareEnv.ADAPTER_URL ?? "http://localhost:8788";
     const otel = await otelConfigFromEnv(cloudflareEnv);
     (request as Request & { context?: CloudflareContext }).context = {
       cloudflare: { env: cloudflareEnv },
