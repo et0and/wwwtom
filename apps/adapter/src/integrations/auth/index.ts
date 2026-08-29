@@ -141,6 +141,36 @@ export const authIntegration = new Elysia({ name: "auth" })
     return proxyToApi(request, apiUrl, "POST", "/api/auth/sign-out");
   })
   .post(
+    "/auth/sign-in/social",
+    async ({ body, request }) => {
+      const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
+      const apiUrl = env.API_URL ?? "http://localhost:8787";
+      return proxyToApi(request, apiUrl, "POST", "/api/auth/sign-in/social", JSON.stringify(body));
+    },
+    {
+      body: Schema.toStandardSchemaV1(
+        Schema.Struct({
+          provider: Schema.String,
+          callbackURL: Schema.optional(Schema.String),
+        }),
+      ),
+      response: {
+        200: Schema.toStandardSchemaV1(
+          Schema.Struct({
+            redirect: Schema.Boolean,
+            url: Schema.optional(Schema.String),
+          }),
+        ),
+      },
+    },
+  )
+  .get("/auth/callback/github", async ({ request }) => {
+    const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
+    const apiUrl = env.API_URL ?? "http://localhost:8787";
+    const search = new URL(request.url).search;
+    return proxyToApi(request, apiUrl, "GET", `/api/auth/callback/github${search}`);
+  })
+  .post(
     "/auth/sso/register",
     async ({ body, request }) => {
       const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);

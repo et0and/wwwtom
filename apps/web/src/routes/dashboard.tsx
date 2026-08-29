@@ -21,6 +21,14 @@ type ApiKey = {
 
 type Usage = { hour: number; day: number; week: number; month: number; year: number };
 
+const EMPTY_USAGE: Usage = { hour: 0, day: 0, week: 0, month: 0, year: 0 };
+
+const getAdapterUrl = (): string => {
+  const buildUrl = import.meta.env.VITE_ADAPTER_URL as string | undefined;
+  if (buildUrl) return buildUrl;
+  return import.meta.env.PROD ? "https://adapter.tom.so" : "http://localhost:8788";
+};
+
 const NZ_REGIONS = [
   "Northland",
   "Auckland",
@@ -46,8 +54,21 @@ const fetchSession = async (): Promise<SessionResult> => {
 };
 
 const fetchKeys = async (): Promise<readonly ApiKey[]> => {
-  const result = await callAdapter().auth.keys.get();
-  return unwrapAdapter(result) as readonly ApiKey[];
+  try {
+    const result = await callAdapter().auth.keys.get();
+    return unwrapAdapter(result) as readonly ApiKey[];
+  } catch {
+    return [];
+  }
+};
+
+const fetchUsage = async (keyId: string): Promise<Usage> => {
+  try {
+    const result = await callAdapter().auth.usage.get({ query: { keyId } });
+    return unwrapAdapter(result) as Usage;
+  } catch {
+    return EMPTY_USAGE;
+  }
 };
 
 export default function Dashboard() {
@@ -67,10 +88,7 @@ export default function Dashboard() {
 
   const canCreateKey = createMemo(() => keyName().trim().length > 0);
 
-  const [usage] = createResource(filterKey, async (keyId) => {
-    const result = await callAdapter().auth.usage.get({ query: { keyId } });
-    return unwrapAdapter(result) as Usage;
-  });
+  const [usage] = createResource(filterKey, (keyId) => fetchUsage(keyId));
 
   const handleSignUp = async () => {
     try {
@@ -105,7 +123,25 @@ export default function Dashboard() {
     void refetchSession();
   };
 
-  const handleSsoRegister = async () => {
+  const handleGithubSignIn = async () => {
+    try {
+      const result = await callAdapter().auth["sign-in"].social.post({
+        provider: "github",
+        callbackURL: `${getAdapterUrl()}/auth/callback/github`,
+      });
+      const social = unwrapAdapter(result);
+      if (social.redirect && social.url) {
+        window.location.href = social.url;
+      } else {
+        setAuthMessage("GitHub sign-in returned no redirect URL.");
+        void refetchSession();
+      }
+    } catch (error) {
+      setAuthMessage(`GitHub sign-in failed: ${String(error)}`);
+    }
+  };
+
+  const handleSsoRegister = () => {
     setAuthMessage(
       "SAML needs your IdP metadata (Entity ID, SSO URL, certificate). Once provided, a samlConfig is stored in D1 per organization and /api/auth/sign-in/sso handles the flow.",
     );
@@ -208,10 +244,10 @@ export default function Dashboard() {
         </Show>
         <div class="mt-4 flex gap-2 items-center">
           <button class="button-secondary" onClick={handleSsoRegister}>
-            SAML SSO (per organization)
+            SAML SSO (needs IdP metadata)
           </button>
-          <button class="button-secondary" disabled onClick={() => void 0}>
-            OAuth2 (needs provider client id)
+          <button class="button-secondary" onClick={handleGithubSignIn}>
+            Sign in with GitHub
           </button>
         </div>
       </BlurInSection>

@@ -92,6 +92,8 @@ export type CloudflareEnv = {
   // readCloudflareEnv (secretKeys); AUTH_DB is the D1 binding.
   BETTER_AUTH_SECRET?: string;
   BETTER_AUTH_URL?: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
   AUTH_DB?: D1Database;
 };
 
@@ -117,6 +119,8 @@ const secretKeys = [
   "CONTROL_TOKEN",
   "BETTER_AUTH_SECRET",
   "BETTER_AUTH_URL",
+  "GITHUB_CLIENT_ID",
+  "GITHUB_CLIENT_SECRET",
 ] as const;
 
 export type ResolvedCloudflareEnv = CloudflareEnv & { AXIOM_TOKEN?: string };

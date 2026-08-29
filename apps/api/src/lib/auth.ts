@@ -13,10 +13,14 @@ import * as schema from "../db/auth-schema";
 export type AuthEnv = {
   BETTER_AUTH_SECRET?: string | undefined;
   BETTER_AUTH_URL?: string | undefined;
+  GITHUB_CLIENT_ID?: string | undefined;
+  GITHUB_CLIENT_SECRET?: string | undefined;
 };
 
 export const createAuth = (db: D1Database, env: AuthEnv) => {
   const drizzleDb = drizzle(db, { schema });
+  const githubClientId = env.GITHUB_CLIENT_ID;
+  const githubClientSecret = env.GITHUB_CLIENT_SECRET;
 
   return betterAuth({
     appName: "tom.so",
@@ -28,6 +32,15 @@ export const createAuth = (db: D1Database, env: AuthEnv) => {
     emailAndPassword: {
       enabled: true,
     },
+    socialProviders:
+      githubClientId && githubClientSecret
+        ? {
+            github: {
+              clientId: githubClientId,
+              clientSecret: githubClientSecret,
+            },
+          }
+        : undefined,
     plugins: [
       organization(),
       admin(),
@@ -65,6 +78,8 @@ export const authFromRequest = async (request: Request): Promise<Auth | null> =>
   authCache = createAuth(binding, {
     BETTER_AUTH_SECRET: env.BETTER_AUTH_SECRET,
     BETTER_AUTH_URL: env.BETTER_AUTH_URL,
+    GITHUB_CLIENT_ID: env.GITHUB_CLIENT_ID,
+    GITHUB_CLIENT_SECRET: env.GITHUB_CLIENT_SECRET,
   });
   return authCache;
 };

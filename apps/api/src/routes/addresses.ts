@@ -98,7 +98,8 @@ export const addressRoutes = new Elysia({ name: "address" })
               apikeyId: verified.id,
               userId: verified.referenceId,
             }),
-          catch: (cause) => new Error(String(cause)),
+          catch: (cause) =>
+            new HttpError({ message: "Failed to record usage", status: 500, cause }),
         }).pipe(Effect.ignore);
 
         const scoped =
