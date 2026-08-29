@@ -98,8 +98,8 @@ export const addressRoutes = new Elysia({ name: "address" })
               apikeyId: verified.id,
               userId: verified.referenceId,
             }),
-          catch: () => Promise.resolve(),
-        });
+          catch: (cause) => new Error(String(cause)),
+        }).pipe(Effect.ignore);
 
         const scoped =
           scopeMetadata && scopeMetadata.scope !== "all"
