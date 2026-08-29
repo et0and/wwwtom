@@ -11,7 +11,7 @@ onlyBuiltDependencies:
   - "unrs-resolver"
   - "workerd"
 catalog:
-  effect: 4.0.0-beta.105
+  effect: 4.0.0-rc.112
   kysely: 0.28.9
   postgres: 3.4.7
   solid-js: 1.9.12

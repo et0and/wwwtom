@@ -227,6 +227,9 @@ export default function Dashboard() {
             Sign out
           </button>
         </Show>
+        <pre class="text-xs whitespace-pre-wrap overflow-x-auto bg-black/5 p-3 rounded mb-3">
+          {`session: ${JSON.stringify(session()?.session ?? null, null, 2)}\n\naccounts: ${JSON.stringify(accounts() ?? [], null, 2)}`}
+        </pre>
         <Show when={!currentUser()}>
           <div class="space-y-2 max-w-md">
             <input
