@@ -164,6 +164,12 @@ export const authIntegration = new Elysia({ name: "auth" })
       },
     },
   )
+  .get("/api/auth/callback/github", async ({ request }) => {
+    const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
+    const apiUrl = env.API_URL ?? "http://localhost:8787";
+    const search = new URL(request.url).search;
+    return proxyToApi(request, apiUrl, "GET", `/api/auth/callback/github${search}`);
+  })
   .get("/auth/callback/github", async ({ request }) => {
     const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
     const apiUrl = env.API_URL ?? "http://localhost:8787";

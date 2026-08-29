@@ -21,6 +21,11 @@ type ApiKey = {
 
 type Usage = { hour: number; day: number; week: number; month: number; year: number };
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 8;
+
+const isValidEmail = (value: string): boolean => EMAIL_PATTERN.test(value.trim());
+
 const EMPTY_USAGE: Usage = { hour: 0, day: 0, week: 0, month: 0, year: 0 };
 
 const NZ_REGIONS = [
@@ -81,6 +86,9 @@ export default function Dashboard() {
   const [filterKey, setFilterKey] = createSignal<string>("all");
 
   const canCreateKey = createMemo(() => keyName().trim().length > 0);
+  const emailValid = createMemo(() => isValidEmail(email()));
+  const passwordValid = createMemo(() => password().length >= MIN_PASSWORD_LENGTH);
+  const canSubmit = createMemo(() => emailValid() && passwordValid());
 
   const [usage] = createResource(filterKey, (keyId) => fetchUsage(keyId));
 
@@ -215,19 +223,31 @@ export default function Dashboard() {
               placeholder="Email"
               value={email()}
               onInput={(event) => setEmail(event.currentTarget.value)}
+              aria-invalid={Boolean(email()) && !emailValid()}
             />
             <input
               class="input w-full"
               type="password"
-              placeholder="Password"
+              placeholder="Password (min 8 chars)"
               value={password()}
               onInput={(event) => setPassword(event.currentTarget.value)}
+              aria-invalid={Boolean(password()) && !passwordValid()}
             />
+            <Show when={email() && !emailValid()}>
+              <p class="text-sm text-red-600">Enter a valid email address.</p>
+            </Show>
+            <Show when={password() && !passwordValid()}>
+              <p class="text-sm text-red-600">Password must be at least 8 characters.</p>
+            </Show>
             <div class="flex gap-2">
-              <button class="button-primary" onClick={handleSignUp}>
+              <button
+                class="button-primary"
+                disabled={!canSubmit() || !name().trim()}
+                onClick={handleSignUp}
+              >
                 Create account
               </button>
-              <button class="button-secondary" onClick={handleSignIn}>
+              <button class="button-secondary" disabled={!canSubmit()} onClick={handleSignIn}>
                 Sign in
               </button>
             </div>
