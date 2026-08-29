@@ -89,9 +89,16 @@ const proxyToApi = async (
   const init: RequestInit = { method, headers, redirect: "manual" };
   if (body !== undefined) init.body = body;
   const response = await fetch(target.toString(), init);
+  const outHeaders = new Headers();
+  response.headers.forEach((value, key) => {
+    if (key.toLowerCase() !== "set-cookie") outHeaders.set(key, value);
+  });
+  for (const cookieValue of response.headers.getSetCookie()) {
+    outHeaders.append("set-cookie", cookieValue);
+  }
   return new Response(response.body, {
     status: response.status,
-    headers: response.headers,
+    headers: outHeaders,
   });
 };
 
