@@ -61,7 +61,9 @@ describe("AddressSearchQuerySchema comma handling", () => {
       q: ["Dominion road", " 4"],
       limit: "20",
     });
-    const qValue = Array.isArray(decoded.q) ? decoded.q.join(",") : decoded.q;
+    const qValue: string = Array.isArray(decoded.q)
+      ? (decoded.q as readonly string[]).join(",")
+      : (decoded.q as string);
     expect(qValue.trim().length).toBeGreaterThanOrEqual(3);
   });
 
@@ -75,7 +77,7 @@ describe("AddressSearchQuerySchema comma handling", () => {
       q: qValue,
       limit: raw.limit as string | undefined,
       bbox: undefined,
-    } satisfies { q: string; limit?: string; bbox?: string };
+    } satisfies { q: string; limit?: string | undefined; bbox?: string | undefined };
     expect(decoded.q).toBe("Dominion road, 4");
     expect(decoded.q.trim()).toBe("Dominion road, 4");
   });

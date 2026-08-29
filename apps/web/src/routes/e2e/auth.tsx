@@ -10,9 +10,12 @@ export default function E2EAuthDemo() {
     >
       <BlurInText text="Auth E2E Demo" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.2}>
-        <div class="mb-4 p-3 border border-dashed rounded bg-amber-50 dark:bg-amber-950/20 text-sm">
-          Dev only route. Not linked from nav. Tests Better Auth with D1 via adapter. SAML stub
-          ready for IdP config per organization.
+        <div class="banner" role="status">
+          <p class="banner-title">Dev only</p>
+          <p>
+            Not linked from nav. Tests Better Auth with D1 via adapter. SAML stub ready for IdP
+            config per organization.
+          </p>
         </div>
         <p class="mb-4 text-muted">
           This route will host Better Auth flows: email + password, OAuth2 providers, SAML SSO per

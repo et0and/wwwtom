@@ -54,7 +54,7 @@ export const addressRoutes = new Elysia({ name: "address" })
         q: qValue,
         limit: raw.limit as string | undefined,
         bbox: bboxRaw,
-      } satisfies { q: string; limit?: string; bbox?: string };
+      } satisfies { q: string; limit?: string | undefined; bbox?: string | undefined };
       const trimmed = decoded.q.trim();
       if (trimmed.length < 3) {
         set.status = 400;
@@ -159,12 +159,12 @@ export const addressRoutes = new Elysia({ name: "address" })
         road_name: raw.road_name as string | undefined,
         bbox: bboxRaw,
       } satisfies {
-        limit?: string;
-        offset?: string;
-        town_city?: string;
-        suburb_locality?: string;
-        road_name?: string;
-        bbox?: string;
+        limit?: string | undefined;
+        offset?: string | undefined;
+        town_city?: string | undefined;
+        suburb_locality?: string | undefined;
+        road_name?: string | undefined;
+        bbox?: string | undefined;
       };
       const limit = parseLimit(decoded.limit, 100, 1000);
       const offset = parseLimit(decoded.offset, 0, 1_000_000);

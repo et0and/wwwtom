@@ -52,9 +52,12 @@ export default function AddressPage() {
     >
       <BlurInText text="Address Search" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.2}>
-        <div class="mb-4 p-3 border border-dashed rounded bg-gray-50 dark:bg-white/5 text-sm">
-          Demo — research branch with partial Neon seed. `tsvector` on read replica, 250ms debounce,
-          3-char guard. Full NZ set is 2.1M.
+        <div class="banner" role="status">
+          <p class="banner-title">Demo</p>
+          <p>
+            Research branch with partial Neon seed. `tsvector` on read replica, 250ms debounce,
+            3-char guard. Full NZ set is 2.1M.
+          </p>
         </div>
         <Suspense fallback={<Spinner />}>
           <Show when={metaQuery.data}>
