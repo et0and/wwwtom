@@ -7,32 +7,16 @@ import {
   onCleanup,
   Show,
 } from "solid-js";
-import { Schema } from "effect";
-import { AddressListSchema } from "@tom/schemas/address";
 import type { Address } from "@tom/types/address";
 import { HttpError } from "@tom/types/errors";
 import { Spinner } from "@tom/ui/Spinner";
-
-const getApiBaseUrl = (): string => {
-  const buildUrl = import.meta.env.VITE_API_URL as string | undefined;
-  if (buildUrl) return buildUrl;
-  return import.meta.env.PROD ? "https://api.tom.so" : "http://localhost:8787";
-};
+import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 
 const fetchAddresses = async (query: string): Promise<readonly Address[]> => {
-  const url = new URL("/v1/search", getApiBaseUrl());
-  url.searchParams.set("q", query);
-  url.searchParams.set("limit", "20");
-  const response = await fetch(url.toString());
-  if (!response.ok) {
-    const body = await response.text();
-    throw new HttpError({
-      message: body || `Search failed: ${response.status}`,
-      status: response.status,
-    });
-  }
-  const json = await response.json();
-  return Schema.decodeUnknownSync(AddressListSchema)(json);
+  const result = await callAdapter().address.search.get({
+    query: { q: query, limit: "20" },
+  });
+  return unwrapAdapter(result);
 };
 
 export function AddressSearch() {
