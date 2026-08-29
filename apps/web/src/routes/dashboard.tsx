@@ -1,4 +1,12 @@
-import { createMemo, createResource, createSignal, For, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createResource,
+  createSignal,
+  For,
+  onCleanup,
+  Show,
+} from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInText } from "~/components/BlurInText";
 import { BlurInSection } from "~/components/BlurInSection";
@@ -87,6 +95,16 @@ export default function Dashboard() {
   const [accounts] = createResource(() =>
     session()?.session ? fetchAccounts() : Promise.resolve([]),
   );
+
+  createEffect(() => {
+    const refreshOnVisible = () => void refetchSession();
+    window.addEventListener("focus", refreshOnVisible);
+    document.addEventListener("visibilitychange", refreshOnVisible);
+    onCleanup(() => {
+      window.removeEventListener("focus", refreshOnVisible);
+      document.removeEventListener("visibilitychange", refreshOnVisible);
+    });
+  });
   const [name, setName] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
