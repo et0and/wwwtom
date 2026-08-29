@@ -44,7 +44,7 @@ export const app = new Elysia({
       },
       credentials: true,
       methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "x-use-simulator"],
+      allowedHeaders: ["Content-Type", "x-use-simulator", "x-api-key"],
     }),
   )
   .derive(async ({ set, request, cookie }) => {

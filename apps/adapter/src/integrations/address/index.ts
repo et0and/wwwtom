@@ -54,8 +54,15 @@ export const addressIntegration = new Elysia({ name: "address" })
           limitValue !== undefined ? { ...baseQuery, limit: limitValue } : baseQuery;
         const apiQuery = bboxValue !== undefined ? { ...withLimit, bbox: bboxValue } : withLimit;
 
+        const apiKeyHeader = request.headers.get("x-api-key");
         const result = yield* Effect.tryPromise({
-          try: () => api.v1.search.get({ query: apiQuery }),
+          try: () =>
+            api.v1.search.get(
+              Object.assign(
+                { query: apiQuery },
+                apiKeyHeader ? { headers: { "x-api-key": apiKeyHeader } } : {},
+              ),
+            ),
           catch: (cause) =>
             new HttpError({ message: "Failed to proxy address search", status: 502, cause }),
         });
