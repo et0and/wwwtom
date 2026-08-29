@@ -4,6 +4,8 @@ import { HttpError } from "@tom/types/errors";
 import { authFromRequest } from "../lib/auth";
 import { countUsageSince, createApiKeyRecord, listApiKeyRecords } from "../services/auth";
 import { logContextFromRequest, runEffect, toErrorResponse } from "@tom/utils/services/worker";
+import { getRequestEnv } from "@tom/utils/services/worker";
+import { readCloudflareEnv } from "@tom/utils/services/config";
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -51,6 +53,35 @@ export const authRoutes = new Elysia({ name: "auth" })
         headers: { "content-type": "application/json" },
       });
     });
+  })
+  .get("/v1/debug/sessions", async ({ request, set }) => {
+    const env = await readCloudflareEnv(getRequestEnv(request));
+    if (!(env.BETTER_AUTH_URL ?? "").includes("dev")) {
+      set.status = 404;
+      return toErrorResponse(404, "Not found");
+    }
+    const db = env.AUTH_DB;
+    if (!db) {
+      set.status = 500;
+      return toErrorResponse(500, "Auth DB not configured");
+    }
+    const effect = Effect.tryPromise({
+      try: async () => {
+        const count = await db.prepare("SELECT count(*) AS n FROM session").all<{ n: number }>();
+        const recent = await db
+          .prepare("SELECT id, userId, expiresAt FROM session ORDER BY createdAt DESC LIMIT 5")
+          .all<{ id: string; userId: string; expiresAt: number }>();
+        return { count: count.results[0]?.n ?? 0, recent: recent.results };
+      },
+      catch: (cause) =>
+        new HttpError({ message: `Debug query failed: ${String(cause)}`, status: 500, cause }),
+    });
+    const result = await runEffect(
+      effect.pipe(Effect.catch((error) => Effect.succeed(toErrorResponse(500, error.message)))),
+      logContextFromRequest(request, "tom-api"),
+    );
+    if (result instanceof Response) return result;
+    return result;
   })
   .post("/v1/keys", async ({ body, request, set }) => {
     const decoded = Schema.decodeUnknownSync(CreateKeyBodySchema)(body ?? {});
