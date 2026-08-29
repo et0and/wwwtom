@@ -45,9 +45,13 @@ Purpose: add SAML SSO, OAuth2, and API key management for commercial use of the 
    - Flow: user logs in via IdP -> Better Auth creates session -> organization membership checked -> issue API key.
 
 5. **OAuth2**
-   - Enable `genericOAuth` or provider list: `socialProviders: { google, github, microsoft }`.
-   - Also expose OAuth2 as provider for third party apps via `oAuth` plugin if service becomes OAuth provider.
-   - Clients use PKCE, redirect to `BETTER_AUTH_URL`.
+   - Enable `socialProviders: { github: { clientId, clientSecret } }` (GitHub wired on dev).
+   - Clients use PKCE; GitHub OAuth app must allowlist the exact `redirect_uri` Better Auth emits = `BETTER_AUTH_URL/api/auth/callback/github`.
+   - Redirect URIs to register in the GitHub OAuth app per environment (do not use a dashboard/page URL — it must be the callback path):
+     - local dev (api worker): `http://localhost:8787/api/auth/callback/github`
+     - dev stage (this branch): `https://dev-api.tom.so/api/auth/callback/github`
+     - production: `https://api.tom.so/api/auth/callback/github`
+   - If the auth base path changes, update the registered redirect URIs accordingly.
 
 6. **API key generation**
    - After login, call `auth.api.createApiKey({ name, prefix, expiresIn })`.
