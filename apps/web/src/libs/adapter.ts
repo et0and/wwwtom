@@ -29,6 +29,8 @@ export const getAdapterBaseUrl = (): string => {
     if (buildUrl) return buildUrl;
     return process.env.ADAPTER_URL ?? DEV_ADAPTER_URL;
   }
+  const injectedUrl = document.querySelector('meta[name="x-adapter-url"]')?.getAttribute("content");
+  if (injectedUrl) return injectedUrl;
   const buildUrl = import.meta.env.VITE_ADAPTER_URL as string | undefined;
   if (buildUrl) return buildUrl;
   return import.meta.env.PROD ? PROD_ADAPTER_URL : DEV_ADAPTER_URL;
