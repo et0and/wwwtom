@@ -11,6 +11,7 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@elysiajs/cors": "catalog:",
     "@elysiajs/openapi": "catalog:",
     "@standard-schema/spec": "catalog:",
     "@tom/constants": "workspace:*",
