@@ -71,7 +71,20 @@ export const authRoutes = new Elysia({ name: "auth" })
         const recent = await db
           .prepare("SELECT id, userId, expiresAt FROM session ORDER BY createdAt DESC LIMIT 5")
           .all<{ id: string; userId: string; expiresAt: number }>();
-        return { count: count.results[0]?.n ?? 0, recent: recent.results };
+        const accounts = await db
+          .prepare(
+            "SELECT providerId, userId, createdAt FROM account ORDER BY createdAt DESC LIMIT 6",
+          )
+          .all<{ providerId: string; userId: string; createdAt: number }>();
+        const users = await db
+          .prepare("SELECT id, name, email, createdAt FROM user ORDER BY createdAt DESC LIMIT 6")
+          .all<{ id: string; name: string; email: string; createdAt: number }>();
+        return {
+          count: count.results[0]?.n ?? 0,
+          recent: recent.results,
+          accounts: accounts.results,
+          users: users.results,
+        };
       },
       catch: (cause) =>
         new HttpError({ message: `Debug query failed: ${String(cause)}`, status: 500, cause }),
