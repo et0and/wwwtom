@@ -84,12 +84,17 @@ const REGION_TERRITORIAL_AUTHORITY_KEYWORDS = {
   Southland: ["Southland", "Gore", "Invercargill"],
 };
 
+type RegionKeywords = Readonly<Record<string, readonly string[]>>;
+
+const regionKeywords = (region: string): readonly string[] =>
+  (REGION_TERRITORIAL_AUTHORITY_KEYWORDS as RegionKeywords)[region] ?? [];
+
 export const isRegionAllowed = (
   territorialAuthority: string,
   regions: readonly string[],
 ): boolean =>
   regions.some((region) =>
-    (REGION_TERRITORIAL_AUTHORITY_KEYWORDS[region] ?? []).some((keyword) =>
+    regionKeywords(region).some((keyword) =>
       territorialAuthority.toLowerCase().includes(keyword.toLowerCase()),
     ),
   );

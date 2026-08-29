@@ -84,6 +84,8 @@ const proxyToApi = async (
   const headers = new Headers({ "content-type": "application/json" });
   const cookie = request.headers.get("cookie");
   if (cookie) headers.set("cookie", cookie);
+  const origin = request.headers.get("origin");
+  if (origin) headers.set("origin", origin);
   const init: RequestInit = { method, headers, redirect: "manual" };
   if (body !== undefined) init.body = body;
   const response = await fetch(target.toString(), init);
