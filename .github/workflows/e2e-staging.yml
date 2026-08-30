@@ -2,8 +2,8 @@ name: E2E (staging nightly)
 
 on:
   schedule:
-    # 02:47 UTC daily — after the fixture-store nightly (02:17) and the
-    # production deploy have both settled.
+    # 02:47 UTC daily — after the fixture-store nightly (02:17) and any
+    # dev-push deploy to staging (deploy.yml) have settled.
     - cron: "47 2 * * *"
   workflow_dispatch:
 
@@ -37,9 +37,10 @@ jobs:
         run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
 
       # The staging stack (`staging-web.tom.so` plus its adapter/API) is
-      # deployed via the Deploy workflow (workflow_dispatch, stage=staging);
-      # this suite exercises it with real upstreams — no fixture simulator,
-      # no x-use-simulator header. Override the target with E2E_STAGING_URL.
+      # deployed on every push to dev by the Deploy workflow (production is
+      # manual via workflow_dispatch); this suite exercises it with real
+      # upstreams — no fixture simulator, no x-use-simulator header. Override
+      # the target with E2E_STAGING_URL / E2E_STAGING_ADAPTER_URL.
       - name: Run staging e2e suite
         env:
           CI: "true"

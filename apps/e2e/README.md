@@ -170,8 +170,9 @@ pnpm --filter @tom/e2e test:e2e:staging
 ```
 
 The workflow `.github/workflows/e2e-staging.yml` runs it nightly (02:47 UTC)
-and on `workflow_dispatch`; the stage is deployed via the Deploy workflow
-(`workflow_dispatch`, stage=staging).
+and on `workflow_dispatch`. Every push to `dev` deploys the staging stage
+via the Deploy workflow (production deploys are manual), so the nightly
+validates the latest staged stack.
 
 ## Conventions for tests in this suite
 

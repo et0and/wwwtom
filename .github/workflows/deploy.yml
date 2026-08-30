@@ -15,20 +15,23 @@ on:
     branches:
       - dev
 
+# Pushes to dev deploy the STAGING stage (production is a manual
+# workflow_dispatch with its own environment approval gates). The staging
+# nightly e2e (e2e-staging.yml) then validates the freshly deployed stack.
 permissions:
   contents: read
 
 concurrency:
-  group: deploy-${{ github.event_name == 'push' && 'production' || inputs.stage }}
+  group: deploy-${{ github.event_name == 'push' && 'staging' || inputs.stage }}
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Deploy ${{ github.event_name == 'push' && 'production' || inputs.stage }}
+    name: Deploy ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
     runs-on: ubuntu-latest
-    environment: ${{ github.event_name == 'push' && 'production' || inputs.stage }}
+    environment: ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
     env:
-      ALCHEMY_STAGE: ${{ github.event_name == 'push' && 'production' || inputs.stage }}
+      ALCHEMY_STAGE: ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
