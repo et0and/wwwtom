@@ -1,18 +1,26 @@
-name: E2E (nightly)
+name: E2E
 
 on:
   schedule:
     # 02:17 UTC daily — after the deploy pipeline has settled.
     - cron: "17 2 * * *"
   workflow_dispatch:
+  # Runs on every PR against dev so the suite is part of merge
+  # requirements. No `push` trigger: the merged dev commit already ran
+  # green as the last PR state, so post-merge re-runs would be wasted.
+  pull_request:
+    branches: [dev]
 
 permissions:
   contents: read
   actions: read
 
+# One run per PR number (cancelled on newer pushes, so only the latest
+# passes) and per ref for scheduled/manual runs — overlapping runs cannot
+# queue up.
 concurrency:
-  group: e2e-nightly-${{ github.ref }}
-  cancel-in-progress: false
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   playwright:

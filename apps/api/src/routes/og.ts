@@ -6,10 +6,21 @@ import { logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
 
-// Param validation (length limits) happens in the OG service via @tom/schemas.
-const titleSchema = Schema.optional(
-  Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(100)),
-).pipe(
+/**
+ * OG text params are free text — titles and summaries legitimately contain
+ * commas. Elysia's standard-schema query parser splits comma-separated
+ * values into arrays, so accept the array form and rejoin it in the handler
+ * (validateOgParams enforces the real length bounds on the joined value).
+ */
+const commaTolerantString = (maxLength: number) =>
+  Schema.Union([
+    Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(maxLength)),
+    // Rejoined in the handler; validateOgParams enforces the real bounds on
+    // the full joined value.
+    Schema.Array(Schema.String),
+  ]);
+
+const titleSchema = commaTolerantString(100).pipe(
   Schema.annotate({
     description: "Title text for the OG image",
     examples: ["Tom Hackshaw"],
@@ -17,9 +28,7 @@ const titleSchema = Schema.optional(
   }),
 );
 
-const summarySchema = Schema.optional(
-  Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(200)),
-).pipe(
+const summarySchema = commaTolerantString(200).pipe(
   Schema.annotate({
     description: "Summary/description text for the OG image",
     examples: ["Design engineer from Aotearoa New Zealand"],
@@ -70,11 +79,15 @@ const badGatewaySchema = errorResponseSchema.pipe(
   Schema.annotate({ description: "Font fetch failed" }),
 );
 
+/** Rejoin the comma-split list form Elysia produces for text params. */
+const joinCommaList = (value: string | string[] | undefined): string | undefined =>
+  Array.isArray(value) ? value.join(",") : value;
+
 export const ogRoutes = new Elysia({ name: "og" }).get(
   "/og",
   async ({ query, request, set }) => {
-    const title = query.title || "Tom Hackshaw";
-    const summary = query.summary || "Design engineer from Aotearoa New Zealand";
+    const title = joinCommaList(query.title) || "Tom Hackshaw";
+    const summary = joinCommaList(query.summary) || "Design engineer from Aotearoa New Zealand";
     const template = query.template;
     const referer = request.headers.get("Referer") ?? "";
     const requester = referer || query.requester || "unknown";

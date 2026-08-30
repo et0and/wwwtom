@@ -12,23 +12,39 @@ import {
   toErrorResponse,
 } from "@tom/utils/services/worker";
 
+/**
+ * OG text is free text and legitimately contains commas ("Aotearoa, New
+ * Zealand"). Elysia's standard-schema query parser splits comma-separated
+ * values into arrays, so accept the array form and rejoin it before
+ * forwarding (the API's validateOgParams enforces the real length bounds).
+ */
+const commaTolerantString = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
+
 const OgQuerySchema = Schema.Struct({
-  title: Schema.optional(Schema.String),
-  summary: Schema.optional(Schema.String),
+  title: Schema.optional(commaTolerantString),
+  summary: Schema.optional(commaTolerantString),
 });
 
 const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
+
+/** Rejoin the comma-split list form Elysia produces for text params. */
+const joinCommaList = (value: string | readonly string[] | undefined): string | undefined => {
+  if (value === undefined) return undefined;
+  return Array.isArray(value) ? value.join(",") : (value as string);
+};
 
 export const ogIntegration = new Elysia({ name: "og" }).get(
   "/og",
   async ({ query, request }) => {
     const env = await readCloudflareEnv(getRequestEnv(request));
     const apiUrl = env.API_URL ?? "http://localhost:8787";
+    const title = joinCommaList(query.title);
+    const summary = joinCommaList(query.summary);
 
     const program = Effect.gen(function* () {
       const params = new URLSearchParams();
-      if (query.title) params.set("title", query.title);
-      if (query.summary) params.set("summary", query.summary);
+      if (title) params.set("title", title);
+      if (summary) params.set("summary", summary);
       params.set("template", "default");
 
       const headers = new Headers();
