@@ -8,6 +8,11 @@ inputs:
   install:
     description: Run `pnpm install --frozen-lockfile` after setup.
     default: "true"
+  install-playwright:
+    description: >-
+      Also cache (~/.cache/ms-playwright) and install the Playwright
+      chromium browser (e2e-only workflows).
+    default: "false"
 runs:
   using: composite
   steps:
@@ -36,3 +41,17 @@ runs:
       if: ${{ inputs.install == 'true' }}
       shell: bash
       run: pnpm install --frozen-lockfile
+
+    - name: Cache Playwright browsers
+      if: ${{ inputs.install-playwright == 'true' }}
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ~/.cache/ms-playwright
+        # The lockfile pins the playwright version, which pins the browser
+        # revisions — any lockfile change just reinstalls.
+        key: ${{ runner.os }}-ms-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
+    - name: Install Playwright browsers
+      if: ${{ inputs.install-playwright == 'true' }}
+      shell: bash
+      run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
