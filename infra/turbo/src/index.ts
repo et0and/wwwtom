@@ -259,7 +259,9 @@ const putArtifact = ({
       );
     }
 
-    if (secrets.TURBO_CACHE_SIGNATURE_KEY !== undefined) {
+    if (secrets.TURBO_CACHE_SIGNATURE_KEY === undefined) {
+      yield* storeArtifact(kv, hash, body, metadataFromHeaders(request.headers));
+    } else {
       const providedTag = request.headers.get("x-artifact-tag");
       const expectedTag = yield* computeArtifactTag(
         secrets.TURBO_CACHE_SIGNATURE_KEY,
@@ -281,8 +283,6 @@ const putArtifact = ({
         ...metadataFromHeaders(request.headers),
         tag: expectedTag,
       });
-    } else {
-      yield* storeArtifact(kv, hash, body, metadataFromHeaders(request.headers));
     }
 
     yield* Effect.logInfo("cache artifact stored", { hash, bytes: body.byteLength });
