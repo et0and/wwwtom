@@ -17,25 +17,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+      # Shared setup (checkout, pnpm, store cache, frozen install).
+      # Release needs the full history and the embedded credentials.
+      - uses: ./.github/actions/setup
         with:
           fetch-depth: 0
-          persist-credentials: true
 
       - name: Fetch all tags and ensure branch is up to date
         run: |
           git fetch --tags
           git checkout dev
           git pull origin dev
-
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
-
-      - name: Check pnpm version
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
 
       - name: Build
         run: pnpm run build

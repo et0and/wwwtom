@@ -1,0 +1,49 @@
+name: Setup repository
+description: >-
+  Check out, pin pnpm, restore the pnpm store cache, and install
+  dependencies with --frozen-lockfile. One definition for every workflow
+  so the setup block never drifts.
+inputs:
+  fetch-depth:
+    description: Checkout git history depth (release builds need 0).
+    default: "1"
+  persist-credentials:
+    description: Keep the embedded token for authenticated steps (release).
+    default: "true"
+  install:
+    description: Run `pnpm install --frozen-lockfile` after setup.
+    default: "true"
+runs:
+  using: composite
+  steps:
+    - name: Check out repository
+      uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+      with:
+        fetch-depth: ${{ inputs.fetch-depth }}
+        persist-credentials: ${{ inputs.persist-credentials }}
+
+    - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
+
+    # The pnpm store is content-addressed and shared across every job on
+    # this runner type, so one warm store makes each parallel job's
+    # `pnpm install` a near-instant restore — the "install once, reuse
+    # everywhere" effect without actually shipping node_modules between
+    # jobs.
+    - name: Resolve the pnpm store path
+      shell: bash
+      run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
+
+    - name: Restore the pnpm store
+      uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830
+      with:
+        path: ${{ env.PNPM_STORE_PATH }}
+        # The lockfile is the single source of truth for the dependency
+        # graph: any change invalidates the whole store cache.
+        key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          ${{ runner.os }}-pnpm-store-
+
+    - name: Install dependencies
+      if: ${{ inputs.install == 'true' }}
+      shell: bash
+      run: pnpm install --frozen-lockfile
