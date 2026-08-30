@@ -184,10 +184,9 @@ validates the latest staged stack.
   are disabled via `helpers.disableAnimations` (they start invisible); the
   sr-only accessible text they hide is preserved, so `getByRole("heading")`
   still resolves.
-- Single browser project; serial workers. SolidJS SSR shares a module-level
-  `sharedConfig.context`, so parallel renders race it and can crash or hang —
-  a nightly values reliability over wall-clock. Bump `workers` once SolidJS
-  supports concurrent SSR.
+- Single browser project; **fully parallel** (`fullyParallel: true`, default
+  workers). Solid 2 scopes SSR requests with `node:async_hooks`, and the web
+  app owns a query cache per request, so concurrent renders don't race.
 - Expected-failure deltas for a11y (serious/critical only) are triaged via the
   HTML report, not silently skipped.
 

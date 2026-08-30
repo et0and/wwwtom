@@ -1,4 +1,4 @@
-name: E2E (staging nightly)
+name: E2E (staging)
 
 on:
   schedule:
