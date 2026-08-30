@@ -1,27 +1,16 @@
 name: Setup repository
 description: >-
-  Check out, pin pnpm, restore the pnpm store cache, and install
-  dependencies with --frozen-lockfile. One definition for every workflow
-  so the setup block never drifts.
+  Pin pnpm, restore the pnpm store cache, and install dependencies with
+  --frozen-lockfile. One definition for every workflow so the setup block
+  never drifts. Call after an explicit `actions/checkout` (local composite
+  actions require the workspace to exist first).
 inputs:
-  fetch-depth:
-    description: Checkout git history depth (release builds need 0).
-    default: "1"
-  persist-credentials:
-    description: Keep the embedded token for authenticated steps (release).
-    default: "true"
   install:
     description: Run `pnpm install --frozen-lockfile` after setup.
     default: "true"
 runs:
   using: composite
   steps:
-    - name: Check out repository
-      uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-      with:
-        fetch-depth: ${{ inputs.fetch-depth }}
-        persist-credentials: ${{ inputs.persist-credentials }}
-
     - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
 
     # The pnpm store is content-addressed and shared across every job on

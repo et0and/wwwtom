@@ -31,7 +31,8 @@ jobs:
       # needs a token to post/update the preview comment.
       GITHUB_TOKEN: ${{ github.token }}
     steps:
-      # Shared setup (checkout, pnpm, store cache, frozen install).
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
       - uses: ./.github/actions/setup
 
       # Deploys shared -> api -> adapter -> web. The web stack posts or
@@ -55,7 +56,8 @@ jobs:
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
     steps:
-      # Shared setup (checkout, pnpm, store cache, frozen install).
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
       - uses: ./.github/actions/setup
 
       # Tears down web -> adapter -> api -> shared so no preview resources

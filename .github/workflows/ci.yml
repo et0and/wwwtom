@@ -14,7 +14,8 @@ jobs:
     runs-on: ubuntu-slim
 
     steps:
-      # Shared setup (checkout, pnpm, store cache, frozen install).
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
       - uses: ./.github/actions/setup
 
       # Unit tests run in every workspace with a `test` script: @tom/web,

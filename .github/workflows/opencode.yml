@@ -17,17 +17,17 @@ jobs:
       pull-requests: write
       issues: write
     steps:
+      # Local composite actions (oc-gate) require the workspace first.
+      - name: Checkout repository
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          persist-credentials: false
+
       - name: OpenCode gate
         id: oc
         uses: ./.github/actions/oc-gate
         with:
           allowed-users: et0and
-
-      - name: Checkout repository
-        if: steps.oc.outputs.triggered == 'true'
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-        with:
-          persist-credentials: false
 
       - name: Run opencode
         if: steps.oc.outputs.triggered == 'true'
