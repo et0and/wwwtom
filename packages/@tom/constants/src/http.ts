@@ -10,6 +10,7 @@ export const HttpStatus = {
   NotFound: 404,
   Conflict: 409,
   MethodNotAllowed: 405,
+  PayloadTooLarge: 413,
   ImATeapot: 418,
   UnprocessableEntity: 422,
   InternalServerError: 500,

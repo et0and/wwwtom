@@ -20,8 +20,16 @@ jobs:
 
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
-      # package's workspace dependencies first.
+      # package's workspace dependencies first. Task artifacts are shared
+      # through the KV-backed remote cache at turbo-cache.tom.so (TURBO_API
+      # points Turbo at a custom server; TURBO_TEAM must be set or remote
+      # caching stays disabled). Add the same value used as TURBO_CACHE_TOKEN
+      # in the TOM_SECRETS bundle as a repository secret so CI runs can read
+      # and write the cache.
       - name: Run unit tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
+          TURBO_API: https://turbo-cache.tom.so
+          TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
+          TURBO_TEAM: wwwtom
         run: pnpm turbo run test

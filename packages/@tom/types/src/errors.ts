@@ -141,3 +141,8 @@ export class GitHubApiError extends Schema.TaggedError<GitHubApiError>()("GitHub
   status: Schema.optional(Schema.Number),
   cause: Schema.optional(Schema.Unknown),
 }) {}
+
+export class TurboCacheError extends Schema.TaggedError<TurboCacheError>()("TurboCacheError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}

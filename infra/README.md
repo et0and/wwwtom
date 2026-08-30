@@ -8,6 +8,7 @@ Effect V4.
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/api`: Elysia Worker
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
+- `turbo-cache`: KV-backed Turborepo remote cache (`turbo-cache.tom.so`) for CI/CD
 - `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
@@ -38,10 +39,12 @@ pnpm deploy:shared
 pnpm deploy:api
 pnpm deploy:web
 pnpm deploy:runner
+pnpm deploy:turbo-cache
 pnpm deploy:gtm
 ```
 
-Deployment order is `shared -> api -> adapter -> web`. `gtm` is independent and can be deployed at any time.
+Deployment order is `shared -> turbo-cache -> api -> adapter -> web`. `gtm` is
+independent and can be deployed at any time.
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
@@ -58,7 +61,7 @@ registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
-(`web -> adapter -> api -> shared`).
+(`web -> adapter -> api -> turbo-cache -> shared`).
 
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 
@@ -69,6 +72,39 @@ pnpm dev:adapter
 The adapter runs on `http://localhost:8788`; local secrets are split out of the
 `TOM_SECRETS` bundle because Secrets Store bindings are not supported in local
 mode.
+
+## Turbo remote cache
+
+The `turbo-cache` stack implements the Turborepo remote-cache protocol
+(`/v8/artifacts/{hash}` GET/HEAD/PUT, `/v8/artifacts/status`, and
+`/v8/artifacts/events`) on a Cloudflare KV namespace, so CI runs share task
+artifacts and skip work that another run already did.
+
+- The production worker lives at `https://turbo-cache.tom.so`; other stages
+  get `{stage}-turbo-cache.tom.so`.
+- Artifacts are gzip-compressed tarballs capped at Cloudflare KV's 25 MiB value
+  limit (oversized uploads fail with 413) and expire after 7 days.
+- Every route requires `Authorization: Bearer <token>`. The token is read from
+  the TOM_SECRETS bundle as `TURBO_CACHE_TOKEN` (min length 32) and must also
+  be stored as a GitHub Actions repository secret.
+
+Point Turbo 2.x at it from CI or a local shell:
+
+```bash
+export TURBO_API=https://turbo-cache.tom.so
+# Same value as the TURBO_CACHE_TOKEN entry in the TOM_SECRETS bundle.
+export TURBO_TOKEN=<token>
+export TURBO_TEAM=wwwtom  # required or Turbo keeps remote caching disabled
+```
+
+Local dev for the cache worker (workerd + real bindings from `alchemy dev`):
+
+```bash
+pnpm dev:turbo-cache
+```
+
+The cache worker runs on `http://localhost:8790` by default. Deploy with
+`pnpm deploy:turbo-cache`.
 
 `ALCHEMY_STAGE` is required. This prevents a command intended for production
 from silently creating a new stage-specific Worker.
