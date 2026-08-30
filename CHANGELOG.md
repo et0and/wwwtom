@@ -1,3 +1,16 @@
+# [2.1.0](https://github.com/et0and/wwwtom/compare/v2.0.0...v2.1.0) (2026-08-30)
+
+
+### Bug Fixes
+
+* **infra:** give turbo KV namespace a distinct logical id ([471db84](https://github.com/et0and/wwwtom/commit/471db8447f156c6e283a19707b60417243b9d5db))
+
+
+### Features
+
+* **infra:** KV-backed Turborepo remote cache ([dc47110](https://github.com/et0and/wwwtom/commit/dc47110c5c43b02b0f804cfe4925ac4327bbf409))
+* **infra:** rename turborepo cache to infra/turbo with HMAC signing ([84732fc](https://github.com/et0and/wwwtom/commit/84732fcf12d14838951a2768dffac0eb5d70eda9))
+
 # [2.0.0](https://github.com/et0and/wwwtom/compare/v1.100.1...v2.0.0) (2026-08-30)
 
 
