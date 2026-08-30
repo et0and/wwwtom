@@ -1,3 +1,28 @@
+# [2.0.0](https://github.com/et0and/wwwtom/compare/v1.100.1...v2.0.0) (2026-08-30)
+
+
+* feat(web)!: migrate Solid 1 and SolidStart to Solid 2 core ([5b065a0](https://github.com/et0and/wwwtom/commit/5b065a0b9c38a67d9d364516a9f1677946fe8587))
+
+
+### Bug Fixes
+
+* **og:** accept commas in OG image title and summary params ([53b522d](https://github.com/et0and/wwwtom/commit/53b522d6b801395b834d93f7e1bb9f8056bd3e0d))
+
+
+### BREAKING CHANGES
+
+* SolidStart is removed from apps/web. The app now runs on
+Solid 2 core: @solidjs/web renderer, explicit createRouter route table,
+@solidjs/meta 1, @tanstack/solid-query 6, and @solidjs/vite-plugin start
+mode (SSR + middleware) replacing the SolidStart handler, file routes, and
+"use server" adapter functions. Server functions are gone - routes call
+the adapter directly; feed/sitemap/robots are served by the middleware.
+Each SSR request owns a per-request query cache (node:async_hooks scopes),
+making the e2e suite fully parallel.
+
+Verification: 53 unit tests + 29 e2e tests pass; production build and
+vite preview SSR verified.
+
 ## [1.100.1](https://github.com/et0and/wwwtom/compare/v1.100.0...v1.100.1) (2026-08-27)
 
 
