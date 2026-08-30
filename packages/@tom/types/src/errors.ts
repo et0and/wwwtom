@@ -141,3 +141,14 @@ export class GitHubApiError extends Schema.TaggedError<GitHubApiError>()("GitHub
   status: Schema.optional(Schema.Number),
   cause: Schema.optional(Schema.Unknown),
 }) {}
+
+export class FlagsError extends Schema.TaggedError<FlagsError>()("FlagsError", {
+  message: Schema.String,
+  flagKey: Schema.optional(Schema.String),
+  cause: Schema.optional(Schema.Unknown),
+}) {}
+
+export class InvalidUrlError extends Schema.TaggedError<InvalidUrlError>()("InvalidUrlError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}

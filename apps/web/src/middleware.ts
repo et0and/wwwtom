@@ -1,9 +1,12 @@
 import { getRequestEvent } from "@solidjs/web";
+import { Effect } from "effect";
+import { InvalidUrlError } from "@tom/types/errors";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { logLevelFromEnv, otelConfigFromEnv } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
 import { createRequestQueryClient } from "~/libs/query-client";
 import { handleFeed, handleRobots, handleSitemap } from "~/server/static-routes";
+import { handleFlags } from "~/server/flags";
 
 /**
  * Per-request server middleware (start mode). Runs inside the request-event
@@ -28,10 +31,21 @@ export default async function middleware(request: Request, next: () => Promise<R
     event.locals.queryClient = createRequestQueryClient();
   }
 
-  const pathname = new URL(request.url).pathname;
+  const url = Effect.runSync(
+    Effect.try({
+      // Effect.try is the Effect-idiomatic try/catch; request.url is
+      // platform-valid (mirrors infra/runner).
+      // pi-lens-ignore: unchecked-throwing-call
+      try: () => new URL(request.url),
+      catch: (cause) => new InvalidUrlError({ message: "Invalid request URL", cause }),
+    }),
+  );
+  const pathname = url.pathname;
   if (pathname === "/feed.xml") return handleFeed();
   if (pathname === "/sitemap.xml") return handleSitemap();
   if (pathname === "/robots.txt") return handleRobots();
+  // Same-origin flag refetch for the client (used-only list; see server/flags.ts).
+  if (pathname === "/api/flags") return handleFlags(url, logContext);
 
   return next();
 }

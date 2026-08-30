@@ -7,6 +7,7 @@ import { Stage } from "alchemy/Stage";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
+import { tomFlags } from "../flagship/tom.flags.ts";
 import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
 import { previewComment } from "../utils/github/preview-comment.ts";
 
@@ -41,6 +42,8 @@ export const web = Effect.gen(function* () {
       TOM_RATE_LIMIT_KV: webKv,
       HYPERDRIVE: webHyperdrive,
       WORK_QUEUE: tomQueue,
+      // Same-origin flag evaluation for the client (wwwtom /api/flags).
+      FLAGS: tomFlags,
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
       // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
       ...(isAlchemyDev ? undefined : { VITE_ADAPTER_URL: `https://${adapterHost}` }),

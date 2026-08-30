@@ -2,6 +2,7 @@ import { Context, Effect, Layer, Redacted, Schema } from "effect";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 import type { TomWorkMessageEncoded } from "@tom/schemas/queue";
 import { SecretsError } from "@tom/types/errors";
+import type { FlagshipBinding } from "@tom/flags/binding";
 
 export interface AppConfigContract {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
@@ -67,6 +68,10 @@ export type CloudflareEnv = {
   ADAPTER_URL?: string;
   API_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
+  // Cloudflare Flagship feature-flag binding, wired into the api worker in
+  // infra/apps/api.run.ts. Routes evaluate flags through
+  // Flags.Binding(env.FLAGS) from @tom/flags/service; absent in test.
+  FLAGS?: FlagshipBinding;
   // When set, requests carrying the `x-use-simulator` header have their
   // upstream service URLs (payload/arena/polar/api) rewritten to this base
   // URL — the e2e fixture simulator (apps/simulator).

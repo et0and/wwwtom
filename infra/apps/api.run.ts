@@ -5,6 +5,7 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
+import { tomFlags } from "../flagship/tom.flags.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -56,6 +57,8 @@ export const api = Effect.gen(function* () {
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       WORK_QUEUE: tomQueue,
+      // Evaluate flags through Flags.Binding(env.FLAGS) (@tom/flags/service).
+      FLAGS: tomFlags,
     },
   });
 });

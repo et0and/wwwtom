@@ -1,0 +1,26 @@
+{
+  "name": "@tom/flags",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./binding": "./src/binding.ts",
+    "./client": "./src/client.ts",
+    "./flag": "./src/flag.ts",
+    "./registry": "./src/registry.ts",
+    "./service": "./src/service.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "oxlint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tom/types": "workspace:*",
+    "effect": "catalog:"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "vitest": "catalog:"
+  }
+}

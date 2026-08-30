@@ -23,6 +23,7 @@
     "@tom/adapter": "workspace:*",
     "@tom/checkout": "workspace:*",
     "@tom/constants": "workspace:*",
+    "@tom/flags": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",

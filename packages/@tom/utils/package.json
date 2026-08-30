@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@tom/constants": "workspace:*",
+    "@tom/flags": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "effect": "catalog:",
