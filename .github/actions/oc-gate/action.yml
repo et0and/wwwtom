@@ -1,0 +1,57 @@
+name: OpenCode gate
+description: >-
+  Decide whether a comment should invoke the OpenCode agent. A composite
+  step cannot appear in `jobs.<id>.if:`, so the job runs unconditionally
+  and every step that needs the go/no-go reads `steps.<id>.outputs.triggered`.
+  The gate itself is a tiny bash check — no checkout required.
+inputs:
+  allowed-users:
+    description: >-
+      Comma-separated login(s) allowed to trigger. Empty means anyone who
+      wrote a trigger comment may invoke the agent.
+    default: et0and
+  require-label:
+    description: Require the PR/issue to carry the `opencode` label.
+    default: "false"
+outputs:
+  triggered:
+    description: "true when the comment is an authorized OpenCode trigger."
+    value: ${{ steps.check.outputs.triggered }}
+runs:
+  using: composite
+  steps:
+    - name: Evaluate trigger
+      id: check
+      shell: bash
+      env:
+        BODY: ${{ github.event.comment.body }}
+        AUTHOR: ${{ github.event.comment.user.login }}
+        ALLOWED: ${{ inputs.allowed-users }}
+        LABELS: >-
+          ${{ join(github.event.pull_request.labels.*.name, ',') }},
+          ${{ join(github.event.issue.labels.*.name, ',') }}
+        REQUIRE_LABEL: ${{ inputs.require-label }}
+      run: |
+        # Trigger check mirrors the original expressions: an explicit
+        # leading "/oc" | "/opencode", or " /oc" | " /opencode" anywhere.
+        triggered="false"
+        case "$BODY" in
+          "/oc"* | "/opencode"* | *" /oc"* | *" /opencode"*) triggered="true" ;;
+        esac
+
+        # Label gate: only PR-comments-style workflows opt in.
+        if [[ "$triggered" == "true" && "$REQUIRE_LABEL" == "true" ]]; then
+          if [[ ",$LABELS," != *",opencode,"* ]]; then
+            triggered="false"
+          fi
+        fi
+
+        # Author gate: empty means anyone; otherwise a comma-separated list.
+        if [[ "$triggered" == "true" && -n "$ALLOWED" ]]; then
+          case ",$ALLOWED," in
+            *",$AUTHOR,"*) ;;
+            *) triggered="false" ;;
+          esac
+        fi
+
+        echo "triggered=$triggered" >> "$GITHUB_OUTPUT"

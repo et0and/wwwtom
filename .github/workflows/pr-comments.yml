@@ -9,19 +9,11 @@ on:
 
 jobs:
   respond:
-    # Only run if:
-    # 1. Comment contains /oc or /opencode trigger
-    # 2. AND the PR has the "opencode" label (created by create-pr workflow)
-    if: |
-      (
-        contains(github.event.comment.body, ' /oc') ||
-        startsWith(github.event.comment.body, '/oc') ||
-        contains(github.event.comment.body, ' /opencode') ||
-        startsWith(github.event.comment.body, '/opencode')
-      ) && (
-        contains(github.event.pull_request.labels.*.name, 'opencode') ||
-        contains(github.event.issue.labels.*.name, 'opencode')
-      )
+    # Trigger + label check moved into .github/actions/oc-gate (shared with
+    # the opencode workflow): the job runs on every comment and gates its
+    # real steps on the composite's `triggered` output. Unlike opencode, any
+    # author may trigger as long as the PR carries the `opencode` label
+    # (the create-pr workflow adds it).
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -29,13 +21,22 @@ jobs:
       pull-requests: write
       issues: write
     steps:
+      - name: OpenCode gate
+        id: oc
+        uses: ./.github/actions/oc-gate
+        with:
+          allowed-users: ""
+          require-label: "true"
+
       - name: Checkout repository
+        if: steps.oc.outputs.triggered == 'true'
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
         with:
           persist-credentials: false
 
       - name: Get PR info
         id: pr
+        if: steps.oc.outputs.triggered == 'true'
         run: |
           if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
             echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
@@ -44,6 +45,7 @@ jobs:
           fi
 
       - name: Run opencode with thread context
+        if: steps.oc.outputs.triggered == 'true'
         uses: anomalyco/opencode/github@latest
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
@@ -66,7 +68,7 @@ jobs:
             - Only modify files relevant to the request
 
       - name: Reply with summary
-        if: always()
+        if: always() && steps.oc.outputs.triggered == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
