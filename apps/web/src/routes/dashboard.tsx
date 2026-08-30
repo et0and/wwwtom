@@ -55,14 +55,20 @@ const NZ_REGIONS = [
   "Southland",
 ];
 
-const fetchCookieProbe = async (): Promise<{ cookieState: string; sessionSeen: boolean }> => {
+const fetchCookieProbe = async (): Promise<{
+  url: string;
+  cookieState: string;
+  sessionSeen: boolean;
+  rawStatus: number;
+}> => {
+  const url = `${getAdapterBaseUrl()}/auth/session`;
   try {
-    const res = await fetch(`${getAdapterBaseUrl()}/auth/session`, { credentials: "include" });
-    const cookieState = res.headers.get("x-auth-cookie-token") ?? "no-header";
+    const res = await fetch(url, { credentials: "include" });
+    const cookieState = res.headers.get("x-auth-cookie-token") ?? "missing-header";
     const body = (await res.json()) as { session?: unknown };
-    return { cookieState, sessionSeen: Boolean(body.session) };
-  } catch {
-    return { cookieState: "fetch-failed", sessionSeen: false };
+    return { url, cookieState, sessionSeen: Boolean(body.session), rawStatus: res.status };
+  } catch (cause) {
+    return { url, cookieState: `threw: ${String(cause)}`, sessionSeen: false, rawStatus: 0 };
   }
 };
 
@@ -104,18 +110,22 @@ export default function Dashboard() {
   const [session, { refetch: refetchSession }] = createResource(fetchSession);
   const [keys, { refetch: refetchKeys }] = createResource(fetchKeys);
   const [accounts] = createResource(() =>
-    session()?.session ? fetchAccounts() : Promise.resolve([]),
+    import.meta.env.SSR ? Promise.resolve(null) : fetchAccounts(),
   );
-  const [probe, { refetch: refetchProbe }] = createResource(fetchCookieProbe);
+  const [probe, { refetch: refetchProbe }] = createResource(() =>
+    import.meta.env.SSR ? Promise.resolve(null) : fetchCookieProbe(),
+  );
 
   createEffect(() => {
     const refreshOnVisible = () => {
       void refetchSession();
       void refetchProbe();
     };
+    const refreshInterval = setInterval(refreshOnVisible, 4000);
     window.addEventListener("focus", refreshOnVisible);
     document.addEventListener("visibilitychange", refreshOnVisible);
     onCleanup(() => {
+      clearInterval(refreshInterval);
       window.removeEventListener("focus", refreshOnVisible);
       document.removeEventListener("visibilitychange", refreshOnVisible);
     });
