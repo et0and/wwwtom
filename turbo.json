@@ -1,9 +1,5 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  // HMAC signing is on: every remote-cache artifact must carry an
-  // x-artifact-tag (base64 HMAC-SHA256) so a leaked write token cannot poison
-  // the cache. Turbo reads the key from TURBO_REMOTE_CACHE_SIGNATURE_KEY;
-  // runtimes without it only get non-fatal remote-cache warnings.
   "remoteCache": {
     "signature": true
   },
