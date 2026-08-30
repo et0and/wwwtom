@@ -109,8 +109,12 @@ const fetchUsage = async (keyId: string): Promise<Usage> => {
 export default function Dashboard() {
   const [session, { refetch: refetchSession }] = createResource(fetchSession);
   const [keys, { refetch: refetchKeys }] = createResource(fetchKeys);
-  const [accounts] = createResource(() =>
-    import.meta.env.SSR ? Promise.resolve(null) : fetchAccounts(),
+  const [accounts] = createResource(
+    () => (import.meta.env.SSR ? null : session()),
+    async () => {
+      const current = session();
+      return current?.session ? fetchAccounts() : ([] as const);
+    },
   );
   const [probe, { refetch: refetchProbe }] = createResource(() =>
     import.meta.env.SSR ? Promise.resolve(null) : fetchCookieProbe(),
