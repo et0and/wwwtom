@@ -1,12 +1,4 @@
-import {
-  createEffect,
-  createMemo,
-  createResource,
-  createSignal,
-  For,
-  onCleanup,
-  Show,
-} from "solid-js";
+import { createMemo, createResource, createSignal, For, Show } from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInText } from "~/components/BlurInText";
 import { BlurInSection } from "~/components/BlurInSection";
@@ -116,24 +108,13 @@ export default function Dashboard() {
       return current?.session ? fetchAccounts() : ([] as const);
     },
   );
-  const [probe, { refetch: refetchProbe }] = createResource(() =>
-    import.meta.env.SSR ? Promise.resolve(null) : fetchCookieProbe(),
+  const [probe] = createResource(
+    () => (import.meta.env.SSR ? null : session()),
+    async () => {
+      const current = session();
+      return current ? fetchCookieProbe() : null;
+    },
   );
-
-  createEffect(() => {
-    const refreshOnVisible = () => {
-      void refetchSession();
-      void refetchProbe();
-    };
-    const refreshInterval = setInterval(refreshOnVisible, 4000);
-    window.addEventListener("focus", refreshOnVisible);
-    document.addEventListener("visibilitychange", refreshOnVisible);
-    onCleanup(() => {
-      clearInterval(refreshInterval);
-      window.removeEventListener("focus", refreshOnVisible);
-      document.removeEventListener("visibilitychange", refreshOnVisible);
-    });
-  });
   const [name, setName] = createSignal("");
   const [email, setEmail] = createSignal("");
   const [password, setPassword] = createSignal("");
