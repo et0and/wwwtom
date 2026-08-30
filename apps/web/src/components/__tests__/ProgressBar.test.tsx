@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@solidjs/testing-library";
-import { A, Route, Router } from "@solidjs/router";
+import { createRouter, memoryHistory } from "@solidjs/router";
 import { describe, it, expect } from "vitest";
 import { ProgressBar } from "@tom/ui/ProgressBar";
 
@@ -7,30 +7,28 @@ function TestShell() {
   return (
     <>
       <ProgressBar />
-      <A href="/about">About</A>
+      <a href="/about">About</a>
     </>
   );
 }
 
+const TestRouter = createRouter({
+  history: memoryHistory("/"),
+  routes: [
+    { path: "/", component: TestShell },
+    { path: "/about", component: () => <div>About</div> },
+  ],
+});
+
 describe("ProgressBar", () => {
   it("is hidden before any navigation", () => {
-    render(() => (
-      <Router>
-        <Route path="/" component={TestShell} />
-        <Route path="/about" component={() => <div>About</div>} />
-      </Router>
-    ));
+    render(() => <TestRouter />);
 
     expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
   it("appears during navigation and disappears afterwards", async () => {
-    render(() => (
-      <Router>
-        <Route path="/" component={TestShell} />
-        <Route path="/about" component={() => <div>About</div>} />
-      </Router>
-    ));
+    render(() => <TestRouter />);
 
     fireEvent.click(screen.getByRole("link", { name: "About" }));
 

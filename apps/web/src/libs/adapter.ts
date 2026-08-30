@@ -1,6 +1,6 @@
 import { treaty } from "@elysiajs/eden";
 import type { AdapterApp } from "@tom/adapter";
-import { getRequestEvent } from "solid-js/web";
+import { getRequestEvent, isServer } from "@solidjs/web";
 import { Effect, Option, Schema } from "effect";
 import { HttpError } from "@tom/types/errors";
 import { withLogging } from "@tom/utils/services/logging";
@@ -9,27 +9,19 @@ import type { LogContext } from "@tom/utils/services/logging";
 const DEV_ADAPTER_URL = "http://localhost:8788";
 const PROD_ADAPTER_URL = "https://adapter.tom.so";
 
-type RequestContext = {
-  cloudflare?: { env?: { ADAPTER_URL?: string } };
-  logContext?: LogContext;
-};
-
 /**
- * The adapter's base URL. On the server it comes from the Worker binding
- * (per-stage); the client uses the build-time VITE_ADAPTER_URL that Alchemy
- * inlines for production, falling back to localhost in dev.
+ * The adapter's base URL. On the server the per-stage URL is either the
+ * build-time VITE_ADAPTER_URL that Alchemy inlines into the SSR bundle for
+ * every stage, or the dev default; the client uses the same inline. The
+ * guestbook flow needs no Worker binding on the web worker itself — the
+ * adapter is a public host.
  */
 export const getAdapterBaseUrl = (): string => {
-  if (import.meta.env.SSR) {
-    const event = getRequestEvent();
-    const context = event?.nativeEvent.context as RequestContext | undefined;
-    const bindingUrl = context?.cloudflare?.env?.ADAPTER_URL;
-    if (bindingUrl) return bindingUrl;
-    const buildUrl = import.meta.env.VITE_ADAPTER_URL as string | undefined;
+  const buildUrl = import.meta.env.VITE_ADAPTER_URL as string | undefined;
+  if (isServer) {
     if (buildUrl) return buildUrl;
     return process.env.ADAPTER_URL ?? DEV_ADAPTER_URL;
   }
-  const buildUrl = import.meta.env.VITE_ADAPTER_URL as string | undefined;
   if (buildUrl) return buildUrl;
   return import.meta.env.PROD ? PROD_ADAPTER_URL : DEV_ADAPTER_URL;
 };
@@ -44,7 +36,7 @@ export const getAdapterBaseUrl = (): string => {
  */
 export const callAdapter = () => {
   const headers: Record<string, string> = {};
-  if (import.meta.env.SSR) {
+  if (isServer) {
     const simulatorHeader = getRequestEvent()?.request.headers.get("x-use-simulator");
     if (simulatorHeader) headers["x-use-simulator"] = simulatorHeader;
   }
@@ -123,8 +115,8 @@ export const runAdapterRequest = <T>(request: () => Promise<EdenResult<T>>): Pro
 
 /** Logging context for the current SSR request, if any. */
 const getServerLogContext = (): LogContext => {
-  if (!import.meta.env.SSR) return { serviceName: "tom-web" };
+  if (!isServer) return { serviceName: "tom-web" };
   const event = getRequestEvent();
-  const logContext = (event?.nativeEvent.context as RequestContext | undefined)?.logContext;
+  const logContext = event?.locals.logContext;
   return logContext ?? { serviceName: "tom-web" };
 };

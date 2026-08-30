@@ -1,4 +1,5 @@
-import { createSignal, onMount, onCleanup, Show, createEffect } from "solid-js";
+import { createSignal, Show, onSettled, createEffect } from "solid-js";
+import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import { Effect } from "effect";
 import { Spinner } from "@tom/ui/Spinner";
@@ -9,9 +10,9 @@ export default function Hold() {
   const [isPlaybackInitiated, setIsPlaybackInitiated] = createSignal(false);
   const [isClient, setIsClient] = createSignal(false);
   let audioRef: HTMLAudioElement | undefined;
-  let interval: ReturnType<typeof setInterval> | undefined;
 
-  onMount(() => {
+  onSettled(() => {
+    if (isServer) return;
     setIsClient(true);
 
     const savedTimer = localStorage.getItem("timer");
@@ -19,19 +20,23 @@ export default function Hold() {
       setTimer(parseInt(savedTimer, 10));
     }
 
-    interval = setInterval(() => {
+    const interval = setInterval(() => {
       setTimer((prevTimer) => prevTimer + 1);
     }, 1000);
 
-    onCleanup(() => {
-      if (interval) clearInterval(interval);
+    return () => {
+      clearInterval(interval);
       audioRef?.pause();
-    });
+    };
   });
 
-  createEffect(() => {
-    localStorage.setItem("timer", timer().toString());
-  });
+  createEffect(
+    () => timer(),
+    (value) => {
+      if (isServer) return;
+      localStorage.setItem("timer", value.toString());
+    },
+  );
 
   const handleAudioStart = () => {
     const audio = new Audio("https://cdn.tom.so/hold.mp3");

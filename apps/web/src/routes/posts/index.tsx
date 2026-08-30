@@ -1,44 +1,20 @@
-import type { RouteDefinition, RouteSectionProps } from "@solidjs/router";
-import { getRequestEvent } from "solid-js/web";
+import { httpHeader } from "@solidjs/web";
+import { useLocation } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPosts } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
-import { Suspense, Show, For } from "solid-js";
+import { Loading, Show, For } from "solid-js";
 import { Link } from "@tom/ui/Link";
 import { Spinner } from "@tom/ui/Spinner";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { queryClient } from "~/libs/query-client";
 
-export const route = {
-  preload: ({ location }) => {
-    const page = Number(location.query.page) || 1;
-    queryClient
-      .prefetchQuery({
-        queryKey: ["posts", page],
-        queryFn: () => fetchPosts(page, 5),
-      })
-      .catch(() => {
-        // A failed prefetch surfaces through the query's error state — don't
-        // let the rejection fail the SSR request.
-      });
-  },
-} satisfies RouteDefinition;
+export default function PostsHome() {
+  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
+  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
 
-export default function PostsHome(props: RouteSectionProps) {
-  const currentPage = () => Number(props.location.query.page) || 1;
-  const event = getRequestEvent();
-
-  if (event) {
-    event.response.headers.set(
-      "Cache-Control",
-      "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
-    );
-    event.response.headers.set(
-      "CDN-Cache-Control",
-      "public, max-age=3600, stale-while-revalidate=86400",
-    );
-  }
+  const location = useLocation();
+  const currentPage = () => Number(location.query.page) || 1;
 
   const postsQuery = useQuery(() => ({
     queryKey: ["posts", currentPage()],
@@ -63,7 +39,7 @@ export default function PostsHome(props: RouteSectionProps) {
         <p>Some of my writing.</p>
       </BlurInSection>
       <BlurInSection delay={0.5}>
-        <Suspense fallback={<Spinner color="grey" />}>
+        <Loading fallback={<Spinner color="grey" />}>
           <Show when={postsQuery.isError}>
             <div class="banner" role="alert">
               <p class="banner-title">Error loading posts</p>
@@ -118,7 +94,7 @@ export default function PostsHome(props: RouteSectionProps) {
               );
             }}
           </Show>
-        </Suspense>
+        </Loading>
       </BlurInSection>
     </PageLayout>
   );

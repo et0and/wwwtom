@@ -1,4 +1,5 @@
-import { createSignal, onMount, onCleanup, Show, For, createEffect } from "solid-js";
+import { createSignal, Show, For, onSettled, createEffect } from "solid-js";
+import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
 import { Spinner } from "@tom/ui/Spinner";
@@ -19,31 +20,17 @@ export default function Kawara() {
   // oxlint-disable-next-line no-unassigned-vars -- assigned by the Solid `ref` below
   let scrollContainer: HTMLDivElement | undefined;
 
-  onMount(() => {
+  onSettled(() => {
+    if (isServer) return;
     setIsClient(true);
     setWindowHeight(window.innerHeight);
 
     const handleResize = () => setWindowHeight(window.innerHeight);
-    const handleScroll = () => {
-      if (scrollContainer) {
-        setScrollTop(scrollContainer.scrollTop);
-      }
-    };
-
     window.addEventListener("resize", handleResize);
 
-    setTimeout(() => {
-      if (scrollContainer) {
-        scrollContainer.addEventListener("scroll", handleScroll);
-      }
-    }, 0);
-
-    onCleanup(() => {
+    return () => {
       window.removeEventListener("resize", handleResize);
-      if (scrollContainer) {
-        scrollContainer.removeEventListener("scroll", handleScroll);
-      }
-    });
+    };
   });
 
   const startIndex = () => Math.floor(scrollTop() / ITEM_HEIGHT);
@@ -58,22 +45,21 @@ export default function Kawara() {
     return items;
   };
 
-  // Ensure scroll listener is attached when container is ready
-  createEffect(() => {
-    if (scrollContainer && isClient()) {
+  // Ensure the scroll listener is attached when the container is ready
+  createEffect(
+    () => (isClient() ? scrollContainer : undefined),
+    (container) => {
+      if (isServer || !container) return;
       const handleScroll = () => {
-        if (scrollContainer) {
-          setScrollTop(scrollContainer.scrollTop);
-        }
+        setScrollTop(container.scrollTop);
       };
-      scrollContainer.addEventListener("scroll", handleScroll);
+      container.addEventListener("scroll", handleScroll);
 
       return () => {
-        scrollContainer.removeEventListener("scroll", handleScroll);
+        container.removeEventListener("scroll", handleScroll);
       };
-    }
-    return;
-  });
+    },
+  );
 
   return (
     <>

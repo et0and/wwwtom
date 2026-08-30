@@ -1,5 +1,4 @@
-import { A } from "@solidjs/router";
-import { createSignal, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 
 export function Nav() {
   const [isOpen, setIsOpen] = createSignal(false);
@@ -16,11 +15,7 @@ export function Nav() {
           <h1 class="!text-lg">Tom Hackshaw</h1>
         </a>
         <div class="hidden md:flex md:items-center space-x-4 text-lg">
-          {navItems.map((item) => (
-            <A preload={true} href={item.href}>
-              {item.label}
-            </A>
-          ))}
+          <For each={navItems}>{(item) => <a href={item.href}>{item.label}</a>}</For>
         </div>
         <button class="md:hidden p-2" onClick={() => setIsOpen(!isOpen())} aria-label="Toggle menu">
           <svg
@@ -49,11 +44,13 @@ export function Nav() {
       <Show when={isOpen()}>
         <div class="nav-dropdown md:hidden">
           <div class="flex flex-col py-4 px-6 text-lg">
-            {navItems.map((item) => (
-              <A preload={true} href={item.href} onClick={() => setIsOpen(false)}>
-                {item.label}
-              </A>
-            ))}
+            <For each={navItems}>
+              {(item) => (
+                <a href={item.href} onClick={() => setIsOpen(false)}>
+                  {item.label}
+                </a>
+              )}
+            </For>
           </div>
         </div>
       </Show>

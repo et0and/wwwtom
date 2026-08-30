@@ -1,5 +1,3 @@
-"use server";
-
 import { callAdapter, runAdapterRequest } from "~/libs/adapter";
 
 export function fetchPosts(page: number, pageSize: number) {

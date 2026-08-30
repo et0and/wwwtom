@@ -1,18 +1,16 @@
-import { Router } from "@solidjs/router";
-import { FileRoutes } from "@solidjs/start/router";
-import { Suspense, onMount } from "solid-js";
-import { MetaProvider } from "@solidjs/meta";
 import { QueryClientProvider } from "@tanstack/solid-query";
+import { onSettled } from "solid-js";
 import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
 import { ProgressBar } from "@tom/ui/ProgressBar";
 import { SkipLink } from "@tom/ui/SkipLink";
-import { queryClient } from "~/libs/query-client";
 import { useGlobalHaptics } from "~/libs/haptics";
+import { getQueryClient } from "~/libs/query-client";
+import { Router } from "~/router";
 import "./app.css";
 
-function RootLayout(props: { children?: import("solid-js").JSX.Element }) {
-  onMount(() => {
+function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
+  onSettled(() => {
     useGlobalHaptics();
   });
 
@@ -21,22 +19,20 @@ function RootLayout(props: { children?: import("solid-js").JSX.Element }) {
       <SkipLink />
       <ProgressBar />
       <Nav />
-      <div class="flex-1">
-        <Suspense>{props.children}</Suspense>
-      </div>
+      <div class="flex-1">{props.children}</div>
       <Footer />
     </div>
   );
 }
 
 export default function App() {
+  // On the server each request owns its query cache (locals.queryClient);
+  // outside a request scope this is the shared fallback client.
+  const client = getQueryClient();
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <MetaProvider>
-        <Router root={RootLayout}>
-          <FileRoutes />
-        </Router>
-      </MetaProvider>
+    <QueryClientProvider client={client}>
+      <Router>{(props) => <RootLayout>{props.children}</RootLayout>}</Router>
     </QueryClientProvider>
   );
 }

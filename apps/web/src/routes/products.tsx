@@ -1,13 +1,13 @@
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { createResource, For, Suspense, ErrorBoundary, Show } from "solid-js";
+import { createMemo, For, Loading, Errored, Show } from "solid-js";
 import { Spinner } from "@tom/ui/Spinner";
 import { formatPrice } from "@tom/checkout";
 import { fetchProducts } from "~/server/adapter";
 
 export default function Checkout() {
-  const [products] = createResource(() => fetchProducts());
+  const products = createMemo(() => fetchProducts());
 
   return (
     <>
@@ -18,8 +18,8 @@ export default function Checkout() {
         <div class="space-y-6">
           <BlurInText text="Products" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
-            <ErrorBoundary fallback={<p class="text-red-600">Failed to load products</p>}>
-              <Suspense fallback={<Spinner />}>
+            <Errored fallback={<p class="text-red-600">Failed to load products</p>}>
+              <Loading fallback={<Spinner />}>
                 <Show
                   when={products()?.length}
                   fallback={<p class="text-gray-500">No products available</p>}
@@ -44,8 +44,8 @@ export default function Checkout() {
                     </For>
                   </div>
                 </Show>
-              </Suspense>
-            </ErrorBoundary>
+              </Loading>
+            </Errored>
           </BlurInSection>
         </div>
       </PageLayout>

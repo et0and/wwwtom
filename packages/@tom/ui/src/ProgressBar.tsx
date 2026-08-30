@@ -1,5 +1,5 @@
 import { useIsRouting } from "@solidjs/router";
-import { createEffect, createSignal, on, onCleanup, Show } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 
 const TRICKLE_INTERVAL_MS = 200;
 const SETTLE_MS = 200;
@@ -22,7 +22,8 @@ export function ProgressBar() {
   const [progress, setProgress] = createSignal(0);
 
   createEffect(
-    on(isRouting, (routing) => {
+    () => isRouting(),
+    (routing) => {
       if (routing) {
         setProgress(0);
         setIsLeaving(false);
@@ -32,22 +33,22 @@ export function ProgressBar() {
           () => setProgress((n) => Math.min(trickle(n), MAX_PROGRESS)),
           TRICKLE_INTERVAL_MS,
         );
-        onCleanup(() => clearInterval(interval));
-      } else {
-        setProgress(1);
-
-        const settle = setTimeout(() => setIsLeaving(true), SETTLE_MS);
-        const remove = setTimeout(() => {
-          setIsVisible(false);
-          setIsLeaving(false);
-          setProgress(0);
-        }, SETTLE_MS + FADE_MS);
-        onCleanup(() => {
-          clearTimeout(settle);
-          clearTimeout(remove);
-        });
+        return () => clearInterval(interval);
       }
-    }),
+
+      setProgress(1);
+
+      const settle = setTimeout(() => setIsLeaving(true), SETTLE_MS);
+      const remove = setTimeout(() => {
+        setIsVisible(false);
+        setIsLeaving(false);
+        setProgress(0);
+      }, SETTLE_MS + FADE_MS);
+      return () => {
+        clearTimeout(settle);
+        clearTimeout(remove);
+      };
+    },
   );
 
   return (
@@ -58,8 +59,7 @@ export function ProgressBar() {
         aria-valuenow={Math.round(progress() * 100)}
         aria-valuemin={0}
         aria-valuemax={100}
-        class="tom-progress"
-        classList={{ "tom-progress-leaving": isLeaving() }}
+        class={["tom-progress", { "tom-progress-leaving": isLeaving() }]}
       >
         <div
           class="tom-progress-bar"

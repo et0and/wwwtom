@@ -1,6 +1,6 @@
 /// <reference types="vitest" />
 import { defineConfig, loadEnv } from "vite";
-import solid from "vite-plugin-solid";
+import solid from "@solidjs/vite-plugin";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -10,16 +10,6 @@ export default defineConfig(({ mode }) => {
       environment: "jsdom",
       setupFiles: ["./src/test/setup.ts"],
       globals: true,
-      transformMode: {
-        web: [/\.[jt]sx?$/],
-      },
-      deps: {
-        optimizer: {
-          web: {
-            include: ["solid-js/web", "solid-js"],
-          },
-        },
-      },
     },
     resolve: {
       conditions: ["development", "browser"],
@@ -28,10 +18,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     define: {
-      DEV: true,
       "import.meta.env.DEV": true,
       "import.meta.env.PROD": false,
-      "import.meta.env.SSR": false,
       "process.env.ARENA_TOKEN": JSON.stringify(env.ARENA_TOKEN),
       "import.meta.env.ARENA_TOKEN": JSON.stringify(env.ARENA_TOKEN),
     },

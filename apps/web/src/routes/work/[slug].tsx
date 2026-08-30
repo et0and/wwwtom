@@ -1,32 +1,12 @@
-import { lazy, For, Show, createMemo } from "solid-js";
-import { useParams, type RouteDefinition } from "@solidjs/router";
+import { For, Show, createMemo } from "solid-js";
+import { useParams } from "@solidjs/router";
+import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
-import { getRequestEvent } from "solid-js/web";
 import { fetchWorkBySlug } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { queryClient } from "~/libs/query-client";
-
-export const route = {
-  preload: ({ params }) => {
-    if (params.slug) {
-      queryClient
-        .prefetchQuery({
-          queryKey: ["work", params.slug],
-          queryFn: () => fetchWorkBySlug(params.slug!),
-        })
-        .catch(() => {
-          // A failed prefetch surfaces through the query's error state — don't
-          // let the rejection fail the SSR request.
-        });
-    }
-  },
-} satisfies RouteDefinition;
-
-const ArenaCarousel = lazy(() =>
-  import("~/components/Arena").then((m) => ({ default: m.ArenaCarousel })),
-);
+import { ArenaCarousel } from "~/components/Arena";
 
 const WorkNotFound = ({ slug }: { slug: string | undefined }) => (
   <PageLayout title="Not found" description="The page you are looking for does not exist.">
@@ -42,18 +22,9 @@ const WorkNotFound = ({ slug }: { slug: string | undefined }) => (
 export default function WorkPage() {
   const params = useParams();
   const slug = createMemo(() => params.slug);
-  const event = getRequestEvent();
 
-  if (event) {
-    event.response.headers.set(
-      "Cache-Control",
-      "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400",
-    );
-    event.response.headers.set(
-      "CDN-Cache-Control",
-      "public, max-age=3600, stale-while-revalidate=86400",
-    );
-  }
+  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
+  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
 
   const workQuery = useQuery(() => ({
     queryKey: ["work", slug()],

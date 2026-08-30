@@ -1,5 +1,5 @@
 import { WebHaptics, defaultPatterns } from "web-haptics";
-import { isServer } from "solid-js/web";
+import { isServer } from "@solidjs/web";
 
 let hapticsInstance: WebHaptics | null = null;
 let listenerAdded = false;

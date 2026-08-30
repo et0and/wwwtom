@@ -16,11 +16,10 @@
   },
   "dependencies": {
     "@elysiajs/eden": "catalog:",
-    "@mdx-js/rollup": "3.1.1",
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
-    "@solidjs/start": "2.0.0-beta.9",
-    "@tanstack/solid-query": "^5.101.4",
+    "@solidjs/web": "catalog:",
+    "@tanstack/solid-query": "catalog:",
     "@tom/adapter": "workspace:*",
     "@tom/checkout": "workspace:*",
     "@tom/constants": "workspace:*",
@@ -33,11 +32,11 @@
     "number-to-words": "1.2.4",
     "rss": "1.2.2",
     "solid-js": "catalog:",
-    "solid-mdx": "0.0.7",
     "web-haptics": "0.0.6"
   },
   "devDependencies": {
-    "@solidjs/testing-library": "0.8.10",
+    "@solidjs/testing-library": "1.0.0-beta.2",
+    "@solidjs/vite-plugin": "catalog:",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",
     "@types/node": "24.9.1",
@@ -46,7 +45,6 @@
     "jsdom": "27.0.0",
     "tailwindcss": "4.3.3",
     "vite": "^8.1.5",
-    "vite-plugin-solid": "^2.11.11",
     "vitest": "4.1.10"
   }
 }

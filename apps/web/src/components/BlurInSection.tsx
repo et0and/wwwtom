@@ -1,5 +1,5 @@
-import type { JSX } from "solid-js";
-import { mergeProps } from "solid-js";
+import type { JSX } from "@solidjs/web";
+import { merge } from "solid-js";
 
 interface BlurInSectionProps {
   children: JSX.Element;
@@ -8,7 +8,7 @@ interface BlurInSectionProps {
 }
 
 export function BlurInSection(props: BlurInSectionProps) {
-  const merged = mergeProps({ delay: 0, class: "" }, props);
+  const merged = merge({ delay: 0, class: "" }, props);
 
   return (
     <div
