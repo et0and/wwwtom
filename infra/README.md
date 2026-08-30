@@ -8,7 +8,7 @@ Effect V4.
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/api`: Elysia Worker
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
-- `turbo-cache`: KV-backed Turborepo remote cache (`turbo-cache.tom.so`) for CI/CD
+- `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
@@ -39,11 +39,11 @@ pnpm deploy:shared
 pnpm deploy:api
 pnpm deploy:web
 pnpm deploy:runner
-pnpm deploy:turbo-cache
+pnpm deploy:turbo
 pnpm deploy:gtm
 ```
 
-Deployment order is `shared -> turbo-cache -> api -> adapter -> web`. `gtm` is
+Deployment order is `shared -> turbo -> api -> adapter -> web`. `gtm` is
 independent and can be deployed at any time.
 
 The `runner` stack is on-demand infrastructure, not part of the default
@@ -61,7 +61,7 @@ registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
-(`web -> adapter -> api -> turbo-cache -> shared`).
+(`web -> adapter -> api -> turbo -> shared`).
 
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 
@@ -75,36 +75,48 @@ mode.
 
 ## Turbo remote cache
 
-The `turbo-cache` stack implements the Turborepo remote-cache protocol
+The `turbo` stack implements the Turborepo remote-cache protocol
 (`/v8/artifacts/{hash}` GET/HEAD/PUT, `/v8/artifacts/status`, and
 `/v8/artifacts/events`) on a Cloudflare KV namespace, so CI runs share task
 artifacts and skip work that another run already did.
 
-- The production worker lives at `https://turbo-cache.tom.so`; other stages
-  get `{stage}-turbo-cache.tom.so`.
+- The production worker lives at `https://turbo.infra.tom.so`; other stages
+  get `{stage}-turbo.infra.tom.so`.
 - Artifacts are gzip-compressed tarballs capped at Cloudflare KV's 25 MiB value
   limit (oversized uploads fail with 413) and expire after 7 days.
 - Every route requires `Authorization: Bearer <token>`. The token is read from
   the TOM_SECRETS bundle as `TURBO_CACHE_TOKEN` (min length 32) and must also
-  be stored as a GitHub Actions repository secret.
+  be stored as a GitHub Actions repository secret `TURBO_CACHE_TOKEN`.
+- When `TURBO_CACHE_SIGNATURE_KEY` is in the bundle, uploads must include an
+  `x-artifact-tag` header (base64 HMAC-SHA256 over `hash || teamId || body`)
+  and the worker rejects unsigned or tampered artifacts with 401. This is
+  Turbo's own signing scheme, so a leaked write token cannot poison the cache.
+  The repo's `turbo.json` declares `remoteCache.signature: true`, which is the
+  client-side switch that makes Turbo sign; Turbo reads the key itself from
+  the `TURBO_REMOTE_CACHE_SIGNATURE_KEY` environment variable. Runtimes
+  without the key get non-fatal remote-cache warnings, so local dev is
+  unaffected until a machine opts in.
 
 Point Turbo 2.x at it from CI or a local shell:
 
 ```bash
-export TURBO_API=https://turbo-cache.tom.so
+export TURBO_API=https://turbo.infra.tom.so
 # Same value as the TURBO_CACHE_TOKEN entry in the TOM_SECRETS bundle.
 export TURBO_TOKEN=<token>
 export TURBO_TEAM=wwwtom  # required or Turbo keeps remote caching disabled
+# Same value as the TURBO_CACHE_SIGNATURE_KEY bundle entry (Turbo's client-
+# side name for the signing key; min 32 bytes when the key is enabled).
+export TURBO_REMOTE_CACHE_SIGNATURE_KEY=<signature-key>
 ```
 
 Local dev for the cache worker (workerd + real bindings from `alchemy dev`):
 
 ```bash
-pnpm dev:turbo-cache
+pnpm dev:turbo
 ```
 
 The cache worker runs on `http://localhost:8790` by default. Deploy with
-`pnpm deploy:turbo-cache`.
+`pnpm deploy:turbo`.
 
 `ALCHEMY_STAGE` is required. This prevents a command intended for production
 from silently creating a new stage-specific Worker.
@@ -132,7 +144,9 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "SUCCESS_URL": "https://tom.so/thanks",
   "INTERNAL_API_TOKEN": "...",
   "GITHUB_TOKEN": "...",
-  "CONTROL_TOKEN": "..."
+  "CONTROL_TOKEN": "...",
+  "TURBO_CACHE_TOKEN": "...",
+  "TURBO_CACHE_SIGNATURE_KEY": "..."
 }
 ```
 
@@ -140,6 +154,13 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
 **Administration: write** permission (used to mint runner registration
 tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
 random value of at least 32 characters.
+
+`TURBO_CACHE_TOKEN` (bearer token for the turbo remote cache) and
+`TURBO_CACHE_SIGNATURE_KEY` (artifact signature key, min 32 bytes) protect the
+cache. Generate both with `openssl rand -hex 32`; store the same values as the
+`TURBO_CACHE_TOKEN` and `TURBO_CACHE_SIGNATURE_KEY` GitHub Actions repository
+secrets (`TURBO_REMOTE_CACHE_SIGNATURE_KEY` is Turbo's client-side name for the
+latter).
 
 `INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
 `x-internal-token` header when calling the API's protected routes

@@ -1,3 +1,4 @@
+import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import worker, {
   ARTIFACT_TTL_SECONDS,
@@ -6,10 +7,15 @@ import worker, {
   type TurboCacheEnv,
 } from "../index";
 
-const TOKEN = "test-turbo-cache-token-0123456789abcdef";
+const TOKEN = "test-turbo-token-0123456789abcdef";
+const SIGNATURE_KEY = "test-turbo-signature-key-0123456789abcdef";
 // A typical 64-char turbo task hash.
 const HASH = "9f86d081884c7d659a2feaa0c55ad01edfb2bcd5a2e0a5b9d3b1f6a5c8d1a2c3";
-const BASE = "https://turbo-cache.tom.so";
+const BASE = "https://turbo.infra.tom.so";
+
+/** Tag Turbo's client computes: base64 HMAC-SHA256 over hash || teamId || body. */
+const tagFor = (hash: string, teamId: string, body: Uint8Array, key: string): string =>
+  createHmac("sha256", key).update(hash).update(teamId).update(body).digest("base64");
 
 type StoredArtifact = { value: Uint8Array; metadata: ArtifactMetadata | null };
 
@@ -47,13 +53,16 @@ class MemoryKv {
   }
 }
 
-const setup = () => {
+const setup = (signatureKey?: string) => {
   const kv = new MemoryKv();
   const env: TurboCacheEnv = {
     TURBO_CACHE_KV: kv,
     TURBO_CACHE_TOKEN: TOKEN,
     NODE_ENV: "test",
   };
+  if (signatureKey !== undefined) {
+    Object.assign(env, { TURBO_CACHE_SIGNATURE_KEY: signatureKey });
+  }
   return { kv, env };
 };
 
@@ -303,5 +312,76 @@ describe("Turborepo remote cache on KV", () => {
     });
     const response = await worker.fetch(put, env);
     expect(response.status).toBe(500);
+  });
+
+  it("verifies the artifact tag when a signature key is configured", async () => {
+    const { kv, env } = setup(SIGNATURE_KEY);
+    const body = new Uint8Array([7, 7, 7]);
+    const tag = tagFor(HASH, "", body, SIGNATURE_KEY);
+
+    const put = request(`/v8/artifacts/${HASH}`, {
+      method: "PUT",
+      headers: authorizedHeaders({
+        "Content-Type": "application/octet-stream",
+        "x-artifact-tag": tag,
+      }),
+      body,
+    });
+    expect((await worker.fetch(put, env)).status).toBe(200);
+
+    const stored = kv.entries.get(HASH);
+    expect(stored?.metadata?.tag).toBe(tag);
+
+    const get = await worker.fetch(
+      request(`/v8/artifacts/${HASH}`, { headers: authorizedHeaders() }),
+      env,
+    );
+    expect(get.status).toBe(200);
+    // Signed clients recompute the tag from the body and reject a mismatch.
+    expect(get.headers.get("x-artifact-tag")).toBe(tag);
+  });
+
+  it("verifies tags signed over a teamId query parameter", async () => {
+    const { env } = setup(SIGNATURE_KEY);
+    const body = new Uint8Array([8]);
+    const tag = tagFor(HASH, "team_xyz", body, SIGNATURE_KEY);
+
+    const put = request(`/v8/artifacts/${HASH}?teamId=team_xyz`, {
+      method: "PUT",
+      headers: authorizedHeaders({
+        "Content-Type": "application/octet-stream",
+        "x-artifact-tag": tag,
+      }),
+      body,
+    });
+    expect((await worker.fetch(put, env)).status).toBe(200);
+  });
+
+  it("rejects a tampered artifact tag with 401 and stores nothing", async () => {
+    const { kv, env } = setup(SIGNATURE_KEY);
+    const body = new Uint8Array([9]);
+    const tag = tagFor(HASH, "", body, SIGNATURE_KEY);
+
+    const put = request(`/v8/artifacts/${HASH}`, {
+      method: "PUT",
+      headers: authorizedHeaders({
+        "Content-Type": "application/octet-stream",
+        "x-artifact-tag": `${tag.slice(0, -2)}AA`,
+      }),
+      body,
+    });
+    expect((await worker.fetch(put, env)).status).toBe(401);
+    expect(kv.entries.size).toBe(0);
+  });
+
+  it("rejects an unsigned upload when a signature key is configured", async () => {
+    const { kv, env } = setup(SIGNATURE_KEY);
+    const put = request(`/v8/artifacts/${HASH}`, {
+      method: "PUT",
+      headers: authorizedHeaders({ "Content-Type": "application/octet-stream" }),
+      body: new Uint8Array([1]),
+    });
+    expect((await worker.fetch(put, env)).status).toBe(401);
+    expect(kv.entries.size).toBe(0);
   });
 });

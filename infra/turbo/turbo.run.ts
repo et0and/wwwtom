@@ -4,20 +4,26 @@ import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
-import { turboCacheKv } from "../kv/turbo-cache.kv.ts";
+import { turboKv } from "../kv/turbo.kv.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 /**
- * KV-backed Turborepo remote cache (`turbo-cache.tom.so`). The Turbo CLI
+ * KV-backed Turborepo remote cache (`turbo.infra.tom.so`). The Turbo CLI
  * uploads task artifacts to `PUT /v8/artifacts/{hash}` and restores them
  * from `GET /v8/artifacts/{hash}`; every route requires the bearer token
- * seeded in the TOM_SECRETS bundle as `TURBO_CACHE_TOKEN`.
+ * seeded in the TOM_SECRETS bundle as `TURBO_CACHE_TOKEN`. Artifacts are
+ * HMAC-signed (tag = base64 HMAC-SHA256 over hash || teamId || body with
+ * `TURBO_CACHE_SIGNATURE_KEY`), so a leaked write token cannot poison the
+ * cache with forged artifacts.
  *
- * Set `TURBO_API=https://turbo-cache.tom.so` (custom-server URL),
- * `TURBO_TOKEN=<TURBO_CACHE_TOKEN>` and `TURBO_TEAM` in CI to share the
- * cache between runs.
+ * Set in CI:
+ * - `TURBO_API=https://turbo.infra.tom.so` (custom-server URL)
+ * - `TURBO_TOKEN=<TURBO_CACHE_TOKEN>`
+ * - `TURBO_TEAM` (required or Turbo keeps remote caching disabled)
+ * - `TURBO_REMOTE_CACHE_SIGNATURE_KEY=<TURBO_CACHE_SIGNATURE_KEY>` (Turbo's
+ *   client-side name for the signature key)
  */
-export const turboCache = Effect.gen(function* () {
+export const turbo = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
 
@@ -32,7 +38,7 @@ export const turboCache = Effect.gen(function* () {
     }
   }
 
-  return yield* Cloudflare.Worker("wwwtom-turbo-cache", {
+  return yield* Cloudflare.Worker("wwwtom-turbo", {
     main: `${import.meta.dirname}/src/index.ts`,
     compatibility: { date: "2026-08-12", flags: ["nodejs_compat"] },
     dev: {
@@ -47,25 +53,25 @@ export const turboCache = Effect.gen(function* () {
     // Every stage gets a deterministic worker name and custom domain so other
     // stacks can reference it (production adopts the existing worker).
     ...(stage === "production"
-      ? { name: "wwwtom-turbo-cache", domain: stageHost(stage, "turbo-cache") }
-      : { name: `wwwtom-turbo-cache-${stage}`, domain: stageHost(stage, "turbo-cache") }),
+      ? { name: "wwwtom-turbo", domain: stageHost(stage, "turbo.infra") }
+      : { name: `wwwtom-turbo-${stage}`, domain: stageHost(stage, "turbo.infra") }),
     env: {
       NODE_ENV: "production",
       ...devSecrets,
-      TURBO_CACHE_KV: turboCacheKv,
+      TURBO_CACHE_KV: turboKv,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
     },
   });
 });
 
 export default Stack(
-  "wwwtom-turbo-cache",
+  "wwwtom-turbo",
   {
     providers: Cloudflare.providers() as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
-    const worker = yield* turboCache;
+    const worker = yield* turbo;
 
     return {
       url: worker.url,

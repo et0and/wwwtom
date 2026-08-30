@@ -24,6 +24,12 @@ import {
  * - `POST /v8/artifacts/events` accepts (and discards) usage analytics
  *
  * All routes require `Authorization: Bearer <TURBO_CACHE_TOKEN>`.
+ *
+ * When `TURBO_CACHE_SIGNATURE_KEY` is set, uploads must carry an
+ * `x-artifact-tag` header: base64 HMAC-SHA256 over `hash || teamId || body`
+ * (Turbo signs the same payload client-side via
+ * `TURBO_REMOTE_CACHE_SIGNATURE_KEY`). Tags are stored and echoed back on
+ * downloads so a signed client can verify the artifact it fetched.
  */
 
 // Cloudflare KV rejects values over 25 MiB, so artifacts are capped up front
@@ -43,6 +49,49 @@ export type ArtifactMetadata = {
   readonly dirtyHash?: string;
 };
 
+/**
+ * base64 (standard, padded) HMAC-SHA256 of `hash || teamId || body`, the
+ * payload Turbo signs with its `TURBO_REMOTE_CACHE_SIGNATURE_KEY`. The client
+ * only signs over the teamId query parameter when `TURBO_TEAMID` is set;
+ * with plain `TURBO_TEAM` it signs over an empty team, so the server must
+ * fall back to "" when the URL carries no `teamId`.
+ */
+const computeArtifactTag = (
+  key: string,
+  hash: string,
+  teamId: string,
+  body: ArrayBuffer,
+): Effect.Effect<string, TurboCacheError> =>
+  Effect.gen(function* () {
+    const cryptoKey = yield* Effect.tryPromise({
+      try: () =>
+        crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(key),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"],
+        ),
+      catch: (cause) => new TurboCacheError({ message: "HMAC key import failed", cause }),
+    });
+
+    const prefix = new TextEncoder().encode(`${hash}${teamId}`);
+    const message = new Uint8Array(prefix.byteLength + body.byteLength);
+    message.set(prefix, 0);
+    message.set(new Uint8Array(body), prefix.byteLength);
+
+    const signature = yield* Effect.tryPromise({
+      try: () => crypto.subtle.sign("HMAC", cryptoKey, message),
+      catch: (cause) => new TurboCacheError({ message: "HMAC signing failed", cause }),
+    });
+
+    const bytes = new Uint8Array(signature);
+    let binary = "";
+    for (let index = 0; index < bytes.length; index++) {
+      binary += String.fromCharCode(bytes[index] ?? 0);
+    }
+    return btoa(binary);
+  });
 /**
  * The KV surface this worker relies on. Kept narrow so the handler stays
  * testable without faking the entire KVNamespace interface; Cloudflare's
@@ -64,10 +113,15 @@ export type TurboCacheEnv = CloudflareEnv & {
   readonly TURBO_CACHE_KV: TurboCacheKv;
   // Resolved from the TOM_SECRETS bundle by readCloudflareEnv.
   readonly TURBO_CACHE_TOKEN?: string;
+  // Optional — same value as Turbo's TURBO_REMOTE_CACHE_SIGNATURE_KEY.
+  readonly TURBO_CACHE_SIGNATURE_KEY?: string;
 };
 
 const TurboCacheSecrets = Schema.Struct({
   TURBO_CACHE_TOKEN: Schema.String.check(Schema.isMinLength(32)),
+  // Optional; when set, uploads are verified against this signature key.
+  // Must match Turbo's TURBO_REMOTE_CACHE_SIGNATURE_KEY.
+  TURBO_CACHE_SIGNATURE_KEY: Schema.optional(Schema.String.check(Schema.isMinLength(32))),
 });
 
 type TurboCacheSecrets = Schema.Schema.Type<typeof TurboCacheSecrets>;
@@ -84,13 +138,11 @@ const parseTurboCacheSecrets = (
  * Constant-time byte comparison of two same-length buffers (WebCrypto has no
  * timingSafeEqual on Workers).
  */
-const constantTimeEqual = (a: ArrayBuffer, b: ArrayBuffer): boolean => {
-  const left = new Uint8Array(a);
-  const right = new Uint8Array(b);
-  if (left.length !== right.length) return false;
+const constantTimeEqual = (a: Uint8Array, b: Uint8Array): boolean => {
+  if (a.length !== b.length) return false;
   let diff = 0;
-  for (let index = 0; index < left.length; index++) {
-    diff |= (left[index] ?? 0) ^ (right[index] ?? 0);
+  for (let index = 0; index < a.length; index++) {
+    diff |= (a[index] ?? 0) ^ (b[index] ?? 0);
   }
   return diff === 0;
 };
@@ -107,7 +159,7 @@ const secureEqual = (provided: string, expected: string): Effect.Effect<boolean,
         (cause) => new TurboCacheError({ message: "Timing-safe compare failed", cause }),
       ),
     );
-    return constantTimeEqual(providedHash, expectedHash);
+    return constantTimeEqual(new Uint8Array(providedHash), new Uint8Array(expectedHash));
   });
 
 const authenticate = (
@@ -174,11 +226,19 @@ const loadArtifact = (
     catch: (cause) => new TurboCacheError({ message: "Failed to read cache artifact", cause }),
   });
 
-const putArtifact = (
-  request: Request,
-  hash: string,
-  kv: TurboCacheKv,
-): Effect.Effect<Response, TurboCacheError> =>
+const putArtifact = ({
+  request,
+  hash,
+  teamId,
+  kv,
+  secrets,
+}: {
+  request: Request;
+  hash: string;
+  teamId: string;
+  kv: TurboCacheKv;
+  secrets: TurboCacheSecrets;
+}): Effect.Effect<Response, TurboCacheError> =>
   Effect.gen(function* () {
     const contentLength = request.headers.get("Content-Length");
     if (contentLength !== null && Number.parseInt(contentLength, 10) > MAX_ARTIFACT_BYTES) {
@@ -199,7 +259,32 @@ const putArtifact = (
       );
     }
 
-    yield* storeArtifact(kv, hash, body, metadataFromHeaders(request.headers));
+    if (secrets.TURBO_CACHE_SIGNATURE_KEY !== undefined) {
+      const providedTag = request.headers.get("x-artifact-tag");
+      const expectedTag = yield* computeArtifactTag(
+        secrets.TURBO_CACHE_SIGNATURE_KEY,
+        hash,
+        teamId,
+        body,
+      );
+      const tagMatches =
+        providedTag !== null &&
+        constantTimeEqual(
+          new TextEncoder().encode(providedTag),
+          new TextEncoder().encode(expectedTag),
+        );
+      if (!tagMatches) {
+        yield* Effect.logWarning("cache artifact rejected: signature mismatch", { hash });
+        return toErrorResponse(HttpStatus.Unauthorized, "Invalid artifact tag");
+      }
+      yield* storeArtifact(kv, hash, body, {
+        ...metadataFromHeaders(request.headers),
+        tag: expectedTag,
+      });
+    } else {
+      yield* storeArtifact(kv, hash, body, metadataFromHeaders(request.headers));
+    }
+
     yield* Effect.logInfo("cache artifact stored", { hash, bytes: body.byteLength });
     return new Response(null, { status: HttpStatus.Ok });
   });
@@ -256,7 +341,14 @@ const handleRequest = (
     }
     const hash = artifactMatch[1];
 
-    if (request.method === "PUT") return yield* putArtifact(request, hash, env.TURBO_CACHE_KV);
+    if (request.method === "PUT")
+      return yield* putArtifact({
+        request,
+        hash,
+        teamId: url.searchParams.get("teamId") ?? "",
+        kv: env.TURBO_CACHE_KV,
+        secrets,
+      });
     if (request.method === "GET") return yield* getArtifact(hash, env.TURBO_CACHE_KV);
     if (request.method === "HEAD") return yield* headArtifact(hash, env.TURBO_CACHE_KV);
 
@@ -271,11 +363,11 @@ const handleRequestWithAlerts = (
     Effect.flatMap((secrets) => handleRequest(request, env, secrets)),
     Effect.catch((cause) =>
       Effect.gen(function* () {
-        yield* Effect.logError("unhandled turbo-cache error", {
+        yield* Effect.logError("unhandled turbo error", {
           error: toErrorMessage(cause),
         });
         yield* Effect.sync(() => {
-          sendErrorAlert(env, "Unhandled turbo-cache error", cause);
+          sendErrorAlert(env, "Unhandled turbo error", cause);
         });
         return toErrorResponse(HttpStatus.InternalServerError, "Internal server error");
       }),
@@ -300,7 +392,7 @@ const worker = {
 
     return runEffect(
       handleRequestWithAlerts(request, env),
-      logContextFromRequest(request, "wwwtom-turbo-cache"),
+      logContextFromRequest(request, "wwwtom-turbo"),
     );
   },
 };

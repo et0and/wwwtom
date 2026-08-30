@@ -101,6 +101,7 @@ const secretKeys = [
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
   "TURBO_CACHE_TOKEN",
+  "TURBO_CACHE_SIGNATURE_KEY",
 ] as const;
 
 export type ResolvedCloudflareEnv = CloudflareEnv & { AXIOM_TOKEN?: string };
