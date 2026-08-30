@@ -1,6 +1,5 @@
-import type { RouteDefinition } from "@solidjs/router";
 import { useQuery, useMutation } from "@tanstack/solid-query";
-import { For, Show, Suspense, createSignal } from "solid-js";
+import { For, Show, Loading, createSignal } from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Spinner } from "@tom/ui/Spinner";
 import { BlurInSection } from "~/components/BlurInSection";
@@ -8,7 +7,7 @@ import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 
-const fetchEntries = async () => {
+export const fetchEntries = async () => {
   const result = await callAdapter().guestbook.entries.get();
   return unwrapAdapter(result);
 };
@@ -34,20 +33,6 @@ const logout = async () => {
   const result = await callAdapter().guestbook.logout.post();
   return unwrapAdapter(result);
 };
-
-export const route = {
-  preload: () => {
-    queryClient
-      .prefetchQuery({
-        queryKey: ["guestbook-entries"],
-        queryFn: fetchEntries,
-      })
-      .catch(() => {
-        // A failed prefetch surfaces through the query's error state — don't
-        // let the rejection fail the SSR request.
-      });
-  },
-} satisfies RouteDefinition;
 
 export default function Guestbook() {
   const entriesQuery = useQuery(() => ({
@@ -91,7 +76,7 @@ export default function Guestbook() {
       <BlurInText text="Guestbook" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
         <div class="mx-auto">
-          <Suspense fallback={<Spinner />}>
+          <Loading fallback={<Spinner />}>
             <Show
               when={currentUserQuery.data}
               fallback={
@@ -121,7 +106,9 @@ export default function Guestbook() {
                         name="handle"
                         placeholder="user@mastodon.social"
                         value={handle()}
-                        onInput={(e) => setHandle(e.currentTarget.value)}
+                        onInput={(e) => {
+                          setHandle(e.currentTarget.value);
+                        }}
                         required
                         pattern="[^@]+@[^@]+"
                         title="Enter your Fediverse handle in the format: user@instance.social"
@@ -191,9 +178,11 @@ export default function Guestbook() {
                         name="message"
                         placeholder="Leave your message here..."
                         value={message()}
-                        onInput={(e) => setMessage(e.currentTarget.value)}
+                        onInput={(e) => {
+                          setMessage(e.currentTarget.value);
+                        }}
                         required
-                        maxLength={500}
+                        maxlength={500}
                         disabled={signMutation.isPending}
                         class="input w-full min-h-32 mb-2"
                       />
@@ -212,13 +201,13 @@ export default function Guestbook() {
                 );
               }}
             </Show>
-          </Suspense>
+          </Loading>
         </div>
       </BlurInSection>
       <BlurInSection delay={0.5}>
         <div class="space-y-4">
           <h2 class="mb-4">Signatures</h2>
-          <Suspense fallback={<Spinner />}>
+          <Loading fallback={<Spinner />}>
             <Show when={entriesQuery.data}>
               {(data) => {
                 const d = data();
@@ -264,7 +253,7 @@ export default function Guestbook() {
                 );
               }}
             </Show>
-          </Suspense>
+          </Loading>
         </div>
       </BlurInSection>
     </PageLayout>

@@ -1,24 +1,21 @@
 import { render, screen } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
-import { Router, Route } from "@solidjs/router";
+import { createRouter, memoryHistory } from "@solidjs/router";
 import { Nav } from "@tom/ui/Nav";
+
+const TestRouter = createRouter({
+  history: memoryHistory("/"),
+  routes: [{ path: "/", component: Nav }],
+});
 
 describe("Nav", () => {
   it("matches the snapshot", () => {
-    const { container } = render(() => (
-      <Router>
-        <Route path="/" component={Nav} />
-      </Router>
-    ));
+    const { container } = render(() => <TestRouter />);
     expect(container).toMatchSnapshot();
   });
 
   it("renders main navigation links", () => {
-    render(() => (
-      <Router>
-        <Route path="/" component={Nav} />
-      </Router>
-    ));
+    render(() => <TestRouter />);
 
     expect(screen.getByRole("link", { name: "Tom Hackshaw" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Work" })).toBeInTheDocument();
@@ -26,11 +23,7 @@ describe("Nav", () => {
   });
 
   it("has correct href attributes for navigation links", () => {
-    render(() => (
-      <Router>
-        <Route path="/" component={Nav} />
-      </Router>
-    ));
+    render(() => <TestRouter />);
 
     expect(screen.getByRole("link", { name: "Tom Hackshaw" })).toHaveAttribute("href", "/");
     expect(screen.getByRole("link", { name: "Work" })).toHaveAttribute("href", "/work");
@@ -38,11 +31,7 @@ describe("Nav", () => {
   });
 
   it("has correct nav styling classes", () => {
-    render(() => (
-      <Router>
-        <Route path="/" component={Nav} />
-      </Router>
-    ));
+    render(() => <TestRouter />);
     const nav = screen.getByRole("navigation");
 
     expect(nav).toHaveClass("relative");
@@ -53,11 +42,7 @@ describe("Nav", () => {
   });
 
   it("contains mobile menu toggle button", () => {
-    render(() => (
-      <Router>
-        <Route path="/" component={Nav} />
-      </Router>
-    ));
+    render(() => <TestRouter />);
     const toggleButton = screen.getByRole("button", { name: "Toggle menu" });
 
     expect(toggleButton).toBeInTheDocument();

@@ -1,0 +1,55 @@
+name: E2E (staging)
+
+on:
+  schedule:
+    # 02:47 UTC daily — after the fixture-store nightly (02:17) and any
+    # dev-push deploy to staging (deploy.yml) have settled.
+    - cron: "47 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: e2e-staging-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  playwright:
+    name: Playwright (staging · real data)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+      - uses: ./.github/actions/setup
+        with:
+          install-playwright: "true"
+
+      # The staging stack (`staging-web.tom.so` plus its adapter/API) is
+      # deployed on every push to dev by the Deploy workflow (production is
+      # manual via workflow_dispatch); this suite exercises it with real
+      # upstreams — no fixture simulator, no x-use-simulator header. Override
+      # the target with E2E_STAGING_URL / E2E_STAGING_ADAPTER_URL.
+      - name: Run staging e2e suite
+        env:
+          CI: "true"
+        run: pnpm --filter @tom/e2e test:e2e:staging
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-report-staging
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: test-results-staging
+          path: apps/e2e/test-results/
+          retention-days: 7

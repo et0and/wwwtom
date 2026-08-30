@@ -35,4 +35,27 @@ describe("og integration", () => {
     const headers = new Headers(init.headers);
     expect(headers.get(INTERNAL_TOKEN_HEADER)).toBe("test-token");
   });
+
+  it("keeps commas in title/summary (Elysia splits them into lists)", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(new Uint8Array([0x89, 0x50, 0x4e, 0x47]), {
+        status: 200,
+        headers: { "Content-Type": "image/png" },
+      }),
+    );
+    const env = testEnv({
+      API_URL: "http://localhost:8787",
+      INTERNAL_API_TOKEN: "test-token",
+    });
+
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/og?title=Hi,Tom&summary=Aotearoa,New%20Zealand", env),
+    );
+
+    expect(response.status).toBe(200);
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const forwarded = new URL(url);
+    expect(forwarded.searchParams.get("title")).toBe("Hi,Tom");
+    expect(forwarded.searchParams.get("summary")).toBe("Aotearoa,New Zealand");
+  });
 });

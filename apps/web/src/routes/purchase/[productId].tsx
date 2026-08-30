@@ -1,7 +1,7 @@
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { createResource, createSignal, Suspense, ErrorBoundary, Show, createMemo } from "solid-js";
+import { createMemo, createSignal, Loading, Errored, Show, isPending, latest } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { formatPrice } from "@tom/checkout";
 import { Spinner } from "@tom/ui/Spinner";
@@ -10,11 +10,11 @@ import { fetchProduct, createCustomer } from "~/server/adapter";
 
 export default function Purchase() {
   const params = useParams();
-  const [product] = createResource(
-    () => params.productId,
-    (id) => fetchProduct(id),
-  );
-
+  const product = createMemo(() => {
+    const productId = params.productId;
+    if (!productId) throw new Error("Missing product id");
+    return fetchProduct(productId);
+  });
   const [isRedirecting, setIsRedirecting] = createSignal(false);
   const [email, setEmail] = createSignal("");
   const [name, setName] = createSignal("");
@@ -22,7 +22,7 @@ export default function Purchase() {
   const [emailError, setEmailError] = createSignal("");
 
   const pageTitle = createMemo(() => {
-    const p = product();
+    const p = latest(() => product());
     return p ? `Purchase ${p.name}` : "Purchase";
   });
 
@@ -75,10 +75,8 @@ export default function Purchase() {
           <BlurInText text="Complete your purchase" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
             <div class="space-y-4">
-              <ErrorBoundary
-                fallback={<p class="text-center text-red-600">Failed to load product</p>}
-              >
-                <Suspense fallback={<Spinner />}>
+              <Errored fallback={<p class="text-center text-red-600">Failed to load product</p>}>
+                <Loading fallback={<Spinner />}>
                   <Show when={product()}>
                     {(p) => (
                       <>
@@ -91,8 +89,8 @@ export default function Purchase() {
                       </>
                     )}
                   </Show>
-                </Suspense>
-              </ErrorBoundary>
+                </Loading>
+              </Errored>
             </div>
           </BlurInSection>
           <BlurInSection delay={0.5}>
@@ -123,7 +121,9 @@ export default function Purchase() {
                 <input
                   type="text"
                   value={name()}
-                  onInput={(e) => setName(e.currentTarget.value)}
+                  onInput={(e) => {
+                    setName(e.currentTarget.value);
+                  }}
                   placeholder="John Product"
                   disabled={isRedirecting()}
                   class="w-full px-3 py-2 border border-gray-300 disabled:bg-gray-100"
@@ -136,7 +136,7 @@ export default function Purchase() {
 
               <button
                 onClick={handlePurchase}
-                disabled={isRedirecting() || !email() || product.loading}
+                disabled={isRedirecting() || !email() || isPending(() => product())}
                 class="w-full bg-[#ad1174] text-white px-4 py-2 hover:bg-[#cc0081] cursor-pointer disabled:bg-gray-400"
               >
                 {isRedirecting() ? "Redirecting..." : "Proceed to payment"}

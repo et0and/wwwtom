@@ -9,7 +9,9 @@ exports[`Nav > matches the snapshot 1`] = `
       class="flex items-center justify-between h-16"
     >
       <a
+        aria-current="page"
         class="font-medium"
+        data-active=""
         href="/"
       >
         <h1
@@ -22,18 +24,12 @@ exports[`Nav > matches the snapshot 1`] = `
         class="hidden md:flex md:items-center space-x-4 text-lg"
       >
         <a
-          class="inactive"
           href="/work"
-          link=""
-          preload="true"
         >
           Work
         </a>
         <a
-          class="inactive"
           href="/posts"
-          link=""
-          preload="true"
         >
           Writing
         </a>

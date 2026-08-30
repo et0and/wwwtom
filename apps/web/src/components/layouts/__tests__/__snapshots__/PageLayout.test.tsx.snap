@@ -3,6 +3,7 @@
 exports[`PageLayout > matches the snapshot 1`] = `
 <div>
   <div>
+    <!---->
     <main
       class="mx-auto p-8 max-w-[750px] view-transition-main"
       id="main"

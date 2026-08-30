@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
-import { Show, Index, createMemo, createSignal } from "solid-js";
+import { Show, For, createMemo, createSignal } from "solid-js";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
 import { Spinner } from "@tom/ui/Spinner";
@@ -137,7 +137,7 @@ export function CameraRoll(props: CameraRollProps) {
               "max-width": "100%",
             }}
           >
-            <Index each={activeContents()?.data || []}>
+            <For each={activeContents()?.data || []} keyed={false}>
               {(item, index) => {
                 const layout = layouts()[index]!;
                 return (
@@ -158,7 +158,7 @@ export function CameraRoll(props: CameraRollProps) {
                   </div>
                 );
               }}
-            </Index>
+            </For>
           </div>
         </div>
         <p class="text-xs mt-2">
@@ -205,8 +205,7 @@ function ImageBlock(props: { block: Extract<ArenaBlock, { type: "Image" }> }) {
             : undefined
         }
         alt={block().image?.alt_text || block().title || ""}
-        class="w-full h-full object-cover"
-        classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
+        class={["w-full h-full object-cover", { "opacity-0": !!blurhashDataUrl() && !loaded() }]}
         onLoad={() => setLoaded(true)}
         loading="lazy"
       />

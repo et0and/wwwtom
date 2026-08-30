@@ -1,4 +1,3 @@
-import { A } from "@solidjs/router";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
@@ -50,7 +49,7 @@ export default function About() {
         </BlurInSection>
         <BlurInSection delay={1.5}>
           <p>
-            See also: <A href="/worktable">what I am currently working on or interested in.</A>
+            See also: <a href="/worktable">what I am currently working on or interested in.</a>
           </p>
         </BlurInSection>
         <BlurInText text="Acknowledgements" tag="h2" baseDelay={1.7} step={0.025} />

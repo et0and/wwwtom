@@ -1,5 +1,6 @@
-import type { Component, JSX, Accessor } from "solid-js";
-import { createMemo } from "solid-js";
+import type { Component, Accessor } from "solid-js";
+import type { JSX } from "@solidjs/web";
+import { createMemo, untrack } from "solid-js";
 import type { JsonLd } from "@tom/schemas/jsonld";
 import { Metadata } from "./Meta";
 
@@ -26,7 +27,8 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
     () => props.frontmatter?.summary ?? resolveProp(props.description) ?? "",
   );
   const canonical = createMemo(() => resolveProp(props.canonical));
-  const canonicalUrl = canonical();
+  // canonical is static per mount (a prop), so a one-time read is honest.
+  const canonicalUrl = untrack(() => canonical());
 
   return (
     <div class={props.class}>

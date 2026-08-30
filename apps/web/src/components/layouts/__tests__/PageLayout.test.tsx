@@ -1,19 +1,16 @@
 import { render } from "@solidjs/testing-library";
 import { describe, it, expect } from "vitest";
 import { PageLayout } from "@tom/ui/PageLayout";
-import { MetaProvider } from "@solidjs/meta";
 
 describe("PageLayout", () => {
   it("matches the snapshot", () => {
     const { container } = render(() => (
-      <MetaProvider>
-        <PageLayout
-          title="Tom and his page layout"
-          description="Microservices were a massive mistake"
-        >
-          <h1>Test content</h1>
-        </PageLayout>
-      </MetaProvider>
+      <PageLayout
+        title="Tom and his page layout"
+        description="Microservices were a massive mistake"
+      >
+        <h1>Test content</h1>
+      </PageLayout>
     ));
     const snapshot = container.cloneNode(true) as HTMLElement;
     const whitespaceNodes = [] as Text[];

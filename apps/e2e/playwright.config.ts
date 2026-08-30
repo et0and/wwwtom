@@ -24,15 +24,15 @@ const IS_CI = process.env.CI === "true" || process.env.CI === "1";
 
 export default defineConfig({
   testDir: "./tests",
-  // Serial workers: SolidJS SSR is not concurrency-safe within one process —
-  // parallel renders share the module-level sharedConfig.context and can
-  // crash (prepareResource "Cannot use 'in' operator") or hang heavier
-  // client-hydrated routes. A nightly values reliability over wall-clock;
-  // bump `workers` once SolidJS supports concurrent SSR.
-  fullyParallel: false,
+  // Fully parallel: Solid 2 request scopes are async-local
+  // (provideRequestEvent via node:async_hooks), so concurrent SSR renders
+  // no longer trample module-level sharedConfig. The web app gives each
+  // request its own query cache (middleware · locals.queryClient), so
+  // parallel pages never share TanStack state. Workers default to half the
+  // host's cores; CI stays reliable with retries.
+  fullyParallel: true,
   forbidOnly: IS_CI,
   retries: IS_CI ? 1 : 0,
-  workers: 1,
   timeout: 30_000,
   expect: { timeout: 8_000 },
   reporter: [["list"], ["html", { open: "never" }]],

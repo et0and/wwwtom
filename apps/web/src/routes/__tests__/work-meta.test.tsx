@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
-import { MemoryRouter, Route, createMemoryHistory } from "@solidjs/router";
+import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { MetaProvider } from "@solidjs/meta";
 import { queryClient } from "~/libs/query-client";
 import WorkPage from "~/routes/work/[slug]";
 
@@ -24,19 +23,17 @@ const workPayload = {
   arenaBlocks: [],
 };
 
-const renderWorkPage = () => {
-  const history = createMemoryHistory();
-  history.set({ value: "/work/an-idea-for-a-performance" });
-  return render(() => (
-    <MetaProvider>
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter history={history}>
-          <Route path="/work/:slug" component={WorkPage} />
-        </MemoryRouter>
-      </QueryClientProvider>
-    </MetaProvider>
+const TestRouter = createRouter({
+  history: memoryHistory("/work/an-idea-for-a-performance"),
+  routes: [{ path: "/work/:slug", component: WorkPage }],
+});
+
+const renderWorkPage = () =>
+  render(() => (
+    <QueryClientProvider client={queryClient}>
+      <TestRouter />
+    </QueryClientProvider>
   ));
-};
 
 const headMeta = (selector: string): string | null | undefined =>
   document.head.querySelector(selector)?.getAttribute("content");

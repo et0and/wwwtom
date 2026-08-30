@@ -16,14 +16,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
-
-      - name: Check pnpm version
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - uses: ./.github/actions/setup
 
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each

@@ -1,6 +1,5 @@
 import { existsSync } from "node:fs";
-import mdx from "@mdx-js/rollup";
-import { solidStart } from "@solidjs/start/config";
+import solid from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 
@@ -15,22 +14,20 @@ export default defineConfig(({ command }) => {
 
   return {
     plugins: [
-      solidStart({ extensions: ["mdx", "md"] }),
+      // Start mode replaces SolidStart: it owns entries, dev SSR serving,
+      // and the production build (dist/client + dist/server). SSR via
+      // @solidjs/web; providers adopt the `ssr` environment. The middleware
+      // fronts pages AND non-HTML endpoints (/feed.xml, /sitemap.xml,
+      // /robots.txt) plus decorates the request event for logging.
+      solid({ start: { middleware: "./src/middleware.ts" }, ssr: true }),
       tailwindcss(),
-      mdx({
-        jsxImportSource: "solid-js",
-        providerImportSource: "solid-mdx",
-      }),
     ],
-    optimizeDeps: {
-      exclude: ["@cf-wasm/photon"],
-    },
-    ssr: {
-      external: ["@cf-wasm/photon"],
-    },
-    build: {
-      rollupOptions: {
-        external: ["@cf-wasm/photon"],
+    resolve: {
+      // tsconfig `paths` resolve in the client build, but the dev SSR
+      // runner needs a real module specifier — declare it here for all
+      // environments.
+      alias: {
+        "~/": new URL("./src/", import.meta.url).pathname,
       },
     },
   };

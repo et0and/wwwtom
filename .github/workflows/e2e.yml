@@ -1,18 +1,26 @@
-name: E2E (nightly)
+name: E2E (fixture store)
 
 on:
   schedule:
     # 02:17 UTC daily — after the deploy pipeline has settled.
     - cron: "17 2 * * *"
   workflow_dispatch:
+  # Runs on every PR against dev so the suite is part of merge
+  # requirements. No `push` trigger: the merged dev commit already ran
+  # green as the last PR state, so post-merge re-runs would be wasted.
+  pull_request:
+    branches: [dev]
 
 permissions:
   contents: read
   actions: read
 
+# One run per PR number (cancelled on newer pushes, so only the latest
+# passes) and per ref for scheduled/manual runs — overlapping runs cannot
+# queue up.
 concurrency:
-  group: e2e-nightly-${{ github.ref }}
-  cancel-in-progress: false
+  group: e2e-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   playwright:
@@ -23,22 +31,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-
-      - uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093
-
-      - name: Check pnpm version
-        run: pnpm --version
-
-      - name: Install dependencies
-        run: pnpm install
+      - uses: ./.github/actions/setup
+        with:
+          install-playwright: "true"
 
       # The web server under test is `vite dev` (not preview — see
       # apps/e2e/playwright.config.ts for why), so no production build is
       # needed; dev compiles on demand and is functionally identical for the
       # suite's purposes.
-      - name: Install Playwright browsers
-        run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
-
       - name: Run e2e suite
         env:
           CI: "true"

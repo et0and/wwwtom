@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
-import { Show, Index, createMemo, createSignal } from "solid-js";
+import { Show, For, createMemo, createSignal } from "solid-js";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
 import { Spinner } from "@tom/ui/Spinner";
@@ -72,13 +72,13 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
       >
         <div class="overflow-x-auto whitespace-nowrap border border-black">
           <div class="carousel-container inline-flex gap-4 p-4">
-            <Index each={activeContents()?.data || []}>
+            <For each={activeContents()?.data || []} keyed={false}>
               {(item) => (
                 <div class="carousel-item flex-shrink-0 w-80">
                   <ArenaItem item={item()} />
                 </div>
               )}
-            </Index>
+            </For>
           </div>
         </div>
         <p class="text-xs mt-2">
@@ -133,8 +133,7 @@ function ImageBlock(props: ImageBlockProps) {
             : undefined
         }
         alt={block().image?.alt_text || block().title || ""}
-        class="w-full h-full object-cover"
-        classList={{ "opacity-0": !!blurhashDataUrl() && !loaded() }}
+        class={["w-full h-full object-cover", { "opacity-0": !!blurhashDataUrl() && !loaded() }]}
         onLoad={() => setLoaded(true)}
         loading="lazy"
       />

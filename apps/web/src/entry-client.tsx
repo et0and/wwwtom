@@ -1,12 +1,16 @@
 // @refresh reload
-import { mount, StartClient } from "@solidjs/start/client";
-import { hydrate } from "@tanstack/solid-query";
-import { queryClient } from "~/libs/query-client";
+import { hydrate } from "@solidjs/web";
+import App from "./app";
+import { Document } from "./Document";
 
-const stateScript = document.getElementById("query-dehydrated-state");
-if (stateScript) {
-  hydrate(queryClient, JSON.parse(stateScript.textContent ?? "null"));
-  stateScript.remove();
-}
-
-mount(() => <StartClient />, document.getElementById("app")!);
+// TanStack Query v6 serializes its cache through the provider's own
+// hydration channel during SSR; the client replay restores the queries, so
+// no manual dehydrated-state script is needed here.
+hydrate(
+  () => (
+    <Document>
+      <App />
+    </Document>
+  ),
+  document,
+);

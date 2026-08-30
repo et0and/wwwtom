@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
-import { Router, Route } from "@solidjs/router";
+import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { MetaProvider } from "@solidjs/meta";
 import { queryClient } from "~/libs/query-client";
 import WorkHome from "~/routes/work/index";
 
@@ -29,15 +28,16 @@ const worksPayload = [
   },
 ];
 
+const TestRouter = createRouter({
+  history: memoryHistory("/"),
+  routes: [{ path: "/", component: WorkHome }],
+});
+
 const renderWorkHome = () =>
   render(() => (
-    <MetaProvider>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <Route path="/" component={WorkHome} />
-        </Router>
-      </QueryClientProvider>
-    </MetaProvider>
+    <QueryClientProvider client={queryClient}>
+      <TestRouter />
+    </QueryClientProvider>
   ));
 
 beforeEach(() => {
