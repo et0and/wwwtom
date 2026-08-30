@@ -1,10 +1,18 @@
-# @tom/e2e — nightly Playwright suite for tom.so
+# @tom/e2e — Playwright suites for tom.so
 
-Browser-level e2e for every page on tom.so, running once per night against a
-fully local stack whose services serve **fixture stores** instead of real
-upstreams (Polar, Are.na, Payload CMS, D1, the internal API). Tests assert
-user-visible behaviour only — never wire formats, request shapes or headers —
-so they stay service-agnostic and break only when the site actually changes.
+Two suites live here:
+
+- **Fixture suite** (`tests/`, `playwright.config.ts`): every page on tom.so
+  against a fully local stack whose services serve **fixture stores** instead
+  of real upstreams (Polar, Are.na, Payload CMS, D1, the internal API). Runs
+  on every PR against `dev` (merge requirement) and nightly. Tests assert
+  user-visible behaviour only — never wire formats, request shapes or
+  headers — so they stay service-agnostic and break only when the site
+  actually changes.
+- **Staging suite** (`tests-staging/`,
+  `playwright.staging.config.ts`): content-agnostic smoke + real-data checks
+  against the deployed `staging` Alchemy stage (`staging-web.tom.so`) — no
+  fixture simulator, no `x-use-simulator` header. Runs nightly.
 
 ```
 browser (Playwright, sends `x-use-simulator: 1`)
@@ -118,30 +126,52 @@ Dev also keeps Solid Meta's head injection faithful (the production build
 served under plain Node produces an empty `<head>`, breaking titles/meta and
 client hydration). A custom-node harness is deliberately not used.
 
-The suite runs with serial workers because SolidJS SSR isn't concurrency-safe
-within one process (parallel renders share the module-level
-`sharedConfig.context` and can crash or hang). Bump `workers` once SolidJS
-supports concurrent SSR.
+The suite runs **fully parallel** (`fullyParallel: true`, default workers):
+Solid 2 scopes each SSR request with `node:async_hooks`
+(`provideRequestEvent`), so parallel renders no longer share a racy
+`sharedConfig`, and the web app gives each request its own query cache
+(`locals.queryClient`) — parallel pages never share TanStack state.
 
 CI sets `CI=true` so `webServer` entries **fail fast** if a port isn't up, and
 retries once on failure.
 
-## The nightly GitHub workflow
+## The fixture-suite GitHub workflow
 
-`.github/workflows/e2e.yml` runs on a cron (02:17 UTC) and on
-`workflow_dispatch`. It:
+`.github/workflows/e2e.yml` runs on pushes to PRs against `dev` (concurrent
+runs are cancelled per PR number so only the latest passes), on a cron
+(02:17 UTC) and on `workflow_dispatch`. There is deliberately no `push`
+trigger — a merged dev commit already ran green as the last PR state. It:
 
 1. checks out and installs;
 2. starts simulator → adapter harness → `vite dev` (Playwright
    `webServer`);
 3. runs the suite with `npx playwright install --with-deps chromium`;
 4. uploads `playwright-report/` + `test-results/` (traces) as artifacts on
-   failure, and opens an issue… (add a step if you want failure notifications:
-   Telegram/email hookup lives in `@tom/utils` and can be wired into a
-   `pull_request`-style notify step).
+   failure.
 
 `pnpm test` / `pnpm typecheck` (turbo) deliberately **do not** include this
-suite — it's nightly-only. Use `pnpm --filter @tom/e2e typecheck` locally.
+suite — it's PR + nightly only. Use `pnpm --filter @tom/e2e typecheck`
+locally.
+
+## The staging suite
+
+`tests-staging/` runs against the **deployed staging stack** (real CMS, Polar,
+Are.na — whatever the `staging` Alchemy stage holds), so assertions are
+content-agnostic: structure, headings, valid feeds/sitemap, 404s, og
+meta, and read-only navigation into the first live post/work/product. The
+guestbook and checkout flows are rendered but never submitted (they mutate
+real data). Run it locally against any deployed stage:
+
+```sh
+pnpm --filter @tom/e2e test:e2e:staging
+E2E_STAGING_URL=https://pr-114-web.tom.so \
+E2E_STAGING_ADAPTER_URL=https://pr-114-adapter.tom.so \
+pnpm --filter @tom/e2e test:e2e:staging
+```
+
+The workflow `.github/workflows/e2e-staging.yml` runs it nightly (02:47 UTC)
+and on `workflow_dispatch`; the stage is deployed via the Deploy workflow
+(`workflow_dispatch`, stage=staging).
 
 ## Conventions for tests in this suite
 
