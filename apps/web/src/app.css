@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "@tom/ui/progress.css";
 
-@source "../../../packages/@tom/ui/src/**/*.tsx";
+@source "../../../packages/ui/src/**/*.tsx";
 
 @theme {
   --animate-blur-in: blurIn 0.3s ease-in;

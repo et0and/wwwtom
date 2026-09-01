@@ -15,7 +15,7 @@
     "write": "oxfmt --write .",
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",
-    "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/@tom/utils && npx vitest run --update",
+    "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/utils && npx vitest run --update",
     "deploy": "pnpm run deploy:shared && pnpm run deploy:turbo && pnpm run deploy:api && pnpm run deploy:adapter && pnpm run deploy:web",
     "deploy:shared": "pnpm --filter @tom/infra run deploy:shared",
     "deploy:web": "pnpm --filter @tom/infra run deploy:web",

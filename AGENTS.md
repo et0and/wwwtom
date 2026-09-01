@@ -12,7 +12,7 @@ Improve existing code; avoid new abstractions.
 - `apps/sophie` — Payload site, Next + OpenNext, Workers.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/@tom/*` — ui, utils, types, db, arena, payload, schemas, checkout, constants, email.
+- `packages/*` — ui, utils, types, db, arena, payload, schemas, checkout, constants, email.
 - `infra` — Alchemy 2.0.0-beta.63 + Effect 4.0.0-beta.99 stacks: shared, turbo, api, adapter, web.
 
 ## Working rules
@@ -45,13 +45,13 @@ Improve existing code; avoid new abstractions.
 
 - root filter: `pnpm test -- Nav.test.tsx`
 - web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/components/__tests__/Nav.test.tsx`)
-- utils: `cd packages/@tom/utils && pnpm vitest run __tests__/telegram.test.ts`
+- utils: `cd packages/utils && pnpm vitest run __tests__/telegram.test.ts`
 - cms: `cd apps/cms && pnpm vitest run tests/int/<name>.int.spec.ts`
 
 ## Tests
 
 - web: `apps/web/src/**/__tests__/*.test.tsx`; jsdom, globals, `src/test/setup.ts` (jest-dom, cleanup, matchMedia mock)
-- utils: `packages/@tom/utils/__tests__/*`
+- utils: `packages/utils/__tests__/*`
 - cms: `apps/cms/tests/int/**/*.int.spec.ts` (vitest + jsdom)
 - Solid UI: `@solidjs/testing-library`; wrap router deps in `Router`/`Route`; assert user-visible behavior; focused snapshots; narrowest relevant test first
 

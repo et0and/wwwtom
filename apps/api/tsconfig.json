@@ -9,7 +9,7 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "paths": {
-      "@tom/*": ["../../packages/@tom/*/src"]
+      "@tom/*": ["../../packages/*/src"]
     }
   },
   "include": ["src/**/*.ts"]

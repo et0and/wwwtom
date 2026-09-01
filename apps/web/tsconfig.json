@@ -18,7 +18,7 @@
     "types": ["node", "vite/client"],
     "paths": {
       "~/*": ["./src/*"],
-      "@tom/*": ["../../packages/@tom/*/src"]
+      "@tom/*": ["../../packages/*/src"]
     },
     "plugins": [
       {
