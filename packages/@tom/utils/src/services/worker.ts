@@ -1,6 +1,6 @@
 import { Effect, Layer, Schema } from "effect";
 import { errorResponseSchema } from "@tom/schemas/error";
-import { HttpStatus } from "@tom/constants/http";
+import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { WorkerEnvMissingError } from "@tom/types/errors";
 import { TelegramService } from "../telegram";
 import { withLogging } from "./logging";
@@ -94,11 +94,19 @@ export const logApiFailure = (message: string, status: number, cause?: unknown) 
     ? Effect.logWarning(message, cause === undefined ? { status } : { status, cause })
     : Effect.logError(message, cause === undefined ? { status } : { status, cause });
 
+/**
+ * An error response status must be a real 4xx/5xx code; anything else (a
+ * 0 sentinel, a redirect class, a non-integer) would produce an invalid
+ * HTTP response, so fall back to 500 at the boundary.
+ */
+const toErrorStatus = (status: number): number =>
+  isErrorStatus(status) ? status : HttpStatus.InternalServerError;
+
 export const toErrorResponse = (status: number, error: string, cause?: string): Response =>
   new Response(
     JSON.stringify(Schema.encodeSync(errorResponseSchema)(cause ? { error, cause } : { error })),
     {
-      status,
+      status: toErrorStatus(status),
       headers: { "Content-Type": "application/json" },
     },
   );

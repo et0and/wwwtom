@@ -4,7 +4,7 @@ import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost, tomSecrets } from "../shared.run.ts";
-import { tomQueue } from "../queues/tom.queue.ts";
+import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -33,7 +33,10 @@ export const api = Effect.gen(function* () {
       ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
       : undefined;
 
-  return yield* Cloudflare.Worker("wwwtom-api", {
+  const queue = yield* tomQueue;
+  const dlq = yield* tomQueueDlq;
+
+  const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
     dev: {
@@ -58,6 +61,18 @@ export const api = Effect.gen(function* () {
       WORK_QUEUE: tomQueue,
     },
   });
+
+  // The api worker hosts the single worker consumer (at most one per queue):
+  // it drains tom-work-queue via the `queue` handler in apps/api/src/index.ts;
+  // exhausted messages route to the DLQ.
+  yield* Cloudflare.Queues.Consumer("tom-work-consumer", {
+    queueId: queue.queueId,
+    scriptName: worker.workerName,
+    deadLetterQueue: dlq.queueName,
+    settings: { batchSize: 10, maxRetries: 3, maxWaitTimeMs: 5000 },
+  });
+
+  return worker;
 });
 
 export default Stack(

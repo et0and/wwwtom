@@ -140,7 +140,9 @@ function mapArenaError(cause: unknown): HttpError {
     return new HttpError({ message: cause.message, status: cause.status });
   }
   if (cause instanceof ArenaNetworkError) {
-    return new HttpError({ message: cause.message, status: 0 });
+    // No HTTP response arrived; 502 is the truthful status for an upstream
+    // the adapter could not reach (never use 0 as a sentinel).
+    return new HttpError({ message: cause.message, status: HttpStatus.BadGateway });
   }
   return new HttpError({
     message: "Arena request failed",
@@ -505,7 +507,11 @@ export class ArenaClient implements ArenaApi {
             headers,
             body: null,
           }),
-        catch: () => new HttpError({ message: "Network request failed", status: 0 }),
+        catch: () =>
+          new HttpError({
+            message: "Network request failed",
+            status: HttpStatus.BadGateway,
+          }),
       });
 
       if (!response.ok) {

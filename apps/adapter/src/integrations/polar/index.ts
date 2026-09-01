@@ -180,7 +180,11 @@ const createPolarCustomer = (
 const runPolar = <T>(effect: Effect.Effect<T, PolarApiError>, context: LogContext): Promise<T> =>
   runAdapter(
     effect,
-    (error) => new AdapterError(error.status || HttpStatus.InternalServerError, error.message),
+    (error) =>
+      new AdapterError({
+        status: error.status || HttpStatus.InternalServerError,
+        message: error.message,
+      }),
     context,
   );
 

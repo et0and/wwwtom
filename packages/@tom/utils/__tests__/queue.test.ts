@@ -25,6 +25,20 @@ describe("TomWorkMessage", () => {
     expect(message.kind).toBe("render-og");
   });
 
+  it("decodes a guestbook-sign message", () => {
+    const message = Schema.decodeUnknownSync(TomWorkMessage)({
+      kind: "guestbook-sign",
+      entryId: 7,
+      fediverseUsername: "tom@mastodon.social",
+      displayName: "Tom",
+      message: "hi!",
+    });
+    if (message.kind !== "guestbook-sign") {
+      throw new Error("expected guestbook-sign");
+    }
+    expect(message.entryId).toBe(7);
+  });
+
   it("rejects an unknown kind", () => {
     expect(() => Schema.decodeUnknownSync(TomWorkMessage)({ kind: "nope" })).toThrow();
   });

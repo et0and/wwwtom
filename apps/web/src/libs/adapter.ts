@@ -3,6 +3,7 @@ import type { AdapterApp } from "@tom/adapter";
 import { getRequestEvent, isServer } from "@solidjs/web";
 import { Effect, Option, Schema } from "effect";
 import { HttpError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
 
@@ -87,7 +88,13 @@ export const adapterRequest = <T>(
   request: () => Promise<EdenResult<T>>,
 ): Effect.Effect<T, HttpError> =>
   Effect.tryPromise(() => request()).pipe(
-    Effect.mapError(() => new HttpError({ message: "Adapter request failed", status: 500 })),
+    Effect.mapError(
+      () =>
+        new HttpError({
+          message: "Adapter request failed",
+          status: HttpStatus.InternalServerError,
+        }),
+    ),
     Effect.flatMap((result) =>
       result.error
         ? Effect.fail(
@@ -101,7 +108,12 @@ export const adapterRequest = <T>(
     Effect.timeoutOrElse({
       duration: ADAPTER_TIMEOUT_MS,
       orElse: () =>
-        Effect.fail(new HttpError({ message: "Adapter request timed out", status: 504 })),
+        Effect.fail(
+          new HttpError({
+            message: "Adapter request timed out",
+            status: HttpStatus.GatewayTimeout,
+          }),
+        ),
     }),
   );
 

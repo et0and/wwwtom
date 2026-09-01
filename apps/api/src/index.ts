@@ -16,6 +16,7 @@ import { requireInternalTokenBeforeHandle } from "./internal";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
+import { queueHandler, type MessageBatch } from "./services/queue-consumer";
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -89,6 +90,7 @@ export type ApiApp = typeof app;
 
 const worker = {
   fetch: (request: Request, env: CloudflareEnv) => app.fetch(attachRequestEnv(request, env)),
+  queue: (batch: MessageBatch, env: CloudflareEnv) => queueHandler(batch, env),
 };
 
 export default worker;

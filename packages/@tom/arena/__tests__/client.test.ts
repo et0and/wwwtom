@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { Effect } from "effect";
+import { Cause, Effect } from "effect";
+import { HttpError } from "@tom/types/errors";
 import { ArenaClient, paginationQueryString, type Fetch, type DateProvider } from "../src/client";
 
 type MockFetch = ReturnType<typeof vi.fn<Fetch>>;
@@ -276,7 +277,7 @@ describe("ArenaClient", () => {
   });
 
   describe("error handling", () => {
-    it("returns HttpError on network failure", async () => {
+    it("returns an HttpError with status 502 on network failure", async () => {
       const networkErrorFetch = vi.fn(async () => {
         throw new Error("Network down");
       });
@@ -286,17 +287,22 @@ describe("ArenaClient", () => {
 
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error("Expected Failure");
-      const cause = result.cause;
-      expect(cause).toBeDefined();
-      expect(cause.reasons[0]?._tag).toBe("Fail");
+      const httpError = result.cause.reasons.find(Cause.isFailReason)?.error;
+      expect(httpError).toBeInstanceOf(HttpError);
+      if (!(httpError instanceof HttpError)) throw new Error("Expected HttpError");
+      // A network failure has no upstream status; 502 is the truthful one.
+      expect(httpError.status).toBe(502);
     });
 
-    it("returns HttpError on non-ok response", async () => {
+    it("returns an HttpError carrying the upstream status on non-ok response", async () => {
       const errorResponse = {
         ok: false,
         status: 404,
         statusText: "Not Found",
         headers: new Headers({ "content-type": "text/plain" }),
+        // The SDK normalizes non-ok bodies via response.text(); without it
+        // a TypeError would escape and land in the 500 catch-all.
+        text: async () => "",
         json: async () => ({}),
       } as Response;
       const errorFetch = vi.fn(async () => errorResponse);
@@ -306,9 +312,10 @@ describe("ArenaClient", () => {
 
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error("Expected Failure");
-      const cause = result.cause;
-      expect(cause).toBeDefined();
-      expect(cause.reasons[0]?._tag).toBe("Fail");
+      const httpError = result.cause.reasons.find(Cause.isFailReason)?.error;
+      expect(httpError).toBeInstanceOf(HttpError);
+      if (!(httpError instanceof HttpError)) throw new Error("Expected HttpError");
+      expect(httpError.status).toBe(404);
     });
   });
 
