@@ -1,3 +1,10 @@
+# [2.2.0](https://github.com/et0and/wwwtom/compare/v2.1.0...v2.2.0) (2026-09-01)
+
+
+### Features
+
+* **queue:** wire guestbook sign alerts through the tom work queue ([bfe4ee0](https://github.com/et0and/wwwtom/commit/bfe4ee094433358220b48293c9e8060c8263b5e2))
+
 # [2.1.0](https://github.com/et0and/wwwtom/compare/v2.0.0...v2.1.0) (2026-08-30)
 
 
