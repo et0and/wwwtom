@@ -2,13 +2,15 @@ import { Elysia } from "elysia";
 import { Effect, Option, Schema } from "effect";
 import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import { checkProfanity } from "@tom/utils/profanity";
+import { makeTomQueueLayer, TomQueueService } from "@tom/utils/services/queue";
+import { HttpStatus } from "@tom/constants/http";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
 import {
   MissingFieldError,
   ProfanityError,
-  AuthenticationError,
+  type AuthenticationError,
   type GuestbookValidationError,
   type OAuthSessionError,
   HttpError,
@@ -36,29 +38,62 @@ type GuestbookError =
   | OAuthSessionError
   | HttpError;
 
-const guestbookStatus = (error: GuestbookError): number => {
-  if (error instanceof HttpError) return error.status;
-  if (error instanceof AuthenticationError) return 401;
-  return 400;
-};
+const guestbookStatus = (error: HttpError): number => error.status;
 
 const runGuestbook = <T>(
   env: CloudflareEnv,
-  effect: Effect.Effect<T, GuestbookError, DatabaseService>,
+  effect: Effect.Effect<T, GuestbookError, DatabaseService | TomQueueService>,
   context: LogContext,
 ): Promise<T> =>
   runAdapter(
     Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
-      Effect.flatMap((resolved) => effect.pipe(Effect.provide(createDbLayer(resolved)))),
+      Effect.flatMap((resolved) =>
+        effect.pipe(
+          Effect.provide(createDbLayer(resolved)),
+          // No-op binding wrapper for routes that never send, and enables
+          // the sign route's best-effort enqueue without blocking the reply.
+          Effect.provide(makeTomQueueLayer(resolved)),
+        ),
+      ),
+      // HttpError carries the response status; pass it through, wrap every
+      // other failure (env resolution, database, flow) as a 500.
       Effect.mapError((error) =>
-        error instanceof HttpError
+        error._tag === "HttpError"
           ? error
-          : new HttpError({ message: error.message, status: 500, cause: error }),
+          : new HttpError({
+              message: error.message,
+              status: HttpStatus.InternalServerError,
+              cause: error,
+            }),
       ),
     ),
-    (error) => new AdapterError(guestbookStatus(error), error.message ?? "Bad request"),
+    (error) =>
+      new AdapterError({ status: guestbookStatus(error), message: error.message ?? "Bad request" }),
     context,
   );
+
+/**
+ * Enqueue a `guestbook-sign` job after the entry exists in the DB. The sign
+ * response never depends on the queue: a failed send is logged and the
+ * user's signature still stands.
+ */
+const notifyGuestbookSign = (entry: GuestbookEntry): Effect.Effect<void, never, TomQueueService> =>
+  Effect.gen(function* () {
+    const queue = yield* TomQueueService;
+    yield* queue
+      .send({
+        kind: "guestbook-sign",
+        entryId: entry.id,
+        fediverseUsername: entry.fediverse_username,
+        displayName: entry.display_name ?? "",
+        message: entry.message,
+      })
+      .pipe(
+        Effect.catchTag("QueueError", (error) =>
+          Effect.logWarning("guestbook:sign:enqueue-failed", { error: error.message }),
+        ),
+      );
+  });
 
 /**
  * In simulator mode (x-use-simulator + SIMULATOR_URL) entries come from the
@@ -67,7 +102,7 @@ const runGuestbook = <T>(
  */
 const simulatorEntries = (
   request: Request,
-): Effect.Effect<readonly GuestbookEntry[], GuestbookError, never> | undefined => {
+): Effect.Effect<readonly GuestbookEntry[], HttpError, never> | undefined => {
   const env = getRequestEnv(request);
   const simulatorUrl = env.SIMULATOR_URL;
   if (!isSimulatorRequest(request) || !simulatorUrl) return undefined;
@@ -85,12 +120,16 @@ const simulatorEntries = (
     if (!response.ok) {
       return yield* new HttpError({
         message: "Guestbook simulator error",
-        status: 502,
+        status: HttpStatus.BadGateway,
       });
     }
     const body = yield* Effect.tryPromise({
       try: () => response.json() as Promise<{ results: readonly GuestbookEntry[] }>,
-      catch: () => new HttpError({ message: "Guestbook simulator parse error", status: 502 }),
+      catch: () =>
+        new HttpError({
+          message: "Guestbook simulator parse error",
+          status: HttpStatus.BadGateway,
+        }),
     });
     yield* Effect.logInfo("guestbook:entries:simulator:success");
     return body.results;
@@ -121,7 +160,11 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
         if (effect) {
           return runAdapter(
             effect,
-            (error) => new AdapterError(guestbookStatus(error), error.message ?? "Bad request"),
+            (error) =>
+              new AdapterError({
+                status: guestbookStatus(error),
+                message: error.message ?? "Bad request",
+              }),
             context,
           );
         }
@@ -290,7 +333,8 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
             });
           }
 
-          yield* auth.signGuestbook({ user, message: body.message });
+          const entry = yield* auth.signGuestbook({ user, message: body.message });
+          yield* notifyGuestbookSign(entry);
           yield* Effect.logInfo("guestbook:sign:success");
           return { success: true };
         }),

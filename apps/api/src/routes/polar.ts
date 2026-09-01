@@ -103,7 +103,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
                   Effect.fail(
                     new PolarApiError({
                       message: "Polar returned an invalid checkout URL",
-                      status: 502,
+                      status: HttpStatus.BadGateway,
                       operation: "checkout",
                     }),
                   ),

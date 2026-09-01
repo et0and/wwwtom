@@ -89,7 +89,7 @@ export const app = new Elysia({
   })
   .onError(({ code, error, set, request }) => {
     set.headers["content-type"] = "application/json";
-    if (error instanceof AdapterError) {
+    if (Schema.is(AdapterError)(error)) {
       return toErrorResponse(error.status, error.message);
     }
     if (code === "NOT_FOUND") {

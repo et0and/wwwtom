@@ -7,6 +7,7 @@ import {
   type PayloadPost,
   type PayloadResponse,
 } from "@tom/schemas/payload";
+import { HttpStatus } from "@tom/constants/http";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -50,7 +51,7 @@ const runPayload = <T>(
         effect.pipe(Effect.provide(createPayloadLayer(simulatorEnv(resolved, request)))),
       ),
     ),
-    (error) => new AdapterError(500, error.message),
+    (error) => new AdapterError({ status: HttpStatus.InternalServerError, message: error.message }),
     context,
   );
 
