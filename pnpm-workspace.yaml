@@ -1,7 +1,7 @@
 packages:
   - "apps/*"
   - "apps/*/*"
-  - "packages/@tom/*"
+  - "packages/*"
   - "infra"
 onlyBuiltDependencies:
   - "@parcel/watcher"
