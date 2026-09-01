@@ -10,6 +10,15 @@ import { Schema } from "effect";
  * `unknown` body with it (`Schema.decodeUnknownSync(TomWorkMessage)(body)`).
  */
 export const TomWorkMessage = Schema.Union([
+  // Live: the adapter enqueues this after a guestbook entry is created; the
+  // queue consumer worker (apps/worker) turns it into a site-owner alert.
+  Schema.Struct({
+    kind: Schema.Literal("guestbook-sign"),
+    entryId: Schema.Number,
+    fediverseUsername: Schema.String,
+    displayName: Schema.String,
+    message: Schema.String,
+  }),
   Schema.Struct({
     kind: Schema.Literal("publish-post"),
     postId: Schema.Number,

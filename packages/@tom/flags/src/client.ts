@@ -7,8 +7,8 @@
  * snapshot falls back to its registered default with reason
  * "NOT_DELIVERED" — a stale client or a typo never breaks the page.
  */
-import { flags, type FlagName } from "./registry.js";
-import type { FlagEvaluation } from "./binding.js";
+import { flags, type FlagName } from "./registry";
+import type { FlagEvaluation } from "./binding";
 
 /**
  * A partial snapshot of flag evaluations, keyed by flag name. Only the flags
@@ -18,4 +18,4 @@ export type FlagSnapshot = { readonly [Name in FlagName]?: FlagEvaluation };
 
 /** Read one flag from a snapshot, falling back to its registered default. */
 export const get = (snapshot: FlagSnapshot, name: FlagName): FlagEvaluation =>
-  snapshot[name] ?? { value: flags[name].defaultValue, reason: "NOT_DELIVERED" };
+  snapshot[name] ?? { value: flags[name].defaultOn, reason: "NOT_DELIVERED" };

@@ -3,6 +3,7 @@ import { Effect, Schema } from "effect";
 import { ArenaService } from "@tom/arena/service";
 import type { ArenaApi } from "@tom/arena/client";
 import type { PaginationAttributes } from "@tom/schemas/arena";
+import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { simulatorEnv } from "../../simulator";
 import { retryPolicy } from "@tom/utils/retry";
@@ -63,10 +64,14 @@ const runArena = <T>(
       Effect.mapError((error) =>
         error instanceof HttpError
           ? error
-          : new HttpError({ message: error.message, status: 500, cause: error }),
+          : new HttpError({
+              message: error.message,
+              status: HttpStatus.InternalServerError,
+              cause: error,
+            }),
       ),
     ),
-    (error) => new AdapterError(error.status, error.message),
+    (error) => new AdapterError({ status: error.status, message: error.message }),
     context,
   );
 

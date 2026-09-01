@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Effect, type Layer } from "effect";
 import { FlagsError } from "@tom/types/errors";
-import { flags, isFlagName } from "../src/registry.js";
-import { evaluateFlags, Flags, type FlagOverrides } from "../src/service.js";
-import { get, type FlagSnapshot } from "../src/client.js";
-import type { FlagshipBinding } from "../src/binding.js";
+import { flags, isFlagName } from "../src/registry";
+import { evaluateFlags, Flags, type FlagOverrides } from "../src/service";
+import { get, type FlagSnapshot } from "../src/client";
+import type { FlagshipBinding } from "../src/binding";
 
 const fakeBinding = (): FlagshipBinding => ({
   getBooleanDetails: vi.fn(async (flagKey: string, defaultValue: boolean) =>
@@ -43,11 +43,9 @@ const runOutcome = <A, E>(
   );
 
 describe("registry", () => {
-  it("stamps keys and defaults onto every flag", () => {
-    expect(flags["dark-mode"].key).toBe("dark-mode");
-    expect(flags["dark-mode"].defaultValue).toBe(false);
-    expect(flags["checkout-flow"].key).toBe("checkout-flow");
-    expect(flags["checkout-flow"].defaultValue).toBe(true);
+  it("declares every flag with its on/off default", () => {
+    expect(flags["dark-mode"].defaultOn).toBe(false);
+    expect(flags["checkout-flow"].defaultOn).toBe(true);
   });
 
   it("accepts only declared keys", () => {

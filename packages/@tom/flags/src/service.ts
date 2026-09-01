@@ -26,8 +26,8 @@
  */
 import { Context, Effect, Layer } from "effect";
 import { FlagsError } from "@tom/types/errors";
-import { flags, type FlagName } from "./registry.js";
-import type { FlagEvaluation, FlagEvaluationContext, FlagshipBinding } from "./binding.js";
+import { flags, type FlagName } from "./registry";
+import type { FlagEvaluation, FlagEvaluationContext, FlagshipBinding } from "./binding";
 
 export interface FlagsContract {
   /** Resolve a flag by key, falling back to the flag's default. */
@@ -47,7 +47,7 @@ const toFlagsError =
 const makeFlags = (binding: FlagshipBinding): FlagsContract => ({
   evaluate: (name, context) =>
     Effect.tryPromise({
-      try: () => binding.getBooleanDetails(name, flags[name].defaultValue, context),
+      try: () => binding.getBooleanDetails(name, flags[name].defaultOn, context),
       catch: toFlagsError(`evaluate flag ${name}`),
     }).pipe(Effect.withSpan("Flags.evaluate")),
 });

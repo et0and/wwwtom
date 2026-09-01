@@ -2,20 +2,21 @@
  * Flag declaration primitives.
  *
  * A flag is declared once, inside the registry, with a single on/off
- * default. The registry stamps the key (the map key) onto the flag, so a
- * flag's key string never has to be written twice and the {@link FlagName}
- * union is derived from the registry itself.
- *
- * @example
- * ```ts
- * export const flags = registry({
- *   "dark-mode": flag({ defaultOn: false }),
- *   "checkout-flow": flag({ defaultOn: true }),
- * });
- * ```
+ * default. The registry's map keys are the flag keys, and the {@link FlagName}
+ * union is derived from them (`keyof`) — the key string is never written
+ * twice and cannot drift.
  */
-export type FlagSpec = {
-  readonly defaultOn: boolean;
-};
+import { Schema } from "effect";
 
-export const flag = (spec: FlagSpec): FlagSpec => spec;
+/**
+ * The shape of a declared flag, modeled with Effect Schema so the type is
+ * derived and every default is validated when the flag is constructed (a
+ * mistyped default fails at module load, not at evaluation time).
+ */
+export const FlagSpec = Schema.Struct({
+  defaultOn: Schema.Boolean,
+});
+export type FlagSpec = Schema.Schema.Type<typeof FlagSpec>;
+
+/** Declare a flag with its on/off default. */
+export const flag = (spec: FlagSpec): FlagSpec => FlagSpec.make(spec);

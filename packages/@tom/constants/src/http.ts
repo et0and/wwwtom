@@ -10,6 +10,7 @@ export const HttpStatus = {
   NotFound: 404,
   Conflict: 409,
   MethodNotAllowed: 405,
+  PayloadTooLarge: 413,
   ImATeapot: 418,
   UnprocessableEntity: 422,
   InternalServerError: 500,
@@ -20,3 +21,11 @@ export const HttpStatus = {
 } as const;
 
 export type HttpStatus = (typeof HttpStatus)[keyof typeof HttpStatus];
+
+/**
+ * True for a real HTTP error status (integer 4xx/5xx). The error-response
+ * boundary uses this so no sentinel (0), redirect class, or 2xx can reach
+ * the wire as an error status.
+ */
+export const isErrorStatus = (status: number): boolean =>
+  Number.isInteger(status) && status >= HttpStatus.BadRequest && status < 600;

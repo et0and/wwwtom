@@ -1,5 +1,5 @@
-import { Effect, Layer } from "effect";
-import { AppConfig, makeAppConfigLayer } from "@tom/utils/services/config";
+import { Effect, Layer, Schema } from "effect";
+import { type AppConfig, makeAppConfigLayer } from "@tom/utils/services/config";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -39,16 +39,10 @@ export const createDbLayer = (env: CloudflareEnv) =>
  * Error thrown by integration runners when the underlying Effect fails.
  * The global onError hook maps it to a JSON response with the right status.
  */
-export class AdapterError extends Error {
-  readonly _tag = "AdapterError";
-  constructor(
-    readonly status: number,
-    message: string,
-  ) {
-    super(message);
-    this.name = "AdapterError";
-  }
-}
+export class AdapterError extends Schema.TaggedError<AdapterError>()("AdapterError", {
+  status: Schema.Number,
+  message: Schema.String,
+}) {}
 
 /**
  * Run an effect (already provided with its layer) and reject with an AdapterError

@@ -152,3 +152,8 @@ export class InvalidUrlError extends Schema.TaggedError<InvalidUrlError>()("Inva
   message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
+
+export class TurboCacheError extends Schema.TaggedError<TurboCacheError>()("TurboCacheError", {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}
