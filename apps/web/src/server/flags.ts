@@ -1,6 +1,7 @@
-import { Effect } from "effect";
-import { isFlagName, type FlagName } from "@tom/flags/registry";
+import { Effect, Schema } from "effect";
+import { parseFlagList, type FlagName } from "@tom/flags/registry";
 import { evaluateFlags, Flags } from "@tom/flags/service";
+import type { FlagEvaluation } from "@tom/flags/binding";
 import { HttpStatus } from "@tom/constants/http";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -18,11 +19,32 @@ import { runEffect } from "@tom/utils/services/worker";
  * resolves missing flags to their registered defaults on the client side.
  */
 
-const parseNames = (searchParams: URLSearchParams): readonly FlagName[] =>
-  (searchParams.get("flags") ?? "")
-    .split(",")
-    .map((raw) => raw.trim())
-    .filter(isFlagName);
+const FlagEvaluationSchema = Schema.Struct({
+  value: Schema.Boolean,
+  variant: Schema.optional(Schema.String),
+  reason: Schema.optional(Schema.String),
+  errorCode: Schema.optional(Schema.String),
+});
+
+const SnapshotJson = Schema.fromJsonString(Schema.Record(Schema.String, FlagEvaluationSchema));
+
+const ErrorJson = Schema.fromJsonString(Schema.Struct({ error: Schema.String }));
+
+const jsonHeaders = {
+  "Content-Type": "application/json",
+  "Cache-Control": "no-store",
+} as const;
+
+const errorResponse = (status: number, error: string): Response =>
+  new Response(Schema.encodeSync(ErrorJson)({ error }), {
+    status,
+    headers: jsonHeaders,
+  });
+
+const snapshotResponse = (pairs: readonly (readonly [FlagName, FlagEvaluation])[]): Response =>
+  new Response(Schema.encodeSync(SnapshotJson)(Object.fromEntries(pairs)), {
+    headers: jsonHeaders,
+  });
 
 const toEvaluationContext = (context: LogContext) => {
   const attributes = {
@@ -32,35 +54,20 @@ const toEvaluationContext = (context: LogContext) => {
   return Object.keys(attributes).length > 0 ? attributes : undefined;
 };
 
-const errorResponse = (status: number, error: string): Response =>
-  new Response(JSON.stringify({ error }), {
-    status,
-    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-  });
-
 export const handleFlags = (url: URL, context: LogContext): Promise<Response> => {
   const env = process.env as CloudflareEnv;
   const binding = env.FLAGS;
+  const names = parseFlagList(url.searchParams.get("flags") ?? "");
 
-  if (!binding) {
-    return Promise.resolve(
-      errorResponse(HttpStatus.InternalServerError, "Flags binding not configured"),
-    );
-  }
-
-  const names = parseNames(url.searchParams);
-  const effect = evaluateFlags(names, toEvaluationContext(context)).pipe(
-    Effect.provide(Flags.Binding(binding)),
-    Effect.map((pairs) => {
-      const snapshot = Object.fromEntries(pairs);
-      return new Response(JSON.stringify(snapshot), {
-        headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
-      });
-    }),
-    Effect.catch((error) =>
-      Effect.succeed(errorResponse(HttpStatus.InternalServerError, error.message)),
-    ),
-  );
+  const effect = binding
+    ? evaluateFlags(names, toEvaluationContext(context)).pipe(
+        Effect.provide(Flags.Binding(binding)),
+        Effect.map(snapshotResponse),
+        Effect.catch((error) =>
+          Effect.succeed(errorResponse(HttpStatus.InternalServerError, error.message)),
+        ),
+      )
+    : Effect.succeed(errorResponse(HttpStatus.InternalServerError, "Flags binding not configured"));
 
   return runEffect(effect, context);
 };

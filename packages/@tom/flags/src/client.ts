@@ -7,8 +7,8 @@
  * snapshot falls back to its registered default with reason
  * "NOT_DELIVERED" — a stale client or a typo never breaks the page.
  */
-import { flags, type FlagName } from "./registry";
-import type { FlagEvaluation } from "./binding";
+import { flags, type FlagName } from "@tom/flags/registry";
+import type { FlagEvaluation } from "@tom/flags/binding";
 
 /**
  * A partial snapshot of flag evaluations, keyed by flag name. Only the flags

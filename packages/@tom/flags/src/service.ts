@@ -40,9 +40,7 @@ export interface FlagsContract {
 const toFlagsError =
   (operation: string) =>
   (cause: unknown): FlagsError =>
-    cause instanceof FlagsError
-      ? cause
-      : new FlagsError({ message: `Failed to ${operation}`, cause });
+    new FlagsError({ message: `Failed to ${operation}`, cause });
 
 const makeFlags = (binding: FlagshipBinding): FlagsContract => ({
   evaluate: (name, context) =>

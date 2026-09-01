@@ -7,7 +7,8 @@
  * evaluation, the client reader, the snapshot shape, and static overrides
  * all key off {@link FlagName} — a typo anywhere is a compile error.
  */
-import { flag } from "./flag";
+import { Option, Schema } from "effect";
+import { flag } from "@tom/flags/flag";
 
 /**
  * The site's flags. Add a new flag here and it becomes typed everywhere
@@ -21,5 +22,24 @@ export const flags = {
 /** The fully typed union of every declared flag key. */
 export type FlagName = keyof typeof flags;
 
-/** True when `name` is a declared flag key. */
-export const isFlagName = (name: string): name is FlagName => name in flags;
+const flagNameMembers = Object.keys(flags).map((name) => Schema.Literal(name)) as [
+  Schema.Literal<FlagName>,
+  ...Schema.Literal<FlagName>[],
+];
+
+/**
+ * Decodes a single flag-name string at its boundary. Unknown names decode
+ * to `None`, so callers can drop them silently instead of crashing on a
+ * stale client.
+ */
+export const FlagNameSchema = Schema.Union(flagNameMembers);
+
+/**
+ * Parse a comma-separated used-only flag list (the `?flags=a,b` query
+ * shape) into known flag names. Unknown names are dropped; an empty input
+ * yields an empty list.
+ */
+export const parseFlagList = (raw: string): readonly FlagName[] =>
+  raw
+    .split(",")
+    .flatMap((part) => Option.toArray(Schema.decodeUnknownOption(FlagNameSchema)(part.trim())));

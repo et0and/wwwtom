@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { Effect, type Layer } from "effect";
 import { FlagsError } from "@tom/types/errors";
-import { flags, isFlagName } from "../src/registry";
-import { evaluateFlags, Flags, type FlagOverrides } from "../src/service";
-import { get, type FlagSnapshot } from "../src/client";
-import type { FlagshipBinding } from "../src/binding";
+import { flags, parseFlagList } from "@tom/flags/registry";
+import { evaluateFlags, Flags, type FlagOverrides } from "@tom/flags/service";
+import { get, type FlagSnapshot } from "@tom/flags/client";
+import type { FlagshipBinding } from "@tom/flags/binding";
 
 const fakeBinding = (): FlagshipBinding => ({
   getBooleanDetails: vi.fn(async (flagKey: string, defaultValue: boolean) =>
@@ -48,10 +48,11 @@ describe("registry", () => {
     expect(flags["checkout-flow"].defaultOn).toBe(true);
   });
 
-  it("accepts only declared keys", () => {
-    expect(isFlagName("dark-mode")).toBe(true);
-    expect(isFlagName("checkout-flow")).toBe(true);
-    expect(isFlagName("dark-mdoe")).toBe(false);
+  it("parses known names from a comma-separated list and drops the rest", () => {
+    expect(parseFlagList("dark-mode,checkout-flow")).toEqual(["dark-mode", "checkout-flow"]);
+    expect(parseFlagList(" dark-mode ,")).toEqual(["dark-mode"]);
+    expect(parseFlagList("dark-mdoe")).toEqual([]);
+    expect(parseFlagList("")).toEqual([]);
   });
 });
 
