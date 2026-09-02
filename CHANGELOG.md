@@ -1,3 +1,10 @@
+## [2.2.1](https://github.com/et0and/wwwtom/compare/v2.2.0...v2.2.1) (2026-09-02)
+
+
+### Bug Fixes
+
+* **e2e:** retry staging suite through Cloudflare bot-protection blocks ([075d1a2](https://github.com/et0and/wwwtom/commit/075d1a2536c1d51e4b760ba3bde0b1aea02d0a76))
+
 # [2.2.0](https://github.com/et0and/wwwtom/compare/v2.1.0...v2.2.0) (2026-09-01)
 
 
