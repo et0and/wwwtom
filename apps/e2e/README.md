@@ -174,6 +174,19 @@ and on `workflow_dispatch`. Every push to `dev` deploys the staging stage
 via the Deploy workflow (production deploys are manual), so the nightly
 validates the latest staged stack.
 
+### Cloudflare bot protection on CI runs
+
+The suite is served through the Cloudflare edge (same `tom.so` zone), and
+GitHub-hosted runners come from datacenter IPs that Cloudflare bot
+protection intermittently fast-blocks (403 on API fetches) or answers with
+its Managed Challenge interstitial. Two layers make the suite resilient:
+config-level `retries` (`playwright.staging.config.ts`) re-run a failed
+test fresh, and the specific helpers in `src/helpers.ts`
+(`fetchWithBackoff` / `gotoWithBackoff`) retry transient
+transfer statuses with exponential backoff mirroring Effect's
+`Schedule.exponential`. Other statuses (404s, 422s, real app errors)
+pass through untouched so regressions surface immediately.
+
 ## Conventions for tests in this suite
 
 - Assert fixture data (titles, prices, messages) — never request counts,
