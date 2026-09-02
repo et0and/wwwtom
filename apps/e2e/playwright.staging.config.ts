@@ -15,7 +15,12 @@ export default defineConfig({
   testDir: "./tests-staging",
   fullyParallel: true,
   forbidOnly: true,
-  retries: 0,
+  // GitHub-hosted runners come from datacenter IPs that Cloudflare bot
+  // protection intermittently challenges or fast-blocks; retries give each
+  // test a fresh context once the transient block clears. The three
+  // endpoint tests and the route-headings loop additionally back off
+  // in-spec (helpers.ts) so a blocked request is retried with delay.
+  retries: process.env.CI === "true" || process.env.CI === "1" ? 2 : 0,
   timeout: 30_000,
   expect: { timeout: 10_000 },
   reporter: [["list"], ["html", { open: "never" }]],
