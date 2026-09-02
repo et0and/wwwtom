@@ -7,6 +7,14 @@ import { Stage } from "alchemy/Stage";
  * it as `WORK_QUEUE` in its env and enqueues work at runtime; the api worker
  * hosts the single worker consumer (at most one per queue) that drains it.
  *
+ * The shared stack (`infra/shared.run.ts`) owns the queue's lifecycle — it is
+ * destroyed last in every teardown, by which point every worker that binds it
+ * is already gone, so the queue can actually be deleted (Cloudflare refuses
+ * to delete a queue that a Worker still references, which aborted preview
+ * destroys mid-chain and leaked every sibling resource — Hyperdrives
+ * included). The app stacks keep their own copies marked `retain()`, so
+ * their destroys skip the delete and preview teardown stays convergent.
+ *
  * Production adopts the plain `tom-work-queue`; other stages get a
  * deterministic per-stage name so every app stack in a stage binds the same
  * queue (Alchemy's auto-naming would give each stack its own queue, since the
