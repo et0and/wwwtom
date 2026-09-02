@@ -11,7 +11,7 @@ import {
   logApiFailure,
   logContextFromRequest,
   runEffect,
-  toErrorResponse,
+  toProblemResponse,
 } from "@tom/utils/services/worker";
 import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -208,7 +208,7 @@ const proxyToApi = (
           const location = upstream.headers.get("location");
           if (location) return Response.redirect(location, upstream.status);
         }
-        return toErrorResponse(HttpStatus.InternalServerError, errorMessage);
+        return toProblemResponse(HttpStatus.InternalServerError, errorMessage);
       }),
     ),
     context,

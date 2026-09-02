@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
-import { errorResponseSchema } from "@tom/schemas/error";
+import { problemDetailsSchema } from "@tom/schemas/error";
 import { PolarApiError } from "@tom/types/errors";
 import {
   getRequestEnv,
@@ -53,19 +53,19 @@ const portalQuerySchema = toOpenApiSchema(PortalQuerySchema);
 const redirectSchema = (description: string) =>
   Schema.String.pipe(Schema.annotate({ description }));
 
-const missingCustomerSchema = errorResponseSchema.pipe(
+const missingCustomerSchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Missing products and/or customerId parameter" }),
 );
 
-const missingPortalSchema = errorResponseSchema.pipe(
+const missingPortalSchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Missing customerId parameter" }),
 );
 
-const checkoutFailedSchema = errorResponseSchema.pipe(
+const checkoutFailedSchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Failed to create checkout" }),
 );
 
-const productNotFoundSchema = errorResponseSchema.pipe(
+const productNotFoundSchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Product not found" }),
 );
 

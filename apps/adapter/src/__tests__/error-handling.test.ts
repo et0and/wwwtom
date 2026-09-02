@@ -14,10 +14,15 @@ afterEach(() => {
 });
 
 describe("adapter error handling", () => {
-  it("returns 404 JSON for unknown routes", async () => {
+  it("returns RFC 9457 problem details for unknown routes", async () => {
     const response = await app.fetch(requestWithEnv("http://localhost/nope", testEnv()));
     expect(response.status).toBe(404);
-    expect(await response.json()).toEqual({ error: "Not found" });
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/not-found",
+      status: 404,
+      title: "Not found",
+      instance: "http://localhost/nope",
+    });
   });
 
   it("forwards an unparseable page param and falls back to the empty page", async () => {
@@ -45,10 +50,15 @@ describe("adapter error handling", () => {
     );
   });
 
-  it("returns 500 JSON when an integration has no access token configured", async () => {
+  it("returns 500 problem details when an integration has no access token configured", async () => {
     const response = await app.fetch(requestWithEnv("http://localhost/polar/products", testEnv()));
     expect(response.status).toBe(500);
     const body = await response.json();
-    expect(body.error).toBe("Network error");
+    expect(body).toEqual({
+      type: "about:blank",
+      status: 500,
+      title: "Network error",
+      instance: "http://localhost/polar/products",
+    });
   });
 });

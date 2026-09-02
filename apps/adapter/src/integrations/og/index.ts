@@ -9,8 +9,9 @@ import {
   getRequestEnv,
   logContextFromRequest,
   runEffect,
-  toErrorResponse,
+  toProblemResponse,
 } from "@tom/utils/services/worker";
+import { ProblemType } from "@tom/constants/problem";
 
 /**
  * OG text is free text and legitimately contains commas ("Aotearoa, New
@@ -86,7 +87,9 @@ export const ogIntegration = new Elysia({ name: "og" }).get(
       Effect.catch(
         Effect.fn("ogErrorHandler")(function* (error: ImageGenerationError) {
           yield* Effect.logError("OG image proxy error", error);
-          return toErrorResponse(HttpStatus.InternalServerError, error.message);
+          return toProblemResponse(HttpStatus.InternalServerError, error.message, {
+            type: ProblemType.Upstream,
+          });
         }),
       ),
     );

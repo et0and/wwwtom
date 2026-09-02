@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import { errorResponseSchema } from "@tom/schemas/error";
+import { problemDetailsSchema } from "@tom/schemas/error";
 import { ValidationError } from "@tom/types/errors";
 import { logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
@@ -67,15 +67,15 @@ const imageResponseSchema = Schema.String.pipe(
   Schema.annotate({ description: "Generated OG image (PNG)" }),
 );
 
-const badRequestSchema = errorResponseSchema.pipe(
+const badRequestSchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Invalid query parameters" }),
 );
 
-const failedSchema = errorResponseSchema.pipe(
+const failedSchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Image generation failed" }),
 );
 
-const badGatewaySchema = errorResponseSchema.pipe(
+const badGatewaySchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Font fetch failed" }),
 );
 

@@ -53,12 +53,20 @@ type EdenResult<T> = {
   error: { status: unknown; value: unknown } | null;
 };
 
-/** The adapter's error responses are `{ error: string }`; parse at the boundary. */
-const AdapterErrorBody = Schema.Struct({ error: Schema.String });
+/** The adapter's error responses are RFC 9457 problem details; parse at the boundary. */
+const ProblemDetailsBody = Schema.Struct({
+  type: Schema.String,
+  status: Schema.Number,
+  title: Schema.String,
+  detail: Schema.optional(Schema.String),
+});
 
 const errorMessage = (error: NonNullable<EdenResult<unknown>["error"]>): string =>
   Option.getOrElse(
-    Option.map(Schema.decodeUnknownOption(AdapterErrorBody)(error.value), (body) => body.error),
+    Option.map(
+      Schema.decodeUnknownOption(ProblemDetailsBody)(error.value),
+      (body) => body.detail ?? body.title,
+    ),
     () => "Adapter request failed",
   );
 
