@@ -1,5 +1,12 @@
 import { Schema } from "effect";
 
+const messageFields = { message: Schema.String };
+
+const messageCauseFields = {
+  message: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+};
+
 export class ImageError extends Schema.TaggedError<ImageError>()("ImageError", {
   response: Schema.Unknown,
   cause: Schema.optional(Schema.Unknown),
@@ -11,13 +18,12 @@ export class PolarApiError extends Schema.TaggedError<PolarApiError>()("PolarApi
   operation: Schema.String,
 }) {}
 
-export class ArenaConfigError extends Schema.TaggedError<ArenaConfigError>()("ArenaConfigError", {
-  message: Schema.String,
-}) {}
+export class ArenaConfigError extends Schema.TaggedError<ArenaConfigError>()(
+  "ArenaConfigError",
+  messageFields,
+) {}
 
-export class SearchError extends Schema.TaggedError<SearchError>()("SearchError", {
-  message: Schema.String,
-}) {}
+export class SearchError extends Schema.TaggedError<SearchError>()("SearchError", messageFields) {}
 
 export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
   message: Schema.String,
@@ -27,10 +33,7 @@ export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
 
 export class DatabaseConnectionError extends Schema.TaggedError<DatabaseConnectionError>()(
   "DatabaseConnectionError",
-  {
-    message: Schema.String,
-    cause: Schema.optional(Schema.Unknown),
-  },
+  messageCauseFields,
 ) {}
 
 export class StoredProcedureError extends Schema.TaggedError<StoredProcedureError>()(
@@ -67,21 +70,20 @@ export class MissingFieldError extends Schema.TaggedError<MissingFieldError>()(
   },
 ) {}
 
-export class ProfanityError extends Schema.TaggedError<ProfanityError>()("ProfanityError", {
-  message: Schema.String,
-}) {}
+export class ProfanityError extends Schema.TaggedError<ProfanityError>()(
+  "ProfanityError",
+  messageFields,
+) {}
 
 export class AuthenticationError extends Schema.TaggedError<AuthenticationError>()(
   "AuthenticationError",
-  {
-    message: Schema.String,
-  },
+  messageFields,
 ) {}
 
-export class NodeinfoError extends Schema.TaggedError<NodeinfoError>()("NodeinfoError", {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class NodeinfoError extends Schema.TaggedError<NodeinfoError>()(
+  "NodeinfoError",
+  messageCauseFields,
+) {}
 
 export class FontFetchError extends Schema.TaggedError<FontFetchError>()("FontFetchError", {
   message: Schema.String,
@@ -95,9 +97,7 @@ export class ValidationError extends Schema.TaggedError<ValidationError>()("Vali
 
 export class ImageGenerationError extends Schema.TaggedError<ImageGenerationError>()(
   "ImageGenerationError",
-  {
-    message: Schema.String,
-  },
+  messageFields,
 ) {}
 
 export class TelegramError extends Schema.TaggedError<TelegramError>()("TelegramError", {
@@ -114,27 +114,25 @@ export class InfrastructureConfigError extends Schema.TaggedError<Infrastructure
   },
 ) {}
 
-export class SecretsError extends Schema.TaggedError<SecretsError>()("SecretsError", {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class SecretsError extends Schema.TaggedError<SecretsError>()(
+  "SecretsError",
+  messageCauseFields,
+) {}
 
 export class WorkerEnvMissingError extends Schema.TaggedError<WorkerEnvMissingError>()(
   "WorkerEnvMissingError",
-  {
-    message: Schema.String,
-  },
+  messageFields,
 ) {}
 
-export class QueueError extends Schema.TaggedError<QueueError>()("QueueError", {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class QueueError extends Schema.TaggedError<QueueError>()(
+  "QueueError",
+  messageCauseFields,
+) {}
 
-export class RunnerError extends Schema.TaggedError<RunnerError>()("RunnerError", {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class RunnerError extends Schema.TaggedError<RunnerError>()(
+  "RunnerError",
+  messageCauseFields,
+) {}
 
 export class GitHubApiError extends Schema.TaggedError<GitHubApiError>()("GitHubApiError", {
   message: Schema.String,
@@ -142,7 +140,7 @@ export class GitHubApiError extends Schema.TaggedError<GitHubApiError>()("GitHub
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
-export class TurboCacheError extends Schema.TaggedError<TurboCacheError>()("TurboCacheError", {
-  message: Schema.String,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
+export class TurboCacheError extends Schema.TaggedError<TurboCacheError>()(
+  "TurboCacheError",
+  messageCauseFields,
+) {}
