@@ -1,3 +1,10 @@
+## [2.4.1](https://github.com/et0and/wwwtom/compare/v2.4.0...v2.4.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **ci:** destroy each PR preview stack independently ([998d2c5](https://github.com/et0and/wwwtom/commit/998d2c5e9220736036afdee45258155d5183774e))
+
 # [2.4.0](https://github.com/et0and/wwwtom/compare/v2.3.0...v2.4.0) (2026-09-03)
 
 
