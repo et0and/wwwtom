@@ -1,3 +1,15 @@
+# [2.5.0](https://github.com/et0and/wwwtom/compare/v2.4.2...v2.5.0) (2026-09-03)
+
+
+### Bug Fixes
+
+* **typecheck:** resolve Effect diagnostics failing root typecheck ([d277522](https://github.com/et0and/wwwtom/commit/d2775221deaf4c076149140ee0ccdec048ceb9c0))
+
+
+### Features
+
+* **logging:** include request context and URL on logs and spans ([f37e862](https://github.com/et0and/wwwtom/commit/f37e86274dca65a3739828607c7de693885e83cc))
+
 ## [2.4.2](https://github.com/et0and/wwwtom/compare/v2.4.1...v2.4.2) (2026-09-03)
 
 
