@@ -61,8 +61,12 @@ jobs:
       # teardown. PULL_REQUEST keeps the code path identical to deploy.
       GITHUB_TOKEN: ${{ github.token }}
     steps:
+      # Teardown needs the infra code and secrets, not the PR head (which
+      # may already be deleted on close), so check out the base branch.
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: dev
       - uses: ./.github/actions/setup
 
       # Tears down web -> adapter -> api -> shared so no preview resources
