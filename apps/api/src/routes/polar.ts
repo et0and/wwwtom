@@ -4,11 +4,15 @@ import { HttpStatus } from "@tom/constants/http";
 import { errorResponseSchema } from "@tom/schemas/error";
 import { PolarApiError } from "@tom/types/errors";
 import {
+  errorDetailsFromRequest,
   getRequestEnv,
   logApiFailure,
   logContextFromRequest,
   runEffect,
+  sendErrorAlert,
 } from "@tom/utils/services/worker";
+import type { ErrorAlertDetails } from "@tom/utils/telegram";
+import type { CloudflareEnv } from "@tom/utils/services/config";
 import { toOpenApiSchema } from "../openapi";
 import {
   createPolarCheckout,
@@ -69,11 +73,24 @@ const productNotFoundSchema = errorResponseSchema.pipe(
   Schema.annotate({ description: "Product not found" }),
 );
 
-const withErrorHandling = (effect: Effect.Effect<Response, PolarApiError>, errorMessage: string) =>
+const withErrorHandling = (
+  effect: Effect.Effect<Response, PolarApiError>,
+  errorMessage: string,
+  env: CloudflareEnv,
+  details: ErrorAlertDetails,
+) =>
   effect.pipe(
     Effect.catch((error) =>
       Effect.gen(function* () {
         yield* logApiFailure(errorMessage, error.status, error);
+        if (
+          error.status < HttpStatus.BadRequest ||
+          error.status >= HttpStatus.InternalServerError
+        ) {
+          yield* Effect.sync(() => {
+            sendErrorAlert(env, errorMessage, error, details);
+          });
+        }
         return yield* Effect.succeed(handlePolarError(error));
       }),
     ),
@@ -116,6 +133,8 @@ export const polarRoutes = new Elysia({ name: "polar" })
             ),
           ),
           "Error creating Polar checkout",
+          env,
+          errorDetailsFromRequest(request, { service: "tom-api" }),
         ),
         logContextFromRequest(request, "tom-api"),
       );
@@ -152,6 +171,8 @@ export const polarRoutes = new Elysia({ name: "polar" })
             Effect.map((data) => Response.redirect(data.customer_portal_url, HttpStatus.Found)),
           ),
           "Error creating Polar customer session",
+          env,
+          errorDetailsFromRequest(request, { service: "tom-api" }),
         ),
         logContextFromRequest(request, "tom-api"),
       );

@@ -53,6 +53,7 @@ export const adapter = Effect.gen(function* () {
       : { name: `wwwtom-adapter-${stage}`, domain: stageHost(stage, "adapter") }),
     env: {
       NODE_ENV: "production",
+      TOM_STAGE: stage,
       ...devSecrets,
       WORK_QUEUE: tomQueue,
       ...(isAlchemyDev

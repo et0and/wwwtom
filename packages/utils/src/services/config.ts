@@ -82,6 +82,9 @@ export type CloudflareEnv = {
   OTEL_ENDPOINT?: string;
   OTEL_TRACES_DATASET?: string;
   OTEL_LOGS_DATASET?: string;
+  // Alchemy stage (dev, staging, production, pr-*) for environment labels
+  // in Telegram error alerts. Set by the infra run files, not a secret.
+  TOM_STAGE?: string;
   TOM_SECRETS?: { get(): Promise<string> };
 };
 

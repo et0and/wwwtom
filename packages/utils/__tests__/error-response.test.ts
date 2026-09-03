@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { toErrorResponse } from "../src/services/worker";
+import { dashboardLinks, toErrorResponse } from "../src/services/worker";
 
 describe("toErrorResponse", () => {
   it("keeps a valid error status", async () => {
@@ -18,5 +18,17 @@ describe("toErrorResponse", () => {
 
   it("falls back to 500 for a non-error status", () => {
     expect(toErrorResponse(200, "boom").status).toBe(500);
+  });
+});
+
+describe("dashboardLinks", () => {
+  it("links Axiom logs and the Cloudflare workers dashboard", () => {
+    expect(dashboardLinks()).toEqual([
+      { text: "Axiom logs", url: "https://app.axiom.co/yufugumi-tchp/query" },
+      {
+        text: "Cloudflare Workers",
+        url: "https://dash.cloudflare.com/?to=/:account/workers-and-pages",
+      },
+    ]);
   });
 });

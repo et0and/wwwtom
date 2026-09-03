@@ -6,11 +6,13 @@ import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging"
 import {
   attachRequestContext,
   attachRequestEnv,
+  errorDetailsFromRequest,
   getRequestEnv,
   sendErrorAlert,
   toErrorResponse,
 } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
+import { HttpStatus } from "@tom/constants/http";
 import { AdapterError } from "./config/effect";
 import { arenaIntegration } from "./integrations/arena";
 import { payloadIntegration } from "./integrations/payload";
@@ -90,6 +92,14 @@ export const app = new Elysia({
   .onError(({ code, error, set, request }) => {
     set.headers["content-type"] = "application/json";
     if (Schema.is(AdapterError)(error)) {
+      if (error.status >= HttpStatus.InternalServerError) {
+        sendErrorAlert(
+          getRequestEnv(request),
+          `Adapter ${error.status} error`,
+          error,
+          errorDetailsFromRequest(request, { service: "tom-adapter", status: error.status }),
+        );
+      }
       return toErrorResponse(error.status, error.message);
     }
     if (code === "NOT_FOUND") {
@@ -100,7 +110,12 @@ export const app = new Elysia({
       Effect.runFork(Effect.logWarning("Validation error", { path: request.url }));
       return toErrorResponse(400, "Validation error");
     }
-    sendErrorAlert(getRequestEnv(request), "Unhandled adapter error", error);
+    sendErrorAlert(
+      getRequestEnv(request),
+      "Unhandled adapter error",
+      error,
+      errorDetailsFromRequest(request, { service: "tom-adapter", status: 500 }),
+    );
     return toErrorResponse(500, "Internal server error");
   })
   .use(arenaIntegration)

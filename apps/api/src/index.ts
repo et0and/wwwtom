@@ -6,6 +6,7 @@ import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging"
 import {
   attachRequestContext,
   attachRequestEnv,
+  errorDetailsFromRequest,
   getRequestEnv,
   sendErrorAlert,
   toErrorResponse,
@@ -74,7 +75,12 @@ export const app = new Elysia({
     }
     Effect.runFork(
       Effect.sync(() => {
-        void sendErrorAlert(getRequestEnv(request), "Unhandled API error", error);
+        void sendErrorAlert(
+          getRequestEnv(request),
+          "Unhandled API error",
+          error,
+          errorDetailsFromRequest(request, { service: "tom-api", status: 500 }),
+        );
       }),
     );
     return toErrorResponse(500, "Internal server error");
