@@ -12,6 +12,7 @@ import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging"
 import {
   attachRequestContext,
   attachRequestEnv,
+  errorDetailsFromRequest,
   getRequestEnv,
   sendErrorAlert,
   toProblemResponse,
@@ -97,6 +98,14 @@ export const app = new Elysia({
   })
   .onError(({ code, error, request }) => {
     if (Schema.is(AdapterError)(error)) {
+      if (error.status >= HttpStatus.InternalServerError) {
+        sendErrorAlert(
+          getRequestEnv(request),
+          `Adapter ${error.status} error`,
+          error,
+          errorDetailsFromRequest(request, { service: "tom-adapter", status: error.status }),
+        );
+      }
       const type = problemTypeForStatus(error.status);
       return toProblemResponse(error.status, error.message, {
         ...(type && { type }),
@@ -119,7 +128,12 @@ export const app = new Elysia({
         ...(errors && { errors }),
       });
     }
-    sendErrorAlert(getRequestEnv(request), "Unhandled adapter error", error);
+    sendErrorAlert(
+      getRequestEnv(request),
+      "Unhandled adapter error",
+      error,
+      errorDetailsFromRequest(request, { service: "tom-adapter", status: 500 }),
+    );
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
   .use(arenaIntegration)

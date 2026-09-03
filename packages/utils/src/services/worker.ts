@@ -4,9 +4,10 @@ import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { PROBLEM_JSON_MEDIA_TYPE, ProblemType } from "@tom/constants/problem";
 import { WorkerEnvMissingError } from "@tom/types/errors";
 import { TelegramService } from "../telegram";
+import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
 import { withLogging } from "./logging";
 import type { LogContext, OtelConfig } from "./logging";
-import { makeAppConfigLayer } from "./config";
+import { makeAppConfigLayer, readCloudflareEnv } from "./config";
 import type { CloudflareEnv } from "./config";
 
 export const runEffect = <A, E>(effect: Effect.Effect<A, E>, context: LogContext): Promise<A> =>
@@ -29,17 +30,67 @@ const createTelegramLayer = (env: CloudflareEnv) => {
   return Layer.provide(TelegramService.Default, configLayer);
 };
 
-export const sendErrorAlert = (env: CloudflareEnv, message: string, cause?: unknown) => {
-  const layer = createTelegramLayer(env);
-  Effect.runFork(
-    Effect.gen(function* () {
-      const telegram = yield* TelegramService;
-      yield* telegram.sendError(message, cause);
-    }).pipe(
-      Effect.provide(layer),
-      Effect.catch(() => Effect.void),
-    ),
-  );
+export const sendErrorAlert = (
+  env: CloudflareEnv,
+  message: string,
+  cause?: unknown,
+  details?: ErrorAlertDetails,
+) => {
+  void readCloudflareEnv(env)
+    .then((resolved) => {
+      const layer = createTelegramLayer(resolved);
+      const stage = details?.stage ?? resolved.TOM_STAGE;
+      Effect.runFork(
+        Effect.gen(function* () {
+          const telegram = yield* TelegramService;
+          yield* telegram.sendError(message, cause, {
+            ...details,
+            ...(stage && { stage }),
+            links: [...(details?.links ?? []), ...dashboardLinks()],
+          });
+        }).pipe(
+          Effect.provide(layer),
+          Effect.catch(() => Effect.void),
+        ),
+      );
+    })
+    .catch(() => undefined);
+};
+
+/** Axiom organization slug for dashboard links in Telegram error alerts. */
+const AXIOM_ORG = "yufugumi-tchp";
+
+/**
+ * Dashboard buttons for error alerts. The Cloudflare link needs no account
+ * ID (`:account` resolves in the dashboard).
+ */
+export const dashboardLinks = (): readonly AlertLink[] => [
+  { text: "Axiom logs", url: `https://app.axiom.co/${AXIOM_ORG}/query` },
+  {
+    text: "Cloudflare Workers",
+    url: "https://dash.cloudflare.com/?to=/:account/workers-and-pages",
+  },
+];
+
+/**
+ * Build alert details from the request logging context plus the route and
+ * status, so Telegram errors carry the requestId that correlates Axiom
+ * logs/traces and Workers Logs.
+ */
+export const errorDetailsFromRequest = (
+  request: Request,
+  options?: { service?: string; status?: number },
+): ErrorAlertDetails => {
+  const context = getRequestContext(request);
+  return {
+    ...(options?.service && { service: options.service }),
+    ...(options?.status !== undefined && { status: options.status }),
+    method: request.method,
+    path: new URL(request.url).pathname,
+    ...(context.requestId && { requestId: context.requestId }),
+    ...(context.sessionId && { sessionId: context.sessionId }),
+    ...(context.userId && { userId: context.userId }),
+  };
 };
 
 /**

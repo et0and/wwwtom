@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect, Layer, Redacted } from "effect";
+import type { ErrorAlertDetails } from "@tom/schemas/telegram";
 import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
 
@@ -59,8 +60,8 @@ const runTestResult = <A, E>(
 const sendAlertEffect = (message: string) =>
   Effect.flatMap(TelegramService, (service) => service.sendAlert(message));
 
-const sendErrorEffect = (message: string, cause?: unknown) =>
-  Effect.flatMap(TelegramService, (service) => service.sendError(message, cause));
+const sendErrorEffect = (message: string, cause?: unknown, details?: ErrorAlertDetails) =>
+  Effect.flatMap(TelegramService, (service) => service.sendError(message, cause, details));
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -139,6 +140,127 @@ describe("TelegramService", () => {
     expect(text).toContain("*Error:* `Boom`");
     expect(text).toContain("*Time:*");
     expect(text).toContain("Boom stack");
+  });
+
+  it("includes request details and log lookup in alert payloads", async () => {
+    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+    vi.stubGlobal("fetch", fetcher);
+
+    await runTestEffect(
+      sendErrorEffect("Adapter 500 error", new Error("Boom"), {
+        service: "tom-adapter",
+        stage: "staging",
+        status: 500,
+        method: "GET",
+        path: "/guestbook/entries",
+        requestId: "req-123",
+        userId: "tom@example",
+      }),
+      { telegramBotToken: "token", telegramChatId: "123" },
+    );
+
+    const call = fetcher.mock.calls[0];
+    if (!call) {
+      throw new Error("Expected fetch to be called");
+    }
+    const options = call[1];
+    if (!options) {
+      throw new Error("Expected fetch options");
+    }
+    expect(options.body).toBeTypeOf("string");
+    const body = JSON.parse(options.body as string);
+    const text = body.text as string;
+
+    expect(text).toContain("*ERROR · tom-adapter · staging · 500*");
+    expect(text).toContain("*Route:* GET /guestbook/entries");
+    expect(text).toContain("*Request:* `req-123`");
+    expect(text).toContain("*User:* `tom@example`");
+    expect(text).toContain("['tom-logs'] | where requestId == 'req-123'");
+  });
+
+  it("attaches link buttons when details include links", async () => {
+    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+    vi.stubGlobal("fetch", fetcher);
+
+    await runTestEffect(
+      sendErrorEffect("Something broke", new Error("Boom"), {
+        service: "tom-api",
+        links: [{ text: "Cloudflare Workers", url: "https://dash.cloudflare.com/?to=/:account/x" }],
+      }),
+      { telegramBotToken: "token", telegramChatId: "123" },
+    );
+
+    const call = fetcher.mock.calls[0];
+    if (!call) {
+      throw new Error("Expected fetch to be called");
+    }
+    const options = call[1];
+    if (!options) {
+      throw new Error("Expected fetch options");
+    }
+    expect(options.body).toBeTypeOf("string");
+    const body = JSON.parse(options.body as string);
+
+    expect(body.reply_markup).toEqual({
+      inline_keyboard: [
+        [{ text: "Cloudflare Workers", url: "https://dash.cloudflare.com/?to=/:account/x" }],
+      ],
+    });
+  });
+
+  it("omits reply markup when details have no links", async () => {
+    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+    vi.stubGlobal("fetch", fetcher);
+
+    await runTestEffect(sendErrorEffect("Something broke", new Error("Boom")), {
+      telegramBotToken: "token",
+      telegramChatId: "123",
+    });
+
+    const call = fetcher.mock.calls[0];
+    if (!call) {
+      throw new Error("Expected fetch to be called");
+    }
+    const options = call[1];
+    if (!options) {
+      throw new Error("Expected fetch options");
+    }
+    expect(options.body).toBeTypeOf("string");
+    const body = JSON.parse(options.body as string);
+
+    expect(body.reply_markup).toBeUndefined();
+  });
+
+  it("truncates long stacks and caps alert length", async () => {
+    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+    vi.stubGlobal("fetch", fetcher);
+
+    const error = new Error("Boom");
+    error.stack = "x".repeat(5000);
+
+    await runTestEffect(sendErrorEffect("Something broke", error), {
+      telegramBotToken: "token",
+      telegramChatId: "123",
+    });
+
+    const call = fetcher.mock.calls[0];
+    if (!call) {
+      throw new Error("Expected fetch to be called");
+    }
+    const options = call[1];
+    if (!options) {
+      throw new Error("Expected fetch options");
+    }
+    expect(options.body).toBeTypeOf("string");
+    const body = JSON.parse(options.body as string);
+    const text = body.text as string;
+
+    expect(text).toContain("(truncated)");
+    expect(text.length).toBeLessThanOrEqual(3900);
   });
 
   it("surfaces fetch errors as TelegramError", async () => {

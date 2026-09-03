@@ -59,6 +59,7 @@ export const api = Effect.gen(function* () {
       : { name: `wwwtom-api-${stage}`, domain: stageHost(stage, "api") }),
     env: {
       NODE_ENV: "production",
+      TOM_STAGE: stage,
       ...devSecrets,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
