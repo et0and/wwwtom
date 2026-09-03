@@ -1,23 +1,7 @@
 import { Context, Effect, Layer, Redacted } from "effect";
 import { TelegramError } from "@tom/types/errors";
+import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
 import { AppConfig } from "./services/config";
-
-export interface AlertLink {
-  readonly text: string;
-  readonly url: string;
-}
-
-export interface ErrorAlertDetails {
-  readonly service?: string;
-  readonly stage?: string;
-  readonly status?: number;
-  readonly method?: string;
-  readonly path?: string;
-  readonly requestId?: string;
-  readonly sessionId?: string;
-  readonly userId?: string;
-  readonly links?: readonly AlertLink[];
-}
 
 export interface TelegramServiceContract {
   readonly sendAlert: (message: string) => Effect.Effect<void, TelegramError>;

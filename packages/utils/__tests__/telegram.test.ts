@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect, Layer, Redacted } from "effect";
-import { TelegramService, type ErrorAlertDetails } from "../src/telegram";
+import type { ErrorAlertDetails } from "@tom/schemas/telegram";
+import { TelegramService } from "../src/telegram";
 import { AppConfig } from "../src/services/config";
 
 type TestConfig = {

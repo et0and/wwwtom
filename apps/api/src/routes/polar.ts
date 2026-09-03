@@ -11,7 +11,7 @@ import {
   runEffect,
   sendErrorAlert,
 } from "@tom/utils/services/worker";
-import type { ErrorAlertDetails } from "@tom/utils/telegram";
+import type { ErrorAlertDetails } from "@tom/schemas/telegram";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import { toOpenApiSchema } from "../openapi";
 import {

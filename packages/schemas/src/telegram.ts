@@ -1,0 +1,31 @@
+import { Schema } from "effect";
+
+const AlertLinkSchema = Schema.Struct({
+  text: Schema.String,
+  url: Schema.String,
+});
+
+export const alertLinkSchema = AlertLinkSchema;
+
+export type AlertLink = Schema.Schema.Type<typeof AlertLinkSchema>;
+
+/**
+ * Correlation details attached to Telegram error alerts: the originating
+ * service and stage, the failing route and status, the requestId that ties
+ * Axiom logs/traces and Workers Logs together, and dashboard link buttons.
+ */
+const ErrorAlertDetailsSchema = Schema.Struct({
+  service: Schema.optional(Schema.String),
+  stage: Schema.optional(Schema.String),
+  status: Schema.optional(Schema.Number),
+  method: Schema.optional(Schema.String),
+  path: Schema.optional(Schema.String),
+  requestId: Schema.optional(Schema.String),
+  sessionId: Schema.optional(Schema.String),
+  userId: Schema.optional(Schema.String),
+  links: Schema.optional(Schema.Array(AlertLinkSchema)),
+});
+
+export const errorAlertDetailsSchema = ErrorAlertDetailsSchema;
+
+export type ErrorAlertDetails = Schema.Schema.Type<typeof ErrorAlertDetailsSchema>;
