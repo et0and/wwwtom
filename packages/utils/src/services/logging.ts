@@ -13,8 +13,8 @@ import { readCloudflareEnv, type CloudflareEnv, type ResolvedCloudflareEnv } fro
  *
  * - Console always writes structured JSON (captured by Workers Logs).
  * - With an AXIOM_TOKEN present, spans and log records export to the OTLP
- *   endpoint (Axiom cloud by default) so requestId/sessionId/userId
- *   annotations and Effect spans are queryable alongside the console
+ *   endpoint (Axiom cloud by default) so requestId/sessionId/userId and
+ *   method/path/url annotations and Effect spans are queryable alongside the console
  *   output. The ingest token is an IaC-minted Secrets Store binding in
  *   production (see infra/shared.run.ts); OTEL_ENDPOINT / OTEL_*_DATASET
  *   remain optional overrides.
@@ -33,6 +33,9 @@ export type LogContext = {
   readonly requestId?: string;
   readonly sessionId?: string;
   readonly userId?: string;
+  readonly method?: string;
+  readonly path?: string;
+  readonly url?: string;
   readonly logLevel?: "Debug" | "Info";
   readonly otel?: OtelConfig;
 };
@@ -73,12 +76,18 @@ type LogAnnotations = {
   requestId?: string;
   sessionId?: string;
   userId?: string;
+  method?: string;
+  path?: string;
+  url?: string;
 };
 
 const logAnnotations = (context: LogContext): LogAnnotations => ({
   ...(context.requestId && { requestId: context.requestId }),
   ...(context.sessionId && { sessionId: context.sessionId }),
   ...(context.userId && { userId: context.userId }),
+  ...(context.method && { method: context.method }),
+  ...(context.path && { path: context.path }),
+  ...(context.url && { url: context.url }),
 });
 
 /**
@@ -124,6 +133,7 @@ const makeLoggingLayer = (context: LogContext) => {
 export const withLogging = <A, E, R>(effect: Effect.Effect<A, E, R>, context: LogContext) =>
   effect.pipe(
     Effect.annotateLogs(logAnnotations(context)),
+    Effect.annotateSpans(logAnnotations(context)),
     Effect.provideService(References.MinimumLogLevel, context.logLevel ?? "Info"),
     Effect.provide(makeLoggingLayer(context)),
   );
