@@ -61,10 +61,21 @@ jobs:
       - uses: ./.github/actions/setup
 
       # Tears down web -> adapter -> api -> shared so no preview resources
-      # linger after the PR is merged or closed.
-      - name: Destroy preview stage
-        run: >
-          pnpm destroy:web --yes &&
-          pnpm destroy:adapter --yes &&
-          pnpm destroy:api --yes &&
-          pnpm destroy:shared --yes
+      # linger after the PR is merged or closed. Each step runs even when
+      # the previous one fails: one stack (e.g. the queue delete racing a
+      # still-bound worker) must never block the rest of the teardown.
+      - name: Destroy web
+        if: always()
+        run: pnpm destroy:web --yes
+
+      - name: Destroy adapter
+        if: always()
+        run: pnpm destroy:adapter --yes
+
+      - name: Destroy api
+        if: always()
+        run: pnpm destroy:api --yes
+
+      - name: Destroy shared
+        if: always()
+        run: pnpm destroy:shared --yes
