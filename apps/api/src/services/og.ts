@@ -4,7 +4,8 @@ import { ogImageQueryParamsSchema } from "@tom/schemas/og";
 import { OgTemplates, type OgTemplateParams } from "@tom/ui/OgImage";
 import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
-import { toErrorResponse } from "@tom/utils/services/worker";
+import { ProblemType } from "@tom/constants/problem";
+import { toProblemResponse } from "@tom/utils/services/worker";
 
 const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 
@@ -101,13 +102,17 @@ export const handleOgError = (
   error: FontFetchError | ValidationError | ImageGenerationError,
 ): Response => {
   if (error instanceof FontFetchError) {
-    return toErrorResponse(HttpStatus.BadGateway, error.message, error.cause);
+    return toProblemResponse(HttpStatus.BadGateway, error.message, {
+      type: ProblemType.Upstream,
+      detail: error.cause,
+    });
   }
   if (error instanceof ValidationError) {
-    return toErrorResponse(
-      HttpStatus.BadRequest,
-      `Validation error: ${error.field} - ${error.issue}`,
-    );
+    return toProblemResponse(HttpStatus.BadRequest, "Validation error", {
+      type: ProblemType.Validation,
+      detail: `${error.field} - ${error.issue}`,
+      errors: [{ pointer: `#/${error.field}`, detail: error.issue }],
+    });
   }
-  return toErrorResponse(HttpStatus.InternalServerError, error.message);
+  return toProblemResponse(HttpStatus.InternalServerError, error.message);
 };

@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { PolarApiError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
-import { logApiFailure, toErrorResponse } from "@tom/utils/services/worker";
+import { logApiFailure, toProblemResponse } from "@tom/utils/services/worker";
 
 const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,
@@ -101,7 +101,7 @@ export const createPolarCustomerSession = (
   }).pipe(Effect.withSpan("polar.customerSession"));
 
 export const handlePolarError = (error: PolarApiError): Response =>
-  toErrorResponse(
+  toProblemResponse(
     error.status >= HttpStatus.BadRequest && error.status < HttpStatus.InternalServerError
       ? error.status
       : HttpStatus.InternalServerError,

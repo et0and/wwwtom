@@ -1,4 +1,10 @@
-import { Elysia } from "elysia";
+import {
+  Elysia,
+  ValidationError,
+  type InternalServerError,
+  type NotFoundError,
+  type ParseError,
+} from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { openapi } from "@elysiajs/openapi";
 import { Effect } from "effect";
@@ -9,15 +15,32 @@ import {
   errorDetailsFromRequest,
   getRequestEnv,
   sendErrorAlert,
-  toErrorResponse,
+  toProblemResponse,
 } from "@tom/utils/services/worker";
 import type { CloudflareEnv } from "@tom/utils/services/config";
+import { HttpStatus } from "@tom/constants/http";
+import { ProblemType } from "@tom/constants/problem";
 import { healthRoutes } from "./routes/health";
 import { requireInternalTokenBeforeHandle } from "./internal";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
 import { queueHandler, type MessageBatch } from "./services/queue-consumer";
+
+/**
+ * Field-level problems from an Elysia validation failure, as the RFC 9457
+ * `errors` extension (JSON-pointer paths, rfc9457 §3.2).
+ */
+const toValidationProblems = (
+  error: Error | ValidationError | ParseError | NotFoundError | InternalServerError,
+): readonly { readonly detail: string; readonly pointer: string }[] | undefined =>
+  error instanceof ValidationError && error.all.length > 0
+    ? error.all.map(({ path, message }) => ({ detail: message, pointer: toPointer(path) }))
+    : undefined;
+
+/** Dot-joined Elysia error paths become RFC 6901 JSON pointers. */
+const toPointer = (path: string): string =>
+  path === "root" ? "#" : `#/${path.split(".").join("/")}`;
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -63,15 +86,22 @@ export const app = new Elysia({
       ...(otel && { otel }),
     });
   })
-  .onError(({ code, error, set, request }) => {
-    set.headers["content-type"] = "application/json";
+  .onError(({ code, error, request }) => {
     if (code === "NOT_FOUND") {
       Effect.runFork(Effect.logWarning("Not found", { path: request.url }));
-      return toErrorResponse(404, "Not found");
+      return toProblemResponse(HttpStatus.NotFound, "Not found", {
+        type: ProblemType.NotFound,
+        instance: request.url,
+      });
     }
     if (code === "VALIDATION") {
       Effect.runFork(Effect.logWarning("Validation error", { path: request.url }));
-      return toErrorResponse(400, "Validation error");
+      const errors = toValidationProblems(error);
+      return toProblemResponse(HttpStatus.BadRequest, "Validation error", {
+        type: ProblemType.Validation,
+        instance: request.url,
+        ...(errors && { errors }),
+      });
     }
     Effect.runFork(
       Effect.sync(() => {
@@ -83,7 +113,7 @@ export const app = new Elysia({
         );
       }),
     );
-    return toErrorResponse(500, "Internal server error");
+    return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
   .use(healthRoutes)
   // OG image generation is a public route: social crawlers (Twitter, Slack,

@@ -3,6 +3,7 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
+import { retain } from "alchemy/RemovalPolicy";
 import { stageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
@@ -33,8 +34,11 @@ export const api = Effect.gen(function* () {
       ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
       : undefined;
 
-  const queue = yield* tomQueue;
-  const dlq = yield* tomQueueDlq;
+  // The shared stack owns the queue lifecycle; this copy stays retained so a
+  // preview destroy never deletes the queue while sibling workers still bind
+  // it (see infra/queues/tom.queue.ts).
+  const queue = yield* tomQueue.pipe(retain());
+  const dlq = yield* tomQueueDlq.pipe(retain());
 
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
@@ -59,7 +63,7 @@ export const api = Effect.gen(function* () {
       ...devSecrets,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
-      WORK_QUEUE: tomQueue,
+      WORK_QUEUE: queue,
     },
   });
 

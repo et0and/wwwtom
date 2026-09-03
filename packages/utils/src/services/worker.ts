@@ -1,6 +1,7 @@
 import { Effect, Layer, Schema } from "effect";
-import { errorResponseSchema } from "@tom/schemas/error";
+import { problemDetailsSchema, type ProblemDetails } from "@tom/schemas/error";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
+import { PROBLEM_JSON_MEDIA_TYPE, ProblemType } from "@tom/constants/problem";
 import { WorkerEnvMissingError } from "@tom/types/errors";
 import { TelegramService } from "../telegram";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
@@ -153,14 +154,37 @@ export const logApiFailure = (message: string, status: number, cause?: unknown) 
 const toErrorStatus = (status: number): number =>
   isErrorStatus(status) ? status : HttpStatus.InternalServerError;
 
-export const toErrorResponse = (status: number, error: string, cause?: string): Response =>
+/**
+ * RFC 9457 problem-details response (rfc9457 §3). `type` defaults to
+ * `about:blank`, the RFC's generic fallback; pass a ProblemType constant for
+ * known problems. Field-level validation problems ride in the `errors`
+ * extension with JSON-pointer paths.
+ */
+export const toProblemResponse = (
+  status: number,
+  title: string,
+  options: ProblemDetailsOptions = {},
+): Response =>
   new Response(
-    JSON.stringify(Schema.encodeSync(errorResponseSchema)(cause ? { error, cause } : { error })),
+    JSON.stringify(
+      Schema.encodeSync(problemDetailsSchema)({
+        type: options.type ?? ProblemType.AboutBlank,
+        status: toErrorStatus(status),
+        title,
+        ...(options.detail !== undefined && { detail: options.detail }),
+        ...(options.instance !== undefined && { instance: options.instance }),
+        ...(options.errors !== undefined && { errors: options.errors }),
+      }),
+    ),
     {
       status: toErrorStatus(status),
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": PROBLEM_JSON_MEDIA_TYPE },
     },
   );
+
+type ProblemDetailsOptions = {
+  readonly [K in "type" | "detail" | "instance" | "errors"]?: ProblemDetails[K];
+};
 
 /** Human-readable message from an unknown failure (Error or string). */
 export const toErrorMessage = (cause: unknown): string =>

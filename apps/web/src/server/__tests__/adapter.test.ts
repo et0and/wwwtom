@@ -56,7 +56,16 @@ describe("server functions", () => {
     });
 
     it("throws an HttpError carrying the adapter status and message", async () => {
-      fetchMock.mockResolvedValue(jsonResponse({ error: "Not found" }, 404));
+      fetchMock.mockResolvedValue(
+        jsonResponse(
+          {
+            type: "https://errors.tom.so/not-found",
+            status: 404,
+            title: "Not found",
+          },
+          404,
+        ),
+      );
       try {
         await fetchPostBySlug("missing");
         expect.unreachable();

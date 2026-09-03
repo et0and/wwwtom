@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
+import { ProblemType } from "@tom/constants/problem";
 import { TurboCacheError } from "@tom/types/errors";
 import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/services/logging";
 import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
@@ -9,7 +10,7 @@ import {
   runEffect,
   sendErrorAlert,
   toErrorMessage,
-  toErrorResponse,
+  toProblemResponse,
 } from "@tom/utils/services/worker";
 
 /**
@@ -242,7 +243,7 @@ const putArtifact = ({
   Effect.gen(function* () {
     const contentLength = request.headers.get("Content-Length");
     if (contentLength !== null && Number.parseInt(contentLength, 10) > MAX_ARTIFACT_BYTES) {
-      return toErrorResponse(
+      return toProblemResponse(
         HttpStatus.PayloadTooLarge,
         "Artifact exceeds the 25 MiB Cloudflare KV value limit",
       );
@@ -253,7 +254,7 @@ const putArtifact = ({
       catch: (cause) => new TurboCacheError({ message: "Failed to read artifact body", cause }),
     });
     if (body.byteLength > MAX_ARTIFACT_BYTES) {
-      return toErrorResponse(
+      return toProblemResponse(
         HttpStatus.PayloadTooLarge,
         "Artifact exceeds the 25 MiB Cloudflare KV value limit",
       );
@@ -277,7 +278,9 @@ const putArtifact = ({
         );
       if (!tagMatches) {
         yield* Effect.logWarning("cache artifact rejected: signature mismatch", { hash });
-        return toErrorResponse(HttpStatus.Unauthorized, "Invalid artifact tag");
+        return toProblemResponse(HttpStatus.Unauthorized, "Invalid artifact tag", {
+          type: ProblemType.Unauthorized,
+        });
       }
       yield* storeArtifact(kv, hash, body, {
         ...metadataFromHeaders(request.headers),
@@ -294,7 +297,9 @@ const getArtifact = (hash: string, kv: TurboCacheKv): Effect.Effect<Response, Tu
     const entry = yield* loadArtifact(kv, hash);
     if (entry === null) {
       yield* Effect.logDebug("cache artifact miss", { hash });
-      return toErrorResponse(HttpStatus.NotFound, "Artifact not found");
+      return toProblemResponse(HttpStatus.NotFound, "Artifact not found", {
+        type: ProblemType.NotFound,
+      });
     }
     yield* Effect.logDebug("cache artifact hit", { hash });
     return new Response(entry.body, {
@@ -306,7 +311,10 @@ const getArtifact = (hash: string, kv: TurboCacheKv): Effect.Effect<Response, Tu
 const headArtifact = (hash: string, kv: TurboCacheKv): Effect.Effect<Response, TurboCacheError> =>
   Effect.gen(function* () {
     const entry = yield* loadArtifact(kv, hash);
-    if (entry === null) return toErrorResponse(HttpStatus.NotFound, "Artifact not found");
+    if (entry === null)
+      return toProblemResponse(HttpStatus.NotFound, "Artifact not found", {
+        type: ProblemType.NotFound,
+      });
     return new Response(null, {
       status: HttpStatus.Ok,
       headers: artifactHeaders(entry.metadata ?? {}, entry.body.byteLength),
@@ -326,7 +334,11 @@ const handleRequest = (
     });
 
     const authorized = yield* authenticate(request, secrets.TURBO_CACHE_TOKEN);
-    if (!authorized) return toErrorResponse(HttpStatus.Unauthorized, "Unauthorized");
+    if (!authorized) {
+      return toProblemResponse(HttpStatus.Unauthorized, "Unauthorized", {
+        type: ProblemType.Unauthorized,
+      });
+    }
 
     if (request.method === "GET" && url.pathname === "/v8/artifacts/status") {
       return Response.json({ status: "enabled" });
@@ -337,7 +349,9 @@ const handleRequest = (
 
     const artifactMatch = url.pathname.match(ARTIFACT_ROUTE_PATTERN);
     if (artifactMatch === null || artifactMatch[1] === undefined) {
-      return toErrorResponse(HttpStatus.NotFound, "Not found");
+      return toProblemResponse(HttpStatus.NotFound, "Not found", {
+        type: ProblemType.NotFound,
+      });
     }
     const hash = artifactMatch[1];
 
@@ -352,7 +366,7 @@ const handleRequest = (
     if (request.method === "GET") return yield* getArtifact(hash, env.TURBO_CACHE_KV);
     if (request.method === "HEAD") return yield* headArtifact(hash, env.TURBO_CACHE_KV);
 
-    return toErrorResponse(HttpStatus.MethodNotAllowed, "Method not allowed");
+    return toProblemResponse(HttpStatus.MethodNotAllowed, "Method not allowed");
   });
 
 const handleRequestWithAlerts = (
@@ -369,7 +383,7 @@ const handleRequestWithAlerts = (
         yield* Effect.sync(() => {
           sendErrorAlert(env, "Unhandled turbo error", cause);
         });
-        return toErrorResponse(HttpStatus.InternalServerError, "Internal server error");
+        return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
       }),
     ),
   );

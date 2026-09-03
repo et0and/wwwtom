@@ -1,6 +1,7 @@
 import { getSandbox, type Sandbox } from "@cloudflare/sandbox";
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
+import { ProblemType } from "@tom/constants/problem";
 import { GitHubApiError, RunnerError } from "@tom/types/errors";
 import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/services/logging";
 import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
@@ -10,7 +11,7 @@ import {
   runEffect,
   sendErrorAlert,
   toErrorMessage,
-  toErrorResponse,
+  toProblemResponse,
 } from "@tom/utils/services/worker";
 
 // The container-backed DO class this Worker hosts. The stack binds it via
@@ -291,21 +292,31 @@ const handleRequest = (
     if (isCleanupRequest) {
       const cleanupToken = yield* createCleanupToken(cleanupSandboxId, secrets.CONTROL_TOKEN);
       const authorized = yield* authenticate(request, cleanupToken);
-      if (!authorized) return toErrorResponse(HttpStatus.Unauthorized, "Unauthorized");
+      if (!authorized) {
+        return toProblemResponse(HttpStatus.Unauthorized, "Unauthorized", {
+          type: ProblemType.Unauthorized,
+        });
+      }
 
       yield* destroyRunner(env, cleanupSandboxId);
       return new Response(null, { status: HttpStatus.NoContent });
     }
 
     if (url.pathname !== "/runners") {
-      return toErrorResponse(HttpStatus.NotFound, "Not found");
+      return toProblemResponse(HttpStatus.NotFound, "Not found", {
+        type: ProblemType.NotFound,
+      });
     }
     if (request.method !== "POST") {
-      return toErrorResponse(HttpStatus.MethodNotAllowed, "Method not allowed");
+      return toProblemResponse(HttpStatus.MethodNotAllowed, "Method not allowed");
     }
 
     const authorized = yield* authenticate(request, secrets.CONTROL_TOKEN);
-    if (!authorized) return toErrorResponse(HttpStatus.Unauthorized, "Unauthorized");
+    if (!authorized) {
+      return toProblemResponse(HttpStatus.Unauthorized, "Unauthorized", {
+        type: ProblemType.Unauthorized,
+      });
+    }
 
     return yield* startRunner(env, secrets, url.origin).pipe(
       Effect.map((runner) => Response.json(runner, { status: HttpStatus.Accepted })),
@@ -315,11 +326,10 @@ const handleRequest = (
             error: toErrorMessage(error),
             repository: env.GITHUB_REPOSITORY,
           });
-          return toErrorResponse(
-            HttpStatus.BadGateway,
-            "Failed to start runner",
-            toErrorMessage(error),
-          );
+          return toProblemResponse(HttpStatus.BadGateway, "Failed to start runner", {
+            type: ProblemType.Upstream,
+            detail: toErrorMessage(error),
+          });
         }),
       ),
     );
@@ -337,7 +347,7 @@ const handleRequestWithAlerts = (
         yield* Effect.sync(() => {
           sendErrorAlert(env, "Unhandled runner error", cause);
         });
-        return toErrorResponse(HttpStatus.InternalServerError, "Internal server error");
+        return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
       }),
     ),
   );

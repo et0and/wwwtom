@@ -4,6 +4,7 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Layer } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
+import { retain } from "alchemy/RemovalPolicy";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
@@ -40,7 +41,7 @@ export const web = Effect.gen(function* () {
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       TOM_RATE_LIMIT_KV: webKv,
       HYPERDRIVE: webHyperdrive,
-      WORK_QUEUE: tomQueue,
+      WORK_QUEUE: tomQueue.pipe(retain()),
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
       // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
       ...(isAlchemyDev ? undefined : { VITE_ADAPTER_URL: `https://${adapterHost}` }),

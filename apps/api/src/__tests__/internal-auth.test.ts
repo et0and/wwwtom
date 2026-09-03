@@ -9,7 +9,11 @@ describe("internal token auth", () => {
       requestWithEnv("http://localhost/checkout?products=prod_1", testEnv()),
     );
     expect(response.status).toBe(401);
-    expect(await response.json()).toEqual({ error: "Unauthorized" });
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/unauthorized",
+      status: 401,
+      title: "Unauthorized",
+    });
   });
 
   it("rejects /checkout with a wrong token", async () => {
@@ -19,6 +23,7 @@ describe("internal token auth", () => {
       }),
     );
     expect(response.status).toBe(401);
+    expect((await response.json()).type).toBe("https://errors.tom.so/unauthorized");
   });
 
   it("leaves /og public for social crawlers", async () => {

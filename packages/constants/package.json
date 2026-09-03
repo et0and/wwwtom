@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./http": "./src/http.ts",
-    "./headers": "./src/headers.ts"
+    "./headers": "./src/headers.ts",
+    "./problem": "./src/problem.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

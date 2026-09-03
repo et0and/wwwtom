@@ -86,7 +86,13 @@ describe("polar routes", () => {
     it("returns 400 when products are missing", async () => {
       const response = await app.fetch(internalRequest("http://localhost/checkout", env));
       expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({ error: "Validation error" });
+      expect(await response.json()).toEqual({
+        type: "https://errors.tom.so/validation",
+        status: 400,
+        title: "Validation error",
+        instance: "http://localhost/checkout",
+        errors: [{ pointer: "#/products", detail: "Missing key" }],
+      });
     });
 
     it("returns Polar's 4xx status when the product doesn't exist", async () => {
@@ -96,7 +102,11 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(404);
       const body = await response.json();
-      expect(body).toEqual({ error: "Failed to create checkout" });
+      expect(body).toEqual({
+        type: "about:blank",
+        status: 404,
+        title: "Failed to create checkout",
+      });
     });
 
     it("returns 500 JSON when Polar fails with a server error", async () => {
@@ -106,7 +116,11 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body).toEqual({ error: "Failed to create checkout" });
+      expect(body).toEqual({
+        type: "about:blank",
+        status: 500,
+        title: "Failed to create checkout",
+      });
     });
 
     it("returns 500 JSON when Polar is unreachable", async () => {
@@ -116,7 +130,11 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body).toEqual({ error: "Network error" });
+      expect(body).toEqual({
+        type: "about:blank",
+        status: 500,
+        title: "Network error",
+      });
     });
   });
 
@@ -145,7 +163,13 @@ describe("polar routes", () => {
     it("returns 400 when customerId is missing", async () => {
       const response = await app.fetch(internalRequest("http://localhost/portal", env));
       expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({ error: "Validation error" });
+      expect(await response.json()).toEqual({
+        type: "https://errors.tom.so/validation",
+        status: 400,
+        title: "Validation error",
+        instance: "http://localhost/portal",
+        errors: [{ pointer: "#/customerId", detail: "Missing key" }],
+      });
     });
 
     it("returns 500 JSON when Polar fails", async () => {
@@ -155,7 +179,11 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(500);
       const body = await response.json();
-      expect(body).toEqual({ error: "Failed to create customer session" });
+      expect(body).toEqual({
+        type: "about:blank",
+        status: 500,
+        title: "Failed to create customer session",
+      });
     });
   });
 });
