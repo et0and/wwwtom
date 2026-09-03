@@ -1,3 +1,16 @@
+# [2.3.0](https://github.com/et0and/wwwtom/compare/v2.2.1...v2.3.0) (2026-09-03)
+
+
+### Bug Fixes
+
+* **infra:** let preview destroys converge by owning the work queue in shared ([5e0b557](https://github.com/et0and/wwwtom/commit/5e0b55765f33f33b7a525b52ad1ad4fe18f744b7))
+* **infra:** use RFC 9457 problem details in turbo cache and runner workers ([79e0d55](https://github.com/et0and/wwwtom/commit/79e0d550c2aa47919f10d685484961e0868364ab))
+
+
+### Features
+
+* **api,adapter:** adopt RFC 9457 problem details for error responses ([1919d42](https://github.com/et0and/wwwtom/commit/1919d42727d5924eeb8935b57bc8343af72d1cc6))
+
 ## [2.2.1](https://github.com/et0and/wwwtom/compare/v2.2.0...v2.2.1) (2026-09-02)
 
 
