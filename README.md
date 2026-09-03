@@ -30,7 +30,19 @@ It will be fairly obvious looking through this project that I use a lot of Cloud
 
 ## Testing
 
-I use Vitest for unit tests. No end to end tests yet but will do so soon.
+Unit tests run under Vitest in each workspace (`pnpm test` via Turbo).
+
+End to end tests run under Playwright in `apps/e2e`, in two suites:
+
+- **Fixture suite** (`tests/`): every page against a fully local stack. A fixture simulator (`apps/simulator`) stands in for the real upstreams (Payload CMS, Are.na, Polar, D1, internal API) via an `x-use-simulator` header, so the suite is deterministic. It runs on every PR against `dev` and nightly.
+- **Staging suite** (`tests-staging/`): content-agnostic smoke checks against the deployed `staging` stage (`staging-web.tom.so`) with real upstreams. It runs nightly. Every push to `dev` redeploys staging, so the nightly validates the latest staged stack.
+
+```bash
+pnpm --filter @tom/e2e test:e2e # Fixture suite (local stack)
+pnpm --filter @tom/e2e test:e2e:staging # Staging suite (deployed stage)
+```
+
+See `apps/e2e/README.md` for the full setup, conventions, and known gaps.
 
 ## License
 
