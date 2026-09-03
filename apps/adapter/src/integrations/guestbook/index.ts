@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import { checkProfanity } from "@tom/utils/profanity";
 import { makeTomQueueLayer, TomQueueService } from "@tom/utils/services/queue";
@@ -71,7 +71,7 @@ const guestbookStatus = (error: GuestbookFlowError): number => {
 const guestbookMessage = (
   error: GuestbookFlowError & {
     readonly message?: string;
-    readonly field?: string;
+    readonly field?: string | undefined;
   },
 ): string =>
   error._tag === "MissingFieldError"
@@ -87,10 +87,9 @@ const runGuestbook = <T>(
     Effect.tryPromise(() => readCloudflareEnv(env)).pipe(
       Effect.flatMap((resolved) =>
         effect.pipe(
-          Effect.provide(createDbLayer(resolved)),
           // No-op binding wrapper for routes that never send, and enables
           // the sign route's best-effort enqueue without blocking the reply.
-          Effect.provide(makeTomQueueLayer(resolved)),
+          Effect.provide(Layer.mergeAll(createDbLayer(resolved), makeTomQueueLayer(resolved))),
         ),
       ),
       // HttpError carries the response status; client-flow failures map to
@@ -310,7 +309,9 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
         });
         yield* Effect.sync(() => {
           cookie.guestbook_session.remove();
-          cookie.guestbook_user.value = JSON.stringify(user);
+          cookie.guestbook_user.value = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))(
+            user,
+          );
           cookie.guestbook_user.update({
             httpOnly: true,
             secure: env.NODE_ENV === "production",

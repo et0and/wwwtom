@@ -107,7 +107,7 @@ const createPolarCustomer = (
         fetch(`${polarBaseUrl(env)}/v1/customers/`, {
           method: "POST",
           headers: authHeaders(env.POLAR_ACCESS_TOKEN),
-          body: JSON.stringify({
+          body: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
             email: input.email,
             name: input.name,
             external_id: input.externalId,

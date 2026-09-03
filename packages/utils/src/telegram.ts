@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Context, Effect, Layer, Redacted, Schema } from "effect";
 import { TelegramError } from "@tom/types/errors";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
 import { MAX_ALERT_LENGTH, MAX_STACK_LENGTH } from "@tom/schemas/telegram";
@@ -96,7 +96,7 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
             fetch(telegramUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
+              body: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
                 chat_id: chatId,
                 text,
                 parse_mode: "Markdown",

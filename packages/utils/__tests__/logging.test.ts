@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
 import { otelConfigFromResolvedEnv, withLogging } from "../src/services/logging";
+import { attachRequestContext, getRequestContext } from "../src/services/worker";
 import { readCloudflareEnv } from "../src/services/config";
 
 type ConsoleLogRecord = {
@@ -37,6 +38,58 @@ describe("withLogging", () => {
         sessionId: "session-1",
         userId: "tom@mastodon.social",
       },
+    });
+  });
+
+  it("annotates method, path and url on logs", async () => {
+    const logs = captureLogs();
+    await Effect.runPromise(
+      withLogging(Effect.logInfo("hello"), {
+        serviceName: "tom-api",
+        requestId: "req-1",
+        method: "GET",
+        path: "/guestbook",
+        url: "https://example.com/guestbook",
+      }),
+    );
+    expect(logs[0]).toMatchObject({
+      annotations: {
+        requestId: "req-1",
+        method: "GET",
+        path: "/guestbook",
+        url: "https://example.com/guestbook",
+      },
+    });
+  });
+
+  it("annotates spans with request context and url", async () => {
+    const annotations = await Effect.runPromise(
+      withLogging(Effect.spanAnnotations, {
+        serviceName: "tom-api",
+        requestId: "req-1",
+        sessionId: "session-1",
+        method: "POST",
+        path: "/api/sign",
+        url: "https://example.com/api/sign",
+      }),
+    );
+    expect(annotations).toMatchObject({
+      requestId: "req-1",
+      sessionId: "session-1",
+      method: "POST",
+      path: "/api/sign",
+      url: "https://example.com/api/sign",
+    });
+  });
+
+  it("fills method, path and url from the request", () => {
+    const request = new Request("https://example.com/guestbook?page=2", { method: "POST" });
+    attachRequestContext(request, { requestId: "req-1" });
+    expect(getRequestContext(request)).toMatchObject({
+      requestId: "req-1",
+      method: "POST",
+      path: "/guestbook",
+      url: "https://example.com/guestbook?page=2",
     });
   });
 

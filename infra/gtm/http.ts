@@ -2,6 +2,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
+import * as Schema from "effect/Schema";
 import { CredentialsError, GtmCredentials } from "./credentials.ts";
 import { HttpError, mapStatusToError } from "./errors.ts";
 import type { HttpMethodError } from "./errors.ts";
@@ -237,8 +238,7 @@ const jsonFetch = <A>(
       return yield* mapStatusToError(res.status, text);
     }
     return yield* Effect.try({
-      // oxlint-disable-next-line effect/preferSchemaOverJson -- JSON.parse is the single boundary before Schema validation would occur; generic jsonFetch cannot use fromJsonString without ConstraintDecoder issues
-      try: () => JSON.parse(text) as A,
+      try: () => Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(text) as A,
       catch: () =>
         new HttpError({ message: "invalid JSON response", status: res.status, body: text }),
     });
