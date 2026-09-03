@@ -156,8 +156,7 @@ export const PayloadMetaSchema = Schema.Struct({
   image: Schema.optional(Schema.NullOr(Schema.String)),
 });
 
-export const PayloadPostSchema = Schema.Struct({
-  id: PayloadPostId,
+const payloadEntryFields = {
   title: Schema.String,
   summary: Schema.optional(Schema.NullOr(Schema.String)),
   publishedAt: Schema.String,
@@ -169,21 +168,16 @@ export const PayloadPostSchema = Schema.Struct({
   createdAt: Schema.String,
   updatedAt: Schema.String,
   meta: Schema.optional(PayloadMetaSchema),
+};
+
+export const PayloadPostSchema = Schema.Struct({
+  id: PayloadPostId,
+  ...payloadEntryFields,
 });
 
 export const PayloadWorkSchema = Schema.Struct({
   id: PayloadWorkId,
-  title: Schema.String,
-  summary: Schema.optional(Schema.NullOr(Schema.String)),
-  publishedAt: Schema.String,
-  slug: Schema.String,
-  content: Schema.optional(Schema.Union([Schema.String, PayloadRichContentSchema])),
-  heroImage: Schema.optional(Schema.NullOr(PayloadHeroImageSchema)),
-  arenaSlug: Schema.optional(Schema.NullOr(Schema.String)),
-  arenaTitle: Schema.optional(Schema.NullOr(Schema.String)),
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-  meta: Schema.optional(PayloadMetaSchema),
+  ...payloadEntryFields,
 });
 
 export const PayloadResponseSchema = <A, I, R>(itemSchema: Schema.Codec<A, I, R>) =>
