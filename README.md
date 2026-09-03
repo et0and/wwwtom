@@ -2,7 +2,7 @@
 
 ![Screenshot my website](wwwtom.png)
 
-A website of my very own, and my first foray into [Solid Start](https://start.solidjs.com/) and Turborepo.
+A monorepo of my very own.
 
 This is still very much a work in progress and has some rough edges. I'm still fairly new to [Solid](https://solidjs.com).
 
