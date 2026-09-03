@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { expectNoPageErrors } from "../src/helpers";
+import { expectNoPageErrors, fetchWithBackoff } from "../src/helpers";
 
 /**
  * Real-data flows against the staging stage: list pages hydrate live CMS /
@@ -80,5 +80,27 @@ test.describe("staging real data", () => {
       await expect(page.locator('textarea[name="message"]')).toBeVisible();
     }
     await expectNoErrors(page);
+  });
+
+  test("guestbook entries API returns an entry list from the stage database", async ({
+    request,
+  }) => {
+    // Regression cover for the missing-table outage: the bundle pointed at
+    // a database without guestbook tables, so this answered 5xx (then 4xx
+    // under problem details) instead of an entry list on every stage. The
+    // read path flaps transiently through Hyperdrive, so poll for a healthy
+    // answer: a persistent outage fails every attempt and goes red.
+    test.setTimeout(180_000);
+    const adapter = process.env.E2E_STAGING_ADAPTER_URL ?? "https://staging-adapter.tom.so";
+    await expect
+      .poll(
+        async () => {
+          const response = await fetchWithBackoff(request, `${adapter}/guestbook/entries`);
+          const body = await response.json().catch(() => null);
+          return { status: response.status(), isList: Array.isArray(body) };
+        },
+        { message: "guestbook entries must answer 200 with a list", timeout: 120_000 },
+      )
+      .toEqual({ status: 200, isList: true });
   });
 });
