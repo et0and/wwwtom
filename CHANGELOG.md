@@ -1,3 +1,10 @@
+# [2.4.0](https://github.com/et0and/wwwtom/compare/v2.3.0...v2.4.0) (2026-09-03)
+
+
+### Features
+
+* **telegram:** alert on 5xx with env, request context and dashboard links ([#121](https://github.com/et0and/wwwtom/issues/121)) ([34dae45](https://github.com/et0and/wwwtom/commit/34dae456a98d09ede851efb0c504e030a18c2fd6))
+
 # [2.3.0](https://github.com/et0and/wwwtom/compare/v2.2.1...v2.3.0) (2026-09-03)
 
 
