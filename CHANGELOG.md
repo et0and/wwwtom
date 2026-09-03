@@ -1,3 +1,10 @@
+## [2.4.2](https://github.com/et0and/wwwtom/compare/v2.4.1...v2.4.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* **ci:** destroy previews on close and sweep orphans ([f0020ac](https://github.com/et0and/wwwtom/commit/f0020ac8fd49db762552a4c23404b104824e53ec))
+
 ## [2.4.1](https://github.com/et0and/wwwtom/compare/v2.4.0...v2.4.1) (2026-09-03)
 
 
