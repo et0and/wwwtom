@@ -5,7 +5,12 @@ import { checkProfanity } from "@tom/utils/profanity";
 import { makeTomQueueLayer, TomQueueService } from "@tom/utils/services/queue";
 import { HttpStatus } from "@tom/constants/http";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
+import {
+  getRequestEnv,
+  logContextFromRequest,
+  toProblemResponse,
+} from "@tom/utils/services/worker";
+import { ProblemType } from "@tom/constants/problem";
 import type { LogContext } from "@tom/utils/services/logging";
 import {
   MissingFieldError,
@@ -21,7 +26,7 @@ import { isSimulatorRequest } from "../../simulator";
 import {
   authUrlResponseSchema,
   callbackQuerySchema,
-  errorResponseSchema,
+  problemDetailsSchema,
   guestbookSessionCookieSchema,
   guestbookUserCookieSchema,
   handleBodySchema,
@@ -38,7 +43,40 @@ type GuestbookError =
   | OAuthSessionError
   | HttpError;
 
-const guestbookStatus = (error: HttpError): number => error.status;
+/** A failure from the guestbook flow channel (HttpError or a flow error). */
+type GuestbookFlowError = { readonly _tag: string };
+
+/**
+ * HTTP status for a guestbook failure. HttpError carries its own status;
+ * client-flow failures map to 4xx; anything else (env, database, unknown)
+ * stays a 500.
+ */
+const guestbookStatus = (error: GuestbookFlowError): number => {
+  switch (error._tag) {
+    case "HttpError":
+      return (error as HttpError).status;
+    case "AuthenticationError":
+      return HttpStatus.Unauthorized;
+    case "MissingFieldError":
+    case "ProfanityError":
+    case "GuestbookValidationError":
+    case "OAuthSessionError":
+      return HttpStatus.BadRequest;
+    default:
+      return HttpStatus.InternalServerError;
+  }
+};
+
+/** User-facing message for a guestbook failure; field-only errors get one. */
+const guestbookMessage = (
+  error: GuestbookFlowError & {
+    readonly message?: string;
+    readonly field?: string;
+  },
+): string =>
+  error._tag === "MissingFieldError"
+    ? `Missing required field: ${error.field}`
+    : (error.message ?? "Bad request");
 
 const runGuestbook = <T>(
   env: CloudflareEnv,
@@ -55,14 +93,15 @@ const runGuestbook = <T>(
           Effect.provide(makeTomQueueLayer(resolved)),
         ),
       ),
-      // HttpError carries the response status; pass it through, wrap every
-      // other failure (env resolution, database, flow) as a 500.
+      // HttpError carries the response status; client-flow failures map to
+      // their 4xx status with a user-facing message; anything else (env
+      // resolution, database, unknown flow failures) stays a 500.
       Effect.mapError((error) =>
         error._tag === "HttpError"
           ? error
           : new HttpError({
-              message: error.message,
-              status: HttpStatus.InternalServerError,
+              message: guestbookMessage(error),
+              status: guestbookStatus(error),
               cause: error,
             }),
       ),
@@ -203,11 +242,13 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
   )
   .post(
     "/guestbook/auth/initiate",
-    ({ body, cookie, request, set }) => {
+    ({ body, cookie, request }) => {
       const env = getRequestEnv(request);
       if (!body.handle) {
-        set.status = 400;
-        return { error: "Missing field: handle" };
+        return toProblemResponse(HttpStatus.BadRequest, "Missing field: handle", {
+          type: ProblemType.Validation,
+          instance: request.url,
+        });
       }
 
       const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
@@ -244,9 +285,9 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
       cookie: guestbookSessionCookieSchema,
       response: {
         200: authUrlResponseSchema,
-        400: errorResponseSchema,
-        401: errorResponseSchema,
-        500: errorResponseSchema,
+        400: problemDetailsSchema,
+        401: problemDetailsSchema,
+        500: problemDetailsSchema,
       },
       detail: { description: "Start Fediverse OAuth for the guestbook", tags: ["guestbook"] },
     },
@@ -302,7 +343,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
   )
   .post(
     "/guestbook/sign",
-    ({ body, cookie, request, set }) => {
+    ({ body, cookie, request }) => {
       const env = getRequestEnv(request);
       const userJson = Option.getOrElse(
         Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user.value),
@@ -313,8 +354,10 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
         () => null,
       );
       if (!user) {
-        set.status = 401;
-        return { error: "Not authenticated" };
+        return toProblemResponse(HttpStatus.Unauthorized, "Not authenticated", {
+          type: ProblemType.Unauthorized,
+          instance: request.url,
+        });
       }
 
       return runGuestbook(
@@ -346,9 +389,9 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
       cookie: guestbookUserCookieSchema,
       response: {
         200: successResponseSchema,
-        400: errorResponseSchema,
-        401: errorResponseSchema,
-        500: errorResponseSchema,
+        400: problemDetailsSchema,
+        401: problemDetailsSchema,
+        500: problemDetailsSchema,
       },
       detail: { description: "Sign the guestbook (requires the user cookie)", tags: ["guestbook"] },
     },

@@ -3,6 +3,7 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
+import { retain } from "alchemy/RemovalPolicy";
 import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
@@ -54,7 +55,7 @@ export const adapter = Effect.gen(function* () {
     env: {
       NODE_ENV: "production",
       ...devSecrets,
-      WORK_QUEUE: tomQueue,
+      WORK_QUEUE: tomQueue.pipe(retain()),
       ...(isAlchemyDev
         ? undefined
         : {

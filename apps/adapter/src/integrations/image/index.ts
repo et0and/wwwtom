@@ -6,8 +6,9 @@ import {
   logApiFailure,
   logContextFromRequest,
   runEffect,
-  toErrorResponse,
+  toProblemResponse,
 } from "@tom/utils/services/worker";
+import { ProblemType } from "@tom/constants/problem";
 
 const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
@@ -25,7 +26,7 @@ const imageQuerySchema = Schema.toStandardSchemaV1(ImageQuerySchema);
 const toImageError = (message: string, cause?: unknown): ImageError => {
   const fields = cause === undefined ? {} : { cause };
   return new ImageError({
-    response: toErrorResponse(HttpStatus.InternalServerError, message),
+    response: toProblemResponse(HttpStatus.InternalServerError, message),
     ...fields,
   });
 };
@@ -45,7 +46,9 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
             onNone: () =>
               Effect.fail(
                 new ImageError({
-                  response: toErrorResponse(HttpStatus.BadRequest, "Invalid URL"),
+                  response: toProblemResponse(HttpStatus.BadRequest, "Invalid URL", {
+                    type: ProblemType.Validation,
+                  }),
                 }),
               ),
             onSome: (url) => Effect.succeed(url),
@@ -54,7 +57,9 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
 
         if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
           return yield* new ImageError({
-            response: toErrorResponse(HttpStatus.Forbidden, "Domain not allowed"),
+            response: toProblemResponse(HttpStatus.Forbidden, "Domain not allowed", {
+              type: ProblemType.Forbidden,
+            }),
           });
         }
 

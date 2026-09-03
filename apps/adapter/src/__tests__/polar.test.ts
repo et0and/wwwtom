@@ -31,11 +31,16 @@ describe("polar integration", () => {
       expect(await response.json()).toEqual(products);
     });
 
-    it("maps Polar errors to a JSON error response", async () => {
+    it("maps Polar errors to RFC 9457 problem details", async () => {
       fetchMock.mockResolvedValue(jsonResponse({ error: "unauthorized" }, 401));
       const response = await app.fetch(requestWithEnv("http://localhost/polar/products", polarEnv));
       expect(response.status).toBe(401);
-      expect(await response.json()).toEqual({ error: "Failed to fetch products" });
+      expect(await response.json()).toEqual({
+        type: "https://errors.tom.so/unauthorized",
+        status: 401,
+        title: "Failed to fetch products",
+        instance: "http://localhost/polar/products",
+      });
     });
   });
 
@@ -54,13 +59,18 @@ describe("polar integration", () => {
       expect(await response.json()).toEqual(product);
     });
 
-    it("maps Polar errors to a JSON error response", async () => {
+    it("maps Polar errors to RFC 9457 problem details", async () => {
       fetchMock.mockResolvedValue(jsonResponse({ error: "not found" }, 404));
       const response = await app.fetch(
         requestWithEnv("http://localhost/polar/products/missing", polarEnv),
       );
       expect(response.status).toBe(404);
-      expect(await response.json()).toEqual({ error: "Failed to fetch product" });
+      expect(await response.json()).toEqual({
+        type: "https://errors.tom.so/not-found",
+        status: 404,
+        title: "Failed to fetch product",
+        instance: "http://localhost/polar/products/missing",
+      });
     });
   });
 
@@ -99,7 +109,10 @@ describe("polar integration", () => {
         }),
       );
       expect(response.status).toBe(400);
-      expect(await response.json()).toEqual({ error: "Validation error" });
+      const body = await response.json();
+      expect(body.type).toBe("https://errors.tom.so/validation");
+      expect(body.title).toBe("Validation error");
+      expect(body.errors?.length).toBeGreaterThan(0);
     });
   });
 });

@@ -31,7 +31,17 @@ describe("unwrapAdapter", () => {
   it("throws an HttpError with the adapter message and status", () => {
     let error: unknown;
     try {
-      unwrapAdapter({ data: null, error: { status: 404, value: { error: "Not found" } } });
+      unwrapAdapter({
+        data: null,
+        error: {
+          status: 404,
+          value: {
+            type: "https://errors.tom.so/not-found",
+            status: 404,
+            title: "Not found",
+          },
+        },
+      });
     } catch (caught) {
       error = caught;
     }
@@ -39,16 +49,44 @@ describe("unwrapAdapter", () => {
     expect(error).toMatchObject({ message: "Not found", status: 404 });
   });
 
-  it("falls back to a generic message when the error body has no message", () => {
+  it("prefers detail over title for the user-facing message", () => {
+    let error: unknown;
+    try {
+      unwrapAdapter({
+        data: null,
+        error: {
+          status: 400,
+          value: {
+            type: "https://errors.tom.so/validation",
+            status: 400,
+            title: "Validation error",
+            detail: "title - too long",
+          },
+        },
+      });
+    } catch (caught) {
+      error = caught;
+    }
+    expect(error).toBeInstanceOf(HttpError);
+    expect(error).toMatchObject({ message: "title - too long", status: 400 });
+  });
+
+  it("falls back to a generic message when the error body is not problem details", () => {
     expect(() =>
-      unwrapAdapter({ data: null, error: { status: 400, value: { detail: "nope" } } }),
+      unwrapAdapter({ data: null, error: { status: 400, value: { error: "legacy" } } }),
     ).toThrow("Adapter request failed");
   });
 
   it("falls back to status 500 when the error status is missing", () => {
     let error: unknown;
     try {
-      unwrapAdapter({ data: null, error: { status: null, value: { error: "boom" } } });
+      unwrapAdapter({
+        data: null,
+        error: {
+          status: null,
+          value: { type: "about:blank", status: 500, title: "boom" },
+        },
+      });
     } catch (caught) {
       error = caught;
     }
@@ -58,7 +96,10 @@ describe("unwrapAdapter", () => {
 
   it("throws an HttpError instance", () => {
     try {
-      unwrapAdapter({ data: null, error: { status: 500, value: { error: "boom" } } });
+      unwrapAdapter({
+        data: null,
+        error: { status: 500, value: { type: "about:blank", status: 500, title: "boom" } },
+      });
       expect.unreachable();
     } catch (error) {
       expect(error).toBeInstanceOf(HttpError);

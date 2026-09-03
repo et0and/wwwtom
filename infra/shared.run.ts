@@ -9,6 +9,7 @@ import { InfrastructureConfigError } from "@tom/types/errors";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
+import { tomQueue, tomQueueDlq } from "./queues/tom.queue.ts";
 
 export const readSecretBundle = (
   name: string,
@@ -128,7 +129,12 @@ export default Stack(
   },
   Effect.gen(function* () {
     const stage = yield* Stage;
-    const [store, secrets] = yield* Effect.all([secretsStore, tomSecrets]);
+    const [store, secrets, queue, dlq] = yield* Effect.all([
+      secretsStore,
+      tomSecrets,
+      tomQueue,
+      tomQueueDlq,
+    ]);
 
     // The Axiom resources are org-level and can only have one owner, so only
     // production registers them; other stages would fight over ownership on
@@ -139,6 +145,8 @@ export default Stack(
     return {
       secretsStore: store.storeName,
       tomSecrets: secrets.secretName,
+      tomQueue: queue.queueName,
+      tomQueueDlq: dlq.queueName,
       ...(axiom && {
         axiom: {
           traces: axiom.traces.name,

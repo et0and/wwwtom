@@ -1,8 +1,9 @@
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
+import { ProblemType } from "@tom/constants/problem";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { readCloudflareEnv } from "@tom/utils/services/config";
-import { getRequestEnv, toErrorResponse } from "@tom/utils/services/worker";
+import { getRequestEnv, toProblemResponse } from "@tom/utils/services/worker";
 
 /** Constant-time comparison so token timing can't leak the shared secret. */
 const timingSafeEqual = (a: string, b: string): boolean => {
@@ -30,6 +31,9 @@ export const requireInternalTokenBeforeHandle = async ({ request }: { request: R
         hasToken: provided !== null,
       }),
     );
-    return toErrorResponse(HttpStatus.Unauthorized, "Unauthorized");
+    return toProblemResponse(HttpStatus.Unauthorized, "Unauthorized", {
+      type: ProblemType.Unauthorized,
+    });
   }
+  return;
 };
