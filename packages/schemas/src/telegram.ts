@@ -29,3 +29,9 @@ const ErrorAlertDetailsSchema = Schema.Struct({
 export const errorAlertDetailsSchema = ErrorAlertDetailsSchema;
 
 export type ErrorAlertDetails = Schema.Schema.Type<typeof ErrorAlertDetailsSchema>;
+
+/** Telegram Bot API caps message text at 4096 characters; stay under it. */
+export const MAX_ALERT_LENGTH = 3900;
+
+/** Stack traces truncate past this so one alert never crowds out context. */
+export const MAX_STACK_LENGTH = 1200;

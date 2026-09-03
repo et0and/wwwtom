@@ -1,6 +1,7 @@
 import { Context, Effect, Layer, Redacted } from "effect";
 import { TelegramError } from "@tom/types/errors";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
+import { MAX_ALERT_LENGTH, MAX_STACK_LENGTH } from "@tom/schemas/telegram";
 import { AppConfig } from "./services/config";
 
 export interface TelegramServiceContract {
@@ -11,9 +12,6 @@ export interface TelegramServiceContract {
     details?: ErrorAlertDetails,
   ) => Effect.Effect<void, TelegramError>;
 }
-
-const MAX_ALERT_LENGTH = 3900;
-const MAX_STACK_LENGTH = 1200;
 
 const truncate = (value: string, max: number): string =>
   value.length > max ? `${value.slice(0, max)}\n… (truncated)` : value;
