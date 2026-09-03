@@ -55,32 +55,31 @@ export const getTemplate = (
   }
 };
 
-export const generateOgImageEffect = (
+export const generateOgImageEffect = Effect.fn("og.generate")(function* (
   title: string,
   summary: string,
   requester: string,
   templateParam?: string,
-) =>
-  Effect.gen(function* () {
-    yield* Effect.logInfo("Generating OG image");
-    const fontData = yield* fontFetchEffect;
-    const template = getTemplate(requester, templateParam);
+) {
+  yield* Effect.logInfo("Generating OG image");
+  const fontData = yield* fontFetchEffect;
+  const template = getTemplate(requester, templateParam);
 
-    const html = template({ title, summary });
+  const html = template({ title, summary });
 
-    return new ImageResponse(html, {
-      width: 1200,
-      height: 630,
-      fonts: [
-        {
-          name: "Libre Caslon Condensed",
-          data: fontData,
-          weight: 400,
-          style: "normal",
-        },
-      ],
-    });
-  }).pipe(Effect.withSpan("og.generate"));
+  return new ImageResponse(html, {
+    width: 1200,
+    height: 630,
+    fonts: [
+      {
+        name: "Libre Caslon Condensed",
+        data: fontData,
+        weight: 400,
+        style: "normal",
+      },
+    ],
+  });
+});
 
 export const validateOgParams = (title: string, summary: string) => {
   return Schema.decodeUnknownEffect(ogImageQueryParamsSchema)({

@@ -90,11 +90,11 @@ export const VersionProvider = () =>
           if (!containerPath) return undefined;
           const header = yield* http
             .getLatestContainerVersionHeader(containerPath)
-            .pipe(Effect.catchTag("NotFound", () => Effect.succeed(undefined as never)));
+            .pipe(Effect.catchTag("NotFound", () => Effect.void));
           if (!header) return undefined;
           const version = yield* http
             .getContainerVersion(header.path)
-            .pipe(Effect.catchTag("NotFound", () => Effect.succeed(undefined as never)));
+            .pipe(Effect.catchTag("NotFound", () => Effect.void));
           if (!version) return undefined;
           return toAttrs(version);
         }),
@@ -115,17 +115,17 @@ export const VersionProvider = () =>
           if (!hasChanges) {
             const latest = yield* http
               .getLatestContainerVersionHeader(containerPath)
-              .pipe(Effect.catchTag("NotFound", () => Effect.succeed(undefined as never)));
+              .pipe(Effect.catchTag("NotFound", () => Effect.void));
             if (latest) {
               const existing = yield* http
                 .getContainerVersion(latest.path)
-                .pipe(Effect.catchTag("NotFound", () => Effect.succeed(undefined as never)));
+                .pipe(Effect.catchTag("NotFound", () => Effect.void));
               if (existing) {
                 const attrs = toAttrs(existing);
                 if (news.publish) {
                   const live = yield* http
                     .getLiveContainerVersion(containerPath)
-                    .pipe(Effect.catchTag("NotFound", () => Effect.succeed(undefined as never)));
+                    .pipe(Effect.catchTag("NotFound", () => Effect.void));
                   if (!live || live.path !== attrs.path) {
                     yield* http.publishContainerVersion(attrs.path).pipe(
                       Effect.catchTag("NotFound", () => Effect.void),
