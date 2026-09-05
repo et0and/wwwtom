@@ -1,4 +1,10 @@
 import { Effect, Schema } from "effect";
+import {
+  polarCheckoutSchema,
+  polarCustomerSessionSchema,
+  type PolarCheckout,
+  type PolarCustomerSession,
+} from "@tom/schemas/polar";
 import { PolarApiError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { logApiFailure, toProblemResponse } from "@tom/utils/services/worker";
@@ -7,17 +13,6 @@ const authHeaders = (accessToken: string | undefined) => ({
   Authorization: `Bearer ${accessToken}`,
   "Content-Type": "application/json",
 });
-
-const parseJson = <T>(response: Response, operation: string): Effect.Effect<T, PolarApiError> =>
-  Effect.tryPromise({
-    try: () => response.json() as Promise<T>,
-    catch: () =>
-      new PolarApiError({
-        message: "Failed to parse response",
-        status: HttpStatus.InternalServerError,
-        operation,
-      }),
-  });
 
 export const createPolarCheckout = (
   accessToken: string | undefined,
@@ -28,7 +23,7 @@ export const createPolarCheckout = (
     customerId: string | undefined;
     customerEmail: string | undefined;
   },
-): Effect.Effect<{ url: string }, PolarApiError> =>
+): Effect.Effect<PolarCheckout, PolarApiError> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("Creating Polar checkout session");
     const response = yield* Effect.tryPromise({
@@ -60,14 +55,33 @@ export const createPolarCheckout = (
       });
     }
 
-    return yield* parseJson<{ url: string }>(response, "create_checkout");
+    const json: unknown = yield* Effect.tryPromise({
+      try: () => response.json(),
+      catch: () =>
+        new PolarApiError({
+          message: "Failed to parse response",
+          status: HttpStatus.InternalServerError,
+          operation: "create_checkout",
+        }),
+    });
+
+    return yield* Schema.decodeUnknownEffect(polarCheckoutSchema)(json).pipe(
+      Effect.mapError(
+        () =>
+          new PolarApiError({
+            message: "Failed to parse response",
+            status: HttpStatus.InternalServerError,
+            operation: "create_checkout",
+          }),
+      ),
+    );
   }).pipe(Effect.withSpan("polar.checkout"));
 
 export const createPolarCustomerSession = (
   accessToken: string | undefined,
   baseUrl: string,
   params: { customerId: string; returnUrl: string },
-): Effect.Effect<{ customer_portal_url: string }, PolarApiError> =>
+): Effect.Effect<PolarCustomerSession, PolarApiError> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("Creating Polar customer session");
     const response = yield* Effect.tryPromise({
@@ -97,7 +111,26 @@ export const createPolarCustomerSession = (
       });
     }
 
-    return yield* parseJson<{ customer_portal_url: string }>(response, "create_customer_session");
+    const json: unknown = yield* Effect.tryPromise({
+      try: () => response.json(),
+      catch: () =>
+        new PolarApiError({
+          message: "Failed to parse response",
+          status: HttpStatus.InternalServerError,
+          operation: "create_customer_session",
+        }),
+    });
+
+    return yield* Schema.decodeUnknownEffect(polarCustomerSessionSchema)(json).pipe(
+      Effect.mapError(
+        () =>
+          new PolarApiError({
+            message: "Failed to parse response",
+            status: HttpStatus.InternalServerError,
+            operation: "create_customer_session",
+          }),
+      ),
+    );
   }).pipe(Effect.withSpan("polar.customerSession"));
 
 export const handlePolarError = (error: PolarApiError): Response =>

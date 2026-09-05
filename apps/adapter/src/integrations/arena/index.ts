@@ -92,10 +92,10 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   )
   .get(
     "/arena/channels/:slug",
-    ({ params, query, request }) => {
+    ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.channel(params.slug).get(toPaginationAttributes(query)),
+        (client) => client.channel(params.slug).get(),
         logContextFromRequest(request, "tom-adapter"),
         "public",
       );

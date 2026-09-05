@@ -107,7 +107,24 @@ describe("payload integration", () => {
 
   describe("GET /payload/works", () => {
     it("returns the works list", async () => {
-      const works = { docs: [{ id: 1, title: "Hyperjam", slug: "hyperjam" }] };
+      const works = {
+        docs: [
+          {
+            id: 1,
+            title: "Hyperjam",
+            slug: "hyperjam",
+            publishedAt: "2026-06-30T00:00:00.000Z",
+            createdAt: "2026-06-30T00:00:00.000Z",
+            updatedAt: "2026-07-01T00:00:00.000Z",
+          },
+        ],
+        totalDocs: 1,
+        limit: 100,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      };
       fetchMock.mockResolvedValue(jsonResponse(works));
       const response = await app.fetch(requestWithEnv("http://localhost/payload/works", env));
       expect(response.status).toBe(200);
@@ -138,7 +155,25 @@ describe("payload integration", () => {
   describe("GET /payload/works/:slug", () => {
     it("returns the work with converted content", async () => {
       fetchMock.mockResolvedValue(
-        jsonResponse({ docs: [{ id: 1, title: "Hyperjam", slug: "hyperjam", content: "html" }] }),
+        jsonResponse({
+          docs: [
+            {
+              id: 1,
+              title: "Hyperjam",
+              slug: "hyperjam",
+              publishedAt: "2026-06-30T00:00:00.000Z",
+              createdAt: "2026-06-30T00:00:00.000Z",
+              updatedAt: "2026-07-01T00:00:00.000Z",
+              content: "html",
+            },
+          ],
+          totalDocs: 1,
+          limit: 1,
+          page: 1,
+          totalPages: 1,
+          hasNextPage: false,
+          hasPrevPage: false,
+        }),
       );
       const response = await app.fetch(
         requestWithEnv("http://localhost/payload/works/hyperjam", env),

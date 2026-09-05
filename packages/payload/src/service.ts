@@ -1,19 +1,26 @@
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Context, Effect, Layer, Option, Redacted, Schema } from "effect";
 import { AppConfig } from "@tom/utils/services/config";
 import { retryPolicy } from "@tom/utils/retry";
-import type { PayloadPost, PayloadResponse } from "@tom/schemas/payload";
+import {
+  PayloadPostSchema,
+  PayloadResponseSchema,
+  PayloadWorkSchema,
+  type PayloadPost,
+  type PayloadResponse,
+  type PayloadWork,
+} from "@tom/schemas/payload";
 
 const cacheExpiryHeader = "x-payload-cache-expires-at";
 
-const getCacheExpiryTimestamp = (response: Response): number | null => {
-  const cacheExpiryValue = response.headers.get(cacheExpiryHeader);
-  if (!cacheExpiryValue) return null;
-
-  const cacheExpiryTimestamp = Number(cacheExpiryValue);
-  if (!Number.isFinite(cacheExpiryTimestamp)) return null;
-
-  return cacheExpiryTimestamp;
-};
+const getCacheExpiryTimestamp = (response: Response): number | null =>
+  Option.getOrNull(
+    Option.filter(
+      Schema.decodeUnknownOption(Schema.NumberFromString)(
+        response.headers.get(cacheExpiryHeader) ?? "",
+      ),
+      Number.isFinite,
+    ),
+  );
 
 const hasExpiredCacheEntry = (response: Response, cacheTTL?: number): boolean => {
   if (!cacheTTL || cacheTTL <= 0) return false;
@@ -38,6 +45,45 @@ const withCacheMetadata = (response: Response, cacheTTL?: number): Response => {
   });
 };
 
+const fetchWithCache = (
+  url: string,
+  cacheTTL: number | undefined,
+  fetchResponse: () => Effect.Effect<Response, PayloadError>,
+): Effect.Effect<Response, PayloadError> =>
+  Effect.gen(function* () {
+    const cache = yield* Effect.tryPromise({
+      try: () => caches.open("payload-cache"),
+      catch: () => null,
+    }).pipe(Effect.orElseSucceed(() => null));
+
+    if (!cache) return yield* fetchResponse();
+
+    const cacheReq = new Request(url);
+    const cached = yield* Effect.tryPromise({
+      try: () => cache.match(cacheReq),
+      catch: () => null,
+    }).pipe(Effect.orElseSucceed(() => null));
+
+    if (cached && !hasExpiredCacheEntry(cached, cacheTTL)) {
+      yield* Effect.logDebug(`Cache hit: ${url}`);
+      return cached;
+    }
+
+    if (cached) yield* Effect.logDebug(`Cache stale: ${url}`);
+    yield* Effect.logDebug(`Cache miss: ${url}`);
+    const response = yield* fetchResponse();
+
+    if (response.ok) {
+      const responseWithCacheMetadata = withCacheMetadata(response.clone(), cacheTTL);
+      yield* Effect.tryPromise({
+        try: () => cache.put(cacheReq, responseWithCacheMetadata),
+        catch: () => null,
+      }).pipe(Effect.orElseSucceed(() => undefined));
+    }
+
+    return response;
+  });
+
 export class PayloadError extends Error {
   readonly _tag = "PayloadError";
   constructor(
@@ -52,12 +98,14 @@ export class PayloadError extends Error {
 
 export interface PayloadServiceContract {
   /**
-   * Fetch data from a Payload endpoint with optional caching
+   * Fetch data from a Payload endpoint with optional caching, validating
+   * the response against the given schema.
    */
-  readonly fetch: <T>(
+  readonly fetch: <A, I, R>(
     endpoint: string,
+    schema: Schema.Codec<A, I, R>,
     options?: RequestInit & { useCache?: boolean; cacheTTL?: number },
-  ) => Effect.Effect<T, PayloadError>;
+  ) => Effect.Effect<A, PayloadError, R>;
 
   /**
    * Fetch posts
@@ -80,12 +128,12 @@ export interface PayloadServiceContract {
     limit?: number;
     page?: number;
     sort?: string;
-  }) => Effect.Effect<PayloadResponse<PayloadPost>, PayloadError>;
+  }) => Effect.Effect<PayloadResponse<PayloadWork>, PayloadError>;
 
   /**
    * Fetch a single work by slug
    */
-  readonly getWorkBySlug: (slug: string) => Effect.Effect<PayloadPost | null, PayloadError>;
+  readonly getWorkBySlug: (slug: string) => Effect.Effect<PayloadWork | null, PayloadError>;
 }
 
 // Build query string from params
@@ -116,10 +164,11 @@ export class PayloadService extends Context.Service<PayloadService, PayloadServi
       }
 
       const doFetch = Effect.fn("PayloadService.fetch")(
-        <T>(
+        <A, I, R>(
           endpoint: string,
+          schema: Schema.Codec<A, I, R>,
           options?: RequestInit & { useCache?: boolean; cacheTTL?: number },
-        ): Effect.Effect<T, PayloadError> =>
+        ): Effect.Effect<A, PayloadError, R> =>
           Effect.gen(function* () {
             const url = `${baseUrl}/api${endpoint}`;
             const fetchResponse = () =>
@@ -138,47 +187,9 @@ export class PayloadService extends Context.Service<PayloadService, PayloadServi
 
             yield* Effect.logDebug(`Fetching Payload: ${url}`);
 
-            let response: Response;
-
-            if (options?.useCache) {
-              const cacheResult = yield* Effect.tryPromise({
-                try: async () => (await caches.open("payload-cache")) as Cache | null,
-                catch: () => null,
-              }).pipe(Effect.orElseSucceed(() => null));
-
-              if (cacheResult) {
-                const cacheReq = new Request(url);
-                const cached = yield* Effect.tryPromise({
-                  try: async () => await cacheResult.match(cacheReq),
-                  catch: () => null,
-                }).pipe(Effect.orElseSucceed(() => null));
-
-                if (cached && !hasExpiredCacheEntry(cached, options.cacheTTL)) {
-                  yield* Effect.logDebug(`Cache hit: ${url}`);
-                  response = cached;
-                } else {
-                  if (cached) {
-                    yield* Effect.logDebug(`Cache stale: ${url}`);
-                  }
-
-                  yield* Effect.logDebug(`Cache miss: ${url}`);
-                  response = yield* fetchResponse();
-
-                  if (response.ok) {
-                    const clone = response.clone();
-                    const responseWithCacheMetadata = withCacheMetadata(clone, options.cacheTTL);
-                    yield* Effect.tryPromise({
-                      try: async () => await cacheResult.put(cacheReq, responseWithCacheMetadata),
-                      catch: () => null,
-                    }).pipe(Effect.orElseSucceed(() => undefined));
-                  }
-                }
-              } else {
-                response = yield* fetchResponse();
-              }
-            } else {
-              response = yield* fetchResponse();
-            }
+            const response = options?.useCache
+              ? yield* fetchWithCache(url, options.cacheTTL, fetchResponse)
+              : yield* fetchResponse();
 
             if (!response.ok) {
               return yield* Effect.fail(
@@ -190,13 +201,17 @@ export class PayloadService extends Context.Service<PayloadService, PayloadServi
               );
             }
 
-            const data = yield* Effect.tryPromise({
+            const json: unknown = yield* Effect.tryPromise({
               try: () => response.json(),
               catch: (e) =>
                 new PayloadError(e instanceof Error ? e.message : "JSON parse error", endpoint),
             });
 
-            return data as T;
+            return yield* Schema.decodeUnknownEffect(schema)(json).pipe(
+              Effect.mapError(
+                () => new PayloadError("Payload response failed validation", endpoint),
+              ),
+            );
           }).pipe(Effect.retry(retryPolicy)),
       );
 
@@ -205,18 +220,18 @@ export class PayloadService extends Context.Service<PayloadService, PayloadServi
 
         getPosts: (params) => {
           const endpoint = `/posts${buildQuery(params)}`;
-          return doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          return doFetch(endpoint, PayloadResponseSchema(PayloadPostSchema), {
             useCache: true,
           });
         },
 
         getPostBySlug: Effect.fn("PayloadService.getPostBySlug")(function* (slug: string) {
           const endpoint = `/posts?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`;
-          const data = yield* doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          const data = yield* doFetch(endpoint, PayloadResponseSchema(PayloadPostSchema), {
             useCache: true,
           });
 
-          if (!data.docs || data.docs.length === 0) {
+          if (data.docs.length === 0) {
             return null;
           }
 
@@ -225,18 +240,18 @@ export class PayloadService extends Context.Service<PayloadService, PayloadServi
 
         getWorks: (params) => {
           const endpoint = `/works${buildQuery(params)}`;
-          return doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          return doFetch(endpoint, PayloadResponseSchema(PayloadWorkSchema), {
             useCache: true,
           });
         },
 
         getWorkBySlug: Effect.fn("PayloadService.getWorkBySlug")(function* (slug: string) {
           const endpoint = `/works?where[slug][equals]=${encodeURIComponent(slug)}&limit=1`;
-          const data = yield* doFetch<PayloadResponse<PayloadPost>>(endpoint, {
+          const data = yield* doFetch(endpoint, PayloadResponseSchema(PayloadWorkSchema), {
             useCache: true,
           });
 
-          if (!data.docs || data.docs.length === 0) {
+          if (data.docs.length === 0) {
             return null;
           }
 

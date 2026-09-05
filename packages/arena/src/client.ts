@@ -1,8 +1,13 @@
 import { Effect } from "effect";
-import { createArena, ArenaApiError, ArenaNetworkError, type Arena } from "@aredotna/sdk";
+import {
+  createArena,
+  ArenaApiError,
+  ArenaNetworkError,
+  type Arena,
+  type Channel,
+} from "@aredotna/sdk";
 import type {
   GetChannelsApiResponse,
-  GetConnectionsApiResponse,
   MeApiResponse,
   PaginationAttributes,
   GetGroupApiResponse,
@@ -51,14 +56,12 @@ export interface ArenaGroupApi {
 
 export interface ArenaChannelApi {
   create(status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError>;
-  get(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError>;
+  get(): Effect.Effect<Channel, HttpError>;
   delete(): Effect.Effect<void, HttpError>;
   update(data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError>;
   thumb(): Effect.Effect<GetChannelThumbApiResponse, HttpError>;
   contents(options?: PaginationAttributes): Effect.Effect<GetChannelContentsApiResponse, HttpError>;
-  connections(
-    options?: PaginationAttributes,
-  ): Effect.Effect<GetConnectionsApiResponse[], HttpError>;
+  connections(options?: PaginationAttributes): Effect.Effect<ChannelConnections, HttpError>;
 }
 
 export interface ArenaSearchApi {
@@ -98,11 +101,9 @@ export type Fetch = (
   },
 ) => Promise<Response>;
 
-/** Bridge SDK responses to local schema types in one place. */
-const toLocal = <T>(promise: Promise<unknown>): Promise<T> => promise as Promise<T>;
-
-const sdkEffect = <T>(run: () => Promise<unknown>): Effect.Effect<T, HttpError> =>
-  Effect.tryPromise({ try: () => toLocal<T>(run()), catch: mapArenaError });
+/** Run an SDK promise as an Effect, mapping SDK errors to HttpError. */
+const sdkEffect = <T>(run: () => Promise<T>): Effect.Effect<T, HttpError> =>
+  Effect.tryPromise({ try: run, catch: mapArenaError });
 
 const formatSort = (sort?: string, direction?: string): string | undefined => {
   if (sort && direction) return `${sort}_${direction}`;
@@ -151,39 +152,108 @@ function mapArenaError(cause: unknown): HttpError {
   });
 }
 
-type SdkQuery = { page?: number; per?: number; sort?: string };
+type ContentsQuery = NonNullable<Parameters<Arena["channels"]["contents"]>[1]>;
+type ChannelConnections = Awaited<ReturnType<Arena["channels"]["connections"]>>;
+type ConnectionsQuery = NonNullable<Parameters<Arena["channels"]["connections"]>[1]>;
+type BlockConnectionsQuery = NonNullable<Parameters<Arena["blocks"]["connections"]>[1]>;
+type BlockCommentsQuery = NonNullable<Parameters<Arena["blocks"]["comments"]>[1]>;
+type SearchQuery = NonNullable<Parameters<Arena["search"]["query"]>[0]>;
 
-function toSdkQuery(options: PaginationAttributes | undefined): SdkQuery {
-  const { page, per, sort, direction } = {
-    ...defaultPaginationOptions,
-    ...options,
+interface PageParams {
+  page?: number;
+  per?: number;
+}
+
+const pageParams = (options: PaginationAttributes | undefined): PageParams => {
+  const { page, per } = { ...defaultPaginationOptions, ...options };
+  return {
+    ...(page !== undefined && { page }),
+    ...(per !== undefined && { per }),
   };
-  const result: SdkQuery = {};
-  if (page) result.page = page;
-  if (per) result.per = per;
+};
+
+const toContentsSort = (sort?: string, direction?: string): ContentsQuery["sort"] => {
   const combined = formatSort(sort, direction);
-  if (combined) result.sort = combined;
+  if (
+    combined === "position_asc" ||
+    combined === "position_desc" ||
+    combined === "created_at_asc" ||
+    combined === "created_at_desc" ||
+    combined === "updated_at_asc" ||
+    combined === "updated_at_desc"
+  ) {
+    return combined;
+  }
+  return undefined;
+};
+
+const toConnectionsSort = (sort?: string, direction?: string): ConnectionsQuery["sort"] => {
+  const combined = formatSort(sort, direction);
+  if (combined === "created_at_asc" || combined === "created_at_desc") return combined;
+  return undefined;
+};
+
+const toSearchSort = (sort?: string, direction?: string): SearchQuery["sort"] => {
+  const combined = formatSort(sort, direction);
+  if (
+    combined === "score_desc" ||
+    combined === "created_at_asc" ||
+    combined === "created_at_desc" ||
+    combined === "updated_at_asc" ||
+    combined === "updated_at_desc" ||
+    combined === "name_asc" ||
+    combined === "name_desc" ||
+    combined === "connections_count_desc"
+  ) {
+    return combined;
+  }
+  return undefined;
+};
+
+function toContentsQuery(options: PaginationAttributes | undefined): ContentsQuery {
+  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const result: ContentsQuery = { ...pageParams(options) };
+  const sortParam = toContentsSort(sort, direction);
+  if (sortParam !== undefined) result.sort = sortParam;
   return result;
 }
 
-type ArenaSearchQuery = {
-  query: string;
-  page?: number;
-  per?: number;
-  sort?: string;
-  type?: Array<"User" | "Channel" | "Block">;
-};
+function toConnectionsQuery(options: PaginationAttributes | undefined): ConnectionsQuery {
+  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const result: ConnectionsQuery = { ...pageParams(options) };
+  const sortParam = toConnectionsSort(sort, direction);
+  if (sortParam !== undefined) result.sort = sortParam;
+  return result;
+}
+
+function toBlockConnectionsQuery(options: PaginationAttributes | undefined): BlockConnectionsQuery {
+  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const result: BlockConnectionsQuery = { ...pageParams(options) };
+  const sortParam = toConnectionsSort(sort, direction);
+  if (sortParam !== undefined) result.sort = sortParam;
+  return result;
+}
+
+function toBlockCommentsQuery(options: PaginationAttributes | undefined): BlockCommentsQuery {
+  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const result: BlockCommentsQuery = { ...pageParams(options) };
+  const sortParam = toConnectionsSort(sort, direction);
+  if (sortParam !== undefined) result.sort = sortParam;
+  return result;
+}
 
 function toSdkSearchQuery(
   query: string,
   type: "users" | "channels" | "blocks" | undefined,
   options: PaginationAttributes | undefined,
-): ArenaSearchQuery {
-  const base = toSdkQuery(options);
-  const result: ArenaSearchQuery = { query, ...base };
-  if (type) {
-    result.type = type === "users" ? ["User"] : type === "channels" ? ["Channel"] : ["Block"];
-  }
+): SearchQuery {
+  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const result: SearchQuery = { query, ...pageParams(options) };
+  const sortParam = toSearchSort(sort, direction);
+  if (sortParam !== undefined) result.sort = sortParam;
+  if (type === "users") result.type = ["User"];
+  if (type === "channels") result.type = ["Channel"];
+  if (type === "blocks") result.type = ["Block"];
   return result;
 }
 
@@ -232,18 +302,16 @@ export class ArenaClient implements ArenaApi {
       const hasAuth = ArenaClient.hasAuthorizationHeader(init?.headers);
       const shouldUseEdgeCache = method === "GET" && !hasAuth;
 
-      const requestInit = (
-        shouldUseEdgeCache
-          ? {
-              ...init,
-              cf: {
-                cacheTtl: 86400,
-                cacheKey: `arena:v3:public:${url}`,
-                cacheTtlByStatus: { "400-599": 0 },
-              },
-            }
-          : { ...init, cf: { cacheTtl: 0 } }
-      ) as NonNullable<Parameters<Fetch>[1]>;
+      const requestInit: NonNullable<Parameters<Fetch>[1]> = shouldUseEdgeCache
+        ? {
+            ...init,
+            cf: {
+              cacheTtl: 86400,
+              cacheKey: `arena:v3:public:${url}`,
+              cacheTtlByStatus: { "400-599": 0 },
+            },
+          }
+        : { ...init, cf: { cacheTtl: 0 } };
 
       const response = await fetchImpl(input, requestInit);
 
@@ -276,8 +344,10 @@ export class ArenaClient implements ArenaApi {
     const wrappedFetch = this.createCachedFetch(config?.fetch || fetch.bind(globalThis));
     this.rawFetch = wrappedFetch;
     this.date = config?.date || Date;
+    const sdkFetch: typeof fetch = (input, init) =>
+      wrappedFetch(input instanceof URL ? input.href : input, init);
     this.arena = createArena({
-      fetch: wrappedFetch as typeof fetch,
+      fetch: sdkFetch,
       baseUrl: config?.baseUrl ?? "https://api.are.na",
       ...(normalizedToken && { token: normalizedToken }),
     });
@@ -323,31 +393,27 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
         sdkEffect<GetChannelContentsApiResponse>(() =>
-          this.arena.channels.contents(slug, toSdkQuery(options) as any),
+          this.arena.channels.contents(slug, toContentsQuery(options)),
         ),
-      connections: (
-        options?: PaginationAttributes,
-      ): Effect.Effect<GetConnectionsApiResponse[], HttpError> =>
-        sdkEffect<GetConnectionsApiResponse[]>(() =>
-          this.arena.channels.connections(slug, toSdkQuery(options) as any),
+      connections: (options?: PaginationAttributes): Effect.Effect<ChannelConnections, HttpError> =>
+        sdkEffect<ChannelConnections>(() =>
+          this.arena.channels.connections(slug, toConnectionsQuery(options)),
         ),
       create: (status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError> =>
         sdkEffect<CreateChannelApiResponse>(() =>
           this.arena.channels.create({
             title: slug,
-            visibility: status as "public" | "private" | "closed",
-          } as any),
+            ...(status !== undefined && { visibility: status }),
+          }),
         ),
       update: (data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError> =>
         sdkEffect<void>(() => {
           const body: ChannelUpdateBody = { title: data.title };
           if (data.status) body.visibility = data.status;
-          return this.arena.channels.update(slug, body as any);
+          return this.arena.channels.update(slug, body).then(() => undefined);
         }),
-      get: (options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> =>
-        sdkEffect<GetChannelsApiResponse>(() =>
-          this.arena.channels.get(slug, toSdkQuery(options) as any),
-        ),
+      get: (): Effect.Effect<Channel, HttpError> =>
+        sdkEffect<Channel>(() => this.arena.channels.get(slug)),
       delete: (): Effect.Effect<void, HttpError> =>
         sdkEffect<void>(() => this.arena.channels.delete(slug)),
       thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
@@ -361,7 +427,7 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockChannelsApiResponse, HttpError> =>
         sdkEffect<GetBlockChannelsApiResponse>(() =>
-          this.arena.blocks.connections(id, toSdkQuery(options) as any),
+          this.arena.blocks.connections(id, toBlockConnectionsQuery(options)),
         ),
       get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
         sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
@@ -370,12 +436,12 @@ export class ArenaClient implements ArenaApi {
         description?: string;
         content?: string;
       }): Effect.Effect<void, HttpError> =>
-        sdkEffect<void>(() => this.arena.blocks.update(id, data as any)),
+        sdkEffect<void>(() => this.arena.blocks.update(id, data).then(() => undefined)),
       comments: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockCommentApiResponse, HttpError> =>
         sdkEffect<GetBlockCommentApiResponse>(() =>
-          this.arena.blocks.comments(id, toSdkQuery(options) as any),
+          this.arena.blocks.comments(id, toBlockCommentsQuery(options)),
         ),
     };
   }
@@ -387,28 +453,28 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         sdkEffect<SearchApiResponse>(() =>
-          this.arena.search.query(toSdkSearchQuery(query, undefined, options) as any),
+          this.arena.search.query(toSdkSearchQuery(query, undefined, options)),
         ),
       blocks: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         sdkEffect<SearchApiResponse>(() =>
-          this.arena.search.query(toSdkSearchQuery(query, "blocks", options) as any),
+          this.arena.search.query(toSdkSearchQuery(query, "blocks", options)),
         ),
       channels: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         sdkEffect<SearchApiResponse>(() =>
-          this.arena.search.query(toSdkSearchQuery(query, "channels", options) as any),
+          this.arena.search.query(toSdkSearchQuery(query, "channels", options)),
         ),
       users: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
         sdkEffect<SearchApiResponse>(() =>
-          this.arena.search.query(toSdkSearchQuery(query, "users", options) as any),
+          this.arena.search.query(toSdkSearchQuery(query, "users", options)),
         ),
     };
   }
@@ -421,10 +487,7 @@ export class ArenaClient implements ArenaApi {
     return this.getJson<T>(`${url}?${qs}`);
   }
 
-  private makeRequest<T>(
-    endpoint: string,
-    method: "GET" | "POST" | "PUT" | "DELETE",
-  ): Effect.Effect<T, HttpError> {
+  private makeRequest<T>(endpoint: string): Effect.Effect<T, HttpError> {
     const url = `${this.domain}${endpoint}`;
     const rawFetch = this.rawFetch;
     const headers = this.headers;
@@ -433,7 +496,7 @@ export class ArenaClient implements ArenaApi {
       const response = yield* Effect.tryPromise({
         try: () =>
           rawFetch(url, {
-            method,
+            method: "GET",
             headers,
             body: null,
           }),
@@ -454,7 +517,7 @@ export class ArenaClient implements ArenaApi {
           : "";
 
         yield* Effect.logWarning(
-          `[arena-diag] method=${method} endpoint=${endpoint} status=${response.status} statusText=${response.statusText} contentType=${contentType} contentLength=${contentLength}${providerRequestIdField}`,
+          `[arena-diag] endpoint=${endpoint} status=${response.status} statusText=${response.statusText} contentType=${contentType} contentLength=${contentLength}${providerRequestIdField}`,
         );
 
         return yield* new HttpError({
@@ -463,12 +526,8 @@ export class ArenaClient implements ArenaApi {
         });
       }
 
-      if (method === "DELETE" || method === "PUT") {
-        return undefined as T;
-      }
-
-      const json = yield* Effect.tryPromise({
-        try: () => response.json() as Promise<T>,
+      const json: T = yield* Effect.tryPromise({
+        try: () => response.json(),
         catch: () =>
           new HttpError({
             message: "Failed to parse JSON response",
@@ -481,6 +540,6 @@ export class ArenaClient implements ArenaApi {
   }
 
   private getJson<T>(endpoint: string): Effect.Effect<T, HttpError> {
-    return this.makeRequest<T>(endpoint, "GET");
+    return this.makeRequest<T>(endpoint);
   }
 }

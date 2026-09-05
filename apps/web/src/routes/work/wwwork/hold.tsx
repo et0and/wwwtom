@@ -17,7 +17,8 @@ export default function Hold() {
 
     const savedTimer = localStorage.getItem("timer");
     if (savedTimer) {
-      setTimer(parseInt(savedTimer, 10));
+      const parsedTimer = Number(savedTimer);
+      if (Number.isInteger(parsedTimer) && parsedTimer >= 0) setTimer(parsedTimer);
     }
 
     const interval = setInterval(() => {

@@ -13,14 +13,14 @@ const BlurInTextBody = (props: {
 }) => {
   const words = () => {
     const rawWords = props.merged.text.split(" ");
-    let globalIndex = 0;
+    const charCounts = rawWords.map((word) => word.length);
     return rawWords.map((word, i) => {
-      const chars = word.split("").map((char) => ({
-        char,
-        globalIndex: globalIndex++,
-      }));
+      const precedingChars = charCounts.slice(0, i).reduce((sum, count) => sum + count + 1, 0);
+      const chars = word
+        .split("")
+        .map((char, charIndex) => ({ char, globalIndex: precedingChars + charIndex }));
       const hasSpace = i < rawWords.length - 1;
-      const spaceIndex = hasSpace ? globalIndex++ : -1;
+      const spaceIndex = hasSpace ? precedingChars + word.length : -1;
       return { chars, hasSpace, spaceIndex };
     });
   };
