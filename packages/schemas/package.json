@@ -11,6 +11,7 @@
     "./jsonld": "./src/jsonld.ts",
     "./og": "./src/og.ts",
     "./payload": "./src/payload.ts",
+    "./polar": "./src/polar.ts",
     "./queue": "./src/queue.ts",
     "./secrets": "./src/secrets.ts",
     "./telegram": "./src/telegram.ts"

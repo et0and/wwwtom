@@ -1,5 +1,6 @@
 import { getSandbox, type Sandbox } from "@cloudflare/sandbox";
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
+import { FetchHttpClient, Headers, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { GitHubApiError, RunnerError } from "@tom/types/errors";
@@ -66,10 +67,10 @@ const constantTimeEqual = (a: ArrayBuffer, b: ArrayBuffer): boolean => {
   const left = new Uint8Array(a);
   const right = new Uint8Array(b);
   if (left.length !== right.length) return false;
-  let diff = 0;
-  for (let index = 0; index < left.length; index++) {
-    diff |= (left[index] ?? 0) ^ (right[index] ?? 0);
-  }
+  const diff = Array.from(left, (byte, index) => byte ^ (right[index] ?? 0)).reduce(
+    (acc, code) => acc | code,
+    0,
+  );
   return diff === 0;
 };
 
@@ -124,52 +125,56 @@ const createCleanupToken = (
     );
   });
 
+/**
+ * HttpClient bound to the current global fetch. Built per call because the
+ * Fetch reference default pins the first-seen implementation process-wide.
+ */
+const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
+  Layer.provideMerge(FetchHttpClient.layer, Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch));
+
 const createRegistrationToken = (
   repository: string,
   githubToken: string,
 ): Effect.Effect<RegistrationToken, GitHubApiError> =>
   Effect.gen(function* () {
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(`https://api.github.com/repos/${repository}/actions/runners/registration-token`, {
-          method: "POST",
-          headers: {
-            Accept: "application/vnd.github+json",
-            Authorization: `Bearer ${githubToken}`,
-            "User-Agent": "cloudflare-sandbox-actions-runner",
-            "X-GitHub-Api-Version": "2026-03-10",
-          },
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client
+      .post(`https://api.github.com/repos/${repository}/actions/runners/registration-token`, {
+        headers: Headers.fromInput({
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${githubToken}`,
+          "User-Agent": "cloudflare-sandbox-actions-runner",
+          "X-GitHub-Api-Version": "2026-03-10",
         }),
-      catch: (cause) =>
-        new GitHubApiError({ message: "GitHub registration-token request failed", cause }),
-    });
+      })
+      .pipe(
+        Effect.mapError(
+          (cause) =>
+            new GitHubApiError({ message: "GitHub registration-token request failed", cause }),
+        ),
+      );
 
-    if (!response.ok) {
-      const body = response.body;
-      if (body) {
-        yield* Effect.tryPromise(() => body.cancel()).pipe(Effect.ignore);
-      }
-      return yield* new GitHubApiError({
-        message: `GitHub registration-token request failed: ${response.status}`,
-        status: response.status,
-      });
-    }
+    const okResponse = yield* HttpClientResponse.filterStatusOk(response).pipe(
+      Effect.mapError((error) => {
+        const status = error.response?.status;
+        return new GitHubApiError({
+          message: `GitHub registration-token request failed${status === undefined ? "" : `: ${status}`}`,
+          ...(status !== undefined && { status }),
+          cause: error,
+        });
+      }),
+    );
 
-    const raw = yield* Effect.tryPromise({
-      try: () => response.json(),
-      catch: (cause) =>
-        new GitHubApiError({
-          message: "GitHub returned an invalid registration-token response",
-          cause,
-        }),
-    });
-
-    return yield* Effect.try({
-      try: () => Schema.decodeUnknownSync(RegistrationTokenResponse)(raw),
-      catch: () =>
-        new GitHubApiError({ message: "GitHub returned an invalid registration-token response" }),
-    });
-  });
+    return yield* HttpClientResponse.schemaBodyJson(RegistrationTokenResponse)(okResponse).pipe(
+      Effect.mapError(
+        (cause) =>
+          new GitHubApiError({
+            message: "GitHub returned an invalid registration-token response",
+            cause,
+          }),
+      ),
+    );
+  }).pipe(Effect.provide(liveHttpClient()));
 
 const startRunner = (
   env: RunnerEnv,
@@ -359,7 +364,12 @@ const worker = {
     // binding before anything else. The spread preserves the Sandbox
     // binding and the plain vars.
     const resolvedEnv = await readCloudflareEnv(rawEnv);
-    const env = resolvedEnv as RunnerEnv;
+    const env: RunnerEnv = {
+      ...resolvedEnv,
+      Sandbox: rawEnv.Sandbox,
+      GITHUB_REPOSITORY: rawEnv.GITHUB_REPOSITORY,
+      RUNNER_LABELS: rawEnv.RUNNER_LABELS,
+    };
 
     const requestId = crypto.randomUUID();
     const otel = otelConfigFromResolvedEnv(resolvedEnv);

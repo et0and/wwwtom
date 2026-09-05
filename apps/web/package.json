@@ -31,8 +31,7 @@
     "effect": "catalog:",
     "number-to-words": "1.2.4",
     "rss": "1.2.2",
-    "solid-js": "catalog:",
-    "web-haptics": "0.0.6"
+    "solid-js": "catalog:"
   },
   "devDependencies": {
     "@solidjs/testing-library": "1.0.0-beta.2",

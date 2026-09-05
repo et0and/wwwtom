@@ -3,6 +3,9 @@ import { Effect, Option, Schema } from "effect";
 import { PayloadService } from "@tom/payload/service";
 import {
   PayloadContentNodeSchema,
+  PayloadPostSchema,
+  PayloadResponseSchema,
+  PayloadWorkSchema,
   type PayloadContentNode,
   type PayloadPost,
   type PayloadResponse,
@@ -16,8 +19,8 @@ import { AdapterError, createPayloadLayer, runAdapter } from "../../config/effec
 import { simulatorEnv } from "../../simulator";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 
-const emptyPostsResponse = {
-  docs: [] as readonly PayloadPost[],
+const emptyPostsResponse: PayloadResponse<PayloadPost> = {
+  docs: [],
   totalDocs: 0,
   limit: 1,
   page: 1,
@@ -61,8 +64,9 @@ const fetchPosts = (page: number, pageSize: number) =>
     yield* Effect.logInfo(`payload:posts:${page}:${pageSize}:start`);
 
     const response = yield* payload
-      .fetch<PayloadResponse<PayloadPost>>(
+      .fetch(
         `/posts?sort=-publishedAt&limit=${pageSize}&page=${page}&depth=1`,
+        PayloadResponseSchema(PayloadPostSchema),
         { useCache: true, cacheTTL: 3600 },
       )
       .pipe(
@@ -95,8 +99,9 @@ const fetchPostBySlug = (slug: string, adapterUrl: string) =>
     yield* Effect.logInfo(`payload:post:${slug}:start`);
 
     const fetchBySlug = (options: RequestInit & { useCache?: boolean; cacheTTL?: number }) =>
-      payload.fetch<PayloadResponse<PayloadPost>>(
+      payload.fetch(
         `/posts?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+        PayloadResponseSchema(PayloadPostSchema),
         options,
       );
 
@@ -157,7 +162,7 @@ const fetchWorks = (sort?: string) =>
 
     const endpoint = sort ? `/works?sort=${encodeURIComponent(sort)}` : "/works?sort=title";
     const response = yield* payload
-      .fetch<PayloadResponse<PayloadPost>>(endpoint, {
+      .fetch(endpoint, PayloadResponseSchema(PayloadWorkSchema), {
         useCache: true,
         cacheTTL: 3600,
       })
@@ -165,7 +170,7 @@ const fetchWorks = (sort?: string) =>
         Effect.catch(
           Effect.fn("getWorksErrorHandler")(function* (cause: unknown) {
             yield* Effect.logWarning("payload:works:error", cause);
-            return { docs: [] as readonly PayloadPost[] };
+            return { docs: [] };
           }),
         ),
       );
@@ -180,8 +185,9 @@ const fetchWorkBySlug = (slug: string, adapterUrl: string) =>
     yield* Effect.logInfo(`payload:work:${slug}:start`);
 
     const fetchBySlug = (options: RequestInit & { useCache?: boolean; cacheTTL?: number }) =>
-      payload.fetch<PayloadResponse<PayloadPost>>(
+      payload.fetch(
         `/works?where%5Bslug%5D%5Bequals%5D=${encodeURIComponent(slug)}&limit=1&depth=3`,
+        PayloadResponseSchema(PayloadWorkSchema),
         options,
       );
 
@@ -231,10 +237,14 @@ const fetchFeed = (limit: number, adapterUrl: string) =>
     yield* Effect.logInfo(`payload:feed:${limit}:start`);
 
     const response = yield* payload
-      .fetch<PayloadResponse<PayloadPost>>(`/posts?sort=-publishedAt&limit=${limit}&depth=3`, {
-        useCache: true,
-        cacheTTL: 3600,
-      })
+      .fetch(
+        `/posts?sort=-publishedAt&limit=${limit}&depth=3`,
+        PayloadResponseSchema(PayloadPostSchema),
+        {
+          useCache: true,
+          cacheTTL: 3600,
+        },
+      )
       .pipe(
         Effect.catch(
           Effect.fn("getFeedErrorHandler")(function* (cause: unknown) {

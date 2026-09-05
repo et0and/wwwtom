@@ -1,8 +1,10 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
-import { Show, For, createMemo, createSignal } from "solid-js";
+import { Show, For, createEffect, createMemo, createSignal } from "solid-js";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
+import { HttpError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
 import { Spinner } from "@tom/ui/Spinner";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 
@@ -19,6 +21,23 @@ interface BlockLayout {
   zIndex: number;
   rotation: number;
 }
+
+const asBlock = <T extends ArenaBlock["type"]>(
+  block: ArenaBlock,
+  type: T,
+): Extract<ArenaBlock, { type: T }> | null =>
+  block.type === type ? (block as Extract<ArenaBlock, { type: T }>) : null;
+
+const FALLBACK_SIZE = { w: 200, h: 200 };
+
+const FALLBACK_LAYOUT: BlockLayout = {
+  width: "200px",
+  height: "200px",
+  top: "0px",
+  left: "0px",
+  zIndex: 1,
+  rotation: 0,
+};
 
 function generateRandomLayout(index: number, total: number, containerWidth: number): BlockLayout {
   const seed = index * 9301 + 49297;
@@ -39,7 +58,8 @@ function generateRandomLayout(index: number, total: number, containerWidth: numb
     h: Math.round(size.h * scaleFactor),
   }));
 
-  const size = sizes[Math.floor(random(1) * sizes.length)]!;
+  const sizeIndex = Math.floor(random(1) * sizes.length);
+  const size = sizes[sizeIndex] ?? FALLBACK_SIZE;
 
   const gridSpacing = Math.round(280 * scaleFactor);
   const rowHeight = Math.round(260 * scaleFactor);
@@ -67,16 +87,25 @@ function generateRandomLayout(index: number, total: number, containerWidth: numb
 export function CameraRoll(props: CameraRollProps) {
   const contentsQuery = useQuery(() => ({
     queryKey: ["arena-contents", props.slug],
-    queryFn: async () => {
-      try {
-        return await fetchChannelContents(props.slug, 20);
-      } catch {
-        void Effect.runFork(
-          Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
-        );
-        return null;
-      }
-    },
+    queryFn: () =>
+      Effect.runPromise(
+        Effect.tryPromise({
+          try: () => fetchChannelContents(props.slug, 20),
+          catch: (error) =>
+            new HttpError({
+              message: "Arena request failed",
+              status: HttpStatus.InternalServerError,
+              cause: error,
+            }),
+        }).pipe(
+          Effect.catch((error) =>
+            Effect.logWarning(
+              `[arena] getChannelContents failed for slug "${props.slug}"`,
+              error,
+            ).pipe(Effect.map(() => null)),
+          ),
+        ),
+      ),
   }));
 
   const activeContents = createMemo(() => contentsQuery.data);
@@ -96,37 +125,32 @@ export function CameraRoll(props: CameraRollProps) {
     const layoutsData = layouts();
     if (layoutsData.length === 0) return { width: 0, height: 0 };
 
-    let maxWidth = 0;
-    let maxHeight = 0;
+    const extents = layoutsData.map((layout) => {
+      const width = Number.parseInt(layout.width, 10);
+      const height = Number.parseInt(layout.height, 10);
+      const left = Number.parseInt(layout.left, 10);
+      const top = Number.parseInt(layout.top, 10);
 
-    layoutsData.forEach((layout) => {
-      const width = parseInt(layout.width);
-      const height = parseInt(layout.height);
-      const left = parseInt(layout.left);
-      const top = parseInt(layout.top);
-
-      maxWidth = Math.max(maxWidth, left + width);
-      maxHeight = Math.max(maxHeight, top + height);
+      return { right: left + width, bottom: top + height };
     });
 
-    return { width: maxWidth, height: maxHeight };
+    return {
+      width: extents.reduce((max, extent) => Math.max(max, extent.right), 0),
+      height: extents.reduce((max, extent) => Math.max(max, extent.bottom), 0),
+    };
+  });
+
+  createEffect(() => {
+    if (!isLoading() && !hasContent()) {
+      void Effect.runFork(
+        Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+      );
+    }
   });
 
   return (
     <Show when={!isLoading()} fallback={<Spinner />}>
-      <Show
-        when={hasContent()}
-        fallback={
-          <>
-            {
-              void Effect.runFork(
-                Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
-              )
-            }
-            <p>Sorry, no content found</p>
-          </>
-        }
-      >
+      <Show when={hasContent()} fallback={<p>Sorry, no content found</p>}>
         <div class="">
           <div
             class="relative mx-auto"
@@ -139,7 +163,7 @@ export function CameraRoll(props: CameraRollProps) {
           >
             <For each={activeContents()?.data || []} keyed={false}>
               {(item, index) => {
-                const layout = layouts()[index]!;
+                const layout = layouts()[index] ?? FALLBACK_LAYOUT;
                 return (
                   <div
                     class="absolute transition-transform hover:scale-200 hover:z-9999"
@@ -176,8 +200,8 @@ function ArenaItem(props: { item: ArenaChannelContents }) {
   const item = () => props.item;
 
   return (
-    <Show when={"base_type" in item()}>
-      <ArenaBlockItem block={item() as ArenaBlock} />
+    <Show when={"base_type" in item() && "type" in item() ? (item() as ArenaBlock) : null}>
+      {(block) => <ArenaBlockItem block={block()} />}
     </Show>
   );
 }
@@ -190,12 +214,12 @@ function ImageBlock(props: { block: Extract<ArenaBlock, { type: "Image" }> }) {
 
   return (
     <div class="image-block relative w-full h-full bg-gray-100">
-      <Show when={blurhashDataUrl() && !loaded()}>
-        <img
-          src={blurhashDataUrl()!}
-          alt=""
-          class="absolute inset-0 w-full h-full object-cover blur-sm"
-        />
+      <Show when={blurhashDataUrl()}>
+        {(url) => (
+          <Show when={!loaded()}>
+            <img src={url()} alt="" class="absolute inset-0 w-full h-full object-cover blur-sm" />
+          </Show>
+        )}
       </Show>
       <img
         src={block().image?.medium.src}
@@ -218,11 +242,9 @@ function ArenaBlockItem(props: { block: ArenaBlock }) {
 
   return (
     <div class="arena-block h-full overflow-hidden">
-      <Show when={block().type === "Image"}>
-        <ImageBlock block={block() as Extract<ArenaBlock, { type: "Image" }>} />
-      </Show>
-      <Show when={block().type === "Attachment"}>
-        <AttachmentBlock block={block() as Extract<ArenaBlock, { type: "Attachment" }>} />
+      <Show when={asBlock(block(), "Image")}>{(image) => <ImageBlock block={image()} />}</Show>
+      <Show when={asBlock(block(), "Attachment")}>
+        {(attachment) => <AttachmentBlock block={attachment()} />}
       </Show>
     </div>
   );

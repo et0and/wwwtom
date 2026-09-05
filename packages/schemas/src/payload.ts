@@ -86,14 +86,14 @@ export const PayloadMediaSchema: Schema.Codec<PayloadMediaType> = Schema.Struct(
   updatedAt: Schema.String,
   createdAt: Schema.String,
   url: Schema.String,
-  thumbnailURL: Schema.String,
+  thumbnailURL: Schema.NullOr(Schema.String),
   filename: Schema.String,
   mimeType: Schema.String,
   filesize: Schema.Number,
   width: Schema.Number,
   height: Schema.Number,
-  focalX: Schema.Number,
-  focalY: Schema.Number,
+  focalX: Schema.NullOr(Schema.Number),
+  focalY: Schema.NullOr(Schema.Number),
   sizes: PayloadMediaSizesSchema,
   // oxlint-disable anti-slop/no-chained-type-assertions -- required: recursive schema types do not overlap the Codec type without an unknown bridge
 }) as unknown as Schema.Codec<PayloadMediaType>;

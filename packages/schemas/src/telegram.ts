@@ -35,3 +35,18 @@ export const MAX_ALERT_LENGTH = 3900;
 
 /** Stack traces truncate past this so one alert never crowds out context. */
 export const MAX_STACK_LENGTH = 1200;
+
+/**
+ * POST /bot<token>/sendMessage → 200. This app only needs delivery
+ * confirmation; decoding `ok: true` fails the Effect when Telegram
+ * rejects the message instead of silently succeeding.
+ *
+ * @see https://core.telegram.org/bots/api#sendmessage
+ */
+const TelegramSendResponseSchema = Schema.Struct({
+  ok: Schema.Literal(true),
+});
+
+export const telegramSendResponseSchema = TelegramSendResponseSchema;
+
+export type TelegramSendResponse = Schema.Schema.Type<typeof TelegramSendResponseSchema>;

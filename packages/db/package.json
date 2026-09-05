@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
     "test": "vitest run",
-    "migrate": "tsx src/migrate.ts"
+    "migrate": "tsx src/migrate.ts",
+    "generate": "tsx src/generate.ts"
   },
   "dependencies": {
     "@tom/types": "workspace:*",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@electric-sql/pglite": "0.5.5",
     "@types/node": "^26.1.2",
+    "kysely-codegen": "0.20.0",
     "pglite-server": "0.1.5",
     "tsx": "4.20.3",
     "typescript": "5.9.3",

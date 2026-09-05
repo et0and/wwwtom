@@ -46,13 +46,13 @@ export const processMessage = (
 ): Effect.Effect<void, TelegramError, TelegramService> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("api:queue:process", { kind: message.kind });
-    if (message.kind === "guestbook-sign") {
-      yield* handleGuestbookSign(message);
-    } else {
+    if (message.kind !== "guestbook-sign") {
       // publish-post / render-og are not produced yet; ack with a warning
       // rather than poisoning the queue.
       yield* Effect.logWarning("api:queue:unhandled-kind", { kind: message.kind });
+      return;
     }
+    yield* handleGuestbookSign(message);
   });
 
 const telegramLayer = (env: CloudflareEnv) => {

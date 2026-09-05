@@ -224,9 +224,8 @@ const gtmFetch = (
       }),
   });
 
-const jsonFetch = <A>(
-  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- _schema is Schema<A> erased to unknown for generic jsonFetch; call sites pass typed schemas
-  _schema: unknown,
+const jsonFetch = <A, I, R, E>(
+  schema: Schema.Codec<A, I, R, E>,
   path: string,
   init: RequestInit,
   token: Redacted.Redacted,
@@ -237,10 +236,20 @@ const jsonFetch = <A>(
     if (!res.ok) {
       return yield* mapStatusToError(res.status, text);
     }
-    return yield* Effect.try({
-      try: () => Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(text) as A,
+    const json = yield* Effect.try({
+      try: () => Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Unknown))(text),
       catch: () =>
         new HttpError({ message: "invalid JSON response", status: res.status, body: text }),
+    });
+    // The GTM schemas need no decoding services at runtime (plain JSON);
+    // the unknown-services typing is conservative, so assert once here
+    // instead of leaving all responses unvalidated.
+    // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- required: JSON-only schemas carry conservative unknown services
+    const validated = schema as unknown as Schema.Codec<A, I, never, never>;
+    return yield* Effect.try({
+      try: () => Schema.decodeUnknownSync(validated)(json),
+      catch: () =>
+        new HttpError({ message: "invalid GTM response", status: res.status, body: text }),
     });
   });
 
@@ -267,13 +276,12 @@ export const GtmHttpLive = Layer.effect(
     ): Effect.Effect<A, HttpMethodError | CredentialsError> =>
       Effect.flatMap(creds.getAccessToken, request);
 
-    const authedJson = <A>(
-      // oxlint-disable-next-line anti-slop/no-unknown-parameters -- _schema is Schema<A> erased; call sites pass typed schemas
-      _schema: unknown,
+    const authedJson = <A, I, R, E>(
+      schema: Schema.Codec<A, I, R, E>,
       path: string,
       init: RequestInit,
     ): Effect.Effect<A, HttpMethodError | CredentialsError> =>
-      authed((token) => jsonFetch(_schema, path, init, token));
+      authed((token) => jsonFetch(schema, path, init, token));
 
     const authedVoid = (
       path: string,
