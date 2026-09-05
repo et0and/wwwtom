@@ -66,10 +66,10 @@ const constantTimeEqual = (a: ArrayBuffer, b: ArrayBuffer): boolean => {
   const left = new Uint8Array(a);
   const right = new Uint8Array(b);
   if (left.length !== right.length) return false;
-  let diff = 0;
-  for (let index = 0; index < left.length; index++) {
-    diff |= (left[index] ?? 0) ^ (right[index] ?? 0);
-  }
+  const diff = Array.from(left, (byte, index) => byte ^ (right[index] ?? 0)).reduce(
+    (acc, code) => acc | code,
+    0,
+  );
   return diff === 0;
 };
 
@@ -359,7 +359,12 @@ const worker = {
     // binding before anything else. The spread preserves the Sandbox
     // binding and the plain vars.
     const resolvedEnv = await readCloudflareEnv(rawEnv);
-    const env = resolvedEnv as RunnerEnv;
+    const env: RunnerEnv = {
+      ...resolvedEnv,
+      Sandbox: rawEnv.Sandbox,
+      GITHUB_REPOSITORY: rawEnv.GITHUB_REPOSITORY,
+      RUNNER_LABELS: rawEnv.RUNNER_LABELS,
+    };
 
     const requestId = crypto.randomUUID();
     const otel = otelConfigFromResolvedEnv(resolvedEnv);
