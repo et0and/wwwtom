@@ -1,3 +1,10 @@
+## [2.5.1](https://github.com/et0and/wwwtom/compare/v2.5.0...v2.5.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **ci:** remove staging e2e nightly and repair preview sweep query ([a7badda](https://github.com/et0and/wwwtom/commit/a7baddaf1f7eaefb21c50688629cc953bfbd6a11))
+
 # [2.5.0](https://github.com/et0and/wwwtom/compare/v2.4.2...v2.5.0) (2026-09-03)
 
 
