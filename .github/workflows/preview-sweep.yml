@@ -7,7 +7,7 @@ name: Sweep orphan PR previews
 # each stack runs even when the previous one fails.
 on:
   schedule:
-    # 03:41 UTC daily — clear of the e2e nightlies (02:17, 02:47).
+    # 03:41 UTC daily — clear of the e2e nightly (02:17).
     - cron: "41 3 * * *"
   workflow_dispatch:
 
@@ -40,7 +40,7 @@ jobs:
         run: |
           cutoff=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
           prs=$(gh pr list --state closed --limit 100 --json number,closedAt \
-            --jq --arg cutoff "$cutoff" '.[] | select(.closedAt > $cutoff) | .number')
+            | jq -r --arg cutoff "$cutoff" '.[] | select(.closedAt > $cutoff) | .number')
           if [ -z "$prs" ]; then
             echo "No recently closed PRs; nothing to sweep."
             exit 0
