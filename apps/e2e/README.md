@@ -12,7 +12,9 @@ Two suites live here:
 - **Staging suite** (`tests-staging/`,
   `playwright.staging.config.ts`): content-agnostic smoke + real-data checks
   against the deployed `staging` Alchemy stage (`staging-web.tom.so`) — no
-  fixture simulator, no `x-use-simulator` header. Runs nightly.
+  fixture simulator, no `x-use-simulator` header. Runs manually (the
+  nightly staging workflow was removed: GitHub-hosted runner IPs trip
+  Cloudflare bot protection).
 
 ```
 browser (Playwright, sends `x-use-simulator: 1`)
@@ -169,9 +171,10 @@ E2E_STAGING_ADAPTER_URL=https://pr-114-adapter.tom.so \
 pnpm --filter @tom/e2e test:e2e:staging
 ```
 
-The workflow `.github/workflows/e2e-staging.yml` runs it nightly (02:47 UTC)
-and on `workflow_dispatch`. Every push to `dev` deploys the staging stage
-via the Deploy workflow (production deploys are manual), so the nightly
+The staging suite has no scheduled workflow (removed — Cloudflare
+bot-blocks GitHub runner IPs). Run it manually against any deployed stage.
+Every push to `dev` deploys the staging stage
+via the Deploy workflow (production deploys are manual), so a manual run
 validates the latest staged stack.
 
 ### Cloudflare bot protection on CI runs

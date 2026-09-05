@@ -16,8 +16,7 @@ on:
       - dev
 
 # Pushes to dev deploy the STAGING stage (production is a manual
-# workflow_dispatch with its own environment approval gates). The staging
-# nightly e2e (e2e-staging.yml) then validates the freshly deployed stack.
+# workflow_dispatch with its own environment approval gates).
 permissions:
   contents: read
 
