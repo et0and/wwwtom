@@ -15,20 +15,39 @@ afterEach(() => {
 
 const polarEnv = testEnv({ POLAR_ACCESS_TOKEN: "test-token" });
 
+const fullProduct = {
+  id: "prod_1",
+  name: "Tom's zine",
+  description: "A printed zine",
+  medias: [{ id: "med_1", public_url: "https://cdn.tom.so/zine.jpg" }],
+  prices: [{ price_amount: 1500, price_currency: "usd" }],
+};
+
+/** URL and body JSON of the single stubbed fetch call. */
+const sentPolarRequest = async (): Promise<{
+  url: string;
+  body: unknown;
+  init: RequestInit;
+}> => {
+  const [url, init] = fetchMock.mock.calls[0] ?? [];
+  const requestInit: RequestInit = init;
+  const body =
+    requestInit.body === undefined || requestInit.body === null
+      ? undefined
+      : await new Response(requestInit.body).json();
+  return { url: String(url), body, init: requestInit };
+};
+
 describe("polar integration", () => {
   describe("GET /polar/products", () => {
     it("returns the products from the Polar API", async () => {
-      const products = [{ id: "prod_1", name: "Tom's zine" }];
-      fetchMock.mockResolvedValue(jsonResponse({ items: products }));
+      fetchMock.mockResolvedValue(jsonResponse({ items: [fullProduct] }));
       const response = await app.fetch(requestWithEnv("http://localhost/polar/products", polarEnv));
       expect(response.status).toBe(200);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.polar.sh/v1/products?is_archived=false",
-        expect.objectContaining({
-          headers: expect.objectContaining({ Authorization: "Bearer test-token" }),
-        }),
-      );
-      expect(await response.json()).toEqual(products);
+      const sent = await sentPolarRequest();
+      expect(sent.url).toBe("https://api.polar.sh/v1/products?is_archived=false");
+      expect(new Headers(sent.init.headers).get("authorization")).toBe("Bearer test-token");
+      expect(await response.json()).toEqual([fullProduct]);
     });
 
     it("maps Polar errors to RFC 9457 problem details", async () => {
@@ -46,17 +65,14 @@ describe("polar integration", () => {
 
   describe("GET /polar/products/:productId", () => {
     it("returns a single product", async () => {
-      const product = { id: "prod_1", name: "Tom's zine" };
-      fetchMock.mockResolvedValue(jsonResponse(product));
+      fetchMock.mockResolvedValue(jsonResponse(fullProduct));
       const response = await app.fetch(
         requestWithEnv("http://localhost/polar/products/prod_1", polarEnv),
       );
       expect(response.status).toBe(200);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.polar.sh/v1/products/prod_1",
-        expect.anything(),
-      );
-      expect(await response.json()).toEqual(product);
+      const sent = await sentPolarRequest();
+      expect(sent.url).toBe("https://api.polar.sh/v1/products/prod_1");
+      expect(await response.json()).toEqual(fullProduct);
     });
 
     it("maps Polar errors to RFC 9457 problem details", async () => {
@@ -76,7 +92,7 @@ describe("polar integration", () => {
 
   describe("POST /polar/customers", () => {
     it("creates a customer with an external id", async () => {
-      const customer = { id: "cust_1", email: "tom@example.com" };
+      const customer = { id: "cust_1" };
       fetchMock.mockResolvedValue(jsonResponse(customer));
       const response = await app.fetch(
         requestWithEnv("http://localhost/polar/customers", polarEnv, {
@@ -86,17 +102,13 @@ describe("polar integration", () => {
         }),
       );
       expect(response.status).toBe(200);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.polar.sh/v1/customers/",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({
-            email: "tom@example.com",
-            name: undefined,
-            external_id: "uuid-1",
-          }),
-        }),
-      );
+      const sent = await sentPolarRequest();
+      expect(sent.url).toBe("https://api.polar.sh/v1/customers/");
+      expect(sent.body).toEqual({
+        email: "tom@example.com",
+        name: undefined,
+        external_id: "uuid-1",
+      });
       expect(await response.json()).toEqual(customer);
     });
 

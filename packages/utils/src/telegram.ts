@@ -1,7 +1,18 @@
-import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import { Context, Effect, Layer, Redacted } from "effect";
+import {
+  FetchHttpClient,
+  Headers,
+  HttpBody,
+  HttpClient,
+  HttpClientResponse,
+} from "effect/unstable/http";
 import { TelegramError } from "@tom/types/errors";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
-import { MAX_ALERT_LENGTH, MAX_STACK_LENGTH } from "@tom/schemas/telegram";
+import {
+  MAX_ALERT_LENGTH,
+  MAX_STACK_LENGTH,
+  telegramSendResponseSchema,
+} from "@tom/schemas/telegram";
 import { AppConfig } from "./services/config";
 
 export interface TelegramServiceContract {
@@ -89,46 +100,75 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
         text: string,
         links?: readonly AlertLink[],
       ) {
+        const client = yield* HttpClient.HttpClient;
         const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
 
-        const response = yield* Effect.tryPromise({
-          try: () =>
-            fetch(telegramUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
-                chat_id: chatId,
-                text,
-                parse_mode: "Markdown",
-                ...(links &&
-                  links.length > 0 && {
-                    reply_markup: {
-                      inline_keyboard: [links.map((link) => ({ text: link.text, url: link.url }))],
-                    },
-                  }),
-              }),
+        const requestBody = yield* HttpBody.json({
+          chat_id: chatId,
+          text,
+          parse_mode: "Markdown",
+          ...(links &&
+            links.length > 0 && {
+              reply_markup: {
+                inline_keyboard: [links.map((link) => ({ text: link.text, url: link.url }))],
+              },
             }),
-          catch: (error) =>
-            new TelegramError({
-              message: error instanceof Error ? error.message : "Unknown error",
-            }),
-        });
+        }).pipe(
+          Effect.mapError(
+            () => new TelegramError({ message: "Failed to encode Telegram request" }),
+          ),
+        );
 
-        if (!response.ok) {
-          return yield* new TelegramError({
-            message: `Telegram API error: ${response.status} ${response.statusText}`,
-            status: response.status,
-          });
-        }
+        const response = yield* client
+          .post(telegramUrl, {
+            headers: Headers.fromInput({ "Content-Type": "application/json" }),
+            body: requestBody,
+          })
+          .pipe(
+            Effect.mapError((error) => {
+              const cause = "cause" in error.reason ? error.reason.cause : undefined;
+              return new TelegramError({
+                message: cause instanceof Error ? cause.message : error.message,
+              });
+            }),
+          );
+
+        const okResponse = yield* HttpClientResponse.filterStatusOk(response).pipe(
+          Effect.mapError((error) => {
+            const status = error.response?.status;
+            return new TelegramError({
+              message: `Telegram API error: ${status ?? "unknown status"}`,
+              ...(status !== undefined && { status }),
+            });
+          }),
+        );
+
+        yield* HttpClientResponse.schemaBodyJson(telegramSendResponseSchema)(okResponse).pipe(
+          Effect.mapError(
+            () => new TelegramError({ message: "Telegram API error: unexpected response" }),
+          ),
+        );
       });
 
+      const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
+        Layer.provideMerge(
+          FetchHttpClient.layer,
+          Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch),
+        );
+
       const service: TelegramServiceContract = {
+        // Resolve fetch per call: the Fetch reference default pins the
+        // first-seen implementation process-wide, which breaks stubbed fetch
+        // in tests (and hides the seam in production).
         sendAlert: Effect.fn("TelegramService.sendAlert")((message: string) =>
-          doSendTelegramAlert(message),
+          Effect.provide(doSendTelegramAlert(message), liveHttpClient()),
         ),
         sendError: Effect.fn("TelegramService.sendError")(
           (message: string, cause?: unknown, details?: ErrorAlertDetails) =>
-            doSendTelegramAlert(formatErrorMessage(message, cause, details), details?.links),
+            Effect.provide(
+              doSendTelegramAlert(formatErrorMessage(message, cause, details), details?.links),
+              liveHttpClient(),
+            ),
         ),
       };
       return service;
