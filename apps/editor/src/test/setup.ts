@@ -16,6 +16,18 @@ Object.defineProperty(window, "matchMedia", {
   }),
 });
 
+Object.defineProperty(window, "ResizeObserver", {
+  writable: true,
+  value: class {
+    constructor(callback: ResizeObserverCallback) {
+      void callback;
+    }
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  },
+});
+
 afterEach(() => {
   cleanup();
 });

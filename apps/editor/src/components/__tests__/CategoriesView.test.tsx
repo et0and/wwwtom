@@ -30,11 +30,8 @@ describe("CategoriesView", () => {
       .mockResolvedValueOnce(
         jsonResponse([...categories, { id: "cat-2", slug: "notes", title: "Notes" }]),
       );
-    const { findByLabelText, findByRole, findByText } = render(() => (
-      <CategoriesView onBack={() => undefined} />
-    ));
+    const { findByLabelText, findByRole, findByText } = render(() => <CategoriesView />);
     expect(await findByText("Essays · essays")).toBeInTheDocument();
-    expect(await findByRole("button", { name: "← Back" })).toBeInTheDocument();
     fireEvent.input(await findByLabelText("Slug"), { target: { value: "notes" } });
     fireEvent.input(await findByLabelText("Title"), { target: { value: "Notes" } });
     fireEvent.click(await findByRole("button", { name: "Add category" }));
@@ -45,7 +42,7 @@ describe("CategoriesView", () => {
 
   it("shows validation errors without saving", async () => {
     fetchMock.mockResolvedValue(jsonResponse(categories));
-    const { findByRole, findByText } = render(() => <CategoriesView onBack={() => undefined} />);
+    const { findByRole, findByText } = render(() => <CategoriesView />);
     await findByText("Essays · essays");
     fireEvent.click(await findByRole("button", { name: "Add category" }));
     expect(await findByText("Invalid category data")).toBeInTheDocument();
@@ -58,7 +55,7 @@ describe("CategoriesView", () => {
       .mockResolvedValueOnce(jsonResponse({ id: "cat-1" }))
       .mockResolvedValueOnce(jsonResponse([]));
     vi.spyOn(window, "confirm").mockReturnValue(true);
-    const { findByRole } = render(() => <CategoriesView onBack={() => undefined} />);
+    const { findByRole } = render(() => <CategoriesView />);
     fireEvent.click(await findByRole("button", { name: "Delete category essays" }));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
     const [deleteUrl, deleteInit] = fetchMock.mock.calls[1] as [string, RequestInit];

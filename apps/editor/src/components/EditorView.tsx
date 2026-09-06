@@ -2,7 +2,6 @@ import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect, Option, Schema } from "effect";
 import type { CmsError } from "@tom/types/errors";
 import type { CmsMedia, CmsPost, CmsWork, TiptapDoc } from "@tom/schemas/cms";
-import { renderTiptapHtml } from "@tom/utils/tiptap-html";
 import { Button } from "@tom/ui/tomui/button";
 import { Input } from "@tom/ui/tomui/input";
 import { InputGroup } from "@tom/ui/tomui/input-group";
@@ -145,7 +144,6 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
   >([]);
   const [savedSlug, setSavedSlug] = createSignal<string | null>(props.initial.slug);
   const [saveState, setSaveState] = createSignal<SaveState>({ status: "idle" });
-  const [showPreview, setShowPreview] = createSignal(false);
   const [showHistory, setShowHistory] = createSignal(false);
   /** Current history reload; revoked to noop when the panel unmounts. */
   type HistoryReload = { current: () => void };
@@ -165,28 +163,11 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
     element = current;
   };
   const mediaUrl = (mediaId: string): string => mediaFileUrl(adapterUrl(), mediaId);
-  const [previewHtml, setPreviewHtml] = createSignal("");
-
-  /** Render preview HTML; stale results lose to newer docs by identity. */
-  const renderPreview = (doc: TiptapDoc): void => {
-    void runClient(
-      renderTiptapHtml(doc, mediaUrl).pipe(
-        Effect.tap((html) =>
-          Effect.sync(() => {
-            if (handle.doc() === doc) setPreviewHtml(html);
-          }),
-        ),
-      ),
-    );
-  };
 
   const handle = createTiptap({
     element: () => element,
     initialDoc: () => props.initial.doc,
     mediaUrl,
-    onDoc: (doc) => {
-      if (showPreview()) renderPreview(doc);
-    },
   });
 
   onSettled(() => {
@@ -333,15 +314,6 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
     return state.status === "error" ? state.message : undefined;
   });
 
-  const togglePreview = (): void => {
-    const next = !showPreview();
-    setShowPreview(next);
-    if (next) {
-      const doc = handle.doc();
-      if (doc) renderPreview(doc);
-    }
-  };
-
   const codeActive = createMemo(() => {
     handle.version();
     return handle.editor()?.isActive("codeBlock") ?? false;
@@ -373,252 +345,252 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
           <Show when={saveState().status === "saved"}>
             <Badge variant="success">Saved</Badge>
           </Show>
-          <Show when={saveError()}>
-            {(message) => <Banner variant="error" description={message()} />}
-          </Show>
-          <Button
-            type="button"
-            size="sm"
-            variant="primary"
-            loading={saveState().status === "saving"}
-            onClick={onSave}
-          >
-            {savedSlug() === null ? "Create" : "Save"}
-          </Button>
-          <Show when={savedSlug() !== null}>
-            <Button type="button" size="sm" variant="secondary-destructive" onClick={onDelete}>
-              Delete
-            </Button>
+        </div>
+      </div>
+      <div class="editor-layout">
+        <aside class="editor-sidebar">
+          <div class="editor-actions">
             <Button
               type="button"
               size="sm"
-              variant="outline"
-              onClick={() => setShowHistory(!showHistory())}
+              variant="primary"
+              loading={saveState().status === "saving"}
+              onClick={onSave}
             >
-              {showHistory() ? "Hide history" : "History"}
+              {savedSlug() === null ? "Create" : "Save"}
             </Button>
-          </Show>
-        </div>
-      </div>
-      <Show when={showHistory() ? savedSlug() : null}>
-        {(slug) => (
-          <HistoryPanel
-            kind={props.kind}
-            slug={slug()}
-            onRestored={onRestored}
-            onReload={(reload) => {
-              historyReload.current = reload;
-            }}
-          />
-        )}
-      </Show>
-
-      <div class="editor-fields">
-        <label class="field">
-          Title
-          <Input
-            type="text"
-            value={fields().title}
-            onInput={(event) => setField("title", event.currentTarget.value)}
-          />
-        </label>
-        <label class="field">
-          Slug
-          <InputGroup>
-            <InputGroup.Input
-              type="text"
-              value={fields().slug}
-              onInput={(event) => setField("slug", event.currentTarget.value)}
-            />
-            <InputGroup.Button
-              type="button"
-              onClick={() => setField("slug", slugify(fields().title))}
-            >
-              Use title
-            </InputGroup.Button>
-          </InputGroup>
-        </label>
-        <label class="field">
-          Summary
-          <textarea
-            value={fields().summary}
-            onInput={(event) => setField("summary", event.currentTarget.value)}
-          />
-        </label>
-        <label class="field">
-          Status
-          <Select
-            value={fields().status}
-            options={[
-              { label: "Draft", value: "draft" },
-              { label: "Published", value: "published" },
-            ]}
-            onChange={(value) => setStatus(value)}
-          />
-        </label>
-        <label class="field">
-          Published at
-          <Input
-            type="datetime-local"
-            placeholder="YYYY-MM-DD HH:MM"
-            value={fields().publishedAt.slice(0, 16)}
-            onInput={(event) => setField("publishedAt", event.currentTarget.value)}
-          />
-        </label>
-      </div>
-
-      <Show when={props.kind === "posts"}>
-        <div class="my-4">
-          <Collapsible>
-            <Collapsible.DefaultTrigger>
-              Categories
-              {selectedCategories().length > 0 ? ` (${selectedCategories().length})` : ""}
-            </Collapsible.DefaultTrigger>
-            <Collapsible.DefaultPanel>
-              <Show
-                when={allCategories().length > 0}
-                fallback={<p class="text-sm text-tomui-subtle">No categories yet.</p>}
+            <Show when={savedSlug() !== null}>
+              <Button type="button" size="sm" variant="secondary-destructive" onClick={onDelete}>
+                Delete
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                onClick={() => setShowHistory(!showHistory())}
               >
-                <For each={allCategories()}>
-                  {(category) => (
-                    <label class="check">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories().includes(category.id)}
-                        onChange={() => toggleCategory(category.id)}
-                      />
-                      {category.title}
-                    </label>
-                  )}
-                </For>
-              </Show>
-            </Collapsible.DefaultPanel>
-          </Collapsible>
-        </div>
-      </Show>
-
-      <Toolbar
-        editor={handle.editor}
-        version={handle.version}
-        activePanel={panel()}
-        onTogglePanel={(item) => openPanel(panel() === item ? "none" : item)}
-      />
-      <div ref={setElement} class="tiptap-editor" />
-
-      <div class="editor-panels">
-        <Show when={panelError()}>
-          {(message) => <Banner variant="error" description={message()} />}
-        </Show>
-        <Show when={panel() === "link"}>
-          <div class="panel">
-            <label class="field">
-              URL
-              <Input
-                type="text"
-                value={linkUrl()}
-                onInput={(event) => setLinkUrl(event.currentTarget.value)}
-              />
-            </label>
-            <Button type="button" size="sm" variant="secondary" onClick={onApplyLink}>
-              Apply
-            </Button>
+                {showHistory() ? "Hide history" : "History"}
+              </Button>
+            </Show>
+            <Show when={saveError()}>
+              {(message) => <Banner variant="error" description={message()} />}
+            </Show>
           </div>
-        </Show>
-        <Show when={panel() === "arena"}>
-          <div class="panel">
-            <label class="field">
-              Channel slug
-              <Input
-                type="text"
-                value={arenaSlug()}
-                onInput={(event) => setArenaSlug(event.currentTarget.value)}
-              />
-            </label>
-            <label class="field">
-              Title (optional)
-              <Input
-                type="text"
-                value={arenaTitle()}
-                onInput={(event) => setArenaTitle(event.currentTarget.value)}
-              />
-            </label>
-            <Button type="button" size="sm" variant="secondary" onClick={onInsertArena}>
-              Insert
-            </Button>
-          </div>
-        </Show>
-        <Show when={panel() === "media"}>
-          <div class="panel">
-            <label class="field">
-              File
-              <input
-                type="file"
-                accept="image/*,video/*"
-                onChange={(event) => setPickedFile(event.currentTarget.files?.[0])}
-              />
-            </label>
-            <label class="field">
-              Alt text
-              <Input
-                type="text"
-                value={mediaAlt()}
-                onInput={(event) => setMediaAlt(event.currentTarget.value)}
-              />
-            </label>
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              loading={uploading()}
-              disabled={pickedFile() === undefined || uploading()}
-              onClick={onUpload}
-            >
-              {uploading() ? "Uploading…" : "Upload and insert"}
-            </Button>
-            <MediaPicker onPick={onPickMedia} />
-          </div>
-        </Show>
-        <Show when={codeActive()}>
-          <div class="panel">
-            <label class="field">
-              File name
-              <Input
-                type="text"
-                value={codeAttrs()?.fileName ?? ""}
-                onInput={(event) => {
-                  setCodeOptions(handle.editor(), {
-                    language: codeAttrs()?.language ?? "",
-                    fileName:
-                      event.currentTarget.value === "" ? undefined : event.currentTarget.value,
-                    showLineNumbers: codeAttrs()?.showLineNumbers ?? false,
-                  });
+          <Show when={showHistory() ? savedSlug() : null}>
+            {(slug) => (
+              <HistoryPanel
+                kind={props.kind}
+                slug={slug()}
+                onRestored={onRestored}
+                onReload={(reload) => {
+                  historyReload.current = reload;
                 }}
               />
-            </label>
-            <label class="check">
-              <input
-                type="checkbox"
-                checked={codeAttrs()?.showLineNumbers ?? false}
-                onChange={(event) => {
-                  setCodeOptions(handle.editor(), {
-                    language: codeAttrs()?.language ?? "",
-                    fileName: codeAttrs()?.fileName,
-                    showLineNumbers: event.currentTarget.checked,
-                  });
-                }}
+            )}
+          </Show>
+
+          <div class="editor-fields">
+            <label class="field">
+              Title
+              <Input
+                type="text"
+                value={fields().title}
+                onInput={(event) => setField("title", event.currentTarget.value)}
               />
-              Line numbers
+            </label>
+            <label class="field">
+              Slug
+              <InputGroup>
+                <InputGroup.Input
+                  type="text"
+                  value={fields().slug}
+                  onInput={(event) => setField("slug", event.currentTarget.value)}
+                />
+                <InputGroup.Button
+                  type="button"
+                  onClick={() => setField("slug", slugify(fields().title))}
+                >
+                  Use title
+                </InputGroup.Button>
+              </InputGroup>
+            </label>
+            <label class="field">
+              Summary
+              <textarea
+                value={fields().summary}
+                onInput={(event) => setField("summary", event.currentTarget.value)}
+              />
+            </label>
+            <label class="field">
+              Status
+              <Select
+                value={fields().status}
+                options={[
+                  { label: "Draft", value: "draft" },
+                  { label: "Published", value: "published" },
+                ]}
+                onChange={(value) => setStatus(value)}
+              />
+            </label>
+            <label class="field">
+              Published at
+              <Input
+                type="datetime-local"
+                placeholder="YYYY-MM-DD HH:MM"
+                value={fields().publishedAt.slice(0, 16)}
+                onInput={(event) => setField("publishedAt", event.currentTarget.value)}
+              />
             </label>
           </div>
-        </Show>
+
+          <Show when={props.kind === "posts"}>
+            <div class="editor-categories">
+              <Collapsible>
+                <Collapsible.DefaultTrigger>
+                  Categories
+                  {selectedCategories().length > 0 ? ` (${selectedCategories().length})` : ""}
+                </Collapsible.DefaultTrigger>
+                <Collapsible.DefaultPanel>
+                  <Show
+                    when={allCategories().length > 0}
+                    fallback={<p class="text-sm text-tomui-subtle">No categories yet.</p>}
+                  >
+                    <For each={allCategories()}>
+                      {(category) => (
+                        <label class="check">
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories().includes(category.id)}
+                            onChange={() => toggleCategory(category.id)}
+                          />
+                          {category.title}
+                        </label>
+                      )}
+                    </For>
+                  </Show>
+                </Collapsible.DefaultPanel>
+              </Collapsible>
+            </div>
+          </Show>
+        </aside>
+        <section class="editor-main">
+          <Toolbar
+            editor={handle.editor}
+            version={handle.version}
+            activePanel={panel()}
+            onTogglePanel={(item) => openPanel(panel() === item ? "none" : item)}
+          />
+          <div ref={setElement} class="tiptap-editor" />
+
+          <div class="editor-panels">
+            <Show when={panelError()}>
+              {(message) => <Banner variant="error" description={message()} />}
+            </Show>
+            <Show when={panel() === "link"}>
+              <div class="panel">
+                <label class="field">
+                  URL
+                  <Input
+                    type="text"
+                    value={linkUrl()}
+                    onInput={(event) => setLinkUrl(event.currentTarget.value)}
+                  />
+                </label>
+                <Button type="button" size="sm" variant="secondary" onClick={onApplyLink}>
+                  Apply
+                </Button>
+              </div>
+            </Show>
+            <Show when={panel() === "arena"}>
+              <div class="panel">
+                <label class="field">
+                  Channel slug
+                  <Input
+                    type="text"
+                    value={arenaSlug()}
+                    onInput={(event) => setArenaSlug(event.currentTarget.value)}
+                  />
+                </label>
+                <label class="field">
+                  Title (optional)
+                  <Input
+                    type="text"
+                    value={arenaTitle()}
+                    onInput={(event) => setArenaTitle(event.currentTarget.value)}
+                  />
+                </label>
+                <Button type="button" size="sm" variant="secondary" onClick={onInsertArena}>
+                  Insert
+                </Button>
+              </div>
+            </Show>
+            <Show when={panel() === "media"}>
+              <div class="panel">
+                <label class="field">
+                  File
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(event) => setPickedFile(event.currentTarget.files?.[0])}
+                  />
+                </label>
+                <label class="field">
+                  Alt text
+                  <Input
+                    type="text"
+                    value={mediaAlt()}
+                    onInput={(event) => setMediaAlt(event.currentTarget.value)}
+                  />
+                </label>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  loading={uploading()}
+                  disabled={pickedFile() === undefined || uploading()}
+                  onClick={onUpload}
+                >
+                  {uploading() ? "Uploading…" : "Upload and insert"}
+                </Button>
+                <MediaPicker onPick={onPickMedia} />
+              </div>
+            </Show>
+            <Show when={codeActive()}>
+              <div class="panel">
+                <label class="field">
+                  File name
+                  <Input
+                    type="text"
+                    value={codeAttrs()?.fileName ?? ""}
+                    onInput={(event) => {
+                      setCodeOptions(handle.editor(), {
+                        language: codeAttrs()?.language ?? "",
+                        fileName:
+                          event.currentTarget.value === "" ? undefined : event.currentTarget.value,
+                        showLineNumbers: codeAttrs()?.showLineNumbers ?? false,
+                      });
+                    }}
+                  />
+                </label>
+                <label class="check">
+                  <input
+                    type="checkbox"
+                    checked={codeAttrs()?.showLineNumbers ?? false}
+                    onChange={(event) => {
+                      setCodeOptions(handle.editor(), {
+                        language: codeAttrs()?.language ?? "",
+                        fileName: codeAttrs()?.fileName,
+                        showLineNumbers: event.currentTarget.checked,
+                      });
+                    }}
+                  />
+                  Line numbers
+                </label>
+              </div>
+            </Show>
+          </div>
+        </section>
       </div>
-
-      <Button type="button" size="sm" variant="ghost" onClick={togglePreview}>
-        {showPreview() ? "Hide preview" : "Show preview"}
-      </Button>
-      <Show when={showPreview()}>
-        <div class="preview" innerHTML={previewHtml()} />
-      </Show>
     </div>
   );
 };
