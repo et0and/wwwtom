@@ -16,7 +16,7 @@
 
 @layer components {
   .editor-shell {
-    @apply mx-auto max-w-3xl px-4 py-8 font-sans;
+    @apply mx-auto max-w-3xl px-4 pb-8 font-sans;
   }
 
   .signin-view {
@@ -28,7 +28,7 @@
   }
 
   .editor-nav {
-    @apply sticky top-0 z-30 -mx-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-300 bg-white px-4 pb-4 dark:border-neutral-700 dark:bg-neutral-950;
+    @apply sticky top-0 z-30 -mx-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-300 bg-white px-4 pt-4 pb-4 dark:border-neutral-700 dark:bg-neutral-950;
   }
 
   .editor-title {
@@ -72,8 +72,70 @@
     @apply mb-4 flex flex-wrap items-center gap-2;
   }
 
+  .editor-layout {
+    @apply grid gap-4;
+  }
+
+  .editor-sidebar {
+    @apply grid content-start gap-4;
+  }
+
+  .editor-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .editor-categories {
+    @apply grid gap-2;
+  }
+
+  .editor-main {
+    @apply grid min-w-0 content-start;
+  }
+
+  @media (min-width: 1024px) {
+    .editor-shell-wide {
+      max-width: none;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+
+    .editor-shell-wide .editor-nav,
+    .editor-shell-wide .content-list-header {
+      margin-left: -1.5rem;
+      margin-right: -1.5rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+
+    .editor-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .editor-sidebar {
+      position: sticky;
+      top: calc(var(--editor-nav-h, 0px) + 16px);
+    }
+
+    .editor-main .tiptap-editor {
+      min-height: 60vh;
+    }
+
+    .editor-toolbar [data-tomui-component="Toolbar"] {
+      display: flex;
+      width: 100%;
+      max-width: none;
+    }
+
+    .editor-toolbar [data-tomui-component="Toolbar.Button"] {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
+
   .editor-fields {
-    @apply mb-4 grid gap-3;
+    @apply grid gap-3;
   }
 
   .field {
@@ -94,13 +156,19 @@
     @apply min-h-64 rounded-b-lg border border-neutral-300 p-3 focus:outline-2 focus:outline-neutral-800 dark:border-neutral-700 dark:focus:outline-neutral-200;
   }
 
-  /* Canvas typography mirrors the preview scale so headings read as headings. */
+  /* Canvas typography matches the site scale so the editor reads as the page. */
+  .tiptap-editor p {
+    @apply pb-4 tracking-tight;
+  }
+
   .tiptap-editor h1 {
-    @apply pb-2 text-3xl font-medium tracking-tight;
+    @apply pb-2 text-4xl font-medium tracking-tight;
   }
 
   .tiptap-editor h2 {
-    @apply pb-2 text-2xl tracking-tight;
+    @apply pb-2 tracking-tight;
+    font-size: 1.75rem;
+    font-weight: 400;
   }
 
   .tiptap-editor h3 {
@@ -132,8 +200,25 @@
 
   /* CMS banners mirror the site's banner idiom (hairline + badge).
      The canvas carries no badge element (it would parse back into content),
-     so its label renders through ::before; preview has the real badge. */
-  .tiptap-editor .banner,
+     so its label renders through ::before; history preview has the real badge. */
+  .tiptap-editor .banner {
+    position: relative;
+    line-height: 1.5;
+    margin-top: 1rem;
+    margin-bottom: 0;
+    width: 100%;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1rem;
+    color: rgb(0 0 0);
+    border-color: rgb(209 213 219);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
   .preview .banner {
     position: relative;
     line-height: 1.5;
@@ -191,12 +276,81 @@
     }
   }
 
+  /* Media figures match the site: rounded image, centered caption. */
+  .tiptap-editor figure {
+    @apply my-4;
+  }
+
+  .tiptap-editor img {
+    @apply rounded-md;
+  }
+
+  .tiptap-editor figcaption {
+    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  /* Arena embeds render as carousels on the site; the canvas shows a
+     labeled placeholder at the same position in the flow. */
+  .tiptap-editor [data-arena]::after {
+    content: "Arena / " attr(data-arena);
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgb(107 114 128);
+  }
+
   .tiptap-editor [data-arena],
   .tiptap-editor figure[data-media-id] {
     @apply my-2 border border-dashed border-neutral-400 p-2 dark:border-neutral-600;
   }
 
-  .tiptap-editor pre,
+  /* Code in the canvas matches the site code-block treatment. Shiki
+     highlighting runs at save time; the canvas shows plain mono text with
+     the same spacing, filename bar, and dark treatment. */
+  .tiptap-editor pre {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    tab-size: 2;
+    background-color: rgb(24 24 27);
+    color: rgb(244 244 245);
+  }
+
+  .tiptap-editor pre code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .tiptap-editor pre[data-filename]::before {
+    content: attr(data-filename);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    padding: 0.5rem 1rem;
+    margin: -1rem -1rem 1rem;
+    background-color: rgb(243 244 246);
+    border-bottom: 1px solid rgb(229 231 235);
+    border-radius: 0.5rem 0.5rem 0 0;
+    color: rgb(75 85 99);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor pre {
+      background-color: rgb(0 0 0);
+    }
+
+    .tiptap-editor pre[data-filename]::before {
+      background-color: rgb(31 41 55);
+      border-color: rgb(75 85 99);
+      color: rgb(156 163 175);
+    }
+  }
+
   .preview pre {
     @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
   }
@@ -288,8 +442,71 @@
     @apply grid gap-4;
   }
 
+  .categories-layout {
+    @apply grid min-w-0 content-start gap-4;
+  }
+
+  .categories-list {
+    @apply grid min-w-0 content-start;
+  }
+
+  .categories-form {
+    @apply grid min-w-0 content-start;
+  }
+
+  @media (min-width: 1024px) {
+    .categories-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .categories-form {
+      grid-column: 1;
+      grid-row: 1;
+      position: sticky;
+      top: calc(var(--editor-nav-h, 0px) + 16px);
+    }
+
+    .categories-list {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  }
+
   .media-view {
     @apply grid gap-4;
+  }
+
+  .media-layout {
+    @apply grid min-w-0 content-start gap-4;
+  }
+
+  .media-sidebar {
+    @apply grid min-w-0 content-start gap-4;
+  }
+
+  .media-results {
+    @apply grid min-w-0 content-start;
+  }
+
+  @media (min-width: 1024px) {
+    .media-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .media-sidebar {
+      position: sticky;
+      top: calc(var(--editor-nav-h, 0px) + 16px);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .media-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
   }
 
   .media-grid {
@@ -325,7 +542,7 @@
   }
 
   .history-panel {
-    @apply mb-4 grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+    @apply grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
   }
 
   .history-rows {

@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createSignal, onSettled } from "solid-js";
+import { Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
 import { Effect } from "effect";
 import { Banner } from "@tom/ui/tomui/banner";
 import { Loader } from "@tom/ui/tomui/loader";
@@ -51,18 +51,23 @@ export const App = (props: { navigate?: (url: string) => void }) => {
   const navigate = props.navigate ?? assignUrl;
 
   // The list toolbar sticks below the header, so publish the header
-  // height for its sticky offset. Layout never depends on the value.
-  onSettled(() => {
-    const nav = document.querySelector(".editor-nav");
-    if (!(nav instanceof HTMLElement)) return;
-    const sync = (): void => {
-      document.documentElement.style.setProperty("--editor-nav-h", `${nav.offsetHeight}px`);
-    };
-    sync();
-    const observer = new ResizeObserver(sync);
-    observer.observe(nav);
-    return () => observer.disconnect();
-  });
+  // height for its sticky offset. The nav mounts only after sign-in
+  // resolves, so track the session: the effect re-runs post-commit once
+  // the nav exists. Layout never depends on the value.
+  createEffect(
+    () => session(),
+    () => {
+      const nav = document.querySelector(".editor-nav");
+      if (!(nav instanceof HTMLElement)) return;
+      const sync = (): void => {
+        document.documentElement.style.setProperty("--editor-nav-h", `${nav.offsetHeight}px`);
+      };
+      sync();
+      const observer = new ResizeObserver(sync);
+      observer.observe(nav);
+      onCleanup(() => observer.disconnect());
+    },
+  );
 
   const onSignOut = (): void => {
     void runClient(
@@ -73,8 +78,11 @@ export const App = (props: { navigate?: (url: string) => void }) => {
     );
   };
 
+  const wide = (): boolean =>
+    view().name === "edit" || view().name === "categories" || view().name === "media";
+
   return (
-    <main class="editor-shell">
+    <main class={`editor-shell${wide() ? " editor-shell-wide" : ""}`}>
       <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Switch>
         <Match when={session() === undefined}>
@@ -126,7 +134,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
                   <PostList onEdit={(kind, slug) => setView({ name: "edit", kind, slug })} />
                 </Match>
                 <Match when={view().name === "categories"}>
-                  <CategoriesView onBack={() => setView({ name: "list" })} />
+                  <CategoriesView />
                 </Match>
                 <Match when={view().name === "media"}>
                   <MediaView onEdit={(kind, slug) => setView({ name: "edit", kind, slug })} />

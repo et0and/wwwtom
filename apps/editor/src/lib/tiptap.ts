@@ -170,8 +170,6 @@ export const createTiptap = (options: {
   readonly element: () => HTMLElement | undefined;
   readonly initialDoc: () => TiptapDoc | undefined;
   readonly mediaUrl: (mediaId: string) => string;
-  /** Fires with the fresh doc on every transaction (preview rendering). */
-  readonly onDoc?: (doc: TiptapDoc) => void;
 }): TiptapHandle => {
   const [editor, setEditor] = createSignal<Editor | undefined>(undefined);
   const [version, setVersion] = createSignal(0);
@@ -192,7 +190,6 @@ export const createTiptap = (options: {
         // Read-then-set: the 2.0 beta drops notifications for updater fns.
         setVersion(version() + 1);
         setDirty(true);
-        options.onDoc?.(next);
       },
     });
     setEditor(instance);

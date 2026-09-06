@@ -91,7 +91,7 @@ export const EditorToolbar = (props: {
     `min-h-10 shrink-0${active ? " bg-tomui-fill font-medium" : ""}`;
 
   return (
-    <div class="flex flex-wrap items-center gap-2">
+    <div class="editor-toolbar flex flex-wrap items-center gap-2">
       <Toolbar aria-label="Formatting" class="min-w-0 max-w-full overflow-x-auto">
         <Toolbar.Button
           aria-pressed={boldActive() ? "true" : "false"}

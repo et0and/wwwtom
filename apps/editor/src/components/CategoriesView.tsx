@@ -8,7 +8,7 @@ import { createCategory, deleteCategory, listCategories } from "../lib/content";
 import { runClient } from "../lib/api";
 
 /** Category manager: list, add, delete. Posts link by id from the edit view. */
-export const CategoriesView = (props: { onBack: () => void }) => {
+export const CategoriesView = () => {
   const [categories, setCategories] = createSignal<ReadonlyArray<CmsCategory>>([]);
   const [slug, setSlug] = createSignal("");
   const [title, setTitle] = createSignal("");
@@ -53,63 +53,60 @@ export const CategoriesView = (props: { onBack: () => void }) => {
 
   return (
     <div class="categories-view">
-      <Button
-        type="button"
-        size="sm"
-        variant="ghost"
-        class="justify-self-start"
-        onClick={props.onBack}
-      >
-        ← Back
-      </Button>
       <h2>Categories</h2>
       <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
-      <ul class="content-rows">
-        <For each={categories()}>
-          {(category) => (
-            <li class="content-row">
-              <span class="row-title">
-                {category.title} · {category.slug}
-              </span>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary-destructive"
-                aria-label={`Delete category ${category.slug}`}
-                onClick={() => onDelete(category.slug)}
-              >
-                Delete
-              </Button>
-            </li>
-          )}
-        </For>
-      </ul>
-      <div class="panel">
-        <label class="field">
-          Slug
-          <Input
-            type="text"
-            value={slug()}
-            onInput={(event) => setSlug(event.currentTarget.value)}
-          />
-        </label>
-        <label class="field">
-          Title
-          <Input
-            type="text"
-            value={title()}
-            onInput={(event) => setTitle(event.currentTarget.value)}
-          />
-        </label>
-        <Button
-          type="button"
-          size="sm"
-          variant="secondary"
-          class="justify-self-start"
-          onClick={onAdd}
-        >
-          Add category
-        </Button>
+      <div class="categories-layout">
+        <section class="categories-list">
+          <ul class="content-rows">
+            <For each={categories()}>
+              {(category) => (
+                <li class="content-row">
+                  <span class="row-title">
+                    {category.title} · {category.slug}
+                  </span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary-destructive"
+                    aria-label={`Delete category ${category.slug}`}
+                    onClick={() => onDelete(category.slug)}
+                  >
+                    Delete
+                  </Button>
+                </li>
+              )}
+            </For>
+          </ul>
+        </section>
+        <aside class="categories-form">
+          <div class="panel">
+            <label class="field">
+              Slug
+              <Input
+                type="text"
+                value={slug()}
+                onInput={(event) => setSlug(event.currentTarget.value)}
+              />
+            </label>
+            <label class="field">
+              Title
+              <Input
+                type="text"
+                value={title()}
+                onInput={(event) => setTitle(event.currentTarget.value)}
+              />
+            </label>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              class="justify-self-start"
+              onClick={onAdd}
+            >
+              Add category
+            </Button>
+          </div>
+        </aside>
       </div>
     </div>
   );

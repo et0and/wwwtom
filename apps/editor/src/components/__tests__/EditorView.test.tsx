@@ -281,10 +281,11 @@ describe("EditorView", () => {
       fireEvent.click(await findByRole("button", { name: "Arena" }));
       fireEvent.input(await findByLabelText("Channel slug"), { target: { value: "toms-place" } });
       fireEvent.click(await findByRole("button", { name: "Insert" }));
-      fireEvent.click(await findByRole("button", { name: "Show preview" }));
       await vi.waitFor(() => {
-        const preview = container.querySelector(".preview") as HTMLElement | null;
-        expect(preview?.innerHTML).toContain(`data-arena="toms-place"`);
+        const node = container.querySelector(
+          '.tiptap-editor div[data-arena="toms-place"]',
+        ) as HTMLElement | null;
+        expect(node).not.toBeNull();
       });
     });
 
