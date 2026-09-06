@@ -7,10 +7,11 @@ export const cmsD1 = Effect.gen(function* () {
   const stage = yield* Stage;
 
   return yield* Cloudflare.D1.Database("wwwtom-cms-d1", {
-    // Production reuses the existing Payload D1; the new tables coexist
-    // with the Payload tables until the Payload admin retires. Other
-    // stages get isolated databases.
-    ...(stage === "production" ? { name: "tom-cms" } : undefined),
+    // Production uses a fresh database: the Payload tables in tom-cms share
+    // names with the CMS tables (posts, works, media, categories) but not
+    // shapes, so they cannot coexist. tom-cms stays live for Payload until
+    // the cutover, then retires. Other stages get isolated databases.
+    ...(stage === "production" ? { name: "tom-cms-v2" } : undefined),
     migrationsDir: `${import.meta.dirname}/migrations`,
   });
 });

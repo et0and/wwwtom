@@ -217,7 +217,7 @@ const main = async (): Promise<void> => {
   );
   const targetDb =
     args.target === "production"
-      ? await findDatabase(auth, (name) => name === "tom-cms", "production target")
+      ? await findDatabase(auth, (name) => name === "tom-cms-v2", "production target")
       : await findDatabase(
           auth,
           (name) => name.includes("cms-d1") && name.includes(args.target),
