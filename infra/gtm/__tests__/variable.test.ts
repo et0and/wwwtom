@@ -3,16 +3,18 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { Unowned } from "alchemy/AdoptPolicy";
 import { Variable, VariableProvider, type VariableProps } from "../variable.ts";
-import { Trigger, TriggerProvider } from "../trigger.ts";
 import { Folder, FolderProvider } from "../folder.ts";
 import { makeFakeState } from "../fake.ts";
-import { findGtmProvider, makeTestLayer, testSession } from "./driver.ts";
+import {
+  findGtmProvider,
+  makeTestLayer,
+  reconcileTrigger,
+  testSession,
+  testWorkspace,
+} from "./driver.ts";
 
 const withVariableProvider = (state: ReturnType<typeof makeFakeState>) =>
   Layer.provideMerge(VariableProvider(), makeTestLayer(state));
-
-const withTriggerProvider = (state: ReturnType<typeof makeFakeState>) =>
-  Layer.provideMerge(TriggerProvider(), makeTestLayer(state));
 
 const withFolderProvider = (state: ReturnType<typeof makeFakeState>) =>
   Layer.provideMerge(FolderProvider(), makeTestLayer(state));
@@ -36,27 +38,6 @@ const reconcileVariable = async (
         bindings: [],
       });
     }).pipe(Effect.provide(withVariableProvider(state))),
-  );
-
-const reconcileTrigger = async (
-  state: ReturnType<typeof makeFakeState>,
-  props: { workspacePath: string; name: string; type: string },
-  id = "my-trigger",
-): Promise<unknown> =>
-  Effect.runPromise(
-    Effect.gen(function* () {
-      const provider = yield* findGtmProvider(Trigger);
-      return yield* provider.reconcile({
-        id,
-        fqn: `Gtm.Trigger/${id}`,
-        instanceId: "test-instance",
-        news: props as never,
-        olds: undefined,
-        output: undefined,
-        session: testSession,
-        bindings: [],
-      });
-    }).pipe(Effect.provide(withTriggerProvider(state))),
   );
 
 const reconcileFolder = async (
@@ -83,32 +64,32 @@ const reconcileFolder = async (
 describe("Variable provider", () => {
   it("creates variable with parameters and formatValue", async () => {
     const state = makeFakeState();
-    const ws = "accounts/123/containers/C1/workspaces/1";
     const attrs = (await reconcileVariable(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "myVar",
       type: "template",
       parameter: [{ type: "template", key: "value", value: "hello" }],
       formatValue: { convertToBoolean: true },
     })) as { variableId: string; path: string; formatValue: unknown };
     expect(attrs.variableId).toBeDefined();
-    expect(attrs.path).toContain(ws);
+    expect(attrs.path).toContain(testWorkspace);
     expect(attrs.formatValue).toEqual({ convertToBoolean: true });
-    expect(state.calls.some((c) => c.method === "POST" && c.path === `${ws}/variables`)).toBe(true);
+    expect(
+      state.calls.some((c) => c.method === "POST" && c.path === `${testWorkspace}/variables`),
+    ).toBe(true);
   });
 
   it("wires enabling/disabling triggers via triggerId", async () => {
     const state = makeFakeState();
-    const ws = "accounts/123/containers/C1/workspaces/1";
     const trig = (await reconcileTrigger(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "evt",
       type: "customEvent",
     })) as {
       triggerId: string;
     };
     const v = (await reconcileVariable(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "condVar",
       type: "c",
       enablingTriggerId: [trig.triggerId],
@@ -120,12 +101,14 @@ describe("Variable provider", () => {
 
   it("references parentFolderId", async () => {
     const state = makeFakeState();
-    const ws = "accounts/123/containers/C1/workspaces/1";
-    const folder = (await reconcileFolder(state, { workspacePath: ws, name: "my-folder" })) as {
+    const folder = (await reconcileFolder(state, {
+      workspacePath: testWorkspace,
+      name: "my-folder",
+    })) as {
       folderId: string;
     };
     const v = (await reconcileVariable(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "folderVar",
       type: "v",
       parentFolderId: folder.folderId,
@@ -135,16 +118,15 @@ describe("Variable provider", () => {
 
   it("updates with fingerprint", async () => {
     const state = makeFakeState();
-    const ws = "accounts/123/containers/C1/workspaces/1";
     const created = (await reconcileVariable(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "myVar",
       type: "v",
     })) as { fingerprint: string };
     state.calls.length = 0;
     await new Promise((r) => setTimeout(r, 2));
     const updated = (await reconcileVariable(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "myVar",
       type: "v",
       notes: "updated",
@@ -156,9 +138,8 @@ describe("Variable provider", () => {
 
   it("read marks foreign variable as Unowned", async () => {
     const state = makeFakeState();
-    const ws = "accounts/123/containers/C1/workspaces/1";
-    state.variables.set(`${ws}/variables/1`, {
-      path: `${ws}/variables/1`,
+    state.variables.set(`${testWorkspace}/variables/1`, {
+      path: `${testWorkspace}/variables/1`,
       accountId: "123",
       containerId: "C1",
       workspaceId: "1",
@@ -176,7 +157,7 @@ describe("Variable provider", () => {
           id: "myVar",
           fqn: "Gtm.Variable/myVar",
           instanceId: "test-instance",
-          olds: { workspacePath: ws, name: "myVar", type: "v" },
+          olds: { workspacePath: testWorkspace, name: "myVar", type: "v" },
           output: undefined,
         });
       }).pipe(Effect.provide(withVariableProvider(state))),
@@ -186,9 +167,8 @@ describe("Variable provider", () => {
 
   it("delete removes variable", async () => {
     const state = makeFakeState();
-    const ws = "accounts/123/containers/C1/workspaces/1";
     const created = (await reconcileVariable(state, {
-      workspacePath: ws,
+      workspacePath: testWorkspace,
       name: "myVar",
       type: "v",
     })) as { path: string };
@@ -199,7 +179,7 @@ describe("Variable provider", () => {
           id: "myVar",
           fqn: "Gtm.Variable/myVar",
           instanceId: "test-instance",
-          olds: { workspacePath: ws, name: "myVar", type: "v" },
+          olds: { workspacePath: testWorkspace, name: "myVar", type: "v" },
           output: {
             accountId: "123",
             containerId: "C1",

@@ -75,20 +75,24 @@ export const WorkspaceSchema = Schema.Struct({
 });
 export type Workspace = Schema.Schema.Type<typeof WorkspaceSchema>;
 
-export const ContainerDraftSchema = Schema.Struct({
+const containerWritableFields = {
   name: Schema.String,
   domainName: Schema.optional(Schema.Array(Schema.String)),
   usageContext: Schema.optional(Schema.Array(ContainerUsageContextSchema)),
   notes: Schema.optional(Schema.String),
   fingerprint: Schema.optional(Schema.String),
-});
+};
+
+export const ContainerDraftSchema = Schema.Struct(containerWritableFields);
 export type ContainerDraft = Schema.Schema.Type<typeof ContainerDraftSchema>;
 
-export const WorkspaceDraftSchema = Schema.Struct({
+const workspaceWritableFields = {
   name: Schema.String,
   description: Schema.optional(Schema.String),
   fingerprint: Schema.optional(Schema.String),
-});
+};
+
+export const WorkspaceDraftSchema = Schema.Struct(workspaceWritableFields);
 export type WorkspaceDraft = Schema.Schema.Type<typeof WorkspaceDraftSchema>;
 
 export const ListContainersResponseSchema = Schema.Struct({
@@ -161,16 +165,10 @@ export const ConsentSettingsSchema = Schema.Struct({
 });
 export type ConsentSettings = Schema.Schema.Type<typeof ConsentSettingsSchema>;
 
-export const TagSchema = Schema.Struct({
-  path: Schema.String,
-  accountId: Schema.String,
-  containerId: Schema.String,
-  workspaceId: Schema.String,
-  tagId: Schema.String,
+const tagWritableFields = {
   name: Schema.String,
   type: Schema.String,
   parameter: Schema.optional(Schema.Array(ParameterSchema)),
-  fingerprint: Schema.optional(Schema.String),
   firingTriggerId: Schema.optional(Schema.Array(Schema.String)),
   blockingTriggerId: Schema.optional(Schema.Array(Schema.String)),
   setupTag: Schema.optional(Schema.Array(SetupTagSchema)),
@@ -188,9 +186,48 @@ export const TagSchema = Schema.Struct({
   consentSettings: Schema.optional(ConsentSettingsSchema),
   monitoringMetadata: Schema.optional(ParameterSchema),
   monitoringMetadataTagNameKey: Schema.optional(Schema.String),
+  fingerprint: Schema.optional(Schema.String),
+};
+
+export const TagSchema = Schema.Struct({
+  path: Schema.String,
+  accountId: Schema.String,
+  containerId: Schema.String,
+  workspaceId: Schema.String,
+  tagId: Schema.String,
+  ...tagWritableFields,
   tagManagerUrl: Schema.optional(Schema.String),
 });
 export type Tag = Schema.Schema.Type<typeof TagSchema>;
+
+const triggerWritableFields = {
+  name: Schema.String,
+  type: Schema.String,
+  parameter: Schema.optional(Schema.Array(ParameterSchema)),
+  filter: Schema.optional(Schema.Array(ConditionSchema)),
+  customEventFilter: Schema.optional(Schema.Array(ConditionSchema)),
+  autoEventFilter: Schema.optional(Schema.Array(ConditionSchema)),
+  parentFolderId: Schema.optional(Schema.String),
+  notes: Schema.optional(Schema.String),
+  waitForTags: Schema.optional(ParameterSchema),
+  checkValidation: Schema.optional(ParameterSchema),
+  waitForTagsTimeout: Schema.optional(ParameterSchema),
+  uniqueTriggerId: Schema.optional(ParameterSchema),
+  eventName: Schema.optional(ParameterSchema),
+  interval: Schema.optional(ParameterSchema),
+  limit: Schema.optional(ParameterSchema),
+  selector: Schema.optional(ParameterSchema),
+  intervalSeconds: Schema.optional(ParameterSchema),
+  maxTimerLengthSeconds: Schema.optional(ParameterSchema),
+  verticalScrollPercentageList: Schema.optional(ParameterSchema),
+  horizontalScrollPercentageList: Schema.optional(ParameterSchema),
+  visibilitySelector: Schema.optional(ParameterSchema),
+  visiblePercentageMin: Schema.optional(ParameterSchema),
+  visiblePercentageMax: Schema.optional(ParameterSchema),
+  continuousTimeMinMilliseconds: Schema.optional(ParameterSchema),
+  totalTimeMinMilliseconds: Schema.optional(ParameterSchema),
+  fingerprint: Schema.optional(Schema.String),
+};
 
 export const TriggerSchemaStruct = Schema.Struct({
   path: Schema.String,
@@ -198,90 +235,16 @@ export const TriggerSchemaStruct = Schema.Struct({
   containerId: Schema.String,
   workspaceId: Schema.String,
   triggerId: Schema.String,
-  name: Schema.String,
-  type: Schema.String,
-  parameter: Schema.optional(Schema.Array(ParameterSchema)),
-  filter: Schema.optional(Schema.Array(ConditionSchema)),
-  customEventFilter: Schema.optional(Schema.Array(ConditionSchema)),
-  autoEventFilter: Schema.optional(Schema.Array(ConditionSchema)),
-  fingerprint: Schema.optional(Schema.String),
-  parentFolderId: Schema.optional(Schema.String),
-  notes: Schema.optional(Schema.String),
+  ...triggerWritableFields,
   tagManagerUrl: Schema.optional(Schema.String),
-  waitForTags: Schema.optional(ParameterSchema),
-  checkValidation: Schema.optional(ParameterSchema),
-  waitForTagsTimeout: Schema.optional(ParameterSchema),
-  uniqueTriggerId: Schema.optional(ParameterSchema),
-  eventName: Schema.optional(ParameterSchema),
-  interval: Schema.optional(ParameterSchema),
-  limit: Schema.optional(ParameterSchema),
-  selector: Schema.optional(ParameterSchema),
-  intervalSeconds: Schema.optional(ParameterSchema),
-  maxTimerLengthSeconds: Schema.optional(ParameterSchema),
-  verticalScrollPercentageList: Schema.optional(ParameterSchema),
-  horizontalScrollPercentageList: Schema.optional(ParameterSchema),
-  visibilitySelector: Schema.optional(ParameterSchema),
-  visiblePercentageMin: Schema.optional(ParameterSchema),
-  visiblePercentageMax: Schema.optional(ParameterSchema),
-  continuousTimeMinMilliseconds: Schema.optional(ParameterSchema),
-  totalTimeMinMilliseconds: Schema.optional(ParameterSchema),
 });
 export type Trigger = Schema.Schema.Type<typeof TriggerSchemaStruct>;
 export const TriggerSchema = TriggerSchemaStruct;
 
-export const TagDraftSchema = Schema.Struct({
-  name: Schema.String,
-  type: Schema.String,
-  parameter: Schema.optional(Schema.Array(ParameterSchema)),
-  firingTriggerId: Schema.optional(Schema.Array(Schema.String)),
-  blockingTriggerId: Schema.optional(Schema.Array(Schema.String)),
-  setupTag: Schema.optional(Schema.Array(SetupTagSchema)),
-  teardownTag: Schema.optional(Schema.Array(TeardownTagSchema)),
-  parentFolderId: Schema.optional(Schema.String),
-  tagFiringOption: Schema.optional(
-    Schema.Literals(["oncePerEvent", "oncePerLoad", "unlimited", "tagFiringOptionUnspecified"]),
-  ),
-  paused: Schema.optional(Schema.Boolean),
-  notes: Schema.optional(Schema.String),
-  scheduleStartMs: Schema.optional(Schema.String),
-  scheduleEndMs: Schema.optional(Schema.String),
-  liveOnly: Schema.optional(Schema.Boolean),
-  priority: Schema.optional(ParameterSchema),
-  consentSettings: Schema.optional(ConsentSettingsSchema),
-  monitoringMetadata: Schema.optional(ParameterSchema),
-  monitoringMetadataTagNameKey: Schema.optional(Schema.String),
-  fingerprint: Schema.optional(Schema.String),
-});
+export const TagDraftSchema = Schema.Struct(tagWritableFields);
 export type TagDraft = Schema.Schema.Type<typeof TagDraftSchema>;
 
-export const TriggerDraftSchema = Schema.Struct({
-  name: Schema.String,
-  type: Schema.String,
-  parameter: Schema.optional(Schema.Array(ParameterSchema)),
-  filter: Schema.optional(Schema.Array(ConditionSchema)),
-  customEventFilter: Schema.optional(Schema.Array(ConditionSchema)),
-  autoEventFilter: Schema.optional(Schema.Array(ConditionSchema)),
-  parentFolderId: Schema.optional(Schema.String),
-  notes: Schema.optional(Schema.String),
-  waitForTags: Schema.optional(ParameterSchema),
-  checkValidation: Schema.optional(ParameterSchema),
-  waitForTagsTimeout: Schema.optional(ParameterSchema),
-  uniqueTriggerId: Schema.optional(ParameterSchema),
-  eventName: Schema.optional(ParameterSchema),
-  interval: Schema.optional(ParameterSchema),
-  limit: Schema.optional(ParameterSchema),
-  selector: Schema.optional(ParameterSchema),
-  intervalSeconds: Schema.optional(ParameterSchema),
-  maxTimerLengthSeconds: Schema.optional(ParameterSchema),
-  verticalScrollPercentageList: Schema.optional(ParameterSchema),
-  horizontalScrollPercentageList: Schema.optional(ParameterSchema),
-  visibilitySelector: Schema.optional(ParameterSchema),
-  visiblePercentageMin: Schema.optional(ParameterSchema),
-  visiblePercentageMax: Schema.optional(ParameterSchema),
-  continuousTimeMinMilliseconds: Schema.optional(ParameterSchema),
-  totalTimeMinMilliseconds: Schema.optional(ParameterSchema),
-  fingerprint: Schema.optional(Schema.String),
-});
+export const TriggerDraftSchema = Schema.Struct(triggerWritableFields);
 export type TriggerDraft = Schema.Schema.Type<typeof TriggerDraftSchema>;
 
 export const ListTagsResponseSchema = Schema.Struct({
@@ -311,40 +274,32 @@ export const VariableFormatValueSchema = Schema.Struct({
 });
 export type VariableFormatValue = Schema.Schema.Type<typeof VariableFormatValueSchema>;
 
+const variableWritableFields = {
+  name: Schema.String,
+  type: Schema.String,
+  parameter: Schema.optional(Schema.Array(ParameterSchema)),
+  parentFolderId: Schema.optional(Schema.String),
+  notes: Schema.optional(Schema.String),
+  scheduleStartMs: Schema.optional(Schema.String),
+  scheduleEndMs: Schema.optional(Schema.String),
+  formatValue: Schema.optional(VariableFormatValueSchema),
+  enablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
+  disablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
+  fingerprint: Schema.optional(Schema.String),
+};
+
 export const VariableSchema = Schema.Struct({
   path: Schema.String,
   accountId: Schema.String,
   containerId: Schema.String,
   workspaceId: Schema.String,
   variableId: Schema.String,
-  name: Schema.String,
-  type: Schema.String,
-  parameter: Schema.optional(Schema.Array(ParameterSchema)),
-  fingerprint: Schema.optional(Schema.String),
-  parentFolderId: Schema.optional(Schema.String),
-  notes: Schema.optional(Schema.String),
+  ...variableWritableFields,
   tagManagerUrl: Schema.optional(Schema.String),
-  scheduleStartMs: Schema.optional(Schema.String),
-  scheduleEndMs: Schema.optional(Schema.String),
-  formatValue: Schema.optional(VariableFormatValueSchema),
-  enablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
-  disablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
 });
 export type Variable = Schema.Schema.Type<typeof VariableSchema>;
 
-export const VariableDraftSchema = Schema.Struct({
-  name: Schema.String,
-  type: Schema.String,
-  parameter: Schema.optional(Schema.Array(ParameterSchema)),
-  parentFolderId: Schema.optional(Schema.String),
-  notes: Schema.optional(Schema.String),
-  scheduleStartMs: Schema.optional(Schema.String),
-  scheduleEndMs: Schema.optional(Schema.String),
-  formatValue: Schema.optional(VariableFormatValueSchema),
-  enablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
-  disablingTriggerId: Schema.optional(Schema.Array(Schema.String)),
-  fingerprint: Schema.optional(Schema.String),
-});
+export const VariableDraftSchema = Schema.Struct(variableWritableFields);
 export type VariableDraft = Schema.Schema.Type<typeof VariableDraftSchema>;
 
 export const ListVariablesResponseSchema = Schema.Struct({
@@ -353,24 +308,24 @@ export const ListVariablesResponseSchema = Schema.Struct({
 });
 export type ListVariablesResponse = Schema.Schema.Type<typeof ListVariablesResponseSchema>;
 
+const folderWritableFields = {
+  name: Schema.String,
+  notes: Schema.optional(Schema.String),
+  fingerprint: Schema.optional(Schema.String),
+};
+
 export const FolderSchema = Schema.Struct({
   path: Schema.String,
   accountId: Schema.String,
   containerId: Schema.String,
   workspaceId: Schema.String,
   folderId: Schema.String,
-  name: Schema.String,
-  notes: Schema.optional(Schema.String),
-  fingerprint: Schema.optional(Schema.String),
+  ...folderWritableFields,
   tagManagerUrl: Schema.optional(Schema.String),
 });
 export type Folder = Schema.Schema.Type<typeof FolderSchema>;
 
-export const FolderDraftSchema = Schema.Struct({
-  name: Schema.String,
-  notes: Schema.optional(Schema.String),
-  fingerprint: Schema.optional(Schema.String),
-});
+export const FolderDraftSchema = Schema.Struct(folderWritableFields);
 export type FolderDraft = Schema.Schema.Type<typeof FolderDraftSchema>;
 
 export const ListFoldersResponseSchema = Schema.Struct({

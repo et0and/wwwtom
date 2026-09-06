@@ -1,3 +1,36 @@
+## [2.5.1](https://github.com/et0and/wwwtom/compare/v2.5.0...v2.5.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **ci:** remove staging e2e nightly and repair preview sweep query ([a7badda](https://github.com/et0and/wwwtom/commit/a7baddaf1f7eaefb21c50688629cc953bfbd6a11))
+
+# [2.5.0](https://github.com/et0and/wwwtom/compare/v2.4.2...v2.5.0) (2026-09-03)
+
+
+### Bug Fixes
+
+* **typecheck:** resolve Effect diagnostics failing root typecheck ([d277522](https://github.com/et0and/wwwtom/commit/d2775221deaf4c076149140ee0ccdec048ceb9c0))
+
+
+### Features
+
+* **logging:** include request context and URL on logs and spans ([f37e862](https://github.com/et0and/wwwtom/commit/f37e86274dca65a3739828607c7de693885e83cc))
+
+## [2.4.2](https://github.com/et0and/wwwtom/compare/v2.4.1...v2.4.2) (2026-09-03)
+
+
+### Bug Fixes
+
+* **ci:** destroy previews on close and sweep orphans ([f0020ac](https://github.com/et0and/wwwtom/commit/f0020ac8fd49db762552a4c23404b104824e53ec))
+
+## [2.4.1](https://github.com/et0and/wwwtom/compare/v2.4.0...v2.4.1) (2026-09-03)
+
+
+### Bug Fixes
+
+* **ci:** destroy each PR preview stack independently ([998d2c5](https://github.com/et0and/wwwtom/commit/998d2c5e9220736036afdee45258155d5183774e))
+
 # [2.4.0](https://github.com/et0and/wwwtom/compare/v2.3.0...v2.4.0) (2026-09-03)
 
 

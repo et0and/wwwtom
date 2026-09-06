@@ -124,7 +124,7 @@ export const tomSecrets = Effect.gen(function* () {
 export default Stack(
   "wwwtom",
   {
-    providers: Layer.mergeAll(Cloudflare.providers(), Axiom.providers()) as never,
+    providers: Layer.provideMerge(Cloudflare.providers(), Axiom.providers()) as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

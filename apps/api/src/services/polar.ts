@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { PolarApiError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { logApiFailure, toProblemResponse } from "@tom/utils/services/worker";
@@ -36,7 +36,7 @@ export const createPolarCheckout = (
         fetch(`${baseUrl}/v1/checkouts/`, {
           method: "POST",
           headers: authHeaders(accessToken),
-          body: JSON.stringify({
+          body: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
             products: params.products,
             successUrl: params.successUrl,
             customerId: params.customerId,
@@ -75,7 +75,7 @@ export const createPolarCustomerSession = (
         fetch(`${baseUrl}/v1/customer-sessions/`, {
           method: "POST",
           headers: authHeaders(accessToken),
-          body: JSON.stringify({
+          body: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
             customerId: params.customerId,
             returnUrl: params.returnUrl,
           }),

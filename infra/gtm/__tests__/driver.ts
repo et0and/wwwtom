@@ -49,4 +49,32 @@ export const findGtmProvider = <R extends ResourceLike>(
     (service) => service as GtmProviderService<R>,
   );
 
+import { Trigger, TriggerProvider, type TriggerProps } from "../trigger.ts";
+
+export const testWorkspace = "accounts/123/containers/C1/workspaces/1";
+
+export const withTriggerProvider = (state: FakeState) =>
+  Layer.provideMerge(TriggerProvider(), makeTestLayer(state));
+
+export const reconcileTrigger = async (
+  state: FakeState,
+  props: TriggerProps,
+  id = "my-trigger",
+): Promise<unknown> =>
+  Effect.runPromise(
+    Effect.gen(function* () {
+      const provider = yield* findGtmProvider(Trigger);
+      return yield* provider.reconcile({
+        id,
+        fqn: `Gtm.Trigger/${id}`,
+        instanceId: "test-instance",
+        news: props,
+        olds: undefined,
+        output: undefined,
+        session: testSession,
+        bindings: [],
+      });
+    }).pipe(Effect.provide(withTriggerProvider(state))),
+  );
+
 export type { FakeState };

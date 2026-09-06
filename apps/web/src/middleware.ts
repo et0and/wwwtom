@@ -18,6 +18,9 @@ export default async function middleware(request: Request, next: () => Promise<R
   const logContext: LogContext = {
     serviceName: "tom-web",
     requestId: crypto.randomUUID(),
+    method: request.method,
+    path: new URL(request.url).pathname,
+    url: request.url,
     logLevel: logLevelFromEnv(env),
     ...(otel && { otel }),
   };

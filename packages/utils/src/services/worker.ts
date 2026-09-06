@@ -14,8 +14,8 @@ export const runEffect = <A, E>(effect: Effect.Effect<A, E>, context: LogContext
   Effect.runPromise(withLogging(effect, context));
 
 /**
- * Build the logging context for a request from the requestId/sessionId/userId
- * and OTEL config attached by the worker's onRequest middleware.
+ * Build the logging context for a request from the requestId/sessionId/userId,
+ * method/path/url, and OTEL config attached by the worker's onRequest middleware.
  */
 export const logContextFromRequest = (request: Request, serviceName: string): LogContext => ({
   serviceName,
@@ -114,15 +114,18 @@ export const getRequestEnv = (request: Request): CloudflareEnv => {
 };
 
 /**
- * Per-request logging context (requestId, sessionId, userId, log level, OTEL
- * config) attached by the worker entry's onRequest middleware and read back
- * by route handlers so every log line is correlated. Mirrors the
+ * Per-request logging context (requestId, sessionId, userId, method/path/url,
+ * log level, OTEL config) attached by the worker entry's onRequest middleware
+ * and read back by route handlers so every log line is correlated. Mirrors the
  * RequestWithEnv pattern.
  */
 export type RequestContext = {
   readonly requestId?: string;
   readonly sessionId?: string;
   readonly userId?: string;
+  readonly method?: string;
+  readonly path?: string;
+  readonly url?: string;
   readonly logLevel?: "Debug" | "Info";
   readonly otel?: OtelConfig;
 };
@@ -130,7 +133,12 @@ export type RequestContext = {
 type RequestWithContext = Request & { requestContext?: RequestContext };
 
 export const attachRequestContext = (request: Request, context: RequestContext): Request => {
-  (request as RequestWithContext).requestContext = context;
+  (request as RequestWithContext).requestContext = {
+    method: request.method,
+    path: new URL(request.url).pathname,
+    url: request.url,
+    ...context,
+  };
   return request;
 };
 

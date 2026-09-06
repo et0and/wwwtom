@@ -98,13 +98,17 @@ export type Fetch = (
   },
 ) => Promise<Response>;
 
-/**
- * Bridge @aredotna/sdk responses to the local schema types. The SDK's own
- * response types don't overlap the schema types, so every SDK call needs a
- * type bridge; a single-assertion helper keeps that in one place instead of
- * chained `as unknown as` casts at each call site.
- */
+/** Bridge SDK responses to local schema types in one place. */
 const toLocal = <T>(promise: Promise<unknown>): Promise<T> => promise as Promise<T>;
+
+const sdkEffect = <T>(run: () => Promise<unknown>): Effect.Effect<T, HttpError> =>
+  Effect.tryPromise({ try: () => toLocal<T>(run()), catch: mapArenaError });
+
+const formatSort = (sort?: string, direction?: string): string | undefined => {
+  if (sort && direction) return `${sort}_${direction}`;
+  if (sort) return sort;
+  return undefined;
+};
 
 export type DateProvider = { now(): number };
 
@@ -125,12 +129,8 @@ export function paginationQueryString(
   const attrs: string[] = [];
   if (page) attrs.push(`page=${page}`);
   if (per) attrs.push(`per_page=${per}`);
-  // Arena API expects combined sort value: "position_desc", "created_at_asc", etc.
-  if (sort && direction) {
-    attrs.push(`sort=${sort}_${direction}`);
-  } else if (sort) {
-    attrs.push(`sort=${sort}`);
-  }
+  const combined = formatSort(sort, direction);
+  if (combined) attrs.push(`sort=${combined}`);
   if (forceRefresh) attrs.push(`date=${dateProvider.now()}`);
   return attrs.join("&");
 }
@@ -161,11 +161,8 @@ function toSdkQuery(options: PaginationAttributes | undefined): SdkQuery {
   const result: SdkQuery = {};
   if (page) result.page = page;
   if (per) result.per = per;
-  if (sort && direction) {
-    result.sort = `${sort}_${direction}`;
-  } else if (sort) {
-    result.sort = sort;
-  }
+  const combined = formatSort(sort, direction);
+  if (combined) result.sort = combined;
   return result;
 }
 
@@ -287,10 +284,7 @@ export class ArenaClient implements ArenaApi {
   }
 
   me(): Effect.Effect<MeApiResponse, HttpError> {
-    return Effect.tryPromise({
-      try: () => toLocal<MeApiResponse>(this.arena.me()),
-      catch: mapArenaError,
-    });
+    return sdkEffect<MeApiResponse>(() => this.arena.me());
   }
 
   channels(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> {
@@ -300,34 +294,22 @@ export class ArenaClient implements ArenaApi {
   user(id: number | string): ArenaUserApi {
     return {
       get: (): Effect.Effect<GetUserApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<GetUserApiResponse>(this.arena.users.get(id)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetUserApiResponse>(() => this.arena.users.get(id)),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetUserChannelsApiResponse, HttpError> =>
         this.getJsonWithPaginationQuery(`users/${id}/channels`, options),
       following: (): Effect.Effect<GetUserFollowingApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<GetUserFollowingApiResponse>(this.arena.users.following(id)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetUserFollowingApiResponse>(() => this.arena.users.following(id)),
       followers: (): Effect.Effect<GetUserFollowersApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<GetUserFollowersApiResponse>(this.arena.users.followers(id)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetUserFollowersApiResponse>(() => this.arena.users.followers(id)),
     };
   }
 
   group(slug: string): ArenaGroupApi {
     return {
       get: (): Effect.Effect<GetGroupApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<GetGroupApiResponse>(this.arena.groups.get(slug)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetGroupApiResponse>(() => this.arena.groups.get(slug)),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetGroupChannelsApiResponse, HttpError> =>
@@ -340,56 +322,34 @@ export class ArenaClient implements ArenaApi {
       contents: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<GetChannelContentsApiResponse>(
-              this.arena.channels.contents(slug, toSdkQuery(options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetChannelContentsApiResponse>(() =>
+          this.arena.channels.contents(slug, toSdkQuery(options) as any),
+        ),
       connections: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetConnectionsApiResponse[], HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<GetConnectionsApiResponse[]>(
-              this.arena.channels.connections(slug, toSdkQuery(options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetConnectionsApiResponse[]>(() =>
+          this.arena.channels.connections(slug, toSdkQuery(options) as any),
+        ),
       create: (status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<CreateChannelApiResponse>(
-              this.arena.channels.create({
-                title: slug,
-                visibility: status as "public" | "private" | "closed",
-              } as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<CreateChannelApiResponse>(() =>
+          this.arena.channels.create({
+            title: slug,
+            visibility: status as "public" | "private" | "closed",
+          } as any),
+        ),
       update: (data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError> =>
-        Effect.tryPromise({
-          try: () => {
-            const body: ChannelUpdateBody = { title: data.title };
-            if (data.status) body.visibility = data.status;
-            return toLocal<void>(this.arena.channels.update(slug, body as any));
-          },
-          catch: mapArenaError,
+        sdkEffect<void>(() => {
+          const body: ChannelUpdateBody = { title: data.title };
+          if (data.status) body.visibility = data.status;
+          return this.arena.channels.update(slug, body as any);
         }),
       get: (options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<GetChannelsApiResponse>(
-              this.arena.channels.get(slug, toSdkQuery(options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetChannelsApiResponse>(() =>
+          this.arena.channels.get(slug, toSdkQuery(options) as any),
+        ),
       delete: (): Effect.Effect<void, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<void>(this.arena.channels.delete(slug)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<void>(() => this.arena.channels.delete(slug)),
       thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
         this.getJson(`channels/${slug}/thumb`),
     };
@@ -400,37 +360,23 @@ export class ArenaClient implements ArenaApi {
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockChannelsApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<GetBlockChannelsApiResponse>(
-              this.arena.blocks.connections(id, toSdkQuery(options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetBlockChannelsApiResponse>(() =>
+          this.arena.blocks.connections(id, toSdkQuery(options) as any),
+        ),
       get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<GetBlockApiResponse>(this.arena.blocks.get(id)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
       update: (data: {
         title?: string;
         description?: string;
         content?: string;
       }): Effect.Effect<void, HttpError> =>
-        Effect.tryPromise({
-          try: () => toLocal<void>(this.arena.blocks.update(id, data as any)),
-          catch: mapArenaError,
-        }),
+        sdkEffect<void>(() => this.arena.blocks.update(id, data as any)),
       comments: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockCommentApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<GetBlockCommentApiResponse>(
-              this.arena.blocks.comments(id, toSdkQuery(options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<GetBlockCommentApiResponse>(() =>
+          this.arena.blocks.comments(id, toSdkQuery(options) as any),
+        ),
     };
   }
 
@@ -440,46 +386,30 @@ export class ArenaClient implements ArenaApi {
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<SearchApiResponse>(
-              this.arena.search.query(toSdkSearchQuery(query, undefined, options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<SearchApiResponse>(() =>
+          this.arena.search.query(toSdkSearchQuery(query, undefined, options) as any),
+        ),
       blocks: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<SearchApiResponse>(
-              this.arena.search.query(toSdkSearchQuery(query, "blocks", options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<SearchApiResponse>(() =>
+          this.arena.search.query(toSdkSearchQuery(query, "blocks", options) as any),
+        ),
       channels: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<SearchApiResponse>(
-              this.arena.search.query(toSdkSearchQuery(query, "channels", options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<SearchApiResponse>(() =>
+          this.arena.search.query(toSdkSearchQuery(query, "channels", options) as any),
+        ),
       users: (
         query: string,
         options?: PaginationAttributes,
       ): Effect.Effect<SearchApiResponse, HttpError> =>
-        Effect.tryPromise({
-          try: () =>
-            toLocal<SearchApiResponse>(
-              this.arena.search.query(toSdkSearchQuery(query, "users", options) as any),
-            ),
-          catch: mapArenaError,
-        }),
+        sdkEffect<SearchApiResponse>(() =>
+          this.arena.search.query(toSdkSearchQuery(query, "users", options) as any),
+        ),
     };
   }
 
