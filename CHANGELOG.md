@@ -1,3 +1,10 @@
+# [2.8.0](https://github.com/et0and/wwwtom/compare/v2.7.0...v2.8.0) (2026-09-06)
+
+
+### Features
+
+* **editor:** desktop two-column layouts and WYSIWYG canvas ([fa0303e](https://github.com/et0and/wwwtom/commit/fa0303e8cf96c8210c02db86480b28d78e20b95d))
+
 # [2.7.0](https://github.com/et0and/wwwtom/compare/v2.6.2...v2.7.0) (2026-09-06)
 
 
