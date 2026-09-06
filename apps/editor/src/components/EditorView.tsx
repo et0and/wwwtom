@@ -3,6 +3,14 @@ import { Effect, Option, Schema } from "effect";
 import type { CmsError } from "@tom/types/errors";
 import type { CmsMedia, CmsPost, CmsWork, TiptapDoc } from "@tom/schemas/cms";
 import { renderTiptapHtml } from "@tom/utils/tiptap-html";
+import { Button } from "@tom/ui/tomui/button";
+import { Input } from "@tom/ui/tomui/input";
+import { InputGroup } from "@tom/ui/tomui/input-group";
+import { Badge } from "@tom/ui/tomui/badge";
+import { Banner } from "@tom/ui/tomui/banner";
+import { Loader } from "@tom/ui/tomui/loader";
+import { Select } from "@tom/ui/tomui/select";
+import { Collapsible } from "@tom/ui/tomui/collapsible";
 import { adapterUrl, runClient } from "../lib/api";
 import {
   getPost,
@@ -46,7 +54,6 @@ const blankFields: ContentFields = {
   summary: "",
   status: "draft",
   publishedAt: "",
-  heroMediaId: "",
 };
 
 const toInitial = (item: CmsPost | CmsWork, slug: string): InitialData => ({
@@ -56,7 +63,6 @@ const toInitial = (item: CmsPost | CmsWork, slug: string): InitialData => ({
     summary: item.summary ?? "",
     status: item.status,
     publishedAt: item.publishedAt ?? "",
-    heroMediaId: item.heroMediaId ?? "",
   },
   doc: item.content,
   categoryIds: "categories" in item ? item.categories.map((category) => category.id) : [],
@@ -102,15 +108,21 @@ export const EditorView = (props: {
     <div class="editor-view">
       <Show when={error()}>
         {(message) => (
-          <div>
-            <p class="error">{message()}</p>
-            <button type="button" onClick={props.onExit}>
+          <div class="grid gap-2">
+            <Banner variant="error" description={message()} />
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              class="justify-self-start"
+              onClick={props.onExit}
+            >
               Back
-            </button>
+            </Button>
           </div>
         )}
       </Show>
-      <Show when={initial()} fallback={error() === undefined ? <p>Loading…</p> : null}>
+      <Show when={initial()} fallback={error() === undefined ? <Loader size="base" /> : null}>
         {(data) => <EditorBody kind={props.kind} initial={data()} onExit={props.onExit} />}
       </Show>
     </div>
@@ -346,30 +358,47 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
   return (
     <div class="editor-body">
       <div class="editor-topbar">
-        <button type="button" onClick={onBack}>
+        <Button type="button" size="sm" variant="ghost" onClick={onBack}>
           ← Back
-        </button>
-        <Show when={handle.dirty()}>
-          <span class="dirty-flag">Unsaved changes</span>
-        </Show>
-        <Show when={saveState().status === "saving"}>
-          <span>Saving…</span>
-        </Show>
-        <Show when={saveState().status === "saved"}>
-          <span>Saved</span>
-        </Show>
-        <Show when={saveError()}>{(message) => <span class="error">{message()}</span>}</Show>
-        <button type="button" class="save-button" onClick={onSave}>
-          {savedSlug() === null ? "Create" : "Save"}
-        </button>
-        <Show when={savedSlug() !== null}>
-          <button type="button" class="delete-button" onClick={onDelete}>
-            Delete
-          </button>
-          <button type="button" onClick={() => setShowHistory(!showHistory())}>
-            {showHistory() ? "Hide history" : "History"}
-          </button>
-        </Show>
+        </Button>
+        <div class="ml-auto flex flex-wrap items-center gap-2">
+          <Show when={handle.dirty()}>
+            <Badge variant="warning">Unsaved changes</Badge>
+          </Show>
+          <Show when={saveState().status === "saving"}>
+            <span class="flex items-center gap-1 text-sm">
+              <Loader size="sm" /> Saving…
+            </span>
+          </Show>
+          <Show when={saveState().status === "saved"}>
+            <Badge variant="success">Saved</Badge>
+          </Show>
+          <Show when={saveError()}>
+            {(message) => <Banner variant="error" description={message()} />}
+          </Show>
+          <Button
+            type="button"
+            size="sm"
+            variant="primary"
+            loading={saveState().status === "saving"}
+            onClick={onSave}
+          >
+            {savedSlug() === null ? "Create" : "Save"}
+          </Button>
+          <Show when={savedSlug() !== null}>
+            <Button type="button" size="sm" variant="secondary-destructive" onClick={onDelete}>
+              Delete
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setShowHistory(!showHistory())}
+            >
+              {showHistory() ? "Hide history" : "History"}
+            </Button>
+          </Show>
+        </div>
       </div>
       <Show when={showHistory() ? savedSlug() : null}>
         {(slug) => (
@@ -387,7 +416,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
       <div class="editor-fields">
         <label class="field">
           Title
-          <input
+          <Input
             type="text"
             value={fields().title}
             onInput={(event) => setField("title", event.currentTarget.value)}
@@ -395,15 +424,20 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         </label>
         <label class="field">
           Slug
-          <input
-            type="text"
-            value={fields().slug}
-            onInput={(event) => setField("slug", event.currentTarget.value)}
-          />
+          <InputGroup>
+            <InputGroup.Input
+              type="text"
+              value={fields().slug}
+              onInput={(event) => setField("slug", event.currentTarget.value)}
+            />
+            <InputGroup.Button
+              type="button"
+              onClick={() => setField("slug", slugify(fields().title))}
+            >
+              Use title
+            </InputGroup.Button>
+          </InputGroup>
         </label>
-        <button type="button" onClick={() => setField("slug", slugify(fields().title))}>
-          Use title
-        </button>
         <label class="field">
           Summary
           <textarea
@@ -413,55 +447,54 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         </label>
         <label class="field">
           Status
-          <select
+          <Select
             value={fields().status}
-            onChange={(event) => setStatus(event.currentTarget.value)}
-          >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-          </select>
+            options={[
+              { label: "Draft", value: "draft" },
+              { label: "Published", value: "published" },
+            ]}
+            onChange={(value) => setStatus(value)}
+          />
         </label>
         <label class="field">
           Published at
-          <input
+          <Input
             type="datetime-local"
+            placeholder="YYYY-MM-DD HH:MM"
             value={fields().publishedAt.slice(0, 16)}
             onInput={(event) => setField("publishedAt", event.currentTarget.value)}
           />
         </label>
-        <label class="field">
-          Hero media id
-          <input
-            type="text"
-            value={fields().heroMediaId}
-            onInput={(event) => setField("heroMediaId", event.currentTarget.value)}
-          />
-        </label>
-        <Show when={fields().heroMediaId !== ""}>
-          <img
-            class="hero-preview"
-            src={mediaFileUrl(adapterUrl(), fields().heroMediaId)}
-            alt="Hero preview"
-          />
-        </Show>
       </div>
 
       <Show when={props.kind === "posts"}>
-        <fieldset class="field">
-          <legend>Categories</legend>
-          <For each={allCategories()}>
-            {(category) => (
-              <label class="check">
-                <input
-                  type="checkbox"
-                  checked={selectedCategories().includes(category.id)}
-                  onChange={() => toggleCategory(category.id)}
-                />
-                {category.title}
-              </label>
-            )}
-          </For>
-        </fieldset>
+        <div class="my-4">
+          <Collapsible>
+            <Collapsible.DefaultTrigger>
+              Categories
+              {selectedCategories().length > 0 ? ` (${selectedCategories().length})` : ""}
+            </Collapsible.DefaultTrigger>
+            <Collapsible.DefaultPanel>
+              <Show
+                when={allCategories().length > 0}
+                fallback={<p class="text-sm text-tomui-subtle">No categories yet.</p>}
+              >
+                <For each={allCategories()}>
+                  {(category) => (
+                    <label class="check">
+                      <input
+                        type="checkbox"
+                        checked={selectedCategories().includes(category.id)}
+                        onChange={() => toggleCategory(category.id)}
+                      />
+                      {category.title}
+                    </label>
+                  )}
+                </For>
+              </Show>
+            </Collapsible.DefaultPanel>
+          </Collapsible>
+        </div>
       </Show>
 
       <Toolbar
@@ -473,27 +506,29 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
       <div ref={setElement} class="tiptap-editor" />
 
       <div class="editor-panels">
-        <Show when={panelError()}>{(message) => <p class="error">{message()}</p>}</Show>
+        <Show when={panelError()}>
+          {(message) => <Banner variant="error" description={message()} />}
+        </Show>
         <Show when={panel() === "link"}>
           <div class="panel">
             <label class="field">
               URL
-              <input
+              <Input
                 type="text"
                 value={linkUrl()}
                 onInput={(event) => setLinkUrl(event.currentTarget.value)}
               />
             </label>
-            <button type="button" onClick={onApplyLink}>
+            <Button type="button" size="sm" variant="secondary" onClick={onApplyLink}>
               Apply
-            </button>
+            </Button>
           </div>
         </Show>
         <Show when={panel() === "arena"}>
           <div class="panel">
             <label class="field">
               Channel slug
-              <input
+              <Input
                 type="text"
                 value={arenaSlug()}
                 onInput={(event) => setArenaSlug(event.currentTarget.value)}
@@ -501,15 +536,15 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
             </label>
             <label class="field">
               Title (optional)
-              <input
+              <Input
                 type="text"
                 value={arenaTitle()}
                 onInput={(event) => setArenaTitle(event.currentTarget.value)}
               />
             </label>
-            <button type="button" onClick={onInsertArena}>
+            <Button type="button" size="sm" variant="secondary" onClick={onInsertArena}>
               Insert
-            </button>
+            </Button>
           </div>
         </Show>
         <Show when={panel() === "media"}>
@@ -524,19 +559,22 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
             </label>
             <label class="field">
               Alt text
-              <input
+              <Input
                 type="text"
                 value={mediaAlt()}
                 onInput={(event) => setMediaAlt(event.currentTarget.value)}
               />
             </label>
-            <button
+            <Button
               type="button"
+              size="sm"
+              variant="secondary"
+              loading={uploading()}
               disabled={pickedFile() === undefined || uploading()}
               onClick={onUpload}
             >
               {uploading() ? "Uploading…" : "Upload and insert"}
-            </button>
+            </Button>
             <MediaPicker onPick={onPickMedia} />
           </div>
         </Show>
@@ -544,7 +582,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
           <div class="panel">
             <label class="field">
               File name
-              <input
+              <Input
                 type="text"
                 value={codeAttrs()?.fileName ?? ""}
                 onInput={(event) => {
@@ -575,9 +613,9 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         </Show>
       </div>
 
-      <button type="button" onClick={togglePreview}>
+      <Button type="button" size="sm" variant="ghost" onClick={togglePreview}>
         {showPreview() ? "Hide preview" : "Show preview"}
-      </button>
+      </Button>
       <Show when={showPreview()}>
         <div class="preview" innerHTML={previewHtml()} />
       </Show>

@@ -135,6 +135,7 @@ describe("EditorView", () => {
       const { findByRole, findByLabelText } = render(() => (
         <EditorView kind="posts" slug="hello-world" onExit={() => undefined} />
       ));
+      fireEvent.click(await findByRole("button", { name: /Categories/ }));
       fireEvent.click(await findByLabelText("Notes"));
       fireEvent.click(await findByRole("button", { name: "Save" }));
       await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));

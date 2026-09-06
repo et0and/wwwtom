@@ -1,6 +1,9 @@
 import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsCategory } from "@tom/schemas/cms";
+import { Button } from "@tom/ui/tomui/button";
+import { Input } from "@tom/ui/tomui/input";
+import { Banner } from "@tom/ui/tomui/banner";
 import { createCategory, deleteCategory, listCategories } from "../lib/content";
 import { runClient } from "../lib/api";
 
@@ -50,11 +53,17 @@ export const CategoriesView = (props: { onBack: () => void }) => {
 
   return (
     <div class="categories-view">
-      <button type="button" class="back-button" onClick={props.onBack}>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        class="justify-self-start"
+        onClick={props.onBack}
+      >
         ← Back
-      </button>
+      </Button>
       <h2>Categories</h2>
-      <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+      <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <ul class="content-rows">
         <For each={categories()}>
           {(category) => (
@@ -62,14 +71,15 @@ export const CategoriesView = (props: { onBack: () => void }) => {
               <span class="row-title">
                 {category.title} · {category.slug}
               </span>
-              <button
+              <Button
                 type="button"
-                class="delete-button"
+                size="sm"
+                variant="secondary-destructive"
                 aria-label={`Delete category ${category.slug}`}
                 onClick={() => onDelete(category.slug)}
               >
                 Delete
-              </button>
+              </Button>
             </li>
           )}
         </For>
@@ -77,7 +87,7 @@ export const CategoriesView = (props: { onBack: () => void }) => {
       <div class="panel">
         <label class="field">
           Slug
-          <input
+          <Input
             type="text"
             value={slug()}
             onInput={(event) => setSlug(event.currentTarget.value)}
@@ -85,15 +95,21 @@ export const CategoriesView = (props: { onBack: () => void }) => {
         </label>
         <label class="field">
           Title
-          <input
+          <Input
             type="text"
             value={title()}
             onInput={(event) => setTitle(event.currentTarget.value)}
           />
         </label>
-        <button type="button" class="back-button" onClick={onAdd}>
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          class="justify-self-start"
+          onClick={onAdd}
+        >
           Add category
-        </button>
+        </Button>
       </div>
     </div>
   );

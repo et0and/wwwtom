@@ -62,7 +62,6 @@ const fields: ContentFields = {
   summary: "",
   status: "draft",
   publishedAt: "",
-  heroMediaId: "",
 };
 
 const lastCall = () => {
@@ -86,9 +85,11 @@ describe("editor content client", () => {
         hasPrevPage: false,
       }),
     );
-    const list = await runClient(listPosts());
+    const list = await runClient(listPosts(1));
     expect(list.totalDocs).toBe(1);
-    expect(lastCall().url).toBe("http://localhost:8788/content/posts?status=all&pageSize=50");
+    expect(lastCall().url).toBe(
+      "http://localhost:8788/content/posts?status=all&page=1&pageSize=10",
+    );
   });
 
   it("lists works", async () => {
@@ -103,8 +104,10 @@ describe("editor content client", () => {
         hasPrevPage: false,
       }),
     );
-    await runClient(listWorks());
-    expect(lastCall().url).toBe("http://localhost:8788/content/works?status=all&pageSize=50");
+    await runClient(listWorks(1));
+    expect(lastCall().url).toBe(
+      "http://localhost:8788/content/works?status=all&page=1&pageSize=10",
+    );
   });
 
   it("gets a post by slug", async () => {
@@ -194,7 +197,7 @@ describe("editor content client", () => {
 
   it("maps error statuses through", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ title: "Unauthorized" }, 401));
-    const error = await runClient(listPosts().pipe(Effect.flip));
+    const error = await runClient(listPosts(1).pipe(Effect.flip));
     expect(error.status).toBe(401);
   });
 

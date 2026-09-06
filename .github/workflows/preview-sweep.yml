@@ -48,6 +48,7 @@ jobs:
           for pr in $prs; do
             echo "Sweeping preview stage pr-$pr"
             export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"
+            pnpm destroy:storybook --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true

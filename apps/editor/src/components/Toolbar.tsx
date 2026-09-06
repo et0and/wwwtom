@@ -1,6 +1,8 @@
-import { For, createMemo } from "solid-js";
+import { For, Show, createMemo } from "solid-js";
 import { Option, Schema } from "effect";
 import type { Editor } from "@tiptap/core";
+import { Toolbar } from "@tom/ui/tomui/toolbar";
+import { Select } from "@tom/ui/tomui/select";
 
 const BANNER_STYLES = ["info", "warning", "error", "success"] as const;
 
@@ -45,7 +47,7 @@ const INSERT_BUTTONS: ReadonlyArray<{ readonly panel: InsertPanel; readonly labe
  * memos over the editor `version` signal: derivations belong in memos, and
  * JSX reads the memo directly so updates stay reactive.
  */
-export const Toolbar = (props: {
+export const EditorToolbar = (props: {
   editor: () => Editor | undefined;
   version: () => number;
   activePanel: InsertPanel | "none" | "code";
@@ -85,131 +87,124 @@ export const Toolbar = (props: {
     return decoded.value.language;
   });
 
+  const activeClass = (active: boolean): string =>
+    `min-h-10 shrink-0${active ? " bg-tomui-fill font-medium" : ""}`;
+
   return (
-    <div class="toolbar" role="toolbar" aria-label="Formatting">
-      <button
-        type="button"
-        class={boldActive() ? "toolbar-button on" : "toolbar-button"}
-        aria-pressed={boldActive() ? "true" : "false"}
-        onClick={() => props.editor()?.chain().focus().toggleBold().run()}
-      >
-        B
-      </button>
-      <button
-        type="button"
-        class={italicActive() ? "toolbar-button on" : "toolbar-button"}
-        aria-pressed={italicActive() ? "true" : "false"}
-        onClick={() => props.editor()?.chain().focus().toggleItalic().run()}
-      >
-        I
-      </button>
-      <button
-        type="button"
-        class={h1Active() ? "toolbar-button on" : "toolbar-button"}
-        onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 1 }).run()}
-      >
-        H1
-      </button>
-      <button
-        type="button"
-        class={h2Active() ? "toolbar-button on" : "toolbar-button"}
-        onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 2 }).run()}
-      >
-        H2
-      </button>
-      <button
-        type="button"
-        class={h3Active() ? "toolbar-button on" : "toolbar-button"}
-        onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 3 }).run()}
-      >
-        H3
-      </button>
-      <button
-        type="button"
-        class={paragraphActive() ? "toolbar-button on" : "toolbar-button"}
-        onClick={() => props.editor()?.chain().focus().setParagraph().run()}
-      >
-        ¶
-      </button>
-      <button
-        type="button"
-        class={codeActive() ? "toolbar-button on" : "toolbar-button"}
-        onClick={() => props.editor()?.chain().focus().toggleCodeBlock({ language: "text" }).run()}
-      >
-        {"</>"}
-      </button>
-      <button
-        type="button"
-        class="toolbar-button"
-        onClick={() => props.editor()?.chain().focus().setHorizontalRule().run()}
-      >
-        ―
-      </button>
-      <button
-        type="button"
-        class={bannerActive() ? "toolbar-button on" : "toolbar-button"}
-        onClick={() =>
-          props.editor()?.chain().focus().toggleWrap("banner", { style: bannerStyle() }).run()
-        }
-      >
-        Banner
-      </button>
-      <button
-        type="button"
-        class={quoteActive() ? "toolbar-button on" : "toolbar-button"}
-        aria-pressed={quoteActive() ? "true" : "false"}
-        onClick={() => props.editor()?.chain().focus().toggleWrap("blockquote").run()}
-      >
-        Quote
-      </button>
-      <label class="toolbar-select-label">
-        Style
-        <select
-          class="toolbar-select"
-          value={bannerStyle()}
-          onChange={(event) => {
-            const style = event.currentTarget.value;
-            if (isBannerStyle(style)) {
-              props.editor()?.chain().focus().updateAttributes("banner", { style }).run();
-            }
-          }}
+    <div class="flex flex-wrap items-center gap-2">
+      <Toolbar aria-label="Formatting" class="min-w-0 max-w-full overflow-x-auto">
+        <Toolbar.Button
+          aria-pressed={boldActive() ? "true" : "false"}
+          class={activeClass(boldActive())}
+          onClick={() => props.editor()?.chain().focus().toggleBold().run()}
         >
-          <For each={BANNER_STYLES}>{(style) => <option value={style}>{style}</option>}</For>
-        </select>
-      </label>
-      <label class="toolbar-select-label">
-        Language
-        <select
-          class="toolbar-select"
-          value={codeLanguage()}
-          onChange={(event) => {
-            props
-              .editor()
-              ?.chain()
-              .focus()
-              .updateAttributes("codeBlock", {
-                language: event.currentTarget.value,
-              })
-              .run();
-          }}
+          <span class="font-bold">B</span>
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={italicActive() ? "true" : "false"}
+          class={activeClass(italicActive())}
+          onClick={() => props.editor()?.chain().focus().toggleItalic().run()}
         >
-          <For each={CODE_LANGUAGES}>
-            {(language) => <option value={language}>{language}</option>}
-          </For>
-        </select>
-      </label>
-      <For each={INSERT_BUTTONS}>
-        {(item) => (
-          <button
-            type="button"
-            class={props.activePanel === item.panel ? "toolbar-button on" : "toolbar-button"}
-            aria-pressed={props.activePanel === item.panel ? "true" : "false"}
-            onClick={() => props.onTogglePanel(item.panel)}
-          >
-            {item.label}
-          </button>
-        )}
-      </For>
+          <span class="italic">I</span>
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={h1Active() ? "true" : "false"}
+          class={activeClass(h1Active())}
+          onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 1 }).run()}
+        >
+          H1
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={h2Active() ? "true" : "false"}
+          class={activeClass(h2Active())}
+          onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 2 }).run()}
+        >
+          H2
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={h3Active() ? "true" : "false"}
+          class={activeClass(h3Active())}
+          onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 3 }).run()}
+        >
+          H3
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={paragraphActive() ? "true" : "false"}
+          class={activeClass(paragraphActive())}
+          onClick={() => props.editor()?.chain().focus().setParagraph().run()}
+        >
+          ¶
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={codeActive() ? "true" : "false"}
+          class={activeClass(codeActive())}
+          onClick={() =>
+            props.editor()?.chain().focus().toggleCodeBlock({ language: "text" }).run()
+          }
+        >
+          {"</>"}
+        </Toolbar.Button>
+        <Toolbar.Button onClick={() => props.editor()?.chain().focus().setHorizontalRule().run()}>
+          ―
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={bannerActive() ? "true" : "false"}
+          class={activeClass(bannerActive())}
+          onClick={() =>
+            props.editor()?.chain().focus().toggleWrap("banner", { style: bannerStyle() }).run()
+          }
+        >
+          Banner
+        </Toolbar.Button>
+        <Toolbar.Button
+          aria-pressed={quoteActive() ? "true" : "false"}
+          class={activeClass(quoteActive())}
+          onClick={() => props.editor()?.chain().focus().toggleWrap("blockquote").run()}
+        >
+          Quote
+        </Toolbar.Button>
+        <For each={INSERT_BUTTONS}>
+          {(item) => (
+            <Toolbar.Button
+              aria-pressed={props.activePanel === item.panel ? "true" : "false"}
+              class={activeClass(props.activePanel === item.panel)}
+              onClick={() => props.onTogglePanel(item.panel)}
+            >
+              {item.label}
+            </Toolbar.Button>
+          )}
+        </For>
+      </Toolbar>
+      <Show when={bannerActive()}>
+        <label class="ml-auto flex items-center gap-1 text-xs">
+          Style
+          <Select
+            size="sm"
+            value={bannerStyle()}
+            options={BANNER_STYLES.map((style) => ({ label: style, value: style }))}
+            onChange={(style) => {
+              if (isBannerStyle(style)) {
+                props.editor()?.chain().focus().updateAttributes("banner", { style }).run();
+              }
+            }}
+          />
+        </label>
+      </Show>
+      <Show when={codeActive()}>
+        <label class="ml-auto flex items-center gap-1 text-xs">
+          Language
+          <Select
+            size="sm"
+            value={codeLanguage()}
+            options={CODE_LANGUAGES.map((language) => ({ label: language, value: language }))}
+            onChange={(language) => {
+              props.editor()?.chain().focus().updateAttributes("codeBlock", { language }).run();
+            }}
+          />
+        </label>
+      </Show>
     </div>
   );
 };
+
+export { EditorToolbar as Toolbar };

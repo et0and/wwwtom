@@ -2,6 +2,10 @@ import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsPost, CmsRevisionMeta, CmsRevisionSnapshot, CmsWork } from "@tom/schemas/cms";
 import { renderTiptapHtml } from "@tom/utils/tiptap-html";
+import { Button } from "@tom/ui/tomui/button";
+import { Badge } from "@tom/ui/tomui/badge";
+import { Banner } from "@tom/ui/tomui/banner";
+import { Loader } from "@tom/ui/tomui/loader";
 import { adapterUrl, runClient } from "../lib/api";
 import { getRevision, listRevisions, mediaFileUrl, restoreRevision } from "../lib/content";
 import type { ContentKind } from "../lib/content";
@@ -65,7 +69,7 @@ export const HistoryPanel = (props: {
             html,
           })),
         ),
-        Effect.tap((selected) => Effect.sync(() => setSelected(selected))),
+        Effect.tap((next) => Effect.sync(() => setSelected(next))),
         Effect.catch((cause) => Effect.sync(() => setError(cause.message))),
       ),
     );
@@ -98,7 +102,7 @@ export const HistoryPanel = (props: {
   return (
     <div class="history-panel">
       <h2>History</h2>
-      <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+      <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Show
         when={revisions().length > 0}
         fallback={<p class="history-empty">No revisions yet — save to create one.</p>}
@@ -106,9 +110,11 @@ export const HistoryPanel = (props: {
         <div class="history-rows">
           <For each={revisions()}>
             {(meta) => (
-              <button
+              <Button
                 type="button"
-                class={`history-row${selected()?.meta.id === meta.id ? " on" : ""}`}
+                size="sm"
+                variant={selected()?.meta.id === meta.id ? "secondary" : "ghost"}
+                class="w-full justify-between"
                 onClick={() => onSelect(meta)}
               >
                 <span class="history-title">{meta.title}</span>
@@ -116,7 +122,7 @@ export const HistoryPanel = (props: {
                   {formatWhen(meta.createdAt)}
                   {meta.actor === null ? "" : ` · ${meta.actor}`}
                 </span>
-              </button>
+              </Button>
             )}
           </For>
         </div>
@@ -124,15 +130,28 @@ export const HistoryPanel = (props: {
       <Show when={selected()}>
         {(current) => (
           <div class="history-preview">
-            <p class="history-meta">
-              {current().snapshot.status} · {formatWhen(current().meta.createdAt)}
+            <p class="flex items-center gap-2">
+              <Badge variant="secondary">{current().snapshot.status}</Badge>
+              <span class="history-meta">{formatWhen(current().meta.createdAt)}</span>
             </p>
             <div class="preview" innerHTML={current().html} />
-            <button type="button" class="save-button" disabled={restoring()} onClick={onRestore}>
+            <Button
+              type="button"
+              size="sm"
+              variant="primary"
+              loading={restoring()}
+              disabled={restoring()}
+              onClick={onRestore}
+            >
               {restoring() ? "Restoring…" : "Restore this version"}
-            </button>
+            </Button>
           </div>
         )}
+      </Show>
+      <Show when={restoring()}>
+        <p class="flex items-center gap-2">
+          <Loader size="sm" /> Restoring…
+        </p>
       </Show>
     </div>
   );

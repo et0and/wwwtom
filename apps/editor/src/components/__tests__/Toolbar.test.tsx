@@ -51,7 +51,7 @@ describe("Toolbar", () => {
     await vi.waitFor(() =>
       expect(getByRole("button", { name: "B" }).getAttribute("aria-pressed")).toBe("true"),
     );
-    expect(getByRole("button", { name: "B" }).getAttribute("class")).toContain("on");
+    expect(getByRole("button", { name: "B" }).getAttribute("class")).toContain("bg-tomui-fill");
   });
 
   it("switches block type to heading", async () => {

@@ -34,7 +34,7 @@ describe("CategoriesView", () => {
       <CategoriesView onBack={() => undefined} />
     ));
     expect(await findByText("Essays · essays")).toBeInTheDocument();
-    expect(await findByRole("button", { name: "← Back" })).toHaveClass("back-button");
+    expect(await findByRole("button", { name: "← Back" })).toBeInTheDocument();
     fireEvent.input(await findByLabelText("Slug"), { target: { value: "notes" } });
     fireEvent.input(await findByLabelText("Title"), { target: { value: "Notes" } });
     fireEvent.click(await findByRole("button", { name: "Add category" }));

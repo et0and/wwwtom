@@ -1,0 +1,66 @@
+name: Storybook preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [dev]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: storybook-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    if: github.event.action != 'closed'
+    name: Deploy Storybook preview
+    runs-on: ubuntu-latest
+    env:
+      ALCHEMY_STAGE: pr-${{ github.event.pull_request.number }}
+      PULL_REQUEST: ${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      # Alchemy's GitHub provider (preview-comment resource in the
+      # storybook stack) needs a token to post/update the preview comment.
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: ./.github/actions/setup
+
+      # Builds the static Storybook and uploads it as Worker assets.
+      # The storybook stack posts or updates the preview comment via
+      # infra/utils/github/preview-comment.ts.
+      - name: Deploy Storybook preview stage
+        run: pnpm deploy:storybook --yes
+
+  destroy:
+    if: github.event.action == 'closed'
+    name: Destroy Storybook preview
+    runs-on: ubuntu-latest
+    env:
+      ALCHEMY_STAGE: pr-${{ github.event.pull_request.number }}
+      PULL_REQUEST: ${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      # Parity with the deploy job: the storybook stack declares a GitHub
+      # preview-comment resource, so its provider needs a token even on
+      # teardown. PULL_REQUEST keeps the code path identical to deploy.
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      # Teardown needs the infra code and secrets, not the PR head (which
+      # may already be deleted on close), so check out the base branch.
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: dev
+      - uses: ./.github/actions/setup
+
+      - name: Destroy Storybook preview stage
+        run: pnpm destroy:storybook --yes

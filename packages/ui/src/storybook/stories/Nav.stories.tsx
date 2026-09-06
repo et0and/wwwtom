@@ -1,17 +1,19 @@
 import preview from "#.storybook/preview";
-import { Route, Router } from "@solidjs/router";
+import { createRouter, memoryHistory } from "@solidjs/router";
 import { Nav } from "../../Nav";
 
 const meta = preview.meta({
-  title: "Tom/Nav",
+  title: "web/Nav",
   component: Nav,
   tags: ["autodocs"],
   decorators: [
-    (Story) => (
-      <Router>
-        <Route path="/" component={() => <Story />} />
-      </Router>
-    ),
+    (Story) => {
+      const TestRouter = createRouter({
+        history: memoryHistory("/"),
+        routes: [{ path: "/", component: () => <Story /> }],
+      });
+      return <TestRouter />;
+    },
   ],
 });
 

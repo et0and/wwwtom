@@ -1,6 +1,6 @@
 import { createSignal, onSettled } from "solid-js";
 import { Effect, Schema } from "effect";
-import type { CmsError } from "@tom/types/errors";
+import { CmsError } from "@tom/types/errors";
 import { decodeResponse, requestJson, requestVoid, runClient } from "./api";
 
 export const EditorSessionSchema = Schema.Struct({
@@ -43,6 +43,27 @@ const SignInRedirectSchema = Schema.Struct({
 export const editorOrigin = (): string =>
   import.meta.env.VITE_EDITOR_ORIGIN ?? window.location.origin;
 
+const GITHUB_AUTHORIZE_HOST = "github.com";
+
+/**
+ * Reject authorize URLs that are not GitHub https links, so a compromised
+ * API response cannot redirect the editor to a malicious origin.
+ */
+const assertAuthorizeUrl = (url: string): Effect.Effect<string, CmsError> =>
+  Effect.try({
+    try: () => new URL(url),
+    catch: () =>
+      new CmsError({ message: "Invalid sign-in URL", status: 500, operation: "sign_in" }),
+  }).pipe(
+    Effect.flatMap((parsed) =>
+      parsed.protocol === "https:" && parsed.hostname === GITHUB_AUTHORIZE_HOST
+        ? Effect.succeed(url)
+        : Effect.fail(
+            new CmsError({ message: "Invalid sign-in URL", status: 500, operation: "sign_in" }),
+          ),
+    ),
+  );
+
 /**
  * Start GitHub OAuth: POST the provider, then navigate to the authorize
  * URL better-auth returns. The callback lands back on the editor origin,
@@ -64,6 +85,7 @@ export const startGithubSignIn = (): Effect.Effect<string, CmsError> =>
   ).pipe(
     Effect.flatMap((json) => decodeResponse(SignInRedirectSchema, json, "sign_in")),
     Effect.map((result) => result.url),
+    Effect.flatMap(assertAuthorizeUrl),
   );
 
 /** Session signal for the app shell: undefined while loading, null signed out. */

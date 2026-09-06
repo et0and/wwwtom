@@ -64,6 +64,14 @@ describe("editor session", () => {
     expect(body.callbackURL).toContain("http://localhost");
   });
 
+  it("rejects non-GitHub authorize URLs", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ url: "https://evil.example.com/phish", redirect: true }),
+    );
+    const error = await runClient(startGithubSignIn().pipe(Effect.flip));
+    expect(error.message).toBe("Invalid sign-in URL");
+  });
+
   it("shows the email when signed in", async () => {
     fetchMock.mockResolvedValue(jsonResponse(sessionBody));
     const { findByText } = render(() => <Probe />);
