@@ -21,8 +21,8 @@ Three suites live here:
 `playwright.staging.config.ts`): content-agnostic smoke + real-data checks
 against the deployed `staging` Alchemy stage (`staging-web.tom.so`) — no
 fixture simulator, no `x-use-simulator` header. Runs manually (the
-nightly staging workflow was removed: GitHub-hosted runner IPs trip
-Cloudflare bot protection).
+  nightly staging workflow was removed: GitHub-hosted runner IPs trip
+  Cloudflare bot protection).
 
 ```
 browser (Playwright, sends `x-use-simulator: 1`)

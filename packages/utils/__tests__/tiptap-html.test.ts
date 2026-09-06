@@ -43,7 +43,8 @@ describe("renderTiptapHtml", () => {
     expect(html).toBe("<h2>Title</h2><hr>");
   });
 
-  it("highlights code blocks with filename and line numbers", async () => {
+  // Shiki engine init takes seconds on cold CI runners — allow a minute.
+  it("highlights code blocks with filename and line numbers", { timeout: 60000 }, async () => {
     const html = await render({
       type: "doc",
       content: [
