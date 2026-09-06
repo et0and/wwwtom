@@ -1,3 +1,15 @@
+# [2.7.0](https://github.com/et0and/wwwtom/compare/v2.6.2...v2.7.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **web:** sanitize Arena HTML client-side so SSR never touches DOMParser ([7efde07](https://github.com/et0and/wwwtom/commit/7efde076659f2151a4605156ee9637496cc15030))
+
+
+### Features
+
+* **tomui:** port Kumo components to Solid TomUI and wire into web and editor ([98d9a81](https://github.com/et0and/wwwtom/commit/98d9a815341a2e95cb1db2c49a122859f313f8f2))
+
 ## [2.6.2](https://github.com/et0and/wwwtom/compare/v2.6.1...v2.6.2) (2026-09-06)
 
 
