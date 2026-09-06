@@ -1,3 +1,19 @@
+# [2.6.0](https://github.com/et0and/wwwtom/compare/v2.5.1...v2.6.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **cms:** address security review findings ([0d4c1cd](https://github.com/et0and/wwwtom/commit/0d4c1cd873e5d87273b683fa02a330fa70545d3f))
+* **tests:** allow a minute for cold Shiki init in CI ([5b63299](https://github.com/et0and/wwwtom/commit/5b63299558e5e3994533f47b0e19b21f398b4e09))
+
+
+### Features
+
+* **cms:** add dev-copy migration script for staging and production ([b3e813d](https://github.com/et0and/wwwtom/commit/b3e813dc62b0aec88deeaad745395fc10e4dd7ee))
+* **cms:** replace Payload with Tiptap CMS on D1+R2 ([ee25a1a](https://github.com/et0and/wwwtom/commit/ee25a1a2c9df33c0b3d3e76a62ea9d686949f061))
+* **preview:** point PR previews at the dev database and bucket ([dcf864a](https://github.com/et0and/wwwtom/commit/dcf864aa31fd666010899ce1cb60c35a1dbb6f25))
+* **preview:** seed preview content from dev on deploy ([3a132c0](https://github.com/et0and/wwwtom/commit/3a132c079e109a87d9bab59eb4e5ab68b519a066))
+
 ## [2.5.1](https://github.com/et0and/wwwtom/compare/v2.5.0...v2.5.1) (2026-09-05)
 
 
