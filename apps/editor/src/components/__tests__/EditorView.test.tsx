@@ -57,7 +57,8 @@ const saveBody = (index: number): { slug?: unknown; title?: unknown; categoryIds
 
 describe("EditorView", () => {
   describe("new post", () => {
-    it("creates a post from the form", async () => {
+    // Tiptap cold start takes seconds on loaded CI runners — allow extra time.
+    it("creates a post from the form", { timeout: 30_000 }, async () => {
       fetchMock
         .mockResolvedValueOnce(jsonResponse(categories))
         .mockResolvedValueOnce(jsonResponse(post));

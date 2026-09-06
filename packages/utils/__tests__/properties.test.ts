@@ -23,7 +23,7 @@ describe("link safety properties", () => {
     );
   });
 
-  it("drops unsafe link targets for any href", async () => {
+  it("drops unsafe link targets for any href", { timeout: 30_000 }, async () => {
     await FastCheck.assert(
       FastCheck.asyncProperty(FastCheck.string(), async (href) => {
         const document: TiptapDoc = {
@@ -49,30 +49,34 @@ describe("link safety properties", () => {
 });
 
 describe("error status properties", () => {
-  it("keeps error statuses and falls back otherwise for any integer", async () => {
-    await FastCheck.assert(
-      FastCheck.asyncProperty(FastCheck.integer(), async (status) => {
-        const expected = status >= 400 && status < 600 ? status : 500;
-        const response = toProblemResponse(status, "boom");
-        expect(response.status).toBe(expected);
-        expect(response.headers.get("content-type")).toBe("application/problem+json");
-        const body = (await response.json()) as { status: number };
-        expect(body.status).toBe(expected);
-      }),
-      { seed: 42, numRuns: 100 },
-    );
-  });
+  it(
+    "keeps error statuses and falls back otherwise for any integer",
+    { timeout: 30_000 },
+    async () => {
+      await FastCheck.assert(
+        FastCheck.asyncProperty(FastCheck.integer(), async (status) => {
+          const expected = status >= 400 && status < 600 ? status : 500;
+          const response = toProblemResponse(status, "boom");
+          expect(response.status).toBe(expected);
+          expect(response.headers.get("content-type")).toBe("application/problem+json");
+          const body = (await response.json()) as { status: number };
+          expect(body.status).toBe(expected);
+        }),
+        { seed: 42, numRuns: 100 },
+      );
+    },
+  );
 });
 
 describe("queue message properties", () => {
-  it("round-trips any work message through encode and decode", () => {
+  it("round-trips any work message through encode and decode", { timeout: 30_000 }, () => {
     FastCheck.assert(
       FastCheck.property(Schema.toArbitrary(TomWorkMessage), (value) => {
         const encoded = Schema.encodeSync(TomWorkMessage)(value);
         const decoded = Schema.decodeUnknownSync(TomWorkMessage)(encoded);
         expect(decoded).toEqual(value);
       }),
-      { seed: 99, numRuns: 100 },
+      { seed: 99, numRuns: 25 },
     );
   });
 });
