@@ -32,21 +32,35 @@ const teardown = (editor: Editor, element: HTMLElement): void => {
 const decode = (editor: Editor) => Schema.decodeUnknownSync(TiptapDocSchema)(editor.getJSON());
 
 describe("editor inserts", () => {
-  it("inserts arena refs with and without titles", () => {
+  it("inserts arena refs with titles", () => {
     const { editor, element } = setup();
     expect(insertArena(editor, "toms-place", "Tom's Place")).toBe(true);
     expect(JSON.stringify(decode(editor))).toContain(`"slug":"toms-place"`);
-    editor.commands.focus("end");
+    teardown(editor, element);
+  });
+
+  it("inserts arena refs without titles", () => {
+    const { editor, element } = setup();
     expect(insertArena(editor, "bare", null)).toBe(true);
     expect(JSON.stringify(decode(editor))).toContain(`"slug":"bare"`);
+    teardown(editor, element);
+  });
+
+  it("rejects blank arena slugs", () => {
+    const { editor, element } = setup();
     expect(insertArena(editor, "  ", null)).toBe(false);
     teardown(editor, element);
   });
 
-  it("applies safe links and rejects dangerous ones", () => {
+  it("applies safe links", () => {
     const { editor, element } = setup();
     expect(applyLink(editor, "https://tom.so")).toBe(true);
     expect(JSON.stringify(decode(editor))).toContain(`"href":"https://tom.so"`);
+    teardown(editor, element);
+  });
+
+  it("rejects dangerous links", () => {
+    const { editor, element } = setup();
     expect(applyLink(editor, "javascript:alert(1)")).toBe(false);
     expect(applyLink(undefined, "https://tom.so")).toBe(false);
     teardown(editor, element);
@@ -67,6 +81,14 @@ describe("editor inserts", () => {
     });
     expect(insertMedia(editor, "media-1", "Hero")).toBe(true);
     expect(JSON.stringify(decode(editor))).toContain(`"mediaId":"media-1"`);
+    teardown(editor, element);
+  });
+
+  it("rejects blank media inputs", () => {
+    const { editor, element } = setup({
+      type: "doc",
+      content: [{ type: "paragraph" }],
+    });
     expect(insertMedia(editor, "", null)).toBe(false);
     expect(insertMedia(undefined, "media-1", null)).toBe(false);
     teardown(editor, element);

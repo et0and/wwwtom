@@ -77,5 +77,57 @@ describe("auth integration", () => {
         instance: "http://localhost/auth/session",
       });
     });
+
+    it("forwards query params to API", async () => {
+      fetchMock.mockResolvedValue(
+        new Response(JSON.stringify({ status: "ok" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/auth/session?foo=bar&n=1", env),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8787/auth/session?foo=bar&n=1",
+        expect.objectContaining({ method: "GET" }),
+      );
+    });
+
+    it("forwards PUT body with internal token", async () => {
+      fetchMock.mockResolvedValue(
+        new Response(JSON.stringify({ status: "ok" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/auth/user", env, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Tom" }),
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8787/auth/user",
+        expect.objectContaining({ method: "PUT", body: JSON.stringify({ name: "Tom" }) }),
+      );
+      const [, init] = fetchMock.mock.calls[0] as [string, { headers: Headers }];
+      expect(init.headers.get(INTERNAL_TOKEN_HEADER)).toBe("test-token");
+    });
+
+    it("hides internal token from client responses", async () => {
+      fetchMock.mockResolvedValue(
+        new Response(JSON.stringify({ status: "ok" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      const response = await app.fetch(requestWithEnv("http://localhost/auth/session", env));
+      expect(response.status).toBe(200);
+      expect(response.headers.get(INTERNAL_TOKEN_HEADER)).toBeNull();
+    });
   });
 });

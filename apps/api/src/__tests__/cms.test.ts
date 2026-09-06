@@ -205,6 +205,43 @@ describe("cms routes", () => {
     expect(body.title).toBe("Invalid paging parameters");
   });
 
+  it("returns page 1 if page equals 0", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts?page=0&pageSize=10", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { page: number; hasPrevPage: boolean };
+    expect(body.page).toBe(1);
+    expect(body.hasPrevPage).toBe(false);
+  });
+
+  it("clamps pageSize over 100 to 100", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts?page=1&pageSize=1000", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { limit: number };
+    expect(body.limit).toBe(100);
+  });
+
+  it("returns 404 for slug with SQL quotes", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts/hello-world%27--", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 500 if content_json fails to parse", async () => {
+    const badSeed: Seed = {
+      ...fullSeed,
+      posts: [postRow({ slug: "bad-doc", content_json: "not-json" })],
+    };
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts/bad-doc", seedEnv(badSeed)),
+    );
+    expect(response.status).toBe(500);
+  });
+
   it("returns a post by slug with categories and parsed content", async () => {
     const response = await app.fetch(
       requestWithEnv("http://localhost/posts/hello-world", seedEnv(fullSeed)),
@@ -221,36 +258,51 @@ describe("cms routes", () => {
     expect(body.categories.map((category) => category.slug)).toEqual(["essays"]);
   });
 
-  it("returns 404 problem for unknown and draft slugs", async () => {
+  it("returns 404 problem for unknown slugs", async () => {
     const missing = await app.fetch(
       requestWithEnv("http://localhost/posts/nope", seedEnv(fullSeed)),
     );
     expect(missing.status).toBe(404);
+  });
+
+  it("returns 404 problem for draft slugs", async () => {
     const draft = await app.fetch(
       requestWithEnv("http://localhost/posts/draft-post", seedEnv(fullSeed)),
     );
     expect(draft.status).toBe(404);
   });
 
-  it("lists works alphabetically and returns a work by slug", async () => {
+  it("lists works alphabetically", async () => {
     const env = seedEnv(fullSeed);
     const list = await app.fetch(requestWithEnv("http://localhost/works", env));
     expect(list.status).toBe(200);
     const listBody = (await list.json()) as { docs: Array<{ slug: string }> };
     expect(listBody.docs.map((doc) => doc.slug)).toEqual(["atelier", "hyperjam"]);
+  });
+
+  it("returns a work by slug", async () => {
+    const env = seedEnv(fullSeed);
     const single = await app.fetch(requestWithEnv("http://localhost/works/hyperjam", env));
     expect(single.status).toBe(200);
   });
 
-  it("lists categories and returns media by id", async () => {
+  it("lists categories", async () => {
     const env = seedEnv(fullSeed);
     const categories = await app.fetch(requestWithEnv("http://localhost/categories", env));
     const categoriesBody = (await categories.json()) as Array<{ slug: string }>;
     expect(categoriesBody.map((category) => category.slug)).toEqual(["essays"]);
+  });
+
+  it("returns media by id", async () => {
+    const env = seedEnv(fullSeed);
     const media = await app.fetch(requestWithEnv("http://localhost/media/media-1", env));
     expect(media.status).toBe(200);
     const mediaBody = (await media.json()) as { key: string };
     expect(mediaBody.key).toBe("media/hero.webp");
+  });
+
+  it("returns 404 for unknown media", async () => {
+    const env = seedEnv(fullSeed);
     const missing = await app.fetch(requestWithEnv("http://localhost/media/nope", env));
     expect(missing.status).toBe(404);
   });

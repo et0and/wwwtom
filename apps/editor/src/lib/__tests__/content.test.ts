@@ -114,13 +114,18 @@ describe("editor content client", () => {
     expect(lastCall().url).toBe("http://localhost:8788/content/posts/hello-world");
   });
 
-  it("creates posts with POST and updates with PUT", async () => {
+  it("creates posts with POST", async () => {
     const input = await runClient(toPostInput(fields, doc, []));
-    fetchMock.mockResolvedValueOnce(jsonResponse(post)).mockResolvedValueOnce(jsonResponse(post));
+    fetchMock.mockResolvedValueOnce(jsonResponse(post));
     await runClient(savePost(null, input));
     expect(lastCall().url).toBe("http://localhost:8788/content/posts");
     expect(lastCall().init.method).toBe("POST");
     expect(JSON.parse(String(lastCall().init.body)).slug).toBe("hello-world");
+  });
+
+  it("updates posts with PUT", async () => {
+    const input = await runClient(toPostInput(fields, doc, []));
+    fetchMock.mockResolvedValueOnce(jsonResponse(post));
     await runClient(savePost("hello-world", input));
     expect(lastCall().url).toBe("http://localhost:8788/content/posts/hello-world");
     expect(lastCall().init.method).toBe("PUT");
@@ -145,13 +150,19 @@ describe("editor content client", () => {
     expect(lastCall().init.method).toBe("DELETE");
   });
 
-  it("manages categories", async () => {
+  it("lists categories", async () => {
     fetchMock.mockResolvedValue(jsonResponse([{ id: "cat-1", slug: "essays", title: "Essays" }]));
     const categories = await runClient(listCategories());
     expect(categories).toHaveLength(1);
+  });
+
+  it("creates categories with POST", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "cat-2", slug: "notes", title: "Notes" }));
     await runClient(createCategory("notes", "Notes"));
     expect(lastCall().init.method).toBe("POST");
+  });
+
+  it("deletes categories", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ id: "cat-2" }));
     await runClient(deleteCategory("notes"));
     expect(lastCall().url).toBe("http://localhost:8788/content/categories/notes");
