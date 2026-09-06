@@ -3,6 +3,10 @@
  * Tiptap rows + R2 bytes) into staging or production. No conversion, no
  * Payload reads — dev is the source of truth.
  *
+ * HISTORICAL RECORD (production + staging cut over 2026-09-06): the byte
+ * step below needs the one-off POST /migrate/r2-put route, removed after
+ * the cutover. Re-add it to run this again.
+ *
  * Run: pnpm --filter @tom/simulator migrate:cms -- --target=staging
  * Applies only with --apply (default is dry-run):
  *   pnpm --filter @tom/simulator migrate:cms -- --target=staging --apply
