@@ -1,25 +1,32 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
- * Nightly e2e suite for tom.so.
+ * E2E suites for tom.so (all local).
  *
- * Topology (all local, in order of startup):
+ * Topology (in order of startup):
  *   simulator (8789)  ← fixture stores: polar, arena, cms, guestbook, api
  *   adapter   (8788)  ← real adapter Worker entry run under tsx (env attaches
  *                       SIMULATOR_URL; the x-use-simulator header does the swap)
- *   web       (3000)  ← `vite preview` of the production build; built with
- *                       VITE_ADAPTER_URL=http://127.0.0.1:8788
+ *   web       (3000)  ← `vite dev` of apps/web (see below for why dev)
+ *   editor    (5174)  ← `vite dev` of apps/editor
  *
- * Every browser request carries `x-use-simulator: 1` (extraHTTPHeaders), so
- * both browser→adapter calls (guestbook) and SSR web→adapter calls (posts,
- * work, products, arena — forwarded by apps/web/src/libs/adapter.ts) hit the
- * fixture data. Production never sets SIMULATOR_URL, so the header is inert
- * there.
+ * Two projects share this config:
+ * - fixture: every page on tom.so against the fixture stack. Every browser
+ *   request carries `x-use-simulator: 1` (extraHTTPHeaders), so both
+ *   browser→adapter calls (guestbook) and SSR web→adapter calls (posts,
+ *   work, products, arena) hit the fixture data. Production never sets
+ *   SIMULATOR_URL, so the header is inert there.
+ * - editor: the Camus SPA with every adapter call intercepted per test
+ *   (VITE_ADAPTER_URL falls back to localhost:8788, which never needs to
+ *   exist). GitHub OAuth cannot run headless, so `/auth/get-session`
+ *   yields a fixture session (or null); write bodies are asserted, pinning
+ *   the exact API contract the editor speaks.
  */
 
 const SIMULATOR_URL = "http://127.0.0.1:8789";
 const ADAPTER_URL = "http://127.0.0.1:8788";
 const WEB_URL = "http://127.0.0.1:3000";
+const EDITOR_URL = "http://127.0.0.1:5174";
 const IS_CI = process.env.CI === "true" || process.env.CI === "1";
 
 export default defineConfig({
@@ -36,16 +43,33 @@ export default defineConfig({
   timeout: 30_000,
   expect: { timeout: 8_000 },
   reporter: [["list"], ["html", { open: "never" }]],
-  use: {
-    baseURL: WEB_URL,
-    // The suite is service-agnostic: this header is the only test-private
-    // thing on the wire. Assertions never mention it.
-    extraHTTPHeaders: { "x-use-simulator": "1" },
-    trace: "on-first-retry",
-    screenshot: "only-on-failure",
-    video: "off",
-  },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  projects: [
+    {
+      name: "fixture",
+      testIgnore: ["editor.spec.ts"],
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: WEB_URL,
+        // The suite is service-agnostic: this header is the only test-private
+        // thing on the wire. Assertions never mention it.
+        extraHTTPHeaders: { "x-use-simulator": "1" },
+        trace: "on-first-retry",
+        screenshot: "only-on-failure",
+        video: "off",
+      },
+    },
+    {
+      name: "editor",
+      testMatch: ["editor.spec.ts"],
+      use: {
+        ...devices["Desktop Chrome"],
+        baseURL: EDITOR_URL,
+        trace: "on-first-retry",
+        screenshot: "only-on-failure",
+        video: "off",
+      },
+    },
+  ],
   webServer: [
     {
       command: "pnpm --filter @tom/simulator start",
@@ -68,6 +92,12 @@ export default defineConfig({
       // Playwright probes and drives 127.0.0.1.
       command: "pnpm --filter @tom/web exec vite dev --host 127.0.0.1 --port 3000 --strictPort",
       url: `${WEB_URL}/robots.txt`,
+      reuseExistingServer: !IS_CI,
+      timeout: 60_000,
+    },
+    {
+      command: "pnpm --filter @tom/editor exec vite dev --host 127.0.0.1 --port 5174 --strictPort",
+      url: `${EDITOR_URL}/`,
       reuseExistingServer: !IS_CI,
       timeout: 60_000,
     },
