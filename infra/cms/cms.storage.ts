@@ -1,5 +1,8 @@
+import * as d1 from "@distilled.cloud/cloudflare/d1";
+import * as r2 from "@distilled.cloud/cloudflare/r2";
 import * as Cloudflare from "alchemy/Cloudflare";
-import { Effect } from "effect";
+import { CloudflareEnvironment } from "alchemy/Cloudflare";
+import { Effect, Stream } from "effect";
 import { retain } from "alchemy/RemovalPolicy";
 import { Stage } from "alchemy/Stage";
 
@@ -29,13 +32,52 @@ export const cmsMediaBucket = Effect.gen(function* () {
 // handles without ever deleting dev resources. Preview writes are
 // impractical (GitHub OAuth cannot issue sessions on preview origins),
 // so sharing dev content is safe.
-const DEV_D1_NAME = "wwwtom-api-wwwtom-cms-d1-dev-t76vc7wvmdnzyrif";
-const DEV_MEDIA_NAME = "wwwtom-api-wwwtom-cms-media-dev-nurxs6it4jn5wiwr";
+//
+// Dev handles resolve by stable name prefix at deploy time instead of a
+// hardcoded full name: alchemy appends a random suffix per resource, so
+// only the `{stack}-{resource}-{stage}-` prefix survives a recreation.
+// Exactly one match is required — zero or several fail the deploy loudly.
+// Bump these prefixes only if the api stack or resource ids are renamed.
+const DEV_D1_PREFIX = "wwwtom-api-wwwtom-cms-d1-dev-";
+const DEV_MEDIA_PREFIX = "wwwtom-api-wwwtom-cms-media-dev-";
 
-export const previewCmsD1 = Cloudflare.D1.Database("wwwtom-preview-cms-d1", {
-  name: DEV_D1_NAME,
-}).pipe(retain());
+const findDevDatabase = Effect.fn("cmsStorage.findDevDatabase")(function* () {
+  const { accountId } = yield* yield* CloudflareEnvironment;
+  const pages = yield* d1.listDatabases.pages({ accountId }).pipe(Stream.runCollect);
+  const matches = Array.from(pages)
+    .flatMap((page) => page.result ?? [])
+    .map((database) => database.name ?? "")
+    .filter((name) => name.startsWith(DEV_D1_PREFIX));
+  const [match] = matches;
+  if (matches.length !== 1 || match === undefined) {
+    return yield* Effect.die(
+      new Error(`expected exactly one dev CMS database, found ${matches.length}`),
+    );
+  }
+  return match;
+});
 
-export const previewCmsMedia = Cloudflare.R2.Bucket("wwwtom-preview-cms-media", {
-  name: DEV_MEDIA_NAME,
-}).pipe(retain());
+const findDevBucket = Effect.fn("cmsStorage.findDevBucket")(function* () {
+  const { accountId } = yield* yield* CloudflareEnvironment;
+  const response = yield* r2.listBuckets({ accountId, nameContains: "wwwtom-cms-media-dev" });
+  const matches = (response.buckets ?? [])
+    .map((bucket) => bucket.name ?? "")
+    .filter((name) => name.startsWith(DEV_MEDIA_PREFIX));
+  const [match] = matches;
+  if (matches.length !== 1 || match === undefined) {
+    return yield* Effect.die(
+      new Error(`expected exactly one dev CMS bucket, found ${matches.length}`),
+    );
+  }
+  return match;
+});
+
+export const previewCmsD1 = Effect.gen(function* () {
+  const name = yield* findDevDatabase().pipe(Effect.orDie);
+  return yield* Cloudflare.D1.Database("wwwtom-preview-cms-d1", { name }).pipe(retain());
+});
+
+export const previewCmsMedia = Effect.gen(function* () {
+  const name = yield* findDevBucket().pipe(Effect.orDie);
+  return yield* Cloudflare.R2.Bucket("wwwtom-preview-cms-media", { name }).pipe(retain());
+});

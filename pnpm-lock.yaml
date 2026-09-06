@@ -482,6 +482,9 @@ importers:
       '@cloudflare/workers-types':
         specifier: ^4.20250408.0
         version: 4.20260702.1
+      '@distilled.cloud/cloudflare':
+        specifier: 1.0.0-rc.4
+        version: 1.0.0-rc.4(effect@4.0.0-beta.105)
       '@effect/platform-bun':
         specifier: 4.0.0-beta.105
         version: 4.0.0-beta.105(effect@4.0.0-beta.105)
