@@ -7,10 +7,13 @@
  * Applies only with --apply (default is dry-run):
  *   pnpm --filter @tom/simulator migrate:cms -- --target=staging --apply
  * Limit docs for a smoke test: --limit=2. Tables: --only=media|posts|works.
+ * Targets are stage names (staging, production, dev, pr-<n>); the source is
+ * always the dev database.
  *
  * Prerequisites: the target stage api stack deployed (creates the D1/R2
- * resources and runs migrations), alchemy login for D1 access, and
- * infra/.dev.vars holding the TOM_SECRETS bundle (INTERNAL_API_TOKEN).
+ * resources and runs migrations). D1 access comes from CLOUDFLARE_API_TOKEN
+ * + CLOUDFLARE_ACCOUNT_ID or the alchemy login; INTERNAL_API_TOKEN comes
+ * from TOM_SECRETS_JSON/TOM_SECRETS or infra/.dev.vars.
  * Auth sessions are never copied; Better Auth tables stay per-stage.
  * Dependency-free (node builtins only) so it runs anywhere with tsx.
  */
@@ -24,7 +27,7 @@ type DbValue = string | number | null;
 type DbRow = Record<string, DbValue>;
 
 type Args = {
-  readonly target: "staging" | "production";
+  readonly target: string;
   readonly apply: boolean;
   readonly only: string | undefined;
   readonly limit: number | undefined;
@@ -37,8 +40,8 @@ const parseArgs = (argv: ReadonlyArray<string>): Args => {
     return found?.slice(prefix.length);
   };
   const target = get("target");
-  if (target !== "staging" && target !== "production") {
-    throw new Error("pass --target=staging or --target=production");
+  if (target === undefined || target.length === 0) {
+    throw new Error("pass --target=staging, --target=production, or --target=pr-<n>");
   }
   const limit = get("limit");
   return {
@@ -74,6 +77,15 @@ const loadAuth = () => {
 };
 
 const internalToken = (): string => {
+  for (const candidate of [process.env.TOM_SECRETS_JSON, process.env.TOM_SECRETS]) {
+    if (candidate === undefined) continue;
+    try {
+      const bundle = JSON.parse(candidate) as { INTERNAL_API_TOKEN?: string };
+      if (bundle.INTERNAL_API_TOKEN) return bundle.INTERNAL_API_TOKEN;
+    } catch {
+      continue;
+    }
+  }
   const raw = readFileSync(join(rootDir, "infra", ".dev.vars"), "utf8");
   const start = raw.indexOf("{", raw.indexOf("TOM_SECRETS="));
   let depth = 0;
@@ -168,11 +180,11 @@ const REVISIONS_DDL =
 const REVISIONS_INDEX =
   "CREATE INDEX IF NOT EXISTS idx_revisions_entity ON revisions (entity_type, entity_id, created_at DESC)";
 
-const targetApiBase = (target: Args["target"]): string =>
-  target === "production" ? "https://api.tom.so" : "https://staging-api.tom.so";
+const targetApiBase = (target: string): string =>
+  target === "production" ? "https://api.tom.so" : `https://${target}-api.tom.so`;
 
 const copyBytes = async (
-  target: Args["target"],
+  target: string,
   token: string,
   id: string,
   key: string,
@@ -208,8 +220,8 @@ const main = async (): Promise<void> => {
       ? await findDatabase(auth, (name) => name === "tom-cms", "production target")
       : await findDatabase(
           auth,
-          (name) => name.includes("cms-d1") && name.includes("staging"),
-          "staging target",
+          (name) => name.includes("cms-d1") && name.includes(args.target),
+          `${args.target} target`,
         );
 
   const sourceMedia = await queryAll(auth, source, "SELECT * FROM media");

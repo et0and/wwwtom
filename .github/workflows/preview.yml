@@ -44,6 +44,12 @@ jobs:
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes
 
+      # Seeds the preview database + bucket with the dev content so posts
+      # and works render (previews never share the dev database: preview
+      # writes must stay isolated). Idempotent — re-runs skip existing rows.
+      - name: Seed preview content
+        run: pnpm --filter @tom/simulator migrate:cms -- --target=pr-${{ github.event.pull_request.number }} --apply
+
   destroy:
     if: github.event.action == 'closed'
     name: Destroy PR preview
