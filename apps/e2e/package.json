@@ -5,10 +5,10 @@
   "description": "Nightly Playwright e2e suite for tom.so, running against the fixture simulator (apps/simulator) via the x-use-simulator header.",
   "type": "module",
   "scripts": {
-    "test:e2e": "playwright test",
-    "test:e2e:headed": "playwright test --headed",
+    "test:e2e": "playwright test --project=fixture",
+    "test:e2e:headed": "playwright test --project=fixture --headed",
     "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
-    "test:e2e:editor": "playwright test --config=playwright.editor.config.ts",
+    "test:e2e:editor": "playwright test --project=editor",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
   },

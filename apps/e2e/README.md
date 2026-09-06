@@ -1,19 +1,19 @@
 # @tom/e2e — Playwright suites for tom.so
 
-Three suites live here:
+One config (`playwright.config.ts`) with two projects, plus the staging config:
 
-- **Fixture suite** (`tests/`, `playwright.config.ts`): every page on tom.so
+- **Fixture project** (`tests/`, minus `editor.spec.ts`): every page on tom.so
   against a fully local stack whose services serve **fixture stores** instead
   of real upstreams (Polar, Are.na, the CMS API, D1, the internal API). Runs
   on every PR against `dev` (merge requirement) and nightly. Tests assert
   user-visible behaviour only — never wire formats, request shapes or
   headers — so they stay service-agnostic and break only when the site
   actually changes.
-- **Editor suite** (`tests-editor/`, `playwright.editor.config.ts`): the Camus
+- **Editor project** (`tests/editor.spec.ts`): the Camus
   editor SPA under `vite dev` (:5174) with every adapter call intercepted per
   test. GitHub OAuth cannot run headless, so `/auth/get-session` yields a
   fixture session (or null) and `/content/*` yields fixture posts/works;
-  there is no backend. Unlike the fixture suite, these specs **do** assert
+  there is no backend. Unlike the fixture project, these specs **do** assert
   write request bodies — with no server, the client→API contract is the
   product, and the bodies are the same shapes `apps/api` validates.
   `pnpm --filter @tom/e2e test:e2e:editor`.
