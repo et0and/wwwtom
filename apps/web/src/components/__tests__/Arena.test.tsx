@@ -197,4 +197,18 @@ describe("ArenaCarousel", () => {
       ),
     );
   });
+
+  it("shows empty state if channel holds no blocks", async () => {
+    mockedFetchChannelContents.mockResolvedValue({ data: [] });
+    renderCarousel();
+
+    await waitFor(() => expect(screen.getByText("Sorry, no content found")).toBeTruthy());
+  });
+
+  it("shows error if channel fetch fails", async () => {
+    mockedFetchChannelContents.mockRejectedValue(new Error("network down"));
+    renderCarousel();
+
+    await waitFor(() => expect(screen.getByText("Sorry, no content found")).toBeTruthy());
+  });
 });

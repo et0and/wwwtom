@@ -4,7 +4,11 @@ import { BlurInText } from "~/components/BlurInText";
 import { createMemo, createSignal, Loading, Errored, Show, isPending, latest } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { formatPrice } from "@tom/checkout";
-import { Spinner } from "@tom/ui/Spinner";
+import { Loader } from "@tom/ui/tomui/loader";
+import { Button } from "@tom/ui/tomui/button";
+import { Input } from "@tom/ui/tomui/input";
+import { Banner } from "@tom/ui/tomui/banner";
+import { Label } from "@tom/ui/tomui/label";
 import { getAdapterBaseUrl } from "~/libs/adapter";
 import { fetchProduct, createCustomer } from "~/server/adapter";
 
@@ -60,7 +64,7 @@ export default function Purchase() {
         externalId: crypto.randomUUID(),
       });
 
-      const checkoutUrl = `${getAdapterBaseUrl()}/polar/checkout?products=${params.productId ?? ""}&customerId=${customer.id}`;
+      const checkoutUrl = `${getAdapterBaseUrl()}/polar/checkout?products=${encodeURIComponent(params.productId ?? "")}&customerId=${encodeURIComponent(customer.id)}`;
       window.location.href = checkoutUrl;
     } catch (error) {
       setFormError(error instanceof Error ? error.message : "Failed to create customer");
@@ -75,8 +79,8 @@ export default function Purchase() {
           <BlurInText text="Complete your purchase" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
             <div class="space-y-4">
-              <Errored fallback={<p class="text-center text-red-600">Failed to load product</p>}>
-                <Loading fallback={<Spinner />}>
+              <Errored fallback={<Banner variant="error" description="Failed to load product" />}>
+                <Loading fallback={<Loader />}>
                   <Show when={product()}>
                     {(p) => (
                       <>
@@ -96,8 +100,8 @@ export default function Purchase() {
           <BlurInSection delay={0.5}>
             <div class="space-y-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                <input
+                <Label class="block text-sm mb-1">Email Address *</Label>
+                <Input
                   type="email"
                   value={email()}
                   onInput={(e) => {
@@ -107,18 +111,16 @@ export default function Purchase() {
                   placeholder="john@email.com"
                   required
                   disabled={isRedirecting()}
-                  class="w-full px-3 py-2 border border-gray-300 disabled:bg-gray-100"
+                  error={emailError() || undefined}
+                  class="w-full"
                 />
-                <Show when={emailError()}>
-                  <p class="text-red-600 text-sm mt-1">{emailError()}</p>
-                </Show>
               </div>
 
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Full Name (optional)
-                </label>
-                <input
+                <Label class="block text-sm mb-1">
+                  Full Name <span class="font-normal">(optional)</span>
+                </Label>
+                <Input
                   type="text"
                   value={name()}
                   onInput={(e) => {
@@ -126,21 +128,23 @@ export default function Purchase() {
                   }}
                   placeholder="John Product"
                   disabled={isRedirecting()}
-                  class="w-full px-3 py-2 border border-gray-300 disabled:bg-gray-100"
+                  class="w-full"
                 />
               </div>
 
               <Show when={formError()}>
-                <p class="text-red-600 text-sm">{formError()}</p>
+                <Banner variant="error" description={formError()} />
               </Show>
 
-              <button
+              <Button
                 onClick={handlePurchase}
+                variant="primary"
+                loading={isRedirecting()}
                 disabled={isRedirecting() || !email() || isPending(() => product())}
-                class="w-full bg-[#ad1174] text-white px-4 py-2 hover:bg-[#cc0081] cursor-pointer disabled:bg-gray-400"
+                class="w-full"
               >
                 {isRedirecting() ? "Redirecting..." : "Proceed to payment"}
-              </button>
+              </Button>
             </div>
           </BlurInSection>
 

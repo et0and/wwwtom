@@ -1,6 +1,9 @@
 import { Elysia } from "elysia";
 import { Schema } from "effect";
+import type { Product } from "@tom/types/product";
 import polarProducts from "../fixtures/polar-products.json" with { type: "json" };
+
+const products: ReadonlyArray<Product> = polarProducts;
 
 const pagination = {
   current_page: 1,
@@ -8,7 +11,7 @@ const pagination = {
   prev_page: null,
   per_page: 10,
   total_pages: 1,
-  total_count: polarProducts.length,
+  total_count: products.length,
   has_more_pages: false,
 };
 
@@ -29,7 +32,7 @@ export const polarSimulator = new Elysia({ name: "polar-simulator" })
       if (query.is_archived !== "false") {
         return { items: [] };
       }
-      return { items: polarProducts };
+      return { items: products };
     },
     {
       query: Schema.toStandardSchemaV1(
@@ -41,7 +44,7 @@ export const polarSimulator = new Elysia({ name: "polar-simulator" })
   .get(
     "/v1/products/:id",
     ({ params, set }) => {
-      const product = polarProducts.find((p) => p.id === params.id);
+      const product = products.find((p) => p.id === params.id);
       if (!product) {
         set.status = 404;
         return { detail: [{ loc: ["product"], msg: "Not found" }] };

@@ -1,0 +1,637 @@
+@import "tailwindcss";
+@import "@tom/ui/tomui.css";
+@import "@tom/ui/tomui/theme-tomui.css";
+
+@source "../../../packages/ui/src/**/*.tsx";
+
+:root {
+  color-scheme: light dark;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}
+
+@layer components {
+  .editor-shell {
+    @apply mx-auto max-w-3xl px-4 pb-8 font-sans;
+  }
+
+  .signin-view {
+    @apply grid justify-items-center gap-6 py-16 text-center;
+  }
+
+  .signin-title {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  .editor-nav {
+    @apply sticky top-0 z-30 -mx-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-300 bg-white px-4 pt-4 pb-4 dark:border-neutral-700 dark:bg-neutral-950;
+  }
+
+  .editor-title {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  .editor-user {
+    @apply relative ml-auto flex flex-wrap items-center gap-2 text-sm;
+  }
+
+  .avatar {
+    @apply flex h-7 w-7 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white dark:bg-neutral-100 dark:text-neutral-900;
+  }
+
+  .content-list-header {
+    top: var(--editor-nav-h, 0px);
+    @apply sticky z-20 -mx-4 mb-4 flex items-center justify-between bg-white px-4 py-2 dark:bg-neutral-950;
+  }
+
+  .content-rows {
+    @apply divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800;
+  }
+
+  .content-row {
+    @apply flex items-center gap-2 p-2;
+  }
+
+  .row-button {
+    @apply flex flex-1 flex-col items-start gap-0.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900;
+  }
+
+  .row-title {
+    @apply font-medium;
+  }
+
+  .row-meta {
+    @apply text-xs text-neutral-500 dark:text-neutral-400;
+  }
+
+  .editor-topbar {
+    @apply mb-4 flex flex-wrap items-center gap-2;
+  }
+
+  .editor-layout {
+    @apply grid gap-4;
+  }
+
+  .editor-sidebar {
+    @apply grid content-start gap-4;
+  }
+
+  .editor-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .editor-categories {
+    @apply grid gap-2;
+  }
+
+  .editor-main {
+    @apply grid min-w-0 content-start;
+  }
+
+  @media (min-width: 1024px) {
+    .editor-shell-wide {
+      max-width: none;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+
+    .editor-shell-wide .editor-nav,
+    .editor-shell-wide .content-list-header {
+      margin-left: -1.5rem;
+      margin-right: -1.5rem;
+      padding-left: 1.5rem;
+      padding-right: 1.5rem;
+    }
+
+    .editor-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .editor-sidebar {
+      position: sticky;
+      top: calc(var(--editor-nav-h, 0px) + 16px);
+    }
+
+    .editor-main .tiptap-editor {
+      min-height: 60vh;
+    }
+
+    .editor-toolbar [data-tomui-component="Toolbar"] {
+      display: flex;
+      width: 100%;
+      max-width: none;
+    }
+
+    .editor-toolbar [data-tomui-component="Toolbar.Button"] {
+      flex: 1 1 auto;
+      justify-content: center;
+    }
+  }
+
+  .editor-fields {
+    @apply grid gap-3;
+  }
+
+  .field {
+    @apply grid gap-1 text-sm font-medium;
+  }
+
+  .field input[type="text"],
+  .field input[type="datetime-local"],
+  .field textarea {
+    @apply rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm font-normal dark:border-neutral-700 dark:bg-neutral-900;
+  }
+
+  .check {
+    @apply flex items-center gap-2 text-sm font-normal;
+  }
+
+  .tiptap-editor {
+    @apply min-h-64 rounded-b-lg border border-neutral-300 p-3 focus:outline-2 focus:outline-neutral-800 dark:border-neutral-700 dark:focus:outline-neutral-200;
+  }
+
+  /* Canvas typography matches the site scale so the editor reads as the page. */
+  .tiptap-editor p {
+    @apply pb-4 tracking-tight;
+  }
+
+  .tiptap-editor h1 {
+    @apply pb-2 text-4xl font-medium tracking-tight;
+  }
+
+  .tiptap-editor h2 {
+    @apply pb-2 tracking-tight;
+    font-size: 1.75rem;
+    font-weight: 400;
+  }
+
+  .tiptap-editor h3 {
+    @apply pb-1 text-xl tracking-tight;
+  }
+
+  .tiptap-editor h4 {
+    @apply pb-1 text-lg tracking-tight;
+  }
+
+  .tiptap-editor hr {
+    @apply my-6 border-neutral-300 dark:border-neutral-700;
+  }
+
+  .tiptap-editor a {
+    @apply underline;
+  }
+
+  /* Pull quotes mirror the site scale so they read as quotes while editing. */
+  .tiptap-editor blockquote,
+  .preview blockquote {
+    @apply my-8 border-l-2 border-neutral-300 pl-5 text-base leading-normal tracking-tight dark:border-neutral-700;
+  }
+
+  .tiptap-editor blockquote > p:last-child,
+  .preview blockquote > p:last-child {
+    @apply pb-0;
+  }
+
+  /* CMS banners mirror the site's banner idiom (hairline + badge).
+     The canvas carries no badge element (it would parse back into content),
+     so its label renders through ::before; history preview has the real badge. */
+  .tiptap-editor .banner {
+    position: relative;
+    line-height: 1.5;
+    margin-top: 1rem;
+    margin-bottom: 0;
+    width: 100%;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1rem;
+    color: rgb(0 0 0);
+    border-color: rgb(209 213 219);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .preview .banner {
+    position: relative;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1rem;
+    color: rgb(0 0 0);
+    border-color: rgb(209 213 219);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .preview .banner-title,
+  .tiptap-editor .banner::before {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.05em;
+    background-color: rgb(230, 216, 226);
+    padding: 0.25rem 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .tiptap-editor [data-banner="info"]::before {
+    content: "Note";
+  }
+
+  .tiptap-editor [data-banner="warning"]::before {
+    content: "Warning";
+  }
+
+  .tiptap-editor [data-banner="error"]::before {
+    content: "Error";
+  }
+
+  .tiptap-editor [data-banner="success"]::before {
+    content: "Success";
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor .banner,
+    .preview .banner {
+      color: rgb(255 255 255);
+      border-color: rgb(75 85 99);
+    }
+
+    .preview .banner-title,
+    .tiptap-editor .banner::before {
+      background-color: rgb(75, 60, 70);
+    }
+  }
+
+  /* Media figures match the site: rounded image, centered caption. */
+  .tiptap-editor figure {
+    @apply my-4;
+  }
+
+  .tiptap-editor img {
+    @apply rounded-md;
+  }
+
+  .tiptap-editor figcaption {
+    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  /* Arena embeds render as carousels on the site; the canvas shows a
+     labeled placeholder at the same position in the flow. */
+  .tiptap-editor [data-arena]::after {
+    content: "Arena / " attr(data-arena);
+    display: block;
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgb(107 114 128);
+  }
+
+  .tiptap-editor [data-arena],
+  .tiptap-editor figure[data-media-id] {
+    @apply my-2 border border-dashed border-neutral-400 p-2 dark:border-neutral-600;
+  }
+
+  /* Code in the canvas matches the site code-block treatment. Shiki
+     highlighting runs at save time; the canvas shows plain mono text with
+     the same spacing, filename bar, and dark treatment. */
+  .tiptap-editor pre {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    tab-size: 2;
+    background-color: rgb(24 24 27);
+    color: rgb(244 244 245);
+  }
+
+  .tiptap-editor pre code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .tiptap-editor pre[data-filename]::before {
+    content: attr(data-filename);
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    padding: 0.5rem 1rem;
+    margin: -1rem -1rem 1rem;
+    background-color: rgb(243 244 246);
+    border-bottom: 1px solid rgb(229 231 235);
+    border-radius: 0.5rem 0.5rem 0 0;
+    color: rgb(75 85 99);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor pre {
+      background-color: rgb(0 0 0);
+    }
+
+    .tiptap-editor pre[data-filename]::before {
+      background-color: rgb(31 41 55);
+      border-color: rgb(75 85 99);
+      color: rgb(156 163 175);
+    }
+  }
+
+  .preview pre {
+    @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
+  }
+
+  /* Shiki output in previews mirrors the site's code treatment. */
+  .preview .code-block {
+    margin: 1.5rem 0;
+    position: relative;
+  }
+
+  .preview .code-block pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    tab-size: 2;
+  }
+
+  .preview .code-block pre code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  .preview .code-filename {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    padding: 0.5rem 1rem;
+    background-color: rgb(243 244 246);
+    border: 1px solid rgb(229 231 235);
+    border-bottom: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    color: rgb(75 85 99);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview .code-filename {
+      background-color: rgb(31 41 55);
+      border-color: rgb(75 85 99);
+      color: rgb(156 163 175);
+    }
+  }
+
+  .preview .shiki-dark {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview .shiki-light {
+      display: none;
+    }
+
+    .preview .shiki-dark {
+      display: block;
+    }
+  }
+
+  .preview .code-block[data-line-numbers="true"] pre {
+    counter-reset: step;
+  }
+
+  .preview .code-block[data-line-numbers="true"] pre .line::before {
+    counter-increment: step;
+    content: counter(step);
+    display: inline-block;
+    width: 2em;
+    margin-right: 1em;
+    text-align: right;
+    color: rgb(156 163 175);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview .code-block[data-line-numbers="true"] pre .line::before {
+      color: rgb(107 114 133);
+    }
+  }
+
+  .editor-panels {
+    @apply mt-3 grid gap-2;
+  }
+
+  .panel {
+    @apply grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+  }
+
+  .categories-view {
+    @apply grid gap-4;
+  }
+
+  .categories-layout {
+    @apply grid min-w-0 content-start gap-4;
+  }
+
+  .categories-list {
+    @apply grid min-w-0 content-start;
+  }
+
+  .categories-form {
+    @apply grid min-w-0 content-start;
+  }
+
+  @media (min-width: 1024px) {
+    .categories-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .categories-form {
+      grid-column: 1;
+      grid-row: 1;
+      position: sticky;
+      top: calc(var(--editor-nav-h, 0px) + 16px);
+    }
+
+    .categories-list {
+      grid-column: 2;
+      grid-row: 1;
+    }
+  }
+
+  .media-view {
+    @apply grid gap-4;
+  }
+
+  .media-layout {
+    @apply grid min-w-0 content-start gap-4;
+  }
+
+  .media-sidebar {
+    @apply grid min-w-0 content-start gap-4;
+  }
+
+  .media-results {
+    @apply grid min-w-0 content-start;
+  }
+
+  @media (min-width: 1024px) {
+    .media-layout {
+      grid-template-columns: 340px minmax(0, 1fr);
+      gap: 2rem;
+      align-items: start;
+    }
+
+    .media-sidebar {
+      position: sticky;
+      top: calc(var(--editor-nav-h, 0px) + 16px);
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .media-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  .media-grid {
+    @apply grid grid-cols-2 gap-3 sm:grid-cols-3;
+  }
+
+  .media-card {
+    @apply grid content-start gap-1 rounded-lg border border-neutral-200 p-2 dark:border-neutral-800;
+  }
+
+  .media-thumb {
+    @apply aspect-square w-full rounded-md object-cover;
+  }
+
+  .media-name {
+    @apply truncate text-xs text-neutral-500 dark:text-neutral-400;
+  }
+
+  .media-actions {
+    @apply flex gap-2;
+  }
+
+  .media-picker {
+    @apply grid gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800;
+  }
+
+  .media-pick {
+    @apply grid cursor-pointer content-start gap-1 rounded-lg border border-neutral-200 bg-transparent p-2 text-left hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900;
+  }
+
+  .media-usage {
+    @apply grid gap-1 text-left text-sm;
+  }
+
+  .history-panel {
+    @apply grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+  }
+
+  .history-rows {
+    @apply grid max-h-64 gap-1 overflow-y-auto;
+  }
+
+  .history-row {
+    @apply flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-900;
+  }
+
+  .history-row.on {
+    @apply bg-neutral-200 dark:bg-neutral-800;
+  }
+
+  .history-title {
+    @apply text-sm font-medium;
+  }
+
+  .history-meta {
+    @apply text-xs text-neutral-500 dark:text-neutral-400;
+  }
+
+  .history-empty {
+    @apply text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .history-preview {
+    @apply grid gap-2;
+  }
+
+  .history-preview .preview {
+    @apply mt-0;
+  }
+
+  /* Post preview renders the exact HTML the site serves. */
+  .preview {
+    @apply mt-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800;
+  }
+
+  .preview p {
+    @apply pb-4 tracking-tight;
+  }
+
+  .preview h1 {
+    @apply pb-2 text-3xl font-medium tracking-tight;
+  }
+
+  .preview h2 {
+    @apply pb-2 text-2xl tracking-tight;
+  }
+
+  .preview h3 {
+    @apply pb-1 text-xl tracking-tight;
+  }
+
+  .preview h4 {
+    @apply pb-1 text-lg tracking-tight;
+  }
+
+  .preview hr {
+    @apply my-6 border-neutral-300 dark:border-neutral-700;
+  }
+
+  .preview a {
+    @apply underline;
+  }
+
+  .preview figure {
+    @apply my-4;
+  }
+
+  .preview img {
+    @apply rounded-md;
+  }
+
+  .preview figcaption {
+    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .preview [data-arena] {
+    @apply my-3 rounded-md border border-dashed border-neutral-400 p-3 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400;
+  }
+}
+
+/* iOS Safari auto-zooms focused controls under 16px. Hold 16px on touch. */
+@media (pointer: coarse) {
+  .field input[type="text"],
+  .field input[type="datetime-local"],
+  .field textarea {
+    font-size: 16px;
+  }
+}

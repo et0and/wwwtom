@@ -1,18 +1,28 @@
 # @tom/e2e — Playwright suites for tom.so
 
-Two suites live here:
+One config (`playwright.config.ts`) with two projects, plus the staging config:
 
-- **Fixture suite** (`tests/`, `playwright.config.ts`): every page on tom.so
+- **Fixture project** (`tests/`, minus `editor.spec.ts`): every page on tom.so
   against a fully local stack whose services serve **fixture stores** instead
-  of real upstreams (Polar, Are.na, Payload CMS, D1, the internal API). Runs
+  of real upstreams (Polar, Are.na, the CMS API, D1, the internal API). Runs
   on every PR against `dev` (merge requirement) and nightly. Tests assert
   user-visible behaviour only — never wire formats, request shapes or
   headers — so they stay service-agnostic and break only when the site
   actually changes.
-- **Staging suite** (`tests-staging/`,
-  `playwright.staging.config.ts`): content-agnostic smoke + real-data checks
-  against the deployed `staging` Alchemy stage (`staging-web.tom.so`) — no
-  fixture simulator, no `x-use-simulator` header. Runs nightly.
+- **Editor project** (`tests/editor.spec.ts`): the Camus
+  editor SPA under `vite dev` (:5174) with every adapter call intercepted per
+  test. GitHub OAuth cannot run headless, so `/auth/get-session` yields a
+  fixture session (or null) and `/content/*` yields fixture posts/works;
+  there is no backend. Unlike the fixture project, these specs **do** assert
+  write request bodies — with no server, the client→API contract is the
+  product, and the bodies are the same shapes `apps/api` validates.
+  `pnpm --filter @tom/e2e test:e2e:editor`.
+- **Staging suite** (`tests-staging/,
+`playwright.staging.config.ts`): content-agnostic smoke + real-data checks
+against the deployed `staging` Alchemy stage (`staging-web.tom.so`) — no
+fixture simulator, no `x-use-simulator` header. Runs manually (the
+  nightly staging workflow was removed: GitHub-hosted runner IPs trip
+  Cloudflare bot protection).
 
 ```
 browser (Playwright, sends `x-use-simulator: 1`)
@@ -22,7 +32,7 @@ web (vite dev, :3000) ── SSR forward ─┐   browser calls (guestbook) carr
    │                                       ▼
    ▼                                  adapter (:8788) ── "am I in simulator mode?"
 adapter proxies upstreams            │
-   │  payload  → http://127.0.0.1:8789/api/*     (PayloadService URL swap)
+   │  cms      → http://127.0.0.1:8789/posts, /works, /categories (API URL swap)
    │  arena    → http://127.0.0.1:8789/v3/*      (ArenaService URL swap)
    │  polar    → http://127.0.0.1:8789/v1/*      (polarBaseUrl URL swap)
    │  api      → http://127.0.0.1:8789/*         (callApi URL swap: /checkout, /portal)
@@ -39,8 +49,8 @@ simulator (:8789) — Elysia, fixture stores only
   worker also has a `SIMULATOR_URL` env var. Production never sets
   `SIMULATOR_URL`, so the header alone cannot redirect real traffic — the
   switch is opt-in per environment, not per visitor.
-- `simulatorEnv(resolved, request)` rewrites `ARENA_API_URL`, `POLAR_API_URL`,
-  `PAYLOAD_URL` and `API_URL` to the simulator base. The guestbook entries
+- `simulatorEnv(resolved, request)` rewrites `ARENA_API_URL`, `POLAR_API_URL`
+  and `API_URL` to the simulator base. The guestbook entries
   route has a small branch that fetches the simulator instead of D1 (the
   simulator mirrors `DatabaseService.getGuestbookEntries`'s
   `{ results, page, page_size, total_count }` shape).
@@ -50,7 +60,7 @@ simulator (:8789) — Elysia, fixture stores only
   context. Adapter CORS allows the header for the browser calls.
 
 Because the swap happens at the adapter's _service-boundary env_, no
-integration code knows about the simulator — payload/arena/polar still speak
+integration code knows about the simulator — cms/arena/polar still speak
 their normal client contract, just against the fixture host.
 
 ## Fixture stores (single source of truth)
@@ -65,8 +75,8 @@ diffs small when copy changes.
 | ------------------------ | ---------------------------------------- | ------------------------------------------------- |
 | `polar-products.json`    | `/v1/*` (products, customers, checkouts) | `/products`, `/purchase`                          |
 | `arena.json`             | `/v3/*` (channels, blocks, users)        | `/worktable` (channel `tom-s-worktable`)          |
-| `payload-posts.json`     | `/api/posts` (Payload REST shape)        | `/posts`, pagination, `/feed.xml`, `/sitemap.xml` |
-| `payload-works.json`     | `/api/works`                             | `/work`                                           |
+| `cms-posts.json`         | `/posts` (CMS list shape)                | `/posts`, pagination, `/feed.xml`, `/sitemap.xml` |
+| `cms-works.json`         | `/works`                                 | `/work`                                           |
 | `guestbook-entries.json` | `/guestbook/entries`                     | `/guestbook`                                      |
 
 Runtime-mutated in-memory stores live in the simulator plugins
@@ -82,7 +92,7 @@ fixture in `apps/e2e/src/fixture-stores.ts` and write specs against it.
 
 They answer different questions:
 
-- **Effect Layers** (`createPayloadLayer`, `createArenaLayer`, `createDbLayer`
+- **Effect Layers** (`createDbLayer`, `createArenaLayer`
   in `apps/adapter/src/config/effect.ts`, per <https://www.effect.solutions/testing>)
   replace a service **inside the process** — the right tool for adapter unit /
   integration tests that never touch the network. The adapter's integration
@@ -169,9 +179,10 @@ E2E_STAGING_ADAPTER_URL=https://pr-114-adapter.tom.so \
 pnpm --filter @tom/e2e test:e2e:staging
 ```
 
-The workflow `.github/workflows/e2e-staging.yml` runs it nightly (02:47 UTC)
-and on `workflow_dispatch`. Every push to `dev` deploys the staging stage
-via the Deploy workflow (production deploys are manual), so the nightly
+The staging suite has no scheduled workflow (removed — Cloudflare
+bot-blocks GitHub runner IPs). Run it manually against any deployed stage.
+Every push to `dev` deploys the staging stage
+via the Deploy workflow (production deploys are manual), so a manual run
 validates the latest staged stack.
 
 ### Cloudflare bot protection on CI runs

@@ -1,3 +1,59 @@
+# [2.8.0](https://github.com/et0and/wwwtom/compare/v2.7.0...v2.8.0) (2026-09-06)
+
+
+### Features
+
+* **editor:** desktop two-column layouts and WYSIWYG canvas ([fa0303e](https://github.com/et0and/wwwtom/commit/fa0303e8cf96c8210c02db86480b28d78e20b95d))
+
+# [2.7.0](https://github.com/et0and/wwwtom/compare/v2.6.2...v2.7.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **web:** sanitize Arena HTML client-side so SSR never touches DOMParser ([7efde07](https://github.com/et0and/wwwtom/commit/7efde076659f2151a4605156ee9637496cc15030))
+
+
+### Features
+
+* **tomui:** port Kumo components to Solid TomUI and wire into web and editor ([98d9a81](https://github.com/et0and/wwwtom/commit/98d9a815341a2e95cb1db2c49a122859f313f8f2))
+
+## [2.6.2](https://github.com/et0and/wwwtom/compare/v2.6.1...v2.6.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* **auth:** let explicit worker env override the admin allowlist ([525eb2d](https://github.com/et0and/wwwtom/commit/525eb2d4c81a2a18f29b80be24f338c2ab7d5baa))
+
+## [2.6.1](https://github.com/et0and/wwwtom/compare/v2.6.0...v2.6.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **infra:** use a fresh database for the production CMS ([041daa0](https://github.com/et0and/wwwtom/commit/041daa00aacf172deb7bb208b23e2f73f6602cae))
+
+# [2.6.0](https://github.com/et0and/wwwtom/compare/v2.5.1...v2.6.0) (2026-09-06)
+
+
+### Bug Fixes
+
+* **cms:** address security review findings ([0d4c1cd](https://github.com/et0and/wwwtom/commit/0d4c1cd873e5d87273b683fa02a330fa70545d3f))
+* **tests:** allow a minute for cold Shiki init in CI ([5b63299](https://github.com/et0and/wwwtom/commit/5b63299558e5e3994533f47b0e19b21f398b4e09))
+
+
+### Features
+
+* **cms:** add dev-copy migration script for staging and production ([b3e813d](https://github.com/et0and/wwwtom/commit/b3e813dc62b0aec88deeaad745395fc10e4dd7ee))
+* **cms:** replace Payload with Tiptap CMS on D1+R2 ([ee25a1a](https://github.com/et0and/wwwtom/commit/ee25a1a2c9df33c0b3d3e76a62ea9d686949f061))
+* **preview:** point PR previews at the dev database and bucket ([dcf864a](https://github.com/et0and/wwwtom/commit/dcf864aa31fd666010899ce1cb60c35a1dbb6f25))
+* **preview:** seed preview content from dev on deploy ([3a132c0](https://github.com/et0and/wwwtom/commit/3a132c079e109a87d9bab59eb4e5ab68b519a066))
+
+## [2.5.1](https://github.com/et0and/wwwtom/compare/v2.5.0...v2.5.1) (2026-09-05)
+
+
+### Bug Fixes
+
+* **ci:** remove staging e2e nightly and repair preview sweep query ([a7badda](https://github.com/et0and/wwwtom/commit/a7baddaf1f7eaefb21c50688629cc953bfbd6a11))
+
 # [2.5.0](https://github.com/et0and/wwwtom/compare/v2.4.2...v2.5.0) (2026-09-03)
 
 

@@ -66,7 +66,7 @@ export default function WorkPage() {
                 <p>{d.summary ?? ""}</p>
               </BlurInSection>
               <BlurInSection delay={0.5}>
-                <div innerHTML={d.content ?? ""} />
+                <div innerHTML={d.html ?? ""} />
               </BlurInSection>
               <For each={d.arenaBlocks ?? []}>
                 {(block, index) => (

@@ -37,6 +37,8 @@ jobs:
 
       # Deploys shared -> api -> adapter -> web. The web stack posts or
       # updates the preview comment via infra/utils/github/preview-comment.ts.
+      # The preview api reads the dev database + bucket directly
+      # (infra/cms/cms.storage.ts), so seeded content renders as-is.
       - name: Deploy preview stage
         run: >
           pnpm deploy:shared --yes &&

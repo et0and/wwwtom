@@ -160,7 +160,7 @@ GTM_TEST_ACCOUNT=accounts/123456 \
 pnpm --filter @tom/infra exec vitest run gtm --run gtm/__tests__/live.int.test.ts
 ```
 
-`makeFakeGtmHttpLayer` (`http.ts:294`) mirrors GTM's `409` on duplicate names and bumps `fingerprint` on updates. The `adapter`/`simulator` pattern (`apps/simulator/src/index.ts:13` + `x-use-simulator` header) can be reused for GTM by adding a `GTM_API_BASE` override to `GtmHttpLive` — the simulator would expose `POST /tagmanager/v2/**` fixtures the same way `payload.ts` does.
+`makeFakeGtmHttpLayer` (`http.ts:294`) mirrors GTM's `409` on duplicate names and bumps `fingerprint` on updates. The `adapter`/`simulator` pattern (`apps/simulator/src/index.ts:13` + `x-use-simulator` header) can be reused for GTM by adding a `GTM_API_BASE` override to `GtmHttpLive` — the simulator would expose `POST /tagmanager/v2/**` fixtures the same way `cms.ts` does.
 
 ## Troubleshooting
 

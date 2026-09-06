@@ -140,13 +140,16 @@ export function CameraRoll(props: CameraRollProps) {
     };
   });
 
-  createEffect(() => {
-    if (!isLoading() && !hasContent()) {
-      void Effect.runFork(
-        Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
-      );
-    }
-  });
+  createEffect(
+    () => ({ loading: isLoading(), content: hasContent() }),
+    ({ loading, content }) => {
+      if (!loading && !content) {
+        void Effect.runFork(
+          Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+        );
+      }
+    },
+  );
 
   return (
     <Show when={!isLoading()} fallback={<Spinner />}>

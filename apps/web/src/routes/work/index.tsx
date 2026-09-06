@@ -44,7 +44,7 @@ export default function WorkHome() {
           </Show>
           <Show when={worksQuery.data}>
             {(worksData) => (
-              <For each={worksData()}>
+              <For each={worksData().docs}>
                 {(work) => (
                   <Link class="page" preload={true} href={`/work/${work.slug}`}>
                     <h2>{work.title}</h2>

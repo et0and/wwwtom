@@ -2,7 +2,8 @@ import { createSignal, Show, onSettled, createEffect } from "solid-js";
 import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import { Effect } from "effect";
-import { Spinner } from "@tom/ui/Spinner";
+import { Loader } from "@tom/ui/tomui/loader";
+import { Button } from "@tom/ui/tomui/button";
 
 export default function Hold() {
   const [timer, setTimer] = createSignal(0);
@@ -81,7 +82,7 @@ export default function Hold() {
         when={isClient()}
         fallback={
           <div class="flex justify-center items-center h-screen">
-            <Spinner />
+            <Loader />
           </div>
         }
       >
@@ -113,12 +114,14 @@ export default function Hold() {
             <p class="text-2xl">You have been waiting for {formatTime()}</p>
             <div>
               <Show when={!isPlaybackInitiated()}>
-                <button onClick={handleAudioStart}>Trigger music</button>
+                <Button variant="secondary" onClick={handleAudioStart}>
+                  Trigger music
+                </Button>
               </Show>
               <Show when={isPlaybackInitiated()}>
-                <button onClick={handleAudioToggle}>
+                <Button variant="secondary" onClick={handleAudioToggle}>
                   {isPlaying() ? "Click to pause music" : "Click to play music"}
-                </button>
+                </Button>
               </Show>
             </div>
           </main>

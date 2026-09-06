@@ -1,9 +1,10 @@
 import { Elysia } from "elysia";
+import type { GuestbookEntryJson } from "@tom/types/db";
 import entryFixtures from "../fixtures/guestbook-entries.json" with { type: "json" };
 
 // Runtime-mutated store: entries created through the e2e sign-in flow are
 // appended here so the page reflects them like a real database would.
-const entries = [...entryFixtures];
+const entries: Array<GuestbookEntryJson> = [...entryFixtures];
 
 export const guestbookSimulator = new Elysia({ name: "guestbook-simulator" }).get(
   "/guestbook/entries",

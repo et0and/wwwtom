@@ -3,7 +3,5 @@
 pnpm --filter @tom/db generate
 pnpm exec oxfmt --write packages/types/src/db.ts
 git add packages/types/src/db.ts
-# Pre-existing failures: @tom/cms (16 oxlint errors) and @tom/sophie
-# (`next lint` was removed in Next 16). Exclude until fixed.
-pnpm exec turbo run lint --filter=!@tom/cms --filter=!@tom/sophie
+pnpm exec turbo run lint
 pnpm format

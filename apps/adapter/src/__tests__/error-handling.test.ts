@@ -25,29 +25,27 @@ describe("adapter error handling", () => {
     });
   });
 
-  it("forwards an unparseable page param and falls back to the empty page", async () => {
+  it("surfaces the API validation failure for an unparseable page param", async () => {
     fetchMock.mockResolvedValue(
       new Response(
         JSON.stringify({
-          docs: [],
-          totalDocs: 0,
-          limit: 5,
-          page: 1,
-          totalPages: 0,
-          hasNextPage: false,
-          hasPrevPage: false,
+          type: "https://errors.tom.so/validation",
+          status: 400,
+          title: "Invalid paging parameters",
         }),
-        { status: 200 },
+        { status: 400, headers: { "Content-Type": "application/json" } },
       ),
     );
     const response = await app.fetch(
-      requestWithEnv("http://localhost/payload/posts?page=not-a-number", testEnv()),
+      requestWithEnv("http://localhost/content/posts?page=not-a-number", testEnv()),
     );
-    expect(response.status).toBe(200);
-    expect(fetchMock).toHaveBeenCalledWith(
-      "https://cms.tom.so/api/posts?sort=-publishedAt&limit=5&page=NaN&depth=1",
-      expect.anything(),
-    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/validation",
+      status: 400,
+      title: "CMS posts request failed",
+      instance: "http://localhost/content/posts?page=not-a-number",
+    });
   });
 
   it("returns 500 problem details when an integration has no access token configured", async () => {

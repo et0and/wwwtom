@@ -21,8 +21,10 @@ import type { CloudflareEnv } from "@tom/utils/services/config";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { AdapterError } from "./config/effect";
+import { isTrustedWebOrigin } from "./origins";
 import { arenaIntegration } from "./integrations/arena";
-import { payloadIntegration } from "./integrations/payload";
+import { authIntegration } from "./integrations/auth";
+import { cmsIntegration } from "./integrations/cms";
 import { polarIntegration } from "./integrations/polar";
 import { guestbookIntegration, userCookieSchema } from "./integrations/guestbook";
 import { githubIntegration } from "./integrations/github";
@@ -40,17 +42,13 @@ export const app = new Elysia({
       origin: (request) => {
         const origin = request.headers.get("origin");
         if (!origin) return false;
-        return (
-          origin === "http://localhost:5173" ||
-          origin === "http://localhost:3000" ||
-          // Local e2e (apps/e2e) serves the web app from 127.0.0.1.
-          origin === "http://127.0.0.1:3000" ||
-          origin === "https://tom.so" ||
-          origin.endsWith(".tom.so")
-        );
+        // Local editors are trusted only against non-production workers:
+        // the production adapter (adapter.tom.so) never accepts localhost.
+        const workerHost = new URL(request.url).hostname;
+        return isTrustedWebOrigin(origin, workerHost !== "adapter.tom.so");
       },
       credentials: true,
-      methods: ["GET", "POST", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "x-use-simulator"],
     }),
   )
@@ -137,7 +135,8 @@ export const app = new Elysia({
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
   .use(arenaIntegration)
-  .use(payloadIntegration)
+  .use(authIntegration)
+  .use(cmsIntegration)
   .use(polarIntegration)
   .use(guestbookIntegration)
   .use(githubIntegration)

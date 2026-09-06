@@ -79,7 +79,7 @@ export default function PostPage() {
                 ) : null}
               </BlurInSection>
               <BlurInSection delay={0.7}>
-                <div class="pt-8" innerHTML={d.content ?? ""} />
+                <div class="pt-8" innerHTML={d.html ?? ""} />
               </BlurInSection>
               <For each={d.arenaBlocks ?? []}>
                 {(block, index) => (

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index";
-import { jsonResponse, payloadPostsResponse, requestWithEnv, testEnv } from "../test/helpers";
+import { jsonResponse, requestWithEnv, testEnv } from "../test/helpers";
 
 const env = testEnv();
 
@@ -9,7 +9,7 @@ const fetchMock = vi.fn();
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue(jsonResponse(payloadPostsResponse));
+  fetchMock.mockResolvedValue(jsonResponse({ docs: [] }));
 });
 
 afterEach(() => {
@@ -18,7 +18,7 @@ afterEach(() => {
 });
 
 const preflight = (origin: string) =>
-  requestWithEnv("http://localhost/payload/posts", env, {
+  requestWithEnv("http://localhost/content/posts", env, {
     method: "OPTIONS",
     headers: {
       Origin: origin,
@@ -31,20 +31,40 @@ describe("adapter CORS", () => {
     "http://localhost:5173",
     "http://localhost:3000",
     "https://tom.so",
+    "https://cms.tom.so",
+    "https://adapter.tom.so",
     "https://dev-web.tom.so",
     "https://dev-adapter.tom.so",
+    "https://pr-42-cms.tom.so",
   ])("allows the %s origin on preflight", async (origin) => {
     const response = await app.fetch(preflight(origin));
     expect(response.status).toBe(204);
     expect(response.headers.get("access-control-allow-origin")).toBe(origin);
     expect(response.headers.get("access-control-allow-credentials")).toBe("true");
-    expect(response.headers.get("access-control-allow-methods")).toBe("GET, POST, OPTIONS");
+    expect(response.headers.get("access-control-allow-methods")).toBe(
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
     expect(response.headers.get("access-control-allow-headers")).toBe(
       "Content-Type, x-use-simulator",
     );
   });
 
-  it.each(["https://evil.example.com", "https://tom.so.attacker.io"])(
+  it("allows editor PUT preflights with credentials", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/content/posts/hello-world", env, {
+        method: "OPTIONS",
+        headers: {
+          Origin: "http://localhost:5173",
+          "Access-Control-Request-Method": "PUT",
+        },
+      }),
+    );
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBe("http://localhost:5173");
+    expect(response.headers.get("access-control-allow-credentials")).toBe("true");
+  });
+
+  it.each(["https://evil.example.com", "https://tom.so.attacker.io", "https://evil.tom.so"])(
     "does not allow the %s origin",
     async (origin) => {
       const response = await app.fetch(preflight(origin));
@@ -53,9 +73,23 @@ describe("adapter CORS", () => {
     },
   );
 
+  it("does not allow localhost origins against the production worker", async () => {
+    const response = await app.fetch(
+      requestWithEnv("https://adapter.tom.so/content/posts", env, {
+        method: "OPTIONS",
+        headers: {
+          Origin: "http://localhost:5173",
+          "Access-Control-Request-Method": "GET",
+        },
+      }),
+    );
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
   it("echoes the allowed origin on actual requests", async () => {
     const response = await app.fetch(
-      requestWithEnv("http://localhost/payload/posts?pageSize=1", env, {
+      requestWithEnv("http://localhost/content/posts?pageSize=1", env, {
         headers: { Origin: "https://dev-web.tom.so" },
       }),
     );
@@ -64,7 +98,7 @@ describe("adapter CORS", () => {
   }, 10_000);
 
   it("does not set CORS headers for server-to-server requests without an Origin", async () => {
-    const response = await app.fetch(requestWithEnv("http://localhost/payload/posts", env));
+    const response = await app.fetch(requestWithEnv("http://localhost/content/posts", env));
     expect(response.status).toBe(200);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
   });

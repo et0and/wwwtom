@@ -6,6 +6,7 @@ import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { stageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
+import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -40,6 +41,21 @@ export const api = Effect.gen(function* () {
   const queue = yield* tomQueue.pipe(retain());
   const dlq = yield* tomQueueDlq.pipe(retain());
 
+  // The CMS D1 database and media bucket are owned by the api stack, the
+  // only runtime user. Production retains them so a stage teardown never
+  // deletes content or media; preview stages stay ephemeral. PR previews
+  // read the dev database + bucket directly (see cms.storage.ts).
+  const cmsDb = yield* stage === "production"
+    ? cmsD1.pipe(retain())
+    : stage.startsWith("pr-")
+      ? previewCmsD1
+      : cmsD1;
+  const cmsMedia = yield* stage === "production"
+    ? cmsMediaBucket.pipe(retain())
+    : stage.startsWith("pr-")
+      ? previewCmsMedia
+      : cmsMediaBucket;
+
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
@@ -64,6 +80,17 @@ export const api = Effect.gen(function* () {
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       WORK_QUEUE: queue,
+      CMS_D1: cmsDb,
+      CMS_MEDIA: cmsMedia,
+      // Admin allowlist as explicit stage config (not a secret): it wins
+      // over the TOM_SECRETS bundle value, which is opaque and shared.
+      CMS_ADMIN_EMAILS: "gh@tomhackshaw.com",
+      // Better Auth builds OAuth redirect URLs from the adapter origin and
+      // only returns to trusted editor origins after sign-in.
+      ADAPTER_URL: isAlchemyDev
+        ? "http://localhost:8788"
+        : `https://${stageHost(stage, "adapter")}`,
+      EDITOR_URL: isAlchemyDev ? "http://localhost:5173" : `https://${stageHost(stage, "cms")}`,
     },
   });
 

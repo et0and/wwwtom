@@ -15,7 +15,6 @@ const createConfigLayer = (config: TestConfig) => {
   return Layer.succeed(AppConfig, {
     arenaToken: Redacted.make(""),
     arenaBaseUrl: undefined,
-    payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
     telegramBotToken: token ? Redacted.make(token) : undefined,
     telegramChatId: chatId,

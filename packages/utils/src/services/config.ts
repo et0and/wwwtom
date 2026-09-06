@@ -6,7 +6,6 @@ import { SecretsError } from "@tom/types/errors";
 export interface AppConfigContract {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
   readonly arenaBaseUrl: string | undefined;
-  readonly payloadUrl: Redacted.Redacted<string>;
   readonly databaseUrl: Redacted.Redacted<string>;
   readonly telegramBotToken: Redacted.Redacted<string> | undefined;
   readonly telegramChatId: string | undefined;
@@ -24,6 +23,43 @@ const parseOptionalSecret = (value?: string): string | undefined => {
 export type SecretBinding = {
   get(): Promise<string>;
 };
+
+// Minimal Worker-safe D1 surface used by CmsService (apps/api). The real
+// D1Database binding satisfies this structurally; tests fake it.
+export interface CmsD1Statement {
+  readonly bind: (...values: ReadonlyArray<string | number | null>) => CmsD1Statement;
+  readonly first: <T>(column?: string) => Promise<T | null>;
+  readonly all: <T>() => Promise<{ readonly results: ReadonlyArray<T> }>;
+  readonly run: () => Promise<{ readonly success: boolean }>;
+}
+
+export interface CmsD1Binding {
+  readonly prepare: (query: string) => CmsD1Statement;
+  // Batch + exec exist on the real D1 binding; Better Auth detects and
+  // uses them, CmsService only uses prepare.
+  readonly batch: (
+    statements: ReadonlyArray<CmsD1Statement>,
+  ) => Promise<ReadonlyArray<{ readonly success: boolean }>>;
+  readonly exec: (query: string) => Promise<unknown>;
+}
+
+// Minimal Worker-safe R2 surface used by CmsService. The real R2Bucket
+// binding satisfies this structurally; tests fake it.
+export interface CmsR2Object {
+  readonly key: string;
+  readonly size: number;
+  readonly arrayBuffer: () => Promise<ArrayBuffer>;
+}
+
+export interface CmsR2Binding {
+  readonly put: (
+    key: string,
+    value: ArrayBuffer | Uint8Array | string,
+    options?: { readonly httpMetadata?: { readonly contentType?: string } },
+  ) => Promise<{ readonly key: string }>;
+  readonly get: (key: string) => Promise<CmsR2Object | null>;
+  readonly delete: (key: string) => Promise<void>;
+}
 
 // AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
 // Secrets Store binding (production; minted by the Axiom provider). Decode
@@ -44,7 +80,6 @@ export const resolveSecretValue = (
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
   ARENA_API_URL?: string;
-  PAYLOAD_URL?: string;
   DATABASE_URL?: string;
   HYPERDRIVE?: { connectionString: string };
   // Raw Cloudflare queue binding — app code should go through
@@ -66,9 +101,21 @@ export type CloudflareEnv = {
   INTERNAL_API_TOKEN?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
+  // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
+  EDITOR_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
+  // Slim CMS auth (Better Auth + GitHub OAuth), owned by the api stack.
+  BETTER_AUTH_SECRET?: string;
+  GITHUB_CLIENT_ID?: string;
+  GITHUB_CLIENT_SECRET?: string;
+  // Comma-separated admin emails allowed to sign in.
+  CMS_ADMIN_EMAILS?: string;
+  // Slim CMS storage bindings (D1 tables + R2 media bucket), owned by the
+  // api stack (infra/cms/cms.storage.ts). Only the API binds them.
+  CMS_D1?: CmsD1Binding;
+  CMS_MEDIA?: CmsR2Binding;
   // When set, requests carrying the `x-use-simulator` header have their
-  // upstream service URLs (payload/arena/polar/api) rewritten to this base
+  // upstream service URLs (arena/polar/api) rewritten to this base
   // URL — the e2e fixture simulator (apps/simulator).
   SIMULATOR_URL?: string;
   NODE_ENV?: string;
@@ -94,8 +141,11 @@ export type CloudflareEnv = {
 // dataset names default in otelConfigFromResolvedEnv.
 const secretKeys = [
   "ARENA_TOKEN",
-  "PAYLOAD_URL",
   "DATABASE_URL",
+  "BETTER_AUTH_SECRET",
+  "GITHUB_CLIENT_ID",
+  "GITHUB_CLIENT_SECRET",
+  "CMS_ADMIN_EMAILS",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
   "SUCCESS_URL",
@@ -135,14 +185,22 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
     }),
   );
 
-  return { ...rest, ...bundle, ...(axiomToken && { AXIOM_TOKEN: axiomToken }) };
+  return {
+    ...rest,
+    ...bundle,
+    ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
+    // Stage config is authoritative for the admin allowlist: an explicitly
+    // set worker env wins over the bundle (which is opaque and shared), so
+    // a stale bundle value can never lock every admin out. Unset env keeps
+    // the bundle value.
+    ...(rest.CMS_ADMIN_EMAILS !== undefined && { CMS_ADMIN_EMAILS: rest.CMS_ADMIN_EMAILS }),
+  };
 };
 
 export class AppConfig extends Context.Service<AppConfig, AppConfigContract>()("AppConfig") {
   static readonly Default = Layer.succeed(AppConfig, {
     arenaToken: undefined as Redacted.Redacted<string> | undefined,
     arenaBaseUrl: undefined as string | undefined,
-    payloadUrl: Redacted.make(""),
     databaseUrl: Redacted.make(""),
     telegramBotToken: undefined as Redacted.Redacted<string> | undefined,
     telegramChatId: undefined as string | undefined,
@@ -168,7 +226,6 @@ export const makeAppConfigLayer = (config: PartialCloudflareEnv): Layer.Layer<Ap
   return Layer.succeed(AppConfig, {
     arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
     arenaBaseUrl,
-    payloadUrl: Redacted.make(config.PAYLOAD_URL ?? ""),
     databaseUrl: Redacted.make(config.HYPERDRIVE?.connectionString ?? config.DATABASE_URL ?? ""),
     telegramBotToken: config.TELEGRAM_BOT_TOKEN
       ? Redacted.make(config.TELEGRAM_BOT_TOKEN)

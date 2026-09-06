@@ -1,0 +1,47 @@
+{
+  "name": "@tom/editor",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Slim Tiptap CMS editor for tom.so",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --port 5173",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@solidjs/web": "catalog:",
+    "@tiptap/core": "catalog:",
+    "@tiptap/extension-bold": "catalog:",
+    "@tiptap/extension-code-block": "catalog:",
+    "@tiptap/extension-document": "catalog:",
+    "@tiptap/extension-heading": "catalog:",
+    "@tiptap/extension-horizontal-rule": "catalog:",
+    "@tiptap/extension-italic": "catalog:",
+    "@tiptap/extension-link": "catalog:",
+    "@tiptap/extension-paragraph": "catalog:",
+    "@tiptap/extension-text": "catalog:",
+    "@tiptap/pm": "catalog:",
+    "@tom/constants": "workspace:*",
+    "@tom/schemas": "workspace:*",
+    "@tom/types": "workspace:*",
+    "@tom/ui": "workspace:*",
+    "@tom/utils": "workspace:*",
+    "effect": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@solidjs/testing-library": "1.0.0-beta.3",
+    "@solidjs/vite-plugin": "catalog:",
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/jest-dom": "6.8.0",
+    "@types/node": "24.9.1",
+    "jsdom": "27.0.0",
+    "tailwindcss": "4.3.3",
+    "vite": "^8.1.5",
+    "vitest": "4.1.10"
+  }
+}

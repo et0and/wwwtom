@@ -11,14 +11,14 @@ vi.mock("~/server/adapter", () => ({
 
 import { fetchPosts } from "~/server/adapter";
 
-// The fixtures are intentionally minimal; the server function's branded
-// PayloadPost types are not what this UI test cares about.
+// The fixtures are intentionally minimal; the server function's CMS list
+// shape is not what this UI test cares about.
 const mockedFetchPosts = fetchPosts as Mock;
 
-const postsPayload = {
-  data: [
+const postsData = {
+  docs: [
     {
-      id: "34",
+      id: "post-1",
       title: "A pattern language",
       summary: "On imagining a monorepo as a shared house",
       slug: "a-pattern-language",
@@ -26,7 +26,7 @@ const postsPayload = {
       meta: { description: "A meta description" },
     },
     {
-      id: "35",
+      id: "post-2",
       title: "On git notes",
       summary: "Using a niche git feature",
       slug: "on-git-notes",
@@ -34,9 +34,12 @@ const postsPayload = {
       meta: { description: "Another description" },
     },
   ],
-  meta: {
-    pagination: { page: 1, pageSize: 5, pageCount: 1, total: 2 },
-  },
+  totalDocs: 2,
+  limit: 5,
+  page: 1,
+  totalPages: 1,
+  hasNextPage: false,
+  hasPrevPage: false,
 };
 
 const TestRouter = createRouter({
@@ -58,7 +61,7 @@ beforeEach(() => {
 
 describe("posts page", () => {
   it("renders posts fetched through the server function", async () => {
-    mockedFetchPosts.mockResolvedValue(postsPayload);
+    mockedFetchPosts.mockResolvedValue(postsData);
     renderPosts();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
     expect(screen.getByText("On git notes")).toBeTruthy();
@@ -77,8 +80,13 @@ describe("posts page", () => {
 
   it("shows a message when there are no posts", async () => {
     mockedFetchPosts.mockResolvedValue({
-      data: [],
-      meta: { pagination: { page: 1, pageSize: 5, pageCount: 0, total: 0 } },
+      docs: [],
+      totalDocs: 0,
+      limit: 5,
+      page: 1,
+      totalPages: 1,
+      hasNextPage: false,
+      hasPrevPage: false,
     });
     renderPosts();
     await waitFor(() => expect(screen.getByText("No posts found.")).toBeTruthy());
