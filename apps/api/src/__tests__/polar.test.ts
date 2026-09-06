@@ -17,6 +17,23 @@ afterEach(() => {
 
 const env = testEnv({ POLAR_ACCESS_TOKEN: "test-token" });
 
+/** JSON body the service sent through the stubbed fetch. */
+const sentJson = async (): Promise<unknown> => {
+  const init: RequestInit = fetchMock.mock.calls[0]?.[1];
+  return new Response(init.body).json();
+};
+
+/** URL and init of the single stubbed fetch call. */
+interface SentRequest {
+  url: string;
+  init: RequestInit;
+}
+
+const sentRequest = (): SentRequest => {
+  const [url, init] = fetchMock.mock.calls[0] ?? [];
+  return { url: String(url), init };
+};
+
 /** Request with the internal token header, as the adapter would send it. */
 const internalRequest = (url: string, env: CloudflareEnv) =>
   requestWithEnv(url, env, {
@@ -39,18 +56,11 @@ describe("polar routes", () => {
       expect(response.headers.get("location")).toBe(
         "https://checkout.polar.sh/session/abc?theme=light",
       );
-      expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.polar.sh/v1/checkouts/",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({
-            products: ["prod_1"],
-            successUrl: undefined,
-            customerId: undefined,
-            customerEmail: undefined,
-          }),
-        }),
-      );
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const { url, init } = sentRequest();
+      expect(url).toBe("https://api.polar.sh/v1/checkouts/");
+      expect(init.method).toBe("POST");
+      await expect(sentJson()).resolves.toEqual({ products: ["prod_1"] });
     });
 
     it("passes the customer id and success URL through", async () => {
@@ -70,17 +80,16 @@ describe("polar routes", () => {
           successEnv,
         ),
       );
-      expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.polar.sh/v1/checkouts/",
-        expect.objectContaining({
-          body: JSON.stringify({
-            products: ["prod_1"],
-            successUrl: "https://tom.so/thanks?checkoutId={CHECKOUT_ID}",
-            customerId: "cust_1",
-            customerEmail: "tom@example.com",
-          }),
-        }),
-      );
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const { url, init } = sentRequest();
+      expect(url).toBe("https://api.polar.sh/v1/checkouts/");
+      expect(init.method).toBe("POST");
+      await expect(sentJson()).resolves.toEqual({
+        products: ["prod_1"],
+        successUrl: "https://tom.so/thanks?checkoutId={CHECKOUT_ID}",
+        customerId: "cust_1",
+        customerEmail: "tom@example.com",
+      });
     });
 
     it("returns 400 when products are missing", async () => {
@@ -105,7 +114,7 @@ describe("polar routes", () => {
       expect(body).toEqual({
         type: "about:blank",
         status: 404,
-        title: "Failed to create checkout",
+        title: "Failed to create Polar checkout",
       });
     });
 
@@ -119,7 +128,7 @@ describe("polar routes", () => {
       expect(body).toEqual({
         type: "about:blank",
         status: 500,
-        title: "Failed to create checkout",
+        title: "Failed to create Polar checkout",
       });
     });
 
@@ -151,13 +160,14 @@ describe("polar routes", () => {
       );
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe("https://polar.sh/portal/cust_1");
-      expect(fetchMock).toHaveBeenCalledWith(
-        "https://api.polar.sh/v1/customer-sessions/",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ customerId: "cust_1", returnUrl: "https://tom.so/products" }),
-        }),
-      );
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const { url, init } = sentRequest();
+      expect(url).toBe("https://api.polar.sh/v1/customer-sessions/");
+      expect(init.method).toBe("POST");
+      await expect(sentJson()).resolves.toEqual({
+        customerId: "cust_1",
+        returnUrl: "https://tom.so/products",
+      });
     });
 
     it("returns 400 when customerId is missing", async () => {
@@ -182,7 +192,7 @@ describe("polar routes", () => {
       expect(body).toEqual({
         type: "about:blank",
         status: 500,
-        title: "Failed to create customer session",
+        title: "Failed to create Polar customer session",
       });
     });
   });

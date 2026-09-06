@@ -31,17 +31,16 @@ export const Version = Resource<Version>("Gtm.Version");
 
 const containerOf = (workspacePath: string): string => workspacePath.split("/workspaces/")[0] ?? "";
 
-const toAttrs = (v: ContainerVersion): VersionAttributes =>
-  ({
-    path: v.path,
-    containerVersionId: v.containerVersionId,
-    accountId: v.accountId,
-    containerId: v.containerId,
-    name: v.name ?? "",
-    description: v.description ?? "",
-    fingerprint: v.fingerprint ?? "",
-    tagManagerUrl: v.tagManagerUrl ?? "",
-  }) as VersionAttributes;
+const toAttrs = (v: ContainerVersion): VersionAttributes => ({
+  path: v.path,
+  containerVersionId: v.containerVersionId,
+  accountId: v.accountId,
+  containerId: v.containerId,
+  name: v.name ?? "",
+  description: v.description ?? "",
+  fingerprint: v.fingerprint ?? "",
+  tagManagerUrl: v.tagManagerUrl ?? "",
+});
 
 export const VersionProvider = () =>
   Provider.effect(
@@ -50,7 +49,7 @@ export const VersionProvider = () =>
       const http = yield* GtmHttp;
 
       return {
-        list: () => Effect.succeed([] as VersionAttributes[]),
+        list: () => Effect.succeed<VersionAttributes[]>([]),
 
         diff: ({ olds, news, output }) =>
           Effect.sync(() => {

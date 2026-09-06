@@ -12,7 +12,17 @@ import { handleFeed, handleRobots, handleSitemap } from "~/server/static-routes"
  */
 export default async function middleware(request: Request, next: () => Promise<Response>) {
   const event = getRequestEvent();
-  const env = process.env as CloudflareEnv;
+  const env: CloudflareEnv = {
+    ...(process.env.LOG_LEVEL !== undefined && { LOG_LEVEL: process.env.LOG_LEVEL }),
+    ...(process.env.AXIOM_TOKEN !== undefined && { AXIOM_TOKEN: process.env.AXIOM_TOKEN }),
+    ...(process.env.OTEL_ENDPOINT !== undefined && { OTEL_ENDPOINT: process.env.OTEL_ENDPOINT }),
+    ...(process.env.OTEL_TRACES_DATASET !== undefined && {
+      OTEL_TRACES_DATASET: process.env.OTEL_TRACES_DATASET,
+    }),
+    ...(process.env.OTEL_LOGS_DATASET !== undefined && {
+      OTEL_LOGS_DATASET: process.env.OTEL_LOGS_DATASET,
+    }),
+  };
   const otel = await otelConfigFromEnv(env).catch(() => undefined);
 
   const logContext: LogContext = {

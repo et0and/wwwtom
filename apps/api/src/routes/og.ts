@@ -1,7 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { problemDetailsSchema } from "@tom/schemas/error";
-import { ValidationError } from "@tom/types/errors";
 import { logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
@@ -97,16 +96,16 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
         yield* validateOgParams(title, summary);
         return yield* generateOgImageEffect(title, summary, requester, template);
       }).pipe(
-        Effect.catch((error) => {
-          return Effect.gen(function* () {
-            if (error instanceof ValidationError) {
-              yield* Effect.logWarning("Error generating OG image", error);
-            } else {
-              yield* Effect.logError("Error generating OG image", error);
-            }
-            return yield* Effect.succeed(handleOgError(error));
-          });
-        }),
+        Effect.catchTag("ValidationError", (error) =>
+          Effect.logWarning("Error generating OG image", error).pipe(
+            Effect.map(() => handleOgError(error)),
+          ),
+        ),
+        Effect.catch((error) =>
+          Effect.logError("Error generating OG image", error).pipe(
+            Effect.map(() => handleOgError(error)),
+          ),
+        ),
       ),
       logContextFromRequest(request, "tom-api"),
     );

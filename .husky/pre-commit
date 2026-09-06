@@ -1,2 +1,7 @@
+# Regenerate Kysely types from migrations so @tom/types/db.ts never drifts.
+# Boots in-process PGlite; needs no network.
+pnpm --filter @tom/db generate
+pnpm exec oxfmt --write packages/types/src/db.ts
+git add packages/types/src/db.ts
 pnpm exec turbo run lint
 pnpm format

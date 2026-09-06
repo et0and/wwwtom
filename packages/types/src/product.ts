@@ -6,9 +6,9 @@ type ProductMedia = {
 export type Product = {
   id: string;
   name: string;
-  description: string;
-  medias: ProductMedia[];
-  prices: Array<{
+  description: string | null;
+  medias: ReadonlyArray<ProductMedia>;
+  prices: ReadonlyArray<{
     price_amount: number;
     price_currency: string;
   }>;

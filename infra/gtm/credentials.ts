@@ -3,6 +3,13 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 import { Schema } from "effect";
+import {
+  FetchHttpClient,
+  Headers,
+  HttpBody,
+  HttpClient,
+  HttpClientResponse,
+} from "effect/unstable/http";
 
 export class CredentialsError extends Schema.TaggedError<CredentialsError>()("CredentialsError", {
   message: Schema.String,
@@ -31,38 +38,50 @@ type TokenResponse = {
   expiresAt: number;
 };
 
+const TokenResponseSchema = Schema.Struct({
+  access_token: Schema.String,
+  expires_in: Schema.Number,
+});
+
+/**
+ * HttpClient bound to the current global fetch. Built per call because the
+ * Fetch reference default pins the first-seen implementation process-wide.
+ */
+const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
+  Layer.provideMerge(FetchHttpClient.layer, Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch));
+
 const exchangeRefreshToken = (
   value: GtmCredentialsValue,
 ): Effect.Effect<TokenResponse, CredentialsError> =>
-  Effect.tryPromise({
-    try: async () => {
-      const body = new URLSearchParams({
-        client_id: value.clientId,
-        client_secret: Redacted.value(value.clientSecret),
-        refresh_token: Redacted.value(value.refreshToken),
-        grant_type: "refresh_token",
-      });
-      const res = await fetch(TOKEN_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: body.toString(),
-      });
-      if (!res.ok) {
-        const text = await res.text();
-        throw new Error(`token exchange failed ${res.status}: ${text}`);
-      }
-      const json = (await res.json()) as { access_token: string; expires_in: number };
-      return {
-        token: Redacted.make(json.access_token),
-        expiresAt: Date.now() + json.expires_in * 1000,
-      };
-    },
-    catch: (cause) =>
-      new CredentialsError({
-        message: cause instanceof Error ? cause.message : String(cause),
-        cause,
-      }),
-  });
+  Effect.gen(function* () {
+    const client = yield* HttpClient.HttpClient;
+    const requestBody = HttpBody.urlParams({
+      client_id: value.clientId,
+      client_secret: Redacted.value(value.clientSecret),
+      refresh_token: Redacted.value(value.refreshToken),
+      grant_type: "refresh_token",
+    });
+    const response = yield* client
+      .post(TOKEN_ENDPOINT, {
+        headers: Headers.fromInput({ "Content-Type": "application/x-www-form-urlencoded" }),
+        body: requestBody,
+      })
+      .pipe(
+        Effect.mapError(
+          (cause) => new CredentialsError({ message: "Token request failed", cause }),
+        ),
+      );
+    const token = yield* HttpClientResponse.filterStatusOk(response).pipe(
+      Effect.flatMap((okResponse) =>
+        HttpClientResponse.schemaBodyJson(TokenResponseSchema)(okResponse),
+      ),
+      Effect.mapError((cause) => new CredentialsError({ message: "Token exchange failed", cause })),
+    );
+    return {
+      token: Redacted.make(token.access_token),
+      expiresAt: Date.now() + token.expires_in * 1000,
+    };
+  }).pipe(Effect.provide(liveHttpClient()));
 
 /**
  * Refreshes Google OAuth access tokens, caching each token until shortly
@@ -82,9 +101,10 @@ const makeCredentialsService = (value: GtmCredentialsValue): GtmCredentialsServi
         inFlight = undefined;
       });
     }
+    const current = inFlight;
     return Effect.map(
       Effect.tryPromise({
-        try: () => inFlight!,
+        try: () => current,
         catch: (cause) =>
           new CredentialsError({
             message: cause instanceof Error ? cause.message : String(cause),

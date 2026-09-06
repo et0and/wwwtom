@@ -87,10 +87,7 @@ const computeArtifactTag = (
     });
 
     const bytes = new Uint8Array(signature);
-    let binary = "";
-    for (let index = 0; index < bytes.length; index++) {
-      binary += String.fromCharCode(bytes[index] ?? 0);
-    }
+    const binary = Array.from(bytes, (byte) => String.fromCharCode(byte)).join("");
     return btoa(binary);
   });
 /**

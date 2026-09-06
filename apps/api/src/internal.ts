@@ -8,10 +8,10 @@ import { getRequestEnv, toProblemResponse } from "@tom/utils/services/worker";
 /** Constant-time comparison so token timing can't leak the shared secret. */
 const timingSafeEqual = (a: string, b: string): boolean => {
   if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) {
-    diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  }
+  const diff = Array.from(a, (char, index) => char.charCodeAt(0) ^ b.charCodeAt(index)).reduce(
+    (acc, code) => acc | code,
+    0,
+  );
   return diff === 0;
 };
 

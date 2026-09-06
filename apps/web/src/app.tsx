@@ -1,21 +1,15 @@
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { onSettled } from "solid-js";
 import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
 import { ProgressBar } from "@tom/ui/ProgressBar";
 import { SkipLink } from "@tom/ui/SkipLink";
 import { useColorMode } from "@tom/ui/tomui/color-mode";
-import { useGlobalHaptics } from "~/libs/haptics";
 import { getQueryClient } from "~/libs/query-client";
 import { Router } from "~/router";
 import "./app.css";
 
 function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
   useColorMode();
-  onSettled(() => {
-    useGlobalHaptics();
-  });
-
   return (
     <div class="min-h-screen flex flex-col">
       <SkipLink />

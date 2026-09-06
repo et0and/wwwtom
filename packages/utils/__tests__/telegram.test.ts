@@ -64,12 +64,14 @@ const sendErrorEffect = (message: string, cause?: unknown, details?: ErrorAlertD
 
 afterEach(() => {
   vi.unstubAllGlobals();
-  vi.restoreAllMocks();
 });
 
 describe("TelegramService", () => {
   it("returns a no-op service when config missing", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
@@ -78,7 +80,10 @@ describe("TelegramService", () => {
   });
 
   it("sends alerts with expected payload", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
@@ -98,11 +103,13 @@ describe("TelegramService", () => {
       throw new Error("Expected fetch options");
     }
 
-    expect(url).toBe("https://api.telegram.org/bottoken/sendMessage");
+    expect(String(url)).toBe("https://api.telegram.org/bottoken/sendMessage");
     expect(options.method).toBe("POST");
-    expect(options.headers).toEqual({ "Content-Type": "application/json" });
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+    expect(new Headers(options.headers).get("content-type")).toBe("application/json");
+    const body = JSON.parse(new TextDecoder().decode(options.body as Uint8Array)) as {
+      text?: unknown;
+      reply_markup?: unknown;
+    };
 
     expect(body.chat_id).toBe("123");
     expect(body.text).toBe("Hello");
@@ -110,9 +117,19 @@ describe("TelegramService", () => {
   });
 
   it("formats errors in alert payloads", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
-    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
+    const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => {
+      console.log(
+        "FORMATS FETCHER CALLED, global match:",
+        globalThis.fetch === (fetcher as unknown),
+      );
+      return response;
+    });
     vi.stubGlobal("fetch", fetcher);
+    console.log("STUB SET, match:", globalThis.fetch === (fetcher as unknown));
 
     const error = new Error("Boom");
     error.stack = "Boom stack";
@@ -130,8 +147,11 @@ describe("TelegramService", () => {
     if (!options) {
       throw new Error("Expected fetch options");
     }
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+    expect(options.body).toBeInstanceOf(Uint8Array);
+    const body = JSON.parse(new TextDecoder().decode(options.body as Uint8Array)) as {
+      text?: unknown;
+      reply_markup?: unknown;
+    };
     const text = body.text as string;
 
     expect(text).toContain("*ERROR*");
@@ -142,7 +162,10 @@ describe("TelegramService", () => {
   });
 
   it("includes request details and log lookup in alert payloads", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
@@ -167,8 +190,11 @@ describe("TelegramService", () => {
     if (!options) {
       throw new Error("Expected fetch options");
     }
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+    expect(options.body).toBeInstanceOf(Uint8Array);
+    const body = JSON.parse(new TextDecoder().decode(options.body as Uint8Array)) as {
+      text?: unknown;
+      reply_markup?: unknown;
+    };
     const text = body.text as string;
 
     expect(text).toContain("*ERROR · tom-adapter · staging · 500*");
@@ -179,7 +205,10 @@ describe("TelegramService", () => {
   });
 
   it("attaches link buttons when details include links", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
@@ -199,8 +228,11 @@ describe("TelegramService", () => {
     if (!options) {
       throw new Error("Expected fetch options");
     }
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+    expect(options.body).toBeInstanceOf(Uint8Array);
+    const body = JSON.parse(new TextDecoder().decode(options.body as Uint8Array)) as {
+      text?: unknown;
+      reply_markup?: unknown;
+    };
 
     expect(body.reply_markup).toEqual({
       inline_keyboard: [
@@ -210,7 +242,10 @@ describe("TelegramService", () => {
   });
 
   it("omits reply markup when details have no links", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
@@ -227,14 +262,20 @@ describe("TelegramService", () => {
     if (!options) {
       throw new Error("Expected fetch options");
     }
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+    expect(options.body).toBeInstanceOf(Uint8Array);
+    const body = JSON.parse(new TextDecoder().decode(options.body as Uint8Array)) as {
+      text?: unknown;
+      reply_markup?: unknown;
+    };
 
     expect(body.reply_markup).toBeUndefined();
   });
 
   it("truncates long stacks and caps alert length", async () => {
-    const response = { ok: true, status: 200, statusText: "OK" } as Response;
+    const response = new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json" },
+    });
     const fetcher = vi.fn(async (_input: string, _init?: RequestInit) => response);
     vi.stubGlobal("fetch", fetcher);
 
@@ -254,8 +295,11 @@ describe("TelegramService", () => {
     if (!options) {
       throw new Error("Expected fetch options");
     }
-    expect(options.body).toBeTypeOf("string");
-    const body = JSON.parse(options.body as string);
+    expect(options.body).toBeInstanceOf(Uint8Array);
+    const body = JSON.parse(new TextDecoder().decode(options.body as Uint8Array)) as {
+      text?: unknown;
+      reply_markup?: unknown;
+    };
     const text = body.text as string;
 
     expect(text).toContain("(truncated)");
@@ -297,14 +341,13 @@ describe("TelegramService", () => {
       telegramBotToken: "token",
       telegramChatId: "123",
     });
-
     expect(result.tag).toBe("error");
     if (result.tag !== "error") {
       throw new Error("Expected error result");
     }
     expect(result.error).toMatchObject({
       _tag: "TelegramError",
-      message: "Telegram API error: 500 Bad Gateway",
+      message: "Telegram API error: 500",
       status: 500,
     });
   });

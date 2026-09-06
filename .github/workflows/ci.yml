@@ -18,6 +18,14 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
 
+      # Fail when @tom/types/db.ts drifts from the migrations. Generation
+      # boots in-process PGlite; needs no network and no secrets.
+      - name: Check generated DB types are current
+        run: |
+          pnpm --filter @tom/db generate
+          pnpm exec oxfmt --write packages/types/src/db.ts
+          git diff --exit-code packages/types/src/db.ts
+
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
       # package's workspace dependencies first. Task artifacts are shared

@@ -1,9 +1,16 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
+import { Headers, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { PolarApiError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { Customer, CustomerInput } from "@tom/types/customer";
 import type { Product } from "@tom/types/product";
+import {
+  polarCustomerSchema,
+  polarCustomersResponseSchema,
+  polarProductSchema,
+  polarProductsResponseSchema,
+} from "@tom/schemas/polar";
 import { callApi } from "../../callApi";
 import { customerBodySchema } from "../../schemas";
 import {
@@ -17,53 +24,60 @@ import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/confi
 import type { LogContext } from "@tom/utils/services/logging";
 import { AdapterError, runAdapter } from "../../config/effect";
 import { simulatorEnv } from "../../simulator";
+import { liveHttpClient } from "../../http-client";
 
-const authHeaders = (accessToken: string | undefined) => ({
-  Authorization: `Bearer ${accessToken}`,
-  "Content-Type": "application/json",
-});
-
-const parseJson = <T>(response: Response, operation: string): Effect.Effect<T, PolarApiError> =>
-  Effect.tryPromise({
-    try: () => response.json() as Promise<T>,
-    catch: () =>
-      new PolarApiError({
-        message: "Failed to parse response",
-        status: HttpStatus.InternalServerError,
-        operation,
-      }),
+const authHeaders = (accessToken: string | undefined) =>
+  Headers.fromInput({
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
   });
 
 const polarBaseUrl = (env: CloudflareEnv) => env.POLAR_API_URL ?? "https://api.polar.sh";
 
-const fetchPolarProducts = (env: CloudflareEnv): Effect.Effect<Product[], PolarApiError> =>
+const networkError = (operation: string) =>
+  new PolarApiError({ message: "Network error", status: 0, operation });
+
+const parseError = (operation: string) =>
+  new PolarApiError({
+    message: "Failed to parse response",
+    status: HttpStatus.InternalServerError,
+    operation,
+  });
+
+const fetchPolarProducts = (
+  env: CloudflareEnv,
+): Effect.Effect<ReadonlyArray<Product>, PolarApiError> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("Fetching products from Polar API");
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(`${polarBaseUrl(env)}/v1/products?is_archived=false`, {
-          headers: authHeaders(env.POLAR_ACCESS_TOKEN),
-        }),
-      catch: () =>
-        new PolarApiError({
-          message: "Network error",
-          status: 0,
-          operation: "fetch_products",
-        }),
-    });
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client
+      .get(`${polarBaseUrl(env)}/v1/products?is_archived=false`, {
+        headers: authHeaders(env.POLAR_ACCESS_TOKEN),
+      })
+      .pipe(Effect.mapError(() => networkError("fetch_products")));
 
-    if (!response.ok) {
-      yield* logApiFailure("Failed to fetch Polar products", response.status);
-      return yield* new PolarApiError({
-        message: "Failed to fetch products",
-        status: response.status,
-        operation: "fetch_products",
-      });
-    }
+    const okResponse = yield* HttpClientResponse.filterStatusOk(response).pipe(
+      Effect.tapError((error) =>
+        logApiFailure(
+          "Failed to fetch Polar products",
+          error.response?.status ?? HttpStatus.InternalServerError,
+        ),
+      ),
+      Effect.mapError(
+        (error) =>
+          new PolarApiError({
+            message: "Failed to fetch products",
+            status: error.response?.status ?? HttpStatus.InternalServerError,
+            operation: "fetch_products",
+          }),
+      ),
+    );
 
-    const data = yield* parseJson<{ items: Product[] }>(response, "fetch_products");
+    const data = yield* HttpClientResponse.schemaBodyJson(polarProductsResponseSchema)(
+      okResponse,
+    ).pipe(Effect.mapError(() => parseError("fetch_products")));
     return data.items;
-  });
+  }).pipe(Effect.provide(liveHttpClient()));
 
 const fetchPolarProduct = (
   env: CloudflareEnv,
@@ -71,29 +85,101 @@ const fetchPolarProduct = (
 ): Effect.Effect<Product, PolarApiError> =>
   Effect.gen(function* () {
     yield* Effect.logInfo(`Fetching product ${productId} from Polar API`);
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(`${polarBaseUrl(env)}/v1/products/${productId}`, {
-          headers: authHeaders(env.POLAR_ACCESS_TOKEN),
-        }),
-      catch: () =>
-        new PolarApiError({
-          message: "Network error",
-          status: 0,
-          operation: "fetch_product",
-        }),
-    });
+    const client = yield* HttpClient.HttpClient;
+    const response = yield* client
+      .get(`${polarBaseUrl(env)}/v1/products/${productId}`, {
+        headers: authHeaders(env.POLAR_ACCESS_TOKEN),
+      })
+      .pipe(Effect.mapError(() => networkError("fetch_product")));
 
-    if (!response.ok) {
-      yield* logApiFailure(`Failed to fetch Polar product ${productId}`, response.status);
-      return yield* new PolarApiError({
-        message: "Failed to fetch product",
-        status: response.status,
-        operation: "fetch_product",
-      });
+    const okResponse = yield* HttpClientResponse.filterStatusOk(response).pipe(
+      Effect.tapError((error) =>
+        logApiFailure(
+          `Failed to fetch Polar product ${productId}`,
+          error.response?.status ?? HttpStatus.InternalServerError,
+        ),
+      ),
+      Effect.mapError(
+        (error) =>
+          new PolarApiError({
+            message: "Failed to fetch product",
+            status: error.response?.status ?? HttpStatus.InternalServerError,
+            operation: "fetch_product",
+          }),
+      ),
+    );
+
+    return yield* HttpClientResponse.schemaBodyJson(polarProductSchema)(okResponse).pipe(
+      Effect.mapError(() => parseError("fetch_product")),
+    );
+  }).pipe(Effect.provide(liveHttpClient()));
+
+const findExistingCustomer = (
+  client: HttpClient.HttpClient,
+  env: CloudflareEnv,
+  email: string,
+): Effect.Effect<Customer | undefined, PolarApiError> =>
+  Effect.gen(function* () {
+    const response = yield* client
+      .get(`${polarBaseUrl(env)}/v1/customers?email=${encodeURIComponent(email)}`, {
+        headers: authHeaders(env.POLAR_ACCESS_TOKEN),
+      })
+      .pipe(Effect.mapError(() => networkError("find_customer")));
+
+    const okResponse = yield* HttpClientResponse.filterStatusOk(response).pipe(
+      Effect.tapError((error) =>
+        logApiFailure(
+          "Failed to find existing Polar customer",
+          error.response?.status ?? HttpStatus.InternalServerError,
+        ),
+      ),
+      Effect.mapError(
+        (error) =>
+          new PolarApiError({
+            message: "Failed to find existing customer",
+            status: error.response?.status ?? HttpStatus.InternalServerError,
+            operation: "find_customer",
+          }),
+      ),
+    );
+
+    const listData = yield* HttpClientResponse.schemaBodyJson(polarCustomersResponseSchema)(
+      okResponse,
+    ).pipe(Effect.mapError(() => parseError("find_customer")));
+    return listData.items[0];
+  });
+
+const handleCreateError = (
+  response: HttpClientResponse.HttpClientResponse,
+  client: HttpClient.HttpClient,
+  env: CloudflareEnv,
+  email: string,
+): Effect.Effect<Customer, PolarApiError> =>
+  Effect.gen(function* () {
+    const status = response.status;
+    const errorData = yield* response.text.pipe(
+      Effect.mapError(
+        () =>
+          new PolarApiError({
+            message: "Failed to read error response",
+            status,
+            operation: "create_customer",
+          }),
+      ),
+    );
+
+    if (status === HttpStatus.UnprocessableEntity && errorData.includes("already exists")) {
+      yield* Effect.logInfo("Customer already exists in Polar, fetching details");
+      const existing = yield* findExistingCustomer(client, env, email);
+      if (existing) return existing;
     }
 
-    return yield* parseJson<Product>(response, "fetch_product");
+    yield* logApiFailure("Failed to create Polar customer", status, errorData);
+    return yield* new PolarApiError({
+      message: `Failed to create customer: ${errorData}`,
+      status,
+      operation: "create_customer",
+    });
   });
 
 const createPolarCustomer = (
@@ -102,80 +188,35 @@ const createPolarCustomer = (
 ): Effect.Effect<Customer, PolarApiError> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("Creating Polar customer");
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(`${polarBaseUrl(env)}/v1/customers/`, {
-          method: "POST",
-          headers: authHeaders(env.POLAR_ACCESS_TOKEN),
-          body: Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))({
-            email: input.email,
-            name: input.name,
-            external_id: input.externalId,
-          }),
-        }),
-      catch: () =>
-        new PolarApiError({
-          message: "Network error",
-          status: 0,
-          operation: "create_customer",
-        }),
-    });
-
-    if (!response.ok) {
-      const errorData = yield* Effect.tryPromise({
-        try: () => response.text(),
-        catch: () =>
+    const client = yield* HttpClient.HttpClient;
+    const requestBody = yield* HttpBody.json({
+      email: input.email,
+      name: input.name,
+      external_id: input.externalId,
+    }).pipe(
+      Effect.mapError(
+        () =>
           new PolarApiError({
-            message: "Failed to read error response",
-            status: response.status,
+            message: "Failed to encode request",
+            status: HttpStatus.InternalServerError,
             operation: "create_customer",
           }),
-      });
+      ),
+    );
+    const response = yield* client
+      .post(`${polarBaseUrl(env)}/v1/customers/`, {
+        headers: authHeaders(env.POLAR_ACCESS_TOKEN),
+        body: requestBody,
+      })
+      .pipe(Effect.mapError(() => networkError("create_customer")));
 
-      if (
-        response.status === HttpStatus.UnprocessableEntity &&
-        errorData.includes("already exists")
-      ) {
-        yield* Effect.logInfo("Customer already exists in Polar, fetching details");
-        const listResponse = yield* Effect.tryPromise({
-          try: () =>
-            fetch(`${polarBaseUrl(env)}/v1/customers?email=${encodeURIComponent(input.email)}`, {
-              headers: authHeaders(env.POLAR_ACCESS_TOKEN),
-            }),
-          catch: () =>
-            new PolarApiError({
-              message: "Network error",
-              status: 0,
-              operation: "find_customer",
-            }),
-        });
-
-        if (!listResponse.ok) {
-          yield* logApiFailure("Failed to find existing Polar customer", listResponse.status);
-          return yield* new PolarApiError({
-            message: "Failed to find existing customer",
-            status: listResponse.status,
-            operation: "find_customer",
-          });
-        }
-
-        const listData = yield* parseJson<{ items: Customer[] }>(listResponse, "find_customer");
-        const existing = listData.items[0];
-        if (existing) {
-          return existing;
-        }
-      }
-
-      yield* logApiFailure("Failed to create Polar customer", response.status, errorData);
-      return yield* new PolarApiError({
-        message: `Failed to create customer: ${errorData}`,
-        status: response.status,
-        operation: "create_customer",
-      });
+    if (response.status >= 200 && response.status < 300) {
+      return yield* HttpClientResponse.schemaBodyJson(polarCustomerSchema)(response).pipe(
+        Effect.mapError(() => parseError("create_customer")),
+      );
     }
-
-    return yield* parseJson<Customer>(response, "create_customer");
-  });
+    return yield* handleCreateError(response, client, env, input.email);
+  }).pipe(Effect.provide(liveHttpClient()));
 
 const runPolar = <T>(effect: Effect.Effect<T, PolarApiError>, context: LogContext): Promise<T> =>
   runAdapter(

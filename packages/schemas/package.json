@@ -11,6 +11,7 @@
     "./health": "./src/health.ts",
     "./jsonld": "./src/jsonld.ts",
     "./og": "./src/og.ts",
+    "./polar": "./src/polar.ts",
     "./queue": "./src/queue.ts",
     "./secrets": "./src/secrets.ts",
     "./telegram": "./src/telegram.ts"

@@ -9,13 +9,17 @@ import { toProblemResponse } from "@tom/utils/services/worker";
 
 const FONT_URL = "https://cdn.tom.so/LibreCaslonCondensed-Regular.ttf";
 
-let cachedFontData: ArrayBuffer | null = null;
+interface FontCache {
+  data: ArrayBuffer | null;
+}
+
+const fontCache: FontCache = { data: null };
 
 export const fontFetchEffect = Effect.gen(function* () {
   yield* Effect.logInfo("Fetching font");
-  if (cachedFontData !== null) {
+  if (fontCache.data !== null) {
     yield* Effect.logInfo("Pulling cached font files");
-    return cachedFontData;
+    return fontCache.data;
   }
 
   const data = yield* Effect.tryPromise({
@@ -33,7 +37,7 @@ export const fontFetchEffect = Effect.gen(function* () {
       }),
   });
 
-  cachedFontData = data;
+  fontCache.data = data;
 
   return data;
 }).pipe(Effect.withSpan("og.fetchFont"));
@@ -42,17 +46,12 @@ export const getTemplate = (
   requester: string,
   templateParam?: string,
 ): ((params: OgTemplateParams) => string) => {
-  if (templateParam && templateParam in OgTemplates) {
-    return OgTemplates[templateParam as keyof typeof OgTemplates];
-  }
-  switch (true) {
-    case requester.includes("tom.so"):
-      return OgTemplates.default;
-    case requester.includes("dev.tom.so"):
-      return OgTemplates.developer;
-    default:
-      return OgTemplates.minimal;
-  }
+  if (templateParam === "default") return OgTemplates.default;
+  if (templateParam === "minimal") return OgTemplates.minimal;
+  if (templateParam === "developer") return OgTemplates.developer;
+  if (requester.includes("dev.tom.so")) return OgTemplates.developer;
+  if (requester.includes("tom.so")) return OgTemplates.default;
+  return OgTemplates.minimal;
 };
 
 export const generateOgImageEffect = Effect.fn("og.generate")(function* (
