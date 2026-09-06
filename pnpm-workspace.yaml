@@ -14,9 +14,9 @@ catalog:
   effect: 4.0.0-beta.105
   kysely: 0.28.9
   postgres: 3.4.7
-  solid-js: 2.0.0-rc.4
-  "@solidjs/web": 2.0.0-rc.4
-  "@solidjs/vite-plugin": 3.0.0-next.36
+  solid-js: 2.0.0-rc.6
+  "@solidjs/web": 2.0.0-rc.6
+  "@solidjs/vite-plugin": 3.0.0-next.39
   elysia: 1.4.29
   "@elysiajs/eden": 1.4.9
   "@elysiajs/cors": 1.4.2
@@ -25,20 +25,23 @@ catalog:
   "@solidjs/meta": 1.0.0-next.2
   "@solidjs/router": 2.0.0-next.19
   "@tanstack/solid-query": 6.0.0-beta.8
+  "@tiptap/core": 3.31.3
+  "@tiptap/extension-bold": 3.31.3
+  "@tiptap/extension-code-block": 3.31.3
+  "@tiptap/extension-document": 3.31.3
+  "@tiptap/extension-heading": 3.31.3
+  "@tiptap/extension-horizontal-rule": 3.31.3
+  "@tiptap/extension-italic": 3.31.3
+  "@tiptap/extension-link": 3.31.3
+  "@tiptap/extension-paragraph": 3.31.3
+  "@tiptap/extension-text": 3.31.3
+  "@tiptap/pm": 3.31.3
   classnames: 2.5.1
   obscenity: 0.4.5
-  next: 16.1.7
   react: 19.2.1
   react-dom: 19.2.1
-  payload: 3.75.0
-  "@payloadcms/next": 3.75.0
-  "@payloadcms/db-d1-sqlite": 3.75.0
-  "@payloadcms/richtext-lexical": 3.75.0
-  "@payloadcms/storage-r2": 3.75.0
-  dotenv: 16.4.7
   "@types/react": 19.2.9
   "@types/react-dom": 19.2.3
-  graphql: 16.12.0
   postcss: 8.5.8
   eslint: 9.39.2
   "@playwright/test": 1.58.2
@@ -60,4 +63,4 @@ minimumReleaseAgeExclude:
   - "@distilled.cloud/neon@1.0.0-rc.4"
   - "@distilled.cloud/planetscale@1.0.0-rc.4"
   - alchemy@2.0.0-beta.72
-  - "@solidjs/vite-plugin@3.0.0-next.36"
+  - "@solidjs/vite-plugin@3.0.0-next.39"

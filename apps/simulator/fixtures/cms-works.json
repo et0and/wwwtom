@@ -1,0 +1,95 @@
+[
+  {
+    "id": "work-10",
+    "slug": "unlimited-blade-works",
+    "title": "Projection: Unlimited Blade Works",
+    "summary": "A build pipeline that forgets nothing it has ever compiled.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "A reality marble full of traced artifacts: every dependency ever resolved, every blade (and build) ever forged."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>A reality marble full of traced artifacts: every dependency ever resolved, every blade (and build) ever forged.</p>",
+    "status": "published",
+    "publishedAt": "2024-06-01T09:00:00.000Z",
+    "heroMediaId": null,
+    "meta": {
+      "title": null,
+      "description": "A build pipeline that forgets nothing it has ever compiled.",
+      "image": null
+    },
+    "createdAt": "2024-06-01T09:00:00.000Z",
+    "updatedAt": "2024-06-01T09:00:00.000Z"
+  },
+  {
+    "id": "work-11",
+    "slug": "emiya-family-recipes",
+    "title": "Emiya Family Recipes",
+    "summary": "A recipe site for the curry that ends every route.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Mapo tofu, mystery curry and a cooking channel that somehow reconciles every faction."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>Mapo tofu, mystery curry and a cooking channel that somehow reconciles every faction.</p>",
+    "status": "published",
+    "publishedAt": "2023-11-12T10:00:00.000Z",
+    "heroMediaId": null,
+    "meta": {
+      "title": null,
+      "description": "A recipe site for the curry that ends every route.",
+      "image": null
+    },
+    "createdAt": "2023-11-12T10:00:00.000Z",
+    "updatedAt": "2023-11-12T10:00:00.000Z"
+  },
+  {
+    "id": "work-12",
+    "slug": "fuyuki-city-blueprint",
+    "title": "Fuyuki City Blueprint",
+    "summary": "An interactive map of the Holy Grail War: ley lines, churches and the temple.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Every vanishing point in Fuyuki, plotted: the Tohsaka mansion, the Einzbern castle, and the one bridge everyone fights on."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>Every vanishing point in Fuyuki, plotted: the Tohsaka mansion, the Einzbern castle, and the one bridge everyone fights on.</p>",
+    "status": "published",
+    "publishedAt": "2022-09-08T08:00:00.000Z",
+    "heroMediaId": null,
+    "meta": {
+      "title": null,
+      "description": "An interactive map of the Holy Grail War: ley lines, churches and the temple.",
+      "image": null
+    },
+    "createdAt": "2022-09-08T08:00:00.000Z",
+    "updatedAt": "2022-09-08T08:00:00.000Z"
+  }
+]

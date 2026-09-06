@@ -98,6 +98,26 @@ figcaption {
   }
 }
 
+blockquote {
+  font-size: 1rem;
+  line-height: 1.5;
+  letter-spacing: -0.05em;
+  margin-top: 2rem;
+  margin-bottom: 2rem;
+  padding-left: 1.25rem;
+  border-left: 2px solid rgb(209 213 219);
+}
+
+blockquote > p:last-child {
+  padding-bottom: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  blockquote {
+    border-color: rgb(75 85 99);
+  }
+}
+
 .search-category {
   font-size: 0.875rem;
   font-weight: 600;
@@ -497,6 +517,17 @@ a.page:hover {
 .code-block {
   margin: 1.5rem 0;
   position: relative;
+}
+
+/* Bare pre blocks: contain long lines so code never breaks page layout. */
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+pre code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .code-block pre {

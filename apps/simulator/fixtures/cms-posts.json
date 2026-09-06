@@ -1,0 +1,253 @@
+[
+  {
+    "id": "post-1",
+    "slug": "the-holy-grail-war-of-the-modern-web",
+    "title": "The Holy Grail War of the modern web",
+    "summary": "Seven systems, one grail. Why the modern web is a ritual you cannot opt out of.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Every web project is a grail war: seven servants, one wish, and someone is always running a nightly e2e ritual."
+            }
+          ]
+        },
+        {
+          "type": "arena",
+          "attrs": {
+            "slug": "toms-place",
+            "title": "Tom's Place"
+          }
+        },
+        {
+          "type": "banner",
+          "attrs": {
+            "style": "warning"
+          },
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "Masters, mind your command seals."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "blockquote",
+          "content": [
+            {
+              "type": "paragraph",
+              "content": [
+                {
+                  "type": "text",
+                  "text": "The grail does not care about your sprint velocity."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "codeBlock",
+          "attrs": {
+            "language": "typescript",
+            "fileName": "ritual.ts",
+            "showLineNumbers": true
+          },
+          "content": [
+            {
+              "type": "text",
+              "text": "const grail: Wish = await war.summon();"
+            }
+          ]
+        },
+        {
+          "type": "cmsMedia",
+          "attrs": {
+            "mediaId": "fixture-media-1",
+            "alt": "A grail-shaped diagram"
+          }
+        }
+      ]
+    },
+    "html": "<p>Every web project is a grail war: seven servants, one wish, and someone is always running a nightly e2e ritual.</p><div data-arena=\"toms-place\" data-title=\"Tom&#39;s Place\"></div><div role=\"region\" class=\"banner\" data-banner=\"warning\"><p class=\"banner-title\">Warning</p><p>Masters, mind your command seals.</p></div><blockquote><p>The grail does not care about your sprint velocity.</p></blockquote><figure class=\"code-block\" data-line-numbers=\"true\"><figcaption class=\"code-filename\">ritual.ts</figcaption><div class=\"shiki-light\"><pre class=\"shiki github-light\" style=\"background-color:#fff\"><code><span class=\"line\"><span>const grail: Wish = await war.summon();</span></span></code></pre></div><div class=\"shiki-dark\"><pre class=\"shiki vitesse-dark\" style=\"background-color:#000\"><code><span class=\"line\"><span>const grail: Wish = await war.summon();</span></span></code></pre></div></figure><figure><img src=\"http://127.0.0.1:8788/content/media/fixture-media-1/file\" alt=\"A grail-shaped diagram\"></figure>",
+    "status": "published",
+    "publishedAt": "2025-02-10T09:00:00.000Z",
+    "heroMediaId": null,
+    "categories": [],
+    "meta": {
+      "title": "The Holy Grail War of the modern web",
+      "description": "Seven systems, one grail. Why the modern web is a ritual you cannot opt out of.",
+      "image": "https://cdn.tom.so/holy-grail-war.jpg"
+    },
+    "createdAt": "2025-02-10T09:00:00.000Z",
+    "updatedAt": "2025-02-10T09:00:00.000Z"
+  },
+  {
+    "id": "post-2",
+    "slug": "unlimited-blade-works-and-the-craft-of-building",
+    "title": "Unlimited Blade Works and the craft of building",
+    "summary": "Trace: On \u2014 what Shirou's reality marble teaches us about shipping.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Projection is just copying a form you have already understood \u2014 deployment pipelines are the same spell."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>Projection is just copying a form you have already understood \u2014 deployment pipelines are the same spell.</p>",
+    "status": "published",
+    "publishedAt": "2025-01-22T08:30:00.000Z",
+    "heroMediaId": null,
+    "categories": [],
+    "meta": {
+      "title": null,
+      "description": "Trace: On \u2014 what Shirou's reality marble teaches us about shipping.",
+      "image": null
+    },
+    "createdAt": "2025-01-22T08:30:00.000Z",
+    "updatedAt": "2025-01-22T08:30:00.000Z"
+  },
+  {
+    "id": "post-3",
+    "slug": "rin-tohsaka-would-be-a-great-engineering-manager",
+    "title": "Rin Tohsaka would be a great engineering manager",
+    "summary": "Precise gem economy management, zero tolerance for sloppy joins.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "She budgets her magic circuits like a principal engineer budgets capacity, and she never misses the second Sunday ritual."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>She budgets her magic circuits like a principal engineer budgets capacity, and she never misses the second Sunday ritual.</p>",
+    "status": "published",
+    "publishedAt": "2024-12-05T15:00:00.000Z",
+    "heroMediaId": null,
+    "categories": [],
+    "meta": {
+      "title": null,
+      "description": "Precise gem economy management, zero tolerance for sloppy joins.",
+      "image": null
+    },
+    "createdAt": "2024-12-05T15:00:00.000Z",
+    "updatedAt": "2024-12-05T15:00:00.000Z"
+  },
+  {
+    "id": "post-4",
+    "slug": "a-command-seal-for-your-dependency-injection",
+    "title": "A command seal for your dependency injection",
+    "summary": "Three commands. Use them sparingly \u2014 they do not come back.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "First seal: the container resolves. Second seal: the layer provides. Third seal: burn it all and start the ritual again."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>First seal: the container resolves. Second seal: the layer provides. Third seal: burn it all and start the ritual again.</p>",
+    "status": "published",
+    "publishedAt": "2024-10-18T10:00:00.000Z",
+    "heroMediaId": null,
+    "categories": [],
+    "meta": {
+      "title": null,
+      "description": "Three commands. Use them sparingly \u2014 they do not come back.",
+      "image": null
+    },
+    "createdAt": "2024-10-18T10:00:00.000Z",
+    "updatedAt": "2024-10-18T10:00:00.000Z"
+  },
+  {
+    "id": "post-5",
+    "slug": "avalon-the-ideal-e2e-environment",
+    "title": "Avalon: the ideal e2e environment",
+    "summary": "A fixture store is a sheath that heals every wound the real world inflicts.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "The Everdistant Utopia is a place where no test flakes, no service drifts and the data never changes overnight."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>The Everdistant Utopia is a place where no test flakes, no service drifts and the data never changes overnight.</p>",
+    "status": "published",
+    "publishedAt": "2024-08-30T12:00:00.000Z",
+    "heroMediaId": null,
+    "categories": [],
+    "meta": {
+      "title": null,
+      "description": "A fixture store is a sheath that heals every wound the real world inflicts.",
+      "image": null
+    },
+    "createdAt": "2024-08-30T12:00:00.000Z",
+    "updatedAt": "2024-08-30T12:00:00.000Z"
+  },
+  {
+    "id": "post-6",
+    "slug": "servant-classes-as-system-architecture",
+    "title": "Servant classes as system architecture",
+    "summary": "Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker \u2014 and your CI runner.",
+    "content": {
+      "type": "doc",
+      "content": [
+        {
+          "type": "paragraph",
+          "content": [
+            {
+              "type": "text",
+              "text": "Berserker is a monolith with no retries. The Archer class just wanted to be the cool job queue."
+            }
+          ]
+        }
+      ]
+    },
+    "html": "<p>Berserker is a monolith with no retries. The Archer class just wanted to be the cool job queue.</p>",
+    "status": "published",
+    "publishedAt": "2023-03-14T07:00:00.000Z",
+    "heroMediaId": null,
+    "categories": [],
+    "meta": {
+      "title": null,
+      "description": "Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker \u2014 and your CI runner.",
+      "image": null
+    },
+    "createdAt": "2023-03-14T07:00:00.000Z",
+    "updatedAt": "2023-03-14T07:00:00.000Z"
+  }
+]

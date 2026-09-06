@@ -1,4 +1,4 @@
-import { mergeProps } from "solid-js";
+import { merge } from "solid-js";
 
 import { Button } from "./Button";
 import "./header.css";
@@ -11,7 +11,7 @@ export interface HeaderProps {
 }
 
 export const Header = (_props: HeaderProps) => {
-  const props = mergeProps({ user: undefined }, _props);
+  const props = merge({ user: undefined }, _props);
 
   return (
     <header>

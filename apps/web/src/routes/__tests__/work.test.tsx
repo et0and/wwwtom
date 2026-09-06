@@ -13,20 +13,28 @@ import { fetchWorks } from "~/server/adapter";
 
 const mockedFetchWorks = fetchWorks as Mock;
 
-const worksPayload = [
-  {
-    id: "1",
-    title: "An idea for a performance",
-    summary: "A tool for generating performance ideas.",
-    slug: "an-idea-for-a-performance",
-  },
-  {
-    id: "2",
-    title: "Hyperjam",
-    summary: "A Merveilles online game festival.",
-    slug: "hyperjam",
-  },
-];
+const worksData = {
+  docs: [
+    {
+      id: "work-1",
+      title: "An idea for a performance",
+      summary: "A tool for generating performance ideas.",
+      slug: "an-idea-for-a-performance",
+    },
+    {
+      id: "work-2",
+      title: "Hyperjam",
+      summary: "A Merveilles online game festival.",
+      slug: "hyperjam",
+    },
+  ],
+  totalDocs: 2,
+  limit: 10,
+  page: 1,
+  totalPages: 1,
+  hasNextPage: false,
+  hasPrevPage: false,
+};
 
 const TestRouter = createRouter({
   history: memoryHistory("/"),
@@ -47,7 +55,7 @@ beforeEach(() => {
 
 describe("work page", () => {
   it("renders works fetched through the server function", async () => {
-    mockedFetchWorks.mockResolvedValue(worksPayload);
+    mockedFetchWorks.mockResolvedValue(worksData);
     renderWorkHome();
     await waitFor(() => expect(screen.getByText("An idea for a performance")).toBeTruthy());
     expect(screen.getByText("Hyperjam")).toBeTruthy();

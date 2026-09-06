@@ -67,16 +67,25 @@ const guestbookStatus = (error: GuestbookFlowError): number => {
   }
 };
 
-/** User-facing message for a guestbook failure; field-only errors get one. */
-const guestbookMessage = (
-  error: GuestbookFlowError & {
-    readonly message?: string;
-    readonly field?: string | undefined;
-  },
-): string =>
-  error._tag === "MissingFieldError"
-    ? `Missing required field: ${error.field}`
-    : (error.message ?? "Bad request");
+/**
+ * User-facing message for a guestbook failure. Reads `field`/`message`
+ * through Schema string decodes instead of an optional-prop intersection:
+ * `exactOptionalPropertyTypes` rejects `string | undefined` against `?: string`,
+ * so boundary parsing keeps schema-exact error classes assignable.
+ */
+const guestbookMessage = (error: GuestbookFlowError): string => {
+  if (error._tag === "MissingFieldError" && "field" in error) {
+    const field = Schema.decodeUnknownOption(Schema.String)(error.field);
+    return Option.isNone(field)
+      ? "Missing required field"
+      : `Missing required field: ${field.value}`;
+  }
+  if ("message" in error) {
+    const message = Schema.decodeUnknownOption(Schema.String)(error.message);
+    return Option.isNone(message) ? "Bad request" : message.value;
+  }
+  return "Bad request";
+};
 
 const runGuestbook = <T>(
   env: CloudflareEnv,

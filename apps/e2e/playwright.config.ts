@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
  * Nightly e2e suite for tom.so.
  *
  * Topology (all local, in order of startup):
- *   simulator (8789)  ← fixture stores: polar, arena, payload, guestbook, api
+ *   simulator (8789)  ← fixture stores: polar, arena, cms, guestbook, api
  *   adapter   (8788)  ← real adapter Worker entry run under tsx (env attaches
  *                       SIMULATOR_URL; the x-use-simulator header does the swap)
  *   web       (3000)  ← `vite preview` of the production build; built with
@@ -55,7 +55,7 @@ export default defineConfig({
     },
     {
       command: `SIMULATOR_URL=${SIMULATOR_URL} pnpm --filter @tom/e2e exec tsx server/adapter.ts`,
-      url: `${ADAPTER_URL}/payload/posts?page=1&pageSize=1`,
+      url: `${ADAPTER_URL}/content/posts?page=1&pageSize=1`,
       reuseExistingServer: !IS_CI,
       timeout: 60_000,
     },

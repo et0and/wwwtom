@@ -15,9 +15,11 @@
   "include": [
     "playwright.config.ts",
     "playwright.staging.config.ts",
+    "playwright.editor.config.ts",
     "server/**/*.ts",
     "src/**/*.ts",
     "tests/**/*.ts",
+    "tests-editor/**/*.ts",
     "tests-staging/**/*.ts"
   ]
 }

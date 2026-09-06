@@ -4,7 +4,7 @@ import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { polarSimulator } from "./polar";
 import { arenaSimulator } from "./arena";
-import { payloadSimulator } from "./payload";
+import { cmsSimulator } from "./cms";
 import { guestbookSimulator } from "./guestbook";
 import { apiSimulator } from "./api";
 
@@ -13,7 +13,7 @@ const PORT = Number(process.env.SIMULATOR_PORT ?? 8789);
 const app = new Elysia({ name: "tom-simulator" })
   .use(polarSimulator)
   .use(arenaSimulator)
-  .use(payloadSimulator)
+  .use(cmsSimulator)
   .use(guestbookSimulator)
   .use(apiSimulator);
 
@@ -61,7 +61,7 @@ server.listen(PORT, () => {
   console.log(`Tom simulator listening on http://localhost:${PORT}`);
   console.log("  Polar: /v1/*");
   console.log("  Are.na: /v3/*");
-  console.log("  Payload: /api/posts, /api/works");
+  console.log("  CMS: /posts, /works, /categories, /media/:id");
   console.log("  Guestbook: /guestbook/entries");
   console.log("  API: /checkout, /portal");
 });

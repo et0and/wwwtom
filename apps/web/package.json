@@ -35,7 +35,7 @@
     "web-haptics": "0.0.6"
   },
   "devDependencies": {
-    "@solidjs/testing-library": "1.0.0-beta.2",
+    "@solidjs/testing-library": "1.0.0-beta.3",
     "@solidjs/vite-plugin": "catalog:",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",

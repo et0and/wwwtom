@@ -24,7 +24,6 @@ const env: CloudflareEnv = {
   API_URL: SIMULATOR_URL,
   ARENA_API_URL: SIMULATOR_URL,
   POLAR_API_URL: SIMULATOR_URL,
-  PAYLOAD_URL: SIMULATOR_URL,
   SIMULATOR_URL,
   // Telegram error alerts must no-op (no real credentials in CI); failures
   // are swallowed by sendErrorAlert itself.

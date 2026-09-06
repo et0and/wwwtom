@@ -51,14 +51,14 @@ export default function PostsHome() {
               const r = result();
               return (
                 <>
-                  <Show when={r.data && r.data.length > 0}>
-                    <For each={r.data}>
+                  <Show when={r.docs && r.docs.length > 0}>
+                    <For each={r.docs}>
                       {(post) => (
                         <Link class="page" preload={true} href={`/posts/${post.slug}`}>
                           <div>
                             <h2>{post.title}</h2>
                             <time>
-                              {new Date(post.publishedAt).toLocaleDateString("en-NZ", {
+                              {new Date(post.publishedAt ?? "").toLocaleDateString("en-NZ", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
@@ -70,26 +70,19 @@ export default function PostsHome() {
                       )}
                     </For>
                   </Show>
-                  <Show when={!r.data || r.data.length === 0}>
+                  <Show when={!r.docs || r.docs.length === 0}>
                     <p>No posts found.</p>
                   </Show>
-                  <Show when={r.meta?.pagination}>
-                    {(pg) => {
-                      const pagination = pg();
-                      return (
-                        <div class="justify-between flex item-center">
-                          <Show when={pagination.page > 1}>
-                            <Link preload={true} href={`/posts?page=${pagination.page - 1}`}>
-                              Previous
-                            </Link>
-                          </Show>
-                          <Show when={pagination.page < pagination.pageCount}>
-                            <Link href={`/posts?page=${pagination.page + 1}`}>Next</Link>
-                          </Show>
-                        </div>
-                      );
-                    }}
-                  </Show>
+                  <div class="justify-between flex item-center">
+                    <Show when={r.page > 1}>
+                      <Link preload={true} href={`/posts?page=${r.page - 1}`}>
+                        Previous
+                      </Link>
+                    </Show>
+                    <Show when={r.page < r.totalPages}>
+                      <Link href={`/posts?page=${r.page + 1}`}>Next</Link>
+                    </Show>
+                  </div>
                 </>
               );
             }}

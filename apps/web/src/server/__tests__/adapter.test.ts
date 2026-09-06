@@ -31,13 +31,13 @@ afterEach(() => {
 
 describe("server functions", () => {
   describe("fetchPosts", () => {
-    it("calls the adapter posts endpoint with pagination and returns the unwrapped payload", async () => {
-      const payload = { data: [{ id: 34 }], meta: { pagination: { page: 1 } } };
-      fetchMock.mockResolvedValue(jsonResponse(payload));
+    it("calls the adapter posts endpoint with pagination and returns the list", async () => {
+      const body = { docs: [{ id: "post-1" }], totalDocs: 1, page: 2, totalPages: 1 };
+      fetchMock.mockResolvedValue(jsonResponse(body));
       const result = await fetchPosts(2, 5);
-      expect(result).toEqual(payload);
+      expect(result).toEqual(body);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/payload/posts?page=2&pageSize=5",
+        "http://localhost:8788/content/posts?page=2&pageSize=5",
         expect.anything(),
       );
     });
@@ -50,7 +50,7 @@ describe("server functions", () => {
       const result = await fetchPostBySlug("a-pattern-language");
       expect(result).toEqual(post);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/payload/posts/a-pattern-language",
+        "http://localhost:8788/content/posts/a-pattern-language",
         expect.anything(),
       );
     });
@@ -78,12 +78,12 @@ describe("server functions", () => {
 
   describe("fetchWorks", () => {
     it("calls the adapter works endpoint", async () => {
-      const works = [{ id: 1, title: "Hyperjam" }];
+      const works = { docs: [{ id: "work-1", title: "Hyperjam" }], totalDocs: 1 };
       fetchMock.mockResolvedValue(jsonResponse(works));
       const result = await fetchWorks();
       expect(result).toEqual(works);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/payload/works",
+        "http://localhost:8788/content/works",
         expect.anything(),
       );
     });
@@ -96,7 +96,7 @@ describe("server functions", () => {
       const result = await fetchWorkBySlug("hyperjam");
       expect(result).toEqual(work);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/payload/works/hyperjam",
+        "http://localhost:8788/content/works/hyperjam",
         expect.anything(),
       );
     });

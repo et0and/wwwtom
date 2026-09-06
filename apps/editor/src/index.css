@@ -1,0 +1,487 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: light dark;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}
+
+@layer components {
+  .editor-shell {
+    @apply mx-auto max-w-3xl px-4 py-8 font-sans;
+  }
+
+  .signin-view {
+    @apply grid justify-items-center gap-6 py-16 text-center;
+  }
+
+  .signin-title {
+    @apply text-3xl font-semibold tracking-tight;
+  }
+
+  .editor-nav {
+    @apply mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-300 pb-4 dark:border-neutral-700;
+  }
+
+  .editor-title {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  .editor-tabs {
+    @apply flex gap-3;
+  }
+
+  .editor-tab {
+    @apply px-1 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900;
+  }
+
+  .editor-tab.on {
+    @apply font-medium underline underline-offset-4;
+  }
+
+  .editor-user {
+    @apply relative ml-auto flex flex-wrap items-center gap-2 text-sm;
+  }
+
+  .avatar-button {
+    @apply cursor-pointer rounded-full border-0 bg-transparent p-0;
+  }
+
+  .avatar-backdrop {
+    @apply fixed inset-0 cursor-default border-0 bg-transparent p-0;
+  }
+
+  .avatar-menu {
+    @apply absolute top-full right-0 z-10 mt-2 grid gap-2 rounded-lg border border-neutral-200 bg-white p-3 shadow-lg dark:border-neutral-700 dark:bg-neutral-950;
+  }
+
+  .avatar {
+    @apply flex h-7 w-7 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white dark:bg-neutral-100 dark:text-neutral-900;
+  }
+
+  .signin-button,
+  .save-button,
+  .new-button {
+    @apply rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-700 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-white;
+  }
+
+  .signout-button {
+    @apply rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100 dark:border-neutral-700 dark:hover:bg-neutral-900;
+  }
+
+  .delete-button {
+    @apply rounded-md border border-red-300 px-2 py-1 text-sm text-red-700 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-950;
+  }
+
+  .kind-button {
+    @apply rounded-md px-3 py-1.5 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900;
+  }
+
+  .kind-button.on {
+    @apply bg-neutral-200 font-medium dark:bg-neutral-800;
+  }
+
+  .content-list-header {
+    @apply mb-4 flex items-center justify-between;
+  }
+
+  .content-rows {
+    @apply divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800;
+  }
+
+  .content-row {
+    @apply flex items-center gap-2 p-2;
+  }
+
+  .row-button {
+    @apply flex flex-1 flex-col items-start gap-0.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900;
+  }
+
+  .row-title {
+    @apply font-medium;
+  }
+
+  .row-meta {
+    @apply text-xs text-neutral-500 dark:text-neutral-400;
+  }
+
+  .editor-topbar {
+    @apply mb-4 flex flex-wrap items-center gap-2;
+  }
+
+  .dirty-flag {
+    @apply text-xs font-medium text-amber-700 dark:text-amber-400;
+  }
+
+  .error {
+    @apply text-sm text-red-700 dark:text-red-400;
+  }
+
+  .editor-fields {
+    @apply mb-4 grid gap-3;
+  }
+
+  .field {
+    @apply grid gap-1 text-sm font-medium;
+  }
+
+  .field input[type="text"],
+  .field input[type="datetime-local"],
+  .field textarea,
+  .field select,
+  .toolbar-select {
+    @apply rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm font-normal dark:border-neutral-700 dark:bg-neutral-900;
+  }
+
+  .check {
+    @apply flex items-center gap-2 text-sm font-normal;
+  }
+
+  .hero-preview {
+    @apply max-h-48 rounded-md border border-neutral-200 dark:border-neutral-800;
+  }
+
+  .toolbar {
+    @apply flex flex-wrap items-center gap-1 rounded-t-lg border border-neutral-300 border-b-0 p-2 dark:border-neutral-700;
+  }
+
+  .toolbar-button {
+    @apply rounded border border-transparent px-2 py-1 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-900;
+  }
+
+  .toolbar-button.on {
+    @apply border-neutral-400 bg-neutral-200 dark:border-neutral-600 dark:bg-neutral-800;
+  }
+
+  .toolbar-select-label {
+    @apply ml-auto flex items-center gap-1 text-xs;
+  }
+
+  .tiptap-editor {
+    @apply min-h-64 rounded-b-lg border border-neutral-300 p-3 focus:outline-2 focus:outline-neutral-800 dark:border-neutral-700 dark:focus:outline-neutral-200;
+  }
+
+  /* Canvas typography mirrors the preview scale so headings read as headings. */
+  .tiptap-editor h1 {
+    @apply pb-2 text-3xl font-medium tracking-tight;
+  }
+
+  .tiptap-editor h2 {
+    @apply pb-2 text-2xl tracking-tight;
+  }
+
+  .tiptap-editor h3 {
+    @apply pb-1 text-xl tracking-tight;
+  }
+
+  .tiptap-editor h4 {
+    @apply pb-1 text-lg tracking-tight;
+  }
+
+  .tiptap-editor hr {
+    @apply my-6 border-neutral-300 dark:border-neutral-700;
+  }
+
+  .tiptap-editor a {
+    @apply underline;
+  }
+
+  /* Pull quotes mirror the site scale so they read as quotes while editing. */
+  .tiptap-editor blockquote,
+  .preview blockquote {
+    @apply my-8 border-l-2 border-neutral-300 pl-5 text-base leading-normal tracking-tight dark:border-neutral-700;
+  }
+
+  .tiptap-editor blockquote > p:last-child,
+  .preview blockquote > p:last-child {
+    @apply pb-0;
+  }
+
+  /* CMS banners mirror the site's banner idiom (hairline + badge).
+     The canvas carries no badge element (it would parse back into content),
+     so its label renders through ::before; preview has the real badge. */
+  .tiptap-editor .banner,
+  .preview .banner {
+    position: relative;
+    line-height: 1.5;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 100%;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 1rem;
+    color: rgb(0 0 0);
+    border-color: rgb(209 213 219);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .preview .banner-title,
+  .tiptap-editor .banner::before {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: -0.05em;
+    background-color: rgb(230, 216, 226);
+    padding: 0.25rem 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .tiptap-editor [data-banner="info"]::before {
+    content: "Note";
+  }
+
+  .tiptap-editor [data-banner="warning"]::before {
+    content: "Warning";
+  }
+
+  .tiptap-editor [data-banner="error"]::before {
+    content: "Error";
+  }
+
+  .tiptap-editor [data-banner="success"]::before {
+    content: "Success";
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor .banner,
+    .preview .banner {
+      color: rgb(255 255 255);
+      border-color: rgb(75 85 99);
+    }
+
+    .preview .banner-title,
+    .tiptap-editor .banner::before {
+      background-color: rgb(75, 60, 70);
+    }
+  }
+
+  .tiptap-editor [data-arena],
+  .tiptap-editor figure[data-media-id] {
+    @apply my-2 border border-dashed border-neutral-400 p-2 dark:border-neutral-600;
+  }
+
+  .tiptap-editor pre,
+  .preview pre {
+    @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
+  }
+
+  /* Shiki output in previews mirrors the site's code treatment. */
+  .preview .code-block {
+    margin: 1.5rem 0;
+    position: relative;
+  }
+
+  .preview .code-block pre {
+    margin: 0;
+    padding: 1rem;
+    overflow-x: auto;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    line-height: 1.5;
+    tab-size: 2;
+  }
+
+  .preview .code-block pre code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  .preview .code-filename {
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    padding: 0.5rem 1rem;
+    background-color: rgb(243 244 246);
+    border: 1px solid rgb(229 231 235);
+    border-bottom: none;
+    border-radius: 0.5rem 0.5rem 0 0;
+    color: rgb(75 85 99);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview .code-filename {
+      background-color: rgb(31 41 55);
+      border-color: rgb(75 85 99);
+      color: rgb(156 163 175);
+    }
+  }
+
+  .preview .shiki-dark {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview .shiki-light {
+      display: none;
+    }
+
+    .preview .shiki-dark {
+      display: block;
+    }
+  }
+
+  .preview .code-block[data-line-numbers="true"] pre {
+    counter-reset: step;
+  }
+
+  .preview .code-block[data-line-numbers="true"] pre .line::before {
+    counter-increment: step;
+    content: counter(step);
+    display: inline-block;
+    width: 2em;
+    margin-right: 1em;
+    text-align: right;
+    color: rgb(156 163 175);
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview .code-block[data-line-numbers="true"] pre .line::before {
+      color: rgb(107 114 133);
+    }
+  }
+
+  .editor-panels {
+    @apply mt-3 grid gap-2;
+  }
+
+  .panel {
+    @apply grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+  }
+
+  .categories-view {
+    @apply grid gap-4;
+  }
+
+  /* Breadcrumb actions hug the left instead of stretching the grid. */
+  .back-button {
+    @apply justify-self-start;
+  }
+
+  .media-view {
+    @apply grid gap-4;
+  }
+
+  .media-grid {
+    @apply grid grid-cols-2 gap-3 sm:grid-cols-3;
+  }
+
+  .media-card {
+    @apply grid content-start gap-1 rounded-lg border border-neutral-200 p-2 dark:border-neutral-800;
+  }
+
+  .media-thumb {
+    @apply aspect-square w-full rounded-md object-cover;
+  }
+
+  .media-name {
+    @apply truncate text-xs text-neutral-500 dark:text-neutral-400;
+  }
+
+  .media-actions {
+    @apply flex gap-2;
+  }
+
+  .media-picker {
+    @apply grid gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800;
+  }
+
+  .media-pick {
+    @apply grid cursor-pointer content-start gap-1 rounded-lg border border-neutral-200 bg-transparent p-2 text-left hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900;
+  }
+
+  .media-usage {
+    @apply grid gap-1 text-left text-sm;
+  }
+
+  .history-panel {
+    @apply mb-4 grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+  }
+
+  .history-rows {
+    @apply grid max-h-64 gap-1 overflow-y-auto;
+  }
+
+  .history-row {
+    @apply flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-900;
+  }
+
+  .history-row.on {
+    @apply bg-neutral-200 dark:bg-neutral-800;
+  }
+
+  .history-title {
+    @apply text-sm font-medium;
+  }
+
+  .history-meta {
+    @apply text-xs text-neutral-500 dark:text-neutral-400;
+  }
+
+  .history-empty {
+    @apply text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .history-preview {
+    @apply grid gap-2;
+  }
+
+  .history-preview .preview {
+    @apply mt-0;
+  }
+
+  /* Post preview renders the exact HTML the site serves. */
+  .preview {
+    @apply mt-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800;
+  }
+
+  .preview p {
+    @apply pb-4 tracking-tight;
+  }
+
+  .preview h1 {
+    @apply pb-2 text-3xl font-medium tracking-tight;
+  }
+
+  .preview h2 {
+    @apply pb-2 text-2xl tracking-tight;
+  }
+
+  .preview h3 {
+    @apply pb-1 text-xl tracking-tight;
+  }
+
+  .preview h4 {
+    @apply pb-1 text-lg tracking-tight;
+  }
+
+  .preview hr {
+    @apply my-6 border-neutral-300 dark:border-neutral-700;
+  }
+
+  .preview a {
+    @apply underline;
+  }
+
+  .preview figure {
+    @apply my-4;
+  }
+
+  .preview img {
+    @apply rounded-md;
+  }
+
+  .preview figcaption {
+    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .preview [data-arena] {
+    @apply my-3 rounded-md border border-dashed border-neutral-400 p-3 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400;
+  }
+}

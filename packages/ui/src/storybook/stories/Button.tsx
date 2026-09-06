@@ -1,4 +1,4 @@
-import { mergeProps, splitProps } from "solid-js";
+import { merge, omit } from "solid-js";
 import "./button.css";
 
 export interface ButtonProps {
@@ -10,10 +10,8 @@ export interface ButtonProps {
 
 /** Primary UI component for user interaction */
 export const Button = (_props: ButtonProps) => {
-  const [props, rest] = splitProps(
-    mergeProps({ primary: false, backgroundColor: null, size: "medium" }, _props),
-    ["primary", "backgroundColor", "size", "label"],
-  );
+  const props = merge({ primary: false, backgroundColor: null, size: "medium" }, _props);
+  const rest = omit(props, "primary", "backgroundColor", "size", "label");
 
   const mode = () => (props.primary ? "storybook-button--primary" : "storybook-button--secondary");
 

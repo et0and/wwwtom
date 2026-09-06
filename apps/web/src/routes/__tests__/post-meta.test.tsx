@@ -13,15 +13,15 @@ import { fetchPostBySlug } from "~/server/adapter";
 
 const mockedFetchPostBySlug = fetchPostBySlug as Mock;
 
-const postPayload = {
-  id: "34",
+const postData = {
+  id: "post-1",
   title: "A pattern language",
   summary: "On imagining a monorepo as a shared house",
   slug: "a-pattern-language",
   publishedAt: "2026-06-30T00:00:00.000Z",
   updatedAt: "2026-06-30T00:00:00.000Z",
   meta: { description: "A meta description" },
-  content: "<p>On imagining a monorepo as a shared house.</p>",
+  html: "<p>On imagining a monorepo as a shared house.</p>",
   arenaBlocks: [],
 };
 
@@ -47,7 +47,7 @@ beforeEach(() => {
 
 describe("post page meta tags", () => {
   it("renders title, description and og/twitter meta into the document head", async () => {
-    mockedFetchPostBySlug.mockResolvedValue(postPayload);
+    mockedFetchPostBySlug.mockResolvedValue(postData);
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
 
@@ -67,7 +67,7 @@ describe("post page meta tags", () => {
   });
 
   it("points og:image and twitter:image at the public adapter proxy, absolute", async () => {
-    mockedFetchPostBySlug.mockResolvedValue(postPayload);
+    mockedFetchPostBySlug.mockResolvedValue(postData);
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
 
@@ -83,7 +83,7 @@ describe("post page meta tags", () => {
     // The meta tags must be present once the query settles, regardless of the
     // innerHTML body content — this guards against the head flushing before
     // the async post fetch resolves.
-    const bare = { ...postPayload, content: "", arenaBlocks: [] };
+    const bare = { ...postData, html: "", arenaBlocks: [] };
     mockedFetchPostBySlug.mockResolvedValue(bare);
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());

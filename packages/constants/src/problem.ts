@@ -12,6 +12,7 @@ export const ProblemType = {
   Unauthorized: "https://errors.tom.so/unauthorized",
   Forbidden: "https://errors.tom.so/forbidden",
   NotFound: "https://errors.tom.so/not-found",
+  Conflict: "https://errors.tom.so/conflict",
   Upstream: "https://errors.tom.so/upstream",
 } as const;
 

@@ -1,19 +1,19 @@
 import { callAdapter, runAdapterRequest } from "~/libs/adapter";
 
 export function fetchPosts(page: number, pageSize: number) {
-  return runAdapterRequest(() => callAdapter().payload.posts.get({ query: { page, pageSize } }));
+  return runAdapterRequest(() => callAdapter().content.posts.get({ query: { page, pageSize } }));
 }
 
 export function fetchPostBySlug(slug: string) {
-  return runAdapterRequest(() => callAdapter().payload.posts({ slug }).get());
+  return runAdapterRequest(() => callAdapter().content.posts({ slug }).get());
 }
 
 export function fetchWorks() {
-  return runAdapterRequest(() => callAdapter().payload.works.get());
+  return runAdapterRequest(() => callAdapter().content.works.get());
 }
 
 export function fetchWorkBySlug(slug: string) {
-  return runAdapterRequest(() => callAdapter().payload.works({ slug }).get());
+  return runAdapterRequest(() => callAdapter().content.works({ slug }).get());
 }
 
 export function fetchProducts() {
