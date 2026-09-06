@@ -70,6 +70,37 @@ describe("guestbook cookie handling", () => {
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toBeNull();
     });
+
+    it("returns JSON null if guestbook_user holds an array", async () => {
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/guestbook/me", env, {
+          headers: { Cookie: "guestbook_user=%5B%5D" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toBeNull();
+    });
+
+    it("returns JSON null if guestbook_user misses fields", async () => {
+      const partial = encodeURIComponent(JSON.stringify({ username: "tom" }));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/guestbook/me", env, {
+          headers: { Cookie: `guestbook_user=${partial}` },
+        }),
+      );
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toBeNull();
+    });
+
+    it("returns JSON null if guestbook_user holds a number", async () => {
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/guestbook/me", env, {
+          headers: { Cookie: "guestbook_user=42" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      await expect(response.json()).resolves.toBeNull();
+    });
   });
 
   describe("POST /guestbook/logout", () => {

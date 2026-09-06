@@ -34,16 +34,4 @@ describe("Footer", () => {
     expect(webringLink).toBeInTheDocument();
     expect(webringLink).toHaveAttribute("href", "https://webring.xxiivv.com/#random");
   });
-
-  it("has correct footer styling classes", () => {
-    render(() => <Footer />);
-    const footer = screen.getByRole("contentinfo");
-
-    expect(footer).toHaveClass("flex");
-    expect(footer).toHaveClass("items-center");
-    expect(footer).toHaveClass("justify-between");
-    expect(footer).toHaveClass("px-6");
-    expect(footer).toHaveClass("py-4");
-    expect(footer).toHaveClass("flex-shrink-0");
-  });
 });

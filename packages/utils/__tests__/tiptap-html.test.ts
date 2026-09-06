@@ -90,7 +90,7 @@ describe("renderTiptapHtml", () => {
     expect(html).toBe("<blockquote><p>Stay hungry.</p></blockquote>");
   });
 
-  it("renders nested banners, arena refs, and media", async () => {
+  it("renders nested banners", async () => {
     const html = await render(
       doc({
         type: "banner",
@@ -114,10 +114,16 @@ describe("renderTiptapHtml", () => {
         `<div role="region" class="banner" data-banner="info">` +
         `<p class="banner-title">Note</p></div></div>`,
     );
+  });
+
+  it("renders arena refs and escapes titles", async () => {
     const arena = await render(
       doc({ type: "arena", attrs: { slug: "toms-place", title: "Tom's Place" } }),
     );
     expect(arena).toBe(`<div data-arena="toms-place" data-title="Tom&#39;s Place"></div>`);
+  });
+
+  it("renders media and escapes alt text", async () => {
     const media = await render(
       doc({ type: "cmsMedia", attrs: { mediaId: "media-1" as CmsMediaId, alt: "A <photo>" } }),
     );

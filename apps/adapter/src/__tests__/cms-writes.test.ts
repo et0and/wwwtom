@@ -93,6 +93,36 @@ describe("cms write proxy", () => {
       expect(response.status).toBe(409);
       expect(await response.json()).toEqual({ title: "Conflict" });
     });
+
+    it("returns 502 if session fetch throws", async () => {
+      fetchMock.mockRejectedValueOnce(new Error("connection refused"));
+      const response = await app.fetch(
+        writeRequest("http://localhost/content/posts", "POST", { slug: "hello-world" }),
+      );
+      expect(response.status).toBe(502);
+      expect(await response.json()).toEqual({
+        type: "about:blank",
+        status: 502,
+        title: "CMS auth unavailable",
+        instance: "http://localhost/content/posts",
+      });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects writes with no cookie with 401", async () => {
+      fetchMock.mockResolvedValueOnce(jsonResponse(noSessionBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts", env, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ slug: "hello-world" }),
+        }),
+      );
+      expect(response.status).toBe(401);
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(new Headers(init.headers).get("cookie")).toBeNull();
+    });
   });
 
   describe("write origin gate", () => {
@@ -158,6 +188,43 @@ describe("cms write proxy", () => {
       expect(response.status).toBe(200);
       expect(fetchMock).toHaveBeenCalledTimes(2);
     });
+
+    it("prefers Origin over Referer if both exist", async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(sessionBody))
+        .mockResolvedValueOnce(jsonResponse({ id: "post-1" }));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts", env, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            cookie: "better-auth.session_token=abc",
+            origin: "http://localhost:5173",
+            referer: "https://evil.com/page",
+          },
+          body: JSON.stringify({ slug: "hello-world" }),
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
+    it("rejects evil Origin even if Referer is trusted", async () => {
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts", env, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            cookie: "better-auth.session_token=abc",
+            origin: "https://evil.com",
+            referer: "http://localhost:5173/page",
+          },
+          body: JSON.stringify({ slug: "hello-world" }),
+        }),
+      );
+      expect(response.status).toBe(403);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
   });
 
   describe("PUT /content/posts/:slug", () => {
@@ -189,7 +256,7 @@ describe("cms write proxy", () => {
   });
 
   describe("categories", () => {
-    it("forwards create and delete", async () => {
+    it("forwards category creates", async () => {
       fetchMock
         .mockResolvedValueOnce(jsonResponse(sessionBody))
         .mockResolvedValueOnce(jsonResponse({ id: "cat-2" }));
@@ -198,7 +265,9 @@ describe("cms write proxy", () => {
       );
       expect(created.status).toBe(200);
       expect(writeCall().url).toBe("http://localhost:8787/categories");
+    });
 
+    it("forwards category deletes", async () => {
       fetchMock
         .mockResolvedValueOnce(jsonResponse(sessionBody))
         .mockResolvedValueOnce(jsonResponse({ id: "cat-2" }));
@@ -206,7 +275,7 @@ describe("cms write proxy", () => {
         writeRequest("http://localhost/content/categories/notes", "DELETE"),
       );
       expect(deleted.status).toBe(200);
-      expect(writeCall(3).url).toBe("http://localhost:8787/categories/notes");
+      expect(writeCall().url).toBe("http://localhost:8787/categories/notes");
     });
   });
 

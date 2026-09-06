@@ -41,6 +41,30 @@ describe("toProblemResponse", () => {
   it("falls back to 500 for a non-error status", () => {
     expect(toProblemResponse(200, "boom").status).toBe(500);
   });
+
+  it("keeps 400 and 599 as valid error statuses", async () => {
+    expect(toProblemResponse(400, "bad").status).toBe(400);
+    expect(toProblemResponse(599, "edge").status).toBe(599);
+    expect(((await toProblemResponse(599, "edge").json()) as { status: number }).status).toBe(599);
+  });
+
+  it("falls back to 500 if status exceeds 599", async () => {
+    const response = toProblemResponse(600, "boom");
+    expect(response.status).toBe(500);
+    expect(((await response.json()) as { status: number }).status).toBe(500);
+  });
+
+  it("falls back to 500 for negative and non-integer statuses", () => {
+    expect(toProblemResponse(-1, "boom").status).toBe(500);
+    expect(toProblemResponse(404.5, "boom").status).toBe(500);
+    expect(toProblemResponse(Number.NaN, "boom").status).toBe(500);
+  });
+
+  it("preserves content-type application/problem+json", async () => {
+    const response = toProblemResponse(600, "boom");
+    expect(response.headers.get("content-type")).toBe("application/problem+json");
+    expect(((await response.json()) as { title: string }).title).toBe("boom");
+  });
 });
 
 describe("dashboardLinks", () => {

@@ -22,7 +22,11 @@ describe("TomWorkMessage", () => {
       kind: "render-og",
       url: "https://tom.so",
     });
-    expect(message.kind).toBe("render-og");
+    if (message.kind !== "render-og") {
+      throw new Error("expected render-og");
+    }
+    expect(message.url).toBeInstanceOf(URL);
+    expect(message.url.href).toBe("https://tom.so/");
   });
 
   it("decodes a guestbook-sign message", () => {
@@ -45,6 +49,33 @@ describe("TomWorkMessage", () => {
 
   it("rejects a message missing required fields", () => {
     expect(() => Schema.decodeUnknownSync(TomWorkMessage)({ kind: "publish-post" })).toThrow();
+  });
+
+  it("rejects publish-post with string postId", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(TomWorkMessage)({
+        kind: "publish-post",
+        postId: "42",
+        publishAt: 1_700_000_000_000,
+      }),
+    ).toThrow();
+  });
+
+  it("rejects render-og with a bad URL", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(TomWorkMessage)({ kind: "render-og", url: "not-a-url" }),
+    ).toThrow();
+  });
+
+  it("rejects guestbook-sign missing message", () => {
+    expect(() =>
+      Schema.decodeUnknownSync(TomWorkMessage)({
+        kind: "guestbook-sign",
+        entryId: 7,
+        fediverseUsername: "tom@mastodon.social",
+        displayName: "Tom",
+      }),
+    ).toThrow();
   });
 });
 
@@ -117,6 +148,48 @@ describe("TomQueueService", () => {
         _tag: "QueueError",
         message: "WORK_QUEUE binding missing from worker env",
       });
+    }
+  });
+
+  it("fails with QueueError if send throws", async () => {
+    const send = vi.fn().mockRejectedValue(new Error("queue down"));
+    const env = testEnv({ send, sendBatch: vi.fn().mockResolvedValue(undefined) });
+    const result = await Effect.runPromise(
+      Effect.match(
+        Effect.gen(function* () {
+          const queue = yield* TomQueueService;
+          yield* queue.send({ kind: "publish-post", postId: 1, publishAt: Date.now() });
+        }).pipe(Effect.provide(makeTomQueueLayer(env))),
+        {
+          onFailure: (error) => ({ tag: "error" as const, error }),
+          onSuccess: (value) => ({ tag: "success" as const, value }),
+        },
+      ),
+    );
+    expect(result.tag).toBe("error");
+    if (result.tag === "error") {
+      expect(result.error).toMatchObject({ _tag: "QueueError" });
+    }
+  });
+
+  it("fails with QueueError if sendBatch throws", async () => {
+    const sendBatch = vi.fn().mockRejectedValue(new Error("queue down"));
+    const env = testEnv({ send: vi.fn(), sendBatch });
+    const result = await Effect.runPromise(
+      Effect.match(
+        Effect.gen(function* () {
+          const queue = yield* TomQueueService;
+          yield* queue.sendBatch([{ kind: "render-og", url: "https://tom.so" }]);
+        }).pipe(Effect.provide(makeTomQueueLayer(env))),
+        {
+          onFailure: (error) => ({ tag: "error" as const, error }),
+          onSuccess: (value) => ({ tag: "success" as const, value }),
+        },
+      ),
+    );
+    expect(result.tag).toBe("error");
+    if (result.tag === "error") {
+      expect(result.error).toMatchObject({ _tag: "QueueError" });
     }
   });
 });

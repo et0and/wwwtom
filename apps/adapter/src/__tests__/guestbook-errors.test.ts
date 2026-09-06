@@ -41,6 +41,19 @@ describe("guestbook flow error mapping", () => {
     });
   });
 
+  it("rejects tricky profanity with 400", async () => {
+    const response = await app.fetch(
+      postJson("http://localhost/guestbook/sign", { message: "well fuck!" }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/validation",
+      status: 400,
+      title: "Your message contains profanity. Please keep it clean!",
+      instance: "http://localhost/guestbook/sign",
+    });
+  });
+
   it("maps a missing sign message to a 400 validation problem naming the field", async () => {
     const response = await app.fetch(postJson("http://localhost/guestbook/sign", { message: "" }));
     expect(response.status).toBe(400);
@@ -74,6 +87,32 @@ describe("guestbook flow error mapping", () => {
       type: "https://errors.tom.so/validation",
       status: 400,
       title: "Missing field: handle",
+      instance: "http://localhost/guestbook/auth/initiate",
+    });
+  });
+
+  it("rejects a handle with extra parts with 400", async () => {
+    const response = await app.fetch(
+      postJson("http://localhost/guestbook/auth/initiate", { handle: "a@b@c" }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/validation",
+      status: 400,
+      title: "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
+      instance: "http://localhost/guestbook/auth/initiate",
+    });
+  });
+
+  it("rejects a handle with no instance with 400", async () => {
+    const response = await app.fetch(
+      postJson("http://localhost/guestbook/auth/initiate", { handle: "tom@" }),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/validation",
+      status: 400,
+      title: "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
       instance: "http://localhost/guestbook/auth/initiate",
     });
   });
