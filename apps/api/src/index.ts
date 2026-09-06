@@ -26,6 +26,7 @@ import { requireInternalTokenBeforeHandle } from "./internal";
 import { authRoutes } from "./routes/auth";
 import { cmsRoutes } from "./routes/cms";
 import { cmsWriteRoutes } from "./routes/cms-writes";
+import { migrateRoutes } from "./routes/migrate";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./routes/og";
 import { polarRoutes } from "./routes/polar";
@@ -179,7 +180,7 @@ export const app = new Elysia({
   // iMessage) fetch the image URL without any auth headers.
   .use(ogRoutes)
   .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) =>
-    app.use(polarRoutes).use(authRoutes).use(cmsWriteRoutes),
+    app.use(polarRoutes).use(authRoutes).use(cmsWriteRoutes).use(migrateRoutes),
   )
   .compile();
 
