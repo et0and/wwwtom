@@ -11,6 +11,13 @@ export class PolarApiError extends Schema.TaggedError<PolarApiError>()("PolarApi
   operation: Schema.String,
 }) {}
 
+export class CmsError extends Schema.TaggedError<CmsError>()("CmsError", {
+  message: Schema.String,
+  status: Schema.Number,
+  operation: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
+}) {}
+
 export class ArenaConfigError extends Schema.TaggedError<ArenaConfigError>()("ArenaConfigError", {
   message: Schema.String,
 }) {}

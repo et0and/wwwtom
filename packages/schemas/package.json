@@ -6,11 +6,11 @@
   "exports": {
     "./arena": "./src/arena.ts",
     "./branded": "./src/branded.ts",
+    "./cms": "./src/cms.ts",
     "./error": "./src/error.ts",
     "./health": "./src/health.ts",
     "./jsonld": "./src/jsonld.ts",
     "./og": "./src/og.ts",
-    "./payload": "./src/payload.ts",
     "./queue": "./src/queue.ts",
     "./secrets": "./src/secrets.ts",
     "./telegram": "./src/telegram.ts"

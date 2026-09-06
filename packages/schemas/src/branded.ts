@@ -78,32 +78,6 @@ export const ArenaCommentId = Schema.Number.pipe(Schema.brand("ArenaCommentId"))
 export type ArenaCommentId = Schema.Schema.Type<typeof ArenaCommentId>;
 
 /**
- * Branded type for Payload post IDs.
- * Note: Can be either number or string (union type)
- */
-export const PayloadPostId = Schema.Union([
-  Schema.Number.pipe(Schema.brand("PayloadPostId")),
-  Schema.String.pipe(Schema.brand("PayloadPostId")),
-]);
-export type PayloadPostId = Schema.Schema.Type<typeof PayloadPostId>;
-
-/**
- * Branded type for Payload work IDs.
- * Note: Can be either number or string (union type)
- */
-export const PayloadWorkId = Schema.Union([
-  Schema.Number.pipe(Schema.brand("PayloadWorkId")),
-  Schema.String.pipe(Schema.brand("PayloadWorkId")),
-]);
-export type PayloadWorkId = Schema.Schema.Type<typeof PayloadWorkId>;
-
-/**
- * Branded type for Payload media IDs.
- */
-export const PayloadMediaId = Schema.Number.pipe(Schema.brand("PayloadMediaId"));
-export type PayloadMediaId = Schema.Schema.Type<typeof PayloadMediaId>;
-
-/**
  * Parse and validate a numeric ID into ArenaUserId.
  * Use for parsing user IDs atAPI boundaries.
  */
@@ -133,10 +107,3 @@ export const parseArenaConnectionId = Schema.decodeUnknownEffect(ArenaConnection
  * Parse and validate a numeric ID into ArenaCommentId.
  */
 export const parseArenaCommentId = Schema.decodeUnknownEffect(ArenaCommentId);
-
-/**
- * Parse and validate a numeric ID into PayloadMediaId.
- */
-export const parsePayloadMediaId = Schema.decodeUnknownEffect(PayloadMediaId);
-
-// Note: PayloadPostId and PayloadWorkId are unions, parsing may need custom logic

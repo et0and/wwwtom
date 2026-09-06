@@ -20,7 +20,7 @@ pnpm run write # Format files with oxfmt
 
 External packages and dependencies have been deliberately kept small in order to keep the project lean.
 
-Content is fetched from a headless [Payload CMS](https://payloadcms.com/) instance for the posts and works routes/slugs. All of the types and config is Payload specific, but could be swapped to a CMS of your choice.
+Content is served from a slim CMS on D1 plus R2 for the posts and works routes/slugs. Types live in `@tom/schemas/cms` as Effect Schemas.
 
 ## Deployment
 

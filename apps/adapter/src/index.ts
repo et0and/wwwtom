@@ -22,7 +22,8 @@ import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { AdapterError } from "./config/effect";
 import { arenaIntegration } from "./integrations/arena";
-import { payloadIntegration } from "./integrations/payload";
+import { authIntegration } from "./integrations/auth";
+import { cmsIntegration } from "./integrations/cms";
 import { polarIntegration } from "./integrations/polar";
 import { guestbookIntegration, userCookieSchema } from "./integrations/guestbook";
 import { githubIntegration } from "./integrations/github";
@@ -50,7 +51,7 @@ export const app = new Elysia({
         );
       },
       credentials: true,
-      methods: ["GET", "POST", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "x-use-simulator"],
     }),
   )
@@ -137,7 +138,8 @@ export const app = new Elysia({
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
   .use(arenaIntegration)
-  .use(payloadIntegration)
+  .use(authIntegration)
+  .use(cmsIntegration)
   .use(polarIntegration)
   .use(guestbookIntegration)
   .use(githubIntegration)

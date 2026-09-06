@@ -8,6 +8,7 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
+    "test:e2e:editor": "playwright test --config=playwright.editor.config.ts",
     "report": "playwright show-report",
     "typecheck": "tsc --noEmit"
   },
@@ -15,8 +16,11 @@
     "@axe-core/playwright": "^4.10.1",
     "@playwright/test": "catalog:",
     "@tom/adapter": "workspace:*",
+    "@tom/schemas": "workspace:*",
+    "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
     "@types/node": "^24.9.1",
+    "effect": "catalog:",
     "tsx": "4.20.3",
     "typescript": "6.0.3"
   }

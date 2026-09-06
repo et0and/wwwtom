@@ -4,7 +4,6 @@ import type { CloudflareEnv } from "@tom/utils/services/config";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
 import { DatabaseService } from "@tom/db/service";
-import { PayloadService } from "@tom/payload/service";
 import { ArenaService } from "@tom/arena/service";
 
 /**
@@ -28,9 +27,6 @@ const createServiceLayer = <S, E, R>(
 
 export const createArenaLayer = (env: CloudflareEnv) =>
   createServiceLayer(env, ArenaService.Default);
-
-export const createPayloadLayer = (env: CloudflareEnv) =>
-  createServiceLayer(env, PayloadService.Default);
 
 export const createDbLayer = (env: CloudflareEnv) =>
   createServiceLayer(env, DatabaseService.Default);

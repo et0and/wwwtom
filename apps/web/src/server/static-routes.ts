@@ -10,7 +10,7 @@ import { HttpStatus } from "@tom/constants/http";
 
 export const handleFeed = () =>
   Effect.runPromise(
-    adapterRequest(() => callAdapter().payload.feed.get({ query: { limit: 20 } })).pipe(
+    adapterRequest(() => callAdapter().content.feed.get({ query: { limit: 20 } })).pipe(
       Effect.map(({ docs }) => {
         const feed = new RSS({
           title: "Tom Hackshaw",
@@ -28,7 +28,7 @@ export const handleFeed = () =>
             description: post.summary,
             url: postUrl,
             guid: post.id,
-            date: new Date(post.publishedAt),
+            date: new Date(post.publishedAt ?? ""),
             author: "Tom Hackshaw",
             custom_elements: [{ "content:encoded": post.content }],
           });
@@ -56,12 +56,12 @@ export const handleFeed = () =>
 export const handleSitemap = () =>
   Effect.runPromise(
     Effect.all([
-      adapterRequest(() => callAdapter().payload.posts.get({ query: { page: 1, pageSize: 500 } })),
-      adapterRequest(() => callAdapter().payload.works.get({ query: { sort: "-updatedAt" } })),
+      adapterRequest(() => callAdapter().content.posts.get({ query: { page: 1, pageSize: 500 } })),
+      adapterRequest(() => callAdapter().content.works.get()),
     ]).pipe(
       Effect.map(([postsResult, worksResult]) => {
-        const posts = postsResult.data;
-        const works = worksResult;
+        const posts = postsResult.docs;
+        const works = worksResult.docs;
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

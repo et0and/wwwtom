@@ -18,14 +18,12 @@
     "@tom/arena": "workspace:*",
     "@tom/constants": "workspace:*",
     "@tom/db": "workspace:*",
-    "@tom/payload": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
     "effect": "catalog:",
     "elysia": "catalog:",
-    "megalodon": "10.2.0",
-    "shiki": "1.29.2"
+    "megalodon": "10.2.0"
   },
   "devDependencies": {
     "vitest": "catalog:"

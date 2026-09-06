@@ -2,7 +2,7 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * Nightly staging suite: runs against the deployed `staging` Alchemy stage
- * (real upstreams — payload/Polar/arena live data, no fixture simulator).
+ * (real upstreams — CMS/Polar/arena live data, no fixture simulator).
  * Separate from the fixture suite (`playwright.config.ts`): no local
  * webServers, no `x-use-simulator` header, and a different test directory
  * whose assertions are content-agnostic.

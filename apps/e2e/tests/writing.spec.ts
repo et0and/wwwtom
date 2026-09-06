@@ -2,10 +2,10 @@ import { test, expect } from "@playwright/test";
 import { fixturePosts, POSTS_PAGE_SIZE, newestPost, oldestPost } from "../src/fixture-stores";
 
 /**
- * /posts — the Writing index and post pages, driven by the payload fixture
+ * /posts — the Writing index and post pages, driven by the CMS fixture
  * store. Six fixture posts with a page size of five means page 2 exists and
  * holds exactly the oldest post; the index shows titles and summaries, and a
- * detail page renders the converted Lexical body.
+ * detail page renders the stored HTML body.
  */
 test.describe("writing", () => {
   test("posts index lists the newest page of fixture posts", async ({ page }) => {

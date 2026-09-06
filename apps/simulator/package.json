@@ -10,6 +10,8 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@tom/schemas": "workspace:*",
+    "@tom/types": "workspace:*",
     "effect": "catalog:",
     "elysia": "catalog:",
     "tsx": "4.20.3"

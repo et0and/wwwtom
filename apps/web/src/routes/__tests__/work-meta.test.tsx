@@ -13,13 +13,13 @@ import { fetchWorkBySlug } from "~/server/adapter";
 
 const mockedFetchWorkBySlug = fetchWorkBySlug as Mock;
 
-const workPayload = {
-  id: "1",
+const workData = {
+  id: "work-1",
   title: "An idea for a performance",
   summary: "A tool for generating performance ideas.",
   slug: "an-idea-for-a-performance",
   meta: { description: "A meta description" },
-  content: "<p>A tool for generating performance ideas.</p>",
+  html: "<p>A tool for generating performance ideas.</p>",
   arenaBlocks: [],
 };
 
@@ -45,7 +45,7 @@ beforeEach(() => {
 
 describe("work page meta tags", () => {
   it("renders title, description and og/twitter meta into the document head", async () => {
-    mockedFetchWorkBySlug.mockResolvedValue(workPayload);
+    mockedFetchWorkBySlug.mockResolvedValue(workData);
     renderWorkPage();
     await waitFor(() => expect(screen.getByText("An idea for a performance")).toBeTruthy());
 
@@ -62,7 +62,7 @@ describe("work page meta tags", () => {
   });
 
   it("points og:image and twitter:image at the public adapter proxy, absolute", async () => {
-    mockedFetchWorkBySlug.mockResolvedValue(workPayload);
+    mockedFetchWorkBySlug.mockResolvedValue(workData);
     renderWorkPage();
     await waitFor(() => expect(screen.getByText("An idea for a performance")).toBeTruthy());
 

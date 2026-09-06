@@ -7,7 +7,7 @@ Effect V4.
 
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/api`: Elysia Worker
-- `apps/adapter`: Elysia BFF Worker (integrations: arena, payload, polar, guestbook, github, image, og)
+- `apps/adapter`: Elysia BFF Worker (integrations: arena, cms, polar, guestbook, github, image, og)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
@@ -136,7 +136,6 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
 ```json
 {
   "ARENA_TOKEN": "...",
-  "PAYLOAD_URL": "https://cms.tom.so",
   "DATABASE_URL": "postgresql://...",
   "TELEGRAM_BOT_TOKEN": "...",
   "TELEGRAM_CHAT_ID": "...",
@@ -144,6 +143,10 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "SUCCESS_URL": "https://tom.so/thanks",
   "INTERNAL_API_TOKEN": "...",
   "GITHUB_TOKEN": "...",
+  "GITHUB_CLIENT_ID": "...",
+  "GITHUB_CLIENT_SECRET": "...",
+  "BETTER_AUTH_SECRET": "...",
+  "CMS_ADMIN_EMAILS": "tom@example.com",
   "CONTROL_TOKEN": "...",
   "TURBO_CACHE_TOKEN": "...",
   "TURBO_CACHE_SIGNATURE_KEY": "..."
@@ -155,6 +158,12 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
 tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
 random value of at least 32 characters.
 
+`GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
+credentials for CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
+`BETTER_AUTH_SECRET` signs sessions (min 32 chars; `openssl rand -base64 32`).
+`CMS_ADMIN_EMAILS` is the comma-separated allowlist for sign-in; everyone else
+is rejected before a user row is created.
+
 `TURBO_CACHE_TOKEN` (bearer token for the turbo remote cache) and
 `TURBO_CACHE_SIGNATURE_KEY` (artifact signature key, min 32 bytes) protect the
 cache. Generate both with `openssl rand -hex 32`; store the same values as the
@@ -164,7 +173,7 @@ latter).
 
 `INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
 `x-internal-token` header when calling the API's protected routes
-(`/og`, `/checkout`, `/portal`). Generate a long random value; requests
+(`/og`, `/checkout`, `/portal`, `/auth/*`). Generate a long random value; requests
 without a matching token are rejected with 401.
 
 `DATABASE_URL` is also used to configure the Hyperdrive origin. At runtime,

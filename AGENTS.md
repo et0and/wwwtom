@@ -1,19 +1,18 @@
 # wwwtom
 
-pnpm + Turborepo monorepo: tom.so, api.tom.so, cms.tom.so, sophie.st.
+pnpm + Turborepo monorepo: tom.so, api.tom.so.
 Smallest correct change, follow local patterns, verify before handoff.
 Improve existing code; avoid new abstractions.
 
 ## Shape
 
-- `apps/web` — SolidStart 2 (2.0.0-beta.9) + Vite, Workers. Solid rules: `apps/web/AGENTS.md`.
+- `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Solid rules: `apps/web/AGENTS.md`.
+- `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS), Cloudflare Website. Same Solid rules.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers.
-- `apps/cms` — Payload 3.75 + Next 16 + OpenNext, Workers (D1 SQLite, R2).
-- `apps/sophie` — Payload site, Next + OpenNext, Workers.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/*` — ui, utils, types, db, arena, payload, schemas, checkout, constants, email.
-- `infra` — Alchemy 2.0.0-beta.63 + Effect 4.0.0-beta.99 stacks: shared, turbo, api, adapter, web.
+- `packages/*` — ui, utils, types, db, arena, schemas, checkout, constants, email.
+- `infra` — Alchemy 2.0.0-beta.72 + Effect 4.0.0-beta.105 stacks: shared, turbo, api, adapter, web.
 
 ## Working rules
 
@@ -25,35 +24,33 @@ Improve existing code; avoid new abstractions.
 
 ## Commands (root)
 
-- `pnpm dev` (all via Turbo) | `dev:web` | `dev:api` | `dev:adapter` | `dev:cms` | `dev:sophie`
+- `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
 - `pnpm test:update` — snapshot update (web, utils)
-- `pnpm deploy` = shared → api → adapter → web (Alchemy; `ALCHEMY_STAGE` required)
-- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web`
-- `pnpm deploy:cms` / `deploy:sophie` (OpenNext; `CLOUDFLARE_ENV` required)
+- `pnpm deploy` = shared → api → adapter → web → editor (Alchemy; `ALCHEMY_STAGE` required)
+- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:editor`
 - `pnpm destroy` — destroy current Alchemy stage
 
 ## App scripts
 
 - web: `dev|build|start|typecheck|lint|test|test:ui|test:coverage`
+- editor: `dev|build|preview|typecheck|lint|test`
 - api: `dev|build|deploy|test|typecheck|lint|cf-typegen`
-- cms: `dev|build|lint|lint:fix|generate:types|generate:importmap|payload|preview|deploy|deploy:app|deploy:database`
-- sophie: + `typecheck`
 
 ## Single tests
 
 - root filter: `pnpm test -- Nav.test.tsx`
 - web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/components/__tests__/Nav.test.tsx`)
 - utils: `cd packages/utils && pnpm vitest run __tests__/telegram.test.ts`
-- cms: `cd apps/cms && pnpm vitest run tests/int/<name>.int.spec.ts`
 
 ## Tests
 
 - web: `apps/web/src/**/__tests__/*.test.tsx`; jsdom, globals, `src/test/setup.ts` (jest-dom, cleanup, matchMedia mock)
+- editor: `apps/editor/src/**/__tests__/*.test.{ts,tsx}` (`.tsx` for JSX tests — `.ts` skips the JSX transform)
 - utils: `packages/utils/__tests__/*`
-- cms: `apps/cms/tests/int/**/*.int.spec.ts` (vitest + jsdom)
 - Solid UI: `@solidjs/testing-library`; wrap router deps in `Router`/`Route`; assert user-visible behavior; focused snapshots; narrowest relevant test first
+- Solid 2.0 writes flush async — await state with `vi.waitFor`, never assert immediately after the action
 
 ## TypeScript
 
@@ -76,8 +73,8 @@ Improve existing code; avoid new abstractions.
 ## Effect
 
 - `Effect.gen` | `Effect.succeed` | `Effect.fail` | `Effect.try` / `Effect.tryPromise`
+- `Effect.catch` for recovery — `catchAll` does not exist in Effect 4
 - errors in `@tom/types/errors`; `Redacted.make()` for secrets/tokens; never swallow errors
-- match logging API in touched area (CMS: `payload.logger`)
 
 ## Logging (Effect apps)
 
@@ -111,16 +108,15 @@ Never guess at Effect patterns - check the guide first.
 - components = setup fns, run once, not render loops
 - signals as fns: `count()`; one signal per value
 - derivations in `createMemo`/derived fns — never `createEffect` that sets state
-- `createEffect` side effects only; `onCleanup` inside effects
-- props via `props.x` (no destructure); `splitProps`/`mergeProps`
-- `<For>`/`<Index>`/`<Show>`, never `.map()` in JSX; `<Suspense>` for async
-- `class` not `className`; `classList` for reactive classes
+- `createEffect(compute, effect)` is two-arg; side effects only; `onCleanup` inside effects
+- `onSettled` for mount work (no `onMount`); return cleanup from the callback
+- props via `props.x` (no destructure); `merge` for defaults, `omit` for rest
+- `<For>`/`<Show>`/`<Switch>`, never `.map()` in JSX; `<Loading>` for async (no `Suspense`, no `createResource`)
+- `class` not `className`; template strings for reactive classes (no `classList`); boolean attrs as `"true"`/`"false"` strings
 
-## API / CMS
+## API
 
 - api: Elysia + Effect, Worker runtime; tsconfig `jsxImportSource: "solid-js"` — preserve
-- cms/sophie: Next + Payload + React; don't force Solid patterns into CMS
-- cms has own `eslint.config.mjs`; follow stronger local app rules when they differ
 
 ## Infra
 
@@ -139,5 +135,5 @@ Never guess at Effect patterns - check the guide first.
 
 ## Sites
 
-- web `https://tom.so`, api `https://api.tom.so`, cms `https://cms.tom.so`
+- web `https://tom.so`, api `https://api.tom.so`
 - if unsure, read nearest package or app config before changing patterns

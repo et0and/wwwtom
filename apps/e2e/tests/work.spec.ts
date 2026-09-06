@@ -2,8 +2,9 @@ import { test, expect } from "@playwright/test";
 import { fixtureWorks } from "../src/fixture-stores";
 
 /**
- * /work — the Work index and project pages, driven by the payload fixture
- * store. Works sort by title; a detail page renders the converted body.
+ * /work — the Work index and project pages, driven by the CMS fixture
+ * store. Works sort alphabetically by title (the real API contract, mirrored
+ * by the simulator); a detail page renders the stored body.
  */
 test.describe("work", () => {
   test("work index lists every fixture project", async ({ page }) => {
@@ -13,6 +14,15 @@ test.describe("work", () => {
     for (const work of fixtureWorks) {
       await expect(page.getByRole("heading", { name: work.title, level: 2 })).toBeVisible();
     }
+  });
+
+  test("work index sorts alphabetically by title", async ({ page }) => {
+    await page.goto("/work");
+    const titles = await page.getByRole("heading", { level: 2 }).allTextContents();
+    const expected = fixtureWorks
+      .map((work) => work.title)
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+    expect(titles).toEqual(expected);
   });
 
   test("a project detail page renders title and body", async ({ page }) => {

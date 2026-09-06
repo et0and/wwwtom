@@ -18,11 +18,14 @@
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
     "@tom/utils": "workspace:*",
+    "better-auth": "^1.7.2",
     "effect": "catalog:",
     "elysia": "catalog:",
     "workers-og": "0.0.27"
   },
   "devDependencies": {
+    "@better-auth/kysely-adapter": "1.7.2",
+    "kysely": "0.29.5",
     "vitest": "catalog:"
   }
 }
