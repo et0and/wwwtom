@@ -1,5 +1,10 @@
-import { For, Match, Show, Switch, createSignal } from "solid-js";
+import { Match, Show, Switch, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
+import { Banner } from "@tom/ui/tomui/banner";
+import { Loader } from "@tom/ui/tomui/loader";
+import { DropdownMenu } from "@tom/ui/tomui/dropdown";
+import { Tabs } from "@tom/ui/tomui/tabs";
+import { useColorMode } from "@tom/ui/tomui/color-mode";
 import { runClient } from "./lib/api";
 import { createSession, signOut } from "./lib/session";
 import type { ContentKind } from "./lib/content";
@@ -39,14 +44,27 @@ const viewForTab = (tab: Tab): View => {
 const assignUrl = (url: string): void => window.location.assign(url);
 
 export const App = (props: { navigate?: (url: string) => void }) => {
+  useColorMode();
   const { session, reloadSession } = createSession();
   const [view, setView] = createSignal<View>({ name: "list" });
   const [error, setError] = createSignal<string | undefined>(undefined);
-  const [menuOpen, setMenuOpen] = createSignal(false);
   const navigate = props.navigate ?? assignUrl;
 
+  // The list toolbar sticks below the header, so publish the header
+  // height for its sticky offset. Layout never depends on the value.
+  onSettled(() => {
+    const nav = document.querySelector(".editor-nav");
+    if (!(nav instanceof HTMLElement)) return;
+    const sync = (): void => {
+      document.documentElement.style.setProperty("--editor-nav-h", `${nav.offsetHeight}px`);
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(nav);
+    return () => observer.disconnect();
+  });
+
   const onSignOut = (): void => {
-    setMenuOpen(false);
     void runClient(
       signOut().pipe(
         Effect.tap(() => Effect.sync(reloadSession)),
@@ -57,10 +75,12 @@ export const App = (props: { navigate?: (url: string) => void }) => {
 
   return (
     <main class="editor-shell">
-      <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+      <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Switch>
         <Match when={session() === undefined}>
-          <p>Loading…</p>
+          <p class="flex items-center gap-2">
+            <Loader size="sm" /> Loading…
+          </p>
         </Match>
         <Match when={session() === null}>
           <div class="signin-view">
@@ -72,51 +92,33 @@ export const App = (props: { navigate?: (url: string) => void }) => {
           {(current) => (
             <div>
               <nav class="editor-nav">
-                <h1 class="editor-title">Camus</h1>
-                <div class="editor-tabs">
-                  <For each={TABS}>
-                    {(item) => (
-                      <button
-                        type="button"
-                        class={tabForView(view()) === item.tab ? "editor-tab on" : "editor-tab"}
-                        aria-current={tabForView(view()) === item.tab ? "page" : undefined}
-                        onClick={() => setView(viewForTab(item.tab))}
-                      >
-                        {item.label}
-                      </button>
-                    )}
-                  </For>
+                <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                  <h1 class="editor-title">Camus</h1>
+                  <Tabs
+                    variant="underline"
+                    value={tabForView(view())}
+                    onValueChange={(value) =>
+                      setView(viewForTab(TABS.find((item) => item.tab === value)?.tab ?? "content"))
+                    }
+                    tabs={TABS.map((item) => ({ value: item.tab, label: item.label }))}
+                  />
                 </div>
                 <div class="editor-user">
-                  <button
-                    type="button"
-                    class="avatar-button"
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen() ? "true" : "false"}
-                    aria-label="Account"
-                    onClick={() => setMenuOpen(!menuOpen())}
-                  >
-                    <Avatar name={current().user.name} email={current().user.email} />
-                  </button>
-                  <Show when={menuOpen()}>
-                    <button
-                      type="button"
-                      class="avatar-backdrop"
-                      aria-label="Close account menu"
-                      onClick={() => setMenuOpen(false)}
-                    />
-                    <div class="avatar-menu" role="menu">
-                      <span>Signed in as {current().user.email}</span>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        class="signout-button"
-                        onClick={onSignOut}
-                      >
+                  <DropdownMenu>
+                    <DropdownMenu.Trigger
+                      class="cursor-pointer rounded-full border-0 bg-transparent p-0"
+                      aria-label="Account"
+                    >
+                      <Avatar name={current().user.name} email={current().user.email} />
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content align="end">
+                      <DropdownMenu.Label>Signed in as {current().user.email}</DropdownMenu.Label>
+                      <DropdownMenu.Separator />
+                      <DropdownMenu.Item variant="danger" onClick={onSignOut}>
                         Sign out
-                      </button>
-                    </div>
-                  </Show>
+                      </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                  </DropdownMenu>
                 </div>
               </nav>
               <Switch>

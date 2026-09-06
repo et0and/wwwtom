@@ -2,6 +2,7 @@ packages:
   - "apps/*"
   - "apps/*/*"
   - "packages/*"
+  - "packages/ui/src/storybook"
   - "infra"
 onlyBuiltDependencies:
   - "@parcel/watcher"

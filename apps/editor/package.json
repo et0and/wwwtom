@@ -28,6 +28,7 @@
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
+    "@tom/ui": "workspace:*",
     "@tom/utils": "workspace:*",
     "effect": "catalog:",
     "solid-js": "catalog:"

@@ -1,7 +1,11 @@
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
-import { Spinner } from "@tom/ui/Spinner";
+import { Loader } from "@tom/ui/tomui/loader";
+import { Button } from "@tom/ui/tomui/button";
+import { Input } from "@tom/ui/tomui/input";
+import { Banner } from "@tom/ui/tomui/banner";
+import { Text } from "@tom/ui/tomui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
@@ -51,6 +55,7 @@ export default function Guestbook() {
   const authMutation = useMutation(() => ({
     mutationFn: (inputHandle: string) => initiateAuth(inputHandle),
     onSuccess: (result) => {
+      if (!result.authUrl.startsWith("https://")) throw new Error("Invalid auth URL");
       window.location.href = result.authUrl;
     },
   }));
@@ -76,7 +81,7 @@ export default function Guestbook() {
       <BlurInText text="Guestbook" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
         <div class="mx-auto">
-          <Loading fallback={<Spinner />}>
+          <Loading fallback={<Loader />}>
             <Show
               when={currentUserQuery.data}
               fallback={
@@ -90,7 +95,11 @@ export default function Guestbook() {
                     user@fosstodon.org).
                   </p>
                   <Show when={authMutation.isError}>
-                    <div class="mb-4 alert-error">{authMutation.error?.message}</div>
+                    <Banner
+                      variant="error"
+                      description={authMutation.error?.message}
+                      class="mb-4"
+                    />
                   </Show>
                   <form
                     onSubmit={(e) => {
@@ -101,7 +110,7 @@ export default function Guestbook() {
                     }}
                   >
                     <div class="flex gap-2">
-                      <input
+                      <Input
                         type="text"
                         name="handle"
                         placeholder="user@mastodon.social"
@@ -113,15 +122,16 @@ export default function Guestbook() {
                         pattern="[^@]+@[^@]+"
                         title="Enter your Fediverse handle in the format: user@instance.social"
                         disabled={authMutation.isPending}
-                        class="input flex-1"
+                        class="flex-1"
                       />
-                      <button
+                      <Button
                         type="submit"
+                        variant="primary"
+                        loading={authMutation.isPending}
                         disabled={authMutation.isPending}
-                        class="button-primary"
                       >
                         {authMutation.isPending ? "Connecting..." : "Sign in"}
-                      </button>
+                      </Button>
                     </div>
                   </form>
                 </div>
@@ -140,7 +150,7 @@ export default function Guestbook() {
                         />
                         <div>
                           <div class="font-semibold">{u.display_name}</div>
-                          <div class="text-sm text-muted">
+                          <div class="text-sm text-tomui-subtle">
                             @{u.username}@{u.instance}
                           </div>
                         </div>
@@ -151,20 +161,30 @@ export default function Guestbook() {
                           logoutMutation.mutate();
                         }}
                       >
-                        <button
+                        <Button
                           type="submit"
+                          variant="secondary"
+                          size="sm"
+                          loading={logoutMutation.isPending}
                           disabled={logoutMutation.isPending}
-                          class="button-secondary"
                         >
                           {logoutMutation.isPending ? "Logging out..." : "Logout"}
-                        </button>
+                        </Button>
                       </form>
                     </div>
                     <Show when={signMutation.isSuccess}>
-                      <div class="mb-4 alert-success">Thank you for signing the guestbook!</div>
+                      <Banner
+                        variant="default"
+                        description="Thank you for signing the guestbook!"
+                        class="mb-4"
+                      />
                     </Show>
                     <Show when={signMutation.isError}>
-                      <div class="mb-4 alert-error">{signMutation.error?.message}</div>
+                      <Banner
+                        variant="error"
+                        description={signMutation.error?.message}
+                        class="mb-4"
+                      />
                     </Show>
                     <form
                       onSubmit={(e) => {
@@ -184,17 +204,20 @@ export default function Guestbook() {
                         required
                         maxlength={500}
                         disabled={signMutation.isPending}
-                        class="input w-full min-h-32 mb-2"
+                        class="mb-2 min-h-32 w-full rounded-lg border border-tomui-line bg-tomui-control px-3 py-2 text-tomui-default outline-none focus:border-tomui-focus"
                       />
                       <div class="flex justify-between items-center">
-                        <span class="text-sm text-muted">{message().length}/500</span>
-                        <button
+                        <Text variant="secondary" size="sm" as="span">
+                          {message().length}/500
+                        </Text>
+                        <Button
                           type="submit"
+                          variant="primary"
+                          loading={signMutation.isPending}
                           disabled={signMutation.isPending}
-                          class="button-primary"
                         >
                           {signMutation.isPending ? "Signing..." : "Sign guestbook"}
-                        </button>
+                        </Button>
                       </div>
                     </form>
                   </div>
@@ -207,14 +230,18 @@ export default function Guestbook() {
       <BlurInSection delay={0.5}>
         <div class="space-y-4">
           <h2 class="mb-4">Signatures</h2>
-          <Loading fallback={<Spinner />}>
+          <Loading fallback={<Loader />}>
             <Show when={entriesQuery.data}>
               {(data) => {
                 const d = data();
                 return (
                   <Show
                     when={d.length > 0}
-                    fallback={<div class="text-muted">No signatures yet. Be the first!</div>}
+                    fallback={
+                      <Text variant="secondary" size="sm">
+                        No signatures yet. Be the first!
+                      </Text>
+                    }
                   >
                     <For each={d}>
                       {(entry) => (
@@ -232,10 +259,12 @@ export default function Guestbook() {
                                 <span class="font-semibold">
                                   {entry.display_name ?? entry.fediverse_username}
                                 </span>
-                                <span class="text-sm text-muted">{entry.fediverse_username}</span>
+                                <Text variant="secondary" size="sm" as="span">
+                                  {entry.fediverse_username}
+                                </Text>
                               </div>
                               <p class="guestbook-message mb-2">{entry.message}</p>
-                              <time class="text-xs text-subtle">
+                              <Text variant="secondary" size="xs" as="time">
                                 {new Date(entry.created_at).toLocaleDateString("en-NZ", {
                                   year: "numeric",
                                   month: "long",
@@ -243,7 +272,7 @@ export default function Guestbook() {
                                   hour: "2-digit",
                                   minute: "2-digit",
                                 })}
-                              </time>
+                              </Text>
                             </div>
                           </div>
                         </div>

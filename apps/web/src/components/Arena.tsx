@@ -3,8 +3,9 @@ import { Effect } from "effect";
 import { Show, For, createMemo, createSignal } from "solid-js";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
-import { Spinner } from "@tom/ui/Spinner";
+import { Loader } from "@tom/ui/tomui/loader";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
+import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/libs/utils/sanitize";
 
 interface ArenaCarouselProps {
   slug: string;
@@ -56,7 +57,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     return !!(response?.data && response.data.length > 0);
   });
   return (
-    <Show when={!isLoading()} fallback={<Spinner />}>
+    <Show when={!isLoading()} fallback={<Loader />}>
       <Show
         when={hasContent()}
         fallback={
@@ -133,7 +134,7 @@ function ImageBlock(props: ImageBlockProps) {
             : undefined
         }
         alt={block().image?.alt_text || block().title || ""}
-        class={["w-full h-full object-cover", { "opacity-0": !!blurhashDataUrl() && !loaded() }]}
+        class={`w-full h-full object-cover ${blurhashDataUrl() && !loaded() ? "opacity-0" : ""}`}
         onLoad={() => setLoaded(true)}
         loading="lazy"
       />
@@ -155,7 +156,7 @@ function ArenaBlockItem(props: ArenaBlockItemProps) {
         {(text) =>
           text().content?.html ? (
             <div class="text-content prose prose-sm break-words whitespace-normal">
-              <div innerHTML={text().content.html} />
+              <div innerHTML={sanitizeRichHtml(text().content.html)} />
             </div>
           ) : (
             <div class="text-content prose prose-sm break-words whitespace-normal">
@@ -197,15 +198,15 @@ function EmbedBlock(props: EmbedBlockProps) {
             class="embed-container relative w-full bg-black overflow-hidden"
             style={{ "aspect-ratio": embedAspectRatio(embed().width, embed().height) }}
           >
-            <div class="embed-html" innerHTML={embedHtml()} />
+            <div class="embed-html" innerHTML={sanitizeEmbedHtml(embedHtml())} />
           </div>
         </Show>
         <Show when={!isPlaying() && thumbnail()}>
           <button
             type="button"
-            class="embed-poster relative block w-full p-0 border-0 cursor-pointer"
             onClick={() => setIsPlaying(true)}
             aria-label={`Play ${block().title || "video"}`}
+            class="relative block w-full cursor-pointer border-0 bg-transparent p-0"
           >
             <div class="relative w-full h-60 bg-gray-100">
               <img

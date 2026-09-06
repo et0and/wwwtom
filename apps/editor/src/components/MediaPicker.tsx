@@ -1,6 +1,8 @@
 import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsMedia } from "@tom/schemas/cms";
+import { Input } from "@tom/ui/tomui/input";
+import { Banner } from "@tom/ui/tomui/banner";
 import { adapterUrl, runClient } from "../lib/api";
 import { listMedia, mediaFileName, mediaFileUrl } from "../lib/content";
 
@@ -35,14 +37,14 @@ export const MediaPicker = (props: { onPick: (item: CmsMedia) => void }) => {
     <div class="media-picker">
       <label class="field">
         Choose existing
-        <input
+        <Input
           type="text"
           value={query()}
           placeholder="Search by filename"
           onInput={(event) => setQuery(event.currentTarget.value)}
         />
       </label>
-      <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+      <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Show when={visible().length > 0} fallback={<p class="history-meta">No matching media.</p>}>
         <div class="media-grid">
           <For each={visible()}>

@@ -1,9 +1,19 @@
 import addonA11y from "@storybook/addon-a11y";
 import addonDocs from "@storybook/addon-docs";
 import { definePreview } from "storybook-solidjs-vite";
+import { useColorMode } from "@tom/ui/tomui/color-mode";
+import "./tomui.css";
 
 export default definePreview({
   addons: [addonDocs(), addonA11y()],
+  decorators: [
+    (Story) => {
+      useColorMode();
+      document.body.style.backgroundColor = "var(--color-tomui-canvas)";
+      document.body.style.color = "var(--text-color-tomui-default)";
+      return Story();
+    },
+  ],
   parameters: {
     // automatically create action args for all props that start with 'on'
     actions: {

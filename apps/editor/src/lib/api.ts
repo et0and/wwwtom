@@ -4,6 +4,15 @@ import { CmsError } from "@tom/types/errors";
 /** Adapter origin, inlined at build time for production. */
 export const adapterUrl = (): string => import.meta.env.VITE_ADAPTER_URL ?? "http://localhost:8788";
 
+/** Session requests never hang: abort slow fetches so the shell always settles. */
+const REQUEST_TIMEOUT_MS = 15000;
+
+const fetchWithTimeout = (url: string, init: RequestInit): Promise<Response> => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  return fetch(url, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));
+};
+
 /** Run a client effect as a promise at the Solid boundary. */
 export const runClient = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =>
   Effect.runPromise(effect);
@@ -15,7 +24,7 @@ export const requestJson = (
   operation: string,
 ): Effect.Effect<unknown, CmsError> =>
   Effect.tryPromise({
-    try: () => fetch(`${adapterUrl()}${path}`, { ...init, credentials: "include" }),
+    try: () => fetchWithTimeout(`${adapterUrl()}${path}`, { ...init, credentials: "include" }),
     catch: (cause) =>
       new CmsError({ message: "Editor request failed", status: 500, operation, cause }),
   }).pipe(
@@ -48,7 +57,7 @@ export const requestVoid = (
   operation: string,
 ): Effect.Effect<void, CmsError> =>
   Effect.tryPromise({
-    try: () => fetch(`${adapterUrl()}${path}`, { ...init, credentials: "include" }),
+    try: () => fetchWithTimeout(`${adapterUrl()}${path}`, { ...init, credentials: "include" }),
     catch: (cause) =>
       new CmsError({ message: "Editor request failed", status: 500, operation, cause }),
   }).pipe(

@@ -32,6 +32,13 @@ import { decodeResponse, requestJson } from "./api";
 
 export type ContentKind = "posts" | "works";
 
+/** Rows per content list page, shared by the list view and the API query. */
+export const PAGE_SIZE = 10;
+
+/** Clamp a requested page to a valid 1-based number. Guards NaN/Infinity. */
+const safePage = (page: number): number =>
+  Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
+
 const postListSchema = CmsListResponseSchema(CmsPostSchema);
 const workListSchema = CmsListResponseSchema(CmsWorkSchema);
 const categoryListSchema = Schema.Array(CmsCategorySchema);
@@ -47,7 +54,7 @@ const restoreInputJson = Schema.fromJsonString(CmsRestoreInputSchema);
 
 /** Public file URL for a media id (used by previews and hero images). */
 export const mediaFileUrl = (adapterOrigin: string, mediaId: string): string =>
-  `${adapterOrigin}/content/media/${mediaId}/file`;
+  `${adapterOrigin}/content/media/${encodeURIComponent(mediaId)}/file`;
 
 const fetchAndDecode = <A, I>(
   path: string,
@@ -73,17 +80,27 @@ const encodeBody = (encode: () => string, operation: string): Effect.Effect<stri
       new CmsError({ message: "Invalid editor data", status: 500, operation, cause }),
   });
 
-export const listPosts = (): Effect.Effect<CmsListResponse<CmsPost>, CmsError> =>
-  fetchAndDecode("/content/posts?status=all&pageSize=50", {}, postListSchema, "list_posts");
+export const listPosts = (page: number): Effect.Effect<CmsListResponse<CmsPost>, CmsError> =>
+  fetchAndDecode(
+    `/content/posts?status=all&page=${safePage(page)}&pageSize=${PAGE_SIZE}`,
+    {},
+    postListSchema,
+    "list_posts",
+  );
 
-export const listWorks = (): Effect.Effect<CmsListResponse<CmsWork>, CmsError> =>
-  fetchAndDecode("/content/works?status=all&pageSize=50", {}, workListSchema, "list_works");
+export const listWorks = (page: number): Effect.Effect<CmsListResponse<CmsWork>, CmsError> =>
+  fetchAndDecode(
+    `/content/works?status=all&page=${safePage(page)}&pageSize=${PAGE_SIZE}`,
+    {},
+    workListSchema,
+    "list_works",
+  );
 
 export const getPost = (slug: string): Effect.Effect<CmsPost, CmsError> =>
-  fetchAndDecode(`/content/posts/${slug}`, {}, CmsPostSchema, "get_post");
+  fetchAndDecode(`/content/posts/${encodeURIComponent(slug)}`, {}, CmsPostSchema, "get_post");
 
 export const getWork = (slug: string): Effect.Effect<CmsWork, CmsError> =>
-  fetchAndDecode(`/content/works/${slug}`, {}, CmsWorkSchema, "get_work");
+  fetchAndDecode(`/content/works/${encodeURIComponent(slug)}`, {}, CmsWorkSchema, "get_work");
 
 const saveContent = <A, I>(
   kind: ContentKind,
@@ -93,7 +110,7 @@ const saveContent = <A, I>(
   operation: string,
 ): Effect.Effect<A, CmsError> =>
   fetchAndDecode(
-    slug === null ? `/content/${kind}` : `/content/${kind}/${slug}`,
+    slug === null ? `/content/${kind}` : `/content/${kind}/${encodeURIComponent(slug)}`,
     { ...jsonBody(body), method: slug === null ? "POST" : "PUT" },
     schema,
     operation,
@@ -118,17 +135,27 @@ export const saveWork = (
   );
 
 export const deletePost = (slug: string): Effect.Effect<{ readonly id: string }, CmsError> =>
-  fetchAndDecode(`/content/posts/${slug}`, { method: "DELETE" }, deleteResultSchema, "delete_post");
+  fetchAndDecode(
+    `/content/posts/${encodeURIComponent(slug)}`,
+    { method: "DELETE" },
+    deleteResultSchema,
+    "delete_post",
+  );
 
 export const deleteWork = (slug: string): Effect.Effect<{ readonly id: string }, CmsError> =>
-  fetchAndDecode(`/content/works/${slug}`, { method: "DELETE" }, deleteResultSchema, "delete_work");
+  fetchAndDecode(
+    `/content/works/${encodeURIComponent(slug)}`,
+    { method: "DELETE" },
+    deleteResultSchema,
+    "delete_work",
+  );
 
 export const listRevisions = (
   kind: ContentKind,
   slug: string,
 ): Effect.Effect<ReadonlyArray<CmsRevisionMeta>, CmsError> =>
   fetchAndDecode(
-    `/content/${kind}/${slug}/revisions`,
+    `/content/${kind}/${encodeURIComponent(slug)}/revisions`,
     {},
     revisionMetaListSchema,
     "list_revisions",
@@ -140,7 +167,7 @@ export const getRevision = (
   revisionId: string,
 ): Effect.Effect<CmsRevisionSnapshot, CmsError> =>
   fetchAndDecode(
-    `/content/${kind}/${slug}/revisions/${revisionId}`,
+    `/content/${kind}/${encodeURIComponent(slug)}/revisions/${encodeURIComponent(revisionId)}`,
     {},
     CmsRevisionSnapshotSchema,
     "get_revision",
@@ -195,7 +222,7 @@ export const createCategory = (slug: string, title: string): Effect.Effect<CmsCa
 
 export const deleteCategory = (slug: string): Effect.Effect<{ readonly id: string }, CmsError> =>
   fetchAndDecode(
-    `/content/categories/${slug}`,
+    `/content/categories/${encodeURIComponent(slug)}`,
     { method: "DELETE" },
     deleteResultSchema,
     "delete_category",
@@ -218,10 +245,20 @@ export const listMedia = (): Effect.Effect<CmsListResponse<CmsMedia>, CmsError> 
   fetchAndDecode("/content/media?pageSize=100", {}, mediaListSchema, "list_media");
 
 export const getMediaUsage = (id: string): Effect.Effect<CmsMediaUsage, CmsError> =>
-  fetchAndDecode(`/content/media/${id}/usage`, {}, CmsMediaUsageSchema, "get_media_usage");
+  fetchAndDecode(
+    `/content/media/${encodeURIComponent(id)}/usage`,
+    {},
+    CmsMediaUsageSchema,
+    "get_media_usage",
+  );
 
 export const deleteMedia = (id: string): Effect.Effect<{ readonly id: string }, CmsError> =>
-  fetchAndDecode(`/content/media/${id}`, { method: "DELETE" }, deleteResultSchema, "delete_media");
+  fetchAndDecode(
+    `/content/media/${encodeURIComponent(id)}`,
+    { method: "DELETE" },
+    deleteResultSchema,
+    "delete_media",
+  );
 
 /** Display filename from a storage key (`media/<id>/<name>`). */
 export const mediaFileName = (key: string): string => {
@@ -235,7 +272,6 @@ export type ContentFields = {
   readonly summary: string;
   readonly status: CmsStatus;
   readonly publishedAt: string;
-  readonly heroMediaId: string;
 };
 
 /** Meta tags derive from the post itself; the editor sends nulls. */
@@ -258,7 +294,7 @@ export const toPostInput = (
       content: doc,
       status: fields.status,
       publishedAt: nullIfEmpty(fields.publishedAt),
-      heroMediaId: nullIfEmpty(fields.heroMediaId),
+      heroMediaId: null,
       categoryIds,
       meta: emptyMeta,
     },
@@ -280,7 +316,7 @@ export const toWorkInput = (
       content: doc,
       status: fields.status,
       publishedAt: nullIfEmpty(fields.publishedAt),
-      heroMediaId: nullIfEmpty(fields.heroMediaId),
+      heroMediaId: null,
       meta: emptyMeta,
     },
     "save_work",

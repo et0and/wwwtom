@@ -1,6 +1,9 @@
 import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsMedia, CmsMediaUsage } from "@tom/schemas/cms";
+import { Button } from "@tom/ui/tomui/button";
+import { Input } from "@tom/ui/tomui/input";
+import { Banner } from "@tom/ui/tomui/banner";
 import { adapterUrl, runClient } from "../lib/api";
 import { deleteMedia, getMediaUsage, listMedia, mediaFileName, mediaFileUrl } from "../lib/content";
 import type { ContentKind } from "../lib/content";
@@ -18,16 +21,26 @@ const UsageList = (props: {
         <div class="media-usage">
           <For each={found().posts}>
             {(post) => (
-              <button type="button" onClick={() => props.onEdit("posts", post.slug)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => props.onEdit("posts", post.slug)}
+              >
                 Post: {post.title}
-              </button>
+              </Button>
             )}
           </For>
           <For each={found().works}>
             {(work) => (
-              <button type="button" onClick={() => props.onEdit("works", work.slug)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={() => props.onEdit("works", work.slug)}
+              >
                 Work: {work.title}
-              </button>
+              </Button>
             )}
           </For>
         </div>
@@ -106,14 +119,14 @@ export const MediaView = (props: { onEdit: (kind: ContentKind, slug: string) => 
     <div class="media-view">
       <label class="field">
         Search media
-        <input
+        <Input
           type="text"
           value={query()}
           placeholder="Filter by filename"
           onInput={(event) => setQuery(event.currentTarget.value)}
         />
       </label>
-      <Show when={error()}>{(message) => <p class="error">{message()}</p>}</Show>
+      <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Show
         when={visible().length > 0}
         fallback={<p class="history-empty">No media yet — upload from a post or work.</p>}
@@ -142,12 +155,22 @@ export const MediaView = (props: { onEdit: (kind: ContentKind, slug: string) => 
                 </Show>
                 <p class="media-name">{mediaFileName(item.key)}</p>
                 <div class="media-actions">
-                  <button type="button" onClick={() => toggleUsage(item.id)}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => toggleUsage(item.id)}
+                  >
                     {openUsage() === item.id ? "Hide usage" : "Usage"}
-                  </button>
-                  <button type="button" class="delete-button" onClick={() => onDelete(item)}>
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="secondary-destructive"
+                    onClick={() => onDelete(item)}
+                  >
                     Delete
-                  </button>
+                  </Button>
                 </div>
                 <Show when={openUsage() === item.id}>
                   <UsageList usage={usage()[item.id]} onEdit={props.onEdit} />

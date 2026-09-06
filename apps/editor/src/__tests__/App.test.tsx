@@ -89,7 +89,7 @@ describe("App", () => {
     const { findByRole, findByText } = render(() => <App />);
     expect(await findByRole("heading", { name: "Camus" })).toBeInTheDocument();
     await findByText("Nothing here yet.");
-    fireEvent.click(await findByRole("button", { name: "Media" }));
+    fireEvent.click(await findByRole("tab", { name: "Media" }));
     expect(await findByText("hero.webp")).toBeInTheDocument();
   });
 
@@ -131,7 +131,7 @@ describe("App", () => {
       .mockResolvedValueOnce(jsonResponse([]));
     const { findByRole, findByText } = render(() => <App />);
     await findByText("Nothing here yet.");
-    fireEvent.click(await findByRole("button", { name: "Categories" }));
+    fireEvent.click(await findByRole("tab", { name: "Categories" }));
     expect(await findByRole("button", { name: "Add category" })).toBeInTheDocument();
   });
 });

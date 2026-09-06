@@ -1,0 +1,56 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="web" />
+
+# TomUI
+
+TomUI is the design system for this monorepo. It brings an accessible Solid v2 component library with TomUI design tokens.
+
+## Use
+
+Import components from exact deep paths. Never use barrel files.
+
+```tsx
+import { Button } from "@tom/ui/tomui/button";
+import { Input } from "@tom/ui/tomui/input";
+```
+
+Import the styles once in app CSS after Tailwind.
+
+```css
+@import "tailwindcss";
+@import "@tom/ui/tomui.css";
+@import "@tom/ui/tomui/theme-tomui.css";
+```
+
+Tailwind must scan the component sources for class generation.
+
+```css
+@source "../../../packages/ui/src/**/*.tsx";
+```
+
+## Variants
+
+Every component ships a machine-readable variant table.
+
+```tsx
+import { TOMUI_BUTTON_VARIANTS, TOMUI_BUTTON_DEFAULT_VARIANTS } from "@tom/ui/tomui/button";
+```
+
+Prop names match the table keys. Defaults come from the matching defaults table. Unknown values fall back to the default.
+
+## Forms
+
+Button geometry uses the `form` prop: `base`, `square`, or `circle`. Square and circle forms are icon-only and need an accessible name.
+
+```tsx
+<Button variant="primary">Save</Button>
+<Button form="square" aria-label="Refresh" />
+```
+
+## Rules
+
+- `class`, never `className`.
+- `<Show>` and `<For>`, never `.map()` in JSX.
+- One signal per value, derivations in memos.
+- No `any`, no `let`, no `console.*` in components.

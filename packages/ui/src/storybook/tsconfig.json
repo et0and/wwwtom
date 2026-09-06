@@ -5,7 +5,8 @@
     "moduleResolution": "bundler",
     "allowJs": true,
     "jsx": "preserve",
-    "jsxImportSource": "solid-js",
+    "jsxImportSource": "@solidjs/web",
+    "skipLibCheck": true,
     "types": ["vite/client"],
     "paths": {
       "#.storybook/*": ["./.storybook/*"]

@@ -17,19 +17,26 @@
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.0.1",
+    "@solidjs/router": "catalog:",
+    "@solidjs/vite-plugin": "catalog:",
+    "@solidjs/web": "catalog:",
     "@storybook/addon-a11y": "^10.2.13",
     "@storybook/addon-docs": "^10.2.13",
     "@storybook/addon-links": "^10.2.13",
     "@storybook/addon-onboarding": "^10.2.13",
     "@storybook/addon-vitest": "^10.2.13",
     "@storybook/builder-vite": "^10.2.13",
+    "@tailwindcss/vite": "4.3.3",
+    "@tom/ui": "workspace:*",
     "@vitest/browser": "^4.0.18",
     "@vitest/browser-playwright": "^4.0.18",
     "@vitest/coverage-v8": "^4.0.18",
     "playwright": "^1.58.2",
-    "solid-js": "^1.9.11",
+    "solid-js": "catalog:",
     "storybook": "^10.2.13",
-    "storybook-solidjs-vite": "^10.0.9",
+    "storybook-solidjs-vite": "^10.7.1",
+    "tailwindcss": "4.3.3",
+    "vite": "^8.1.5",
     "vitest": "^4.0.18"
   }
 }

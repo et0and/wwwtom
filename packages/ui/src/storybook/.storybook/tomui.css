@@ -1,0 +1,6 @@
+@import "tailwindcss";
+@import "@tom/ui/tomui.css";
+@import "@tom/ui/tomui/theme-tomui.css";
+
+@source "../../tomui/**/*.tsx";
+@source "../stories/**/*.tsx";

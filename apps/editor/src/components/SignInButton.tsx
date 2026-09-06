@@ -1,4 +1,5 @@
 import { Effect } from "effect";
+import { Button } from "@tom/ui/tomui/button";
 import { runClient } from "../lib/api";
 import { startGithubSignIn } from "../lib/session";
 
@@ -21,8 +22,8 @@ export const SignInButton = (props: {
   };
 
   return (
-    <button type="button" class="signin-button" onClick={onClick}>
+    <Button type="button" variant="primary" onClick={onClick}>
       Sign in with GitHub
-    </button>
+    </Button>
   );
 };
