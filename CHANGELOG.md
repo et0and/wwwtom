@@ -1,3 +1,10 @@
+## [2.6.1](https://github.com/et0and/wwwtom/compare/v2.6.0...v2.6.1) (2026-09-06)
+
+
+### Bug Fixes
+
+* **infra:** use a fresh database for the production CMS ([041daa0](https://github.com/et0and/wwwtom/commit/041daa00aacf172deb7bb208b23e2f73f6602cae))
+
 # [2.6.0](https://github.com/et0and/wwwtom/compare/v2.5.1...v2.6.0) (2026-09-06)
 
 
