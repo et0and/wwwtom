@@ -6,7 +6,7 @@ import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { stageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
-import { cmsD1, cmsMediaBucket } from "../cms/cms.storage.ts";
+import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -43,9 +43,18 @@ export const api = Effect.gen(function* () {
 
   // The CMS D1 database and media bucket are owned by the api stack, the
   // only runtime user. Production retains them so a stage teardown never
-  // deletes content or media; preview stages stay ephemeral.
-  const cmsDb = yield* stage === "production" ? cmsD1.pipe(retain()) : cmsD1;
-  const cmsMedia = yield* stage === "production" ? cmsMediaBucket.pipe(retain()) : cmsMediaBucket;
+  // deletes content or media; preview stages stay ephemeral. PR previews
+  // read the dev database + bucket directly (see cms.storage.ts).
+  const cmsDb = yield* stage === "production"
+    ? cmsD1.pipe(retain())
+    : stage.startsWith("pr-")
+      ? previewCmsD1
+      : cmsD1;
+  const cmsMedia = yield* stage === "production"
+    ? cmsMediaBucket.pipe(retain())
+    : stage.startsWith("pr-")
+      ? previewCmsMedia
+      : cmsMediaBucket;
 
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,

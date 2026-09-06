@@ -37,18 +37,14 @@ jobs:
 
       # Deploys shared -> api -> adapter -> web. The web stack posts or
       # updates the preview comment via infra/utils/github/preview-comment.ts.
+      # The preview api reads the dev database + bucket directly
+      # (infra/cms/cms.storage.ts), so seeded content renders as-is.
       - name: Deploy preview stage
         run: >
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes
-
-      # Seeds the preview database + bucket with the dev content so posts
-      # and works render (previews never share the dev database: preview
-      # writes must stay isolated). Idempotent — re-runs skip existing rows.
-      - name: Seed preview content
-        run: pnpm --filter @tom/simulator migrate:cms -- --target=pr-${{ github.event.pull_request.number }} --apply
 
   destroy:
     if: github.event.action == 'closed'
