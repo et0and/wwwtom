@@ -1,3 +1,10 @@
+## [2.6.2](https://github.com/et0and/wwwtom/compare/v2.6.1...v2.6.2) (2026-09-06)
+
+
+### Bug Fixes
+
+* **auth:** let explicit worker env override the admin allowlist ([525eb2d](https://github.com/et0and/wwwtom/commit/525eb2d4c81a2a18f29b80be24f338c2ab7d5baa))
+
 ## [2.6.1](https://github.com/et0and/wwwtom/compare/v2.6.0...v2.6.1) (2026-09-06)
 
 
