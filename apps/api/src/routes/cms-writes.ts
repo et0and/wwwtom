@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   CmsCategoryInputSchema,
   CmsPostInputSchema,
@@ -12,7 +12,7 @@ import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/services/config";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
-import { createAuthFromEnv, requireSession } from "../services/auth";
+import { createAuthFromEnv, isAdminEmail, requireSession } from "../services/auth";
 import type { MediaUpload } from "../services/cms";
 import {
   createCategory,
@@ -67,11 +67,26 @@ const requireAuthor = (request: Request): Effect.Effect<AuthorContext, CmsError>
     const r2 = yield* requireCmsR2(env);
     const auth = yield* createAuthFromEnv(env);
     const author = yield* requireSession(auth, request.headers);
+    // Sessions outlive allowlist edits: re-check membership on every
+    // write so removing an email revokes access, not just future sign-ins.
+    // The session comes from Better Auth (an I/O boundary), so decode the
+    // email instead of narrowing it.
+    const email = Schema.decodeUnknownOption(Schema.String)(author.user.email);
+    if (
+      Option.isNone(email) ||
+      !isAdminEmail(email.value, (env.CMS_ADMIN_EMAILS ?? "").split(","))
+    ) {
+      return yield* new CmsError({
+        message: "Forbidden",
+        status: HttpStatus.Forbidden,
+        operation: "cms_auth",
+      });
+    }
     return {
       db,
       r2,
       adapterUrl: env.ADAPTER_URL ?? "http://localhost:8788",
-      actor: author.user.email ?? "unknown",
+      actor: email.value,
     };
   });
 
@@ -103,13 +118,14 @@ const decodeInputBody = <A, I, B>(
     ),
   );
 
+// SVG is executable when served top-level, so it is never an upload
+// type (existing rows stay served, hardened by response headers).
 const UPLOAD_MIMES: ReadonlySet<string> = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
   "image/gif",
   "image/avif",
-  "image/svg+xml",
   "video/mp4",
   "video/webm",
 ]);
@@ -126,6 +142,81 @@ const UploadFormSchema = Schema.Struct({
   alt: Schema.optional(Schema.String),
   caption: Schema.optional(Schema.String),
 });
+
+const asciiAt = (bytes: Uint8Array, offset: number, length: number): string => {
+  let text = "";
+  for (let index = offset; index < offset + length; index += 1) {
+    text += String.fromCharCode(bytes[index] ?? 0);
+  }
+  return text;
+};
+
+const MP4_BRANDS: ReadonlySet<string> = new Set([
+  "isom",
+  "iso2",
+  "iso3",
+  "iso4",
+  "iso5",
+  "iso6",
+  "mp41",
+  "mp42",
+  "avc1",
+  "M4V",
+  "M4A",
+  "dash",
+  "msdh",
+  "msix",
+]);
+
+/**
+ * Detect the true media type from magic bytes. The multipart Content-Type
+ * is client-controlled, so bytes must match the claimed type or fail
+ * closed — otherwise HTML/JS can masquerade as an image and be re-served
+ * with an executable content type.
+ */
+const isJpegBytes = (bytes: Uint8Array): boolean =>
+  bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+
+const isPngBytes = (bytes: Uint8Array): boolean =>
+  bytes.length >= 8 &&
+  bytes[0] === 0x89 &&
+  bytes[1] === 0x50 &&
+  bytes[2] === 0x4e &&
+  bytes[3] === 0x47 &&
+  bytes[4] === 0x0d &&
+  bytes[5] === 0x0a &&
+  bytes[6] === 0x1a &&
+  bytes[7] === 0x0a;
+
+const isWebpBytes = (bytes: Uint8Array): boolean =>
+  bytes.length >= 12 && asciiAt(bytes, 0, 4) === "RIFF" && asciiAt(bytes, 8, 4) === "WEBP";
+
+const isGifBytes = (bytes: Uint8Array): boolean =>
+  bytes.length >= 6 && (asciiAt(bytes, 0, 6) === "GIF87a" || asciiAt(bytes, 0, 6) === "GIF89a");
+
+const isWebmBytes = (bytes: Uint8Array): boolean =>
+  bytes.length >= 12 &&
+  bytes[0] === 0x1a &&
+  bytes[1] === 0x45 &&
+  bytes[2] === 0xdf &&
+  bytes[3] === 0xa3;
+
+/** ISO BMFF brand box: AVIF stills or MP4 video by major brand. */
+const ftypMime = (bytes: Uint8Array): string | null => {
+  if (bytes.length < 12 || asciiAt(bytes, 4, 4) !== "ftyp") return null;
+  const brand = asciiAt(bytes, 8, 4);
+  if (brand === "avif" || brand === "avis") return "image/avif";
+  return MP4_BRANDS.has(brand) ? "video/mp4" : null;
+};
+
+const detectUploadMime = (bytes: Uint8Array): string | null => {
+  if (isJpegBytes(bytes)) return "image/jpeg";
+  if (isPngBytes(bytes)) return "image/png";
+  if (isWebpBytes(bytes)) return "image/webp";
+  if (isGifBytes(bytes)) return "image/gif";
+  if (isWebmBytes(bytes)) return "video/webm";
+  return ftypMime(bytes);
+};
 
 /** Decode a multipart upload body at the route boundary. */
 const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpload, CmsError> =>
@@ -166,6 +257,10 @@ const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpl
               cause,
             }),
         });
+        const detected = detectUploadMime(new Uint8Array(bytes));
+        if (detected === null || detected !== file.type) {
+          return yield* failInput(`Upload bytes do not match type: ${file.type}`, operation);
+        }
         return {
           name: sanitizeFileName(file.name),
           mime: file.type,

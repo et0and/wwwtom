@@ -113,6 +113,13 @@ export const app = new Elysia({
           instance: request.url,
         });
       }
+      if (error.status === HttpStatus.Forbidden) {
+        Effect.runFork(Effect.logWarning("CMS forbidden", { path: request.url }));
+        return toProblemResponse(HttpStatus.Forbidden, error.message, {
+          type: ProblemType.Forbidden,
+          instance: request.url,
+        });
+      }
       if (error.status === HttpStatus.Conflict) {
         Effect.runFork(Effect.logWarning("CMS conflict", { path: request.url }));
         return toProblemResponse(HttpStatus.Conflict, error.message, {

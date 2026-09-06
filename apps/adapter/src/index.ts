@@ -21,6 +21,7 @@ import type { CloudflareEnv } from "@tom/utils/services/config";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { AdapterError } from "./config/effect";
+import { isTrustedWebOrigin } from "./origins";
 import { arenaIntegration } from "./integrations/arena";
 import { authIntegration } from "./integrations/auth";
 import { cmsIntegration } from "./integrations/cms";
@@ -41,14 +42,10 @@ export const app = new Elysia({
       origin: (request) => {
         const origin = request.headers.get("origin");
         if (!origin) return false;
-        return (
-          origin === "http://localhost:5173" ||
-          origin === "http://localhost:3000" ||
-          // Local e2e (apps/e2e) serves the web app from 127.0.0.1.
-          origin === "http://127.0.0.1:3000" ||
-          origin === "https://tom.so" ||
-          origin.endsWith(".tom.so")
-        );
+        // Local editors are trusted only against non-production workers:
+        // the production adapter (adapter.tom.so) never accepts localhost.
+        const workerHost = new URL(request.url).hostname;
+        return isTrustedWebOrigin(origin, workerHost !== "adapter.tom.so");
       },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

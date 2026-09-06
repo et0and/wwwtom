@@ -102,6 +102,42 @@ export const requireCmsR2 = (env: CloudflareEnv): Effect.Effect<CmsR2Binding, Cm
       );
 
 /**
+ * Worker Cache API for hot media bytes. Edge CDN caching covers
+ * production via Cache-Control; this shields R2 on dev/preview hosts and
+ * absorbs repeat hits in-worker. Absent outside Workers (tests) — skip.
+ * Best-effort: cache failures fall through to R2, never 500.
+ */
+type DefaultCache = {
+  readonly match: (key: string) => Promise<Response | undefined>;
+  readonly put: (key: string, response: Response) => Promise<void>;
+};
+
+type CacheScope = { readonly caches?: { readonly default?: DefaultCache } };
+
+/**
+ * `caches.default` is a Workers extension missing from the DOM type, so
+ * reach it through a narrow structural view. Undefined outside Workers
+ * (tests) — callers skip caching then.
+ */
+const defaultCache = (): DefaultCache | undefined => (globalThis as CacheScope).caches?.default;
+
+const matchFileCache = (url: string): Effect.Effect<Response | undefined, never> =>
+  Effect.tryPromise({
+    try: async () => (await defaultCache()?.match(url)) ?? undefined,
+    catch: () => undefined,
+  }).pipe(Effect.orElseSucceed(() => undefined));
+
+const putFileCache = (url: string, response: Response): Effect.Effect<void, never> =>
+  Effect.ignore(
+    Effect.tryPromise({
+      try: async () => {
+        await defaultCache()?.put(url, response.clone());
+      },
+      catch: () => undefined,
+    }),
+  );
+
+/**
  * Best-effort admin check for reads: a live session unlocks drafts,
  * anything else falls back to published-only. Never fails, so anonymous
  * readers never see auth errors.
@@ -243,37 +279,47 @@ export const cmsRoutes = new Elysia({ name: "cms" })
     ({ params, request }) => {
       const env = getRequestEnv(request);
       return runCms(
-        requireCmsD1(env).pipe(
-          Effect.flatMap((db) =>
-            Effect.flatMap(requireCmsR2(env), (r2) =>
-              Effect.flatMap(decodeMediaParams(params, "get_media_file"), ({ id }) =>
-                getMediaFile(db, r2, id),
+        Effect.flatMap(matchFileCache(request.url), (cached) => {
+          if (cached !== undefined) return Effect.succeed(cached);
+          return requireCmsD1(env).pipe(
+            Effect.flatMap((db) =>
+              Effect.flatMap(requireCmsR2(env), (r2) =>
+                Effect.flatMap(decodeMediaParams(params, "get_media_file"), ({ id }) =>
+                  getMediaFile(db, r2, id),
+                ),
               ),
             ),
-          ),
-          Effect.flatMap(({ mime, object }) =>
-            Effect.tryPromise({
-              try: () => object.arrayBuffer(),
-              catch: (cause) =>
-                new CmsError({
-                  message: "Media read failed",
-                  status: HttpStatus.InternalServerError,
-                  operation: "get_media_file",
-                  cause,
-                }),
-            }).pipe(
-              Effect.map(
-                (bytes) =>
-                  new Response(bytes, {
-                    headers: {
-                      "Content-Type": mime,
-                      "Cache-Control": "public, max-age=31536000, immutable",
-                    },
+            Effect.flatMap(({ mime, object }) =>
+              Effect.tryPromise({
+                try: () => object.arrayBuffer(),
+                catch: (cause) =>
+                  new CmsError({
+                    message: "Media read failed",
+                    status: HttpStatus.InternalServerError,
+                    operation: "get_media_file",
+                    cause,
                   }),
+              }).pipe(
+                Effect.map(
+                  (bytes) =>
+                    new Response(bytes, {
+                      headers: {
+                        "Content-Type": mime,
+                        "Cache-Control": "public, max-age=31536000, immutable",
+                        // Served bytes are renderer-trusted images/video.
+                        // nosniff stops MIME-sniffing; sandbox stops a
+                        // smuggled script from executing top-level (this
+                        // also protects pre-existing SVG rows).
+                        "X-Content-Type-Options": "nosniff",
+                        "Content-Security-Policy": "sandbox",
+                      },
+                    }),
+                ),
+                Effect.tap((response) => putFileCache(request.url, response)),
               ),
             ),
-          ),
-        ),
+          );
+        }),
         request,
       );
     },

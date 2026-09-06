@@ -8,6 +8,7 @@ import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker
 import type { LogContext } from "@tom/utils/services/logging";
 import { callApi } from "../../callApi";
 import { AdapterError, runAdapter } from "../../config/effect";
+import { isTrustedWebOrigin } from "../../origins";
 import { forwardHeaders, toProxiedResponse } from "../auth";
 import { simulatorEnv } from "../../simulator";
 
@@ -115,16 +116,17 @@ const requireContentSession = (
   );
 
 /**
- * Origins allowed to drive CMS writes. Mirrors the CORS allowlist: the
- * adapter itself, any tom.so subdomain (the editor), and local dev ports.
- * Requests without Origin/Referer are non-browser callers (curl) and pass.
+ * Origins allowed to drive CMS writes. The adapter itself always passes;
+ * web origins must match the shared allowlist (exact hosts, so apex
+ * tom.so works and unknown subdomains do not). Local editors pass only
+ * off production. Requests without Origin/Referer are non-browser callers
+ * (curl) and pass.
  */
-const trustedWriteOrigin = (origin: string, adapterOrigin: string): boolean =>
-  origin === adapterOrigin ||
-  origin.endsWith(".tom.so") ||
-  origin === "http://localhost:5173" ||
-  origin === "http://localhost:3000" ||
-  origin === "http://127.0.0.1:3000";
+const trustedWriteOrigin = (
+  origin: string,
+  adapterOrigin: string,
+  allowLocalOrigins: boolean,
+): boolean => origin === adapterOrigin || isTrustedWebOrigin(origin, allowLocalOrigins);
 
 const refererOrigin = (referer: string): Effect.Effect<string, never> =>
   Effect.try(() => new URL(referer).origin).pipe(Effect.orElseSucceed(() => ""));
@@ -139,9 +141,11 @@ const requireTrustedWriteOrigin = (
   adapterOrigin: string,
 ): Effect.Effect<void, AdapterError> =>
   Effect.gen(function* () {
+    const env = getRequestEnv(request);
+    const allowLocalOrigins = (env.NODE_ENV ?? "") !== "production";
     const direct = request.headers.get("origin");
     if (direct !== null) {
-      return yield* trustedWriteOrigin(direct, adapterOrigin)
+      return yield* trustedWriteOrigin(direct, adapterOrigin, allowLocalOrigins)
         ? Effect.void
         : Effect.fail(
             new AdapterError({
@@ -153,7 +157,7 @@ const requireTrustedWriteOrigin = (
     const referer = request.headers.get("referer");
     if (referer === null) return;
     const origin = yield* refererOrigin(referer);
-    if (!trustedWriteOrigin(origin, adapterOrigin)) {
+    if (!trustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins)) {
       return yield* Effect.fail(
         new AdapterError({
           status: HttpStatus.Forbidden,

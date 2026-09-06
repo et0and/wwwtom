@@ -14,7 +14,9 @@ vi.mock("../services/auth", async (importOriginal) => {
   const { Effect: FX } = await import("effect");
   return {
     ...original,
-    requireSession: vi.fn(() => FX.succeed({ user: { id: "admin-1" } })),
+    requireSession: vi.fn(() =>
+      FX.succeed({ user: { id: "admin-1", email: "gh@tomhackshaw.com" } }),
+    ),
   };
 });
 
@@ -345,6 +347,13 @@ const fakeR2 = (files: Map<string, { bytes: ArrayBuffer; mime: string }>): CmsR2
   },
 });
 
+// Real magic bytes: uploads must match their claimed Content-Type.
+const pngBytes = (): ArrayBuffer =>
+  new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x41]).buffer as ArrayBuffer;
+const webpBytes = (): ArrayBuffer =>
+  new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x0c, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50, 0x41])
+    .buffer as ArrayBuffer;
+
 const validPostBase: CmsPostInput = {
   slug: "hello-world" as CmsSlug,
   title: "Hello World",
@@ -394,6 +403,7 @@ const setup = () => {
     BETTER_AUTH_SECRET: "test-secret-with-at-least-32-chars!!",
     GITHUB_CLIENT_ID: "test-client-id",
     GITHUB_CLIENT_SECRET: "test-client-secret",
+    CMS_ADMIN_EMAILS: "gh@tomhackshaw.com",
     ADAPTER_URL: "http://localhost:8788",
   });
   return { store, files, env };
@@ -607,7 +617,7 @@ describe("cms write routes", () => {
 
     it("uploads a file to R2, stores metadata, and serves the bytes", async () => {
       const { store, files, env } = setup();
-      const bytes = new TextEncoder().encode("fake-webp-bytes").buffer as ArrayBuffer;
+      const bytes = webpBytes();
       const upload = await app.fetch(
         uploadRequest(env, new File([bytes], "hero.webp", { type: "image/webp" })),
       );
@@ -627,7 +637,9 @@ describe("cms write routes", () => {
       const file = await app.fetch(requestWithEnv(`http://localhost/media/${media.id}/file`, env));
       expect(file.status).toBe(200);
       expect(file.headers.get("Content-Type")).toBe("image/webp");
-      expect(await file.text()).toBe("fake-webp-bytes");
+      expect(file.headers.get("X-Content-Type-Options")).toBe("nosniff");
+      expect(file.headers.get("Content-Security-Policy")).toBe("sandbox");
+      expect(new Uint8Array(await file.arrayBuffer())).toEqual(new Uint8Array(bytes));
     });
 
     it("rejects unsupported types and missing files with 400", async () => {
@@ -648,9 +660,24 @@ describe("cms write routes", () => {
       expect(missing.status).toBe(HttpStatus.BadRequest);
     });
 
+    it("rejects SVG uploads and byte/type mismatches with 400", async () => {
+      const { env } = setup();
+      const svgBytes = new TextEncoder().encode("<svg></svg>").buffer as ArrayBuffer;
+      const svg = await app.fetch(
+        uploadRequest(env, new File([svgBytes], "x.svg", { type: "image/svg+xml" })),
+      );
+      expect(svg.status).toBe(HttpStatus.BadRequest);
+      const mismatch = await app.fetch(
+        uploadRequest(env, new File([pngBytes()], "a.jpg", { type: "image/jpeg" })),
+      );
+      expect(mismatch.status).toBe(HttpStatus.BadRequest);
+      const mismatchBody = (await mismatch.json()) as { title: string };
+      expect(mismatchBody.title).toContain("do not match");
+    });
+
     it("deletes the object and the row", async () => {
       const { store, files, env } = setup();
-      const bytes = new TextEncoder().encode("bytes").buffer as ArrayBuffer;
+      const bytes = pngBytes();
       const upload = (await (
         await app.fetch(uploadRequest(env, new File([bytes], "a.png", { type: "image/png" })))
       ).json()) as { id: string; key: string };
@@ -875,6 +902,44 @@ describe("cms write routes", () => {
       const response = await app.fetch(authedJson("http://localhost/media/nope/usage", env, "GET"));
       expect(response.status).toBe(HttpStatus.NotFound);
     });
+
+    it("refuses to delete media referenced by posts with 409", async () => {
+      const { store, files, env } = setup();
+      const key = "media/media-9/photo.webp";
+      store.media.push({
+        id: "media-9",
+        key,
+        mime: "image/webp",
+        width: null,
+        height: null,
+        alt: null,
+        caption: null,
+        variants_json: "[]",
+        created_at: "2026-09-01T00:00:00.000Z",
+        updated_at: "2026-09-01T00:00:00.000Z",
+      });
+      files.set(key, { bytes: webpBytes(), mime: "image/webp" });
+      store.posts.push({
+        id: "post-9",
+        slug: "with-image",
+        title: "With Image",
+        summary: null,
+        content_json: `{"type": "doc", "content": [{"text": "uses media-9"}]}`,
+        html: "",
+        status: "published",
+        published_at: null,
+        hero_media_id: null,
+        meta_title: null,
+        meta_description: null,
+        meta_image: null,
+        created_at: "2026-09-01T00:00:00.000Z",
+        updated_at: "2026-09-01T00:00:00.000Z",
+      });
+      const deleted = await app.fetch(authedJson("http://localhost/media/media-9", env, "DELETE"));
+      expect(deleted.status).toBe(HttpStatus.Conflict);
+      expect(store.media).toHaveLength(1);
+      expect(files.has(key)).toBe(true);
+    });
   });
 
   describe("authorization", () => {
@@ -905,6 +970,15 @@ describe("cms write routes", () => {
         authedJson("http://localhost/posts", env, "POST", postInput()),
       );
       expect(response.status).toBe(HttpStatus.Unauthorized);
+    });
+
+    it("rejects writes from sessions outside the admin allowlist", async () => {
+      const { env } = setup();
+      env.CMS_ADMIN_EMAILS = "someone-else@example.com";
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", postInput()),
+      );
+      expect(response.status).toBe(HttpStatus.Forbidden);
     });
   });
 });

@@ -1234,6 +1234,19 @@ export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
       operation: "delete_media",
     });
   }
+  // Never orphan published content: the editor checks usage first, and
+  // the service enforces it so direct API calls cannot break posts/works.
+  const usage = yield* getMediaUsage(db, id);
+  if (usage.posts.length > 0 || usage.works.length > 0) {
+    return yield* new CmsError({
+      message: `Media in use by ${usage.posts.length} posts and ${usage.works.length} works`,
+      status: HttpStatus.Conflict,
+      operation: "delete_media",
+    });
+  }
+  // D1 first: a failed R2 delete then leaves orphaned bytes (cheap), never
+  // a published post pointing at a missing row.
+  yield* runStatement(db, "DELETE FROM media WHERE id = ?", [id], "delete_media");
   yield* Effect.tryPromise({
     try: () => r2.delete(row.key),
     catch: (cause) =>
@@ -1244,7 +1257,6 @@ export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
         cause,
       }),
   });
-  yield* runStatement(db, "DELETE FROM media WHERE id = ?", [id], "delete_media");
   return { id };
 });
 

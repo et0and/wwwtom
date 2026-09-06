@@ -37,6 +37,13 @@ const safeHref = (href: string): string | null => {
   return isSafeLinkHref(href) ? target : null;
 };
 
+/**
+ * Only these link targets render; anything else (e.g. pasted
+ * `target="evil"` or javascript-frame tricks) is dropped. Enforced here
+ * rather than in the schema so legacy rows keep decoding.
+ */
+const SAFE_LINK_TARGETS: ReadonlySet<string> = new Set(["_blank", "_self"]);
+
 const renderInline = (inline: TiptapInline): string => {
   const text = escapeHtml(inline.text);
   const marks = inline.marks ?? [];
@@ -45,10 +52,13 @@ const renderInline = (inline: TiptapInline): string => {
     if (mark.type === "italic") return `<em>${inner}</em>`;
     const href = safeHref(mark.attrs.href);
     if (href === null) return inner;
-    const target =
-      mark.attrs.target === undefined ? "" : ` target="${escapeHtml(mark.attrs.target)}"`;
-    const rel = mark.attrs.target === "_blank" ? ` rel="noopener"` : "";
-    return `<a href="${escapeHtml(href)}"${target}${rel}>${inner}</a>`;
+    const target = mark.attrs.target;
+    const targetAttr =
+      target !== undefined && SAFE_LINK_TARGETS.has(target)
+        ? ` target="${escapeHtml(target)}"`
+        : "";
+    const rel = target === "_blank" ? ` rel="noopener"` : "";
+    return `<a href="${escapeHtml(href)}"${targetAttr}${rel}>${inner}</a>`;
   }, text);
 };
 

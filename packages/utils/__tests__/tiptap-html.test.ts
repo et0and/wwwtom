@@ -152,4 +152,28 @@ describe("renderTiptapHtml", () => {
   it("renders an empty document to an empty string", async () => {
     expect(await render({ type: "doc", content: [] })).toBe("");
   });
+
+  it("drops non-allowlisted link targets", async () => {
+    const html = await render(
+      doc({
+        type: "paragraph",
+        content: [
+          {
+            type: "text",
+            text: "odd",
+            marks: [{ type: "link", attrs: { href: "https://tom.so", target: "evil" } }],
+          },
+          {
+            type: "text",
+            text: "self",
+            marks: [{ type: "link", attrs: { href: "https://tom.so", target: "_self" } }],
+          },
+        ],
+      }),
+    );
+    expect(html).toBe(
+      `<p><a href="https://tom.so">odd</a>` +
+        `<a href="https://tom.so" target="_self">self</a></p>`,
+    );
+  });
 });

@@ -119,6 +119,21 @@ describe("cms write proxy", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
+    it("rejects unknown tom.so subdomains with 403 without touching the API", async () => {
+      const response = await app.fetch(originRequest("https://evil.tom.so"));
+      expect(response.status).toBe(403);
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it("allows the deployed editor origin", async () => {
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(sessionBody))
+        .mockResolvedValueOnce(jsonResponse({ id: "post-1" }));
+      const response = await app.fetch(originRequest("https://dev-cms.tom.so"));
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+
     it("rejects untrusted referers with 403", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/content/posts", env, {
