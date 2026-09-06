@@ -185,7 +185,16 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
     }),
   );
 
-  return { ...rest, ...bundle, ...(axiomToken && { AXIOM_TOKEN: axiomToken }) };
+  return {
+    ...rest,
+    ...bundle,
+    ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
+    // Stage config is authoritative for the admin allowlist: an explicitly
+    // set worker env wins over the bundle (which is opaque and shared), so
+    // a stale bundle value can never lock every admin out. Unset env keeps
+    // the bundle value.
+    ...(rest.CMS_ADMIN_EMAILS !== undefined && { CMS_ADMIN_EMAILS: rest.CMS_ADMIN_EMAILS }),
+  };
 };
 
 export class AppConfig extends Context.Service<AppConfig, AppConfigContract>()("AppConfig") {

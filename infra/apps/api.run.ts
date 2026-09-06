@@ -82,6 +82,9 @@ export const api = Effect.gen(function* () {
       WORK_QUEUE: queue,
       CMS_D1: cmsDb,
       CMS_MEDIA: cmsMedia,
+      // Admin allowlist as explicit stage config (not a secret): it wins
+      // over the TOM_SECRETS bundle value, which is opaque and shared.
+      CMS_ADMIN_EMAILS: "gh@tomhackshaw.com",
       // Better Auth builds OAuth redirect URLs from the adapter origin and
       // only returns to trusted editor origins after sign-in.
       ADAPTER_URL: isAlchemyDev
