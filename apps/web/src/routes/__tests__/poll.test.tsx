@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@solidjs/testing-library";
 import Poll, { allocateSeats } from "~/routes/poll";
 import { bollinger } from "@tom/ui/tomui/bollinger";
@@ -17,6 +17,11 @@ const columnValues = (table: HTMLElement, column: number): Array<number> =>
       const cells = within(row).getAllByRole("cell");
       return Number(/([\d.]+)/.exec(cells[column]?.textContent ?? "")?.[1] ?? Number.NaN);
     });
+
+afterEach(() => {
+  vi.restoreAllMocks();
+  vi.useRealTimers();
+});
 
 describe("poll math", () => {
   it("allocates all seats proportionally", () => {
@@ -70,5 +75,17 @@ describe("poll page", () => {
     const before = columnValues(supportTable(), 1).join();
     fireEvent.click(screen.getByRole("button", { name: "Spin it again" }));
     await waitFor(() => expect(columnValues(supportTable(), 1).join()).not.toBe(before));
+  });
+
+  it("flashes changed values after a spin, then fades", async () => {
+    const view = render(() => <Poll />);
+    await waitFor(() => expect(within(supportTable()).getAllByRole("row")).toHaveLength(7));
+    expect(view.container.querySelector(".poll-flash")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Spin it again" }));
+    await waitFor(() =>
+      expect(view.container.querySelectorAll(".poll-flash").length).toBeGreaterThan(0),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 2200));
+    expect(view.container.querySelector(".poll-flash")).toBeNull();
   });
 });

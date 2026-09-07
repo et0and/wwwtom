@@ -1,4 +1,4 @@
-import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup, onSettled } from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Spinner } from "@tom/ui/Spinner";
 import { Button } from "@tom/ui/tomui/button";
@@ -48,12 +48,28 @@ function seatClause(name: string, seats: number, delta: number): string {
   return `${name} drops ${Math.abs(delta)} to ${seats}.`;
 }
 
+function changedIndexes<T>(nextValues: Array<T>, prevValues: Array<T>): Array<number> {
+  return nextValues
+    .map((_, index) => index)
+    .filter((index) => nextValues[index] !== prevValues[index]);
+}
+
+interface FlashTimerRef {
+  current: ReturnType<typeof setTimeout> | undefined;
+}
+
 export default function Poll() {
   const [history, setHistory] = createSignal<Array<PartySeries>>([]);
+  const [flashedSupport, setFlashedSupport] = createSignal<Array<number>>([]);
+  const [flashedSeats, setFlashedSeats] = createSignal<Array<number>>([]);
+  const flashTimer: FlashTimerRef = { current: undefined };
   // onSettled is a no-op during SSR, so the numbers only materialize in the
   // browser — the server and the first client render agree on the placeholder.
   onSettled(() => {
     setHistory(generatePartyHistory());
+  });
+  onCleanup(() => {
+    if (flashTimer.current !== undefined) clearTimeout(flashTimer.current);
   });
 
   const headline = createMemo(() =>
@@ -91,8 +107,29 @@ export default function Poll() {
   });
 
   const refresh = () => {
-    setHistory(generatePartyHistory());
+    const beforeShares = headline().map((share) => share.toFixed(1));
+    const beforeSeats = seats();
+    const next = generatePartyHistory();
+    const nextShares = next.map((entry) => (entry.points[entry.points.length - 1] ?? 0).toFixed(1));
+    const nextSeats = allocateSeats(
+      next.map((entry) => entry.points[entry.points.length - 1] ?? 0),
+      PARLIAMENT_SEATS,
+    );
+    setHistory(next);
+    if (flashTimer.current !== undefined) clearTimeout(flashTimer.current);
+    setFlashedSupport(changedIndexes(nextShares, beforeShares));
+    setFlashedSeats(changedIndexes(nextSeats, beforeSeats));
+    flashTimer.current = setTimeout(() => {
+      setFlashedSupport([]);
+      setFlashedSeats([]);
+    }, 1600);
   };
+
+  const supportCellClass = (index: number): string =>
+    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSupport().includes(index) ? "poll-flash bg-amber-200 dark:bg-amber-900/60" : ""}`;
+
+  const seatsCellClass = (index: number): string =>
+    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSeats().includes(index) ? "poll-flash bg-amber-200 dark:bg-amber-900/60" : ""}`;
 
   return (
     <PageLayout
@@ -130,7 +167,7 @@ export default function Poll() {
                     {(entry, index) => (
                       <tr class="border-b">
                         <td class="px-3 py-2">{entry.name}</td>
-                        <td class="px-3 py-2 text-right tabular-nums">
+                        <td class={supportCellClass(index())}>
                           {formatPoints(headline()[index()] ?? 0)}
                         </td>
                         <td class="px-3 py-2 text-right font-semibold">
@@ -172,7 +209,7 @@ export default function Poll() {
                     {(entry, index) => (
                       <tr class="border-b">
                         <td class="px-3 py-2">{entry.name}</td>
-                        <td class="px-3 py-2 text-right tabular-nums">{seats()[index()] ?? 0}</td>
+                        <td class={seatsCellClass(index())}>{seats()[index()] ?? 0}</td>
                         <td class="px-3 py-2 text-right font-semibold">
                           {formatChange(seatDeltas()[index()] ?? 0)}
                         </td>
