@@ -6,6 +6,7 @@ import About from "~/routes/about";
 import Accessibility from "~/routes/accessibility";
 import Guestbook, { fetchEntries } from "~/routes/guestbook";
 import Home from "~/routes/index";
+import Poll from "~/routes/poll";
 import PostPage from "~/routes/posts/[slug]";
 import PostsHome from "~/routes/posts/index";
 import Products from "~/routes/products";
@@ -88,6 +89,7 @@ export const Router = createRouter({
     { path: "/work/wwwork/hold", component: Hold },
     { path: "/work/wwwork/kawara", component: Kawara },
     { path: "/products", component: Products },
+    { path: "/poll", component: Poll },
     { path: "/purchase/:productId", component: Purchase },
     { path: "/worktable", component: Worktable },
     { path: "*404", component: NotFound },

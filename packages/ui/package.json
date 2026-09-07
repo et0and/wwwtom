@@ -23,6 +23,7 @@
     "./tomui/badge": "./src/tomui/components/badge/badge.tsx",
     "./tomui/banner": "./src/tomui/components/banner/banner.tsx",
     "./tomui/banner-action": "./src/tomui/components/banner/banner-action.tsx",
+    "./tomui/bollinger": "./src/tomui/components/bollinger/bollinger.tsx",
     "./tomui/breadcrumbs": "./src/tomui/components/breadcrumbs/breadcrumbs.tsx",
     "./tomui/button": "./src/tomui/components/button/button.tsx",
     "./tomui/chart": "./src/tomui/components/chart/chart.tsx",
