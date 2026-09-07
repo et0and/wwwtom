@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@solidjs/testing-library";
 import Poll, { allocateSeats, generateMethodology } from "~/routes/poll";
-import { bollinger } from "@tom/ui/tomui/bollinger";
+import { computeBollingerBands } from "@tom/ui/tomui/bollinger";
 import { generatePartyHistory } from "~/components/PollTrendChart";
 
 const PARTY_NAMES = ["National", "Labour", "Green", "NZ First", "ACT", "Te Pāti Māori"];
@@ -28,8 +28,12 @@ describe("poll math", () => {
     expect(allocateSeats([50, 30, 20], 120)).toEqual([60, 36, 24]);
   });
 
+  it("awards leftover seats by largest remainder, not largest party", () => {
+    expect(allocateSeats([34.4, 33.3, 32.3], 120)).toEqual([41, 40, 39]);
+  });
+
   it("holds flat bands steady", () => {
-    const band = bollinger([10, 10, 10, 10, 10], 5, 2);
+    const band = computeBollingerBands([10, 10, 10, 10, 10], 5, 2);
     expect(band).toHaveLength(5);
     for (const point of band) {
       expect(point).toEqual({ lower: 10, mid: 10, upper: 10 });
@@ -49,10 +53,19 @@ describe("poll math", () => {
 
   it("keeps the methodology sample internally consistent", () => {
     const method = generateMethodology();
+    expect(method.sample).toBeGreaterThanOrEqual(980);
+    expect(method.sample).toBeLessThanOrEqual(1020);
     expect(method.phone + method.online).toBe(method.sample);
+    expect(method.phone / method.sample).toBeGreaterThan(0.6);
+    expect(method.phone / method.sample).toBeLessThan(0.8);
     const undecidedCount = Math.round((method.sample * method.undecided) / 100);
     const refusedCount = Math.round((method.sample * method.refused) / 100);
     expect(method.decided + undecidedCount + refusedCount).toBe(method.sample);
+    expect(method.decided).toBeGreaterThan(method.sample * 0.9);
+    expect(method.undecided).toBeGreaterThanOrEqual(1.8);
+    expect(method.undecided).toBeLessThanOrEqual(2.6);
+    expect(method.refused).toBeGreaterThanOrEqual(1);
+    expect(method.refused).toBeLessThanOrEqual(1.6);
     expect(method.moe).toBeGreaterThan(2.9);
     expect(method.moe).toBeLessThan(3.3);
   });
@@ -80,11 +93,29 @@ describe("poll page", () => {
   });
 
   it("spins new numbers on request", async () => {
+    let draws = 0;
+    vi.spyOn(Math, "random").mockImplementation(() => {
+      draws += 1;
+      return (draws * 0.13) % 1;
+    });
     render(() => <Poll />);
     await waitFor(() => expect(within(supportTable()).getAllByRole("row")).toHaveLength(7));
     const before = columnValues(supportTable(), 1).join();
     fireEvent.click(screen.getByRole("button", { name: "Spin it again" }));
     await waitFor(() => expect(columnValues(supportTable(), 1).join()).not.toBe(before));
+  });
+
+  it("shows integer seat swings and the refused figure", async () => {
+    render(() => <Poll />);
+    await waitFor(() => expect(within(seatsTable()).getAllByRole("row")).toHaveLength(7));
+    const swings = within(seatsTable())
+      .getAllByRole("row")
+      .slice(1)
+      .map((row) => within(row).getAllByRole("cell")[2]?.textContent ?? "");
+    for (const swing of swings) {
+      expect(swing).toMatch(/^(NC|↑\d+|↓\d+)$/);
+    }
+    expect(screen.getAllByText(/refused to answer/).length).toBeGreaterThan(0);
   });
 
   it("flashes changed values after a spin, then fades", async () => {

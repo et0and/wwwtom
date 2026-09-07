@@ -31,7 +31,7 @@ export const TOMUI_BOLLINGER_DEFAULTS = {
   span: 5,
 } as const;
 
-export function bollinger(
+export function computeBollingerBands(
   values: Array<number>,
   span: number,
   deviations: number,
@@ -73,7 +73,7 @@ export function Bollinger(props: BollingerProps) {
   );
   const entries = () => merged.series ?? [];
   const bands = createMemo(() =>
-    entries().map((entry) => bollinger(entry.values, merged.span, merged.deviations)),
+    entries().map((entry) => computeBollingerBands(entry.values, merged.span, merged.deviations)),
   );
   const ceiling = createMemo(() => {
     const top = bands()
@@ -115,89 +115,92 @@ export function Bollinger(props: BollingerProps) {
     >
       <Show when={entries().length > 0}>
         <figure>
-          <div aria-hidden="true">
-            <svg
-              viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
-              class="h-auto w-full"
-              role="img"
-              aria-label={merged.ariaLabel ?? "Trend chart with Bollinger bands"}
-            >
-              <For each={ticks()}>
-                {(tick) => (
-                  <>
-                    <line
-                      x1={MARGIN.left}
-                      x2={CHART_WIDTH - MARGIN.right}
-                      y1={y(tick)}
-                      y2={y(tick)}
-                      stroke="currentColor"
-                      stroke-opacity="0.2"
-                      stroke-dasharray="4 3"
-                    />
-                    <text
-                      x={MARGIN.left - 6}
-                      y={y(tick) + 4}
-                      text-anchor="end"
-                      font-size="11"
-                      fill="currentColor"
-                    >
-                      {tick}%
-                    </text>
-                  </>
-                )}
-              </For>
-              <For each={entries()}>
-                {(entry, index) => (
-                  <>
-                    <path
-                      d={bandPath(bands()[index()] ?? [])}
-                      fill={entry.color}
-                      fill-opacity="0.15"
-                    />
-                    <path
-                      d={midPath(bands()[index()] ?? [])}
-                      fill="none"
-                      stroke={entry.color}
-                      stroke-width="2"
-                    />
-                    <Show when={(bands()[index()] ?? []).length > 0}>
-                      <circle
-                        cx={x(pointCount() - 1)}
-                        cy={y((bands()[index()] ?? [])[pointCount() - 1]?.mid ?? 0)}
-                        r="3"
-                        fill={entry.color}
-                      />
-                    </Show>
-                  </>
-                )}
-              </For>
-              <For each={labelIndexes()}>
-                {(index) => (
+          <svg
+            viewBox={`0 0 ${CHART_WIDTH} ${CHART_HEIGHT}`}
+            class="h-auto w-full"
+            role="img"
+            aria-label={merged.ariaLabel ?? "Trend chart with Bollinger bands"}
+          >
+            <For each={ticks()}>
+              {(tick) => (
+                <>
+                  <line
+                    x1={MARGIN.left}
+                    x2={CHART_WIDTH - MARGIN.right}
+                    y1={y(tick)}
+                    y2={y(tick)}
+                    stroke="currentColor"
+                    stroke-opacity="0.2"
+                    stroke-dasharray="4 3"
+                  />
                   <text
-                    x={x(index)}
-                    y={CHART_HEIGHT - 12}
-                    text-anchor="middle"
+                    x={MARGIN.left - 6}
+                    y={y(tick) + 4}
+                    text-anchor="end"
                     font-size="11"
                     fill="currentColor"
                   >
-                    {(merged.labels ?? [])[index]}
+                    {tick}%
                   </text>
-                )}
-              </For>
-            </svg>
-            <div class="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs">
-              <For each={entries()}>
-                {(entry) => (
-                  <span class="inline-flex items-center gap-1.5">
-                    <span
-                      class="inline-block h-2.5 w-2.5 rounded-sm"
-                      style={{ "background-color": entry.color }}
+                </>
+              )}
+            </For>
+            <For each={entries()}>
+              {(entry, index) => (
+                <>
+                  <path
+                    d={bandPath(bands()[index()] ?? [])}
+                    fill={entry.color}
+                    fill-opacity="0.15"
+                  />
+                  <path
+                    d={midPath(bands()[index()] ?? [])}
+                    fill="none"
+                    stroke={entry.color}
+                    stroke-width="2"
+                  />
+                  <For each={entry.values}>
+                    {(value, point) => (
+                      <circle cx={x(point())} cy={y(value)} r="2" fill={entry.color} />
+                    )}
+                  </For>
+                  <Show when={(bands()[index()] ?? []).length > 0}>
+                    <circle
+                      cx={x(pointCount() - 1)}
+                      cy={y((bands()[index()] ?? [])[pointCount() - 1]?.mid ?? 0)}
+                      r="3"
+                      fill={entry.color}
                     />
-                    {entry.label}
-                  </span>
-                )}
-              </For>
-            </div>
+                  </Show>
+                </>
+              )}
+            </For>
+            <For each={labelIndexes()}>
+              {(index) => (
+                <text
+                  x={x(index)}
+                  y={CHART_HEIGHT - 12}
+                  text-anchor="middle"
+                  font-size="11"
+                  fill="currentColor"
+                >
+                  {(merged.labels ?? [])[index]}
+                </text>
+              )}
+            </For>
+          </svg>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 pt-2 text-xs">
+            <For each={entries()}>
+              {(entry) => (
+                <span class="inline-flex items-center gap-1.5">
+                  <span
+                    class="inline-block h-2.5 w-2.5 rounded-sm"
+                    style={{ "background-color": entry.color }}
+                  />
+                  {entry.label}
+                </span>
+              )}
+            </For>
           </div>
           <Show when={merged.caption}>
             {(caption) => <figcaption class="pt-2 text-xs opacity-70">{caption()}</figcaption>}

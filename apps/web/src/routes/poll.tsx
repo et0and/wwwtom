@@ -19,11 +19,23 @@ export function allocateSeats(shares: Array<number>, totalSeats: number): Array<
   const quotas = shares.map((share) => (share / 100) * totalSeats);
   const floors = quotas.map((quota) => Math.floor(quota));
   const leftover = Math.max(0, totalSeats - floors.reduce((sum, seats) => sum + seats, 0));
-  const priority = quotas
-    .map((quota, index) => index)
-    .sort((a, b) => (quotas[b] ?? 0) - (quotas[a] ?? 0))
+  const remainders = quotas.map((quota) => quota - Math.floor(quota));
+  const priority = remainders
+    .map((_, index) => index)
+    .sort((a, b) => (remainders[b] ?? 0) - (remainders[a] ?? 0))
     .slice(0, leftover);
   return floors.map((seats, index) => seats + (priority.includes(index) ? 1 : 0));
+}
+
+function blocTotal(counts: Array<number>, names: Array<string>, bloc: Array<string>): number {
+  return names.reduce(
+    (sum, name, index) => sum + (bloc.includes(name) ? (counts[index] ?? 0) : 0),
+    0,
+  );
+}
+
+function isNoChange(delta: number): boolean {
+  return Math.abs(delta) < 0.05;
 }
 
 function formatPoints(value: number): string {
@@ -31,12 +43,18 @@ function formatPoints(value: number): string {
 }
 
 function formatChange(delta: number): string {
-  if (Math.abs(delta) < 0.05) return "NC";
-  return delta > 0 ? `↑${Math.abs(delta).toFixed(1)}` : `↓${Math.abs(delta).toFixed(1)}`;
+  if (isNoChange(delta)) return "NC";
+  const magnitude = Math.abs(delta).toFixed(1);
+  return delta > 0 ? `↑${magnitude}` : `↓${magnitude}`;
+}
+
+function formatSeatChange(delta: number): string {
+  if (isNoChange(delta)) return "NC";
+  return delta > 0 ? `↑${delta}` : `↓${Math.abs(delta)}`;
 }
 
 function supportVerb(delta: number): string {
-  if (Math.abs(delta) < 0.05) return "is unchanged on";
+  if (isNoChange(delta)) return "is unchanged on";
   if (delta > 0) return `is up ${Math.abs(delta).toFixed(1)} points to`;
   return `is down ${Math.abs(delta).toFixed(1)} points to`;
 }
@@ -100,6 +118,7 @@ export default function Poll() {
   const [methodology, setMethodology] = createSignal<Methodology>(EMPTY_METHODOLOGY);
   const [flashedSupport, setFlashedSupport] = createSignal<Array<number>>([]);
   const [flashedSeats, setFlashedSeats] = createSignal<Array<number>>([]);
+  const [flashedBloc, setFlashedBloc] = createSignal(false);
   const [flashedMethod, setFlashedMethod] = createSignal<Array<keyof Methodology>>([]);
   const flashTimer: FlashTimerRef = { current: undefined };
   // onSettled is a no-op during SSR, so the numbers only materialize in the
@@ -128,15 +147,10 @@ export default function Poll() {
   );
   const blocSeats = createMemo(() => {
     const names = history().map((entry) => entry.name);
-    const government = names.reduce(
-      (sum, name, index) => sum + (GOVERNMENT_BLOC.includes(name) ? (seats()[index] ?? 0) : 0),
-      0,
-    );
-    const opposition = names.reduce(
-      (sum, name, index) => sum + (OPPOSITION_BLOC.includes(name) ? (seats()[index] ?? 0) : 0),
-      0,
-    );
-    return { government, opposition };
+    return {
+      government: blocTotal(seats(), names, GOVERNMENT_BLOC),
+      opposition: blocTotal(seats(), names, OPPOSITION_BLOC),
+    };
   });
   const governmentVerdict = createMemo(() => {
     if (blocSeats().government >= 61)
@@ -149,6 +163,7 @@ export default function Poll() {
   const refresh = () => {
     const beforeShares = headline().map((share) => share.toFixed(1));
     const beforeSeats = seats();
+    const beforeBloc = blocSeats();
     const beforeMethod = methodology();
     const next = generatePartyHistory();
     const nextShares = next.map((entry) => (entry.points[entry.points.length - 1] ?? 0).toFixed(1));
@@ -156,12 +171,22 @@ export default function Poll() {
       next.map((entry) => entry.points[entry.points.length - 1] ?? 0),
       PARLIAMENT_SEATS,
     );
+    const nextNames = next.map((entry) => entry.name);
+    const nextBloc = {
+      government: blocTotal(nextSeats, nextNames, GOVERNMENT_BLOC),
+      opposition: blocTotal(nextSeats, nextNames, OPPOSITION_BLOC),
+    };
     const nextMethod = generateMethodology();
     setHistory(next);
     setMethodology(nextMethod);
     if (flashTimer.current !== undefined) clearTimeout(flashTimer.current);
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     setFlashedSupport(changedIndexes(nextShares, beforeShares));
     setFlashedSeats(changedIndexes(nextSeats, beforeSeats));
+    setFlashedBloc(
+      nextBloc.government !== beforeBloc.government ||
+        nextBloc.opposition !== beforeBloc.opposition,
+    );
     setFlashedMethod(
       (Object.keys(nextMethod) as Array<keyof Methodology>).filter(
         (key) => nextMethod[key] !== beforeMethod[key],
@@ -170,18 +195,19 @@ export default function Poll() {
     flashTimer.current = setTimeout(() => {
       setFlashedSupport([]);
       setFlashedSeats([]);
+      setFlashedBloc(false);
       setFlashedMethod([]);
     }, 1600);
   };
 
-  const supportCellClass = (index: number): string =>
-    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSupport().includes(index) ? FLASH_ON : ""}`;
-
-  const seatsCellClass = (index: number): string =>
-    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSeats().includes(index) ? FLASH_ON : ""}`;
-
   const flashText = (flashed: boolean): string =>
     `transition-colors duration-1000 ${flashed ? FLASH_ON : ""}`;
+
+  const valueCellClass = (flashed: boolean): string =>
+    `px-3 py-2 text-right tabular-nums ${flashText(flashed)}`;
+
+  const deltaCellClass = (flashed: boolean): string =>
+    `px-3 py-2 text-right font-semibold tabular-nums ${flashText(flashed)}`;
 
   const methodFlash = (key: keyof Methodology): string => flashText(flashedMethod().includes(key));
 
@@ -201,6 +227,9 @@ export default function Poll() {
         <p>Here are the headline results for September's Doodoo Dynamics Market Research Poll:</p>
       </BlurInSection>
       <BlurInSection delay={0.5}>
+        {/* Sync client-only data, not an async resource: generation is instant and
+            deferred to onSettled only for SSR agreement, so <Show> + <Spinner> is
+            the deliberate pattern here rather than <Loading>. */}
         <Show when={history().length > 0} fallback={<Spinner color="grey" />}>
           <div class="space-y-8">
             <PollTrendChart history={history()} />
@@ -221,10 +250,10 @@ export default function Poll() {
                     {(entry, index) => (
                       <tr class="border-b">
                         <td class="px-3 py-2">{entry.name}</td>
-                        <td class={supportCellClass(index())}>
+                        <td class={valueCellClass(flashedSupport().includes(index()))}>
                           {formatPoints(headline()[index()] ?? 0)}
                         </td>
-                        <td class="px-3 py-2 text-right font-semibold">
+                        <td class={deltaCellClass(flashedSupport().includes(index()))}>
                           {formatChange(deltas()[index()] ?? 0)}
                         </td>
                       </tr>
@@ -236,7 +265,10 @@ export default function Poll() {
                 <For each={history()}>
                   {(entry, index) => (
                     <p>
-                      {entry.name} {supportVerb(deltas()[index()] ?? 0)}{" "}
+                      {entry.name}{" "}
+                      <span class={flashText(flashedSupport().includes(index()))}>
+                        {supportVerb(deltas()[index()] ?? 0)}
+                      </span>{" "}
                       <span class={flashText(flashedSupport().includes(index()))}>
                         {formatPoints(headline()[index()] ?? 0)}
                       </span>
@@ -267,9 +299,11 @@ export default function Poll() {
                     {(entry, index) => (
                       <tr class="border-b">
                         <td class="px-3 py-2">{entry.name}</td>
-                        <td class={seatsCellClass(index())}>{seats()[index()] ?? 0}</td>
-                        <td class="px-3 py-2 text-right font-semibold">
-                          {formatChange(seatDeltas()[index()] ?? 0)}
+                        <td class={valueCellClass(flashedSeats().includes(index()))}>
+                          {seats()[index()] ?? 0}
+                        </td>
+                        <td class={deltaCellClass(flashedSeats().includes(index()))}>
+                          {formatSeatChange(seatDeltas()[index()] ?? 0)}
                         </td>
                       </tr>
                     )}
@@ -284,7 +318,11 @@ export default function Poll() {
                       <span class={flashText(flashedSeats().includes(index()))}>
                         {seats()[index()] ?? 0}
                       </span>{" "}
-                      seats ({seatChange(seatDeltas()[index()] ?? 0)}).
+                      seats (
+                      <span class={flashText(flashedSeats().includes(index()))}>
+                        {seatChange(seatDeltas()[index()] ?? 0)}
+                      </span>
+                      ).
                     </p>
                   )}
                 </For>
@@ -294,11 +332,12 @@ export default function Poll() {
               <h2>The blocs</h2>
               <p>
                 The combined projected seats for the Government Parties Bloc (National, New Zealand
-                First, ACT) is {blocSeats().government}.
+                First, ACT) is{" "}
+                <span class={flashText(flashedBloc())}>{blocSeats().government}</span>.
               </p>
               <p>
                 The combined seats for the Opposition Parties Bloc (Labour, Green, Te Pāti Māori) is{" "}
-                {blocSeats().opposition}.
+                <span class={flashText(flashedBloc())}>{blocSeats().opposition}</span>.
               </p>
               <p>{governmentVerdict()}</p>
             </section>
@@ -319,7 +358,9 @@ export default function Poll() {
                   <span class={methodFlash("undecided")}>
                     {methodology().undecided.toFixed(1)}%
                   </span>{" "}
-                  were undecided on the party vote question.
+                  were undecided on the party vote question, while{" "}
+                  <span class={methodFlash("refused")}>{methodology().refused.toFixed(1)}%</span>{" "}
+                  refused to answer.
                 </em>
               </p>
               <h2>Notes</h2>
@@ -333,7 +374,10 @@ export default function Poll() {
                 phone and{" "}
                 <span class={methodFlash("online")}>{formatCount(methodology().online)}</span> by
                 online panel. The number of decided voters on the vote questions was{" "}
-                <span class={methodFlash("decided")}>{formatCount(methodology().decided)}</span>.
+                <span class={methodFlash("decided")}>{formatCount(methodology().decided)}</span>. A
+                further{" "}
+                <span class={methodFlash("refused")}>{methodology().refused.toFixed(1)}%</span> of
+                respondents refused to answer the vote question.
               </p>
               <p>
                 For seat projections it is assumed all current parliamentary parties will win at
