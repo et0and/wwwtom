@@ -35,17 +35,54 @@ function formatChange(delta: number): string {
   return delta > 0 ? `↑${Math.abs(delta).toFixed(1)}` : `↓${Math.abs(delta).toFixed(1)}`;
 }
 
-function supportClause(name: string, share: number, delta: number): string {
-  if (Math.abs(delta) < 0.05) return `${name} is unchanged on ${formatPoints(share)}.`;
-  if (delta > 0)
-    return `${name} is up ${Math.abs(delta).toFixed(1)} points to ${formatPoints(share)}.`;
-  return `${name} is down ${Math.abs(delta).toFixed(1)} points to ${formatPoints(share)}.`;
+function supportVerb(delta: number): string {
+  if (Math.abs(delta) < 0.05) return "is unchanged on";
+  if (delta > 0) return `is up ${Math.abs(delta).toFixed(1)} points to`;
+  return `is down ${Math.abs(delta).toFixed(1)} points to`;
 }
 
-function seatClause(name: string, seats: number, delta: number): string {
-  if (delta === 0) return `${name} is unchanged on ${seats} seats.`;
-  if (delta > 0) return `${name} gains ${delta} to ${seats}.`;
-  return `${name} drops ${Math.abs(delta)} to ${seats}.`;
+export interface Methodology {
+  decided: number;
+  moe: number;
+  online: number;
+  phone: number;
+  refused: number;
+  sample: number;
+  undecided: number;
+}
+
+const EMPTY_METHODOLOGY: Methodology = {
+  decided: 0,
+  moe: 0,
+  online: 0,
+  phone: 0,
+  refused: 0,
+  sample: 0,
+  undecided: 0,
+};
+
+export function generateMethodology(): Methodology {
+  const sample = 980 + Math.floor(Math.random() * 41);
+  const phone = Math.round(sample * (0.65 + Math.random() * 0.1));
+  const online = sample - phone;
+  const undecided = Math.round((1.8 + Math.random() * 0.8) * 10) / 10;
+  const refused = Math.round((1 + Math.random() * 0.6) * 10) / 10;
+  const decided =
+    sample - Math.round((sample * undecided) / 100) - Math.round((sample * refused) / 100);
+  const moe = Math.round(1.96 * Math.sqrt(0.25 / sample) * 1000) / 10;
+  return { decided, moe, online, phone, refused, sample, undecided };
+}
+
+function formatCount(value: number): string {
+  return value.toLocaleString("en-NZ");
+}
+
+const FLASH_ON = "poll-flash bg-amber-200 dark:bg-amber-900/60";
+
+function seatChange(delta: number): string {
+  if (delta === 0) return "no change";
+  if (delta > 0) return `up ${delta}`;
+  return `down ${Math.abs(delta)}`;
 }
 
 function changedIndexes<T>(nextValues: Array<T>, prevValues: Array<T>): Array<number> {
@@ -60,13 +97,16 @@ interface FlashTimerRef {
 
 export default function Poll() {
   const [history, setHistory] = createSignal<Array<PartySeries>>([]);
+  const [methodology, setMethodology] = createSignal<Methodology>(EMPTY_METHODOLOGY);
   const [flashedSupport, setFlashedSupport] = createSignal<Array<number>>([]);
   const [flashedSeats, setFlashedSeats] = createSignal<Array<number>>([]);
+  const [flashedMethod, setFlashedMethod] = createSignal<Array<keyof Methodology>>([]);
   const flashTimer: FlashTimerRef = { current: undefined };
   // onSettled is a no-op during SSR, so the numbers only materialize in the
   // browser — the server and the first client render agree on the placeholder.
   onSettled(() => {
     setHistory(generatePartyHistory());
+    setMethodology(generateMethodology());
   });
   onCleanup(() => {
     if (flashTimer.current !== undefined) clearTimeout(flashTimer.current);
@@ -109,27 +149,41 @@ export default function Poll() {
   const refresh = () => {
     const beforeShares = headline().map((share) => share.toFixed(1));
     const beforeSeats = seats();
+    const beforeMethod = methodology();
     const next = generatePartyHistory();
     const nextShares = next.map((entry) => (entry.points[entry.points.length - 1] ?? 0).toFixed(1));
     const nextSeats = allocateSeats(
       next.map((entry) => entry.points[entry.points.length - 1] ?? 0),
       PARLIAMENT_SEATS,
     );
+    const nextMethod = generateMethodology();
     setHistory(next);
+    setMethodology(nextMethod);
     if (flashTimer.current !== undefined) clearTimeout(flashTimer.current);
     setFlashedSupport(changedIndexes(nextShares, beforeShares));
     setFlashedSeats(changedIndexes(nextSeats, beforeSeats));
+    setFlashedMethod(
+      (Object.keys(nextMethod) as Array<keyof Methodology>).filter(
+        (key) => nextMethod[key] !== beforeMethod[key],
+      ),
+    );
     flashTimer.current = setTimeout(() => {
       setFlashedSupport([]);
       setFlashedSeats([]);
+      setFlashedMethod([]);
     }, 1600);
   };
 
   const supportCellClass = (index: number): string =>
-    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSupport().includes(index) ? "poll-flash bg-amber-200 dark:bg-amber-900/60" : ""}`;
+    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSupport().includes(index) ? FLASH_ON : ""}`;
 
   const seatsCellClass = (index: number): string =>
-    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSeats().includes(index) ? "poll-flash bg-amber-200 dark:bg-amber-900/60" : ""}`;
+    `px-3 py-2 text-right tabular-nums transition-colors duration-1000 ${flashedSeats().includes(index) ? FLASH_ON : ""}`;
+
+  const flashText = (flashed: boolean): string =>
+    `transition-colors duration-1000 ${flashed ? FLASH_ON : ""}`;
+
+  const methodFlash = (key: keyof Methodology): string => flashText(flashedMethod().includes(key));
 
   return (
     <PageLayout
@@ -182,7 +236,11 @@ export default function Poll() {
                 <For each={history()}>
                   {(entry, index) => (
                     <p>
-                      {supportClause(entry.name, headline()[index()] ?? 0, deltas()[index()] ?? 0)}
+                      {entry.name} {supportVerb(deltas()[index()] ?? 0)}{" "}
+                      <span class={flashText(flashedSupport().includes(index()))}>
+                        {formatPoints(headline()[index()] ?? 0)}
+                      </span>
+                      .
                     </p>
                   )}
                 </For>
@@ -222,7 +280,11 @@ export default function Poll() {
                 <For each={history()}>
                   {(entry, index) => (
                     <p>
-                      {seatClause(entry.name, seats()[index()] ?? 0, seatDeltas()[index()] ?? 0)}
+                      {entry.name} wins{" "}
+                      <span class={flashText(flashedSeats().includes(index()))}>
+                        {seats()[index()] ?? 0}
+                      </span>{" "}
+                      seats ({seatChange(seatDeltas()[index()] ?? 0)}).
                     </p>
                   )}
                 </For>
@@ -249,19 +311,29 @@ export default function Poll() {
               <p>
                 <em>
                   The poll was conducted by Doodoo Dynamics Market Research Ltd. It is a random poll
-                  of 1,000 adult New Zealanders and is weighted to the overall adult population. It
-                  was conducted by phone (landlines and mobile) and online between {HEADLINE_DATES},
-                  has a maximum margin of error of ±3.1% and 2.1% were undecided on the party vote
-                  question.
+                  of <span class={methodFlash("sample")}>{formatCount(methodology().sample)}</span>{" "}
+                  adult New Zealanders and is weighted to the overall adult population. It was
+                  conducted by phone (landlines and mobile) and online between {HEADLINE_DATES}, has
+                  a maximum margin of error of{" "}
+                  <span class={methodFlash("moe")}>±{methodology().moe.toFixed(1)}%</span> and{" "}
+                  <span class={methodFlash("undecided")}>
+                    {methodology().undecided.toFixed(1)}%
+                  </span>{" "}
+                  were undecided on the party vote question.
                 </em>
               </p>
               <h2>Notes</h2>
               <p>
                 The scientific poll was conducted by Doodoo Dynamics Market Research and
                 commissioned by nobody in particular. The target population is adults aged 18+ who
-                live in New Zealand and are eligible and likely to vote. 1,000 respondents agreed to
-                participate, 700 by phone and 300 by online panel. The number of decided voters on
-                the vote questions was 965.
+                live in New Zealand and are eligible and likely to vote.{" "}
+                <span class={methodFlash("sample")}>{formatCount(methodology().sample)}</span>{" "}
+                respondents agreed to participate,{" "}
+                <span class={methodFlash("phone")}>{formatCount(methodology().phone)}</span> by
+                phone and{" "}
+                <span class={methodFlash("online")}>{formatCount(methodology().online)}</span> by
+                online panel. The number of decided voters on the vote questions was{" "}
+                <span class={methodFlash("decided")}>{formatCount(methodology().decided)}</span>.
               </p>
               <p>
                 For seat projections it is assumed all current parliamentary parties will win at
@@ -270,8 +342,11 @@ export default function Poll() {
               </p>
               <p>
                 The results are weighted to reflect the overall voting adult population in terms of
-                gender, age, and area. Based on this sample of 1,000 respondents, the maximum
-                sampling error (for a result of 50%) is ±3.1%, at the 95% confidence level.
+                gender, age, and area. Based on this sample of{" "}
+                <span class={methodFlash("sample")}>{formatCount(methodology().sample)}</span>{" "}
+                respondents, the maximum sampling error (for a result of 50%) is{" "}
+                <span class={methodFlash("moe")}>±{methodology().moe.toFixed(1)}%</span>, at the 95%
+                confidence level.
               </p>
             </section>
             <Button type="button" variant="primary" onClick={refresh}>

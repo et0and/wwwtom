@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen, waitFor, within } from "@solidjs/testing-library";
-import Poll, { allocateSeats } from "~/routes/poll";
+import Poll, { allocateSeats, generateMethodology } from "~/routes/poll";
 import { bollinger } from "@tom/ui/tomui/bollinger";
 import { generatePartyHistory } from "~/components/PollTrendChart";
 
@@ -45,6 +45,16 @@ describe("poll math", () => {
       const total = history.reduce((sum, entry) => sum + (entry.points[month] ?? 0), 0);
       expect(total).toBeCloseTo(100, 5);
     });
+  });
+
+  it("keeps the methodology sample internally consistent", () => {
+    const method = generateMethodology();
+    expect(method.phone + method.online).toBe(method.sample);
+    const undecidedCount = Math.round((method.sample * method.undecided) / 100);
+    const refusedCount = Math.round((method.sample * method.refused) / 100);
+    expect(method.decided + undecidedCount + refusedCount).toBe(method.sample);
+    expect(method.moe).toBeGreaterThan(2.9);
+    expect(method.moe).toBeLessThan(3.3);
   });
 });
 
