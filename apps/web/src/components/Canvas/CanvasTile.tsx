@@ -91,15 +91,22 @@ const tileFrame = (layout: CanvasTileLayout, label: string): TileFrame => ({
 interface CanvasTileProps {
   item: ArenaChannelContents;
   layout: CanvasTileLayout;
+  detail: boolean;
   onOpen: (block: ArenaBlock) => void;
 }
 
 export function CanvasTile(props: CanvasTileProps) {
   const item = () => props.item;
   const layout = () => props.layout;
+  const detail = () => props.detail;
   return (
     <Show when={"base_type" in item()}>
-      <BlockTile block={item() as ArenaBlock} layout={layout()} onOpen={props.onOpen} />
+      <BlockTile
+        block={item() as ArenaBlock}
+        layout={layout()}
+        detail={detail()}
+        onOpen={props.onOpen}
+      />
     </Show>
   );
 }
@@ -107,14 +114,19 @@ export function CanvasTile(props: CanvasTileProps) {
 interface BlockTileProps {
   block: ArenaBlock;
   layout: CanvasTileLayout;
+  detail: boolean;
   onOpen: (block: ArenaBlock) => void;
 }
 
 function BlockTile(props: BlockTileProps) {
   const block = () => props.block;
   const layout = () => props.layout;
+  const detail = () => props.detail;
   const frame = createMemo(() =>
     tileFrame(layout(), block().title || `${block().type} ${block().id}`),
+  );
+  const flatColor = createMemo(() =>
+    Effect.runSync(colorHashForTitle(block().title || `${block().type}-${block().id}`)),
   );
   const open = (): void => props.onOpen(block());
   const onKeyDown = (event: KeyboardEvent): void => {
@@ -132,17 +144,52 @@ function BlockTile(props: BlockTileProps) {
       onClick={open}
       onKeyDown={onKeyDown}
     >
-      <Show when={asBlock(block(), "Image")}>{(image) => <ImageTileBody block={image()} />}</Show>
-      <Show when={asBlock(block(), "Text")}>{(text) => <TextTileBody block={text()} />}</Show>
-      <Show when={asBlock(block(), "Link")}>{(link) => <LinkTileBody block={link()} />}</Show>
-      <Show when={asBlock(block(), "Attachment")}>
-        {(attachment) => <AttachmentTileBody block={attachment()} />}
-      </Show>
-      <Show when={asBlock(block(), "Embed")}>{(embed) => <EmbedTileBody block={embed()} />}</Show>
-      <Show when={block().type === "PendingBlock"}>
-        <PendingTileBody title={block().title} />
+      <Show
+        when={detail()}
+        fallback={<div class="h-full w-full" style={{ "background-color": flatColor() }} />}
+      >
+        <Show when={asBlock(block(), "Image")}>{(image) => <ImageTileBody block={image()} />}</Show>
+        <Show when={asBlock(block(), "Text")}>{(text) => <TextTileBody block={text()} />}</Show>
+        <Show when={asBlock(block(), "Link")}>{(link) => <LinkTileBody block={link()} />}</Show>
+        <Show when={asBlock(block(), "Attachment")}>
+          {(attachment) => <AttachmentTileBody block={attachment()} />}
+        </Show>
+        <Show when={asBlock(block(), "Embed")}>{(embed) => <EmbedTileBody block={embed()} />}</Show>
+        <Show when={block().type === "PendingBlock"}>
+          <PendingTileBody title={block().title} />
+        </Show>
       </Show>
     </Button>
+  );
+}
+
+export interface CulledTileProps {
+  layout: CanvasTileLayout;
+  visible: boolean;
+  children?: JSX.Element;
+}
+
+/** Offscreen tiles stay mounted as bare boxes so paint cost tracks the viewport. */
+export function CulledTile(props: CulledTileProps) {
+  const layout = () => props.layout;
+  return (
+    <Show
+      when={props.visible}
+      fallback={
+        <div
+          aria-hidden="true"
+          class="absolute"
+          style={{
+            left: `${layout().x}px`,
+            top: `${layout().y}px`,
+            width: `${layout().width}px`,
+            height: `${layout().height}px`,
+          }}
+        />
+      }
+    >
+      {props.children}
+    </Show>
   );
 }
 

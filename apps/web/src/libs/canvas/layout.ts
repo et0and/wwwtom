@@ -31,6 +31,27 @@ export interface CanvasBounds {
   readonly height: number;
 }
 
+export interface WorldView {
+  readonly minX: number;
+  readonly minY: number;
+  readonly maxX: number;
+  readonly maxY: number;
+}
+
+export interface TileRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
+/** Whiteboard culling: only tiles touching the view (plus overscan) paint. */
+export const tileIntersectsView = (tile: TileRect, view: WorldView): boolean =>
+  tile.x < view.maxX &&
+  tile.x + tile.width > view.minX &&
+  tile.y < view.maxY &&
+  tile.y + tile.height > view.minY;
+
 export interface CanvasLayout {
   readonly tiles: ReadonlyArray<CanvasTileLayout>;
   readonly bounds: CanvasBounds;

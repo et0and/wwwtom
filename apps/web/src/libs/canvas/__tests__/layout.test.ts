@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
-import { colorHashForTitle, computeCanvasLayout } from "~/libs/canvas/layout";
+import { colorHashForTitle, computeCanvasLayout, tileIntersectsView } from "~/libs/canvas/layout";
 
 const runLayout = (slug: string, count: number) =>
   Effect.runSync(
@@ -54,6 +54,16 @@ describe("computeCanvasLayout", () => {
     }
     const origins = new Set(layout.tiles.map((tile) => `${tile.x},${tile.y}`));
     expect(origins.size).toBe(layout.tiles.length);
+  });
+});
+
+describe("tileIntersectsView", () => {
+  const view = { minX: 0, minY: 0, maxX: 100, maxY: 100 };
+  it("keeps touching tiles and drops the rest", () => {
+    expect(tileIntersectsView({ x: 10, y: 10, width: 20, height: 20 }, view)).toBe(true);
+    expect(tileIntersectsView({ x: 90, y: 90, width: 40, height: 40 }, view)).toBe(true);
+    expect(tileIntersectsView({ x: 200, y: 200, width: 20, height: 20 }, view)).toBe(false);
+    expect(tileIntersectsView({ x: 100, y: 0, width: 20, height: 20 }, view)).toBe(false);
   });
 });
 

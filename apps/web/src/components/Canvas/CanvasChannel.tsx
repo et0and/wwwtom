@@ -8,13 +8,15 @@ import { Dialog } from "@tom/ui/tomui/dialog";
 import { Loader } from "@tom/ui/tomui/loader";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
 import { fetchChannel, fetchChannelContentsPage } from "~/server/adapter";
-import { computeCanvasLayout } from "~/libs/canvas/layout";
+import { computeCanvasLayout, tileIntersectsView } from "~/libs/canvas/layout";
+import type { WorldView } from "~/libs/canvas/layout";
 import { ArenaBlockItem } from "~/components/Arena";
-import { CanvasTile, ChannelTile, describeCanvasItem } from "./CanvasTile";
+import { CanvasTile, ChannelTile, CulledTile, describeCanvasItem } from "./CanvasTile";
 
 const CANVAS_PAGE_SIZE = 100;
-const MIN_SCALE = 0.25;
 const MAX_SCALE = 2.5;
+const DETAIL_SCALE = 0.55;
+const MIN_SCALE_FLOOR = 0.12;
 // Premium tier allows 300 requests per minute; backoff covers lower tiers.
 const PAGE_FETCH_GAP_MS = 800;
 const PAGE_RETRY_COUNT = 5;
@@ -22,7 +24,10 @@ const PAGE_RETRY_MAX_DELAY_MS = 10000;
 const CANVAS_STALE_MS = 10 * 60 * 1000;
 const CANVAS_GC_MS = 60 * 60 * 1000;
 
-const clampScale = (value: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
+interface ViewportSize {
+  readonly width: number;
+  readonly height: number;
+}
 
 interface PointerPoint {
   readonly x: number;
@@ -36,6 +41,7 @@ export function CanvasChannel(props: { slug: string }) {
   const [scale, setScale] = createSignal(1);
   const [selected, setSelected] = createSignal<ArenaBlock | null>(null);
   const [sentinelVisible, setSentinelVisible] = createSignal(false);
+  const [viewportSize, setViewportSize] = createSignal<ViewportSize>({ width: 0, height: 0 });
   const camera = { x: 0, y: 0, scale: 1, centered: false };
   const drag = {
     active: false,
@@ -109,6 +115,33 @@ export function CanvasChannel(props: { slug: string }) {
 
   const transform = createMemo(() => `translate(${x()}px, ${y()}px) scale(${scale()})`);
 
+  const minZoom = createMemo(() => {
+    const bounds = positioned().bounds;
+    const size = viewportSize();
+    if (bounds.width === 0 || size.width === 0) return MIN_SCALE_FLOOR;
+    const fit = Math.min(size.width / bounds.width, size.height / bounds.height);
+    return Math.max(MIN_SCALE_FLOOR, Math.min(fit, 0.5));
+  });
+
+  const clampZoom = (value: number): number => Math.min(MAX_SCALE, Math.max(minZoom(), value));
+
+  const detailVisible = createMemo(() => scale() >= DETAIL_SCALE);
+
+  const visibleWorld = createMemo((): WorldView => {
+    const zoom = scale();
+    const size = viewportSize();
+    if (size.width === 0 && size.height === 0) {
+      return { minX: -Infinity, minY: -Infinity, maxX: Infinity, maxY: Infinity };
+    }
+    const margin = Math.max(size.width, size.height) / Math.max(zoom, MIN_SCALE_FLOOR);
+    return {
+      minX: -x() / zoom - margin,
+      minY: -y() / zoom - margin,
+      maxX: (-x() + size.width) / zoom + margin,
+      maxY: (-y() + size.height) / zoom + margin,
+    };
+  });
+
   const syncCamera = (): void => {
     setX(camera.x);
     setY(camera.y);
@@ -126,7 +159,7 @@ export function CanvasChannel(props: { slug: string }) {
 
   const zoomAt = (clientX: number, clientY: number, factor: number): void => {
     if (!viewport) return;
-    const next = clampScale(camera.scale * factor);
+    const next = clampZoom(camera.scale * factor);
     const rect = viewport.getBoundingClientRect();
     const px = clientX - rect.left;
     const py = clientY - rect.top;
@@ -303,6 +336,11 @@ export function CanvasChannel(props: { slug: string }) {
       zoomAt(event.clientX, event.clientY, Math.exp(-event.deltaY * 0.0015));
     };
     element.addEventListener("wheel", onWheel, { passive: false });
+    const measure = (): void => {
+      setViewportSize({ width: element.clientWidth, height: element.clientHeight });
+    };
+    measure();
+    window.addEventListener("resize", measure);
     const stopGesture = (event: Event): void => {
       event.preventDefault();
     };
@@ -356,6 +394,7 @@ export function CanvasChannel(props: { slug: string }) {
       document.removeEventListener("gesturestart", stopGesture);
       document.removeEventListener("gesturechange", stopGesture);
       document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("resize", measure);
       window.removeEventListener("keydown", onKey);
     };
   });
@@ -391,7 +430,7 @@ export function CanvasChannel(props: { slug: string }) {
                 ref={(element) => {
                   viewport = element;
                 }}
-                class="absolute inset-0 touch-none overflow-hidden select-none"
+                class="absolute inset-0 touch-none overflow-hidden bg-[radial-gradient(circle,rgb(0_0_0/0.14)_1px,transparent_1px)] bg-[size:28px_28px] select-none dark:bg-[radial-gradient(circle,rgb(255_255_255/0.14)_1px,transparent_1px)]"
                 onPointerDown={onPointerDown}
                 onPointerMove={onPointerMove}
                 onPointerUp={endPointer}
@@ -410,10 +449,24 @@ export function CanvasChannel(props: { slug: string }) {
                     {(tile) => {
                       const found = blockById().get(tile.id);
                       if (!found) return null;
+                      const inView = tileIntersectsView(tile, visibleWorld());
                       if (!("base_type" in found)) {
-                        return <ChannelTile slug={found.slug} title={found.title} layout={tile} />;
+                        return (
+                          <CulledTile layout={tile} visible={inView}>
+                            <ChannelTile slug={found.slug} title={found.title} layout={tile} />
+                          </CulledTile>
+                        );
                       }
-                      return <CanvasTile item={found} layout={tile} onOpen={openBlock} />;
+                      return (
+                        <CulledTile layout={tile} visible={inView}>
+                          <CanvasTile
+                            item={found}
+                            layout={tile}
+                            detail={detailVisible()}
+                            onOpen={openBlock}
+                          />
+                        </CulledTile>
+                      );
                     }}
                   </For>
                   <div
