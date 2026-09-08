@@ -187,7 +187,9 @@ export function CanvasChannel(props: { slug: string }) {
 
   const onPointerMove = (event: PointerEvent): void => {
     if (!pointers.has(event.pointerId)) return;
-    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    const moves = event.getCoalescedEvents?.() ?? [];
+    const move = moves[moves.length - 1] ?? event;
+    pointers.set(event.pointerId, { x: move.clientX, y: move.clientY });
     if (pinch.active && pointers.size >= 2) {
       const distance = pointerDistance();
       const mid = pointerMidpoint();
@@ -201,12 +203,12 @@ export function CanvasChannel(props: { slug: string }) {
       return;
     }
     if (!drag.active) return;
-    const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
+    const distance = Math.hypot(move.clientX - drag.startX, move.clientY - drag.startY);
     if (distance > 4) drag.moved = true;
-    drag.x += event.clientX - drag.lastX;
-    drag.y += event.clientY - drag.lastY;
-    drag.lastX = event.clientX;
-    drag.lastY = event.clientY;
+    drag.x += move.clientX - drag.lastX;
+    drag.y += move.clientY - drag.lastY;
+    drag.lastX = move.clientX;
+    drag.lastY = move.clientY;
     camera.x = drag.x;
     camera.y = drag.y;
     syncCamera();
@@ -394,6 +396,7 @@ export function CanvasChannel(props: { slug: string }) {
                 onPointerMove={onPointerMove}
                 onPointerUp={endPointer}
                 onPointerCancel={endPointer}
+                onContextMenu={(event) => event.preventDefault()}
               >
                 <div
                   class="absolute left-0 top-0 will-change-transform"

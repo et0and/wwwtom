@@ -41,8 +41,9 @@ export interface TileSize {
   readonly height: number;
 }
 
-const GOLDEN_ANGLE = 2.399963;
 const CANVAS_PADDING = 400;
+const MASONRY_GUTTER = 40;
+const MASONRY_JITTER = 10;
 
 const hashSeed = (text: string): number => {
   const state = { value: 2166136261 };
@@ -110,20 +111,39 @@ const buildCanvasLayout = (input: {
   }
   const rand = createRandom(hashSeed(slug));
   const count = items.length;
-  const spread = 340 * Math.sqrt(count) + 400;
-  const seedAngle = rand() * Math.PI * 2;
+  const sizes = items.map((item) => tileSize(item.kind, item.ratio, rand));
+  const columns = Math.max(1, Math.round(Math.sqrt(count)));
+  const columnOf = (index: number): number => index % columns;
+  const columnWidths = sizes.reduce(
+    (widths, size, index) => {
+      const column = columnOf(index);
+      widths[column] = Math.max(widths[column] ?? 0, size.width);
+      return widths;
+    },
+    Array.from({ length: columns }, () => 0),
+  );
+  const columnX = columnWidths.reduce((offsets, _width, column) => {
+    offsets.push(
+      (offsets[column - 1] ?? -MASONRY_GUTTER) + (columnWidths[column - 1] ?? 0) + MASONRY_GUTTER,
+    );
+    return offsets;
+  }, [] as Array<number>);
+  const columnY = Array.from({ length: columns }, () => 0);
+  const jitter = (): number => Math.round((rand() * 2 - 1) * MASONRY_JITTER);
   const tiles = items.map((item, index): CanvasTileLayout => {
-    const size = tileSize(item.kind, item.ratio, rand);
-    const angle = index * GOLDEN_ANGLE + seedAngle;
-    const radius = spread * Math.sqrt((index + 0.3 + rand() * 0.7) / count);
-    return {
+    const size = sizes[index] ?? { width: 280, height: 200 };
+    const column = columnOf(index);
+    const width = columnWidths[column] ?? size.width;
+    const tile: CanvasTileLayout = {
       id: item.id,
       width: size.width,
       height: size.height,
-      x: Math.round(radius * Math.cos(angle) - size.width / 2),
-      y: Math.round(radius * Math.sin(angle) * 0.75 - size.height / 2),
-      rotate: Math.round((rand() * 5 - 2.5) * 10) / 10,
+      x: (columnX[column] ?? 0) + Math.round((width - size.width) / 2) + jitter(),
+      y: (columnY[column] ?? 0) + jitter(),
+      rotate: Math.round((rand() * 4 - 2) * 10) / 10,
     };
+    columnY[column] = (columnY[column] ?? 0) + size.height + MASONRY_GUTTER;
+    return tile;
   });
   const bounds = tiles.reduce(
     (acc, tile) => ({

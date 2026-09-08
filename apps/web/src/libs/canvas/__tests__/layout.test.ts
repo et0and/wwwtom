@@ -29,7 +29,22 @@ describe("computeCanvasLayout", () => {
     expect(runLayout("philemon", 8)).toEqual(runLayout("philemon", 8));
   });
 
-  it("scatters tiles across a bounds box holding every tile", () => {
+  it("packs tiles without overlap", () => {
+    [1, 7, 40, 200].forEach((count) => {
+      const layout = runLayout("philemon", count);
+      layout.tiles.forEach((first, a) => {
+        layout.tiles.slice(a + 1).forEach((second) => {
+          const separated =
+            first.x + first.width <= second.x ||
+            second.x + second.width <= first.x ||
+            first.y + first.height <= second.y ||
+            second.y + second.height <= first.y;
+          expect(separated).toBe(true);
+        });
+      });
+    });
+  });
+  it("holds every tile inside the bounds box", () => {
     const layout = runLayout("philemon", 12);
     for (const tile of layout.tiles) {
       expect(tile.x).toBeGreaterThanOrEqual(layout.bounds.minX);
