@@ -1,6 +1,6 @@
 # TomUI
 
-Kumo design rules. Follow always when building or reviewing TomUI.
+Design rules. Follow always when building or reviewing TomUI.
 
 ## Text
 
