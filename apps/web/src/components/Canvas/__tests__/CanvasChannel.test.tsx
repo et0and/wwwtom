@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { CanvasChannel } from "~/components/Canvas/CanvasChannel";
@@ -67,6 +67,10 @@ beforeEach(() => {
   mockedFetchChannel.mockResolvedValue({ title: "Philemon", slug: "philemon" });
 });
 
+afterEach(() => {
+  vi.useRealTimers();
+});
+
 describe("CanvasChannel", () => {
   it("scatters every block of the channel on the canvas", async () => {
     mockedFetchContentsPage.mockResolvedValue(pageFor([imageBlock, textBlock]));
@@ -109,5 +113,18 @@ describe("CanvasChannel", () => {
     renderCanvas();
 
     await waitFor(() => expect(screen.getByText("This channel holds no blocks.")).toBeTruthy());
+  });
+
+  it("shows the error state only when no block loads", async () => {
+    vi.useFakeTimers();
+    try {
+      mockedFetchContentsPage.mockRejectedValue(new Error("too many requests"));
+      renderCanvas();
+
+      await vi.advanceTimersByTimeAsync(40000);
+      expect(screen.getByText("This channel cannot load.")).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

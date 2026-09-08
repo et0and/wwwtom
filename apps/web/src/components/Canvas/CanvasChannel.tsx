@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
-import { For, Show, createEffect, createMemo, createSignal, onSettled } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup, onSettled } from "solid-js";
 import { isServer } from "@solidjs/web";
 import { Metadata } from "@tom/ui/Meta";
 import { Button, buttonVariants } from "@tom/ui/tomui/button";
@@ -15,6 +15,9 @@ import { CanvasTile, ChannelTile, describeCanvasItem } from "./CanvasTile";
 const CANVAS_PAGE_SIZE = 100;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 2.5;
+const PAGE_FETCH_GAP_MS = 800;
+const PAGE_RETRY_COUNT = 5;
+const PAGE_RETRY_MAX_DELAY_MS = 10000;
 
 const clampScale = (value: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
@@ -29,6 +32,7 @@ export function CanvasChannel(props: { slug: string }) {
   const [y, setY] = createSignal(0);
   const [scale, setScale] = createSignal(1);
   const [selected, setSelected] = createSignal<ArenaBlock | null>(null);
+  const [sentinelVisible, setSentinelVisible] = createSignal(false);
   const camera = { x: 0, y: 0, scale: 1, centered: false };
   const drag = {
     active: false,
@@ -43,6 +47,7 @@ export function CanvasChannel(props: { slug: string }) {
   const pointers = new Map<number, PointerPoint>();
   const pinch = { active: false, distance: 0, midX: 0, midY: 0 };
   const sentinel = { el: null as HTMLDivElement | null };
+  const pager = { lastFetch: 0, timer: null as ReturnType<typeof setTimeout> | null };
   let viewport: HTMLDivElement | undefined;
 
   const channelQuery = useQuery(() => ({
@@ -62,6 +67,8 @@ export function CanvasChannel(props: { slug: string }) {
       return lastPage.meta.next_page ?? lastPage.meta.current_page + 1;
     },
     enabled: slug().length > 0,
+    retry: PAGE_RETRY_COUNT,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, PAGE_RETRY_MAX_DELAY_MS),
   }));
 
   const blocks = createMemo(
@@ -145,7 +152,7 @@ export function CanvasChannel(props: { slug: string }) {
 
   const onPointerDown = (event: PointerEvent): void => {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    viewport?.setPointerCapture?.(event.pointerId);
+    if (event.pointerType === "mouse") viewport?.setPointerCapture?.(event.pointerId);
     if (pointers.size === 2) {
       drag.active = false;
       pinch.active = true;
@@ -244,12 +251,33 @@ export function CanvasChannel(props: { slug: string }) {
       if (!element || isServer || !("IntersectionObserver" in globalThis)) return;
       const observer = new IntersectionObserver(
         (entries) => {
-          if (entries[0]?.isIntersecting) void contentsQuery.fetchNextPage();
+          setSentinelVisible(entries[0]?.isIntersecting === true);
         },
         { rootMargin: "1200px" },
       );
       observer.observe(element);
       return () => observer.disconnect();
+    },
+  );
+
+  createEffect(
+    () => ({
+      visible: sentinelVisible(),
+      pages: contentsQuery.data?.pages.length ?? 0,
+      more: contentsQuery.hasNextPage,
+      fetching: contentsQuery.isFetching,
+    }),
+    (state) => {
+      onCleanup(() => {
+        if (pager.timer) clearTimeout(pager.timer);
+        pager.timer = null;
+      });
+      if (!state.visible || !state.more || state.fetching) return;
+      const wait = Math.max(0, PAGE_FETCH_GAP_MS - (Date.now() - pager.lastFetch));
+      pager.timer = setTimeout(() => {
+        pager.lastFetch = Date.now();
+        void contentsQuery.fetchNextPage();
+      }, wait);
     },
   );
 
@@ -261,6 +289,11 @@ export function CanvasChannel(props: { slug: string }) {
       zoomAt(event.clientX, event.clientY, Math.exp(-event.deltaY * 0.0015));
     };
     element.addEventListener("wheel", onWheel, { passive: false });
+    const stopGesture = (event: Event): void => {
+      event.preventDefault();
+    };
+    document.addEventListener("gesturestart", stopGesture);
+    document.addEventListener("gesturechange", stopGesture);
     const onKey = (event: KeyboardEvent): void => {
       if (selected() !== null) {
         if (event.key === "Escape") setSelected(null);
@@ -302,6 +335,8 @@ export function CanvasChannel(props: { slug: string }) {
     window.addEventListener("keydown", onKey);
     return () => {
       element.removeEventListener("wheel", onWheel);
+      document.removeEventListener("gesturestart", stopGesture);
+      document.removeEventListener("gesturechange", stopGesture);
       window.removeEventListener("keydown", onKey);
     };
   });
@@ -323,63 +358,63 @@ export function CanvasChannel(props: { slug: string }) {
         }
       >
         <Show
-          when={!contentsQuery.error}
+          when={blocks().length === 0 && contentsQuery.error !== null}
           fallback={
-            <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
-              <p class="text-sm">This channel cannot load.</p>
-              <Button variant="secondary" onClick={() => void contentsQuery.refetch()}>
-                Retry
-              </Button>
-            </div>
-          }
-        >
-          <Show
-            when={blocks().length > 0}
-            fallback={
-              <div class="absolute inset-0 flex items-center justify-center p-6 text-center">
-                <p class="text-sm">This channel holds no blocks.</p>
-              </div>
-            }
-          >
-            <div
-              ref={(element) => {
-                viewport = element;
-              }}
-              class="absolute inset-0 touch-none overflow-hidden select-none"
-              onPointerDown={onPointerDown}
-              onPointerMove={onPointerMove}
-              onPointerUp={endPointer}
-              onPointerCancel={endPointer}
+            <Show
+              when={blocks().length > 0}
+              fallback={
+                <div class="absolute inset-0 flex items-center justify-center p-6 text-center">
+                  <p class="text-sm">This channel holds no blocks.</p>
+                </div>
+              }
             >
               <div
-                class="absolute left-0 top-0 will-change-transform"
-                style={{
-                  width: `${positioned().bounds.width}px`,
-                  height: `${positioned().bounds.height}px`,
-                  transform: transform(),
+                ref={(element) => {
+                  viewport = element;
                 }}
+                class="absolute inset-0 touch-none overflow-hidden select-none"
+                onPointerDown={onPointerDown}
+                onPointerMove={onPointerMove}
+                onPointerUp={endPointer}
+                onPointerCancel={endPointer}
               >
-                <For each={positioned().tiles}>
-                  {(tile) => {
-                    const found = blockById().get(tile.id);
-                    if (!found) return null;
-                    if (!("base_type" in found)) {
-                      return <ChannelTile slug={found.slug} title={found.title} layout={tile} />;
-                    }
-                    return <CanvasTile item={found} layout={tile} onOpen={openBlock} />;
-                  }}
-                </For>
                 <div
-                  ref={observeSentinel}
-                  class="absolute h-1 w-1"
+                  class="absolute left-0 top-0 will-change-transform"
                   style={{
-                    left: `${positioned().bounds.width / 2}px`,
-                    top: `${positioned().bounds.height - 4}px`,
+                    width: `${positioned().bounds.width}px`,
+                    height: `${positioned().bounds.height}px`,
+                    transform: transform(),
                   }}
-                />
+                >
+                  <For each={positioned().tiles}>
+                    {(tile) => {
+                      const found = blockById().get(tile.id);
+                      if (!found) return null;
+                      if (!("base_type" in found)) {
+                        return <ChannelTile slug={found.slug} title={found.title} layout={tile} />;
+                      }
+                      return <CanvasTile item={found} layout={tile} onOpen={openBlock} />;
+                    }}
+                  </For>
+                  <div
+                    ref={observeSentinel}
+                    class="absolute h-1 w-1"
+                    style={{
+                      left: `${positioned().bounds.width / 2}px`,
+                      top: `${positioned().bounds.height - 4}px`,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          </Show>
+            </Show>
+          }
+        >
+          <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <p class="text-sm">This channel cannot load.</p>
+            <Button variant="secondary" onClick={() => void contentsQuery.refetch()}>
+              Retry
+            </Button>
+          </div>
         </Show>
       </Show>
       <Dialog.Root
