@@ -160,6 +160,27 @@ describe("createAuthFromEnv provider allowlist", () => {
   });
 });
 
+describe("preview editor origins", () => {
+  it("trusts the PR editor origin for a Tom preview stage", async () => {
+    const auth = await Effect.runPromise(
+      createAuthFromEnv(bothProvidersEnv({ TENANT: "tom", TOM_STAGE: "pr-138" })),
+    );
+    expect(auth.options.trustedOrigins).toContain("https://pr-138-cms.tom.so");
+  });
+
+  it("trusts the PR editor origin for a Sophie preview stage", async () => {
+    const auth = await Effect.runPromise(
+      createAuthFromEnv(bothProvidersEnv({ TENANT: "sophie", TOM_STAGE: "pr-138" })),
+    );
+    expect(auth.options.trustedOrigins).toContain("https://pr-138-cms.sophie.st");
+  });
+
+  it("trusts no preview origin off PR stages", async () => {
+    const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv({ TENANT: "tom" })));
+    expect(auth.options.trustedOrigins).toHaveLength(2);
+  });
+});
+
 describe("admin allowlist hook", () => {
   it("lets allowlisted emails create users", async () => {
     const auth = testAuth();

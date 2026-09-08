@@ -12,7 +12,13 @@ const rootDir = `${import.meta.dirname}/../../apps/editor`;
 export const editor = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
-  const adapterHost = stageHost(stage, "adapter");
+  // PR preview editors authenticate through the dev adapter: OAuth
+  // redirect URIs are exact-match at GitHub, so per-PR hosts can never be
+  // registered. The dev API trusts each PR's editor origin (see
+  // previewEditorOrigins in apps/api/src/services/auth.ts).
+  const adapterHost = stage.startsWith("pr-")
+    ? stageHost("dev", "adapter")
+    : stageHost(stage, "adapter");
 
   // Static Vite SPA (no server runtime): the only env it needs is the
   // adapter origin inlined at build time for API calls.

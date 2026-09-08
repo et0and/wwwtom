@@ -34,7 +34,13 @@ export const sophieWeb = Effect.gen(function* () {
 export const sophieEditor = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
-  const adapterHost = sophieStageHost(stage, "adapter");
+  // PR preview editors authenticate through the dev adapter: OAuth
+  // redirect URIs are exact-match at Google, so per-PR hosts can never be
+  // registered. The dev API trusts each PR's editor origin (see
+  // previewEditorOrigins in apps/api/src/services/auth.ts).
+  const adapterHost = stage.startsWith("pr-")
+    ? sophieStageHost("dev", "adapter")
+    : sophieStageHost(stage, "adapter");
 
   // Same Camus SPA code as Tom CMS, with Google auth only plus Sophie
   // adapter origin inlined at build time.

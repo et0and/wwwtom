@@ -116,6 +116,21 @@ const providerAllowed = (
   provider: CmsAuthProvider,
 ): boolean => allowlist === undefined || allowlist.includes(provider);
 
+/**
+ * Preview CMS editor origins (pr-<n>-cms hosts). OAuth redirect URIs are
+ * exact-match at Google/GitHub, so infinite preview hosts can never be
+ * registered: preview editors authenticate through the dev adapters, and
+ * the dev APIs trust exactly their own PR's editor origin here. Derived
+ * from TOM_STAGE + TENANT so no pattern can over-match.
+ */
+const previewEditorOrigins = (env: CloudflareEnv): ReadonlyArray<string> => {
+  const stage = env.TOM_STAGE;
+  if (stage === undefined || !stage.startsWith("pr-")) return [];
+  if (env.TENANT === "sophie") return [`https://${stage}-cms.sophie.st`];
+  if (env.TENANT === "tom") return [`https://${stage}-cms.tom.so`];
+  return [];
+};
+
 /** Build an auth instance from worker env. Fails closed when unset. */
 export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: CloudflareEnv) {
   const database = env.CMS_D1;
@@ -144,7 +159,7 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
         database,
         secret,
         baseURL: adapterUrl,
-        trustedOrigins: [adapterUrl, editorUrl],
+        trustedOrigins: [adapterUrl, editorUrl, ...previewEditorOrigins(env)],
         ...(github && { github }),
         ...(google && { google }),
         adminEmails: parseAdminEmails(env.CMS_ADMIN_EMAILS),
