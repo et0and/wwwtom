@@ -6,6 +6,7 @@ import { OgTemplates, type OgTemplateParams } from "@tom/ui/OgImage";
 import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
+import type { CmsAssetsBinding } from "@tom/utils/services/config";
 import { toProblemResponse } from "@tom/utils/services/worker";
 
 // Fonts ship as static files beside the worker (apps/api/public/fonts,
@@ -15,16 +16,27 @@ const LIBRE_CASLON_PATH = "/fonts/libre-caslon-condensed-regular.ttf";
 const SOLWAY_PATH = "/fonts/solway-400-normal.woff2";
 const FONT_FETCH_TIMEOUT_MS = 3000;
 
+export type OgFontSource = {
+  readonly origin: string;
+  readonly assets?: CmsAssetsBinding | undefined;
+};
+
 const fontCache = new Map<string, ArrayBuffer>();
 
-export const fontFetchEffect = (url: string) =>
+const loadFontBytes = (source: OgFontSource, path: string): Promise<Response> =>
+  source.assets
+    ? source.assets.fetch(`${source.origin}${path}`)
+    : fetch(`${source.origin}${path}`, { signal: AbortSignal.timeout(FONT_FETCH_TIMEOUT_MS) });
+
+export const fontFetchEffect = (source: OgFontSource, path: string) =>
   Effect.gen(function* () {
+    const url = `${source.origin}${path}`;
     const cached = fontCache.get(url);
     if (cached !== undefined) return cached;
 
     const data = yield* Effect.tryPromise({
       try: () =>
-        fetch(url, { signal: AbortSignal.timeout(FONT_FETCH_TIMEOUT_MS) }).then((res) => {
+        loadFontBytes(source, path).then((res) => {
           if (!res.ok) {
             throw new Error(`Failed to fetch font: ${res.status}`);
           }
@@ -68,7 +80,7 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
   requester: string,
   templateParam?: OgTemplate,
   date?: string,
-  assetOrigin?: string,
+  fontSource?: OgFontSource,
 ) {
   yield* Effect.logInfo("Generating OG image");
   const template = getTemplate(requester, templateParam);
@@ -76,13 +88,11 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
   // system-ui, developer is monospace); Solway only serves sophie. Fonts
   // load lazily from the worker's own origin so templates that never use
   // them never pay the fetch.
-  const origin = assetOrigin ?? "http://localhost:8787";
+  const source = fontSource ?? { origin: "http://localhost:8787" };
   const fontData =
-    template === OgTemplates.default
-      ? yield* fontFetchEffect(`${origin}${LIBRE_CASLON_PATH}`)
-      : null;
+    template === OgTemplates.default ? yield* fontFetchEffect(source, LIBRE_CASLON_PATH) : null;
   const sophieFontData =
-    template === OgTemplates.sophie ? yield* fontFetchEffect(`${origin}${SOLWAY_PATH}`) : null;
+    template === OgTemplates.sophie ? yield* fontFetchEffect(source, SOLWAY_PATH) : null;
 
   const html = template({ title, summary, date: date ?? "" });
   const { node, css } = fromHtml(html);

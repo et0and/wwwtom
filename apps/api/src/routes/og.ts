@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { problemDetailsSchema } from "@tom/schemas/error";
+import { getRequestEnv } from "@tom/utils/services/worker";
 import { logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
@@ -107,13 +108,17 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
     const result = await runEffect(
       Effect.gen(function* () {
         const validated = yield* validateOgParams(title, summary, date, template);
+        const env = getRequestEnv(request);
         return yield* generateOgImageEffect(
           title,
           summary,
           requester,
           validated.template,
           validated.date,
-          new URL(request.url).origin,
+          {
+            origin: new URL(request.url).origin,
+            assets: env.ASSETS,
+          },
         );
       }).pipe(
         Effect.catchTag("ValidationError", (error) =>

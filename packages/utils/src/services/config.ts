@@ -43,6 +43,12 @@ export interface CmsD1Binding {
   readonly exec: (query: string) => Promise<unknown>;
 }
 
+// Minimal Worker-safe assets surface (Workers Static Assets ASSETS
+// binding); tests omit it and fall back to same-origin fetch.
+export interface CmsAssetsBinding {
+  readonly fetch: (url: string) => Promise<Response>;
+}
+
 // Minimal Worker-safe R2 surface used by CmsService. The real R2Bucket
 // binding satisfies this structurally; tests fake it.
 export interface CmsR2Object {
@@ -128,6 +134,9 @@ export type CloudflareEnv = {
   // api stack (infra/cms/cms.storage.ts). Only the API binds them.
   CMS_D1?: CmsD1Binding;
   CMS_MEDIA?: CmsR2Binding;
+  // Workers Static Assets binding serving apps/api/public (OG fonts). Set
+  // by the api stack; absent in tests, which fall back to same-origin fetch.
+  ASSETS?: CmsAssetsBinding;
   // When set, requests carrying the `x-use-simulator` header have their
   // upstream service URLs (arena/polar/api) rewritten to this base
   // URL — the e2e fixture simulator (apps/simulator).
