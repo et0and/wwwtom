@@ -113,6 +113,7 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
           requester,
           validated.template,
           validated.date,
+          new URL(request.url).origin,
         );
       }).pipe(
         Effect.catchTag("ValidationError", (error) =>

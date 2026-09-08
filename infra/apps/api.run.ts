@@ -183,6 +183,9 @@ export const api = Effect.gen(function* () {
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
+    // OG fonts ship as static files (apps/api/public/fonts) served by the
+    // worker itself; the OG service fetches them from its own origin.
+    assets: { directory: `${rootDir}/apps/api/public` },
     dev: {
       // Local workerd dev server via `alchemy dev`; API_URL points back at it.
       port: 8787,
@@ -252,6 +255,7 @@ export const api = Effect.gen(function* () {
   const sophieWorker = yield* Cloudflare.Worker("sophie-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
+    assets: { directory: `${rootDir}/apps/api/public` },
     dev: {
       port: 8789,
     },

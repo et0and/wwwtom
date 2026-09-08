@@ -4,15 +4,27 @@ import { requestWithEnv, testEnv } from "../test/helpers";
 import { OgTemplates } from "@tom/ui/OgImage";
 import { getTemplate } from "../services/og";
 
-const fetchMock = vi.fn();
+const fetchMock = vi.fn(
+  async (_input: string): Promise<Response> => new Response(new ArrayBuffer(8)),
+);
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
 
+// Fonts load from the worker's own /fonts/* assets: stub the fetch with
+// fixture bytes (takumi's render is stubbed in test setup) and assert every
+// call stays same-origin, proving no third-party fetch happens.
+const stubLocalFonts = (): void => {
+  vi.stubGlobal("fetch", fetchMock);
+};
+
+const fetchedUrls = (): Array<string> => fetchMock.mock.calls.map((call) => new URL(call[0]).href);
+
 describe("og route", () => {
   it("accepts commas in title/summary (Elysia splits them into lists)", async () => {
+    stubLocalFonts();
     // Before the fix Elysia's standard-schema parser turned the comma value
     // into an array and failed String validation with a 400 before the
     // handler ran. The route must now reach the handler — never the
@@ -26,6 +38,7 @@ describe("og route", () => {
   });
 
   it("renders a PNG through the stubbed renderer", async () => {
+    stubLocalFonts();
     const response = await app.fetch(
       requestWithEnv("http://localhost/og?title=Hi&summary=Hello&template=sophie", testEnv()),
     );
@@ -34,15 +47,18 @@ describe("og route", () => {
     expect(response.headers.get("content-type")).toBe("image/png");
   });
 
-  it("renders without any network fetch (fonts ship in the bundle)", async () => {
-    vi.stubGlobal("fetch", fetchMock);
-    fetchMock.mockRejectedValue(new Error("network is disabled"));
+  it("renders without any third-party fetch (fonts ship as worker assets)", async () => {
+    stubLocalFonts();
     const response = await app.fetch(
       requestWithEnv("http://localhost/og?title=Hi&summary=Hello&template=sophie", testEnv()),
     );
 
     expect(response.status).toBe(200);
-    expect(fetchMock).not.toHaveBeenCalled();
+    const urls = fetchedUrls();
+    expect(urls.length).toBeGreaterThan(0);
+    for (const url of urls) {
+      expect(url.startsWith("http://localhost/fonts/")).toBe(true);
+    }
   });
 
   it("rejects an unknown template with a 400", async () => {
@@ -66,6 +82,7 @@ describe("og route", () => {
   });
 
   it("ignores a ?requester= override (Referer alone drives auto-select)", async () => {
+    stubLocalFonts();
     const sophieSpy = vi.spyOn(OgTemplates, "sophie");
     const minimalSpy = vi.spyOn(OgTemplates, "minimal");
 
@@ -82,6 +99,7 @@ describe("og route", () => {
   });
 
   it("auto-selects sophie from the Referer header", async () => {
+    stubLocalFonts();
     const sophieSpy = vi.spyOn(OgTemplates, "sophie");
 
     const response = await app.fetch(
@@ -95,6 +113,7 @@ describe("og route", () => {
   });
 
   it("treats an explicit template as authoritative over the Referer", async () => {
+    stubLocalFonts();
     const developerSpy = vi.spyOn(OgTemplates, "developer");
     const sophieSpy = vi.spyOn(OgTemplates, "sophie");
 
@@ -124,6 +143,7 @@ describe("getTemplate", () => {
   });
 
   it("accepts a date line without a 400", async () => {
+    stubLocalFonts();
     const response = await app.fetch(
       requestWithEnv(
         "http://localhost/og?title=Wet&summary=Don%27t%20you&date=January%2029,%202016&template=sophie",
