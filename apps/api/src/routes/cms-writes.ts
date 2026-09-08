@@ -10,7 +10,7 @@ import type { CmsCategoryInput, CmsPostInput, CmsWorkInput } from "@tom/schemas/
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/services/config";
-import { readCloudflareEnv } from "@tom/utils/services/config";
+import { parseAdminEmails, readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { createAuthFromEnv, isAdminEmail, requireSession } from "../services/auth";
 import type { MediaUpload } from "../services/cms";
@@ -74,7 +74,7 @@ const requireAuthor = (request: Request): Effect.Effect<AuthorContext, CmsError>
     const email = Schema.decodeUnknownOption(Schema.String)(author.user.email);
     if (
       Option.isNone(email) ||
-      !isAdminEmail(email.value, (env.CMS_ADMIN_EMAILS ?? "").split(","))
+      !isAdminEmail(email.value, parseAdminEmails(env.CMS_ADMIN_EMAILS))
     ) {
       return yield* new CmsError({
         message: "Forbidden",
@@ -280,6 +280,29 @@ const withAuthor = <A>(
   use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
 ): Effect.Effect<A, CmsError> => Effect.flatMap(requireAuthor(request), use);
 
+/**
+ * Sophie is a posts-only tenant: the editor hides works UI-side
+ * (VITE_SOPHIE), and the Sophie-tenant API (TENANT=sophie, set in
+ * infra/apps/api.run.ts) rejects /works/* writes server-side. Reads stay
+ * served; unset TENANT keeps the legacy shared behavior.
+ */
+const requireWorksWritesAllowed = (request: Request): Effect.Effect<void, CmsError> =>
+  Effect.gen(function* () {
+    if (getRequestEnv(request).TENANT === "sophie") {
+      return yield* new CmsError({
+        message: "Works are not available on this tenant",
+        status: HttpStatus.Forbidden,
+        operation: "works_disabled",
+      });
+    }
+  });
+
+const withWorksAuthor = <A>(
+  request: Request,
+  use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
+): Effect.Effect<A, CmsError> =>
+  Effect.flatMap(requireWorksWritesAllowed(request), () => withAuthor(request, use));
+
 const decodePostInput = <B>(body: B, operation: string): Effect.Effect<CmsPostInput, CmsError> =>
   decodeInputBody(CmsPostInputSchema, body, "Invalid post body", operation);
 
@@ -350,7 +373,7 @@ export const cmsWriteRoutes = new Elysia({ name: "cms-writes" })
   )
   .post("/works", ({ body, request }) =>
     runWrites(
-      withAuthor(request, ({ db, actor, adapterUrl }) =>
+      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
         Effect.flatMap(decodeWorkInput(body, "create_work"), (input) =>
           createWork(db, input, actor, adapterUrl),
         ),
@@ -360,7 +383,7 @@ export const cmsWriteRoutes = new Elysia({ name: "cms-writes" })
   )
   .put("/works/:slug", ({ body, params, request }) =>
     runWrites(
-      withAuthor(request, ({ db, actor, adapterUrl }) =>
+      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
         Effect.flatMap(decodeSlugParams(params, "update_work"), ({ slug }) =>
           Effect.flatMap(decodeWorkInput(body, "update_work"), (input) =>
             updateWork(db, slug, input, actor, adapterUrl),
@@ -372,7 +395,7 @@ export const cmsWriteRoutes = new Elysia({ name: "cms-writes" })
   )
   .delete("/works/:slug", ({ params, request }) =>
     runWrites(
-      withAuthor(request, ({ db }) =>
+      withWorksAuthor(request, ({ db }) =>
         Effect.flatMap(decodeSlugParams(params, "delete_work"), ({ slug }) => deleteWork(db, slug)),
       ),
       request,
@@ -432,7 +455,7 @@ export const cmsWriteRoutes = new Elysia({ name: "cms-writes" })
   )
   .post("/works/:slug/restore", ({ body, params, request }) =>
     runWrites(
-      withAuthor(request, ({ db, actor, adapterUrl }) =>
+      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
         Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
           Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
             restoreRevision(db, "work", slug, revisionId, actor, adapterUrl),

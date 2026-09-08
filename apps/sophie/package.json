@@ -1,0 +1,41 @@
+{
+  "name": "@tom/sophie",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Sophie blog frontend on Sophie CMS",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite dev --port 3001",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@elysiajs/eden": "catalog:",
+    "@solidjs/meta": "catalog:",
+    "@solidjs/router": "catalog:",
+    "@solidjs/web": "catalog:",
+    "@tanstack/solid-query": "catalog:",
+    "@tom/adapter": "workspace:*",
+    "@tom/constants": "workspace:*",
+    "@tom/schemas": "workspace:*",
+    "@tom/types": "workspace:*",
+    "@tom/ui": "workspace:*",
+    "@tom/utils": "workspace:*",
+    "effect": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@solidjs/testing-library": "1.0.0-beta.3",
+    "@solidjs/vite-plugin": "catalog:",
+    "@tailwindcss/vite": "4.3.3",
+    "@testing-library/jest-dom": "6.8.0",
+    "@types/node": "24.9.1",
+    "jsdom": "27.0.0",
+    "tailwindcss": "4.3.3",
+    "vite": "^8.1.5",
+    "vitest": "4.1.10"
+  }
+}

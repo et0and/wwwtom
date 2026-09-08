@@ -92,6 +92,24 @@ describe("editor content client", () => {
     );
   });
 
+  it("lists posts in a category", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({
+        docs: [],
+        totalDocs: 0,
+        limit: 50,
+        page: 1,
+        totalPages: 1,
+        hasNextPage: false,
+        hasPrevPage: false,
+      }),
+    );
+    await runClient(listPosts(1, "pages"));
+    expect(lastCall().url).toBe(
+      "http://localhost:8788/content/posts?status=all&page=1&pageSize=10&category=pages",
+    );
+  });
+
   it("lists works", async () => {
     fetchMock.mockResolvedValue(
       jsonResponse({

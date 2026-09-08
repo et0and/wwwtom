@@ -23,6 +23,7 @@ import type {
   CmsPostInput,
   CmsRevisionMeta,
   CmsRevisionSnapshot,
+  CmsSlug,
   CmsStatus,
   CmsWork,
   CmsWorkInput,
@@ -80,9 +81,14 @@ const encodeBody = (encode: () => string, operation: string): Effect.Effect<stri
       new CmsError({ message: "Invalid editor data", status: 500, operation, cause }),
   });
 
-export const listPosts = (page: number): Effect.Effect<CmsListResponse<CmsPost>, CmsError> =>
+export const listPosts = (
+  page: number,
+  category?: CmsSlug | "pages",
+): Effect.Effect<CmsListResponse<CmsPost>, CmsError> =>
   fetchAndDecode(
-    `/content/posts?status=all&page=${safePage(page)}&pageSize=${PAGE_SIZE}`,
+    `/content/posts?status=all&page=${safePage(page)}&pageSize=${PAGE_SIZE}${
+      category === undefined ? "" : `&category=${encodeURIComponent(category)}`
+    }`,
     {},
     postListSchema,
     "list_posts",

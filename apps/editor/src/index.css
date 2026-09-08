@@ -23,6 +23,14 @@
     @apply grid justify-items-center gap-6 py-16 text-center;
   }
 
+  .camus-logo {
+    @apply text-neutral-900 dark:text-neutral-100;
+  }
+
+  .camus-logo > svg {
+    @apply h-20 w-20;
+  }
+
   .signin-title {
     @apply text-3xl font-semibold tracking-tight;
   }

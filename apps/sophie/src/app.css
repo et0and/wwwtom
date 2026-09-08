@@ -1,0 +1,172 @@
+@import "tailwindcss";
+@import "@tom/ui/tomui.css";
+@import "@tom/ui/tomui/theme-tomui.css";
+
+@source "../../../packages/ui/src/**/*.tsx";
+
+:root {
+  color-scheme: light dark;
+}
+
+/* Quattrocento, self-hosted (OFL, vendored from Fontsource, latin subset).
+ * No Google Fonts requests leave the browser. Plain serif fallback. */
+@font-face {
+  font-family: "Quattrocento";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("./fonts/quattrocento-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Quattrocento";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("./fonts/quattrocento-latin-700-normal.woff2") format("woff2");
+}
+
+@layer base {
+  body {
+    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+    font-family: "Quattrocento", Georgia, "Times New Roman", serif;
+  }
+}
+
+@layer components {
+  .sophie-shell {
+    @apply mx-auto flex min-h-screen max-w-2xl flex-col px-4;
+  }
+
+  .sophie-main {
+    @apply flex-1 pb-16;
+  }
+
+  .sophie-footer {
+    @apply py-6 text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .sophie-nav {
+    @apply flex items-baseline gap-4 py-6 text-sm;
+  }
+
+  .sophie-nav a {
+    @apply cursor-pointer hover:underline;
+  }
+
+  .sophie-wordmark {
+    @apply text-xl font-semibold tracking-tight;
+  }
+
+  .sophie-about {
+    @apply ml-auto;
+  }
+
+  .sophie-title {
+    @apply pb-2 text-3xl font-semibold tracking-tight;
+  }
+
+  .sophie-crumbs {
+    @apply pb-4;
+  }
+
+  .sophie-post {
+    @apply block cursor-pointer py-6 no-underline hover:underline;
+  }
+
+  .sophie-post h2 {
+    @apply text-xl font-bold tracking-tight;
+  }
+
+  .sophie-meta {
+    @apply text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .sophie-filter {
+    @apply cursor-pointer text-sm hover:underline;
+  }
+
+  /* Post HTML mirrors the editor preview scale, so posts read as authored. */
+  .sophie-body {
+    @apply grid gap-4 leading-relaxed;
+  }
+
+  .sophie-body p {
+    @apply tracking-tight;
+  }
+
+  .sophie-body h1 {
+    @apply pb-2 text-3xl font-medium tracking-tight;
+  }
+
+  .sophie-body h2 {
+    @apply pt-4 pb-2 text-2xl tracking-tight;
+  }
+
+  .sophie-body h3 {
+    @apply pt-2 pb-1 text-xl tracking-tight;
+  }
+
+  .sophie-body h4 {
+    @apply pt-2 pb-1 text-lg tracking-tight;
+  }
+
+  .sophie-body a {
+    @apply underline;
+  }
+
+  .sophie-body hr {
+    @apply my-6 border-neutral-300 dark:border-neutral-700;
+  }
+
+  .sophie-body blockquote {
+    @apply my-8 border-l-2 border-neutral-300 pl-5 text-base leading-normal tracking-tight dark:border-neutral-700;
+  }
+
+  .sophie-body figure {
+    @apply my-4;
+  }
+
+  .sophie-body img {
+    @apply rounded-md;
+  }
+
+  .sophie-body figcaption {
+    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+  }
+
+  .sophie-body .banner {
+    @apply my-2 flex w-full items-baseline gap-2 border-b border-neutral-300 pb-2 dark:border-neutral-700;
+  }
+
+  .sophie-body .banner-title {
+    @apply shrink-0 px-2 py-1 text-sm font-semibold tracking-tight;
+    background-color: rgb(230, 216, 226);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body .banner-title {
+      background-color: rgb(75, 60, 70);
+    }
+  }
+
+  .sophie-body [data-arena] {
+    @apply my-3 rounded-md border border-dashed border-neutral-400 p-3 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400;
+  }
+
+  .sophie-body pre {
+    @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
+  }
+
+  .sophie-body pre code {
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  .sophie-body .code-block {
+    @apply relative my-6;
+  }
+
+  .sophie-body .code-filename {
+    @apply rounded-t-lg border border-b-0 border-neutral-200 bg-neutral-100 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400;
+  }
+}

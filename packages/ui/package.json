@@ -66,6 +66,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "storybook": "cd src/storybook && pnpm run storybook",
     "storybook:build": "cd src/storybook && pnpm run build",
     "storybook:deploy": "cd src/storybook && pnpm run deploy",
@@ -80,6 +81,7 @@
     "solid-js": "catalog:"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vitest": "catalog:"
   }
 }

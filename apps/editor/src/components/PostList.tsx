@@ -28,36 +28,46 @@ const toRow = (item: CmsPost | CmsWork): ContentRow => ({
 /**
  * Post/work list with kind toggle. Loads through the admin status filter
  * so drafts show alongside published rows. Page and kind live in the URL
- * so refresh and back navigation restore the same list.
+ * so refresh and back navigation restore the same list. Sophie Camus
+ * manages posts only, so the Works toggle stays hidden there.
  */
 export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | null) => void }) => {
+  const sophieMode = (): boolean => import.meta.env.VITE_SOPHIE === "true";
   const initialParams = () => {
     const params = new URLSearchParams(window.location.search);
-    const kind = params.get("kind") === "works" ? "works" : "posts";
+    const tab = params.get("kind");
+    const kind = tab === "works" && !sophieMode() ? "works" : "posts";
+    const pagesOnly = sophieMode() && tab === "pages";
     const page = Number(params.get("page"));
-    return { kind, page: Number.isInteger(page) && page > 0 ? page : 1 } satisfies {
+    return { kind, pagesOnly, page: Number.isInteger(page) && page > 0 ? page : 1 } satisfies {
       kind: ContentKind;
+      pagesOnly: boolean;
       page: number;
     };
   };
   const initial = initialParams();
   const [kind, setKind] = createSignal(initial.kind);
+  const [pagesOnly, setPagesOnly] = createSignal(initial.pagesOnly);
   const [page, setPage] = createSignal(initial.page);
   const [pageCount, setPageCount] = createSignal(1);
   const [rows, setRows] = createSignal<ReadonlyArray<ContentRow>>([]);
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | undefined>(undefined);
 
-  const writeParams = (nextKind: ContentKind, nextPage: number): void => {
+  const writeParams = (nextKind: ContentKind, nextPage: number, onlyPages: boolean): void => {
     const params = new URLSearchParams(window.location.search);
-    params.set("kind", nextKind);
+    params.set("kind", onlyPages ? "pages" : nextKind);
     params.set("page", String(nextPage));
     window.history.replaceState(null, "", `?${params.toString()}`);
   };
 
-  const loadPage = (next: ContentKind, nextPage: number): Effect.Effect<void, CmsError> => {
+  const loadPage = (
+    next: ContentKind,
+    nextPage: number,
+    onlyPages: boolean,
+  ): Effect.Effect<void, CmsError> => {
     const list: Effect.Effect<CmsListResponse<CmsPost> | CmsListResponse<CmsWork>, CmsError> =
-      next === "posts" ? listPosts(nextPage) : listWorks(nextPage);
+      next === "posts" ? listPosts(nextPage, onlyPages ? "pages" : undefined) : listWorks(nextPage);
     return list.pipe(
       Effect.map((list) => ({
         rows: list.docs.map(toRow),
@@ -65,24 +75,25 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
       })),
       Effect.flatMap((loaded): Effect.Effect<void, CmsError> => {
         const safePage = Math.min(nextPage, loaded.pages);
-        if (safePage !== nextPage) return loadPage(next, safePage);
-        if (loaded.rows.length === 0 && safePage > 1) return loadPage(next, safePage - 1);
+        if (safePage !== nextPage) return loadPage(next, safePage, onlyPages);
+        if (loaded.rows.length === 0 && safePage > 1)
+          return loadPage(next, safePage - 1, onlyPages);
         return Effect.sync(() => {
           setRows(loaded.rows);
           setPageCount(loaded.pages);
           setPage(safePage);
-          writeParams(next, safePage);
+          writeParams(next, safePage, onlyPages);
           setLoading(false);
         });
       }),
     );
   };
 
-  const load = (next: ContentKind, nextPage: number): void => {
+  const load = (next: ContentKind, nextPage: number, onlyPages: boolean): void => {
     setLoading(true);
     setError(undefined);
     void runClient(
-      loadPage(next, nextPage).pipe(
+      loadPage(next, nextPage, onlyPages).pipe(
         Effect.catch((cause) =>
           Effect.sync(() => {
             setError(cause.message);
@@ -94,19 +105,21 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
   };
 
   onSettled(() => {
-    load(kind(), page());
+    load(initial.kind, initial.page, initial.pagesOnly);
     const onPopState = (): void => {
       const restored = initialParams();
       setKind(restored.kind);
-      load(restored.kind, restored.page);
+      setPagesOnly(restored.pagesOnly);
+      load(restored.kind, restored.page, restored.pagesOnly);
     };
     window.addEventListener("popstate", onPopState);
     return () => window.removeEventListener("popstate", onPopState);
   });
 
-  const switchKind = (next: ContentKind): void => {
+  const switchKind = (next: ContentKind, onlyPages = false): void => {
     setKind(next);
-    load(next, 1);
+    setPagesOnly(sophieMode() && onlyPages);
+    load(next, 1, sophieMode() && onlyPages);
   };
 
   const onDelete = (slug: string): void => {
@@ -114,7 +127,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
     const current = kind();
     void runClient(
       (current === "posts" ? deletePost(slug) : deleteWork(slug)).pipe(
-        Effect.tap(() => Effect.sync(() => load(current, page()))),
+        Effect.tap(() => Effect.sync(() => load(current, page(), pagesOnly()))),
         Effect.catch((cause) => Effect.sync(() => setError(cause.message))),
       ),
     );
@@ -127,21 +140,36 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
           <Button
             type="button"
             size="sm"
-            variant={kind() === "posts" ? "secondary" : "ghost"}
-            aria-pressed={kind() === "posts" ? "true" : "false"}
+            variant={!pagesOnly() && kind() === "posts" ? "secondary" : "ghost"}
+            aria-pressed={!pagesOnly() && kind() === "posts" ? "true" : "false"}
             onClick={() => switchKind("posts")}
           >
             Posts
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={kind() === "works" ? "secondary" : "ghost"}
-            aria-pressed={kind() === "works" ? "true" : "false"}
-            onClick={() => switchKind("works")}
+          <Show
+            when={sophieMode()}
+            fallback={
+              <Button
+                type="button"
+                size="sm"
+                variant={kind() === "works" ? "secondary" : "ghost"}
+                aria-pressed={kind() === "works" ? "true" : "false"}
+                onClick={() => switchKind("works")}
+              >
+                Works
+              </Button>
+            }
           >
-            Works
-          </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={pagesOnly() ? "secondary" : "ghost"}
+              aria-pressed={pagesOnly() ? "true" : "false"}
+              onClick={() => switchKind("posts", true)}
+            >
+              Pages
+            </Button>
+          </Show>
         </div>
         <Button
           type="button"
@@ -195,7 +223,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
               class="mt-4"
               page={page()}
               pageCount={pageCount()}
-              onChange={(next) => load(kind(), next)}
+              onChange={(next) => load(kind(), next, pagesOnly())}
             />
           </Show>
         </Show>

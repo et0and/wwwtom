@@ -1,17 +1,11 @@
 import { vi } from "vitest";
 
-// workers-og only loads inside the Cloudflare Workers runtime; the API's og
-// service imports it at module scope, so provide a stub.
-vi.mock("workers-og", () => ({
-  ImageResponse: class ImageResponse extends Response {
-    constructor(body: BodyInit, init?: ResponseInit) {
-      super(body, init);
-    }
-  },
+// Takumi renders through a native binding locally; stub the render call so
+// route tests stay hermetic. fromHtml stays real (pure string parsing).
+vi.mock("takumi-js", () => ({
+  render: () => Promise.resolve(new Uint8Array([0x89, 0x50, 0x4e, 0x47])),
 }));
 
-// @tom/ui ships Solid JSX source; the og service only reads the template map,
-// so provide a stub instead of pulling the Solid toolchain into node tests.
-vi.mock("@tom/ui/OgImage", () => ({
-  OgTemplates: {},
-}));
+// @tom/ui/OgImage is plain template-string functions (no Solid runtime), so
+// the real module loads here and getTemplate identity assertions stay
+// meaningful. fromHtml stays real (pure string parsing).
