@@ -26,6 +26,7 @@
     "megalodon": "10.2.0"
   },
   "devDependencies": {
+    "@tom/ui": "workspace:*",
     "vitest": "catalog:"
   }
 }

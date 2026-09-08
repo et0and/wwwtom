@@ -108,7 +108,21 @@ export type CloudflareEnv = {
   BETTER_AUTH_SECRET?: string;
   GITHUB_CLIENT_ID?: string;
   GITHUB_CLIENT_SECRET?: string;
-  // Comma-separated admin emails allowed to sign in.
+  // Google OAuth for Sophie CMS. Tom CMS uses GitHub only; Sophie CMS uses
+  // Google only. Shared auth code reads both and enables each when present.
+  GOOGLE_CLIENT_ID?: string;
+  GOOGLE_CLIENT_SECRET?: string;
+  // Tenant tag isolating the Tom and Sophie deployments ("tom" |
+  // "sophie"). Set per worker in infra (api + adapter run files); runtime
+  // code selects tenant-scoped origins and per-tenant bundle keys from it.
+  // Unset preserves the legacy shared behavior.
+  TENANT?: string;
+  // Comma-separated OAuth provider allowlist ("github", "google") enforced
+  // by createAuthFromEnv. Set per API worker in infra (Tom: github, Sophie:
+  // google); unset preserves the legacy enable-when-configured behavior.
+  CMS_AUTH_PROVIDERS?: string;
+  // Comma-separated admin emails allowed to sign in. Worker bindings only
+  // carry strings, so callers read the parsed string[] via parseAdminEmails.
   CMS_ADMIN_EMAILS?: string;
   // Slim CMS storage bindings (D1 tables + R2 media bucket), owned by the
   // api stack (infra/cms/cms.storage.ts). Only the API binds them.
@@ -145,6 +159,8 @@ const secretKeys = [
   "BETTER_AUTH_SECRET",
   "GITHUB_CLIENT_ID",
   "GITHUB_CLIENT_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
   "CMS_ADMIN_EMAILS",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
@@ -158,6 +174,19 @@ const secretKeys = [
 ] as const;
 
 export type ResolvedCloudflareEnv = CloudflareEnv & { AXIOM_TOKEN?: string };
+
+/** Parse the comma-separated admin allowlist into a string[]. */
+export const parseAdminEmails = (value: string | undefined): Array<string> =>
+  (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter((entry) => entry.length > 0);
+
+const TENANT_PREFIXES = { tom: "TOM_", sophie: "SOPHIE_" } as const;
+
+/** Bundle-key prefix for a tenant tag. Unknown tags select nothing. */
+const tenantPrefix = (tenant: string | undefined): "TOM_" | "SOPHIE_" | undefined =>
+  tenant === "tom" || tenant === "sophie" ? TENANT_PREFIXES[tenant] : undefined;
 
 export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedCloudflareEnv> => {
   const { AXIOM_TOKEN: axiomBinding, ...rest } = env;
@@ -180,20 +209,42 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
 
   const bundle = Object.fromEntries(
     secretKeys.flatMap((key) => {
+      // The admin allowlist resolves separately below (tenant-aware), so
+      // the shared bundle value never leaks into the spread.
+      if (key === "CMS_ADMIN_EMAILS") return [];
       const value = parsed[key];
       return value === undefined ? [] : [[key, value]];
     }),
   );
 
+  const prefix = tenantPrefix(rest.TENANT);
+  const tenantValue = (name: string): string | undefined =>
+    prefix === undefined ? undefined : parsed[`${prefix}${name}`];
+  const tenantAuthSecret = tenantValue("BETTER_AUTH_SECRET");
+  const tenantInternalToken = tenantValue("INTERNAL_API_TOKEN");
+  const tenantAdmins = tenantValue("CMS_ADMIN_EMAILS");
+  // Stage config stays authoritative for the admin allowlist: an explicitly
+  // set worker env wins over the bundle (which is opaque and shared), so a
+  // stale bundle value can never lock every admin out. Per-tenant bundle
+  // keys win over the shared key next; unset keeps the shared value —
+  // except Sophie, which never inherits the shared allowlist (that would
+  // grant Tom admins Sophie access). An empty allowlist fails closed
+  // downstream: no Allowlisted email can sign in or write.
+  const adminEmails =
+    rest.CMS_ADMIN_EMAILS ??
+    tenantAdmins ??
+    (prefix === "SOPHIE_" ? undefined : parsed.CMS_ADMIN_EMAILS);
+
   return {
     ...rest,
     ...bundle,
+    // Per-tenant bundle keys (TOM_*/SOPHIE_*) let each tenant rotate its
+    // secrets independently; unset tenant keys fall back to the shared
+    // value so existing deploys keep working.
+    ...(tenantAuthSecret !== undefined && { BETTER_AUTH_SECRET: tenantAuthSecret }),
+    ...(tenantInternalToken !== undefined && { INTERNAL_API_TOKEN: tenantInternalToken }),
+    ...(adminEmails !== undefined && { CMS_ADMIN_EMAILS: adminEmails }),
     ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
-    // Stage config is authoritative for the admin allowlist: an explicitly
-    // set worker env wins over the bundle (which is opaque and shared), so
-    // a stale bundle value can never lock every admin out. Unset env keeps
-    // the bundle value.
-    ...(rest.CMS_ADMIN_EMAILS !== undefined && { CMS_ADMIN_EMAILS: rest.CMS_ADMIN_EMAILS }),
   };
 };
 

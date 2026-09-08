@@ -21,7 +21,7 @@ import type { CloudflareEnv } from "@tom/utils/services/config";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { AdapterError } from "./config/effect";
-import { isTrustedWebOrigin } from "./origins";
+import { isTrustedWebOrigin, tenantFromValue } from "./origins";
 import { arenaIntegration } from "./integrations/arena";
 import { authIntegration } from "./integrations/auth";
 import { cmsIntegration } from "./integrations/cms";
@@ -42,10 +42,15 @@ export const app = new Elysia({
       origin: (request) => {
         const origin = request.headers.get("origin");
         if (!origin) return false;
-        // Local editors are trusted only against non-production workers:
-        // the production adapter (adapter.tom.so) never accepts localhost.
-        const workerHost = new URL(request.url).hostname;
-        return isTrustedWebOrigin(origin, workerHost !== "adapter.tom.so");
+        // Local editors are trusted only off production, gated on the
+        // worker env — never on the request hostname, which a client
+        // controls. Each tenant trusts only its own hosts (TENANT).
+        const env = getRequestEnv(request);
+        return isTrustedWebOrigin(
+          origin,
+          (env.NODE_ENV ?? "") !== "production",
+          tenantFromValue(env.TENANT),
+        );
       },
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],

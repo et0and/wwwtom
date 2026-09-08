@@ -54,6 +54,19 @@ export const stageWebHost = (stage: string): string =>
   stage === "production" ? "tom.so" : `${stage}-web.tom.so`;
 
 /**
+ * Deterministic hostname for a per-stage Sophie subdomain.
+ * Production uses sophie.st hosts; other stages prefix the stage name.
+ */
+export const sophieStageHost = (stage: string, sub: string): string =>
+  stage === "production" ? `${sub}.sophie.st` : `${stage}-${sub}.sophie.st`;
+
+/**
+ * Hostname for the Sophie web app (apex in production).
+ */
+export const sophieWebHost = (stage: string): string =>
+  stage === "production" ? "sophie.st" : `${stage}-sophie.sophie.st`;
+
+/**
  * Axiom datasets and ingest token for OpenTelemetry shipping, owned by the
  * production stage (see the shared stack below).
  *

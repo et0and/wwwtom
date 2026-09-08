@@ -24,6 +24,15 @@ const commaTolerantString = Schema.Union([Schema.String, Schema.Array(Schema.Str
 const OgQuerySchema = Schema.Struct({
   title: Schema.optional(commaTolerantString),
   summary: Schema.optional(commaTolerantString),
+  template: Schema.optional(
+    Schema.Union([
+      Schema.Literal("default"),
+      Schema.Literal("minimal"),
+      Schema.Literal("developer"),
+      Schema.Literal("sophie"),
+    ]),
+  ),
+  date: Schema.optional(commaTolerantString),
 });
 
 const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
@@ -41,15 +50,24 @@ export const ogIntegration = new Elysia({ name: "og" }).get(
     const apiUrl = env.API_URL ?? "http://localhost:8787";
     const title = joinCommaList(query.title);
     const summary = joinCommaList(query.summary);
+    const template = query.template;
+    const date = joinCommaList(query.date);
+    // Forward the caller's Referer so the API's template auto-select
+    // (sophie.st → sophie) survives the hop.
+    const referer = request.headers.get("referer");
 
     const program = Effect.gen(function* () {
       const params = new URLSearchParams();
       if (title) params.set("title", title);
       if (summary) params.set("summary", summary);
-      params.set("template", "default");
+      // Only forward an explicit template: defaulting to "default" here
+      // would override the API's Referer-based auto-select.
+      if (template !== undefined) params.set("template", template);
+      if (date) params.set("date", date);
 
       const headers = new Headers();
       if (env.INTERNAL_API_TOKEN) headers.set(INTERNAL_TOKEN_HEADER, env.INTERNAL_API_TOKEN);
+      if (referer) headers.set("referer", referer);
 
       const response = yield* Effect.tryPromise({
         // A plain fetch, not the treaty client: the API answers with a PNG

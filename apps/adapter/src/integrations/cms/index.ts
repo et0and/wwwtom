@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import type { CmsPost, TiptapBlock, TiptapDoc } from "@tom/schemas/cms";
+import { CmsSlug, type CmsPost, type TiptapBlock, type TiptapDoc } from "@tom/schemas/cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { readCloudflareEnv } from "@tom/utils/services/config";
@@ -8,7 +8,7 @@ import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker
 import type { LogContext } from "@tom/utils/services/logging";
 import { callApi } from "../../callApi";
 import { AdapterError, runAdapter } from "../../config/effect";
-import { isTrustedWebOrigin } from "../../origins";
+import { isTrustedWriteOrigin, tenantFromValue } from "../../origins";
 import { forwardHeaders, toProxiedResponse } from "../auth";
 import { simulatorEnv } from "../../simulator";
 
@@ -117,17 +117,10 @@ const requireContentSession = (
 
 /**
  * Origins allowed to drive CMS writes. The adapter itself always passes;
- * web origins must match the shared allowlist (exact hosts, so apex
- * tom.so works and unknown subdomains do not). Local editors pass only
- * off production. Requests without Origin/Referer are non-browser callers
- * (curl) and pass.
+ * web origins must match the tenant-scoped allowlist (see origins). Local
+ * editors pass only off production. Requests without Origin/Referer are
+ * non-browser callers (curl) and pass.
  */
-const trustedWriteOrigin = (
-  origin: string,
-  adapterOrigin: string,
-  allowLocalOrigins: boolean,
-): boolean => origin === adapterOrigin || isTrustedWebOrigin(origin, allowLocalOrigins);
-
 const refererOrigin = (referer: string): Effect.Effect<string, never> =>
   Effect.try(() => new URL(referer).origin).pipe(Effect.orElseSucceed(() => ""));
 
@@ -143,9 +136,10 @@ const requireTrustedWriteOrigin = (
   Effect.gen(function* () {
     const env = getRequestEnv(request);
     const allowLocalOrigins = (env.NODE_ENV ?? "") !== "production";
+    const tenant = tenantFromValue(env.TENANT);
     const direct = request.headers.get("origin");
     if (direct !== null) {
-      return yield* trustedWriteOrigin(direct, adapterOrigin, allowLocalOrigins)
+      return yield* isTrustedWriteOrigin(direct, adapterOrigin, allowLocalOrigins, tenant)
         ? Effect.void
         : Effect.fail(
             new AdapterError({
@@ -157,7 +151,7 @@ const requireTrustedWriteOrigin = (
     const referer = request.headers.get("referer");
     if (referer === null) return;
     const origin = yield* refererOrigin(referer);
-    if (!trustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins)) {
+    if (!isTrustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins, tenant)) {
       return yield* Effect.fail(
         new AdapterError({
           status: HttpStatus.Forbidden,
@@ -315,6 +309,7 @@ const PostQuerySchema = Schema.Struct({
   page: Schema.optional(Schema.NumberFromString),
   pageSize: Schema.optional(Schema.NumberFromString),
   status: Schema.optional(Schema.Literals(["all", "draft", "published"])),
+  category: Schema.optional(CmsSlug),
 });
 
 type PostQuery = typeof PostQuerySchema.Type;
@@ -327,6 +322,9 @@ const sessionHeaders = (request: Request): { cookie?: string } => {
 
 const statusQuery = (query: PostQuery): { status?: "all" | "draft" | "published" } =>
   query.status === undefined ? {} : { status: query.status };
+
+const categoryQuery = (query: PostQuery): { category?: string } =>
+  query.category === undefined ? {} : { category: query.category };
 
 const postQuerySchema = Schema.toStandardSchemaV1(PostQuerySchema);
 
@@ -349,7 +347,12 @@ export const cmsIntegration = new Elysia({ name: "cms" })
       const { api, context } = await cmsApi(request);
       return proxyCms(
         api.posts.get({
-          query: { page: query.page ?? 1, pageSize: query.pageSize ?? 5, ...statusQuery(query) },
+          query: {
+            page: query.page ?? 1,
+            pageSize: query.pageSize ?? 5,
+            ...statusQuery(query),
+            ...categoryQuery(query),
+          },
           headers: sessionHeaders(request),
         }),
         "posts",

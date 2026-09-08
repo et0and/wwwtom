@@ -30,12 +30,19 @@ describe("adapter CORS", () => {
   it.each([
     "http://localhost:5173",
     "http://localhost:3000",
+    "http://localhost:5174",
+    "http://localhost:3001",
     "https://tom.so",
     "https://cms.tom.so",
     "https://adapter.tom.so",
     "https://dev-web.tom.so",
     "https://dev-adapter.tom.so",
     "https://pr-42-cms.tom.so",
+    "https://sophie.st",
+    "https://cms.sophie.st",
+    "https://adapter.sophie.st",
+    "https://api.sophie.st",
+    "https://dev-cms.sophie.st",
   ])("allows the %s origin on preflight", async (origin) => {
     const response = await app.fetch(preflight(origin));
     expect(response.status).toBe(204);
@@ -75,7 +82,7 @@ describe("adapter CORS", () => {
 
   it("does not allow localhost origins against the production worker", async () => {
     const response = await app.fetch(
-      requestWithEnv("https://adapter.tom.so/content/posts", env, {
+      requestWithEnv("https://adapter.tom.so/content/posts", testEnv({ NODE_ENV: "production" }), {
         method: "OPTIONS",
         headers: {
           Origin: "http://localhost:5173",
@@ -85,6 +92,21 @@ describe("adapter CORS", () => {
     );
     expect(response.status).toBe(204);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
+  it("scopes preflights to the worker tenant", async () => {
+    const sophiePreflight = (origin: string) =>
+      requestWithEnv("http://localhost/content/posts", testEnv({ TENANT: "sophie" }), {
+        method: "OPTIONS",
+        headers: {
+          Origin: origin,
+          "Access-Control-Request-Method": "GET",
+        },
+      });
+    const tomOrigin = await app.fetch(sophiePreflight("https://cms.tom.so"));
+    expect(tomOrigin.headers.get("access-control-allow-origin")).toBeNull();
+    const sophieOrigin = await app.fetch(sophiePreflight("https://cms.sophie.st"));
+    expect(sophieOrigin.headers.get("access-control-allow-origin")).toBe("https://cms.sophie.st");
   });
 
   it("echoes the allowed origin on actual requests", async () => {

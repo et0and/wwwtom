@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import { Button } from "@tom/ui/tomui/button";
 import { runClient } from "../lib/api";
-import { startGithubSignIn } from "../lib/session";
+import { authProvider, startSocialSignIn } from "../lib/session";
 
 export const SignInButton = (props: {
   onError: (message: string) => void;
@@ -12,9 +12,11 @@ export const SignInButton = (props: {
     else window.location.assign(url);
   };
 
+  const provider = authProvider();
+
   const onClick = (): void => {
     void runClient(
-      startGithubSignIn().pipe(
+      startSocialSignIn(provider).pipe(
         Effect.tap((url) => Effect.sync(() => go(url))),
         Effect.catch((cause) => Effect.sync(() => props.onError(cause.message))),
       ),
@@ -23,7 +25,7 @@ export const SignInButton = (props: {
 
   return (
     <Button type="button" variant="primary" onClick={onClick}>
-      Sign in with GitHub
+      {provider === "google" ? "Sign in with Google" : "Sign in with GitHub"}
     </Button>
   );
 };

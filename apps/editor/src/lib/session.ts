@@ -43,20 +43,36 @@ const SignInRedirectSchema = Schema.Struct({
 export const editorOrigin = (): string =>
   import.meta.env.VITE_EDITOR_ORIGIN ?? window.location.origin;
 
-const GITHUB_AUTHORIZE_HOST = "github.com";
+/** OAuth provider for this editor instance. Sophie uses Google only. */
+export type AuthProvider = "github" | "google";
+
+export const authProvider = (): AuthProvider =>
+  import.meta.env.VITE_AUTH_PROVIDER === "google" ? "google" : "github";
+
+/** Site label from the editor hostname. Exact apex or subdomain match. */
+export const siteLabel = (hostname: string): string =>
+  hostname === "sophie.st" || hostname.endsWith(".sophie.st") ? "sophie.st" : "tom.so";
+
+/** Document title for the running instance (Tom or Sophie Camus). */
+export const documentTitle = (): string => `Camus — ${siteLabel(window.location.hostname)}`;
+
+const AUTHORIZE_HOSTS = {
+  github: "github.com",
+  google: "accounts.google.com",
+} as const satisfies Record<AuthProvider, string>;
 
 /**
- * Reject authorize URLs that are not GitHub https links, so a compromised
+ * Reject authorize URLs outside the active provider host, so a compromised
  * API response cannot redirect the editor to a malicious origin.
  */
-const assertAuthorizeUrl = (url: string): Effect.Effect<string, CmsError> =>
+const assertAuthorizeUrl = (url: string, provider: AuthProvider): Effect.Effect<string, CmsError> =>
   Effect.try({
     try: () => new URL(url),
     catch: () =>
       new CmsError({ message: "Invalid sign-in URL", status: 500, operation: "sign_in" }),
   }).pipe(
     Effect.flatMap((parsed) =>
-      parsed.protocol === "https:" && parsed.hostname === GITHUB_AUTHORIZE_HOST
+      parsed.protocol === "https:" && parsed.hostname === AUTHORIZE_HOSTS[provider]
         ? Effect.succeed(url)
         : Effect.fail(
             new CmsError({ message: "Invalid sign-in URL", status: 500, operation: "sign_in" }),
@@ -65,18 +81,23 @@ const assertAuthorizeUrl = (url: string): Effect.Effect<string, CmsError> =>
   );
 
 /**
- * Start GitHub OAuth: POST the provider, then navigate to the authorize
+ * Start social OAuth: POST the provider, then navigate to the authorize
  * URL better-auth returns. The callback lands back on the editor origin,
- * which the API trusts for post-login redirects.
+ * which the API trusts for post-login redirects. Sophie builds are
+ * Google-only: an arbitrary provider arg is clamped to google (the server
+ * allowlist rejects anything else anyway).
  */
-export const startGithubSignIn = (): Effect.Effect<string, CmsError> =>
-  requestJson(
+export const startSocialSignIn = (
+  provider: AuthProvider = authProvider(),
+): Effect.Effect<string, CmsError> => {
+  const effective: AuthProvider = import.meta.env.VITE_SOPHIE === "true" ? "google" : provider;
+  return requestJson(
     "/auth/sign-in/social",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        provider: "github",
+        provider: effective,
         callbackURL: editorOrigin(),
         disableRedirect: true,
       }),
@@ -85,8 +106,15 @@ export const startGithubSignIn = (): Effect.Effect<string, CmsError> =>
   ).pipe(
     Effect.flatMap((json) => decodeResponse(SignInRedirectSchema, json, "sign_in")),
     Effect.map((result) => result.url),
-    Effect.flatMap(assertAuthorizeUrl),
+    Effect.flatMap((url) => assertAuthorizeUrl(url, effective)),
   );
+};
+
+/** Start GitHub OAuth (Tom editor default). */
+export const startGithubSignIn = (): Effect.Effect<string, CmsError> => startSocialSignIn("github");
+
+/** Start Google OAuth (Sophie editor). */
+export const startGoogleSignIn = (): Effect.Effect<string, CmsError> => startSocialSignIn("google");
 
 /** Session signal for the app shell: undefined while loading, null signed out. */
 export const createSession = () => {

@@ -23,6 +23,9 @@ export const editor = Effect.gen(function* () {
     env: {
       NODE_ENV: "production",
       VITE_ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
+      // Tom editor build: GitHub auth with the full CMS (posts + works).
+      VITE_AUTH_PROVIDER: "github",
+      VITE_SOPHIE: "false",
     },
   });
 });

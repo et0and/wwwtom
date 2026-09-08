@@ -4,6 +4,7 @@ import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { CloudflareEnv, CmsD1Binding } from "@tom/utils/services/config";
+import { parseAdminEmails } from "@tom/utils/services/config";
 
 export type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
 
@@ -20,13 +21,18 @@ export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): b
     .filter((entry) => entry.length > 0)
     .includes(email.trim().toLowerCase());
 
+export type OAuthProvider = {
+  readonly clientId: string;
+  readonly clientSecret: string;
+};
+
 export type CreateAuthOptions = {
   readonly database: AuthDatabase;
   readonly secret: string;
   readonly baseURL: string;
   readonly trustedOrigins: ReadonlyArray<string>;
-  readonly githubClientId: string;
-  readonly githubClientSecret: string;
+  readonly github?: OAuthProvider;
+  readonly google?: OAuthProvider;
   readonly adminEmails: ReadonlyArray<string>;
 };
 
@@ -46,10 +52,8 @@ export const createAuth = (options: CreateAuthOptions) => {
     trustedOrigins: [...options.trustedOrigins],
     database: options.database,
     socialProviders: {
-      github: {
-        clientId: options.githubClientId,
-        clientSecret: options.githubClientSecret,
-      },
+      ...(options.github && { github: options.github }),
+      ...(options.google && { google: options.google }),
     },
     rateLimit: {
       storage: "database",
@@ -76,13 +80,56 @@ export const createAuth = (options: CreateAuthOptions) => {
 
 export type Auth = ReturnType<typeof createAuth>;
 
+/** Provider credentials from worker env. Empty values count as unset. */
+const oauthProvider = (
+  clientId: string | undefined,
+  clientSecret: string | undefined,
+): OAuthProvider | undefined =>
+  clientId !== undefined && clientId !== "" && clientSecret !== undefined && clientSecret !== ""
+    ? { clientId, clientSecret }
+    : undefined;
+
+const AUTH_PROVIDERS = ["github", "google"] as const;
+
+export type CmsAuthProvider = (typeof AUTH_PROVIDERS)[number];
+
+/**
+ * Parse the comma-separated CMS_AUTH_PROVIDERS allowlist (infra sets it
+ * per worker: Tom "github", Sophie "google"). Unset or blank preserves the
+ * legacy enable-when-configured behavior; a set value filters providers,
+ * and a value with no known provider fails closed downstream (no OAuth
+ * provider configures, so createAuthFromEnv reports auth unconfigured).
+ */
+export const parseAuthProviders = (
+  value: string | undefined,
+): ReadonlyArray<CmsAuthProvider> | undefined => {
+  if (value === undefined || value.trim() === "") return undefined;
+  return value
+    .split(",")
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry): entry is CmsAuthProvider => entry === "github" || entry === "google");
+};
+
+/** Provider allowlist check. Unset allowlists keep legacy behavior. */
+const providerAllowed = (
+  allowlist: ReadonlyArray<CmsAuthProvider> | undefined,
+  provider: CmsAuthProvider,
+): boolean => allowlist === undefined || allowlist.includes(provider);
+
 /** Build an auth instance from worker env. Fails closed when unset. */
 export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: CloudflareEnv) {
   const database = env.CMS_D1;
   const secret = env.BETTER_AUTH_SECRET?.trim();
-  const githubClientId = env.GITHUB_CLIENT_ID?.trim();
-  const githubClientSecret = env.GITHUB_CLIENT_SECRET?.trim();
-  if (!database || !secret || !githubClientId || !githubClientSecret) {
+  // Belt-and-braces tenant isolation: even if the other tenant's OAuth
+  // keys leak into this worker's env, the allowlist keeps them disabled.
+  const allowlist = parseAuthProviders(env.CMS_AUTH_PROVIDERS);
+  const github = providerAllowed(allowlist, "github")
+    ? oauthProvider(env.GITHUB_CLIENT_ID?.trim(), env.GITHUB_CLIENT_SECRET?.trim())
+    : undefined;
+  const google = providerAllowed(allowlist, "google")
+    ? oauthProvider(env.GOOGLE_CLIENT_ID?.trim(), env.GOOGLE_CLIENT_SECRET?.trim())
+    : undefined;
+  if (!database || !secret || (github === undefined && google === undefined)) {
     return yield* new CmsError({
       message: "CMS auth not configured",
       status: HttpStatus.InternalServerError,
@@ -98,9 +145,9 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
         secret,
         baseURL: adapterUrl,
         trustedOrigins: [adapterUrl, editorUrl],
-        githubClientId,
-        githubClientSecret,
-        adminEmails: (env.CMS_ADMIN_EMAILS ?? "").split(","),
+        ...(github && { github }),
+        ...(google && { google }),
+        adminEmails: parseAdminEmails(env.CMS_ADMIN_EMAILS),
       }),
     catch: (cause) =>
       new CmsError({

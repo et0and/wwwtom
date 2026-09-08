@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
-import { createAuth, isAdminEmail, memoryDatabase, requireSession } from "../services/auth";
+import type { CmsD1Binding, CloudflareEnv } from "@tom/utils/services/config";
+import {
+  createAuth,
+  createAuthFromEnv,
+  isAdminEmail,
+  memoryDatabase,
+  parseAuthProviders,
+  requireSession,
+} from "../services/auth";
 import type { MemorySeedRow } from "../services/auth";
 
 const testAuth = () =>
@@ -10,10 +18,43 @@ const testAuth = () =>
     secret: "test-secret-with-enough-entropy-0123456789",
     baseURL: "http://localhost:8788",
     trustedOrigins: ["http://localhost:8788"],
-    githubClientId: "test-github-id",
-    githubClientSecret: "test-github-secret",
+    github: { clientId: "test-github-id", clientSecret: "test-github-secret" },
     adminEmails: ["tom@example.com"],
   });
+
+describe("social providers", () => {
+  it("enables Google only for Sophie", () => {
+    const auth = createAuth({
+      database: memoryDatabase(),
+      secret: "test-secret-with-enough-entropy-0123456789",
+      baseURL: "http://localhost:8790",
+      trustedOrigins: ["http://localhost:8790"],
+      google: { clientId: "test-google-id", clientSecret: "test-google-secret" },
+      adminEmails: ["sophie@example.com"],
+    });
+    expect(auth.options.socialProviders?.google).toBeDefined();
+    expect(auth.options.socialProviders?.github).toBeUndefined();
+  });
+
+  it("enables both providers when both configure", () => {
+    const auth = createAuth({
+      database: memoryDatabase(),
+      secret: "test-secret-with-enough-entropy-0123456789",
+      baseURL: "http://localhost:8788",
+      trustedOrigins: ["http://localhost:8788"],
+      github: { clientId: "test-github-id", clientSecret: "test-github-secret" },
+      google: { clientId: "test-google-id", clientSecret: "test-google-secret" },
+      adminEmails: ["tom@example.com"],
+    });
+    expect(auth.options.socialProviders?.github).toBeDefined();
+    expect(auth.options.socialProviders?.google).toBeDefined();
+  });
+
+  it("gates Sophie to one Gmail account", () => {
+    expect(isAdminEmail("sophie@example.com", ["sophie@example.com"])).toBe(true);
+    expect(isAdminEmail("stranger@gmail.com", ["sophie@example.com"])).toBe(false);
+  });
+});
 
 describe("isAdminEmail", () => {
   it("matches case-insensitively with whitespace tolerance", () => {
@@ -24,6 +65,98 @@ describe("isAdminEmail", () => {
     expect(isAdminEmail("stranger@example.com", ["tom@example.com"])).toBe(false);
     expect(isAdminEmail("tom@example.com", [])).toBe(false);
     expect(isAdminEmail("tom@example.com", ["", "  "])).toBe(false);
+  });
+});
+
+const stubDb: CmsD1Binding = {
+  prepare: () => {
+    throw new Error("no database");
+  },
+  batch: () => Promise.resolve([]),
+  exec: () => Promise.resolve({}),
+};
+
+const bothProvidersEnv = (overrides: Partial<CloudflareEnv> = {}): CloudflareEnv => ({
+  CMS_D1: stubDb,
+  BETTER_AUTH_SECRET: "test-secret-with-enough-entropy-0123456789",
+  GITHUB_CLIENT_ID: "test-github-id",
+  GITHUB_CLIENT_SECRET: "test-github-secret",
+  GOOGLE_CLIENT_ID: "test-google-id",
+  GOOGLE_CLIENT_SECRET: "test-google-secret",
+  ...overrides,
+});
+
+describe("parseAuthProviders", () => {
+  it("parses case-insensitively with whitespace tolerance", () => {
+    expect(parseAuthProviders(" GitHub, GOOGLE ")).toEqual(["github", "google"]);
+  });
+
+  it("keeps legacy behavior when unset or blank", () => {
+    expect(parseAuthProviders(undefined)).toBeUndefined();
+    expect(parseAuthProviders("  ")).toBeUndefined();
+  });
+
+  it("drops unknown providers so the caller fails closed", () => {
+    expect(parseAuthProviders("sso")).toEqual([]);
+  });
+});
+
+describe("createAuthFromEnv provider allowlist", () => {
+  it("enables Google only for a Sophie-like env", async () => {
+    const auth = await Effect.runPromise(
+      createAuthFromEnv(bothProvidersEnv({ CMS_AUTH_PROVIDERS: "google" })),
+    );
+    expect(auth.options.socialProviders?.google).toBeDefined();
+    expect(auth.options.socialProviders?.github).toBeUndefined();
+  });
+
+  it("enables GitHub only for a Tom-like env", async () => {
+    const auth = await Effect.runPromise(
+      createAuthFromEnv(bothProvidersEnv({ CMS_AUTH_PROVIDERS: "github" })),
+    );
+    expect(auth.options.socialProviders?.github).toBeDefined();
+    expect(auth.options.socialProviders?.google).toBeUndefined();
+  });
+
+  it("keeps legacy behavior when the allowlist is unset", async () => {
+    const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv()));
+    expect(auth.options.socialProviders?.github).toBeDefined();
+    expect(auth.options.socialProviders?.google).toBeDefined();
+  });
+
+  it("fails closed on an allowlist with no known provider", async () => {
+    const error = await Effect.runPromise(
+      Effect.flip(createAuthFromEnv(bothProvidersEnv({ CMS_AUTH_PROVIDERS: "sso" }))),
+    );
+    expect(error).toBeInstanceOf(CmsError);
+  });
+
+  it("reads a real allowlist string with whitespace/case variants", async () => {
+    const auth = await Effect.runPromise(
+      createAuthFromEnv(
+        bothProvidersEnv({ CMS_ADMIN_EMAILS: " Admin@Example.COM , other@example.com " }),
+      ),
+    );
+    const hook = auth.options.databaseHooks?.user?.create?.before;
+    expect(hook).toBeDefined();
+    const allowed = await hook?.({
+      id: "user-1",
+      email: "admin@example.com",
+      emailVerified: false,
+      name: "Admin",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    expect(allowed).toBeUndefined();
+    const denied = await hook?.({
+      id: "user-2",
+      email: "stranger@example.com",
+      emailVerified: false,
+      name: "Stranger",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    expect(denied).toBe(false);
   });
 });
 
@@ -82,8 +215,7 @@ const sessionAuth = (sessions: Array<MemorySeedRow>) =>
     secret: "test-secret-with-enough-entropy-0123456789",
     baseURL: "http://localhost:8788",
     trustedOrigins: ["http://localhost:8788"],
-    githubClientId: "test-github-id",
-    githubClientSecret: "test-github-secret",
+    github: { clientId: "test-github-id", clientSecret: "test-github-secret" },
     adminEmails: ["tom@example.com"],
   });
 
