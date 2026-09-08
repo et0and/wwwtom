@@ -143,6 +143,7 @@ export const app = new Elysia({
           );
         }),
       );
+      Effect.runFork(Effect.logError("CMS request failed", { cause: String(error) }));
       return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
     }
     if (code === "NOT_FOUND") {
