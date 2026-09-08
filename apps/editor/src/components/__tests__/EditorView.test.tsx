@@ -55,10 +55,11 @@ const saveBody = (index: number): { slug?: unknown; title?: unknown; categoryIds
   };
 };
 
-describe("EditorView", () => {
+describe("EditorView", { timeout: 30_000 }, () => {
+  // Tiptap cold start plus chained async flushes take seconds on loaded
+  // CI runners — allow extra time for every test in this file.
   describe("new post", () => {
-    // Tiptap cold start takes seconds on loaded CI runners — allow extra time.
-    it("creates a post from the form", { timeout: 30_000 }, async () => {
+    it("creates a post from the form", async () => {
       fetchMock
         .mockResolvedValueOnce(jsonResponse(categories))
         .mockResolvedValueOnce(jsonResponse(post));
