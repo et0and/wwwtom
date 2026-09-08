@@ -161,22 +161,18 @@ describe("createAuthFromEnv provider allowlist", () => {
 });
 
 describe("preview editor origins", () => {
-  it("trusts the PR editor origin for a Tom preview stage", async () => {
-    const auth = await Effect.runPromise(
-      createAuthFromEnv(bothProvidersEnv({ TENANT: "tom", TOM_STAGE: "pr-138" })),
-    );
-    expect(auth.options.trustedOrigins).toContain("https://pr-138-cms.tom.so");
-  });
-
-  it("trusts the PR editor origin for a Sophie preview stage", async () => {
-    const auth = await Effect.runPromise(
-      createAuthFromEnv(bothProvidersEnv({ TENANT: "sophie", TOM_STAGE: "pr-138" })),
-    );
-    expect(auth.options.trustedOrigins).toContain("https://pr-138-cms.sophie.st");
-  });
-
-  it("trusts no preview origin off PR stages", async () => {
+  it("trusts the PR editor pattern for a Tom tenant", async () => {
     const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv({ TENANT: "tom" })));
+    expect(auth.options.trustedOrigins).toContain("https://pr-*-cms.tom.so");
+  });
+
+  it("trusts the PR editor pattern for a Sophie tenant", async () => {
+    const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv({ TENANT: "sophie" })));
+    expect(auth.options.trustedOrigins).toContain("https://pr-*-cms.sophie.st");
+  });
+
+  it("trusts no preview pattern without a tenant tag", async () => {
+    const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv()));
     expect(auth.options.trustedOrigins).toHaveLength(2);
   });
 });

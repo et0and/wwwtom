@@ -117,17 +117,17 @@ const providerAllowed = (
 ): boolean => allowlist === undefined || allowlist.includes(provider);
 
 /**
- * Preview CMS editor origins (pr-<n>-cms hosts). OAuth redirect URIs are
- * exact-match at Google/GitHub, so infinite preview hosts can never be
- * registered: preview editors authenticate through the dev adapters, and
- * the dev APIs trust exactly their own PR's editor origin here. Derived
- * from TOM_STAGE + TENANT so no pattern can over-match.
+ * Preview CMS editor origin patterns (pr-<n>-cms hosts). OAuth redirect
+ * URIs are exact-match at Google/GitHub, so infinite preview hosts can
+ * never be registered: preview editors authenticate through the dev
+ * adapters, whose redirect URIs are registered. better-auth matches these
+ * `*` patterns anchored on both ends, so pr-138-cms matches but
+ * evil-pr-138-cms and pr-138-cms.evil.com do not. Only our DNS namespace
+ * can mint matching hosts. Scoped per tenant; unset without one.
  */
-const previewEditorOrigins = (env: CloudflareEnv): ReadonlyArray<string> => {
-  const stage = env.TOM_STAGE;
-  if (stage === undefined || !stage.startsWith("pr-")) return [];
-  if (env.TENANT === "sophie") return [`https://${stage}-cms.sophie.st`];
-  if (env.TENANT === "tom") return [`https://${stage}-cms.tom.so`];
+const previewEditorPatterns = (env: CloudflareEnv): ReadonlyArray<string> => {
+  if (env.TENANT === "sophie") return ["https://pr-*-cms.sophie.st"];
+  if (env.TENANT === "tom") return ["https://pr-*-cms.tom.so"];
   return [];
 };
 
@@ -159,7 +159,7 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
         database,
         secret,
         baseURL: adapterUrl,
-        trustedOrigins: [adapterUrl, editorUrl, ...previewEditorOrigins(env)],
+        trustedOrigins: [adapterUrl, editorUrl, ...previewEditorPatterns(env)],
         ...(github && { github }),
         ...(google && { google }),
         adminEmails: parseAdminEmails(env.CMS_ADMIN_EMAILS),
