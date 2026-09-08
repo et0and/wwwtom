@@ -74,7 +74,23 @@ describe("CanvasChannel", () => {
 
     await waitFor(() => expect(screen.getByAltText("The Psychology of CG Jung")).toBeTruthy());
     expect(screen.getByText("A note")).toBeTruthy();
-    expect(screen.getByText("2 of 2 blocks")).toBeTruthy();
+    expect(screen.queryByRole("banner")).toBeNull();
+  });
+
+  it("pinch zooms the canvas around the touch midpoint", async () => {
+    mockedFetchContentsPage.mockResolvedValue(pageFor([imageBlock, textBlock]));
+    renderCanvas();
+
+    await waitFor(() => expect(screen.getByAltText("The Psychology of CG Jung")).toBeTruthy());
+    const viewport = document.querySelector(".touch-none") as HTMLElement;
+    fireEvent.pointerDown(viewport, { pointerId: 1, clientX: 100, clientY: 100 });
+    fireEvent.pointerDown(viewport, { pointerId: 2, clientX: 200, clientY: 100 });
+    fireEvent.pointerMove(viewport, { pointerId: 2, clientX: 260, clientY: 100 });
+
+    await waitFor(() => {
+      const inner = viewport.firstElementChild as HTMLElement;
+      expect(inner.style.transform).toContain("scale(1.6)");
+    });
   });
 
   it("opens the block detail dialog on tile click", async () => {

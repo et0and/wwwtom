@@ -1,6 +1,7 @@
 import { Effect } from "effect";
 import { Show, createMemo, createSignal } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { Button } from "@tom/ui/tomui/button";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 import { canvasLinkHost, colorHashForTitle } from "~/libs/canvas/layout";
@@ -100,11 +101,10 @@ function BlockTile(props: BlockTileProps) {
     }
   };
   return (
-    <div
-      role="button"
-      tabindex="0"
+    <Button
+      variant="ghost"
       aria-label={frame().label}
-      class="absolute cursor-pointer select-none overflow-hidden rounded-xl border border-black/10 bg-white shadow-md transition-shadow hover:shadow-xl dark:border-white/10 dark:bg-neutral-900"
+      class="absolute cursor-pointer overflow-hidden rounded-none border border-black/10 bg-white px-0 font-normal shadow-md transition-shadow hover:shadow-xl dark:border-white/10 dark:bg-neutral-900"
       style={frame().style}
       onClick={open}
       onKeyDown={onKeyDown}
@@ -119,7 +119,7 @@ function BlockTile(props: BlockTileProps) {
       <Show when={block().type === "PendingBlock"}>
         <PendingTileBody title={block().title} />
       </Show>
-    </div>
+    </Button>
   );
 }
 
@@ -136,10 +136,10 @@ export function ChannelTile(props: ChannelTileProps) {
     <a
       href={`/canvas/${props.slug}`}
       aria-label={`Open canvas ${props.title}`}
-      class="absolute block select-none overflow-hidden rounded-xl border border-dashed border-black/20 bg-neutral-50 p-3 shadow-sm transition-shadow hover:shadow-xl dark:border-white/20 dark:bg-neutral-900"
+      class="absolute block select-none overflow-hidden rounded-none border border-dashed border-black/20 bg-neutral-50 p-3 shadow-sm transition-shadow hover:shadow-xl dark:border-white/20 dark:bg-neutral-900"
       style={frame().style}
     >
-      <p class="text-xs uppercase tracking-wide opacity-60">Channel</p>
+      <p class="text-xs tracking-wide opacity-60">Channel</p>
       <p class="mt-1 text-sm font-medium leading-snug">{props.title}</p>
       <p class="mt-2 text-xs underline">Open canvas</p>
     </a>

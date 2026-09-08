@@ -3,6 +3,7 @@ import { Effect } from "effect";
 import { For, Show, createEffect, createMemo, createSignal, onSettled } from "solid-js";
 import { isServer } from "@solidjs/web";
 import { Metadata } from "@tom/ui/Meta";
+import { Button, buttonVariants } from "@tom/ui/tomui/button";
 import { Dialog } from "@tom/ui/tomui/dialog";
 import { Loader } from "@tom/ui/tomui/loader";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
@@ -16,6 +17,11 @@ const MIN_SCALE = 0.25;
 const MAX_SCALE = 2.5;
 
 const clampScale = (value: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
+
+interface PointerPoint {
+  readonly x: number;
+  readonly y: number;
+}
 
 export function CanvasChannel(props: { slug: string }) {
   const slug = () => props.slug;
@@ -34,6 +40,8 @@ export function CanvasChannel(props: { slug: string }) {
     x: 0,
     y: 0,
   };
+  const pointers = new Map<number, PointerPoint>();
+  const pinch = { active: false, distance: 0, midX: 0, midY: 0 };
   const sentinel = { el: null as HTMLDivElement | null };
   let viewport: HTMLDivElement | undefined;
 
@@ -76,11 +84,6 @@ export function CanvasChannel(props: { slug: string }) {
       })),
     };
   });
-
-  const totalCount = createMemo(
-    () => contentsQuery.data?.pages[0]?.meta.total_count ?? blocks().length,
-  );
-
   const pageTitle = createMemo(() => channelQuery.data?.title || slug());
   const pageDescription = createMemo(
     () => channelQuery.data?.description?.markdown?.slice(0, 160) ?? "",
@@ -126,7 +129,34 @@ export function CanvasChannel(props: { slug: string }) {
     setSelected(block);
   };
 
+  const pointerMidpoint = (): PointerPoint => {
+    const points = [...pointers.values()];
+    const first = points[0] ?? { x: 0, y: 0 };
+    const second = points[1] ?? first;
+    return { x: (first.x + second.x) / 2, y: (first.y + second.y) / 2 };
+  };
+
+  const pointerDistance = (): number => {
+    const points = [...pointers.values()];
+    const first = points[0] ?? { x: 0, y: 0 };
+    const second = points[1] ?? first;
+    return Math.hypot(first.x - second.x, first.y - second.y);
+  };
+
   const onPointerDown = (event: PointerEvent): void => {
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    viewport?.setPointerCapture?.(event.pointerId);
+    if (pointers.size === 2) {
+      drag.active = false;
+      pinch.active = true;
+      drag.moved = true;
+      pinch.distance = pointerDistance();
+      const mid = pointerMidpoint();
+      pinch.midX = mid.x;
+      pinch.midY = mid.y;
+      return;
+    }
+    if (pointers.size > 2) return;
     drag.active = true;
     drag.moved = false;
     drag.lastX = event.clientX;
@@ -135,10 +165,23 @@ export function CanvasChannel(props: { slug: string }) {
     drag.startY = event.clientY;
     drag.x = camera.x;
     drag.y = camera.y;
-    viewport?.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event: PointerEvent): void => {
+    if (!pointers.has(event.pointerId)) return;
+    pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (pinch.active && pointers.size >= 2) {
+      const distance = pointerDistance();
+      const mid = pointerMidpoint();
+      if (pinch.distance > 0) zoomAt(mid.x, mid.y, distance / pinch.distance);
+      camera.x += mid.x - pinch.midX;
+      camera.y += mid.y - pinch.midY;
+      syncCamera();
+      pinch.distance = distance;
+      pinch.midX = mid.x;
+      pinch.midY = mid.y;
+      return;
+    }
     if (!drag.active) return;
     const distance = Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY);
     if (distance > 4) drag.moved = true;
@@ -151,8 +194,21 @@ export function CanvasChannel(props: { slug: string }) {
     syncCamera();
   };
 
-  const endPointer = (): void => {
-    drag.active = false;
+  const endPointer = (event: PointerEvent): void => {
+    pointers.delete(event.pointerId);
+    if (pointers.size < 2) pinch.active = false;
+    if (pointers.size === 1) {
+      const remaining = [...pointers.values()][0] ?? { x: 0, y: 0 };
+      drag.active = true;
+      drag.lastX = remaining.x;
+      drag.lastY = remaining.y;
+      drag.startX = remaining.x;
+      drag.startY = remaining.y;
+      drag.x = camera.x;
+      drag.y = camera.y;
+      return;
+    }
+    if (pointers.size === 0) drag.active = false;
   };
 
   const observeSentinel = (element: HTMLDivElement): void => {
@@ -258,54 +314,10 @@ export function CanvasChannel(props: { slug: string }) {
         metaContent={pageDescription() || `Are.na channel ${slug()} as an open canvas.`}
         canonical={`https://tom.so/canvas/${slug()}`}
       />
-      <header class="absolute inset-x-0 top-0 z-20 flex items-center gap-2 border-b border-black/10 bg-white/90 px-3 py-2 backdrop-blur dark:border-white/10 dark:bg-neutral-900/90">
-        <a href="/" class="text-sm underline" aria-label="Back home">
-          Home
-        </a>
-        <div class="min-w-0 flex-1">
-          <h1 class="truncate text-sm font-medium">{pageTitle()}</h1>
-          <p class="text-[11px] opacity-60">
-            {blocks().length} of {totalCount()} blocks
-          </p>
-        </div>
-        <div class="flex items-center gap-1" role="toolbar" aria-label="Canvas controls">
-          <button
-            type="button"
-            class="rounded border border-black/10 px-2 py-1 text-sm"
-            aria-label="Zoom out"
-            onClick={() => zoomCenter(1 / 1.2)}
-          >
-            -
-          </button>
-          <button
-            type="button"
-            class="rounded border border-black/10 px-2 py-1 text-sm"
-            aria-label="Zoom in"
-            onClick={() => zoomCenter(1.2)}
-          >
-            +
-          </button>
-          <button
-            type="button"
-            class="rounded border border-black/10 px-2 py-1 text-sm"
-            onClick={centerCamera}
-          >
-            Reset
-          </button>
-        </div>
-        <a
-          href={`https://are.na/tom/${slug()}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          class="text-xs underline"
-        >
-          Source
-        </a>
-      </header>
       <Show
         when={!contentsQuery.isLoading}
         fallback={
-          <div class="absolute inset-0 top-14 flex items-center justify-center">
+          <div class="absolute inset-0 flex items-center justify-center">
             <Loader />
           </div>
         }
@@ -313,22 +325,18 @@ export function CanvasChannel(props: { slug: string }) {
         <Show
           when={!contentsQuery.error}
           fallback={
-            <div class="absolute inset-0 top-14 flex flex-col items-center justify-center gap-3 p-6 text-center">
+            <div class="absolute inset-0 flex flex-col items-center justify-center gap-3 p-6 text-center">
               <p class="text-sm">This channel cannot load.</p>
-              <button
-                type="button"
-                class="rounded border border-black/10 px-3 py-1 text-sm underline"
-                onClick={() => void contentsQuery.refetch()}
-              >
+              <Button variant="secondary" onClick={() => void contentsQuery.refetch()}>
                 Retry
-              </button>
+              </Button>
             </div>
           }
         >
           <Show
             when={blocks().length > 0}
             fallback={
-              <div class="absolute inset-0 top-14 flex items-center justify-center p-6 text-center">
+              <div class="absolute inset-0 flex items-center justify-center p-6 text-center">
                 <p class="text-sm">This channel holds no blocks.</p>
               </div>
             }
@@ -337,7 +345,7 @@ export function CanvasChannel(props: { slug: string }) {
               ref={(element) => {
                 viewport = element;
               }}
-              class="absolute inset-x-0 bottom-0 top-14 touch-none select-none overflow-hidden"
+              class="absolute inset-0 touch-none overflow-hidden select-none"
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={endPointer}
@@ -371,22 +379,6 @@ export function CanvasChannel(props: { slug: string }) {
                 />
               </div>
             </div>
-            <div class="absolute inset-x-0 bottom-0 z-20 flex justify-center pb-3">
-              <Show when={contentsQuery.hasNextPage}>
-                <button
-                  type="button"
-                  class="rounded-full border border-black/10 bg-white/90 px-4 py-1 text-xs shadow backdrop-blur dark:bg-neutral-900/90"
-                  onClick={() => void contentsQuery.fetchNextPage()}
-                >
-                  <Show
-                    when={contentsQuery.isFetchingNextPage}
-                    fallback={`Load more (${blocks().length} of ${totalCount()})`}
-                  >
-                    Loading more
-                  </Show>
-                </button>
-              </Show>
-            </div>
           </Show>
         </Show>
       </Show>
@@ -407,7 +399,7 @@ export function CanvasChannel(props: { slug: string }) {
                   <ArenaBlockItem block={block()} />
                 </div>
                 <div class="mt-4 flex justify-end">
-                  <Dialog.Close class="rounded border border-black/10 px-3 py-1 text-sm">
+                  <Dialog.Close class={buttonVariants({ variant: "secondary" })}>
                     Close
                   </Dialog.Close>
                 </div>
