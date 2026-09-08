@@ -81,6 +81,17 @@ describe("adapter CORS", () => {
     },
   );
 
+  it.each([
+    "https://evil-sophie.st",
+    "https://sophie.st.evil.com",
+    "https://cms.sophie.st.evil.com",
+    "https://pr-138-cms.sophie.st.evil.com",
+  ])("does not allow the lookalike %s origin", async (origin) => {
+    const response = await app.fetch(preflight(origin));
+    expect(response.status).toBe(204);
+    expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
+
   it("does not allow localhost origins against a deployed worker", async () => {
     const response = await app.fetch(
       requestWithEnv(

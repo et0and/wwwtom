@@ -142,6 +142,14 @@ describe("getTemplate", () => {
     expect(getTemplate("https://tom.so/posts/hi", undefined)).toBe(OgTemplates.default);
   });
 
+  it("rejects lookalike domains to the minimal template", () => {
+    expect(getTemplate("https://evil-sophie.st/posts", undefined)).toBe(OgTemplates.minimal);
+    expect(getTemplate("https://sophie.st.evil.com/posts", undefined)).toBe(OgTemplates.minimal);
+    expect(getTemplate("https://eviltom.so/posts", undefined)).toBe(OgTemplates.minimal);
+    expect(getTemplate("https://tom.so.evil.com/posts", undefined)).toBe(OgTemplates.minimal);
+    expect(getTemplate("not a url", undefined)).toBe(OgTemplates.minimal);
+  });
+
   it("accepts a date line without a 400", async () => {
     stubLocalFonts();
     const response = await app.fetch(

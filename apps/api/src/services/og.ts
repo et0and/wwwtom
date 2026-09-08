@@ -60,6 +60,17 @@ export const fontFetchEffect = (source: OgFontSource, path: string) =>
     return data;
   }).pipe(Effect.withSpan("og.fetchFont"));
 
+/**
+ * Requester hostname for template auto-select. Substring matching would let
+ * attacker domains like evil-sophie.st or sophie.st.evil.com steal another
+ * site's template, so match exact hosts with a label boundary (the same
+ * rule as the adapter origin allowlists).
+ */
+const requesterHostname = (requester: string): string => {
+  const url = Schema.decodeUnknownOption(Schema.URLFromString)(requester);
+  return Option.isSome(url) ? url.value.hostname.toLowerCase() : "";
+};
+
 export const getTemplate = (
   requester: string,
   templateParam?: OgTemplate,
@@ -68,9 +79,10 @@ export const getTemplate = (
   if (templateParam === "minimal") return OgTemplates.minimal;
   if (templateParam === "developer") return OgTemplates.developer;
   if (templateParam === "sophie") return OgTemplates.sophie;
-  if (requester.includes("sophie.st")) return OgTemplates.sophie;
-  if (requester.includes("dev.tom.so")) return OgTemplates.developer;
-  if (requester.includes("tom.so")) return OgTemplates.default;
+  const hostname = requesterHostname(requester);
+  if (hostname === "sophie.st" || hostname.endsWith(".sophie.st")) return OgTemplates.sophie;
+  if (hostname === "dev.tom.so") return OgTemplates.developer;
+  if (hostname === "tom.so" || hostname.endsWith(".tom.so")) return OgTemplates.default;
   return OgTemplates.minimal;
 };
 
