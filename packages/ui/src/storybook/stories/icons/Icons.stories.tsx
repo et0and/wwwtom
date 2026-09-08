@@ -1,17 +1,12 @@
 import preview from "#.storybook/preview";
-import { For, type Component } from "solid-js";
-import { ArrowRightIcon } from "@tom/icons/ArrowRight";
+import type { JSX } from "@solidjs/web";
+import { For, omit, Show, type Component } from "solid-js";
 import { BellIcon } from "@tom/icons/Bell";
-import { CheckIcon } from "@tom/icons/Check";
 import { HeartIcon } from "@tom/icons/Heart";
-import { HouseIcon } from "@tom/icons/House";
-import { MagnifyingGlassIcon } from "@tom/icons/MagnifyingGlass";
-import { PlusIcon } from "@tom/icons/Plus";
 import { DiscordIcon } from "@tom/icons/social/discord";
 import { GithubIcon } from "@tom/icons/social/github";
 import { GoogleIcon } from "@tom/icons/social/google";
 import { MastodonIcon } from "@tom/icons/social/mastodon";
-import { StarIcon } from "@tom/icons/Star";
 import {
   ICON_COLORS,
   ICON_SIZES,
@@ -19,16 +14,38 @@ import {
   type IconProps,
   type IconSize,
 } from "@tom/icons/types";
-import { XIcon } from "@tom/icons/X";
+import { iconComponent, iconNames } from "./iconRegistry.ts";
+
+type PlaygroundProps = IconProps & {
+  readonly icon: string;
+};
+
+/** Playground wrapper: resolves the selected registry icon by name. */
+const PlaygroundIcon = (props: PlaygroundProps): JSX.Element => {
+  const rest = omit(props, "icon");
+  const Found = (): Component<IconProps> | undefined => iconComponent(props.icon);
+  return (
+    <Show when={Found()} fallback={<span>Unknown icon: {props.icon}</span>}>
+      {(icon) => {
+        const Icon = icon();
+        return <Icon {...rest} />;
+      }}
+    </Show>
+  );
+};
 
 const meta = preview.meta({
   title: "icons/Icon",
-  component: MagnifyingGlassIcon,
+  component: PlaygroundIcon,
   parameters: {
     layout: "centered",
   },
   tags: ["autodocs"],
   argTypes: {
+    icon: {
+      control: "select",
+      options: iconNames,
+    },
     size: {
       control: "select",
       options: Object.keys(ICON_SIZES),
@@ -51,6 +68,7 @@ export default meta;
 
 export const Playground = meta.story({
   args: {
+    icon: "MagnifyingGlass",
     size: "xl",
     color: "current",
     weight: "regular",
@@ -62,6 +80,13 @@ const rowStyle = {
   display: "flex",
   alignItems: "center",
   gap: "24px",
+} as const;
+
+const gridStyle = {
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "16px",
+  maxWidth: "960px",
 } as const;
 
 const cellStyle = {
@@ -81,18 +106,6 @@ type GalleryEntry = {
   readonly Icon: Component<IconProps>;
 };
 
-const galleryIcons: Array<GalleryEntry> = [
-  { name: "MagnifyingGlass", Icon: MagnifyingGlassIcon },
-  { name: "Bell", Icon: BellIcon },
-  { name: "Heart", Icon: HeartIcon },
-  { name: "House", Icon: HouseIcon },
-  { name: "Star", Icon: StarIcon },
-  { name: "Check", Icon: CheckIcon },
-  { name: "Plus", Icon: PlusIcon },
-  { name: "X", Icon: XIcon },
-  { name: "ArrowRight", Icon: ArrowRightIcon },
-];
-
 const socialIcons: Array<GalleryEntry> = [
   { name: "Google", Icon: GoogleIcon },
   { name: "Github", Icon: GithubIcon },
@@ -100,16 +113,20 @@ const socialIcons: Array<GalleryEntry> = [
   { name: "Mastodon", Icon: MastodonIcon },
 ];
 
-export const Gallery = meta.story({
+export const AllIcons = meta.story({
   render: () => (
-    <div style={rowStyle}>
-      <For each={galleryIcons}>
-        {(entry) => (
-          <div style={cellStyle}>
-            <entry.Icon size="xl" title={entry.name} />
-            <span style={labelStyle}>{entry.name}</span>
-          </div>
-        )}
+    <div style={gridStyle}>
+      <For each={iconNames}>
+        {(name) => {
+          const Found = iconComponent(name);
+          if (Found === undefined) return null;
+          return (
+            <div style={cellStyle}>
+              <Found size="md" title={name} />
+              <span style={labelStyle}>{name}</span>
+            </div>
+          );
+        }}
       </For>
     </div>
   ),
