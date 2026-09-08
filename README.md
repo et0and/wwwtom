@@ -20,7 +20,7 @@ pnpm run write # Format files with oxfmt
 
 External packages and dependencies have been deliberately kept small in order to keep the project lean.
 
-Content is served from a slim CMS on D1 plus R2 for the posts and works routes/slugs. Types live in `@tom/schemas/cms` as Effect Schemas.
+Content is served from a slim, Solid CMS called Camus, on D1 plus R2 for the posts and works routes/slugs. Types live in `@tom/schemas/cms` as Effect Schemas.
 
 The same CMS codebase also runs [sophie.st](https://sophie.st): a separate blog plus Camus editor instance with isolated D1+R2, Google-only sign-in, and posts-only content. The API and adapter workers serve both tenants (`TENANT=tom|sophie`); the editor build switches tenant via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`.
 
