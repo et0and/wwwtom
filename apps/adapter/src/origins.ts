@@ -55,6 +55,22 @@ export type Tenant = typeof TenantSchema.Type;
 export const tenantFromValue = (value: string | undefined): Tenant | undefined =>
   value === "tom" || value === "sophie" ? value : undefined;
 
+/**
+ * Whether localhost web origins are trusted: true only when the worker
+ * itself serves plain http on a loopback host (local workerd, `alchemy
+ * dev`, the e2e tsx harness). Deployed workers serve https on a public
+ * host, so production never trusts localhost even though the e2e harness
+ * runs NODE_ENV=production for cookie parity.
+ */
+export const allowLocalOriginsForAdapter = (adapterUrl: string | undefined): boolean => {
+  if (adapterUrl === undefined || adapterUrl === "") return false;
+  const url = Schema.decodeUnknownOption(Schema.URLFromString)(adapterUrl);
+  if (Option.isNone(url)) return false;
+  if (url.value.protocol !== "http:") return false;
+  const hostname = url.value.hostname.toLowerCase();
+  return hostname === "localhost" || hostname === "127.0.0.1";
+};
+
 const TOM_EXACT_HOSTS: ReadonlySet<string> = new Set([
   "tom.so",
   "cms.tom.so",
@@ -113,9 +129,12 @@ const isSophieHost = (hostname: string): boolean => {
 };
 
 /**
- * Exact-match origin check. Local dev origins pass only off production. A
- * tenant tag scopes the check to that tenant's hosts; unset keeps the
- * legacy shared behavior (both tenants).
+ * Exact-match origin check. Local dev origins pass only when the worker
+ * itself runs on localhost (see allowLocalOriginsForAdapter): gating on
+ * NODE_ENV breaks harnesses that run production-like locally, and gating
+ * on the request hostname trusts client-controlled input. A tenant tag
+ * scopes the check to that tenant's hosts; unset keeps the legacy shared
+ * behavior (both tenants).
  */
 export const isTrustedWebOrigin = (
   origin: string,
@@ -136,7 +155,7 @@ export const isTrustedWebOrigin = (
  * Origins allowed to drive CMS/auth writes. The adapter itself always
  * passes; web origins must match the tenant-scoped allowlist (exact hosts,
  * so apex tom.so works and unknown subdomains do not). Local editors pass
- * only off production.
+ * only when the worker itself runs on localhost.
  */
 export const isTrustedWriteOrigin = (
   origin: string,

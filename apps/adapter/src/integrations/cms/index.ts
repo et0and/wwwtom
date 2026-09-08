@@ -8,7 +8,7 @@ import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker
 import type { LogContext } from "@tom/utils/services/logging";
 import { callApi } from "../../callApi";
 import { AdapterError, runAdapter } from "../../config/effect";
-import { isTrustedWriteOrigin, tenantFromValue } from "../../origins";
+import { allowLocalOriginsForAdapter, isTrustedWriteOrigin, tenantFromValue } from "../../origins";
 import { forwardHeaders, toProxiedResponse } from "../auth";
 import { simulatorEnv } from "../../simulator";
 
@@ -135,7 +135,7 @@ const requireTrustedWriteOrigin = (
 ): Effect.Effect<void, AdapterError> =>
   Effect.gen(function* () {
     const env = getRequestEnv(request);
-    const allowLocalOrigins = (env.NODE_ENV ?? "") !== "production";
+    const allowLocalOrigins = allowLocalOriginsForAdapter(env.ADAPTER_URL);
     const tenant = tenantFromValue(env.TENANT);
     const direct = request.headers.get("origin");
     if (direct !== null) {

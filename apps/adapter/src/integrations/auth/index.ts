@@ -5,7 +5,7 @@ import { HttpStatus } from "@tom/constants/http";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import { AdapterError, runAdapter } from "../../config/effect";
-import { isTrustedWriteOrigin, tenantFromValue } from "../../origins";
+import { allowLocalOriginsForAdapter, isTrustedWriteOrigin, tenantFromValue } from "../../origins";
 import type { Tenant } from "../../origins";
 
 // Hop-by-hop and framing headers never survive a proxy hop; everything else
@@ -184,7 +184,7 @@ export const authIntegration = new Elysia({ name: "auth" }).all(
     const env = await readCloudflareEnv(getRequestEnv(request));
     return proxyAuth(request, env.API_URL ?? "http://localhost:8787", env.INTERNAL_API_TOKEN, {
       adapterOrigin: env.ADAPTER_URL ?? "http://localhost:8788",
-      allowLocalOrigins: (env.NODE_ENV ?? "") !== "production",
+      allowLocalOrigins: allowLocalOriginsForAdapter(env.ADAPTER_URL),
       tenant: tenantFromValue(env.TENANT),
     });
   },

@@ -1,8 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index";
+import { allowLocalOriginsForAdapter } from "../origins";
 import { jsonResponse, requestWithEnv, testEnv } from "../test/helpers";
 
-const env = testEnv();
+const env = testEnv({ ADAPTER_URL: "http://localhost:8788" });
 
 const fetchMock = vi.fn();
 
@@ -80,15 +81,19 @@ describe("adapter CORS", () => {
     },
   );
 
-  it("does not allow localhost origins against the production worker", async () => {
+  it("does not allow localhost origins against a deployed worker", async () => {
     const response = await app.fetch(
-      requestWithEnv("https://adapter.tom.so/content/posts", testEnv({ NODE_ENV: "production" }), {
-        method: "OPTIONS",
-        headers: {
-          Origin: "http://localhost:5173",
-          "Access-Control-Request-Method": "GET",
+      requestWithEnv(
+        "https://adapter.tom.so/content/posts",
+        testEnv({ ADAPTER_URL: "https://adapter.tom.so" }),
+        {
+          method: "OPTIONS",
+          headers: {
+            Origin: "http://localhost:5173",
+            "Access-Control-Request-Method": "GET",
+          },
         },
-      }),
+      ),
     );
     expect(response.status).toBe(204);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
@@ -123,5 +128,28 @@ describe("adapter CORS", () => {
     const response = await app.fetch(requestWithEnv("http://localhost/content/posts", env));
     expect(response.status).toBe(200);
     expect(response.headers.get("access-control-allow-origin")).toBeNull();
+  });
+});
+
+describe("allowLocalOriginsForAdapter", () => {
+  it.each(["http://localhost:8788", "http://127.0.0.1:8790"])(
+    "trusts localhost when the worker itself runs on %s",
+    (adapterUrl) => {
+      expect(allowLocalOriginsForAdapter(adapterUrl)).toBe(true);
+    },
+  );
+
+  it.each([
+    "https://adapter.tom.so",
+    "https://dev-adapter.sophie.st",
+    "http://adapter.tom.so",
+    "not a url",
+    "",
+  ])("does not trust localhost when the worker runs on %s", (adapterUrl) => {
+    expect(allowLocalOriginsForAdapter(adapterUrl)).toBe(false);
+  });
+
+  it("does not trust localhost without a worker URL", () => {
+    expect(allowLocalOriginsForAdapter(undefined)).toBe(false);
   });
 });
