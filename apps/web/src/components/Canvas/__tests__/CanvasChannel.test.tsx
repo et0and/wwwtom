@@ -20,6 +20,10 @@ const imageBlock = {
   base_type: "Block",
   title: "The Psychology of CG Jung",
   image: {
+    small: {
+      src: "https://images.are.na/image-small.jpg",
+      src_2x: "https://images.are.na/image-small-2x.jpg",
+    },
     medium: {
       src: "https://images.are.na/image-medium.jpg",
       src_2x: "https://images.are.na/image-medium-2x.jpg",
@@ -106,6 +110,16 @@ describe("CanvasChannel", () => {
 
     await waitFor(() => expect(screen.getByRole("dialog")).toBeTruthy());
     expect(screen.getAllByText("Hello from the canvas")).toHaveLength(2);
+  });
+
+  it("renders a title fallback when an image block carries no versions", async () => {
+    mockedFetchContentsPage.mockResolvedValue(
+      pageFor([{ ...imageBlock, image: undefined, title: "Versionless image" }]),
+    );
+    renderCanvas();
+
+    await waitFor(() => expect(screen.getByText("Versionless image")).toBeTruthy());
+    expect(screen.queryByRole("img", { name: "Versionless image" })).toBeNull();
   });
 
   it("shows an empty state when the channel holds no blocks", async () => {

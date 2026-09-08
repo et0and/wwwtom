@@ -15,9 +15,12 @@ import { CanvasTile, ChannelTile, describeCanvasItem } from "./CanvasTile";
 const CANVAS_PAGE_SIZE = 100;
 const MIN_SCALE = 0.25;
 const MAX_SCALE = 2.5;
+// Premium tier allows 300 requests per minute; backoff covers lower tiers.
 const PAGE_FETCH_GAP_MS = 800;
 const PAGE_RETRY_COUNT = 5;
 const PAGE_RETRY_MAX_DELAY_MS = 10000;
+const CANVAS_STALE_MS = 10 * 60 * 1000;
+const CANVAS_GC_MS = 60 * 60 * 1000;
 
 const clampScale = (value: number): number => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
@@ -47,7 +50,11 @@ export function CanvasChannel(props: { slug: string }) {
   const pointers = new Map<number, PointerPoint>();
   const pinch = { active: false, distance: 0, midX: 0, midY: 0 };
   const sentinel = { el: null as HTMLDivElement | null };
-  const pager = { lastFetch: 0, timer: null as ReturnType<typeof setTimeout> | null };
+  const pager = {
+    lastFetch: 0,
+    timer: null as ReturnType<typeof setTimeout> | null,
+    inView: false,
+  };
   let viewport: HTMLDivElement | undefined;
 
   const channelQuery = useQuery(() => ({
@@ -55,6 +62,8 @@ export function CanvasChannel(props: { slug: string }) {
     queryFn: () => fetchChannel(slug()),
     enabled: slug().length > 0,
     deferStream: true,
+    staleTime: CANVAS_STALE_MS,
+    gcTime: CANVAS_GC_MS,
   }));
 
   const contentsQuery = useInfiniteQuery(() => ({
@@ -69,6 +78,8 @@ export function CanvasChannel(props: { slug: string }) {
     enabled: slug().length > 0,
     retry: PAGE_RETRY_COUNT,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, PAGE_RETRY_MAX_DELAY_MS),
+    staleTime: CANVAS_STALE_MS,
+    gcTime: CANVAS_GC_MS,
   }));
 
   const blocks = createMemo(
@@ -251,7 +262,8 @@ export function CanvasChannel(props: { slug: string }) {
       if (!element || isServer || !("IntersectionObserver" in globalThis)) return;
       const observer = new IntersectionObserver(
         (entries) => {
-          setSentinelVisible(entries[0]?.isIntersecting === true);
+          pager.inView = entries[0]?.isIntersecting === true;
+          setSentinelVisible(pager.inView && document.visibilityState === "visible");
         },
         { rootMargin: "1200px" },
       );
@@ -276,7 +288,7 @@ export function CanvasChannel(props: { slug: string }) {
       const wait = Math.max(0, PAGE_FETCH_GAP_MS - (Date.now() - pager.lastFetch));
       pager.timer = setTimeout(() => {
         pager.lastFetch = Date.now();
-        void contentsQuery.fetchNextPage();
+        if (document.visibilityState === "visible") void contentsQuery.fetchNextPage();
       }, wait);
     },
   );
@@ -294,6 +306,10 @@ export function CanvasChannel(props: { slug: string }) {
     };
     document.addEventListener("gesturestart", stopGesture);
     document.addEventListener("gesturechange", stopGesture);
+    const onVisibility = (): void => {
+      setSentinelVisible(pager.inView && document.visibilityState === "visible");
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     const onKey = (event: KeyboardEvent): void => {
       if (selected() !== null) {
         if (event.key === "Escape") setSelected(null);
@@ -337,6 +353,7 @@ export function CanvasChannel(props: { slug: string }) {
       element.removeEventListener("wheel", onWheel);
       document.removeEventListener("gesturestart", stopGesture);
       document.removeEventListener("gesturechange", stopGesture);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("keydown", onKey);
     };
   });

@@ -15,6 +15,22 @@ import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "
 
 const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: Schema.String }));
 
+const PUBLIC_ARENA_CACHE_CONTROL =
+  "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400";
+
+/**
+ * The canvas serves public channels with the authenticated client for the
+ * higher rate tier, so private items the token can see must stay filtered.
+ */
+const withoutPrivateItems = <
+  T extends { readonly data: ReadonlyArray<{ readonly visibility?: string }> },
+>(
+  response: T,
+): T => ({
+  ...response,
+  data: response.data.filter((item) => item.visibility !== "private"),
+});
+
 const IdOrSlugParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
     id: Schema.Union([Schema.NumberFromString, Schema.String]),
@@ -92,12 +108,27 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   )
   .get(
     "/arena/channels/:slug",
-    ({ params, request }) => {
+    ({ params, request, set }) => {
+      set.headers["Cache-Control"] = PUBLIC_ARENA_CACHE_CONTROL;
       return runArena(
         request,
-        (client) => client.channel(params.slug).get(),
+        (client) =>
+          client
+            .channel(params.slug)
+            .get()
+            .pipe(
+              Effect.flatMap((channel) =>
+                channel.visibility === "private"
+                  ? Effect.fail(
+                      new HttpError({
+                        message: "Channel not found",
+                        status: HttpStatus.NotFound,
+                      }),
+                    )
+                  : Effect.succeed(channel),
+              ),
+            ),
         logContextFromRequest(request, "tom-adapter"),
-        "public",
       );
     },
     {
@@ -108,12 +139,16 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   )
   .get(
     "/arena/channels/:slug/contents",
-    ({ params, query, request }) => {
+    ({ params, query, request, set }) => {
+      set.headers["Cache-Control"] = PUBLIC_ARENA_CACHE_CONTROL;
       return runArena(
         request,
-        (client) => client.channel(params.slug).contents(toPaginationAttributes(query)),
+        (client) =>
+          client
+            .channel(params.slug)
+            .contents(toPaginationAttributes(query))
+            .pipe(Effect.map(withoutPrivateItems)),
         logContextFromRequest(request, "tom-adapter"),
-        "public",
       );
     },
     {
@@ -124,7 +159,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   )
   .get(
     "/arena/channels/:slug/thumb",
-    ({ params, request }) => {
+    ({ params, request, set }) => {
+      set.headers["Cache-Control"] = PUBLIC_ARENA_CACHE_CONTROL;
       return runArena(
         request,
         (client) => client.channel(params.slug).thumb(),

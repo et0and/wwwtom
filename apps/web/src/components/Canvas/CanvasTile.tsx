@@ -52,6 +52,29 @@ export interface TileFrame {
   readonly label: string;
 }
 
+export interface TileThumb {
+  readonly src: string;
+  readonly srcset: string | undefined;
+}
+
+interface TileImageVersion {
+  readonly src?: string;
+  readonly src_2x?: string;
+}
+
+interface TileImage {
+  readonly small?: TileImageVersion | null;
+  readonly medium?: TileImageVersion | null;
+}
+
+/** Smallest usable thumbnail; null when the block carries no image pixels. */
+export const tileThumb = (image: TileImage | null | undefined): TileThumb | null => {
+  const src = image?.small?.src ?? image?.medium?.src;
+  if (!src) return null;
+  const retina = image?.small?.src_2x ?? image?.medium?.src;
+  return { src, srcset: retina && retina !== src ? `${src} 1x, ${retina} 2x` : undefined };
+};
+
 const tileFrame = (layout: CanvasTileLayout, label: string): TileFrame => ({
   label,
   style: {
@@ -150,6 +173,7 @@ function ImageTileBody(props: { block: Extract<ArenaBlock, { type: "Image" }> })
   const block = () => props.block;
   const [loaded, setLoaded] = createSignal(false);
   const placeholder = createMemo(() => Effect.runSync(decodeBlurhash(block().image?.blurhash)));
+  const thumb = createMemo(() => tileThumb(block().image));
   return (
     <div class="relative h-full w-full bg-gray-100 dark:bg-neutral-800">
       <Show when={placeholder() && !loaded()}>
@@ -160,19 +184,19 @@ function ImageTileBody(props: { block: Extract<ArenaBlock, { type: "Image" }> })
           class="absolute inset-0 h-full w-full object-cover blur-sm"
         />
       </Show>
-      <img
-        src={block().image?.medium.src}
-        srcset={
-          block().image?.medium.src_2x
-            ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
-            : undefined
-        }
-        alt={block().image?.alt_text || block().title || ""}
-        class={`h-full w-full object-cover ${placeholder() && !loaded() ? "opacity-0" : ""}`}
-        onLoad={() => setLoaded(true)}
-        loading="lazy"
-        decoding="async"
-      />
+      <Show when={thumb()} fallback={<p class="p-3 text-xs">{block().title || "Image"}</p>}>
+        {(image) => (
+          <img
+            src={image().src}
+            srcset={image().srcset}
+            alt={block().image?.alt_text || block().title || ""}
+            class={`h-full w-full object-cover ${placeholder() && !loaded() ? "opacity-0" : ""}`}
+            onLoad={() => setLoaded(true)}
+            loading="lazy"
+            decoding="async"
+          />
+        )}
+      </Show>
     </div>
   );
 }
@@ -195,6 +219,7 @@ function TextTileBody(props: { block: Extract<ArenaBlock, { type: "Text" }> }) {
 
 function LinkTileBody(props: { block: Extract<ArenaBlock, { type: "Link" }> }) {
   const block = () => props.block;
+  const thumb = createMemo(() => tileThumb(block().image));
   const host = createMemo(() =>
     Effect.runSync(
       canvasLinkHost(block().source?.url ?? "").pipe(Effect.catch(() => Effect.succeed(""))),
@@ -202,22 +227,20 @@ function LinkTileBody(props: { block: Extract<ArenaBlock, { type: "Link" }> }) {
   );
   return (
     <div class="flex h-full w-full flex-col bg-white dark:bg-neutral-900">
-      <Show when={block().image}>
-        <div class="relative min-h-0 flex-1 bg-gray-100 dark:bg-neutral-800">
-          <img
-            src={block().image?.medium.src}
-            srcset={
-              block().image?.medium.src_2x
-                ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
-                : undefined
-            }
-            alt=""
-            aria-hidden="true"
-            class="absolute inset-0 h-full w-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
+      <Show when={thumb()}>
+        {(image) => (
+          <div class="relative min-h-0 flex-1 bg-gray-100 dark:bg-neutral-800">
+            <img
+              src={image().src}
+              srcset={image().srcset}
+              alt=""
+              aria-hidden="true"
+              class="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        )}
       </Show>
       <div class="p-2">
         <p class="truncate text-xs font-medium">
@@ -243,6 +266,7 @@ function AttachmentTileBody(props: { block: Extract<ArenaBlock, { type: "Attachm
   const background = createMemo(() =>
     Effect.runSync(colorHashForTitle(displayName() || `file-${block().id}`)),
   );
+  const thumb = createMemo(() => tileThumb(block().image));
   return (
     <Show
       when={isAudio() || isVideo()}
@@ -251,15 +275,18 @@ function AttachmentTileBody(props: { block: Extract<ArenaBlock, { type: "Attachm
           class="flex h-full w-full flex-col justify-between p-3"
           style={{ "background-color": background() }}
         >
-          <Show when={block().image}>
-            <img
-              src={block().image?.medium.src}
-              alt=""
-              aria-hidden="true"
-              class="mb-2 max-h-2/3 w-full flex-1 object-cover"
-              loading="lazy"
-              decoding="async"
-            />
+          <Show when={thumb()}>
+            {(image) => (
+              <img
+                src={image().src}
+                srcset={image().srcset}
+                alt=""
+                aria-hidden="true"
+                class="mb-2 max-h-2/3 w-full flex-1 object-cover"
+                loading="lazy"
+                decoding="async"
+              />
+            )}
           </Show>
           <div>
             <p class="break-words text-xs font-medium">{displayName()}</p>
@@ -298,29 +325,28 @@ function AttachmentTileBody(props: { block: Extract<ArenaBlock, { type: "Attachm
 
 function EmbedTileBody(props: { block: Extract<ArenaBlock, { type: "Embed" }> }) {
   const block = () => props.block;
+  const thumb = createMemo(() => tileThumb(block().image));
   return (
     <div class="relative h-full w-full bg-black">
       <Show
-        when={block().image}
+        when={thumb()}
         fallback={
           <div class="flex h-full w-full items-center justify-center p-3">
             <p class="text-center text-xs text-white">{block().title || "Embed"}</p>
           </div>
         }
       >
-        <img
-          src={block().image?.medium.src}
-          srcset={
-            block().image?.medium.src_2x
-              ? `${block().image?.medium.src} 1x, ${block().image?.medium.src_2x} 2x`
-              : undefined
-          }
-          alt=""
-          aria-hidden="true"
-          class="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
-          decoding="async"
-        />
+        {(image) => (
+          <img
+            src={image().src}
+            srcset={image().srcset}
+            alt=""
+            aria-hidden="true"
+            class="absolute inset-0 h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        )}
       </Show>
       <div class="absolute inset-0 flex items-center justify-center">
         <div
