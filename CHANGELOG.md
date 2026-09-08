@@ -1,3 +1,31 @@
+# [3.0.0](https://github.com/et0and/wwwtom/compare/v2.8.1...v3.0.0) (2026-09-08)
+
+
+### Bug Fixes
+
+* **adapter:** trust localhost origins when the worker itself runs locally ([677e013](https://github.com/et0and/wwwtom/commit/677e013e76d1e0587701ba6e9b0d8a9bec3ad1b9))
+* **api:** bundle OG fonts in the worker, drop runtime CDN fetches ([b3fc662](https://github.com/et0and/wwwtom/commit/b3fc662492af88e66260ebb60686c7565154132f))
+* **api:** load OG fonts via ASSETS binding, fall back to same-origin fetch ([a96cb9f](https://github.com/et0and/wwwtom/commit/a96cb9f4a1e3f168bc9a086bd919ff343a4ca373))
+* **api:** log error without missing cause property ([a0c08f2](https://github.com/et0and/wwwtom/commit/a0c08f2ff2a7149a123fe713f8a8f278c51bae21))
+* **api:** serve OG fonts as worker static assets, drop generated base64 ([2ff078f](https://github.com/et0and/wwwtom/commit/2ff078ff626a818d30b5148d2d4ea125fc458bb3))
+* **auth:** reject lookalike domains in OG template select and CORS tests ([7c0d79a](https://github.com/et0and/wwwtom/commit/7c0d79a939ee887564bd62aa3b19b5f4295974b5))
+* **auth:** trust preview editors via wildcard patterns, not stage names ([468ee1a](https://github.com/et0and/wwwtom/commit/468ee1a48f9c91b44ca8996bf3f22a0561e7794c))
+* **editor:** render Spinner in Camus sign-in button while signing in ([f808af6](https://github.com/et0and/wwwtom/commit/f808af6a9eeb4224df43bcf8823904c23f68a254))
+* **preview:** authenticate preview CMS editors through dev adapters ([2e173c0](https://github.com/et0and/wwwtom/commit/2e173c062b99055a6bbfeceaeca17e01af9192d7))
+* **sophie:** explicit Google keys on worker env, drop Sophie Hyperdrive ([6d4a7f8](https://github.com/et0and/wwwtom/commit/6d4a7f8bcb591da98166df7425496d847d41a668))
+
+
+### Features
+
+* **editor:** spinner and press feedback on Camus sign-in button ([d19b21b](https://github.com/et0and/wwwtom/commit/d19b21b6a13bbe2519013e81425586aa46848b7b))
+* **sophie:** isolated Camus CMS + SSR frontend for sophie.st ([30854f5](https://github.com/et0and/wwwtom/commit/30854f5265b1622a8d1ab84699c03d5e4bbf3889))
+
+
+### BREAKING CHANGES
+
+* **sophie:** deploys now require TOM_CMS_ADMIN_EMAILS and
+SOPHIE_CMS_ADMIN_EMAILS in TOM_SECRETS (fail closed without them).
+
 ## [2.8.1](https://github.com/et0and/wwwtom/compare/v2.8.0...v2.8.1) (2026-09-07)
 
 
