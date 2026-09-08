@@ -85,6 +85,22 @@ describe("CanvasChannel", () => {
     expect(screen.queryByRole("banner")).toBeNull();
   });
 
+  it("zooms with the wheel once tiles mount", async () => {
+    mockedFetchContentsPage.mockResolvedValue(pageFor([imageBlock, textBlock]));
+    renderCanvas();
+
+    await waitFor(() => expect(screen.getByAltText("The Psychology of CG Jung")).toBeTruthy());
+    const viewport = document.querySelector(".touch-none") as HTMLElement;
+    viewport.dispatchEvent(
+      new WheelEvent("wheel", { deltaY: -500, clientX: 100, clientY: 100, bubbles: true }),
+    );
+
+    await waitFor(() => {
+      const inner = viewport.firstElementChild as HTMLElement;
+      expect(inner.style.transform).toContain("scale(2.117");
+    });
+  });
+
   it("pinch zooms the canvas around the touch midpoint", async () => {
     mockedFetchContentsPage.mockResolvedValue(pageFor([imageBlock, textBlock]));
     renderCanvas();

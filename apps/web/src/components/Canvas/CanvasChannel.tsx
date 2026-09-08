@@ -1,6 +1,6 @@
 import { useInfiniteQuery, useQuery } from "@tanstack/solid-query";
 import { Effect } from "effect";
-import { For, Show, createEffect, createMemo, createSignal, onCleanup, onSettled } from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { isServer } from "@solidjs/web";
 import { Metadata } from "@tom/ui/Meta";
 import { Button, buttonVariants } from "@tom/ui/tomui/button";
@@ -61,7 +61,7 @@ export function CanvasChannel(props: { slug: string }) {
     timer: null as ReturnType<typeof setTimeout> | null,
     inView: false,
   };
-  let viewport: HTMLDivElement | undefined;
+  const [viewportEl, setViewportEl] = createSignal<HTMLDivElement | null>(null);
 
   const channelQuery = useQuery(() => ({
     queryKey: ["canvas-channel", slug()],
@@ -149,8 +149,9 @@ export function CanvasChannel(props: { slug: string }) {
   };
 
   const centerCamera = (): void => {
-    if (!viewport || isServer) return;
-    const rect = viewport.getBoundingClientRect();
+    const element = viewportEl();
+    if (!element || isServer) return;
+    const rect = element.getBoundingClientRect();
     camera.x = rect.width / 2 - positioned().bounds.width / 2;
     camera.y = rect.height / 2 - positioned().bounds.height / 2;
     camera.scale = 1;
@@ -158,9 +159,10 @@ export function CanvasChannel(props: { slug: string }) {
   };
 
   const zoomAt = (clientX: number, clientY: number, factor: number): void => {
-    if (!viewport) return;
+    const element = viewportEl();
+    if (!element) return;
     const next = clampZoom(camera.scale * factor);
-    const rect = viewport.getBoundingClientRect();
+    const rect = element.getBoundingClientRect();
     const px = clientX - rect.left;
     const py = clientY - rect.top;
     camera.x = px - ((px - camera.x) / camera.scale) * next;
@@ -170,8 +172,9 @@ export function CanvasChannel(props: { slug: string }) {
   };
 
   const zoomCenter = (factor: number): void => {
-    if (!viewport) return;
-    const rect = viewport.getBoundingClientRect();
+    const element = viewportEl();
+    if (!element) return;
+    const rect = element.getBoundingClientRect();
     zoomAt(rect.left + rect.width / 2, rect.top + rect.height / 2, factor);
   };
 
@@ -196,7 +199,7 @@ export function CanvasChannel(props: { slug: string }) {
 
   const onPointerDown = (event: PointerEvent): void => {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (event.pointerType === "mouse") viewport?.setPointerCapture?.(event.pointerId);
+    if (event.pointerType === "mouse") viewportEl()?.setPointerCapture?.(event.pointerId);
     if (pointers.size === 2) {
       drag.active = false;
       pinch.active = true;
@@ -271,7 +274,7 @@ export function CanvasChannel(props: { slug: string }) {
   createEffect(
     () => positioned().bounds.width,
     (width) => {
-      if (width === 0 || camera.centered || !viewport || isServer) return;
+      if (width === 0 || camera.centered || !viewportEl() || isServer) return;
       if (blocks().length === 0) return;
       centerCamera();
       camera.centered = true;
@@ -303,7 +306,7 @@ export function CanvasChannel(props: { slug: string }) {
         { rootMargin: "1200px" },
       );
       observer.observe(element);
-      return () => observer.disconnect();
+      onCleanup(() => observer.disconnect());
     },
   );
 
@@ -328,76 +331,78 @@ export function CanvasChannel(props: { slug: string }) {
     },
   );
 
-  onSettled(() => {
-    if (isServer || !viewport) return;
-    const element = viewport;
-    const onWheel = (event: WheelEvent): void => {
-      event.preventDefault();
-      zoomAt(event.clientX, event.clientY, Math.exp(-event.deltaY * 0.0015));
-    };
-    element.addEventListener("wheel", onWheel, { passive: false });
-    const measure = (): void => {
-      setViewportSize({ width: element.clientWidth, height: element.clientHeight });
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    const stopGesture = (event: Event): void => {
-      event.preventDefault();
-    };
-    document.addEventListener("gesturestart", stopGesture);
-    document.addEventListener("gesturechange", stopGesture);
-    const onVisibility = (): void => {
-      setSentinelVisible(pager.inView && document.visibilityState === "visible");
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-    const onKey = (event: KeyboardEvent): void => {
-      if (selected() !== null) {
-        if (event.key === "Escape") setSelected(null);
-        return;
-      }
-      const step = 60 / camera.scale;
-      if (event.key === "ArrowLeft") {
-        camera.x += step;
-        syncCamera();
-        return;
-      }
-      if (event.key === "ArrowRight") {
-        camera.x -= step;
-        syncCamera();
-        return;
-      }
-      if (event.key === "ArrowUp") {
-        camera.y += step;
-        syncCamera();
-        return;
-      }
-      if (event.key === "ArrowDown") {
-        camera.y -= step;
-        syncCamera();
-        return;
-      }
-      if (event.key === "+" || event.key === "=") {
-        zoomCenter(1.2);
-        return;
-      }
-      if (event.key === "-") {
-        zoomCenter(1 / 1.2);
-        return;
-      }
-      if (event.key === "0") {
-        centerCamera();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      element.removeEventListener("wheel", onWheel);
-      document.removeEventListener("gesturestart", stopGesture);
-      document.removeEventListener("gesturechange", stopGesture);
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("keydown", onKey);
-    };
-  });
+  createEffect(
+    () => viewportEl(),
+    (element) => {
+      if (isServer || !element) return;
+      const onWheel = (event: WheelEvent): void => {
+        event.preventDefault();
+        zoomAt(event.clientX, event.clientY, Math.exp(-event.deltaY * 0.0015));
+      };
+      element.addEventListener("wheel", onWheel, { passive: false });
+      const measure = (): void => {
+        setViewportSize({ width: element.clientWidth, height: element.clientHeight });
+      };
+      measure();
+      window.addEventListener("resize", measure);
+      const stopGesture = (event: Event): void => {
+        event.preventDefault();
+      };
+      document.addEventListener("gesturestart", stopGesture);
+      document.addEventListener("gesturechange", stopGesture);
+      const onVisibility = (): void => {
+        setSentinelVisible(pager.inView && document.visibilityState === "visible");
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+      const onKey = (event: KeyboardEvent): void => {
+        if (selected() !== null) {
+          if (event.key === "Escape") setSelected(null);
+          return;
+        }
+        const step = 60 / camera.scale;
+        if (event.key === "ArrowLeft") {
+          camera.x += step;
+          syncCamera();
+          return;
+        }
+        if (event.key === "ArrowRight") {
+          camera.x -= step;
+          syncCamera();
+          return;
+        }
+        if (event.key === "ArrowUp") {
+          camera.y += step;
+          syncCamera();
+          return;
+        }
+        if (event.key === "ArrowDown") {
+          camera.y -= step;
+          syncCamera();
+          return;
+        }
+        if (event.key === "+" || event.key === "=") {
+          zoomCenter(1.2);
+          return;
+        }
+        if (event.key === "-") {
+          zoomCenter(1 / 1.2);
+          return;
+        }
+        if (event.key === "0") {
+          centerCamera();
+        }
+      };
+      window.addEventListener("keydown", onKey);
+      onCleanup(() => {
+        element.removeEventListener("wheel", onWheel);
+        document.removeEventListener("gesturestart", stopGesture);
+        document.removeEventListener("gesturechange", stopGesture);
+        document.removeEventListener("visibilitychange", onVisibility);
+        window.removeEventListener("resize", measure);
+        window.removeEventListener("keydown", onKey);
+      });
+    },
+  );
 
   return (
     <div class="relative h-full w-full overflow-hidden bg-neutral-100 dark:bg-neutral-950">
@@ -428,7 +433,7 @@ export function CanvasChannel(props: { slug: string }) {
             >
               <div
                 ref={(element) => {
-                  viewport = element;
+                  setViewportEl(element);
                 }}
                 class="absolute inset-0 touch-none overflow-hidden bg-[radial-gradient(circle,rgb(0_0_0/0.14)_1px,transparent_1px)] bg-[size:28px_28px] select-none dark:bg-[radial-gradient(circle,rgb(255_255_255/0.14)_1px,transparent_1px)]"
                 onPointerDown={onPointerDown}
