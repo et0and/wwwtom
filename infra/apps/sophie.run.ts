@@ -1,9 +1,11 @@
 import * as Cloudflare from "alchemy/Cloudflare";
+import * as GitHub from "alchemy/GitHub";
 import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Layer } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { sophieStageHost, sophieWebHost } from "../shared.run.ts";
+import { previewComment } from "../utils/github/preview-comment.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -55,12 +57,14 @@ export const sophieEditor = Effect.gen(function* () {
 export default Stack(
   "sophie",
   {
-    providers: Layer.mergeAll(Cloudflare.providers()) as never,
+    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()) as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
     const web = yield* sophieWeb;
     const editor = yield* sophieEditor;
+    yield* previewComment({ id: "sophie-web-preview", name: "Sophie Web", url: web.url });
+    yield* previewComment({ id: "sophie-cms-preview", name: "Sophie CMS", url: editor.url });
 
     return {
       url: web.url,

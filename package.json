@@ -36,7 +36,9 @@
     "semantic-release": "semantic-release",
     "changeset": "changeset",
     "version": "changeset version",
-    "release": "turbo run build && changeset publish --no-git"
+    "release": "turbo run build && changeset publish --no-git",
+    "destroy:editor": "pnpm --filter @tom/infra run destroy:editor",
+    "destroy:sophie": "pnpm --filter @tom/infra run destroy:sophie"
   },
   "dependencies": {
     "@aredotna/sdk": "0.0.4",

@@ -50,6 +50,8 @@ jobs:
             export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"
             pnpm destroy:storybook --yes || true
             pnpm destroy:web --yes || true
+            pnpm destroy:editor --yes || true
+            pnpm destroy:sophie --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true
             pnpm destroy:shared --yes || true

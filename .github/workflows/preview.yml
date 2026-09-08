@@ -35,8 +35,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
 
-      # Deploys shared -> api -> adapter -> web. The web stack posts or
-      # updates the preview comment via infra/utils/github/preview-comment.ts.
+      # Deploys shared -> api -> adapter -> web + editor (Tom CMS) + sophie
+      # (Sophie web + Sophie CMS). The web/editor stacks post or update the
+      # preview comments via infra/utils/github/preview-comment.ts.
       # The preview api reads the dev database + bucket directly
       # (infra/cms/cms.storage.ts), so seeded content renders as-is.
       - name: Deploy preview stage
@@ -44,7 +45,9 @@ jobs:
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
-          pnpm deploy:web --yes
+          pnpm deploy:web --yes &&
+          pnpm deploy:editor --yes &&
+          pnpm deploy:sophie --yes
 
   destroy:
     if: github.event.action == 'closed'
@@ -71,13 +74,21 @@ jobs:
           ref: dev
       - uses: ./.github/actions/setup
 
-      # Tears down web -> adapter -> api -> shared so no preview resources
-      # linger after the PR is merged or closed. Separate steps with
-      # `if: always()` so one stack's failure never blocks the rest —
-      # a single `&&` chain orphans workers (e.g. api/adapter) when an
-      # earlier destroy fails.
+      # Tears down web + editor + sophie -> adapter -> api -> shared so no
+      # preview resources linger after the PR is merged or closed. Separate
+      # steps with `if: always()` so one stack's failure never blocks the
+      # rest — a single `&&` chain orphans workers (e.g. api/adapter) when
+      # an earlier destroy fails.
       - name: Destroy web preview stage
         run: pnpm destroy:web --yes
+
+      - name: Destroy editor preview stage
+        if: always()
+        run: pnpm destroy:editor --yes
+
+      - name: Destroy sophie preview stage
+        if: always()
+        run: pnpm destroy:sophie --yes
 
       - name: Destroy adapter preview stage
         if: always()
