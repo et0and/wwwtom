@@ -12,7 +12,6 @@ import {
   tomSecrets,
 } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
-import { sophieHyperdrive } from "../hyperdrive/sophie.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
 import { sophieQueue } from "../queues/sophie.queue.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
@@ -118,7 +117,9 @@ export const adapter = Effect.gen(function* () {
       ? { name: "wwwtom-adapter", domain: stageHost(stage, "adapter") }
       : { name: `wwwtom-adapter-${stage}`, domain: stageHost(stage, "adapter") }),
     env: {
-      NODE_ENV: "production",
+      // Local workerd trusts localhost editors and clears `secure` cookies;
+      // deployed stages gate both on NODE_ENV.
+      NODE_ENV: isAlchemyDev ? "development" : "production",
       TOM_STAGE: stage,
       TENANT: "tom",
       ...adapterDevSecrets,
@@ -163,7 +164,7 @@ export const adapter = Effect.gen(function* () {
       ? { name: "sophie-adapter", domain: sophieStageHost(stage, "adapter") }
       : { name: `sophie-adapter-${stage}`, domain: sophieStageHost(stage, "adapter") }),
     env: {
-      NODE_ENV: "production",
+      NODE_ENV: isAlchemyDev ? "development" : "production",
       TOM_STAGE: stage,
       TENANT: "sophie",
       ...sophieAdapterDevSecrets,
@@ -174,7 +175,6 @@ export const adapter = Effect.gen(function* () {
         ? undefined
         : {
             TOM_SECRETS: tomSecrets,
-            HYPERDRIVE: sophieHyperdrive,
           }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       ...(isAlchemyDev

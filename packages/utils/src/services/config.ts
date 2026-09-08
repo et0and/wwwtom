@@ -235,9 +235,22 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
     tenantAdmins ??
     (prefix === "SOPHIE_" ? undefined : parsed.CMS_ADMIN_EMAILS);
 
+  // Explicit worker env wins over the opaque bundle for provider keys:
+  // stage config is the only deploy-time guarantee when the store value
+  // is unreadable, so a stale bundle can never silently break a worker.
+  type ExplicitProviderSecrets = {
+    GOOGLE_CLIENT_ID?: string;
+    GOOGLE_CLIENT_SECRET?: string;
+  };
+  const explicitProviderSecrets: ExplicitProviderSecrets = {};
+  if (rest.GOOGLE_CLIENT_ID) explicitProviderSecrets.GOOGLE_CLIENT_ID = rest.GOOGLE_CLIENT_ID;
+  if (rest.GOOGLE_CLIENT_SECRET)
+    explicitProviderSecrets.GOOGLE_CLIENT_SECRET = rest.GOOGLE_CLIENT_SECRET;
+
   return {
     ...rest,
     ...bundle,
+    ...explicitProviderSecrets,
     // Per-tenant bundle keys (TOM_*/SOPHIE_*) let each tenant rotate its
     // secrets independently; unset tenant keys fall back to the shared
     // value so existing deploys keep working.

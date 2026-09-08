@@ -35,6 +35,25 @@ const requireAdminEmails = (
         }),
       );
 
+/**
+ * Resolve a required bundle secret at deploy time, failing the deploy when
+ * absent. Explicit worker env wins over the opaque shared TOM_SECRETS
+ * binding at runtime, so a stale bundle value can never silently break a
+ * worker that depends on the key.
+ */
+const requireBundleSecret = (
+  label: string,
+  value: string | undefined,
+): Effect.Effect<string, InfrastructureConfigError> =>
+  value !== undefined && value.trim() !== ""
+    ? Effect.succeed(value)
+    : Effect.fail(
+        new InfrastructureConfigError({
+          variable: label,
+          message: `${label} must be set in TOM_SECRETS`,
+        }),
+      );
+
 // Bundle-only keys never reach worker env as separate vars: each worker
 // gets the resolved value under the shared name (dev split) or via runtime
 // selection from the TOM_SECRETS binding (production, readCloudflareEnv).
@@ -85,6 +104,18 @@ export const api = Effect.gen(function* () {
   const sophieAdminEmails = yield* requireAdminEmails(
     "SOPHIE_CMS_ADMIN_EMAILS",
     process.env.SOPHIE_CMS_ADMIN_EMAILS ?? deployBundle.SOPHIE_CMS_ADMIN_EMAILS,
+  );
+  // Google OAuth for the Sophie worker resolves here (not from the shared
+  // binding at runtime): the Secrets Store value is opaque and unreadable,
+  // so explicit env is the only way to guarantee the deployed worker sees
+  // the current keys.
+  const sophieGoogleClientId = yield* requireBundleSecret(
+    "GOOGLE_CLIENT_ID",
+    process.env.GOOGLE_CLIENT_ID ?? deployBundle.GOOGLE_CLIENT_ID,
+  );
+  const sophieGoogleClientSecret = yield* requireBundleSecret(
+    "GOOGLE_CLIENT_SECRET",
+    process.env.GOOGLE_CLIENT_SECRET ?? deployBundle.GOOGLE_CLIENT_SECRET,
   );
 
   // Per-tenant OAuth isolation: the Sophie worker must not receive
@@ -247,6 +278,9 @@ export const api = Effect.gen(function* () {
       // Admin allowlist as explicit stage config (deploy-time env or
       // bundle, never code): it wins over the opaque shared bundle value.
       CMS_ADMIN_EMAILS: sophieAdminEmails,
+      // Google OAuth keys, explicit for the same reason (see above).
+      GOOGLE_CLIENT_ID: sophieGoogleClientId,
+      GOOGLE_CLIENT_SECRET: sophieGoogleClientSecret,
       ADAPTER_URL: isAlchemyDev
         ? "http://localhost:8790"
         : `https://${sophieStageHost(stage, "adapter")}`,

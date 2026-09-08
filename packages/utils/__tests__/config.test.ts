@@ -79,4 +79,31 @@ describe("readCloudflareEnv tenant secrets", () => {
     );
     expect(resolved.CMS_ADMIN_EMAILS).toBe("explicit@example.com");
   });
+
+  it("lets explicit worker env win for provider keys over a stale bundle", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv(
+        { ...sharedBundle, GOOGLE_CLIENT_ID: "stale-id", GOOGLE_CLIENT_SECRET: "stale-secret" },
+        {
+          TENANT: "sophie",
+          CMS_ADMIN_EMAILS: "sophie@example.com",
+          GOOGLE_CLIENT_ID: "explicit-id",
+          GOOGLE_CLIENT_SECRET: "explicit-secret",
+        },
+      ),
+    );
+    expect(resolved.GOOGLE_CLIENT_ID).toBe("explicit-id");
+    expect(resolved.GOOGLE_CLIENT_SECRET).toBe("explicit-secret");
+  });
+
+  it("falls back to bundle provider keys without explicit worker env", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv(
+        { ...sharedBundle, GOOGLE_CLIENT_ID: "bundle-id", GOOGLE_CLIENT_SECRET: "bundle-secret" },
+        { TENANT: "sophie", CMS_ADMIN_EMAILS: "sophie@example.com" },
+      ),
+    );
+    expect(resolved.GOOGLE_CLIENT_ID).toBe("bundle-id");
+    expect(resolved.GOOGLE_CLIENT_SECRET).toBe("bundle-secret");
+  });
 });
