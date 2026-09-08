@@ -11,7 +11,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
@@ -35,10 +35,6 @@ jobs:
       # TURBO_CACHE_SIGNATURE_KEY hold the same values seeded in the
       # TOM_SECRETS bundle; the signature key lets Turbo sign and verify
       # every artifact so a leaked write token cannot poison the cache.
-      # Concurrency stays at core count: unbounded fan-out starves vitest
-      # fork workers on these runners (silent kills surface as scheduler
-      # timeouts, slow suites as 5s test timeouts). Do not "fix" flakes by
-      # raising timeouts; keep parallelism capped instead.
       - name: Run unit tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
@@ -46,4 +42,4 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
           TURBO_TEAM: wwwtom
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-        run: pnpm turbo run test --concurrency=4
+        run: pnpm turbo run test
