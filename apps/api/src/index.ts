@@ -91,6 +91,7 @@ export const app = new Elysia({
     });
   })
   .onError(({ code, error, request }) => {
+    Effect.runFork(Effect.logError("API error", { code, cause: String(error?.cause ?? error) }));
     if (Schema.is(CmsError)(error)) {
       if (error.status === HttpStatus.NotFound) {
         Effect.runFork(Effect.logWarning("CMS not found", { path: request.url }));
@@ -143,7 +144,6 @@ export const app = new Elysia({
           );
         }),
       );
-      Effect.runFork(Effect.logError("CMS request failed", { cause: String(error) }));
       return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
     }
     if (code === "NOT_FOUND") {
