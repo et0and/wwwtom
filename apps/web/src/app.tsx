@@ -1,4 +1,6 @@
 import { QueryClientProvider } from "@tanstack/solid-query";
+import { useLocation } from "@solidjs/router";
+import { Show, createMemo } from "solid-js";
 import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
 import { ProgressBar } from "@tom/ui/ProgressBar";
@@ -10,14 +12,23 @@ import "./app.css";
 
 function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
   useColorMode();
+  const location = useLocation();
+  const isCanvas = createMemo(() => location.pathname.startsWith("/canvas"));
   return (
-    <div class="min-h-screen flex flex-col">
-      <SkipLink />
-      <ProgressBar />
-      <Nav />
-      <div class="flex-1">{props.children}</div>
-      <Footer />
-    </div>
+    <Show
+      when={isCanvas()}
+      fallback={
+        <div class="min-h-screen flex flex-col">
+          <SkipLink />
+          <ProgressBar />
+          <Nav />
+          <div class="flex-1">{props.children}</div>
+          <Footer />
+        </div>
+      }
+    >
+      <div class="h-dvh w-full overflow-hidden">{props.children}</div>
+    </Show>
   );
 }
 

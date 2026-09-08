@@ -20,7 +20,7 @@ const asBlock = <T extends ArenaBlock["type"]>(
 ): Extract<ArenaBlock, { type: T }> | null =>
   block.type === type ? (block as Extract<ArenaBlock, { type: T }>) : null;
 
-const formatFileSize = (bytes?: number | null): string => {
+export const formatFileSize = (bytes?: number | null): string => {
   if (!bytes) return "";
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -171,7 +171,7 @@ interface ArenaBlockItemProps {
   block: ArenaBlock;
 }
 
-function ArenaBlockItem(props: ArenaBlockItemProps) {
+export function ArenaBlockItem(props: ArenaBlockItemProps) {
   const block = () => props.block;
 
   return (

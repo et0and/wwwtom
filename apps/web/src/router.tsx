@@ -1,9 +1,16 @@
 import { createRouter } from "@solidjs/router";
 import { getQueryClient } from "~/libs/query-client";
-import { fetchPostBySlug, fetchPosts, fetchWorks, fetchWorkBySlug } from "~/server/adapter";
+import {
+  fetchChannel,
+  fetchPostBySlug,
+  fetchPosts,
+  fetchWorks,
+  fetchWorkBySlug,
+} from "~/server/adapter";
 import NotFound from "~/routes/[...404]";
 import About from "~/routes/about";
 import Accessibility from "~/routes/accessibility";
+import CanvasPage from "~/routes/canvas/[slug]";
 import Guestbook, { fetchEntries } from "~/routes/guestbook";
 import Home from "~/routes/index";
 import PostPage from "~/routes/posts/[slug]";
@@ -90,6 +97,20 @@ export const Router = createRouter({
     { path: "/products", component: Products },
     { path: "/purchase/:productId", component: Purchase },
     { path: "/worktable", component: Worktable },
+    {
+      path: "/canvas/:slug",
+      component: CanvasPage,
+      preload: ({ params }) => {
+        if (params.slug) {
+          getQueryClient()
+            .prefetchQuery({
+              queryKey: ["canvas-channel", params.slug],
+              queryFn: () => fetchChannel(params.slug as string),
+            })
+            .catch(ignoredPrefetchError);
+        }
+      },
+    },
     { path: "*404", component: NotFound },
   ],
 });

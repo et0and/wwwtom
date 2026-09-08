@@ -28,8 +28,18 @@ export function createCustomer(input: { email: string; name?: string; externalId
   return runAdapterRequest(() => callAdapter().polar.customers.post(input));
 }
 
+export function fetchChannel(slug: string) {
+  return runAdapterRequest(() => callAdapter().arena.channels({ slug }).get());
+}
+
 export function fetchChannelContents(slug: string, per: number) {
   return runAdapterRequest(() =>
     callAdapter().arena.channels({ slug }).contents.get({ query: { per } }),
+  );
+}
+
+export function fetchChannelContentsPage(slug: string, page: number, per: number) {
+  return runAdapterRequest(() =>
+    callAdapter().arena.channels({ slug }).contents.get({ query: { page, per } }),
   );
 }
