@@ -22,6 +22,12 @@ External packages and dependencies have been deliberately kept small in order to
 
 Content is served from a slim CMS on D1 plus R2 for the posts and works routes/slugs. Types live in `@tom/schemas/cms` as Effect Schemas.
 
+The same CMS codebase also runs [sophie.st](https://sophie.st): a separate blog plus Camus editor instance with isolated D1+R2, Google-only sign-in, and posts-only content. The API and adapter workers serve both tenants (`TENANT=tom|sophie`); the editor build switches tenant via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`.
+
+## Previews
+
+Every PR against `dev` gets preview deploys with links posted as PR comments: web, Tom CMS, Sophie web, Sophie CMS. Preview editors authenticate through the dev adapters (OAuth redirect URIs are exact-match, so per-PR hosts can't be registered).
+
 ## Deployment
 
 The main site is pretty cheap and bare bones. It uses [Cloudflare Workers](https://workers.cloudflare.com) and [Alchemy](https://alchemy.run) to build and deploy. All static media assets like images are hosted on a separate CDN to keep things lightweight and fast.

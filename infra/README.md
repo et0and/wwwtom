@@ -6,8 +6,10 @@ Effect V4.
 ## Managed apps
 
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
-- `apps/api`: Elysia Worker
-- `apps/adapter`: Elysia BFF Worker (integrations: arena, cms, polar, guestbook, github, image, og)
+- `apps/sophie`: Sophie SSR blog, built by `Cloudflare.Website.Vite`
+- `apps/editor`: Camus CMS SPA, built by `Cloudflare.Website.Vite` (Tom instance + Sophie instance via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`)
+- `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated D1+R2 per tenant)
+- `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, polar, guestbook, github, image, og; same tenant split)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
@@ -37,13 +39,16 @@ ALCHEMY_STAGE=staging pnpm deploy
 # Deploy one component
 pnpm deploy:shared
 pnpm deploy:api
+pnpm deploy:adapter
 pnpm deploy:web
+pnpm deploy:editor
+pnpm deploy:sophie
 pnpm deploy:runner
 pnpm deploy:turbo
 pnpm deploy:gtm
 ```
 
-Deployment order is `shared -> turbo -> api -> adapter -> web`. `gtm` is
+Deployment order is `shared -> turbo -> api -> adapter -> web -> editor -> sophie`. `gtm` is
 independent and can be deployed at any time.
 
 The `runner` stack is on-demand infrastructure, not part of the default
@@ -61,7 +66,7 @@ registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
-(`web -> adapter -> api -> turbo -> shared`).
+(`sophie -> editor -> web -> adapter -> api -> turbo -> shared`).
 
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 
@@ -145,13 +150,25 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "GITHUB_TOKEN": "...",
   "GITHUB_CLIENT_ID": "...",
   "GITHUB_CLIENT_SECRET": "...",
+  "GOOGLE_CLIENT_ID": "...",
+  "GOOGLE_CLIENT_SECRET": "...",
   "BETTER_AUTH_SECRET": "...",
   "CMS_ADMIN_EMAILS": "tom@example.com",
+  "TOM_CMS_ADMIN_EMAILS": "tom@example.com",
+  "SOPHIE_CMS_ADMIN_EMAILS": "sophie@example.com",
+  "SOPHIE_BETTER_AUTH_SECRET": "...",
+  "SOPHIE_INTERNAL_API_TOKEN": "...",
   "CONTROL_TOKEN": "...",
   "TURBO_CACHE_TOKEN": "...",
   "TURBO_CACHE_SIGNATURE_KEY": "..."
 }
 ```
+
+Per-tenant keys (`TOM_*`/`SOPHIE_*`) resolve under the shared names with
+shared-value fallback, so existing deploys keep working until the distinct
+keys are set. Explicit worker env wins over bundle values. Missing
+`TOM_CMS_ADMIN_EMAILS`/`SOPHIE_CMS_ADMIN_EMAILS` fail the deploy (fail
+closed); Sophie never inherits the shared allowlist.
 
 `GITHUB_TOKEN` is a fine-grained PAT scoped to the target repository with
 **Administration: write** permission (used to mint runner registration
@@ -159,7 +176,9 @@ tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
 random value of at least 32 characters.
 
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
-credentials for CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
+credentials for Tom CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
+`GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are the Google OAuth
+credentials for Sophie CMS sign-in.
 `BETTER_AUTH_SECRET` signs sessions (min 32 chars; `openssl rand -base64 32`).
 `CMS_ADMIN_EMAILS` is the comma-separated allowlist for sign-in; everyone else
 is rejected before a user row is created.
@@ -181,5 +200,11 @@ web code prefers the `HYPERDRIVE` binding’s connection string.
 
 ## Previews
 
-When `PULL_REQUEST` is set, the web stack posts or updates a GitHub preview
-comment. Preview stages should use `ALCHEMY_STAGE=pr-<number>`.
+When `PULL_REQUEST` is set, the web, editor, and sophie stacks post or
+update GitHub preview comments (Web, Tom CMS, Sophie Web, Sophie CMS).
+Preview stages should use `ALCHEMY_STAGE=pr-<number>`.
+
+Preview editors authenticate through the dev adapters: OAuth redirect
+URIs are exact-match at Google/GitHub, so per-PR hosts can never be
+registered. The dev APIs trust each PR's editor origin
+(`pr-<n>-cms.tom.so`, `pr-<n>-cms.sophie.st`).
