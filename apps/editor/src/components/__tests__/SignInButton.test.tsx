@@ -21,11 +21,11 @@ describe("SignInButton", () => {
     const button = rendered.getByRole("button", { name: /sign in with/i });
 
     expect(button).not.toBeDisabled();
-    expect(rendered.queryByLabelText("Loading")).toBeNull();
+    expect(rendered.queryByTestId("waiting-spinner")).toBeNull();
 
     fireEvent.click(button);
 
-    await rendered.findByLabelText("Loading");
+    await rendered.findByTestId("waiting-spinner");
     expect(button).toBeDisabled();
     expect(button.className).toContain("active:brightness-95");
   });

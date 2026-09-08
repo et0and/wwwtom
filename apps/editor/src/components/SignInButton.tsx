@@ -1,5 +1,6 @@
 import { Effect } from "effect";
-import { createSignal } from "solid-js";
+import { Show, createSignal } from "solid-js";
+import { Spinner } from "@tom/ui/Spinner";
 import { Button } from "@tom/ui/tomui/button";
 import { runClient } from "../lib/api";
 import { authProvider, startSocialSignIn } from "../lib/session";
@@ -37,10 +38,13 @@ export const SignInButton = (props: {
     <Button
       type="button"
       variant="primary"
-      loading={isSigningIn()}
+      disabled={isSigningIn()}
       onClick={onClick}
       class="active:brightness-95"
     >
+      <Show when={isSigningIn()}>
+        <Spinner color="white" />
+      </Show>
       {provider === "google" ? "Sign in with Google" : "Sign in with GitHub"}
     </Button>
   );
