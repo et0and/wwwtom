@@ -35,9 +35,10 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
 
-      # Deploys shared -> api -> adapter -> web + editor (Tom CMS) + sophie
-      # (Sophie web + Sophie CMS). The web/editor stacks post or update the
-      # preview comments via infra/utils/github/preview-comment.ts.
+      # Deploys shared -> api -> adapter -> web + editor (Tom CMS) + jigjam
+      # (calming puzzle SPA) + sophie (Sophie web + Sophie CMS). The web/editor
+      # stacks post or update the preview comments via
+      # infra/utils/github/preview-comment.ts.
       # The preview api reads the dev database + bucket directly
       # (infra/cms/cms.storage.ts), so seeded content renders as-is.
       - name: Deploy preview stage
@@ -47,6 +48,7 @@ jobs:
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:editor --yes &&
+          pnpm deploy:jigjam --yes &&
           pnpm deploy:sophie --yes
 
   destroy:
@@ -74,7 +76,7 @@ jobs:
           ref: dev
       - uses: ./.github/actions/setup
 
-      # Tears down web + editor + sophie -> adapter -> api -> shared so no
+      # Tears down web + editor + jigjam + sophie -> adapter -> api -> shared so no
       # preview resources linger after the PR is merged or closed. Separate
       # steps with `if: always()` so one stack's failure never blocks the
       # rest — a single `&&` chain orphans workers (e.g. api/adapter) when
@@ -85,6 +87,10 @@ jobs:
       - name: Destroy editor preview stage
         if: always()
         run: pnpm destroy:editor --yes
+
+      - name: Destroy jigjam preview stage
+        if: always()
+        run: pnpm destroy:jigjam --yes
 
       - name: Destroy sophie preview stage
         if: always()

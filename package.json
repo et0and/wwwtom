@@ -8,6 +8,7 @@
     "dev:web": "turbo run dev --filter=@tom/web",
     "dev:sophie": "turbo run dev --filter=@tom/sophie",
     "dev:editor": "turbo run dev --filter=@tom/editor",
+    "dev:jigjam": "turbo run dev --filter=@tom/jigjam",
     "dev:api": "pnpm --filter @tom/infra run dev:api",
     "dev:adapter": "pnpm --filter @tom/infra run dev:adapter",
     "lint": "turbo run lint",
@@ -16,9 +17,10 @@
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",
     "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/utils && npx vitest run --update",
-    "deploy": "pnpm run deploy:shared && pnpm run deploy:turbo && pnpm run deploy:api && pnpm run deploy:adapter && pnpm run deploy:web && pnpm run deploy:editor && pnpm run deploy:sophie",
+    "deploy": "pnpm run deploy:shared && pnpm run deploy:turbo && pnpm run deploy:api && pnpm run deploy:adapter && pnpm run deploy:web && pnpm run deploy:editor && pnpm run deploy:jigjam && pnpm run deploy:sophie",
     "deploy:shared": "pnpm --filter @tom/infra run deploy:shared",
     "deploy:web": "pnpm --filter @tom/infra run deploy:web",
+    "deploy:jigjam": "pnpm --filter @tom/infra run deploy:jigjam",
     "deploy:sophie": "pnpm --filter @tom/infra run deploy:sophie",
     "deploy:editor": "pnpm --filter @tom/infra run deploy:editor",
     "deploy:api": "pnpm --filter @tom/infra run deploy:api",
@@ -38,6 +40,7 @@
     "version": "changeset version",
     "release": "turbo run build && changeset publish --no-git",
     "destroy:editor": "pnpm --filter @tom/infra run destroy:editor",
+    "destroy:jigjam": "pnpm --filter @tom/infra run destroy:jigjam",
     "destroy:sophie": "pnpm --filter @tom/infra run destroy:sophie"
   },
   "dependencies": {

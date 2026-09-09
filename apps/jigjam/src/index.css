@@ -1,0 +1,81 @@
+@import "tailwindcss";
+@import "@tom/ui/tomui.css";
+@import "@tom/ui/tomui/theme-tomui.css";
+
+@source "../../../packages/ui/src/**/*.tsx";
+
+:root {
+  color-scheme: light dark;
+}
+
+@layer base {
+  body {
+    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+  }
+}
+
+@layer components {
+  .jigjam-shell {
+    @apply mx-auto max-w-6xl px-4 pb-10 font-sans;
+  }
+
+  .jigjam-setup {
+    @apply grid gap-4 py-8;
+  }
+
+  .jigjam-setup-body {
+    @apply mt-4 grid gap-4;
+  }
+
+  .jigjam-pick {
+    @apply flex items-center gap-2;
+  }
+
+  .jigjam-thumb {
+    @apply h-14 w-20 rounded-md object-cover ring ring-tomui-line;
+  }
+
+  .jigjam-grid-picks {
+    @apply flex flex-wrap items-end gap-3;
+  }
+
+  .jigjam-select {
+    @apply grid gap-1.5;
+  }
+
+  .jigjam-count {
+    @apply pb-2;
+  }
+
+  .jigjam-board {
+    @apply grid gap-4 py-6;
+  }
+
+  .jigjam-topbar {
+    @apply flex flex-wrap items-start justify-between gap-3;
+  }
+
+  .jigjam-actions {
+    @apply flex flex-wrap items-center gap-2;
+  }
+
+  .jigjam-time {
+    @apply font-medium tabular-nums;
+  }
+
+  .jigjam-scroll {
+    @apply overflow-auto rounded-lg ring ring-tomui-line;
+  }
+
+  .jigjam-play {
+    @apply relative bg-neutral-100 dark:bg-neutral-900;
+  }
+
+  .jigjam-ghost {
+    @apply pointer-events-none absolute rounded-sm opacity-25;
+  }
+
+  .jigjam-loading {
+    @apply absolute top-3 left-3 flex items-center gap-2 text-sm;
+  }
+}
