@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
-import { QueryClientProvider } from "@tanstack/solid-query";
-import { queryClient } from "~/libs/query-client";
+import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import { HttpError } from "@tom/types/errors";
 import PostPage from "~/routes/posts/[slug]";
 
 vi.mock("~/server/adapter", () => ({
@@ -30,18 +30,21 @@ const TestRouter = createRouter({
   routes: [{ path: "/posts/:slug", component: PostPage }],
 });
 
-const renderPostPage = () =>
-  render(() => (
-    <QueryClientProvider client={queryClient}>
+const renderPostPage = () => {
+  // Fresh client per test: no shared cache between cases, and no retries so
+  // error states settle within the default waitFor timeout.
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(() => (
+    <QueryClientProvider client={client}>
       <TestRouter />
     </QueryClientProvider>
   ));
+};
 
 const headMeta = (selector: string): string | null | undefined =>
   document.head.querySelector(selector)?.getAttribute("content");
 
 beforeEach(() => {
-  queryClient.clear();
   mockedFetchPostBySlug.mockReset();
 });
 
@@ -89,5 +92,30 @@ describe("post page meta tags", () => {
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
 
     expect(headMeta('meta[property="og:title"]')).toBe("A pattern language | Tom Hackshaw");
+  });
+
+  it("shows a spinner — not Not found — while the post is loading", async () => {
+    mockedFetchPostBySlug.mockReturnValue(new Promise(() => {}));
+    renderPostPage();
+    await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
+    expect(screen.queryByText("Not found")).toBeNull();
+  });
+
+  it("shows Not found once a missing slug settles to null", async () => {
+    mockedFetchPostBySlug.mockResolvedValue(null);
+    renderPostPage();
+    await waitFor(() => expect(screen.getByText("Not found")).toBeTruthy());
+    expect(screen.getByText('The post "a-pattern-language" does not exist.')).toBeTruthy();
+    expect(document.head.querySelector("title")?.textContent).toBe("Not found | Tom Hackshaw");
+  });
+
+  it("shows an error banner — not Not found — on a server error", async () => {
+    mockedFetchPostBySlug.mockRejectedValue(
+      new HttpError({ message: "Adapter request failed", status: 500 }),
+    );
+    renderPostPage();
+    await waitFor(() => expect(screen.getByText("Error loading post")).toBeTruthy());
+    expect(screen.queryByText("Not found")).toBeNull();
+    expect(document.head.querySelector("title")?.textContent).toBe("Error | Tom Hackshaw");
   });
 });

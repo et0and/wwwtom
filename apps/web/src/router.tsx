@@ -1,6 +1,12 @@
 import { createRouter } from "@solidjs/router";
 import { getQueryClient } from "~/libs/query-client";
-import { fetchPostBySlug, fetchPosts, fetchWorks, fetchWorkBySlug } from "~/server/adapter";
+import {
+  POSTS_PAGE_SIZE,
+  fetchPostBySlug,
+  fetchPosts,
+  fetchWorks,
+  fetchWorkBySlug,
+} from "~/server/adapter";
 import NotFound from "~/routes/[...404]";
 import About from "~/routes/about";
 import Accessibility from "~/routes/accessibility";
@@ -32,19 +38,21 @@ export const Router = createRouter({
     {
       path: "/guestbook",
       component: Guestbook,
-      preload: () => {
+      preload: () =>
         getQueryClient()
           .prefetchQuery({ queryKey: ["guestbook-entries"], queryFn: fetchEntries })
-          .catch(ignoredPrefetchError);
-      },
+          .catch(ignoredPrefetchError),
     },
     {
       path: "/posts",
       component: PostsHome,
       preload: ({ location }) => {
-        const page = Number(location.query.page) || 1;
-        getQueryClient()
-          .prefetchQuery({ queryKey: ["posts", page], queryFn: () => fetchPosts(page, 5) })
+        const page = Math.max(1, Math.floor(Number(location.query.page) || 1));
+        return getQueryClient()
+          .prefetchQuery({
+            queryKey: ["posts", page],
+            queryFn: () => fetchPosts(page, POSTS_PAGE_SIZE),
+          })
           .catch(ignoredPrefetchError);
       },
     },
@@ -52,37 +60,36 @@ export const Router = createRouter({
       path: "/posts/:slug",
       component: PostPage,
       preload: ({ params }) => {
-        if (params.slug) {
-          getQueryClient()
-            .prefetchQuery({
-              queryKey: ["post", params.slug],
-              queryFn: () => fetchPostBySlug(params.slug as string),
-            })
-            .catch(ignoredPrefetchError);
-        }
+        const slug = params.slug;
+        if (!slug) return undefined;
+        return getQueryClient()
+          .prefetchQuery({
+            queryKey: ["post", slug],
+            queryFn: () => fetchPostBySlug(slug),
+          })
+          .catch(ignoredPrefetchError);
       },
     },
     {
       path: "/work",
       component: WorkHome,
-      preload: () => {
+      preload: () =>
         getQueryClient()
           .prefetchQuery({ queryKey: ["works"], queryFn: () => fetchWorks() })
-          .catch(ignoredPrefetchError);
-      },
+          .catch(ignoredPrefetchError),
     },
     {
       path: "/work/:slug",
       component: WorkPage,
       preload: ({ params }) => {
-        if (params.slug) {
-          getQueryClient()
-            .prefetchQuery({
-              queryKey: ["work", params.slug],
-              queryFn: () => fetchWorkBySlug(params.slug as string),
-            })
-            .catch(ignoredPrefetchError);
-        }
+        const slug = params.slug;
+        if (!slug) return undefined;
+        return getQueryClient()
+          .prefetchQuery({
+            queryKey: ["work", slug],
+            queryFn: () => fetchWorkBySlug(slug),
+          })
+          .catch(ignoredPrefetchError);
       },
     },
     { path: "/work/wwwork/hold", component: Hold },

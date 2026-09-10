@@ -1,7 +1,9 @@
 import { Effect, Option, Schema } from "effect";
-import { CmsSlug, type CmsCategory, type CmsListResponse, type CmsPost } from "@tom/schemas/cms";
-import type { HttpError } from "@tom/types/errors";
-import { adapterRequest, callSophie, runClient } from "./api";
+import { CmsSlug } from "@tom/schemas/cms";
+import type { CmsCategory, CmsListResponse, CmsPost, CmsPostSummary } from "@tom/schemas/cms";
+import { HttpStatus } from "@tom/constants/http";
+import { HttpError } from "@tom/types/errors";
+import { adapterRequest, callSophie, runClient, runClientOrNull } from "./api";
 
 const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
   year: "numeric",
@@ -35,23 +37,47 @@ export const formatPublishedDate = (value: string | null): string =>
     () => "",
   );
 
-/** List published Sophie posts, newest first, optionally within a category. */
+/**
+ * Parse the category filter at the boundary. Invalid slugs fail fast with
+ * 400 before touching the network; the shape mirrors CmsSlug, not the
+ * adapter's validation body. Empty string means no filter (the picker only
+ * emits null or a real slug, so this is defensive).
+ */
+const decodeCategoryFilter = (
+  category: string | null,
+): Effect.Effect<CmsSlug | null, HttpError> => {
+  if (category === null || category === "") return Effect.succeed(null);
+  return Schema.decodeUnknownEffect(CmsSlug)(category).pipe(
+    Effect.mapError(
+      () =>
+        new HttpError({
+          message: `Invalid category: ${category}`,
+          status: HttpStatus.BadRequest,
+        }),
+    ),
+  );
+};
+
+/** Reserved category for standalone pages (about, etc.), branded for queries. */
+export const PAGES_CATEGORY: CmsSlug = Effect.runSync(Schema.decodeUnknownEffect(CmsSlug)("pages"));
+
+/** Reserved slug for the about page. Sophie edits it as a post in Camus. */
+export const ABOUT_SLUG = "about";
+
+/**
+ * List published Sophie post summaries, newest first, optionally within a
+ * category. Standalone pages stay hidden server-side (excludeCategory) so
+ * totals match the filtered window.
+ */
 export const listPosts = (
   page: number,
   category: string | null = null,
-): Effect.Effect<CmsListResponse<CmsPost>, HttpError> => {
-  const categoryOption =
-    category === null || category === ""
-      ? Option.none<CmsSlug>()
-      : Schema.decodeUnknownOption(CmsSlug)(category);
-  return adapterRequest(() =>
-    callSophie().content.posts.get({
-      query: Option.isNone(categoryOption)
-        ? { page, pageSize: 10 }
-        : { page, pageSize: 10, category: categoryOption.value },
-    }),
-  );
-};
+): Effect.Effect<CmsListResponse<CmsPostSummary>, HttpError> =>
+  Effect.flatMap(decodeCategoryFilter(category), (slug) => {
+    const baseQuery = { page, pageSize: 10, excludeCategory: PAGES_CATEGORY };
+    const query = slug === null ? baseQuery : { ...baseQuery, category: slug };
+    return adapterRequest(() => callSophie().content.posts.summary.get({ query }));
+  });
 
 /** Get one published Sophie post by slug. */
 export const getPost = (slug: string): Effect.Effect<CmsPost, HttpError> =>
@@ -65,44 +91,19 @@ export const listCategories = (): Effect.Effect<ReadonlyArray<CmsCategory>, Http
 export const fetchPosts = (
   page: number,
   category: string | null = null,
-): Promise<CmsListResponse<CmsPost>> => runClient(listPosts(page, category));
+): Promise<CmsListResponse<CmsPostSummary>> => runClient(listPosts(page, category));
 
-export const fetchPost = (slug: string): Promise<CmsPost> => runClient(getPost(slug));
+export const fetchPost = (slug: string): Promise<CmsPost | null> => runClientOrNull(getPost(slug));
 
 export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> =>
   runClient(listCategories());
 
-export const fetchAbout = (): Promise<CmsPost> => runClient(getPost(ABOUT_SLUG));
+export const fetchAbout = (): Promise<CmsPost | null> => runClientOrNull(getPost(ABOUT_SLUG));
 
 type CategorizedPost = {
   readonly categories: ReadonlyArray<{ readonly slug: string }>;
 };
 
-/** Reserved category for standalone pages (about, etc.). */
-export const PAGES_CATEGORY = "pages";
-
-/** Reserved slug for the about page. Sophie edits it as a post in Camus. */
-export const ABOUT_SLUG = "about";
-
-/** Standalone pages stay off the posts index. */
+/** Standalone pages stay off the category picker. */
 export const isPage = <P extends CategorizedPost>(post: P): boolean =>
   post.categories.some((entry) => entry.slug === PAGES_CATEGORY);
-
-/** Filter posts by category slug on the client. */
-export const postsInCategory = <P extends CategorizedPost>(
-  posts: ReadonlyArray<P>,
-  category: string | null,
-): ReadonlyArray<P> => {
-  if (category === null || category === "") return posts;
-  return posts.filter((post) => post.categories.some((entry) => entry.slug === category));
-};
-
-/** Posts for the index: standalone pages stay hidden, then category filter. */
-export const indexPosts = <P extends CategorizedPost>(
-  posts: ReadonlyArray<P>,
-  category: string | null,
-): ReadonlyArray<P> =>
-  postsInCategory(
-    posts.filter((post) => !isPage(post)),
-    category,
-  );

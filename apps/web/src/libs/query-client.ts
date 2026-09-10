@@ -1,13 +1,22 @@
 import { QueryClient } from "@tanstack/solid-query";
 import { getRequestEvent } from "@solidjs/web";
 
+/** List freshness: indexes refetch after 5 minutes stale. */
+const STALE_MS = 1000 * 60 * 5;
+/** Shared-client retention: entries survive 30 minutes after unmount. */
+const GC_MS = 1000 * 60 * 30;
+
 const DEFAULT_OPTIONS = {
   queries: {
-    staleTime: 1000 * 60 * 5,
+    staleTime: STALE_MS,
+    gcTime: GC_MS,
+    // Detail reads map 404s to settled null data (see
+    // runAdapterRequestOrNull), so absent slugs never enter the error
+    // channel; other failures retry once.
     retry: 1,
     refetchOnWindowFocus: false,
   },
-} as const;
+};
 
 /**
  * Fallback client: unit tests and code outside a request scope (client

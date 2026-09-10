@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import { render, screen, waitFor } from "@solidjs/testing-library";
+import { fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { queryClient } from "~/libs/query-client";
 import PostsHome from "~/routes/posts/index";
 
 vi.mock("~/server/adapter", () => ({
+  POSTS_PAGE_SIZE: 5,
   fetchPosts: vi.fn(),
 }));
 
@@ -91,4 +92,38 @@ describe("posts page", () => {
     renderPosts();
     await waitFor(() => expect(screen.getByText("No posts found.")).toBeTruthy());
   });
+
+  it("swaps to page 2 on client navigation", async () => {
+    // Placeholder data wedged this flow (the new page never replaced the
+    // old one), so pin the swap: click Next, page 2 renders, page 1 clears.
+    const oldest = {
+      id: "post-9",
+      title: "Oldest post",
+      summary: "The oldest",
+      slug: "oldest-post",
+      publishedAt: "2020-01-01T00:00:00.000Z",
+      meta: { description: "Old" },
+    };
+    mockedFetchPosts.mockImplementation((page: number) =>
+      Promise.resolve(
+        page === 2
+          ? { ...postsData, docs: [oldest], page: 2, totalPages: 2 }
+          : { ...postsData, totalPages: 2 },
+      ),
+    );
+    const NavRouter = createRouter({
+      history: memoryHistory("/posts"),
+      routes: [{ path: "/posts", component: PostsHome }],
+    });
+    render(() => (
+      <QueryClientProvider client={queryClient}>
+        <NavRouter />
+      </QueryClientProvider>
+    ));
+    await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
+    fireEvent.click(screen.getByRole("link", { name: "Next" }));
+    await waitFor(() => expect(screen.getByText("Oldest post")).toBeTruthy());
+    expect(screen.queryByText("A pattern language")).toBeNull();
+    expect(mockedFetchPosts).toHaveBeenCalledWith(2, 5);
+  }, 10000);
 });

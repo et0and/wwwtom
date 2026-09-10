@@ -1,3 +1,16 @@
+## [3.0.2](https://github.com/et0and/wwwtom/compare/v3.0.1...v3.0.2) (2026-09-10)
+
+
+### Bug Fixes
+
+* **simulator:** serve post/work summary fixtures ([9d4eac6](https://github.com/et0and/wwwtom/commit/9d4eac62f981148a7fad3653c901bc758c3f2313))
+* **web:** drop placeholderData that wedged posts pagination ([3c3e7ce](https://github.com/et0and/wwwtom/commit/3c3e7cec92e5c943118eaa975f80ebb7c1f9a66d))
+
+
+### Performance Improvements
+
+* **cms:** cold-start posts/work indexes and detail pages ([807e631](https://github.com/et0and/wwwtom/commit/807e6312941d5fabaca4b77ff473a8ebc26a9f45))
+
 ## [3.0.1](https://github.com/et0and/wwwtom/compare/v3.0.0...v3.0.1) (2026-09-10)
 
 

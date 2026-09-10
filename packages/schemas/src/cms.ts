@@ -183,6 +183,13 @@ export type TiptapInline = Schema.Schema.Type<typeof TiptapInlineSchema>;
 export type TiptapBlock = Schema.Schema.Type<typeof TiptapBlockSchema>;
 export type TiptapDoc = Schema.Schema.Type<typeof TiptapDocSchema>;
 
+/** Arena channel reference embedded in a Tiptap document, in order. */
+export const ArenaRefSchema = Schema.Struct({
+  slug: Schema.String,
+  title: Schema.optional(Schema.String),
+});
+export type ArenaRef = typeof ArenaRefSchema.Type;
+
 export const CmsMetaSchema = Schema.Struct({
   title: Schema.NullOr(Schema.String),
   description: Schema.NullOr(Schema.String),
@@ -250,6 +257,45 @@ export const CmsWorkSchema = Schema.Struct({
   updatedAt: Schema.String,
 });
 export type CmsWork = typeof CmsWorkSchema.Type;
+
+/**
+ * Slim list item: every CmsPost field except the heavy body (content +
+ * html). List views (indexes, sitemaps) never render the body; the summary
+ * endpoints serve this shape so list payloads stay small over the
+ * client → adapter → api hops. Single-item reads keep the full schema.
+ *
+ * Kept in sync with CmsPostSchema by hand (Effect 4 has no Schema.omit);
+ * cms-summary.test.ts pins the key parity.
+ */
+export const CmsPostSummarySchema = Schema.Struct({
+  id: CmsPostId,
+  slug: CmsSlug,
+  title: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+  status: CmsStatusSchema,
+  publishedAt: Schema.NullOr(Schema.String),
+  heroMediaId: Schema.NullOr(CmsMediaId),
+  categories: Schema.Array(CmsCategorySchema),
+  meta: CmsMetaSchema,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+});
+export type CmsPostSummary = typeof CmsPostSummarySchema.Type;
+
+/** Slim list item for works, same rationale as CmsPostSummary. */
+export const CmsWorkSummarySchema = Schema.Struct({
+  id: CmsWorkId,
+  slug: CmsSlug,
+  title: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+  status: CmsStatusSchema,
+  publishedAt: Schema.NullOr(Schema.String),
+  heroMediaId: Schema.NullOr(CmsMediaId),
+  meta: CmsMetaSchema,
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+});
+export type CmsWorkSummary = typeof CmsWorkSummarySchema.Type;
 
 export const CmsPostInputSchema = Schema.Struct({
   slug: CmsSlug,
@@ -321,6 +367,13 @@ export const CmsPagingSchema = Schema.Struct({
   pageSize: Schema.optional(PagingNumber),
   status: Schema.optional(CmsStatusFilterSchema),
   category: Schema.optional(CmsSlug),
+  /**
+   * Exclude one category server-side (Sophie hides its reserved "pages"
+   * category from the index without skewing totalDocs/totalPages, which a
+   * client-side filter would). Works routes reject paging carrying either
+   * category key — works have no categories.
+   */
+  excludeCategory: Schema.optional(CmsSlug),
 });
 export type CmsPaging = typeof CmsPagingSchema.Type;
 

@@ -1,8 +1,15 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import { CmsSlug, type CmsPost, type TiptapBlock, type TiptapDoc } from "@tom/schemas/cms";
+import {
+  CmsSlug,
+  type ArenaRef,
+  type CmsPost,
+  type TiptapBlock,
+  type TiptapDoc,
+} from "@tom/schemas/cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
+import { hasSessionCredential } from "@tom/utils/services/session";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -67,6 +74,54 @@ const cmsApi = async (request: Request) => {
 };
 
 const SessionBodySchema = Schema.Struct({ session: Schema.Unknown });
+
+/**
+ * Edge TTLs for anonymous CMS reads: a minute fresh at the edge, five in a
+ * shared cache, a day of stale-while-revalidate. Content edits are rare and
+ * readers tolerate slight staleness; session reads (drafts) never store.
+ */
+const PUBLIC_CMS_CACHE = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400";
+const PRIVATE_NO_STORE = "private, no-store";
+
+/** List page sizes mirror the index pages that consume them. */
+const POSTS_PAGE_SIZE = 5;
+const WORKS_PAGE_SIZE = 10;
+
+/**
+ * Edge-cache public CMS reads. Anonymous responses are identical for every
+ * reader (published only), so they cache at the edge with
+ * stale-while-revalidate; session requests carry drafts and never store.
+ * Only anonymous responses ever populate the cache, so an admin preview
+ * may read stale-published but an anonymous reader can never see drafts.
+ * Called only after a successful proxy — error responses never store.
+ */
+const setCmsCache = (request: Request, set: { headers: Record<string, string | number> }): void => {
+  if (hasSessionCredential(request)) {
+    set.headers["Cache-Control"] = PRIVATE_NO_STORE;
+    return;
+  }
+  set.headers["Cache-Control"] = PUBLIC_CMS_CACHE;
+  set.headers["CDN-Cache-Control"] = PUBLIC_CMS_CACHE;
+};
+
+type CmsApi = Awaited<ReturnType<typeof cmsApi>>["api"];
+
+/**
+ * Proxy a public CMS read, then mark it cacheable. The cache headers go on
+ * after the upstream succeeds so 404/500 problem responses never store at
+ * the edge (a fresh slug would 404 for the whole s-maxage otherwise).
+ */
+const proxyCachedCms = async <T>(
+  request: Request,
+  set: { headers: Record<string, string | number> },
+  resource: string,
+  call: (api: CmsApi) => TreatyCall<T>,
+): Promise<T> => {
+  const { api, context } = await cmsApi(request);
+  const data = await proxyCms(call(api), resource, context);
+  setCmsCache(request, set);
+  return data;
+};
 
 /**
  * Session gate for CMS writes. The browser session cookie rides the
@@ -281,11 +336,6 @@ const toFeedDoc = (post: CmsPost) => ({
   content: post.html,
 });
 
-export type ArenaRef = {
-  readonly slug: string;
-  readonly title?: string;
-};
-
 /** Arena channel references embedded in a Tiptap document, in order. */
 export const extractArenaRefs = (doc: TiptapDoc): Array<ArenaRef> => {
   const refs: Array<ArenaRef> = [];
@@ -310,14 +360,24 @@ const PostQuerySchema = Schema.Struct({
   pageSize: Schema.optional(Schema.NumberFromString),
   status: Schema.optional(Schema.Literals(["all", "draft", "published"])),
   category: Schema.optional(CmsSlug),
+  excludeCategory: Schema.optional(CmsSlug),
 });
 
 type PostQuery = typeof PostQuerySchema.Type;
 
-/** Forward the browser session cookie so the API can unlock drafts. */
-const sessionHeaders = (request: Request): { cookie?: string } => {
+/**
+ * Forward the session credential so the API can unlock drafts. Cookie and
+ * bearer both ride the hop — the API's hasSessionCredential keys off the
+ * same pair, so a bearer-authed admin never reads published-only data that
+ * the edge then caches as public.
+ */
+const sessionHeaders = (request: Request) => {
+  const headers: Record<string, string> = {};
   const cookie = request.headers.get("cookie");
-  return cookie === null ? {} : { cookie };
+  if (cookie !== null) headers["cookie"] = cookie;
+  const authorization = request.headers.get("authorization");
+  if (authorization !== null) headers["authorization"] = authorization;
+  return headers;
 };
 
 const statusQuery = (query: PostQuery): { status?: "all" | "draft" | "published" } =>
@@ -325,6 +385,22 @@ const statusQuery = (query: PostQuery): { status?: "all" | "draft" | "published"
 
 const categoryQuery = (query: PostQuery): { category?: string } =>
   query.category === undefined ? {} : { category: query.category };
+
+const excludeCategoryQuery = (query: PostQuery): { excludeCategory?: string } =>
+  query.excludeCategory === undefined ? {} : { excludeCategory: query.excludeCategory };
+
+/**
+ * Works have no categories: fail closed instead of 200ing an unfiltered
+ * list the caller believes is filtered. The API enforces the same gate.
+ */
+const rejectWorkCategory = (query: PostQuery): void => {
+  if (query.category !== undefined || query.excludeCategory !== undefined) {
+    throw new AdapterError({
+      status: HttpStatus.BadRequest,
+      message: "Category filter not supported for works",
+    });
+  }
+};
 
 const postQuerySchema = Schema.toStandardSchemaV1(PostQuerySchema);
 
@@ -343,35 +419,53 @@ const MediaParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.S
 export const cmsIntegration = new Elysia({ name: "cms" })
   .get(
     "/content/posts",
-    async ({ query, request }) => {
-      const { api, context } = await cmsApi(request);
-      return proxyCms(
+    async ({ query, request, set }) =>
+      proxyCachedCms(request, set, "posts", (api) =>
         api.posts.get({
           query: {
             page: query.page ?? 1,
-            pageSize: query.pageSize ?? 5,
+            pageSize: query.pageSize ?? POSTS_PAGE_SIZE,
             ...statusQuery(query),
             ...categoryQuery(query),
+            ...excludeCategoryQuery(query),
           },
           headers: sessionHeaders(request),
         }),
-        "posts",
-        context,
-      );
-    },
+      ),
     {
       query: postQuerySchema,
       detail: { description: "List posts (drafts need a session)", tags: ["cms"] },
     },
   )
   .get(
+    // Static before dynamic: "/content/posts/summary" must not read as a slug.
+    "/content/posts/summary",
+    async ({ query, request, set }) =>
+      proxyCachedCms(request, set, "post summaries", (api) =>
+        api.posts.summary.get({
+          query: {
+            page: query.page ?? 1,
+            pageSize: query.pageSize ?? POSTS_PAGE_SIZE,
+            ...statusQuery(query),
+            ...categoryQuery(query),
+            ...excludeCategoryQuery(query),
+          },
+          headers: sessionHeaders(request),
+        }),
+      ),
+    {
+      query: postQuerySchema,
+      detail: {
+        description: "List post summaries, no body (drafts need a session)",
+        tags: ["cms"],
+      },
+    },
+  )
+  .get(
     "/content/posts/:slug",
-    async ({ params, request }) => {
-      const { api, context } = await cmsApi(request);
-      const post = await proxyCms(
+    async ({ params, request, set }) => {
+      const post = await proxyCachedCms(request, set, "post", (api) =>
         api.posts({ slug: params.slug }).get({ headers: sessionHeaders(request) }),
-        "post",
-        context,
       );
       return { ...post, arenaBlocks: extractArenaRefs(post.content) };
     },
@@ -382,15 +476,17 @@ export const cmsIntegration = new Elysia({ name: "cms" })
   )
   .get(
     "/content/works",
-    async ({ query, request }) => {
-      const { api, context } = await cmsApi(request);
-      return proxyCms(
+    async ({ query, request, set }) => {
+      rejectWorkCategory(query);
+      return proxyCachedCms(request, set, "works", (api) =>
         api.works.get({
-          query: { page: query.page ?? 1, pageSize: query.pageSize ?? 10, ...statusQuery(query) },
+          query: {
+            page: query.page ?? 1,
+            pageSize: query.pageSize ?? WORKS_PAGE_SIZE,
+            ...statusQuery(query),
+          },
           headers: sessionHeaders(request),
         }),
-        "works",
-        context,
       );
     },
     {
@@ -399,13 +495,34 @@ export const cmsIntegration = new Elysia({ name: "cms" })
     },
   )
   .get(
+    // Static before dynamic: "/content/works/summary" must not read as a slug.
+    "/content/works/summary",
+    async ({ query, request, set }) => {
+      rejectWorkCategory(query);
+      return proxyCachedCms(request, set, "work summaries", (api) =>
+        api.works.summary.get({
+          query: {
+            page: query.page ?? 1,
+            pageSize: query.pageSize ?? WORKS_PAGE_SIZE,
+            ...statusQuery(query),
+          },
+          headers: sessionHeaders(request),
+        }),
+      );
+    },
+    {
+      query: postQuerySchema,
+      detail: {
+        description: "List work summaries, no body (drafts need a session)",
+        tags: ["cms"],
+      },
+    },
+  )
+  .get(
     "/content/works/:slug",
-    async ({ params, request }) => {
-      const { api, context } = await cmsApi(request);
-      const work = await proxyCms(
+    async ({ params, request, set }) => {
+      const work = await proxyCachedCms(request, set, "work", (api) =>
         api.works({ slug: params.slug }).get({ headers: sessionHeaders(request) }),
-        "work",
-        context,
       );
       return { ...work, arenaBlocks: extractArenaRefs(work.content) };
     },
@@ -416,20 +533,16 @@ export const cmsIntegration = new Elysia({ name: "cms" })
   )
   .get(
     "/content/categories",
-    async ({ request }) => {
-      const { api, context } = await cmsApi(request);
-      return proxyCms(api.categories.get(), "categories", context);
-    },
+    async ({ request, set }) =>
+      proxyCachedCms(request, set, "categories", (api) => api.categories.get()),
     {
       detail: { description: "List categories", tags: ["cms"] },
     },
   )
   .get(
     "/content/media/:id",
-    async ({ params, request }) => {
-      const { api, context } = await cmsApi(request);
-      return proxyCms(api.media({ id: params.id }).get(), "media", context);
-    },
+    async ({ params, request, set }) =>
+      proxyCachedCms(request, set, "media", (api) => api.media({ id: params.id }).get()),
     {
       params: MediaParamsSchema,
       detail: { description: "Get media metadata by id", tags: ["cms"] },
@@ -469,12 +582,12 @@ export const cmsIntegration = new Elysia({ name: "cms" })
   )
   .get(
     "/content/feed",
-    async ({ query, request }) => {
-      const { api, context } = await cmsApi(request);
-      const posts = await proxyCms(
-        api.posts.get({ query: { page: 1, pageSize: query.limit ?? 20 } }),
-        "feed",
-        context,
+    async ({ query, request, set }) => {
+      const posts = await proxyCachedCms(request, set, "feed", (api) =>
+        api.posts.get({
+          query: { page: 1, pageSize: query.limit ?? 20 },
+          headers: sessionHeaders(request),
+        }),
       );
       return { docs: posts.docs.map(toFeedDoc) };
     },

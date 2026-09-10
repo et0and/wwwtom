@@ -98,24 +98,42 @@ const scopeByCategory = (
   sql: string,
   values: ReadonlyArray<string | number | null>,
 ): Array<Row> => {
-  if (!sql.includes("c.slug = ?")) return [...posts];
-  const slug = values[2] ?? null;
-  if (slug === null) return [...posts];
-  return posts.filter((row) => postCategories(seed, String(row["id"])).includes(String(slug)));
+  const includeMatch = sql.includes("AND EXISTS (SELECT 1 FROM post_categories");
+  const excludeMatch = sql.includes("NOT EXISTS (SELECT 1 FROM post_categories");
+  if (!includeMatch && !excludeMatch) return [...posts];
+  let scoped = [...posts];
+  let position = 2;
+  if (includeMatch) {
+    const slug = values[position++] ?? null;
+    if (slug !== null) {
+      scoped = scoped.filter((row) =>
+        postCategories(seed, String(row["id"])).includes(String(slug)),
+      );
+    }
+  }
+  if (excludeMatch) {
+    const slug = values[position] ?? null;
+    if (slug !== null) {
+      scoped = scoped.filter(
+        (row) => !postCategories(seed, String(row["id"])).includes(String(slug)),
+      );
+    }
+  }
+  return scoped;
 };
 
-/** Page bounds from bound values; positions shift with a category filter. */
+/** Page bounds from bound values; category filters shift the positions. */
 type PageBounds = {
   readonly limit: number;
   readonly offset: number;
 };
 
 const pageBounds = (sql: string, values: ReadonlyArray<string | number | null>): PageBounds => {
-  if (sql.includes("c.slug = ?")) {
-    return { limit: Number(values[3] ?? 10), offset: Number(values[4] ?? 0) };
-  }
-  if (values.length > 2) return { limit: Number(values[2]), offset: Number(values[3]) };
-  return { limit: Number(values[0] ?? 10), offset: Number(values[1] ?? 0) };
+  void sql;
+  return {
+    limit: Number(values[values.length - 2] ?? 10),
+    offset: Number(values[values.length - 1] ?? 0),
+  };
 };
 
 const runQuery = async <T>(
@@ -344,6 +362,102 @@ describe("cms routes", () => {
     expect(list.status).toBe(200);
     const listBody = (await list.json()) as { docs: Array<{ slug: string }> };
     expect(listBody.docs.map((doc) => doc.slug)).toEqual(["atelier", "hyperjam"]);
+  });
+
+  it("lists post summaries without the body", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts/summary?page=1&pageSize=10", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      docs: Array<{
+        slug: string;
+        title: string;
+        updatedAt: string;
+        categories: Array<{ slug: string }>;
+      }>;
+      totalDocs: number;
+      totalPages: number;
+    };
+    expect(body.totalDocs).toBe(2);
+    expect(body.totalPages).toBe(1);
+    expect(body.docs.map((doc) => doc.slug)).toEqual(["hello-world", "second-post"]);
+    for (const doc of body.docs) {
+      expect("html" in doc).toBe(false);
+      expect("content" in doc).toBe(false);
+    }
+    expect(body.docs[0]?.categories.map((category) => category.slug)).toEqual(["essays"]);
+  });
+
+  it("lists work summaries without the body", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/works/summary", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      docs: Array<{ slug: string; title: string }>;
+      totalDocs: number;
+    };
+    expect(body.totalDocs).toBe(2);
+    expect(body.docs.map((doc) => doc.slug)).toEqual(["atelier", "hyperjam"]);
+    for (const doc of body.docs) {
+      expect("html" in doc).toBe(false);
+      expect("content" in doc).toBe(false);
+    }
+  });
+
+  it("ignores the status filter on summaries for anonymous readers", async () => {
+    for (const path of ["/posts/summary?status=all", "/works/summary?status=all"]) {
+      const response = await app.fetch(
+        requestWithEnv(`http://localhost${path}`, seedEnv(fullSeed)),
+      );
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(2);
+    }
+  });
+
+  it("rejects the category filter on works lists", async () => {
+    for (const path of ["/works?category=essays", "/works/summary?category=essays"]) {
+      const response = await app.fetch(
+        requestWithEnv(`http://localhost${path}`, seedEnv(fullSeed)),
+      );
+      expect(response.status).toBe(400);
+    }
+  });
+
+  it("excludes one category server-side without skewing totals", async () => {
+    const seed: Seed = {
+      ...fullSeed,
+      categories: [...fullSeed.categories, { id: "cat-2", slug: "pages", title: "Pages" }],
+      links: [...fullSeed.links, { postId: "post-2", categoryId: "cat-2" }],
+    };
+    for (const path of ["/posts?excludeCategory=pages", "/posts/summary?excludeCategory=pages"]) {
+      const response = await app.fetch(requestWithEnv(`http://localhost${path}`, seedEnv(seed)));
+      expect(response.status).toBe(200);
+      const body = (await response.json()) as {
+        docs: Array<{ slug: string }>;
+        totalDocs: number;
+      };
+      expect(body.docs.map((doc) => doc.slug)).toEqual(["hello-world"]);
+      expect(body.totalDocs).toBe(1);
+    }
+  });
+
+  it("serves the summary list even when a post takes the reserved slug", async () => {
+    const seed: Seed = {
+      ...fullSeed,
+      posts: [...fullSeed.posts, postRow({ id: "post-9", slug: "summary", title: "Summary" })],
+    };
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts/summary?page=1&pageSize=10", seedEnv(seed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      docs: Array<{ slug: string }>;
+      totalDocs: number;
+    };
+    expect(body.totalDocs).toBe(3);
+    expect(body.docs.map((doc) => doc.slug)).toContain("summary");
   });
 
   it("returns a work by slug", async () => {
