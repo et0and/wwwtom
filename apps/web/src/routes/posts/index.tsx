@@ -1,6 +1,6 @@
 import { httpHeader } from "@solidjs/web";
 import { useLocation } from "@solidjs/router";
-import { keepPreviousData, useQuery } from "@tanstack/solid-query";
+import { useQuery } from "@tanstack/solid-query";
 import { POSTS_PAGE_SIZE, fetchPosts } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
@@ -21,10 +21,11 @@ export default function PostsHome() {
     queryKey: ["posts", currentPage()],
     queryFn: () => fetchPosts(currentPage(), POSTS_PAGE_SIZE),
     // Hold the SSR stream until the list resolves, so a direct load paints
-    // with items instead of a blank spinner. keepPreviousData keeps the
-    // previous page visible while the next page fetches.
+    // with items instead of a blank spinner. No placeholderData: keeping the
+    // previous page as placeholder wedges key-change navigation on this
+    // Query version — the new page never replaces it (pinned by the
+    // pagination test below).
     deferStream: true,
-    placeholderData: keepPreviousData,
   }));
 
   return (
