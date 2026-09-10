@@ -65,6 +65,21 @@ const header = `/**
 const footer = `
 /** Alias keeping the historic @tom/types/db import path stable. */
 export type Database = DB;
+
+/**
+ * Guestbook entry as served over JSON (dates serialized). The simulator and
+ * e2e fixture stores speak this shape; the database row uses Date objects.
+ */
+export type GuestbookEntryJson = {
+  readonly id: number;
+  readonly fediverse_username: string;
+  readonly fediverse_instance: string;
+  readonly display_name: string | null;
+  readonly avatar_url: string | null;
+  readonly message: string;
+  readonly created_at: string;
+  readonly updated_at: string;
+};
 `;
 const outFile = path.join(import.meta.dirname, "../../types/src/db.ts");
 await fs.writeFile(outFile, `${header}\n${output}${footer}`);

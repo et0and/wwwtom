@@ -1,5 +1,5 @@
 import { Effect, Option, Schema } from "effect";
-import type { CmsCategory, CmsListResponse, CmsPost } from "@tom/schemas/cms";
+import { CmsSlug, type CmsCategory, type CmsListResponse, type CmsPost } from "@tom/schemas/cms";
 import type { HttpError } from "@tom/types/errors";
 import { adapterRequest, callSophie, runClient } from "./api";
 
@@ -39,15 +39,19 @@ export const formatPublishedDate = (value: string | null): string =>
 export const listPosts = (
   page: number,
   category: string | null = null,
-): Effect.Effect<CmsListResponse<CmsPost>, HttpError> =>
-  adapterRequest(() =>
+): Effect.Effect<CmsListResponse<CmsPost>, HttpError> => {
+  const categoryOption =
+    category === null || category === ""
+      ? Option.none<CmsSlug>()
+      : Schema.decodeUnknownOption(CmsSlug)(category);
+  return adapterRequest(() =>
     callSophie().content.posts.get({
-      query:
-        category === null || category === ""
-          ? { page, pageSize: 10 }
-          : { page, pageSize: 10, category },
+      query: Option.isNone(categoryOption)
+        ? { page, pageSize: 10 }
+        : { page, pageSize: 10, category: categoryOption.value },
     }),
   );
+};
 
 /** Get one published Sophie post by slug. */
 export const getPost = (slug: string): Effect.Effect<CmsPost, HttpError> =>

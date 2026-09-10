@@ -25,7 +25,9 @@ test.describe("store", () => {
 
     for (const product of fixturePolarProducts) {
       await expect(page.getByRole("heading", { name: product.name, level: 2 })).toBeVisible();
-      await expect(page.getByText(product.description)).toBeVisible();
+      if (product.description !== null) {
+        await expect(page.getByText(product.description)).toBeVisible();
+      }
       const price = product.prices?.[0]?.price_amount;
       if (price !== undefined) {
         await expect(page.getByText(`$${price / 100}`)).toBeVisible();
@@ -42,7 +44,9 @@ test.describe("store", () => {
     await expect(
       page.getByRole("heading", { name: "Complete your purchase", level: 1 }),
     ).toBeVisible();
-    await expect(page.getByText(product.description)).toBeVisible();
+    if (product.description !== null) {
+      await expect(page.getByText(product.description)).toBeVisible();
+    }
   });
 
   test("purchase form validates the email", async ({ page }) => {
