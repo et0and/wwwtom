@@ -1,7 +1,7 @@
 import addonA11y from "@storybook/addon-a11y";
 import addonDocs from "@storybook/addon-docs";
 import { definePreview } from "storybook-solidjs-vite";
-import { useColorMode } from "@tom/ui/tomui/color-mode";
+import { useColorMode } from "@tom/ui/color-mode";
 import "./tomui.css";
 
 export default definePreview({
