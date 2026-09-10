@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Input } from "@tom/ui/tomui/input";
+import { Input } from "@tom/ui/input";
 
 const meta = preview.meta({
   title: "web/Input",

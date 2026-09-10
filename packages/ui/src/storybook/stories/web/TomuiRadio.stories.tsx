@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Radio } from "@tom/ui/tomui/radio";
+import { Radio } from "@tom/ui/radio";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

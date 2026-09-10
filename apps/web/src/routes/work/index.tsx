@@ -2,9 +2,10 @@ import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchWorks } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { Text } from "@tom/ui/text";
 import { Loading, For, Show } from "solid-js";
-import { Link } from "@tom/ui/Link";
-import { Spinner } from "@tom/ui/Spinner";
+import { Link } from "@tom/ui/link";
+import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 
@@ -32,23 +33,30 @@ export default function WorkHome() {
     >
       <BlurInText text="Work" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
-        <p>Some work that I have made.</p>
+        <Text>Some work that I have made.</Text>
       </BlurInSection>
       <BlurInSection delay={0.5}>
-        <Loading fallback={<Spinner color="grey" />}>
+        <Loading fallback={<Loader />}>
           <Show when={worksQuery.isError}>
             <div class="banner" role="alert">
-              <p class="banner-title">Error loading works</p>
-              <p>{worksQuery.error?.message}</p>
+              <Text class="banner-title">Error loading works</Text>
+              <Text>{worksQuery.error?.message}</Text>
             </div>
           </Show>
           <Show when={worksQuery.data}>
             {(worksData) => (
               <For each={worksData().docs}>
                 {(work) => (
-                  <Link class="page" preload={true} href={`/work/${work.slug}`}>
-                    <h2>{work.title}</h2>
-                    <p>{work.summary}</p>
+                  <Link
+                    variant="current"
+                    class="page block!"
+                    preload={true}
+                    href={`/work/${work.slug}`}
+                  >
+                    <Text variant="heading" as="h2">
+                      {work.title}
+                    </Text>
+                    <Text>{work.summary}</Text>
                   </Link>
                 )}
               </For>

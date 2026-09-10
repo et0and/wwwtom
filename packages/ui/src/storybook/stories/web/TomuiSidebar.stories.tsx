@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Sidebar, SidebarItem, SidebarSection } from "@tom/ui/tomui/sidebar";
+import { Sidebar, SidebarItem, SidebarSection } from "@tom/ui/sidebar";
 
 const meta = preview.meta({
   title: "web/Sidebar",

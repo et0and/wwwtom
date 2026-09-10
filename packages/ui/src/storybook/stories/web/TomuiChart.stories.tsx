@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Chart } from "@tom/ui/tomui/chart";
+import { Chart } from "@tom/ui/chart";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

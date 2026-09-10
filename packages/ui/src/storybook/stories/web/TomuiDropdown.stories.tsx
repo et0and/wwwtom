@@ -1,6 +1,6 @@
 import preview from "#.storybook/preview";
-import { buttonVariants } from "@tom/ui/tomui/button";
-import { DropdownMenu } from "@tom/ui/tomui/dropdown";
+import { buttonVariants } from "@tom/ui/button";
+import { DropdownMenu } from "@tom/ui/dropdown";
 
 const meta = preview.meta({
   title: "web/Dropdown",

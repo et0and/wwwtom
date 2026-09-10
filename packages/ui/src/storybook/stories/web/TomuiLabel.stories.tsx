@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Label } from "@tom/ui/tomui/label";
+import { Label } from "@tom/ui/label";
 
 const meta = preview.meta({
   title: "web/Label",

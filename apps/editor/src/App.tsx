@@ -1,10 +1,10 @@
 import { Match, Show, Switch, createEffect, createSignal, onCleanup, onSettled } from "solid-js";
 import { Effect } from "effect";
-import { Banner } from "@tom/ui/tomui/banner";
-import { Loader } from "@tom/ui/tomui/loader";
-import { DropdownMenu } from "@tom/ui/tomui/dropdown";
-import { Tabs } from "@tom/ui/tomui/tabs";
-import { useColorMode } from "@tom/ui/tomui/color-mode";
+import { Banner } from "@tom/ui/banner";
+import { Loader } from "@tom/ui/loader";
+import { DropdownMenu } from "@tom/ui/dropdown";
+import { Tabs } from "@tom/ui/tabs";
+import { useColorMode } from "@tom/ui/color-mode";
 import { runClient } from "./lib/api";
 import { createSession, documentTitle, signOut } from "./lib/session";
 import type { ContentKind } from "./lib/content";

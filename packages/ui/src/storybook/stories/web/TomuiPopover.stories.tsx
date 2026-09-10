@@ -1,6 +1,6 @@
 import preview from "#.storybook/preview";
-import { buttonVariants } from "@tom/ui/tomui/button";
-import { Popover } from "@tom/ui/tomui/popover";
+import { buttonVariants } from "@tom/ui/button";
+import { Popover } from "@tom/ui/popover";
 
 const meta = preview.meta({
   title: "web/Popover",

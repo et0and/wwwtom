@@ -16,16 +16,16 @@ afterEach(() => {
 });
 
 describe("SignInButton", () => {
-  it("shows a spinner and disables while signing in", async () => {
+  it("shows a loader and disables while signing in", async () => {
     const rendered = render(() => <SignInButton onError={() => {}} />);
     const button = rendered.getByRole("button", { name: /sign in with/i });
 
     expect(button).not.toBeDisabled();
-    expect(rendered.queryByTestId("waiting-spinner")).toBeNull();
+    expect(rendered.queryByRole("status")).toBeNull();
 
     fireEvent.click(button);
 
-    await rendered.findByTestId("waiting-spinner");
+    await rendered.findByRole("status");
     expect(button).toBeDisabled();
     expect(button.className).toContain("active:brightness-95");
   });

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Surface } from "@tom/ui/tomui/surface";
+import { Surface } from "@tom/ui/surface";
 
 const meta = preview.meta({
   title: "web/Surface",

@@ -5,10 +5,10 @@ import { HttpStatus } from "@tom/constants/http";
 import type { CmsPost } from "@tom/schemas/cms";
 import { HttpError } from "@tom/types/errors";
 import { Metadata } from "@tom/ui/Meta";
-import { Banner } from "@tom/ui/tomui/banner";
-import { Breadcrumbs } from "@tom/ui/tomui/breadcrumbs";
-import { Loader } from "@tom/ui/tomui/loader";
-import { Pagination } from "@tom/ui/tomui/pagination";
+import { Banner } from "@tom/ui/banner";
+import { Breadcrumbs } from "@tom/ui/breadcrumbs";
+import { Loader } from "@tom/ui/loader";
+import { Pagination } from "@tom/ui/pagination";
 import { getAdapterBaseUrl } from "./lib/api";
 import { getQueryClient } from "./lib/query-client";
 import {

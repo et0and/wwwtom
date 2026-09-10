@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Checkbox } from "@tom/ui/tomui/checkbox";
+import { Checkbox } from "@tom/ui/checkbox";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

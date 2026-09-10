@@ -1,10 +1,10 @@
 import preview from "#.storybook/preview";
-import { Table } from "@tom/ui/tomui/table";
-import { TableBody } from "@tom/ui/tomui/table";
-import { TableCell } from "@tom/ui/tomui/table";
-import { TableHead } from "@tom/ui/tomui/table";
-import { TableHeader } from "@tom/ui/tomui/table";
-import { TableRow } from "@tom/ui/tomui/table";
+import { Table } from "@tom/ui/table";
+import { TableBody } from "@tom/ui/table";
+import { TableCell } from "@tom/ui/table";
+import { TableHead } from "@tom/ui/table";
+import { TableHeader } from "@tom/ui/table";
+import { TableRow } from "@tom/ui/table";
 
 const meta = preview.meta({
   title: "web/Table",

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { DateRangePicker } from "@tom/ui/tomui/date-range-picker";
+import { DateRangePicker } from "@tom/ui/date-range-picker";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

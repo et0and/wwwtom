@@ -11,8 +11,8 @@ TomUI is the design system for this monorepo. It brings an accessible Solid v2 c
 Import components from exact deep paths. Never use barrel files.
 
 ```tsx
-import { Button } from "@tom/ui/tomui/button";
-import { Input } from "@tom/ui/tomui/input";
+import { Button } from "@tom/ui/button";
+import { Input } from "@tom/ui/input";
 ```
 
 Import the styles once in app CSS after Tailwind.
@@ -34,7 +34,7 @@ Tailwind must scan the component sources for class generation.
 Every component ships a machine-readable variant table.
 
 ```tsx
-import { TOMUI_BUTTON_VARIANTS, TOMUI_BUTTON_DEFAULT_VARIANTS } from "@tom/ui/tomui/button";
+import { TOMUI_BUTTON_VARIANTS, TOMUI_BUTTON_DEFAULT_VARIANTS } from "@tom/ui/button";
 ```
 
 Prop names match the table keys. Defaults come from the matching defaults table. Unknown values fall back to the default.

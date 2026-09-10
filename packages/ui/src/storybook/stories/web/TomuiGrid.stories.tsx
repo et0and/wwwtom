@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Grid, GridItem } from "@tom/ui/tomui/grid";
+import { Grid, GridItem } from "@tom/ui/grid";
 
 const meta = preview.meta({
   title: "web/Grid",

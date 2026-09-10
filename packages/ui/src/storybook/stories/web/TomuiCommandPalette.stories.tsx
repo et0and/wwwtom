@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { CommandPalette } from "@tom/ui/tomui/command-palette";
+import { CommandPalette } from "@tom/ui/command-palette";
 
 const meta = preview.meta({
   title: "web/CommandPalette",

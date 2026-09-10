@@ -1,6 +1,6 @@
 import preview from "#.storybook/preview";
-import { Button } from "@tom/ui/tomui/button";
-import { Tooltip } from "@tom/ui/tomui/tooltip";
+import { Button } from "@tom/ui/button";
+import { Tooltip } from "@tom/ui/tooltip";
 
 const meta = preview.meta({
   title: "web/Tooltip",

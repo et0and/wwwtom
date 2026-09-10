@@ -1,7 +1,7 @@
 import preview from "#.storybook/preview";
 import { For } from "solid-js";
-import { Button } from "@tom/ui/tomui/button";
-import { Toaster, createToastStore, type TomuiToastVariant } from "@tom/ui/tomui/toast";
+import { Button } from "@tom/ui/button";
+import { Toaster, createToastStore, type TomuiToastVariant } from "@tom/ui/toast";
 
 const meta = preview.meta({
   title: "web/Toast",

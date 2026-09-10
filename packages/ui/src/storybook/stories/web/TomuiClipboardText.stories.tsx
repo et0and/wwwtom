@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { ClipboardText } from "@tom/ui/tomui/clipboard-text";
+import { ClipboardText } from "@tom/ui/clipboard-text";
 
 const meta = preview.meta({
   title: "web/ClipboardText",

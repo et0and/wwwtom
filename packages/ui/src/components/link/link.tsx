@@ -130,7 +130,7 @@ export type LinkProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, "ref">
 function LinkBase(props: LinkProps): JSX.Element {
   const merged = merge({ variant: TOMUI_LINK_DEFAULT_VARIANTS.variant }, props);
   const rest = omit(merged, "children", "class", "ref", "rel", "target", "variant");
-  const rel = (): string | undefined => {
+  const rel = (): LinkProps["rel"] => {
     if (merged.target !== "_blank" || merged.rel) return merged.rel;
     return "noopener noreferrer";
   };

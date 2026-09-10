@@ -1,6 +1,6 @@
 import preview from "#.storybook/preview";
-import { buttonVariants } from "@tom/ui/tomui/button";
-import { Collapsible } from "@tom/ui/tomui/collapsible";
+import { buttonVariants } from "@tom/ui/button";
+import { Collapsible } from "@tom/ui/collapsible";
 
 const meta = preview.meta({
   title: "web/Collapsible",

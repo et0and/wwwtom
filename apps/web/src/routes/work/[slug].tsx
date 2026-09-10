@@ -4,6 +4,7 @@ import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchWorkBySlug } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { ArenaCarousel } from "~/components/Arena";
@@ -13,7 +14,7 @@ const WorkNotFound = ({ slug }: { slug: string | undefined }) => (
     <article>
       <BlurInText text="Not found" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
-        <p>The work "{slug}" does not exist.</p>
+        <Text>The work "{slug}" does not exist.</Text>
       </BlurInSection>
     </article>
   </PageLayout>
@@ -63,7 +64,7 @@ export default function WorkPage() {
             <article>
               <BlurInText text={d.title} tag="h1" baseDelay={0.1} step={0.025} />
               <BlurInSection delay={0.3}>
-                <p>{d.summary ?? ""}</p>
+                <Text>{d.summary ?? ""}</Text>
               </BlurInSection>
               <BlurInSection delay={0.5}>
                 <div innerHTML={d.html ?? ""} />

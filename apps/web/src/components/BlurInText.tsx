@@ -1,4 +1,5 @@
 import { For, merge, type Merge } from "solid-js";
+import { Text } from "@tom/ui/text";
 
 interface BlurInTextProps {
   text: string;
@@ -72,21 +73,21 @@ export function BlurInText(props: BlurInTextProps) {
 
   if (tag === "h1") {
     return (
-      <h1 class={merged.class}>
+      <Text variant="heading" size="lg" as="h1" class={merged.class}>
         <BlurInTextBody merged={merged} />
-      </h1>
+      </Text>
     );
   }
   if (tag === "h2") {
     return (
-      <h2 class={merged.class}>
+      <Text variant="heading" as="h2" class={merged.class}>
         <BlurInTextBody merged={merged} />
-      </h2>
+      </Text>
     );
   }
   return (
-    <span class={merged.class}>
+    <Text as="span" class={merged.class}>
       <BlurInTextBody merged={merged} />
-    </span>
+    </Text>
   );
 }

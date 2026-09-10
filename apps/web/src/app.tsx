@@ -3,7 +3,7 @@ import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
 import { ProgressBar } from "@tom/ui/ProgressBar";
 import { SkipLink } from "@tom/ui/SkipLink";
-import { useColorMode } from "@tom/ui/tomui/color-mode";
+import { useColorMode } from "@tom/ui/color-mode";
 import { getQueryClient } from "~/libs/query-client";
 import { Router } from "~/router";
 import "./app.css";

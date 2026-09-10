@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { SensitiveInput } from "@tom/ui/tomui/sensitive-input";
+import { SensitiveInput } from "@tom/ui/sensitive-input";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

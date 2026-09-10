@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Flow, FlowNode } from "@tom/ui/tomui/flow";
+import { Flow, FlowNode } from "@tom/ui/flow";
 
 const meta = preview.meta({
   title: "web/Flow",

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Button } from "@tom/ui/tomui/button";
+import { Button } from "@tom/ui/button";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({
