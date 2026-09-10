@@ -1,9 +1,7 @@
-import { Loading, Show, createSignal } from "solid-js";
+import { Loading, Match, Show, Switch, createSignal } from "solid-js";
 import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
-import { HttpStatus } from "@tom/constants/http";
-import type { CmsPost } from "@tom/schemas/cms";
-import { HttpError } from "@tom/types/errors";
+import type { CmsPostSummary } from "@tom/schemas/cms";
 import { Metadata } from "@tom/ui/Meta";
 import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
@@ -18,7 +16,6 @@ import {
   fetchPost,
   fetchPosts,
   formatPublishedDate,
-  isPage,
 } from "./lib/posts";
 import { Nav } from "./components/Nav";
 import { CategoryFilter } from "./components/CategoryFilter";
@@ -89,11 +86,9 @@ const Posts = () => {
     queryFn: fetchCategories,
   }));
 
-  // The active filter runs server-side (?category=), so the page window and
-  // totalPages already match it. Pages stay hidden client-side: the backend
-  // has no exclusion filter and "pages" is a tiny reserved set.
-  const visible = (): ReadonlyArray<CmsPost> =>
-    (postsQuery.data?.docs ?? []).filter((post) => !isPage(post));
+  // The category filter and the reserved-pages exclusion both run
+  // server-side, so the page window and totalPages already match.
+  const visible = (): ReadonlyArray<CmsPostSummary> => postsQuery.data?.docs ?? [];
   const totalPages = (): number => postsQuery.data?.totalPages ?? 1;
 
   return (
@@ -143,60 +138,65 @@ const PostDetail = () => {
     queryKey: ["sophie-post", params.slug],
     queryFn: () => {
       const slug = params.slug;
-      if (!slug) {
-        throw new HttpError({
-          message: "Missing post slug",
-          status: HttpStatus.NotFound,
-        });
-      }
+      if (!slug) return Promise.resolve(null);
       return fetchPost(slug);
     },
     // Hold the SSR stream until the post resolves, so the <head> flushes
     // with title/og meta instead of an empty head.
     deferStream: true,
+    // Absent slugs settle as null data: evict fast so a freshly published
+    // slug refetches instead of replaying Missing from the cache.
+    gcTime: 1000 * 60,
   }));
 
   return (
     <main>
       {/* No Loading wrapper: the query promise suspends to the outer boundary
-        so the SSR stream holds until data resolves and head takes the meta. */}
-      <Show
-        when={postQuery.data}
+        so the SSR stream holds until data resolves and head takes the meta.
+        Absent posts settle as null and fall to the missing state. */}
+      <Switch
         fallback={
-          <Show
-            when={postQuery.isError}
-            fallback={
-              <p class="flex items-center gap-2">
-                <Loader size="sm" /> Loading…
-              </p>
-            }
-          >
-            <Banner variant="error" description={postQuery.error?.message ?? "Load failed"} />
-          </Show>
+          <article>
+            <h1 class="sophie-title">Missing</h1>
+            <p>No post lives here.</p>
+            <p>
+              <a href="/">Posts</a>
+            </p>
+          </article>
         }
       >
-        {(found) => (
-          <article>
-            <Metadata
-              title={found().title}
-              metaType="description"
-              metaContent={found().summary ?? SOPHIE_DESCRIPTION}
-              brand={SOPHIE_BRAND}
-              date={formatPublishedDate(found().publishedAt)}
-            />
-            <div class="sophie-crumbs">
-              <Breadcrumbs
-                size="sm"
-                items={[{ label: "Posts", href: "/" }, { label: found().title }]}
+        <Match when={postQuery.isPending}>
+          <p class="flex items-center gap-2">
+            <Loader size="sm" /> Loading…
+          </p>
+        </Match>
+        <Match when={postQuery.data}>
+          {(found) => (
+            <article>
+              <Metadata
+                title={found().title}
+                metaType="description"
+                metaContent={found().summary ?? SOPHIE_DESCRIPTION}
+                brand={SOPHIE_BRAND}
+                date={formatPublishedDate(found().publishedAt)}
               />
-            </div>
-            {/* post.html is rendered at write time from a validated Tiptap
-              doc via renderTiptapHtml (escaped, unsafe schemes dropped),
-              so innerHTML is safe here. Pinned by html.test.ts. */}
-            <div class="sophie-body" innerHTML={found().html} />
-          </article>
-        )}
-      </Show>
+              <div class="sophie-crumbs">
+                <Breadcrumbs
+                  size="sm"
+                  items={[{ label: "Posts", href: "/" }, { label: found().title }]}
+                />
+              </div>
+              {/* post.html is rendered at write time from a validated Tiptap
+                doc via renderTiptapHtml (escaped, unsafe schemes dropped),
+                so innerHTML is safe here. Pinned by html.test.ts. */}
+              <div class="sophie-body" innerHTML={found().html} />
+            </article>
+          )}
+        </Match>
+        <Match when={postQuery.isError}>
+          <Banner variant="error" description={postQuery.error?.message ?? "Load failed"} />
+        </Match>
+      </Switch>
     </main>
   );
 };

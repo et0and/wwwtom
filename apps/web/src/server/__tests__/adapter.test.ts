@@ -31,13 +31,13 @@ afterEach(() => {
 
 describe("server functions", () => {
   describe("fetchPosts", () => {
-    it("calls the adapter posts endpoint with pagination and returns the list", async () => {
+    it("calls the adapter post summaries endpoint with pagination and returns the list", async () => {
       const body = { docs: [{ id: "post-1" }], totalDocs: 1, page: 2, totalPages: 1 };
       fetchMock.mockResolvedValue(jsonResponse(body));
       const result = await fetchPosts(2, 5);
       expect(result).toEqual(body);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/content/posts?page=2&pageSize=5",
+        "http://localhost:8788/content/posts/summary?page=2&pageSize=5",
         expect.anything(),
       );
     });
@@ -55,7 +55,7 @@ describe("server functions", () => {
       );
     });
 
-    it("throws an HttpError carrying the adapter status and message", async () => {
+    it("resolves null for a 404 problem response", async () => {
       fetchMock.mockResolvedValue(
         jsonResponse(
           {
@@ -66,24 +66,38 @@ describe("server functions", () => {
           404,
         ),
       );
+      await expect(fetchPostBySlug("missing")).resolves.toBeNull();
+    });
+
+    it("throws an HttpError carrying the adapter status and message", async () => {
+      fetchMock.mockResolvedValue(
+        jsonResponse(
+          {
+            type: "https://errors.tom.so/internal",
+            status: 500,
+            title: "Internal error",
+          },
+          500,
+        ),
+      );
       try {
-        await fetchPostBySlug("missing");
+        await fetchPostBySlug("broken");
         expect.unreachable();
       } catch (error) {
         expect(error).toBeInstanceOf(HttpError);
-        expect(error).toMatchObject({ status: 404, message: "Not found" });
+        expect(error).toMatchObject({ status: 500, message: "Internal error" });
       }
     });
   });
 
   describe("fetchWorks", () => {
-    it("calls the adapter works endpoint", async () => {
+    it("calls the adapter work summaries endpoint", async () => {
       const works = { docs: [{ id: "work-1", title: "Hyperjam" }], totalDocs: 1 };
       fetchMock.mockResolvedValue(jsonResponse(works));
       const result = await fetchWorks();
       expect(result).toEqual(works);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/content/works",
+        "http://localhost:8788/content/works/summary",
         expect.anything(),
       );
     });
@@ -99,6 +113,40 @@ describe("server functions", () => {
         "http://localhost:8788/content/works/hyperjam",
         expect.anything(),
       );
+    });
+
+    it("resolves null for a 404 problem response", async () => {
+      fetchMock.mockResolvedValue(
+        jsonResponse(
+          {
+            type: "https://errors.tom.so/not-found",
+            status: 404,
+            title: "Not found",
+          },
+          404,
+        ),
+      );
+      await expect(fetchWorkBySlug("missing")).resolves.toBeNull();
+    });
+
+    it("throws an HttpError carrying the adapter status and message", async () => {
+      fetchMock.mockResolvedValue(
+        jsonResponse(
+          {
+            type: "https://errors.tom.so/internal",
+            status: 500,
+            title: "Internal error",
+          },
+          500,
+        ),
+      );
+      try {
+        await fetchWorkBySlug("broken");
+        expect.unreachable();
+      } catch (error) {
+        expect(error).toBeInstanceOf(HttpError);
+        expect(error).toMatchObject({ status: 500, message: "Internal error" });
+      }
     });
   });
 

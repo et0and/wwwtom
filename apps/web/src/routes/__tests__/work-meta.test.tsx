@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
-import { QueryClientProvider } from "@tanstack/solid-query";
-import { queryClient } from "~/libs/query-client";
+import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
+import { HttpError } from "@tom/types/errors";
 import WorkPage from "~/routes/work/[slug]";
 
 vi.mock("~/server/adapter", () => ({
@@ -28,18 +28,21 @@ const TestRouter = createRouter({
   routes: [{ path: "/work/:slug", component: WorkPage }],
 });
 
-const renderWorkPage = () =>
-  render(() => (
-    <QueryClientProvider client={queryClient}>
+const renderWorkPage = () => {
+  // Fresh client per test: no shared cache between cases, and no retries so
+  // error states settle within the default waitFor timeout.
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(() => (
+    <QueryClientProvider client={client}>
       <TestRouter />
     </QueryClientProvider>
   ));
+};
 
 const headMeta = (selector: string): string | null | undefined =>
   document.head.querySelector(selector)?.getAttribute("content");
 
 beforeEach(() => {
-  queryClient.clear();
   mockedFetchWorkBySlug.mockReset();
 });
 
@@ -72,5 +75,30 @@ describe("work page meta tags", () => {
 
     expect(headMeta('meta[property="og:image"]')).toBe(imageUrl);
     expect(headMeta('meta[name="twitter:image"]')).toBe(imageUrl);
+  });
+
+  it("shows a spinner — not Not found — while the work is loading", async () => {
+    mockedFetchWorkBySlug.mockReturnValue(new Promise(() => {}));
+    renderWorkPage();
+    await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
+    expect(screen.queryByText("Not found")).toBeNull();
+  });
+
+  it("shows Not found once a missing slug settles to null", async () => {
+    mockedFetchWorkBySlug.mockResolvedValue(null);
+    renderWorkPage();
+    await waitFor(() => expect(screen.getByText("Not found")).toBeTruthy());
+    expect(screen.getByText('The work "an-idea-for-a-performance" does not exist.')).toBeTruthy();
+    expect(document.head.querySelector("title")?.textContent).toBe("Not found | Tom Hackshaw");
+  });
+
+  it("shows an error banner — not Not found — on a server error", async () => {
+    mockedFetchWorkBySlug.mockRejectedValue(
+      new HttpError({ message: "Adapter request failed", status: 500 }),
+    );
+    renderWorkPage();
+    await waitFor(() => expect(screen.getByText("Error loading work")).toBeTruthy());
+    expect(screen.queryByText("Not found")).toBeNull();
+    expect(document.head.querySelector("title")?.textContent).toBe("Error | Tom Hackshaw");
   });
 });

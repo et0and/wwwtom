@@ -62,6 +62,27 @@ describe("cms integration", () => {
       expect(await response.json()).toEqual(listBody);
     });
 
+    it("marks anonymous reads cacheable at the edge", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts?page=1&pageSize=5", env),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toContain("public");
+      expect(response.headers.get("Cache-Control")).toContain("s-maxage=300");
+    });
+
+    it("never caches session reads", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts?page=1&pageSize=5", env, {
+          headers: { cookie: "better-auth.session_token=abc" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    });
+
     it("forwards the category filter to the API", async () => {
       fetchMock.mockResolvedValue(jsonResponse(listBody));
       const response = await app.fetch(
@@ -105,6 +126,15 @@ describe("cms integration", () => {
         instance: "http://localhost/content/posts/missing",
       });
     });
+
+    it("never caches error responses at the edge", async () => {
+      fetchMock.mockResolvedValue(jsonResponse({ title: "Not found" }, 404));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts/missing", env),
+      );
+      expect(response.status).toBe(404);
+      expect(response.headers.get("Cache-Control") ?? "").not.toContain("public");
+    });
   });
 
   describe("GET /content/works", () => {
@@ -114,6 +144,68 @@ describe("cms integration", () => {
       expect(response.status).toBe(200);
       expect(fetchMock).toHaveBeenCalledWith(
         "http://localhost:8787/works?page=1&pageSize=10",
+        expect.anything(),
+      );
+    });
+
+    it("rejects the category filter instead of ignoring it", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      for (const path of [
+        "/content/works?category=essays",
+        "/content/works/summary?category=essays",
+      ]) {
+        fetchMock.mockClear();
+        const response = await app.fetch(requestWithEnv(`http://localhost${path}`, env));
+        expect(response.status).toBe(400);
+        expect(fetchMock).not.toHaveBeenCalled();
+      }
+    });
+  });
+
+  describe("GET /content/posts/summary", () => {
+    it("proxies pagination to the API summaries endpoint, not the slug route", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts/summary?page=1&pageSize=5", env),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8787/posts/summary?page=1&pageSize=5",
+        expect.anything(),
+      );
+      expect(await response.json()).toEqual(listBody);
+    });
+
+    it("marks anonymous summary reads cacheable at the edge", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts/summary", env),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toContain("public");
+    });
+
+    it("never caches summary session reads", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts/summary", env, {
+          headers: { cookie: "better-auth.session_token=abc" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    });
+  });
+
+  describe("GET /content/works/summary", () => {
+    it("proxies to the API work summaries endpoint, not the slug route", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/works/summary", env),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8787/works/summary?page=1&pageSize=10",
         expect.anything(),
       );
     });
@@ -175,6 +267,30 @@ describe("cms integration", () => {
       fetchMock.mockResolvedValue(jsonResponse(post));
       await app.fetch(
         requestWithEnv("http://localhost/content/posts/hello-world", env, {
+          headers: { cookie: "better-auth.session_token=abc" },
+        }),
+      );
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(new Headers(init.headers).get("cookie")).toBe("better-auth.session_token=abc");
+    });
+
+    it("forwards the bearer credential and never caches bearer reads", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts?page=1&pageSize=5", env, {
+          headers: { authorization: "Bearer test-token" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+      expect(new Headers(init.headers).get("authorization")).toBe("Bearer test-token");
+      expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    });
+
+    it("forwards the session cookie on feed reads", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      await app.fetch(
+        requestWithEnv("http://localhost/content/feed?limit=2", env, {
           headers: { cookie: "better-auth.session_token=abc" },
         }),
       );

@@ -1,10 +1,11 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { CmsPagingSchema } from "@tom/schemas/cms";
-import type { CmsPaging } from "@tom/schemas/cms";
+import type { CmsListResponse, CmsPaging, CmsStatusFilter } from "@tom/schemas/cms";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding, CloudflareEnv } from "@tom/utils/services/config";
+import { hasSessionCredential } from "@tom/utils/services/session";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { createAuthFromEnv, requireSession } from "../services/auth";
@@ -14,7 +15,9 @@ import {
   getPostBySlug,
   getWorkBySlug,
   listCategories,
+  listPostSummaries,
   listPosts,
+  listWorkSummaries,
   listWorks,
 } from "../services/cms";
 
@@ -140,14 +143,19 @@ const putFileCache = (url: string, response: Response): Effect.Effect<void, neve
 /**
  * Best-effort admin check for reads: a live session unlocks drafts,
  * anything else falls back to published-only. Never fails, so anonymous
- * readers never see auth errors.
+ * readers never see auth errors. Fast-path: without a session credential
+ * (see hasSessionCredential) there is no session to load, so skip auth
+ * init and the D1 lookup entirely — public reads stay at 2-3 D1 queries
+ * instead of 3-4.
  */
-const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<boolean, never> =>
-  createAuthFromEnv(env).pipe(
+const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<boolean, never> => {
+  if (!hasSessionCredential(request)) return Effect.succeed(false);
+  return createAuthFromEnv(env).pipe(
     Effect.flatMap((auth) => requireSession(auth, request.headers)),
     Effect.as(true),
     Effect.orElseSucceed(() => false),
   );
+};
 
 /** Run a CMS effect with request logging. CmsError failures reject and the
  * worker onError hook maps them to RFC 9457 problem responses, so route
@@ -155,27 +163,65 @@ const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<bo
 const runCms = <A>(effect: Effect.Effect<A, CmsError>, request: Request): Promise<A> =>
   runEffect(effect, logContextFromRequest(request, "tom-api"));
 
+/**
+ * Shared list pipeline: storage gate, paging decode, admin check, then the
+ * service list fn. Works have no categories, so their routes reject the
+ * filter instead of silently ignoring it.
+ */
+const runListQuery = <T, Q>(
+  request: Request,
+  query: Q,
+  operation: string,
+  allowCategory: boolean,
+  list: (
+    db: CmsD1Binding,
+    paging: CmsPaging,
+    status: CmsStatusFilter,
+  ) => Effect.Effect<CmsListResponse<T>, CmsError>,
+): Promise<CmsListResponse<T>> => {
+  const env = getRequestEnv(request);
+  return runCms(
+    requireCmsD1(env).pipe(
+      Effect.flatMap((db) =>
+        Effect.flatMap(decodePagingQuery(query, operation), (paging) =>
+          !allowCategory && (paging.category !== undefined || paging.excludeCategory !== undefined)
+            ? Effect.fail(
+                new CmsError({
+                  message: "Category filter not supported for works",
+                  status: HttpStatus.BadRequest,
+                  operation,
+                }),
+              )
+            : Effect.flatMap(optionalSession(request, env), (isAdmin) =>
+                list(db, paging, isAdmin ? (paging.status ?? "all") : "published"),
+              ),
+        ),
+      ),
+    ),
+    request,
+  );
+};
+
 export const cmsRoutes = new Elysia({ name: "cms" })
   .get(
     "/posts",
-    ({ query, request }) => {
-      const env = getRequestEnv(request);
-      return runCms(
-        requireCmsD1(env).pipe(
-          Effect.flatMap((db) =>
-            Effect.flatMap(decodePagingQuery(query, "list_posts"), (paging) =>
-              Effect.flatMap(optionalSession(request, env), (isAdmin) =>
-                listPosts(db, paging, isAdmin ? (paging.status ?? "all") : "published"),
-              ),
-            ),
-          ),
-        ),
-        request,
-      );
-    },
+    ({ query, request }) => runListQuery(request, query, "list_posts", true, listPosts),
     {
       query: cmsListQuerySchema,
       detail: { description: "List posts (drafts need a session)", tags: ["cms"] },
+    },
+  )
+  .get(
+    // Static before dynamic: "/posts/summary" must not read as a slug.
+    "/posts/summary",
+    ({ query, request }) =>
+      runListQuery(request, query, "list_post_summaries", true, listPostSummaries),
+    {
+      query: cmsListQuerySchema,
+      detail: {
+        description: "List post summaries, no body (drafts need a session)",
+        tags: ["cms"],
+      },
     },
   )
   .get(
@@ -202,24 +248,23 @@ export const cmsRoutes = new Elysia({ name: "cms" })
   )
   .get(
     "/works",
-    ({ query, request }) => {
-      const env = getRequestEnv(request);
-      return runCms(
-        requireCmsD1(env).pipe(
-          Effect.flatMap((db) =>
-            Effect.flatMap(decodePagingQuery(query, "list_works"), (paging) =>
-              Effect.flatMap(optionalSession(request, env), (isAdmin) =>
-                listWorks(db, paging, isAdmin ? (paging.status ?? "all") : "published"),
-              ),
-            ),
-          ),
-        ),
-        request,
-      );
-    },
+    ({ query, request }) => runListQuery(request, query, "list_works", false, listWorks),
     {
       query: cmsListQuerySchema,
       detail: { description: "List works (drafts need a session)", tags: ["cms"] },
+    },
+  )
+  .get(
+    // Static before dynamic: "/works/summary" must not read as a slug.
+    "/works/summary",
+    ({ query, request }) =>
+      runListQuery(request, query, "list_work_summaries", false, listWorkSummaries),
+    {
+      query: cmsListQuerySchema,
+      detail: {
+        description: "List work summaries, no body (drafts need a session)",
+        tags: ["cms"],
+      },
     },
   )
   .get(

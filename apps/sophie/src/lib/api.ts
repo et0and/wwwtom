@@ -92,3 +92,17 @@ export const adapterRequest = <T>(
 /** Run a client effect as a promise at the Solid boundary. */
 export const runClient = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =>
   Effect.runPromise(effect);
+
+/**
+ * Run a client read, mapping a 404 to null (absent resource). Other
+ * failures still reject, so detail pages render a not-found state from
+ * settled null data instead of an error banner.
+ */
+export const runClientOrNull = <T>(effect: Effect.Effect<T, HttpError>): Promise<T | null> =>
+  Effect.runPromise(
+    effect.pipe(
+      Effect.catchTag("HttpError", (error) =>
+        error.status === HttpStatus.NotFound ? Effect.succeed(null) : Effect.fail(error),
+      ),
+    ),
+  );

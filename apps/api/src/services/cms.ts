@@ -7,9 +7,11 @@ import {
   CmsMediaUsageRefSchema,
   CmsPostInputSchema,
   CmsPostSchema,
+  CmsPostSummarySchema,
   CmsRevisionMetaSchema,
   CmsWorkInputSchema,
   CmsWorkSchema,
+  CmsWorkSummarySchema,
 } from "@tom/schemas/cms";
 import type {
   CmsCategory,
@@ -20,12 +22,14 @@ import type {
   CmsPaging,
   CmsPost,
   CmsPostInput,
+  CmsPostSummary,
   CmsRevisionEntity,
   CmsRevisionMeta,
   CmsRevisionSnapshot,
   CmsStatusFilter,
   CmsWork,
   CmsWorkInput,
+  CmsWorkSummary,
   TiptapDoc,
 } from "@tom/schemas/cms";
 import { CmsError } from "@tom/types/errors";
@@ -51,6 +55,23 @@ type PostRow = {
 };
 
 type WorkRow = PostRow;
+
+type PostSummaryRow = {
+  readonly id: string;
+  readonly slug: string;
+  readonly title: string;
+  readonly summary: string | null;
+  readonly status: string;
+  readonly published_at: string | null;
+  readonly hero_media_id: string | null;
+  readonly meta_title: string | null;
+  readonly meta_description: string | null;
+  readonly meta_image: string | null;
+  readonly created_at: string;
+  readonly updated_at: string;
+};
+
+type WorkSummaryRow = PostSummaryRow;
 
 type MediaRow = {
   readonly id: string;
@@ -82,10 +103,47 @@ type RevisionRow = {
 /** Revisions kept per document; older snapshots prune on write. */
 const MAX_REVISIONS = 20;
 
-const POST_COLUMNS =
-  "p.id, p.slug, p.title, p.summary, p.content_json, p.html, p.status, " +
-  "p.published_at, p.hero_media_id, p.meta_title, p.meta_description, " +
-  "p.meta_image, p.created_at, p.updated_at";
+const POST_COLUMN_LIST = [
+  "p.id",
+  "p.slug",
+  "p.title",
+  "p.summary",
+  "p.content_json",
+  "p.html",
+  "p.status",
+  "p.published_at",
+  "p.hero_media_id",
+  "p.meta_title",
+  "p.meta_description",
+  "p.meta_image",
+  "p.created_at",
+  "p.updated_at",
+];
+
+const POST_COLUMNS = POST_COLUMN_LIST.join(", ");
+
+/**
+ * List columns: everything except the heavy body (content_json, html).
+ * Derived from POST_COLUMNS so a new column cannot silently miss the
+ * summary selects (a missing column 500s the summary decode instead).
+ */
+const POST_SUMMARY_COLUMNS = POST_COLUMN_LIST.filter(
+  (column) => column !== "p.content_json" && column !== "p.html",
+).join(", ");
+
+/** Slugs shadowed by static API routes; single reads for them are unreachable. */
+const RESERVED_SLUGS = ["summary"];
+
+const rejectReservedSlug = (slug: string, operation: string): Effect.Effect<void, CmsError> =>
+  RESERVED_SLUGS.includes(slug)
+    ? Effect.fail(
+        new CmsError({
+          message: `Slug reserved: ${slug}`,
+          status: HttpStatus.BadRequest,
+          operation,
+        }),
+      )
+    : Effect.void;
 
 const queryAll = <T>(
   db: CmsD1Binding,
@@ -142,29 +200,34 @@ const parseContentJson = (json: string, operation: string): Effect.Effect<Tiptap
     ),
   );
 
+/** Fields shared by full and summary rows: everything except the body. */
+const baseFields = (row: PostSummaryRow) => ({
+  id: row.id,
+  slug: row.slug,
+  title: row.title,
+  summary: row.summary,
+  status: row.status,
+  publishedAt: row.published_at,
+  heroMediaId: row.hero_media_id,
+  meta: {
+    title: row.meta_title,
+    description: row.meta_description,
+    image: row.meta_image,
+  },
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
+});
+
 const toPost = Effect.fn("CmsService.toPost")(function* (
   row: PostRow,
   categories: ReadonlyArray<CmsCategory>,
 ) {
   const content = yield* parseContentJson(row.content_json, "decode_post");
   return yield* Schema.decodeUnknownEffect(CmsPostSchema)({
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    summary: row.summary,
+    ...baseFields(row),
     content,
     html: row.html,
-    status: row.status,
-    publishedAt: row.published_at,
-    heroMediaId: row.hero_media_id,
     categories,
-    meta: {
-      title: row.meta_title,
-      description: row.meta_description,
-      image: row.meta_image,
-    },
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   }).pipe(
     Effect.mapError(
       (cause) =>
@@ -181,22 +244,9 @@ const toPost = Effect.fn("CmsService.toPost")(function* (
 const toWork = Effect.fn("CmsService.toWork")(function* (row: WorkRow) {
   const content = yield* parseContentJson(row.content_json, "decode_work");
   return yield* Schema.decodeUnknownEffect(CmsWorkSchema)({
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    summary: row.summary,
+    ...baseFields(row),
     content,
     html: row.html,
-    status: row.status,
-    publishedAt: row.published_at,
-    heroMediaId: row.hero_media_id,
-    meta: {
-      title: row.meta_title,
-      description: row.meta_description,
-      image: row.meta_image,
-    },
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
   }).pipe(
     Effect.mapError(
       (cause) =>
@@ -204,6 +254,44 @@ const toWork = Effect.fn("CmsService.toWork")(function* (row: WorkRow) {
           message: "Invalid CMS work row",
           status: HttpStatus.InternalServerError,
           operation: "decode_work",
+          cause,
+        }),
+    ),
+  );
+});
+
+/** Slim post row: no Tiptap parse, no HTML — the body never leaves D1. */
+const toPostSummary = Effect.fn("CmsService.toPostSummary")(function* (
+  row: PostSummaryRow,
+  categories: ReadonlyArray<CmsCategory>,
+) {
+  return yield* Schema.decodeUnknownEffect(CmsPostSummarySchema)({
+    ...baseFields(row),
+    categories,
+  }).pipe(
+    Effect.mapError(
+      (cause) =>
+        new CmsError({
+          message: "Invalid CMS post row",
+          status: HttpStatus.InternalServerError,
+          operation: "decode_post_summary",
+          cause,
+        }),
+    ),
+  );
+});
+
+/** Slim work row: no Tiptap parse, no HTML. */
+const toWorkSummary = Effect.fn("CmsService.toWorkSummary")(function* (row: WorkSummaryRow) {
+  return yield* Schema.decodeUnknownEffect(CmsWorkSummarySchema)({
+    ...baseFields(row),
+  }).pipe(
+    Effect.mapError(
+      (cause) =>
+        new CmsError({
+          message: "Invalid CMS work row",
+          status: HttpStatus.InternalServerError,
+          operation: "decode_work_summary",
           cause,
         }),
     ),
@@ -324,38 +412,66 @@ const normalizePaging = (
   return Effect.succeed({ limit, current, offset: (current - 1) * limit });
 };
 
+/**
+ * Category scoping for post lists, shared by full and summary selects so
+ * the two cannot diverge. `category` keeps only linked posts;
+ * `excludeCategory` drops one category (Sophie hides its reserved pages
+ * without skewing totals, which a client-side filter would).
+ */
+const postListFilters = (paging: CmsPaging) => {
+  const category = paging.category ?? null;
+  const excluded = paging.excludeCategory ?? null;
+  const includeFilter =
+    category === null
+      ? ""
+      : "AND EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = p.id AND c.slug = ?) ";
+  const includeCountFilter =
+    category === null
+      ? ""
+      : " AND EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = posts.id AND c.slug = ?)";
+  const excludeFilter =
+    excluded === null
+      ? ""
+      : "AND NOT EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = p.id AND c.slug = ?) ";
+  const excludeCountFilter =
+    excluded === null
+      ? ""
+      : " AND NOT EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = posts.id AND c.slug = ?)";
+  return {
+    rowFilter: includeFilter + excludeFilter,
+    countFilter: includeCountFilter + excludeCountFilter,
+    params: [...(category === null ? [] : [category]), ...(excluded === null ? [] : [excluded])],
+  };
+};
+
 export const listPosts = Effect.fn("CmsService.listPosts")(function* (
   db: CmsD1Binding,
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
   const { limit, current, offset } = yield* normalizePaging(paging, "list_posts");
-  const category = paging.category ?? null;
-  const filter =
-    category === null
-      ? ""
-      : "AND EXISTS (SELECT 1 FROM post_categories pc " +
-        "JOIN categories c ON c.id = pc.category_id " +
-        "WHERE pc.post_id = p.id AND c.slug = ?) ";
-  const categoryParams = category === null ? [] : [category];
+  const { rowFilter, countFilter, params } = postListFilters(paging);
   const [rows, countRow] = yield* Effect.all([
     queryAll<PostRow>(
       db,
       `SELECT ${POST_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
-        filter +
+        rowFilter +
         "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
-      [status, status, ...categoryParams, limit, offset],
+      [status, status, ...params, limit, offset],
       "list_posts",
     ),
     queryFirst<{ total: number }>(
       db,
-      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" +
-        (category === null
-          ? ""
-          : " AND EXISTS (SELECT 1 FROM post_categories pc " +
-            "JOIN categories c ON c.id = pc.category_id " +
-            "WHERE pc.post_id = posts.id AND c.slug = ?)"),
-      category === null ? [status, status] : [status, status, category],
+      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
+      [status, status, ...params],
       "count_posts",
     ),
   ]);
@@ -366,6 +482,44 @@ export const listPosts = Effect.fn("CmsService.listPosts")(function* (
     "list_posts",
   );
   const docs = yield* Effect.forEach(rows, (row) => toPost(row, grouped[row.id] ?? []));
+  return toListResponse(docs, total, current, limit);
+});
+
+/**
+ * Slim post list for indexes and sitemaps: selects no body columns and
+ * skips the Tiptap parse, so list payloads stay small. Full reads (single
+ * post, feed, editor) keep listPosts.
+ */
+export const listPostSummaries = Effect.fn("CmsService.listPostSummaries")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+  status: CmsStatusFilter,
+) {
+  const { limit, current, offset } = yield* normalizePaging(paging, "list_post_summaries");
+  const { rowFilter, countFilter, params } = postListFilters(paging);
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<PostSummaryRow>(
+      db,
+      `SELECT ${POST_SUMMARY_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
+        rowFilter +
+        "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
+      [status, status, ...params, limit, offset],
+      "list_post_summaries",
+    ),
+    queryFirst<{ total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
+      [status, status, ...params],
+      "count_post_summaries",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const grouped = yield* categoriesForPosts(
+    db,
+    rows.map((row) => row.id),
+    "list_post_summaries",
+  );
+  const docs = yield* Effect.forEach(rows, (row) => toPostSummary(row, grouped[row.id] ?? []));
   return toListResponse(docs, total, current, limit);
 });
 
@@ -414,6 +568,36 @@ export const listWorks = Effect.fn("CmsService.listWorks")(function* (
   ]);
   const total = countRow?.total ?? 0;
   const docs = yield* Effect.forEach(rows, (row) => toWork(row));
+  return toListResponse(docs, total, current, limit);
+});
+
+/**
+ * Slim work list for indexes and sitemaps: no body columns, no Tiptap
+ * parse. Full reads (single work, editor) keep listWorks.
+ */
+export const listWorkSummaries = Effect.fn("CmsService.listWorkSummaries")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+  status: CmsStatusFilter,
+) {
+  const { limit, current, offset } = yield* normalizePaging(paging, "list_work_summaries");
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<WorkSummaryRow>(
+      db,
+      `SELECT ${POST_SUMMARY_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
+        "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
+      [status, status, limit, offset],
+      "list_work_summaries",
+    ),
+    queryFirst<{ total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
+      [status, status],
+      "count_work_summaries",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const docs = yield* Effect.forEach(rows, (row) => toWorkSummary(row));
   return toListResponse(docs, total, current, limit);
 });
 
@@ -565,10 +749,12 @@ export type {
   CmsListResponse,
   CmsMedia,
   CmsPost,
+  CmsPostSummary,
   CmsRevisionEntity,
   CmsRevisionMeta,
   CmsRevisionSnapshot,
   CmsWork,
+  CmsWorkSummary,
 };
 
 export type MediaUpload = {
@@ -962,6 +1148,7 @@ export const createPost = Effect.fn("CmsService.createPost")(function* (
   actor: string,
   adapterUrl: string,
 ) {
+  yield* rejectReservedSlug(input.slug, "create_post");
   const taken = yield* findRowBySlug<PostRow>(db, "posts", input.slug, "create_post");
   if (taken) {
     return yield* new CmsError({
@@ -986,6 +1173,7 @@ export const updatePost = Effect.fn("CmsService.updatePost")(function* (
   actor: string,
   adapterUrl: string,
 ) {
+  yield* rejectReservedSlug(slug, "update_post");
   if (input.slug !== slug) {
     return yield* new CmsError({
       message: "Post slug is immutable",
@@ -1062,6 +1250,7 @@ export const createWork = Effect.fn("CmsService.createWork")(function* (
   actor: string,
   adapterUrl: string,
 ) {
+  yield* rejectReservedSlug(input.slug, "create_work");
   const taken = yield* findRowBySlug<WorkRow>(db, "works", input.slug, "create_work");
   if (taken) {
     return yield* new CmsError({
@@ -1085,6 +1274,7 @@ export const updateWork = Effect.fn("CmsService.updateWork")(function* (
   actor: string,
   adapterUrl: string,
 ) {
+  yield* rejectReservedSlug(slug, "update_work");
   if (input.slug !== slug) {
     return yield* new CmsError({
       message: "Work slug is immutable",

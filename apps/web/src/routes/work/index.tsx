@@ -16,6 +16,9 @@ export default function WorkHome() {
   const worksQuery = useQuery(() => ({
     queryKey: ["works"],
     queryFn: () => fetchWorks(),
+    // Hold the SSR stream until the list resolves, so a direct load paints
+    // with items instead of a blank spinner.
+    deferStream: true,
   }));
 
   return (

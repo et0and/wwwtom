@@ -1,6 +1,11 @@
 import { Elysia } from "elysia";
 import { Schema } from "effect";
-import { CmsPostSchema, CmsWorkSchema } from "@tom/schemas/cms";
+import {
+  CmsPostSchema,
+  CmsPostSummarySchema,
+  CmsWorkSchema,
+  CmsWorkSummarySchema,
+} from "@tom/schemas/cms";
 import type { CmsPost, CmsWork } from "@tom/schemas/cms";
 import postFixtures from "../fixtures/cms-posts.json" with { type: "json" };
 import workFixtures from "../fixtures/cms-works.json" with { type: "json" };
@@ -14,24 +19,39 @@ import workFixtures from "../fixtures/cms-works.json" with { type: "json" };
 const posts = Schema.decodeUnknownSync(Schema.Array(CmsPostSchema))(postFixtures);
 const works = Schema.decodeUnknownSync(Schema.Array(CmsWorkSchema))(workFixtures);
 
+/**
+ * Slim list items, mirroring the real summary endpoints: the same fixtures
+ * decoded through the summary schemas, so the body never leaves the
+ * simulator and shape drift fails at boot.
+ */
+const postSummaries = Schema.decodeUnknownSync(Schema.Array(CmsPostSummarySchema))(posts);
+const workSummaries = Schema.decodeUnknownSync(Schema.Array(CmsWorkSummarySchema))(works);
+
 type CmsDoc = CmsPost | CmsWork;
 
-const byPublishedDesc = (a: CmsDoc, b: CmsDoc): number =>
+type ListableDoc = {
+  readonly status: string;
+  readonly title: string;
+  readonly publishedAt: string | null;
+};
+
+const byPublishedDesc = (a: ListableDoc, b: ListableDoc): number =>
   (b.publishedAt ?? "").localeCompare(a.publishedAt ?? "");
 
-const byTitleAsc = (a: CmsDoc, b: CmsDoc): number =>
+const byTitleAsc = (a: ListableDoc, b: ListableDoc): number =>
   a.title.localeCompare(b.title, undefined, { sensitivity: "base" });
 
 /**
  * Minimal CMS list shape ({ docs, totalDocs, ... }). Serves published docs
  * only — posts newest first, works alphabetical — the same contract as the
- * real API (apps/api).
+ * real API (apps/api). Filter params are accepted and ignored: the fixture
+ * store holds published docs only, so there is nothing to scope.
  */
 const listResponse = (
-  docs: ReadonlyArray<CmsDoc>,
+  docs: ReadonlyArray<ListableDoc>,
   page: number,
   limit: number,
-  sort: (a: CmsDoc, b: CmsDoc) => number,
+  sort: (a: ListableDoc, b: ListableDoc) => number,
 ) => {
   const published = docs.filter((doc) => doc.status === "published").sort(sort);
   const totalDocs = published.length;
@@ -55,6 +75,9 @@ const listQuery = Schema.toStandardSchemaV1(
     page: Schema.optional(Schema.NumberFromString),
     pageSize: Schema.optional(Schema.NumberFromString),
     limit: Schema.optional(Schema.NumberFromString),
+    status: Schema.optional(Schema.String),
+    category: Schema.optional(Schema.String),
+    excludeCategory: Schema.optional(Schema.String),
   }),
 );
 
@@ -84,6 +107,21 @@ export const cmsSimulator = new Elysia({ name: "cms-simulator" })
       detail: { description: "Simulated CMS posts", tags: ["cms"] },
     },
   )
+  // Static before dynamic: "/posts/summary" must not read as a slug.
+  .get(
+    "/posts/summary",
+    ({ query }) =>
+      listResponse(
+        postSummaries,
+        query.page ?? 1,
+        query.pageSize ?? query.limit ?? 10,
+        byPublishedDesc,
+      ),
+    {
+      query: listQuery,
+      detail: { description: "Simulated CMS post summaries, no body", tags: ["cms"] },
+    },
+  )
   .get("/posts/:slug", ({ params, set }) => single(findPublished(posts, params.slug), set), {
     params: slugParams,
     detail: { description: "Simulated CMS post by slug", tags: ["cms"] },
@@ -95,6 +133,16 @@ export const cmsSimulator = new Elysia({ name: "cms-simulator" })
     {
       query: listQuery,
       detail: { description: "Simulated CMS works", tags: ["cms"] },
+    },
+  )
+  // Static before dynamic: "/works/summary" must not read as a slug.
+  .get(
+    "/works/summary",
+    ({ query }) =>
+      listResponse(workSummaries, query.page ?? 1, query.pageSize ?? query.limit ?? 10, byTitleAsc),
+    {
+      query: listQuery,
+      detail: { description: "Simulated CMS work summaries, no body", tags: ["cms"] },
     },
   )
   .get("/works/:slug", ({ params, set }) => single(findPublished(works, params.slug), set), {

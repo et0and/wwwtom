@@ -125,13 +125,35 @@ export const adapterRequest = <T>(
     }),
   );
 
-/** Run an adapter request to completion, rejecting with HttpError on failure. */
-export const runAdapterRequest = <T>(request: () => Promise<EdenResult<T>>): Promise<T> => {
+/** Run a logged adapter effect to completion in the current SSR context. */
+const runLoggedAdapterRequest = <T, E>(
+  effect: Effect.Effect<T, E>,
+  operation: string,
+): Promise<T> => {
   const context = getServerLogContext();
-  return Effect.runPromise(
-    withLogging(adapterRequest(request).pipe(Effect.withSpan("web.adapterRequest")), context),
-  );
+  return Effect.runPromise(withLogging(effect.pipe(Effect.withSpan(operation)), context));
 };
+
+/** Run an adapter request to completion, rejecting with HttpError on failure. */
+export const runAdapterRequest = <T>(request: () => Promise<EdenResult<T>>): Promise<T> =>
+  runLoggedAdapterRequest(adapterRequest(request), "web.adapterRequest");
+
+/**
+ * Run an adapter read to completion, mapping a 404 to null (absent
+ * resource). Other failures still reject, so lists keep throwing while
+ * detail pages render a not-found state from settled null data.
+ */
+export const runAdapterRequestOrNull = <T>(
+  request: () => Promise<EdenResult<T>>,
+): Promise<T | null> =>
+  runLoggedAdapterRequest(
+    adapterRequest(request).pipe(
+      Effect.catchTag("HttpError", (error) =>
+        error.status === HttpStatus.NotFound ? Effect.succeed(null) : Effect.fail(error),
+      ),
+    ),
+    "web.adapterRequestOrNull",
+  );
 
 /** Logging context for the current SSR request, if any. */
 const getServerLogContext = (): LogContext => {
