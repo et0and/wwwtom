@@ -1,3 +1,10 @@
+## [3.0.1](https://github.com/et0and/wwwtom/compare/v3.0.0...v3.0.1) (2026-09-10)
+
+
+### Bug Fixes
+
+* **storybook:** point preview to flattened color-mode export ([61e6df2](https://github.com/et0and/wwwtom/commit/61e6df258998acc33011af8e415acaf145363a56))
+
 # [3.0.0](https://github.com/et0and/wwwtom/compare/v2.8.1...v3.0.0) (2026-09-08)
 
 
