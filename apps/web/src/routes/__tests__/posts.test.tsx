@@ -6,6 +6,7 @@ import { queryClient } from "~/libs/query-client";
 import PostsHome from "~/routes/posts/index";
 
 vi.mock("~/server/adapter", () => ({
+  POSTS_PAGE_SIZE: 5,
   fetchPosts: vi.fn(),
 }));
 

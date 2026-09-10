@@ -9,6 +9,7 @@
     "./services/config": "./src/services/config.ts",
     "./services/logging": "./src/services/logging.ts",
     "./services/queue": "./src/services/queue.ts",
+    "./services/session": "./src/services/session.ts",
     "./services/worker": "./src/services/worker.ts",
     "./telegram": "./src/telegram.ts",
     "./tiptap-html": "./src/tiptap-html.ts"

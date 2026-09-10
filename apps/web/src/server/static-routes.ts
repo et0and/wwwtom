@@ -56,8 +56,10 @@ export const handleFeed = () =>
 export const handleSitemap = () =>
   Effect.runPromise(
     Effect.all([
-      adapterRequest(() => callAdapter().content.posts.get({ query: { page: 1, pageSize: 500 } })),
-      adapterRequest(() => callAdapter().content.works.get()),
+      adapterRequest(() =>
+        callAdapter().content.posts.summary.get({ query: { page: 1, pageSize: 500 } }),
+      ),
+      adapterRequest(() => callAdapter().content.works.summary.get()),
     ]).pipe(
       Effect.map(([postsResult, worksResult]) => {
         const posts = postsResult.docs;

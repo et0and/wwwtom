@@ -1,7 +1,7 @@
 import { httpHeader } from "@solidjs/web";
 import { useLocation } from "@solidjs/router";
-import { useQuery } from "@tanstack/solid-query";
-import { fetchPosts } from "~/server/adapter";
+import { keepPreviousData, useQuery } from "@tanstack/solid-query";
+import { POSTS_PAGE_SIZE, fetchPosts } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Loading, Show, For } from "solid-js";
@@ -15,11 +15,16 @@ export default function PostsHome() {
   httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
 
   const location = useLocation();
-  const currentPage = () => Number(location.query.page) || 1;
+  const currentPage = () => Math.max(1, Math.floor(Number(location.query.page) || 1));
 
   const postsQuery = useQuery(() => ({
     queryKey: ["posts", currentPage()],
-    queryFn: () => fetchPosts(currentPage(), 5),
+    queryFn: () => fetchPosts(currentPage(), POSTS_PAGE_SIZE),
+    // Hold the SSR stream until the list resolves, so a direct load paints
+    // with items instead of a blank spinner. keepPreviousData keeps the
+    // previous page visible while the next page fetches.
+    deferStream: true,
+    placeholderData: keepPreviousData,
   }));
 
   return (
@@ -49,11 +54,14 @@ export default function PostsHome() {
           </Show>
           <Show when={postsQuery.data}>
             {(result) => {
-              const r = result();
+              const postsPage = result();
               return (
                 <>
-                  <Show when={r.docs && r.docs.length > 0}>
-                    <For each={r.docs}>
+                  <Show
+                    when={postsPage.docs.length > 0}
+                    fallback={<Text variant="secondary">No posts found.</Text>}
+                  >
+                    <For each={postsPage.docs}>
                       {(post) => (
                         <Link
                           variant="current"
@@ -78,17 +86,18 @@ export default function PostsHome() {
                       )}
                     </For>
                   </Show>
-                  <Show when={!r.docs || r.docs.length === 0}>
-                    <Text variant="secondary">No posts found.</Text>
-                  </Show>
                   <div class="justify-between flex item-center">
-                    <Show when={r.page > 1}>
-                      <Link variant="current" preload={true} href={`/posts?page=${r.page - 1}`}>
+                    <Show when={postsPage.page > 1}>
+                      <Link
+                        variant="current"
+                        preload={true}
+                        href={`/posts?page=${postsPage.page - 1}`}
+                      >
                         Previous
                       </Link>
                     </Show>
-                    <Show when={r.page < r.totalPages}>
-                      <Link variant="current" href={`/posts?page=${r.page + 1}`}>
+                    <Show when={postsPage.page < postsPage.totalPages}>
+                      <Link variant="current" href={`/posts?page=${postsPage.page + 1}`}>
                         Next
                       </Link>
                     </Show>

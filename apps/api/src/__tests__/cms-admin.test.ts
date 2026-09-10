@@ -154,9 +154,44 @@ describe("cms admin reads", () => {
       expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(1);
     });
 
+    it("skips the session lookup without a session credential", async () => {
+      const response = await app.fetch(requestWithEnv("http://localhost/posts", authEnv(seed)));
+      expect(response.status).toBe(200);
+      expect(vi.mocked(requireSession)).not.toHaveBeenCalled();
+    });
+
+    it("skips the session lookup on every read without a credential", async () => {
+      for (const path of [
+        "/posts/summary",
+        "/works",
+        "/works/summary",
+        "/posts/hello-world",
+        "/works/hyperjam",
+      ]) {
+        vi.mocked(requireSession).mockClear();
+        const response = await app.fetch(requestWithEnv(`http://localhost${path}`, authEnv(seed)));
+        expect(response.status).toBe(200);
+        expect(vi.mocked(requireSession)).not.toHaveBeenCalled();
+      }
+    });
+
+    it("checks the session on bearer credentials", async () => {
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/posts", authEnv(seed), {
+          headers: { authorization: "Bearer test-token" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(vi.mocked(requireSession)).toHaveBeenCalled();
+    });
+
     it("lists everything for admins by default", async () => {
       vi.mocked(requireSession).mockReturnValue(adminSession());
-      const response = await app.fetch(requestWithEnv("http://localhost/posts", authEnv(seed)));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/posts", authEnv(seed), {
+          headers: { cookie: "better-auth.session_token=test" },
+        }),
+      );
       expect(response.status).toBe(200);
       expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(2);
     });
@@ -164,7 +199,9 @@ describe("cms admin reads", () => {
     it("filters drafts for admins on request", async () => {
       vi.mocked(requireSession).mockReturnValue(adminSession());
       const response = await app.fetch(
-        requestWithEnv("http://localhost/posts?status=draft", authEnv(seed)),
+        requestWithEnv("http://localhost/posts?status=draft", authEnv(seed), {
+          headers: { cookie: "better-auth.session_token=test" },
+        }),
       );
       expect(response.status).toBe(200);
       const body = (await response.json()) as { docs: Array<{ slug: string }> };
@@ -183,7 +220,9 @@ describe("cms admin reads", () => {
     it("shows drafts to admins", async () => {
       vi.mocked(requireSession).mockReturnValue(adminSession());
       const response = await app.fetch(
-        requestWithEnv("http://localhost/posts/draft-post", authEnv(seed)),
+        requestWithEnv("http://localhost/posts/draft-post", authEnv(seed), {
+          headers: { cookie: "better-auth.session_token=test" },
+        }),
       );
       expect(response.status).toBe(200);
       expect(((await response.json()) as { slug: string }).slug).toBe("draft-post");
