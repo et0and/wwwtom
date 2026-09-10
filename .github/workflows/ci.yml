@@ -26,6 +26,18 @@ jobs:
           pnpm exec oxfmt --write packages/types/src/db.ts
           git diff --exit-code packages/types/src/db.ts
 
+      # Typecheck is a hard merge gate: every workspace with a `typecheck`
+      # script must pass (tsc --noEmit via Turbo) before unit tests run.
+      # It lives in the same required job on purpose, so existing branch
+      # protection keeps enforcing it without settings changes.
+      - name: Run typecheck
+        env:
+          TURBO_API: https://turbo.infra.tom.so
+          TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
+          TURBO_TEAM: wwwtom
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
+        run: pnpm turbo run typecheck
+
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
       # package's workspace dependencies first. Task artifacts are shared
