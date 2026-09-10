@@ -81,6 +81,43 @@ const fakeDb = (seed: Seed): CmsD1Binding => ({
 const matchStatus = (row: Row, status: string | number | null): boolean =>
   status === "all" || row["status"] === status;
 
+/** Category slugs linked to a post, via the seed join rows. */
+const postCategories = (seed: Seed, postId: string): Array<string> =>
+  seed.links
+    .filter((link) => link.postId === postId)
+    .flatMap((link) =>
+      seed.categories
+        .filter((category) => category["id"] === link.categoryId)
+        .map((category) => String(category["slug"])),
+    );
+
+/** Narrow seed rows to a category when the SQL carries a slug filter. */
+const scopeByCategory = (
+  posts: ReadonlyArray<Row>,
+  seed: Seed,
+  sql: string,
+  values: ReadonlyArray<string | number | null>,
+): Array<Row> => {
+  if (!sql.includes("c.slug = ?")) return [...posts];
+  const slug = values[2] ?? null;
+  if (slug === null) return [...posts];
+  return posts.filter((row) => postCategories(seed, String(row["id"])).includes(String(slug)));
+};
+
+/** Page bounds from bound values; positions shift with a category filter. */
+type PageBounds = {
+  readonly limit: number;
+  readonly offset: number;
+};
+
+const pageBounds = (sql: string, values: ReadonlyArray<string | number | null>): PageBounds => {
+  if (sql.includes("c.slug = ?")) {
+    return { limit: Number(values[3] ?? 10), offset: Number(values[4] ?? 0) };
+  }
+  if (values.length > 2) return { limit: Number(values[2]), offset: Number(values[3]) };
+  return { limit: Number(values[0] ?? 10), offset: Number(values[1] ?? 0) };
+};
+
 const runQuery = async <T>(
   sql: string,
   values: ReadonlyArray<string | number | null>,
@@ -89,9 +126,10 @@ const runQuery = async <T>(
   const posts = sql.includes("FROM works") ? seed.works : seed.posts;
   if (sql.includes("COUNT(*)")) {
     const status = values[0] ?? "published";
-    return [{ total: posts.filter((row) => matchStatus(row, status)).length } as T];
+    const scoped = scopeByCategory(posts, seed, sql, values);
+    return [{ total: scoped.filter((row) => matchStatus(row, status)).length } as T];
   }
-  if (sql.includes("post_categories")) {
+  if (sql.includes("SELECT pc.post_id")) {
     const ids = new Set(values.map(String));
     return seed.links
       .filter((link) => ids.has(link.postId))
@@ -109,12 +147,14 @@ const runQuery = async <T>(
     const status = values[1] ?? "published";
     return posts.filter((row) => row["slug"] === values[0] && matchStatus(row, status)) as Array<T>;
   }
-  // List queries bind [limit, offset] or [status, status, limit, offset].
+  // List queries bind [status, status, limit, offset], or with a category
+  // filter [status, status, category, limit, offset].
   // Works list alphabetically; posts list newest first (mirrors the SQL).
-  const status = values.length > 2 ? values[0] : "published";
-  const limit = Number(values.length > 2 ? values[2] : (values[0] ?? 10));
-  const offset = Number(values.length > 2 ? values[3] : (values[1] ?? 0));
-  const ordered = posts.filter((row) => matchStatus(row, status ?? "published"));
+  const status = values[0] ?? "published";
+  const { limit, offset } = pageBounds(sql, values);
+  const ordered = scopeByCategory(posts, seed, sql, values).filter((row) =>
+    matchStatus(row, status ?? "published"),
+  );
   if (sql.includes("FROM works")) {
     ordered.sort((a, b) =>
       String(a["title"]).localeCompare(String(b["title"]), undefined, { sensitivity: "base" }),
@@ -194,6 +234,32 @@ describe("cms routes", () => {
     expect(body.totalDocs).toBe(2);
     expect(body.totalPages).toBe(2);
     expect(body.hasPrevPage).toBe(true);
+  });
+
+  it("filters the post list by category", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts?category=essays", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      docs: Array<{ slug: string }>;
+      totalDocs: number;
+    };
+    expect(body.docs.map((doc) => doc.slug)).toEqual(["hello-world"]);
+    expect(body.totalDocs).toBe(1);
+  });
+
+  it("returns an empty list for an unknown category", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts?category=missing", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      docs: Array<{ slug: string }>;
+      totalDocs: number;
+    };
+    expect(body.docs).toEqual([]);
+    expect(body.totalDocs).toBe(0);
   });
 
   it("returns 400 for unparseable paging parameters", async () => {

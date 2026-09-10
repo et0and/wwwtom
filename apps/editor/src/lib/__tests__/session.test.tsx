@@ -1,7 +1,15 @@
 import { render } from "@solidjs/testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
-import { createSession, loadSession, signOut, startGithubSignIn } from "../session";
+import {
+  createSession,
+  loadSession,
+  signOut,
+  siteLabel,
+  startGithubSignIn,
+  startGoogleSignIn,
+  startSocialSignIn,
+} from "../session";
 import { runClient } from "../api";
 
 const fetchMock = vi.fn();
@@ -72,6 +80,25 @@ describe("editor session", () => {
     expect(error.message).toBe("Invalid sign-in URL");
   });
 
+  it("starts Google sign-in and returns the authorize URL", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ url: "https://accounts.google.com/o/oauth2/auth?x=1", redirect: true }),
+    );
+    const url = await runClient(startGoogleSignIn());
+    expect(url).toContain("https://accounts.google.com/o/oauth2/auth");
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(String(init.body)) as { provider: string };
+    expect(body.provider).toBe("google");
+  });
+
+  it("rejects cross-provider authorize URLs", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse({ url: "https://github.com/login/oauth/authorize?x=1", redirect: true }),
+    );
+    const error = await runClient(startSocialSignIn("google").pipe(Effect.flip));
+    expect(error.message).toBe("Invalid sign-in URL");
+  });
+
   it("shows the email when signed in", async () => {
     fetchMock.mockResolvedValue(jsonResponse(sessionBody));
     const { findByText } = render(() => <Probe />);
@@ -91,5 +118,12 @@ describe("editor session", () => {
     expect(init.method).toBe("POST");
     expect(new Headers(init.headers).get("content-type")).toContain("application/json");
     expect(init.body).toBe("{}");
+  });
+
+  it("labels Sophie hosts from the URL", () => {
+    expect(siteLabel("cms.sophie.st")).toBe("sophie.st");
+    expect(siteLabel("dev-cms.sophie.st")).toBe("sophie.st");
+    expect(siteLabel("cms.tom.so")).toBe("tom.so");
+    expect(siteLabel("localhost")).toBe("tom.so");
   });
 });

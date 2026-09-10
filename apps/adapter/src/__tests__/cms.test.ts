@@ -61,6 +61,18 @@ describe("cms integration", () => {
       );
       expect(await response.json()).toEqual(listBody);
     });
+
+    it("forwards the category filter to the API", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(listBody));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/content/posts?category=pages", env),
+      );
+      expect(response.status).toBe(200);
+      expect(fetchMock).toHaveBeenCalledWith(
+        "http://localhost:8787/posts?page=1&pageSize=5&category=pages",
+        expect.anything(),
+      );
+    });
   });
 
   describe("GET /content/posts/:slug", () => {

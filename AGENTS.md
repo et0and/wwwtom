@@ -1,18 +1,19 @@
 # wwwtom
 
-pnpm + Turborepo monorepo: tom.so, api.tom.so.
+pnpm + Turborepo monorepo: tom.so, sophie.st, api.tom.so.
 Smallest correct change, follow local patterns, verify before handoff.
 Improve existing code; avoid new abstractions.
 
 ## Shape
 
 - `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Solid rules: `apps/web/AGENTS.md`.
-- `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS), Cloudflare Website. Same Solid rules.
-- `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers.
-- `apps/adapter` — fediverse adapter, Elysia + Effect, Workers.
+- `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
+- `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS: Tom Camus + Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Same Solid rules.
+- `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
+- `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/*` — ui, utils, types, db, arena, schemas, checkout, constants, email.
-- `infra` — Alchemy 2.0.0-beta.72 + Effect 4.0.0-beta.105 stacks: shared, turbo, api, adapter, web.
+- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/tomui/AGENTS.md`), utils, types, db, arena, schemas, checkout, constants, email.
+- `infra` — Alchemy 2.0.0-beta.72 + Effect 4.0.0-beta.105 stacks: shared, turbo, api, adapter, web, editor, sophie.
 
 ## Working rules
 
@@ -27,9 +28,9 @@ Improve existing code; avoid new abstractions.
 - `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
-- `pnpm test:update` — snapshot update (web, utils)
-- `pnpm deploy` = shared → api → adapter → web → editor (Alchemy; `ALCHEMY_STAGE` required)
-- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:editor`
+- `pnpm test:update` — snapshot update (web, utils, icons)
+- `pnpm deploy` = shared → api → adapter → web → editor → sophie (Alchemy; `ALCHEMY_STAGE` required)
+- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:editor|deploy:sophie`
 - `pnpm destroy` — destroy current Alchemy stage
 
 ## App scripts
@@ -47,7 +48,11 @@ Improve existing code; avoid new abstractions.
 ## Tests
 
 - web: `apps/web/src/**/__tests__/*.test.tsx`; jsdom, globals, `src/test/setup.ts` (jest-dom, cleanup, matchMedia mock)
+- sophie: `apps/sophie/src/**/__tests__/*`; same Solid setup as web
 - editor: `apps/editor/src/**/__tests__/*.test.{ts,tsx}` (`.tsx` for JSX tests — `.ts` skips the JSX transform)
+- api: `apps/api/src/__tests__/*`; takumi render stubbed in `src/test/setup.ts`, fonts stubbed per test
+- adapter: `apps/adapter/src/__tests__/*`; `requestWithEnv` + `testEnv` in `src/test/helpers.ts`
+- ui: `packages/ui/src/**/__tests__/*`
 - utils: `packages/utils/__tests__/*`
 - Solid UI: `@solidjs/testing-library`; wrap router deps in `Router`/`Route`; assert user-visible behavior; focused snapshots; narrowest relevant test first
 - Solid 2.0 writes flush async — await state with `vi.waitFor`, never assert immediately after the action
@@ -120,9 +125,12 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web; `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → api → adapter → web → editor → sophie; `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
+- per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed
+- `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker
+- Sophie binds no Hyperdrive (CMS is D1+R2; nothing reads `databaseUrl`)
 - web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
 
 ## Rule files
@@ -136,4 +144,5 @@ Never guess at Effect patterns - check the guide first.
 ## Sites
 
 - web `https://tom.so`, api `https://api.tom.so`
+- sophie `https://sophie.st`, sophie api `https://api.sophie.st`
 - if unsure, read nearest package or app config before changing patterns

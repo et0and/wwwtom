@@ -12,7 +12,10 @@ export type CmsMediaId = typeof CmsMediaId.Type;
 export const CmsCategoryId = Schema.String.pipe(Schema.brand("CmsCategoryId"));
 export type CmsCategoryId = typeof CmsCategoryId.Type;
 
-export const CmsSlug = Schema.NonEmptyString.pipe(Schema.brand("CmsSlug"));
+export const CmsSlug = Schema.NonEmptyString.pipe(
+  Schema.check(Schema.isPattern(/^[a-z0-9-]+$/), Schema.isMaxLength(100)),
+  Schema.brand("CmsSlug"),
+);
 export type CmsSlug = typeof CmsSlug.Type;
 
 export const CmsStatusSchema = Schema.Literals(["draft", "published"]);
@@ -317,6 +320,7 @@ export const CmsPagingSchema = Schema.Struct({
   page: Schema.optional(PagingNumber),
   pageSize: Schema.optional(PagingNumber),
   status: Schema.optional(CmsStatusFilterSchema),
+  category: Schema.optional(CmsSlug),
 });
 export type CmsPaging = typeof CmsPagingSchema.Type;
 

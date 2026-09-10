@@ -3,17 +3,18 @@ import * as Output from "alchemy/Output";
 import { Effect } from "effect";
 
 type PreviewCommentProps = {
+  id?: string;
   name: string;
   url: string | undefined | Output.Output<string | undefined, never>;
 };
 
-export const previewComment = ({ name, url }: PreviewCommentProps) =>
+export const previewComment = ({ id = "preview-comment", name, url }: PreviewCommentProps) =>
   Effect.gen(function* () {
     if (!process.env.PULL_REQUEST) {
       return;
     }
 
-    yield* GitHub.Comment("preview-comment", {
+    yield* GitHub.Comment(id, {
       owner: "et0and",
       repository: "wwwtom",
       issueNumber: Number(process.env.PULL_REQUEST),

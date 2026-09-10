@@ -12,6 +12,7 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.unstubAllEnvs();
   vi.restoreAllMocks();
 });
 
@@ -83,6 +84,34 @@ describe("PostList", () => {
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const [worksUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(worksUrl).toBe("http://localhost:8788/content/works?status=all&page=1&pageSize=10");
+    expect(await findByText("Nothing here yet.")).toBeInTheDocument();
+  });
+
+  it("hides the Works toggle in Sophie mode", async () => {
+    vi.stubEnv("VITE_SOPHIE", "true");
+    window.history.replaceState(null, "", "/?kind=works");
+    fetchMock.mockResolvedValue(jsonResponse(listBody([post()])));
+    const { findByText, queryByRole } = render(() => <PostList onEdit={() => undefined} />);
+    await findByText("Hello World");
+    expect(queryByRole("button", { name: "Works" })).toBeNull();
+    expect(fetchMock.mock.calls[0]?.[0]).toBe(
+      "http://localhost:8788/content/posts?status=all&page=1&pageSize=10",
+    );
+  });
+
+  it("lists pages through the category filter in Sophie mode", async () => {
+    vi.stubEnv("VITE_SOPHIE", "true");
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(listBody([post()])))
+      .mockResolvedValueOnce(jsonResponse(listBody([])));
+    const { findByRole, findByText } = render(() => <PostList onEdit={() => undefined} />);
+    await findByText("Hello World");
+    fireEvent.click(await findByRole("button", { name: "Pages" }));
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+    const [pagesUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(pagesUrl).toBe(
+      "http://localhost:8788/content/posts?status=all&page=1&pageSize=10&category=pages",
+    );
     expect(await findByText("Nothing here yet.")).toBeInTheDocument();
   });
 

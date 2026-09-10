@@ -1,4 +1,4 @@
-import { Match, Show, Switch, createEffect, createSignal, onCleanup } from "solid-js";
+import { Match, Show, Switch, createEffect, createSignal, onCleanup, onSettled } from "solid-js";
 import { Effect } from "effect";
 import { Banner } from "@tom/ui/tomui/banner";
 import { Loader } from "@tom/ui/tomui/loader";
@@ -6,9 +6,10 @@ import { DropdownMenu } from "@tom/ui/tomui/dropdown";
 import { Tabs } from "@tom/ui/tomui/tabs";
 import { useColorMode } from "@tom/ui/tomui/color-mode";
 import { runClient } from "./lib/api";
-import { createSession, signOut } from "./lib/session";
+import { createSession, documentTitle, signOut } from "./lib/session";
 import type { ContentKind } from "./lib/content";
 import { SignInButton } from "./components/SignInButton";
+import { CamusLogo } from "./components/CamusLogo";
 import { Avatar } from "./components/Avatar";
 import { PostList } from "./components/PostList";
 import { EditorView } from "./components/EditorView";
@@ -49,6 +50,10 @@ export const App = (props: { navigate?: (url: string) => void }) => {
   const [view, setView] = createSignal<View>({ name: "list" });
   const [error, setError] = createSignal<string | undefined>(undefined);
   const navigate = props.navigate ?? assignUrl;
+
+  onSettled(() => {
+    document.title = documentTitle();
+  });
 
   // The list toolbar sticks below the header, so publish the header
   // height for its sticky offset. The nav mounts only after sign-in
@@ -92,6 +97,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
         </Match>
         <Match when={session() === null}>
           <div class="signin-view">
+            <CamusLogo />
             <h1 class="signin-title">Camus</h1>
             <SignInButton onError={(message) => setError(message)} navigate={navigate} />
           </div>

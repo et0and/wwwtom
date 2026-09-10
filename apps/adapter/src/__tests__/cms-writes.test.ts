@@ -14,7 +14,11 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const env = testEnv({ API_URL: "http://localhost:8787", INTERNAL_API_TOKEN: "adapter-token" });
+const env = testEnv({
+  API_URL: "http://localhost:8787",
+  ADAPTER_URL: "http://localhost:8788",
+  INTERNAL_API_TOKEN: "adapter-token",
+});
 
 const sessionBody = { session: { id: "session-1" }, user: { id: "user-1" } };
 

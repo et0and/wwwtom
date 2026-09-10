@@ -330,18 +330,32 @@ export const listPosts = Effect.fn("CmsService.listPosts")(function* (
   status: CmsStatusFilter,
 ) {
   const { limit, current, offset } = yield* normalizePaging(paging, "list_posts");
+  const category = paging.category ?? null;
+  const filter =
+    category === null
+      ? ""
+      : "AND EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = p.id AND c.slug = ?) ";
+  const categoryParams = category === null ? [] : [category];
   const [rows, countRow] = yield* Effect.all([
     queryAll<PostRow>(
       db,
       `SELECT ${POST_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
+        filter +
         "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
-      [status, status, limit, offset],
+      [status, status, ...categoryParams, limit, offset],
       "list_posts",
     ),
     queryFirst<{ total: number }>(
       db,
-      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)",
-      [status, status],
+      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" +
+        (category === null
+          ? ""
+          : " AND EXISTS (SELECT 1 FROM post_categories pc " +
+            "JOIN categories c ON c.id = pc.category_id " +
+            "WHERE pc.post_id = posts.id AND c.slug = ?)"),
+      category === null ? [status, status] : [status, status, category],
       "count_posts",
     ),
   ]);

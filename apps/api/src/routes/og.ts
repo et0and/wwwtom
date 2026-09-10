@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { problemDetailsSchema } from "@tom/schemas/error";
+import { getRequestEnv } from "@tom/utils/services/worker";
 import { logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
@@ -15,8 +16,11 @@ const commaTolerantString = (maxLength: number) =>
   Schema.Union([
     Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(maxLength)),
     // Rejoined in the handler; validateOgParams enforces the real bounds on
-    // the full joined value.
-    Schema.Array(Schema.String),
+    // the full joined value. Bounded (10 items of 300 chars) so repeated
+    // params cannot pile up unbounded memory before the join.
+    Schema.Array(Schema.String.pipe(Schema.check(Schema.isMaxLength(300)))).pipe(
+      Schema.check(Schema.isMaxLength(10)),
+    ),
   ]);
 
 const titleSchema = commaTolerantString(100).pipe(
@@ -35,21 +39,26 @@ const summarySchema = commaTolerantString(200).pipe(
   }),
 );
 
-const templateSchema = Schema.optional(
-  Schema.Union([Schema.Literal("default"), Schema.Literal("minimal"), Schema.Literal("developer")]),
-).pipe(
+const dateSchema = commaTolerantString(30).pipe(
   Schema.annotate({
-    description:
-      "OG image template to use. Defaults to automatic selection based on requester. Available templates: default, minimal, developer",
-    examples: ["default"],
-    default: "default",
+    description: "Date line for templates that render one (for example sophie)",
+    examples: ["September 9, 2026"],
   }),
 );
 
-const requesterSchema = Schema.optional(Schema.String).pipe(
+const templateSchema = Schema.optional(
+  Schema.Union([
+    Schema.Literal("default"),
+    Schema.Literal("minimal"),
+    Schema.Literal("developer"),
+    Schema.Literal("sophie"),
+  ]),
+).pipe(
   Schema.annotate({
-    description: "Site requesting the OG image",
-    examples: ["https://tom.so"],
+    description:
+      "OG image template to use. Defaults to automatic selection based on requester. Available templates: default, minimal, developer, sophie",
+    examples: ["default"],
+    default: "default",
   }),
 );
 
@@ -57,7 +66,7 @@ const OgQuerySchema = Schema.Struct({
   title: titleSchema,
   summary: summarySchema,
   template: templateSchema,
-  requester: requesterSchema,
+  date: Schema.optional(dateSchema),
 });
 
 const ogQuerySchema = toOpenApiSchema(OgQuerySchema);
@@ -88,13 +97,29 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
     const title = joinCommaList(query.title) || "Tom Hackshaw";
     const summary = joinCommaList(query.summary) || "Design engineer from Aotearoa New Zealand";
     const template = query.template;
+    const date = joinCommaList(query.date);
+    // Template auto-select reads the Referer header only: a ?requester=
+    // override would let any caller force another site's template, so the
+    // query param is not honored. An explicit template param stays
+    // authoritative and is validated below.
     const referer = request.headers.get("Referer") ?? "";
-    const requester = referer || query.requester || "unknown";
+    const requester = referer || "unknown";
 
     const result = await runEffect(
       Effect.gen(function* () {
-        yield* validateOgParams(title, summary);
-        return yield* generateOgImageEffect(title, summary, requester, template);
+        const validated = yield* validateOgParams(title, summary, date, template);
+        const env = getRequestEnv(request);
+        return yield* generateOgImageEffect(
+          title,
+          summary,
+          requester,
+          validated.template,
+          validated.date,
+          {
+            origin: new URL(request.url).origin,
+            assets: env.ASSETS,
+          },
+        );
       }).pipe(
         Effect.catchTag("ValidationError", (error) =>
           Effect.logWarning("Error generating OG image", error).pipe(

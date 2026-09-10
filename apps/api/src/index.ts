@@ -91,6 +91,7 @@ export const app = new Elysia({
     });
   })
   .onError(({ code, error, request }) => {
+    Effect.runFork(Effect.logError("API error", { code, cause: String(error) }));
     if (Schema.is(CmsError)(error)) {
       if (error.status === HttpStatus.NotFound) {
         Effect.runFork(Effect.logWarning("CMS not found", { path: request.url }));
