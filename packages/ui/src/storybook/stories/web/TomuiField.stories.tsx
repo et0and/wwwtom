@@ -1,6 +1,6 @@
 import preview from "#.storybook/preview";
-import { Field } from "@tom/ui/tomui/field";
-import { Input } from "@tom/ui/tomui/input";
+import { Field } from "@tom/ui/field";
+import { Input } from "@tom/ui/input";
 
 const meta = preview.meta({
   title: "web/Field",

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Toolbar } from "@tom/ui/tomui/toolbar";
+import { Toolbar } from "@tom/ui/toolbar";
 
 const meta = preview.meta({
   title: "web/Toolbar",

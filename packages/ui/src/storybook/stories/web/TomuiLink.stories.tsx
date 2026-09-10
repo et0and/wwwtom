@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Link } from "@tom/ui/tomui/link";
+import { Link } from "@tom/ui/link";
 
 const meta = preview.meta({
   title: "web/Link",

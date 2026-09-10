@@ -1,9 +1,9 @@
 import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsCategory } from "@tom/schemas/cms";
-import { Button } from "@tom/ui/tomui/button";
-import { Input } from "@tom/ui/tomui/input";
-import { Banner } from "@tom/ui/tomui/banner";
+import { Button } from "@tom/ui/button";
+import { Input } from "@tom/ui/input";
+import { Banner } from "@tom/ui/banner";
 import { createCategory, deleteCategory, listCategories } from "../lib/content";
 import { runClient } from "../lib/api";
 

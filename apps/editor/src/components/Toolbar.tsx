@@ -1,8 +1,8 @@
 import { For, Show, createMemo } from "solid-js";
 import { Option, Schema } from "effect";
 import type { Editor } from "@tiptap/core";
-import { Toolbar } from "@tom/ui/tomui/toolbar";
-import { Select } from "@tom/ui/tomui/select";
+import { Toolbar } from "@tom/ui/toolbar";
+import { Select } from "@tom/ui/select";
 
 const BANNER_STYLES = ["info", "warning", "error", "success"] as const;
 

@@ -12,7 +12,7 @@ Improve existing code; avoid new abstractions.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/tomui/AGENTS.md`), utils, types, db, arena, schemas, checkout, constants, email.
+- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, checkout, constants, email.
 - `infra` — Alchemy 2.0.0-beta.72 + Effect 4.0.0-beta.105 stacks: shared, turbo, api, adapter, web, editor, sophie.
 
 ## Working rules

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Switch } from "@tom/ui/tomui/switch";
+import { Switch } from "@tom/ui/switch";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

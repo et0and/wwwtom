@@ -3,9 +3,10 @@ import { useLocation } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPosts } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { Text } from "@tom/ui/text";
 import { Loading, Show, For } from "solid-js";
-import { Link } from "@tom/ui/Link";
-import { Spinner } from "@tom/ui/Spinner";
+import { Link } from "@tom/ui/link";
+import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 
@@ -36,14 +37,14 @@ export default function PostsHome() {
     >
       <BlurInText text="Writing" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
-        <p>Some of my writing.</p>
+        <Text>Some of my writing.</Text>
       </BlurInSection>
       <BlurInSection delay={0.5}>
-        <Loading fallback={<Spinner color="grey" />}>
+        <Loading fallback={<Loader />}>
           <Show when={postsQuery.isError}>
             <div class="banner" role="alert">
-              <p class="banner-title">Error loading posts</p>
-              <p>{postsQuery.error?.message}</p>
+              <Text class="banner-title">Error loading posts</Text>
+              <Text>{postsQuery.error?.message}</Text>
             </div>
           </Show>
           <Show when={postsQuery.data}>
@@ -54,33 +55,42 @@ export default function PostsHome() {
                   <Show when={r.docs && r.docs.length > 0}>
                     <For each={r.docs}>
                       {(post) => (
-                        <Link class="page" preload={true} href={`/posts/${post.slug}`}>
+                        <Link
+                          variant="current"
+                          class="page block!"
+                          preload={true}
+                          href={`/posts/${post.slug}`}
+                        >
                           <div>
-                            <h2>{post.title}</h2>
-                            <time>
+                            <Text variant="heading" as="h2">
+                              {post.title}
+                            </Text>
+                            <Text variant="secondary" size="sm" as="time">
                               {new Date(post.publishedAt ?? "").toLocaleDateString("en-NZ", {
                                 year: "numeric",
                                 month: "long",
                                 day: "numeric",
                               })}
-                            </time>
-                            <p>{post.summary || post.meta?.description}</p>
+                            </Text>
+                            <Text>{post.summary || post.meta?.description}</Text>
                           </div>
                         </Link>
                       )}
                     </For>
                   </Show>
                   <Show when={!r.docs || r.docs.length === 0}>
-                    <p>No posts found.</p>
+                    <Text variant="secondary">No posts found.</Text>
                   </Show>
                   <div class="justify-between flex item-center">
                     <Show when={r.page > 1}>
-                      <Link preload={true} href={`/posts?page=${r.page - 1}`}>
+                      <Link variant="current" preload={true} href={`/posts?page=${r.page - 1}`}>
                         Previous
                       </Link>
                     </Show>
                     <Show when={r.page < r.totalPages}>
-                      <Link href={`/posts?page=${r.page + 1}`}>Next</Link>
+                      <Link variant="current" href={`/posts?page=${r.page + 1}`}>
+                        Next
+                      </Link>
                     </Show>
                   </div>
                 </>

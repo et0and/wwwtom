@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Combobox } from "@tom/ui/tomui/combobox";
+import { Combobox } from "@tom/ui/combobox";
 
 const meta = preview.meta({
   title: "web/Combobox",

@@ -5,7 +5,8 @@ import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
-import { Spinner } from "@tom/ui/Spinner";
+import { Loader } from "@tom/ui/loader";
+import { Text } from "@tom/ui/text";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 
 interface CameraRollProps {
@@ -152,8 +153,8 @@ export function CameraRoll(props: CameraRollProps) {
   );
 
   return (
-    <Show when={!isLoading()} fallback={<Spinner />}>
-      <Show when={hasContent()} fallback={<p>Sorry, no content found</p>}>
+    <Show when={!isLoading()} fallback={<Loader />}>
+      <Show when={hasContent()} fallback={<Text variant="secondary">Sorry, no content found</Text>}>
         <div class="">
           <div
             class="relative mx-auto"
@@ -188,12 +189,12 @@ export function CameraRoll(props: CameraRollProps) {
             </For>
           </div>
         </div>
-        <p class="text-xs mt-2">
+        <Text variant="secondary" size="xs" class="mt-2">
           Source:{" "}
           <a href={`https://are.na/tom/${props.slug}`} target="_blank" rel="noopener noreferrer">
             {props.title || props.slug}
           </a>
-        </p>
+        </Text>
       </Show>
     </Show>
   );

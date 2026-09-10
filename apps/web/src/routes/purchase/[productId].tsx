@@ -4,11 +4,12 @@ import { BlurInText } from "~/components/BlurInText";
 import { createMemo, createSignal, Loading, Errored, Show, isPending, latest } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { formatPrice } from "@tom/checkout";
-import { Loader } from "@tom/ui/tomui/loader";
-import { Button } from "@tom/ui/tomui/button";
-import { Input } from "@tom/ui/tomui/input";
-import { Banner } from "@tom/ui/tomui/banner";
-import { Label } from "@tom/ui/tomui/label";
+import { Loader } from "@tom/ui/loader";
+import { Button } from "@tom/ui/button";
+import { Input } from "@tom/ui/input";
+import { Banner } from "@tom/ui/banner";
+import { Text } from "@tom/ui/text";
+import { Label } from "@tom/ui/label";
 import { getAdapterBaseUrl } from "~/libs/adapter";
 import { fetchProduct, createCustomer } from "~/server/adapter";
 
@@ -87,9 +88,13 @@ export default function Purchase() {
                         <Show when={p().medias[0]?.public_url}>
                           {(url) => <img alt={p().name} src={url()} />}
                         </Show>
-                        <h2>{p().name}</h2>
-                        <p>{p().description}</p>
-                        <p class="text-2xl">{formatPrice(p())}</p>
+                        <Text variant="heading" as="h2">
+                          {p().name}
+                        </Text>
+                        <Text>{p().description}</Text>
+                        <Text size="lg" bold class="text-2xl">
+                          {formatPrice(p())}
+                        </Text>
                       </>
                     )}
                   </Show>
@@ -118,7 +123,7 @@ export default function Purchase() {
 
               <div>
                 <Label class="block text-sm mb-1">
-                  Full Name <span class="font-normal">(optional)</span>
+                  Full Name <Text as="span">(optional)</Text>
                 </Label>
                 <Input
                   type="text"
@@ -148,10 +153,10 @@ export default function Purchase() {
             </div>
           </BlurInSection>
 
-          <p class="text-sm text-center">
+          <Text variant="secondary" size="sm" class="text-center">
             Powered by{" "}
             <img src="/logotype_black.svg" alt="Polar" class="inline-block h-5 mx-1 -mt-0.5" />
-          </p>
+          </Text>
         </div>
       </PageLayout>
     </>

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Banner } from "@tom/ui/tomui/banner";
+import { Banner } from "@tom/ui/banner";
 
 const meta = preview.meta({
   title: "web/Banner",

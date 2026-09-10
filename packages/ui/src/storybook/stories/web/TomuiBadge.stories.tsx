@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Badge } from "@tom/ui/tomui/badge";
+import { Badge } from "@tom/ui/badge";
 
 const meta = preview.meta({
   title: "web/Badge",

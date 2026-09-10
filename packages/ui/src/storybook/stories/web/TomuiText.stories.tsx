@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Text } from "@tom/ui/tomui/text";
+import { Text } from "@tom/ui/text";
 
 const meta = preview.meta({
   title: "web/Text",

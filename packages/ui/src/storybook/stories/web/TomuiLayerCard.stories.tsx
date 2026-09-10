@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { LayerCard } from "@tom/ui/tomui/layer-card";
+import { LayerCard } from "@tom/ui/layer-card";
 
 const meta = preview.meta({
   title: "web/LayerCard",

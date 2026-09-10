@@ -4,7 +4,7 @@ import {
   BreadcrumbLink,
   Breadcrumbs,
   BreadcrumbSeparator,
-} from "@tom/ui/tomui/breadcrumbs";
+} from "@tom/ui/breadcrumbs";
 
 const meta = preview.meta({
   title: "web/Breadcrumbs",

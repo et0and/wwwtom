@@ -251,6 +251,8 @@ export interface TextProps {
   /** Additional CSS classes merged via `cn()`. */
   class?: string;
   id?: string;
+  /** Language of the text content (e.g. `"ja"`). */
+  lang?: string;
   ref?: HTMLElement | ((element: HTMLElement) => void) | undefined;
   /** Inline styles. */
   style?: JSX.CSSProperties;

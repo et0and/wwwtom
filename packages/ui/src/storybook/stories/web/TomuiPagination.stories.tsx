@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Pagination } from "@tom/ui/tomui/pagination";
+import { Pagination } from "@tom/ui/pagination";
 
 const meta = preview.meta({
   title: "web/Pagination",

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Autocomplete } from "@tom/ui/tomui/autocomplete";
+import { Autocomplete } from "@tom/ui/autocomplete";
 
 const meta = preview.meta({
   title: "web/Autocomplete",

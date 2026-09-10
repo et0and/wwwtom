@@ -1,9 +1,9 @@
 import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsMedia, CmsMediaUsage } from "@tom/schemas/cms";
-import { Button } from "@tom/ui/tomui/button";
-import { Input } from "@tom/ui/tomui/input";
-import { Banner } from "@tom/ui/tomui/banner";
+import { Button } from "@tom/ui/button";
+import { Input } from "@tom/ui/input";
+import { Banner } from "@tom/ui/banner";
 import { adapterUrl, runClient } from "../lib/api";
 import { deleteMedia, getMediaUsage, listMedia, mediaFileName, mediaFileUrl } from "../lib/content";
 import type { ContentKind } from "../lib/content";

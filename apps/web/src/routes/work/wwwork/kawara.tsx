@@ -2,15 +2,16 @@ import { createSignal, Show, For, onSettled, createEffect } from "solid-js";
 import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
-import { Spinner } from "@tom/ui/Spinner";
+import { Text } from "@tom/ui/text";
+import { Loader } from "@tom/ui/loader";
 
 const TOTAL_COUNT = 1000000;
 const ITEM_HEIGHT = 40;
 
 const NumberItem = (props: { index: number }) => (
-  <p class="mb-1" style={{ height: `${ITEM_HEIGHT}px` }}>
+  <Text class="mb-1" style={{ height: `${ITEM_HEIGHT}px` }}>
     {numberToWords.toWords(props.index + 1)}
-  </p>
+  </Text>
 );
 
 export default function Kawara() {
@@ -69,7 +70,7 @@ export default function Kawara() {
         when={isClient()}
         fallback={
           <div class="flex justify-center items-center h-screen">
-            <Spinner />
+            <Loader />
           </div>
         }
       >
@@ -98,7 +99,7 @@ export default function Kawara() {
           <main class="kawara-main container mx-auto leading-10 text-center">
             {windowHeight() === 0 ? (
               <div>
-                <Spinner />
+                <Loader />
               </div>
             ) : (
               <div

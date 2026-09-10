@@ -2,14 +2,14 @@ import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect, Option, Schema } from "effect";
 import type { CmsError } from "@tom/types/errors";
 import type { CmsMedia, CmsPost, CmsWork, TiptapDoc } from "@tom/schemas/cms";
-import { Button } from "@tom/ui/tomui/button";
-import { Input } from "@tom/ui/tomui/input";
-import { InputGroup } from "@tom/ui/tomui/input-group";
-import { Badge } from "@tom/ui/tomui/badge";
-import { Banner } from "@tom/ui/tomui/banner";
-import { Loader } from "@tom/ui/tomui/loader";
-import { Select } from "@tom/ui/tomui/select";
-import { Collapsible } from "@tom/ui/tomui/collapsible";
+import { Button } from "@tom/ui/button";
+import { Input } from "@tom/ui/input";
+import { InputGroup } from "@tom/ui/input-group";
+import { Badge } from "@tom/ui/badge";
+import { Banner } from "@tom/ui/banner";
+import { Loader } from "@tom/ui/loader";
+import { Select } from "@tom/ui/select";
+import { Collapsible } from "@tom/ui/collapsible";
 import { adapterUrl, runClient } from "../lib/api";
 import {
   getPost,

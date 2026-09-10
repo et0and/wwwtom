@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Meter } from "@tom/ui/tomui/meter";
+import { Meter } from "@tom/ui/meter";
 
 const meta = preview.meta({
   title: "web/Meter",

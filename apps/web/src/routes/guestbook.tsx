@@ -1,11 +1,11 @@
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
 import { PageLayout } from "@tom/ui/PageLayout";
-import { Loader } from "@tom/ui/tomui/loader";
-import { Button } from "@tom/ui/tomui/button";
-import { Input } from "@tom/ui/tomui/input";
-import { Banner } from "@tom/ui/tomui/banner";
-import { Text } from "@tom/ui/tomui/text";
+import { Loader } from "@tom/ui/loader";
+import { Button } from "@tom/ui/button";
+import { Input } from "@tom/ui/input";
+import { Banner } from "@tom/ui/banner";
+import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
@@ -86,14 +86,14 @@ export default function Guestbook() {
               when={currentUserQuery.data}
               fallback={
                 <div class="mb-8">
-                  <p class="mb-4">
+                  <Text class="mb-4">
                     Sign in with your Fediverse account (Mastodon, Pleroma, etc.) to leave a
                     message.
-                  </p>
-                  <p class="mb-3 text-sm">
+                  </Text>
+                  <Text variant="secondary" size="sm" class="mb-3">
                     Enter your full Fediverse handle (e.g., user@mastodon.social or
                     user@fosstodon.org).
-                  </p>
+                  </Text>
                   <Show when={authMutation.isError}>
                     <Banner
                       variant="error"
@@ -149,10 +149,12 @@ export default function Guestbook() {
                           class="w-12 h-12 rounded-full"
                         />
                         <div>
-                          <div class="font-semibold">{u.display_name}</div>
-                          <div class="text-sm text-tomui-subtle">
+                          <Text bold as="span" class="block">
+                            {u.display_name}
+                          </Text>
+                          <Text variant="secondary" size="sm" as="span" class="block">
                             @{u.username}@{u.instance}
-                          </div>
+                          </Text>
                         </div>
                       </div>
                       <form
@@ -229,7 +231,9 @@ export default function Guestbook() {
       </BlurInSection>
       <BlurInSection delay={0.5}>
         <div class="space-y-4">
-          <h2 class="mb-4">Signatures</h2>
+          <Text variant="heading" as="h2" class="mb-4">
+            Signatures
+          </Text>
           <Loading fallback={<Loader />}>
             <Show when={entriesQuery.data}>
               {(data) => {
@@ -256,14 +260,14 @@ export default function Guestbook() {
                             </Show>
                             <div class="flex-1">
                               <div class="flex items-baseline gap-2 mb-1">
-                                <span class="font-semibold">
+                                <Text bold as="span">
                                   {entry.display_name ?? entry.fediverse_username}
-                                </span>
+                                </Text>
                                 <Text variant="secondary" size="sm" as="span">
                                   {entry.fediverse_username}
                                 </Text>
                               </div>
-                              <p class="guestbook-message mb-2">{entry.message}</p>
+                              <Text class="guestbook-message mb-2">{entry.message}</Text>
                               <Text variant="secondary" size="xs" as="time">
                                 {new Date(entry.created_at).toLocaleDateString("en-NZ", {
                                   year: "numeric",

@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { InputGroup } from "@tom/ui/tomui/input-group";
+import { InputGroup } from "@tom/ui/input-group";
 
 const meta = preview.meta({
   title: "web/InputGroup",

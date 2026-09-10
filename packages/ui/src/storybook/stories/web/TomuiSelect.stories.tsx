@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Select } from "@tom/ui/tomui/select";
+import { Select } from "@tom/ui/select";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

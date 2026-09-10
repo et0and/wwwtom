@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Tabs } from "@tom/ui/tomui/tabs";
+import { Tabs } from "@tom/ui/tabs";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({

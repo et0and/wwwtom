@@ -1,4 +1,4 @@
-import { useColorMode } from "@tom/ui/tomui/color-mode";
+import { useColorMode } from "@tom/ui/color-mode";
 
 export const Nav = () => {
   useColorMode();

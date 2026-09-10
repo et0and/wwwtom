@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { Loader } from "@tom/ui/tomui/loader";
+import { Loader } from "@tom/ui/loader";
 
 const meta = preview.meta({
   title: "web/Loader",

@@ -4,6 +4,7 @@ import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPostBySlug } from "~/server/adapter";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { ArenaCarousel } from "~/components/Arena";
@@ -13,7 +14,7 @@ const PostNotFound = ({ slug }: { slug: string | undefined }) => (
     <article>
       <BlurInText text="Not found" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
-        <p>The post "{slug}" does not exist.</p>
+        <Text>The post "{slug}" does not exist.</Text>
       </BlurInSection>
     </article>
   </PageLayout>
@@ -65,17 +66,19 @@ export default function PostPage() {
             <article>
               <BlurInText text={d.title} tag="h1" baseDelay={0.1} step={0.025} />
               <BlurInSection delay={0.3}>
-                <h2>{d.meta?.description ?? ""}</h2>
+                <Text variant="heading" as="h2">
+                  {d.meta?.description ?? ""}
+                </Text>
               </BlurInSection>
               <BlurInSection delay={0.5}>
                 {d.publishedAt ? (
-                  <time>
+                  <Text variant="secondary" size="sm" as="time">
                     {new Date(d.publishedAt ?? "").toLocaleDateString("en-NZ", {
                       year: "numeric",
                       month: "long",
                       day: "numeric",
                     })}
-                  </time>
+                  </Text>
                 ) : null}
               </BlurInSection>
               <BlurInSection delay={0.7}>

@@ -1,6 +1,6 @@
 import preview from "#.storybook/preview";
-import { buttonVariants } from "@tom/ui/tomui/button";
-import { Dialog } from "@tom/ui/tomui/dialog";
+import { buttonVariants } from "@tom/ui/button";
+import { Dialog } from "@tom/ui/dialog";
 
 const meta = preview.meta({
   title: "web/Dialog",

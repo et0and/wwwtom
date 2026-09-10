@@ -1,5 +1,5 @@
 import preview from "#.storybook/preview";
-import { TableOfContents } from "@tom/ui/tomui/table-of-contents";
+import { TableOfContents } from "@tom/ui/table-of-contents";
 
 const meta = preview.meta({
   title: "web/TableOfContents",

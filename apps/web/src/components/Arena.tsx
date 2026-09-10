@@ -5,7 +5,8 @@ import { isServer } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import { fetchChannelContents } from "~/server/adapter";
 import type { ArenaBlock, ArenaChannelContents } from "@tom/schemas/arena";
-import { Loader } from "@tom/ui/tomui/loader";
+import { Loader } from "@tom/ui/loader";
+import { Text } from "@tom/ui/text";
 import { decodeBlurhash } from "~/libs/utils/blurhash";
 import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/libs/utils/sanitize";
 
@@ -92,7 +93,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
                 Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
               )
             }
-            <p>Sorry, no content found</p>
+            <Text variant="secondary">Sorry, no content found</Text>
           </>
         }
       >
@@ -107,12 +108,12 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
             </For>
           </div>
         </div>
-        <p class="text-xs mt-2">
+        <Text variant="secondary" size="xs" class="mt-2">
           Source:{" "}
           <a href={`https://are.na/tom/${props.slug}`} target="_blank" rel="noopener noreferrer">
             {props.title || props.slug}
           </a>
-        </p>
+        </Text>
       </Show>
     </Show>
   );
@@ -184,12 +185,12 @@ function ArenaBlockItem(props: ArenaBlockItemProps) {
               <ClientHtml
                 html={text().content.html}
                 sanitize={sanitizeRichHtml}
-                fallback={<p>{text().content?.markdown}</p>}
+                fallback={<Text>{text().content?.markdown}</Text>}
               />
             </div>
           ) : (
             <div class="text-content prose prose-sm break-words whitespace-normal">
-              <p>{text().content?.markdown}</p>
+              <Text>{text().content?.markdown}</Text>
             </div>
           )
         }
@@ -321,7 +322,7 @@ function LinkBlock(props: LinkBlockProps) {
         </div>
       </Show>
       <div class="link-title mt-2 text-sm break-words whitespace-normal">
-        <p>{block().title || block().source?.title || ""}</p>
+        <Text>{block().title || block().source?.title || ""}</Text>
       </div>
     </a>
   );
