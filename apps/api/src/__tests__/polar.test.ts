@@ -132,6 +132,24 @@ describe("polar routes", () => {
       });
     });
 
+    it("returns 500 JSON when Polar returns an invalid checkout URL", async () => {
+      fetchMock.mockResolvedValue(
+        new Response(JSON.stringify({ url: "not a url" }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+      const response = await app.fetch(
+        internalRequest("http://localhost/checkout?products=prod_1", env),
+      );
+      expect(response.status).toBe(500);
+      expect(await response.json()).toEqual({
+        type: "about:blank",
+        status: 500,
+        title: "Polar returned an invalid checkout URL",
+      });
+    });
+
     it("returns 500 JSON when Polar is unreachable", async () => {
       fetchMock.mockRejectedValue(new TypeError("fetch failed"));
       const response = await app.fetch(

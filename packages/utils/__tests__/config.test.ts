@@ -1,6 +1,28 @@
 import { describe, expect, it } from "vitest";
-import type { CloudflareEnv } from "../src/services/config";
-import { parseAdminEmails, readCloudflareEnv } from "../src/services/config";
+import { Effect, Redacted } from "effect";
+import type { CloudflareEnv, PartialCloudflareEnv } from "../src/services/config";
+import {
+  AppConfig,
+  makeAppConfigLayer,
+  parseAdminEmails,
+  readCloudflareEnv,
+  resolveSecretValue,
+} from "../src/services/config";
+import { SecretsError } from "@tom/types/errors";
+
+describe("resolveSecretValue", () => {
+  it("resolves undefined to undefined", async () => {
+    expect(await resolveSecretValue(undefined)).toBeUndefined();
+  });
+
+  it("resolves a plain string to itself", async () => {
+    expect(await resolveSecretValue("plain-token")).toBe("plain-token");
+  });
+
+  it("resolves a Secrets Store binding via get()", async () => {
+    expect(await resolveSecretValue({ get: async () => "minted-token" })).toBe("minted-token");
+  });
+});
 
 describe("parseAdminEmails", () => {
   it("splits comma-separated emails into a string[]", () => {
@@ -105,5 +127,52 @@ describe("readCloudflareEnv tenant secrets", () => {
     );
     expect(resolved.GOOGLE_CLIENT_ID).toBe("bundle-id");
     expect(resolved.GOOGLE_CLIENT_SECRET).toBe("bundle-secret");
+  });
+
+  it("throws SecretsError when TOM_SECRETS is not valid JSON", async () => {
+    await expect(
+      readCloudflareEnv({ TOM_SECRETS: { get: async () => "not-json" } }),
+    ).rejects.toThrow(SecretsError);
+  });
+
+  it("drops unknown keys from the TOM_SECRETS bundle", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv({ INTERNAL_API_TOKEN: "token", UNKNOWN_KEY: "nope" }),
+    );
+    expect(resolved.INTERNAL_API_TOKEN).toBe("token");
+    expect(Object.hasOwn(resolved, "UNKNOWN_KEY")).toBe(false);
+  });
+});
+
+describe("makeAppConfigLayer", () => {
+  const readConfig = (env: PartialCloudflareEnv) =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        return yield* AppConfig;
+      }).pipe(Effect.provide(makeAppConfigLayer(env))),
+    );
+
+  it("trims optional secrets and drops undefined/null placeholders", async () => {
+    const trimmed = await readConfig({ ARENA_TOKEN: "  token  " });
+    expect(trimmed.arenaToken ? Redacted.value(trimmed.arenaToken) : undefined).toBe("token");
+
+    const placeholder = await readConfig({ ARENA_TOKEN: "undefined" });
+    expect(placeholder.arenaToken).toBeUndefined();
+
+    const nullPlaceholder = await readConfig({ ARENA_API_URL: "NULL" });
+    expect(nullPlaceholder.arenaBaseUrl).toBeUndefined();
+  });
+
+  it("prefers the Hyperdrive connection string over DATABASE_URL", async () => {
+    const resolved = await readConfig({
+      DATABASE_URL: "postgres://direct",
+      HYPERDRIVE: { connectionString: "postgres://pooled" },
+    });
+    expect(Redacted.value(resolved.databaseUrl)).toBe("postgres://pooled");
+  });
+
+  it("treats only production as non-dev", async () => {
+    expect((await readConfig({ NODE_ENV: "development" })).isDev).toBe(true);
+    expect((await readConfig({ NODE_ENV: "production" })).isDev).toBe(false);
   });
 });
