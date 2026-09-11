@@ -1,3 +1,10 @@
+## [3.0.4](https://github.com/et0and/wwwtom/compare/v3.0.3...v3.0.4) (2026-09-11)
+
+
+### Bug Fixes
+
+* **web,sophie:** fail loud on missing request-scoped query client ([aa86c3c](https://github.com/et0and/wwwtom/commit/aa86c3c9ffb829dcd9105ad2d5a4a29fdb1f15c8))
+
 ## [3.0.3](https://github.com/et0and/wwwtom/compare/v3.0.2...v3.0.3) (2026-09-10)
 
 
