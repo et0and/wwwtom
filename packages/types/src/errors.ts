@@ -130,6 +130,11 @@ export class WorkerEnvMissingError extends Schema.TaggedError<WorkerEnvMissingEr
   messageFields,
 ) {}
 
+export class RequestScopeMissingError extends Schema.TaggedError<RequestScopeMissingError>()(
+  "RequestScopeMissingError",
+  messageFields,
+) {}
+
 export class QueueError extends Schema.TaggedError<QueueError>()(
   "QueueError",
   messageCauseFields,
