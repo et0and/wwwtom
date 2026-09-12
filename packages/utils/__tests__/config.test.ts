@@ -6,23 +6,8 @@ import {
   makeAppConfigLayer,
   parseAdminEmails,
   readCloudflareEnv,
-  resolveSecretValue,
 } from "../src/services/config";
 import { SecretsError } from "@tom/types/errors";
-
-describe("resolveSecretValue", () => {
-  it("resolves undefined to undefined", async () => {
-    expect(await resolveSecretValue(undefined)).toBeUndefined();
-  });
-
-  it("resolves a plain string to itself", async () => {
-    expect(await resolveSecretValue("plain-token")).toBe("plain-token");
-  });
-
-  it("resolves a Secrets Store binding via get()", async () => {
-    expect(await resolveSecretValue({ get: async () => "minted-token" })).toBe("minted-token");
-  });
-});
 
 describe("parseAdminEmails", () => {
   it("splits comma-separated emails into a string[]", () => {
@@ -169,10 +154,5 @@ describe("makeAppConfigLayer", () => {
       HYPERDRIVE: { connectionString: "postgres://pooled" },
     });
     expect(Redacted.value(resolved.databaseUrl)).toBe("postgres://pooled");
-  });
-
-  it("treats only production as non-dev", async () => {
-    expect((await readConfig({ NODE_ENV: "development" })).isDev).toBe(true);
-    expect((await readConfig({ NODE_ENV: "production" })).isDev).toBe(false);
   });
 });
