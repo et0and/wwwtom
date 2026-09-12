@@ -1,3 +1,10 @@
+## [3.0.5](https://github.com/et0and/wwwtom/compare/v3.0.4...v3.0.5) (2026-09-12)
+
+
+### Bug Fixes
+
+* **utils:** strip trailing slashes before the OTEL /collector/event suffix ([e198302](https://github.com/et0and/wwwtom/commit/e198302819f232bdfccb6572107a51e3ea0f5b1d))
+
 ## [3.0.4](https://github.com/et0and/wwwtom/compare/v3.0.3...v3.0.4) (2026-09-11)
 
 
