@@ -168,6 +168,20 @@ describe("otelConfigFromResolvedEnv", () => {
     });
   });
 
+  it("trims whitespace and strips trailing slashes before the /collector/event suffix", () => {
+    const otel = otelConfigFromResolvedEnv({
+      OTEL_ENDPOINT: "  https://example.com/collector/event///  ",
+      AXIOM_TOKEN: "secret",
+    });
+    expect(otel?.tracesUrl).toBe("https://example.com/v1/traces");
+    expect(otel?.logsUrl).toBe("https://example.com/v1/logs");
+  });
+
+  it("falls back to the Axiom endpoint when OTEL_ENDPOINT is blank", () => {
+    const otel = otelConfigFromResolvedEnv({ OTEL_ENDPOINT: "   ", AXIOM_TOKEN: "secret" });
+    expect(otel?.tracesUrl).toBe("https://api.axiom.co/v1/traces");
+  });
+
   it("returns undefined when the token is missing", () => {
     expect(otelConfigFromResolvedEnv({})).toBeUndefined();
     expect(otelConfigFromResolvedEnv({ OTEL_ENDPOINT: "https://example.com" })).toBeUndefined();

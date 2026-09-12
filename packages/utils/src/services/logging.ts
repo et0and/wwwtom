@@ -40,12 +40,18 @@ export type LogContext = {
   readonly otel?: OtelConfig;
 };
 
+const stripTrailingSlashes = (value: string): string =>
+  value.endsWith("/") ? stripTrailingSlashes(value.slice(0, -1)) : value;
+
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
-  const endpoint = raw
-    ?.trim()
-    .replace(/\/collector\/event$/, "")
-    .replace(/\/+$/, "");
-  return endpoint ? endpoint : undefined;
+  if (raw === undefined) return undefined;
+  const trimmed = stripTrailingSlashes(raw.trim());
+  if (!trimmed) return undefined;
+  const suffix = "/collector/event";
+  const endpoint = trimmed.endsWith(suffix)
+    ? stripTrailingSlashes(trimmed.slice(0, -suffix.length))
+    : trimmed;
+  return endpoint || undefined;
 };
 
 // Axiom cloud OTLP base. The datasets are the runtime defaults
