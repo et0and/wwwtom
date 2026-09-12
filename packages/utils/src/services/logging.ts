@@ -40,11 +40,8 @@ export type LogContext = {
   readonly otel?: OtelConfig;
 };
 
-const stripTrailingSlashes = (value: string): string => {
-  let stripped = value;
-  while (stripped.endsWith("/")) stripped = stripped.slice(0, -1);
-  return stripped;
-};
+const stripTrailingSlashes = (value: string): string =>
+  value.endsWith("/") ? stripTrailingSlashes(value.slice(0, -1)) : value;
 
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
   if (raw === undefined) return undefined;
