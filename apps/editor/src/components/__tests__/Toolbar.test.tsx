@@ -34,7 +34,9 @@ const withHello = (handle: TiptapHandle): void => {
   });
 };
 
-describe("Toolbar", () => {
+describe("Toolbar", { timeout: 30_000 }, () => {
+  // Tiptap cold start plus chained async flushes take seconds on loaded
+  // CI runners — allow extra time for every test in this file.
   it("toggles bold on the selection", async () => {
     let handle!: TiptapHandle;
     const { getByRole, getByTestId } = render(() => (

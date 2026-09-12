@@ -28,7 +28,7 @@ Improve existing code; avoid new abstractions.
 - `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
-- `pnpm test:update` — snapshot update (web, utils)
+- `pnpm test:update` — snapshot update (web, utils, icons)
 - `pnpm deploy` = shared → api → adapter → web → editor → sophie (Alchemy; `ALCHEMY_STAGE` required)
 - `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:editor|deploy:sophie`
 - `pnpm destroy` — destroy current Alchemy stage

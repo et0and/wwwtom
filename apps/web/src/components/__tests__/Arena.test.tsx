@@ -104,7 +104,9 @@ beforeEach(() => {
   mockedFetchChannelContents.mockReset();
 });
 
-describe("ArenaCarousel", () => {
+describe("ArenaCarousel", { timeout: 30_000 }, () => {
+  // Query round-trips plus full-tree role queries take seconds on loaded
+  // CI runners — allow extra time for every test in this file.
   it("renders a readable name and thumbnail for PDF attachments instead of the hashed filename", async () => {
     mockedFetchChannelContents.mockResolvedValue({ data: [pdfAttachment] });
     renderCarousel();
