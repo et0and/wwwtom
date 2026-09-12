@@ -18,7 +18,6 @@ const createConfigLayer = (config: TestConfig) => {
     databaseUrl: Redacted.make(""),
     telegramBotToken: token ? Redacted.make(token) : undefined,
     telegramChatId: chatId,
-    isDev: true,
   });
 };
 

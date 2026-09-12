@@ -9,7 +9,6 @@ export interface AppConfigContract {
   readonly databaseUrl: Redacted.Redacted<string>;
   readonly telegramBotToken: Redacted.Redacted<string> | undefined;
   readonly telegramChatId: string | undefined;
-  readonly isDev: boolean;
 }
 
 const parseOptionalSecret = (value?: string): string | undefined => {
@@ -270,20 +269,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
   };
 };
 
-export class AppConfig extends Context.Service<AppConfig, AppConfigContract>()("AppConfig") {
-  static readonly Default = Layer.succeed(AppConfig, {
-    arenaToken: undefined as Redacted.Redacted<string> | undefined,
-    arenaBaseUrl: undefined as string | undefined,
-    databaseUrl: Redacted.make(""),
-    telegramBotToken: undefined as Redacted.Redacted<string> | undefined,
-    telegramChatId: undefined as string | undefined,
-    isDev: true as boolean,
-  });
-
-  static fromEnv(env: CloudflareEnv): Layer.Layer<AppConfig> {
-    return makeAppConfigLayer(env);
-  }
-}
+export class AppConfig extends Context.Service<AppConfig, AppConfigContract>()("AppConfig") {}
 
 export type PartialCloudflareEnv = {
   [K in keyof CloudflareEnv]?: CloudflareEnv[K] | undefined;
@@ -304,6 +290,5 @@ export const makeAppConfigLayer = (config: PartialCloudflareEnv): Layer.Layer<Ap
       ? Redacted.make(config.TELEGRAM_BOT_TOKEN)
       : undefined,
     telegramChatId: config.TELEGRAM_CHAT_ID,
-    isDev: config.NODE_ENV !== "production",
   });
 };

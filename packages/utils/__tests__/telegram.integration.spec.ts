@@ -13,7 +13,6 @@ const createConfigLayer = (botToken: string, chat: string) =>
     databaseUrl: Redacted.make(""),
     telegramBotToken: Redacted.make(botToken),
     telegramChatId: chat,
-    isDev: true,
   });
 
 const createLayer = (botToken: string, chat: string) =>
