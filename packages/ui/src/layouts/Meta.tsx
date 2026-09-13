@@ -23,34 +23,39 @@ interface MetaProps {
 }
 
 export function Metadata(props: MetaProps) {
-  const description =
+  // Props are read only inside reactive scopes (the derived functions below
+  // and JSX), so the head updates when a title or date changes.
+  const description = () =>
     props.metaContent || "Tom Hackshaw is a design engineer from Aotearoa New Zealand.";
-  const brand = props.brand ?? TOM_BRAND;
-
-  // Absolute URL: crawlers resolve og:image against the page, and the web
-  // apps don't serve /api/og — go through the public adapter proxy, like all
-  // other web → backend calls.
-  const template = brand.template === undefined ? "" : `&template=${brand.template}`;
-  const date = props.date ? `&date=${encodeURIComponent(props.date)}` : "";
-  const ogImageUrl = `${brand.ogBase}/og?title=${encodeURIComponent(
-    props.title.toString(),
-  )}&summary=${encodeURIComponent(description)}${template}${date}`;
+  const brand = () => props.brand ?? TOM_BRAND;
+  const ogImageUrl = () => {
+    // Absolute URL: crawlers resolve og:image against the page, and the web
+    // apps don't serve /api/og — go through the public adapter proxy, like all
+    // other web → backend calls.
+    const currentBrand = brand();
+    const template =
+      currentBrand.template === undefined ? "" : `&template=${currentBrand.template}`;
+    const date = props.date ? `&date=${encodeURIComponent(props.date)}` : "";
+    return `${currentBrand.ogBase}/og?title=${encodeURIComponent(
+      props.title.toString(),
+    )}&summary=${encodeURIComponent(description())}${template}${date}`;
+  };
 
   return (
     <>
       <Title>
-        {props.title} | {brand.suffix}
+        {props.title} | {brand().suffix}
       </Title>
-      <Meta name={props.metaType || "description"} content={description} />
-      <Meta property="og:title" content={`${props.title} | ${brand.suffix}`} />
-      <Meta property="og:description" content={description} />
-      <Meta property="og:image" content={ogImageUrl} />
-      <Meta name="twitter:title" content={`${props.title} | ${brand.suffix}`} />
-      <Meta name="twitter:description" content={description} />
-      <Meta name="twitter:image" content={ogImageUrl} />
+      <Meta name={props.metaType || "description"} content={description()} />
+      <Meta property="og:title" content={`${props.title} | ${brand().suffix}`} />
+      <Meta property="og:description" content={description()} />
+      <Meta property="og:image" content={ogImageUrl()} />
+      <Meta name="twitter:title" content={`${props.title} | ${brand().suffix}`} />
+      <Meta name="twitter:description" content={description()} />
+      <Meta name="twitter:image" content={ogImageUrl()} />
       <Meta name="twitter:card" content="summary_large_image" />
       {props.canonical && <link rel="canonical" href={props.canonical} />}
-      {brand.siteVerification && <Meta name="msvalidate.01" content={brand.siteVerification} />}
+      {brand().siteVerification && <Meta name="msvalidate.01" content={brand().siteVerification} />}
     </>
   );
 }
