@@ -3,6 +3,7 @@ import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
 import type { CmsPostSummary } from "@tom/schemas/cms";
 import { Metadata } from "@tom/ui/Meta";
+import { ViewTransitions } from "@tom/ui/ViewTransitions";
 import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
 import { Loader } from "@tom/ui/loader";
@@ -277,7 +278,13 @@ export const App = () => {
     <QueryClientProvider client={client}>
       <div class="sophie-shell">
         <Nav />
-        <Router>{(props) => <div class="sophie-main">{props.children}</div>}</Router>
+        <Router>
+          {(props) => (
+            <ViewTransitions>
+              <div class="sophie-main">{props.children}</div>
+            </ViewTransitions>
+          )}
+        </Router>
         <footer class="sophie-footer">
           <p>All rights reserved</p>
         </footer>

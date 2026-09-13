@@ -1,5 +1,5 @@
-import { render } from "@solidjs/testing-library";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render } from "@solidjs/testing-library";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { queryClient } from "../lib/query-client";
 import { App } from "../App";
 
@@ -32,6 +32,34 @@ vi.mock("../lib/posts", async (importOriginal) => {
 describe("Sophie App", () => {
   beforeEach(() => {
     queryClient.clear();
+  });
+
+  afterEach(() => {
+    Reflect.deleteProperty(document, "startViewTransition");
+    window.history.replaceState(null, "", "/");
+  });
+
+  it("wraps in-app navigation in a view transition", async () => {
+    const viewTransition: ViewTransition = {
+      finished: Promise.resolve(),
+      ready: Promise.resolve(),
+      types: new Set<string>(),
+      updateCallbackDone: Promise.resolve(),
+      skipTransition: () => {},
+    };
+    const startViewTransition = vi.fn((callback: () => void) => {
+      callback();
+      return viewTransition;
+    });
+    Object.defineProperty(document, "startViewTransition", {
+      configurable: true,
+      value: startViewTransition,
+    });
+
+    const { findByRole } = render(() => <App />);
+    fireEvent.click(await findByRole("link", { name: "About" }));
+
+    expect(startViewTransition).toHaveBeenCalledTimes(1);
   });
 
   it("shows the Sophie wordmark on the index with an About link only", async () => {

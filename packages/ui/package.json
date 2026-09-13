@@ -12,6 +12,7 @@
     "./ProgressBar": "./src/ProgressBar.tsx",
     "./progress.css": "./src/progress.css",
     "./SkipLink": "./src/SkipLink.tsx",
+    "./ViewTransitions": "./src/ViewTransitions.tsx",
     "./tomui.css": "./src/styles/tomui.css",
     "./tomui/theme-tomui.css": "./src/styles/theme-tomui.css",
     "./cn": "./src/utils/cn.ts",
