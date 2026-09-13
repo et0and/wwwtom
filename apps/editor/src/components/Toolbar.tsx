@@ -3,17 +3,14 @@ import { Option, Schema } from "effect";
 import type { Editor } from "@tiptap/core";
 import { Toolbar } from "@tom/ui/toolbar";
 import { Select } from "@tom/ui/select";
+import { CmsBannerStyleSchema } from "@tom/schemas/cms";
+import type { CmsBannerStyle } from "@tom/schemas/cms";
 
-const BANNER_STYLES = ["info", "warning", "error", "success"] as const;
+const BANNER_STYLES = CmsBannerStyleSchema.literals;
 
-const BannerStyleSchema = Schema.Literals(["info", "warning", "error", "success"]);
+const BannerAttrsSchema = Schema.Struct({ style: Schema.optional(CmsBannerStyleSchema) });
 
-type BannerStyle = typeof BannerStyleSchema.Type;
-
-const BannerAttrsSchema = Schema.Struct({ style: Schema.optional(BannerStyleSchema) });
-
-const isBannerStyle = (style: string): style is BannerStyle =>
-  style === "info" || style === "warning" || style === "error" || style === "success";
+const isBannerStyle = Schema.is(CmsBannerStyleSchema);
 
 const CODE_LANGUAGES = [
   "text",
@@ -47,7 +44,7 @@ const INSERT_BUTTONS: ReadonlyArray<{ readonly panel: InsertPanel; readonly labe
  * memos over the editor `version` signal: derivations belong in memos, and
  * JSX reads the memo directly so updates stay reactive.
  */
-export const EditorToolbar = (props: {
+const EditorToolbar = (props: {
   editor: () => Editor | undefined;
   version: () => number;
   activePanel: InsertPanel | "none" | "code";
@@ -69,7 +66,7 @@ export const EditorToolbar = (props: {
   const bannerActive = markActive("banner");
   const quoteActive = markActive("blockquote");
 
-  const bannerStyle = createMemo((): BannerStyle => {
+  const bannerStyle = createMemo((): CmsBannerStyle => {
     props.version();
     const attrs = props.editor()?.getAttributes("banner");
     if (!attrs) return "info";

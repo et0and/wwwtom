@@ -25,7 +25,6 @@
     "@tiptap/extension-paragraph": "catalog:",
     "@tiptap/extension-text": "catalog:",
     "@tiptap/pm": "catalog:",
-    "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",

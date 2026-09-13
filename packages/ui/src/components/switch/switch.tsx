@@ -94,7 +94,6 @@ export type SwitchProps = Omit<
   disabled?: boolean | undefined;
   onCheckedChange?: ((checked: boolean, event: Event) => void) | undefined;
   transitioning?: boolean | undefined;
-  icon?: JSX.Element | undefined;
   class?: string | undefined;
   onChange?: JSX.ChangeEventHandler<HTMLInputElement, Event> | undefined;
 };
@@ -121,7 +120,6 @@ function SwitchControl(props: SwitchProps): JSX.Element {
     "onCheckedChange",
     "transitioning",
     "class",
-    "icon",
     "id",
     "onChange",
     "aria-label",

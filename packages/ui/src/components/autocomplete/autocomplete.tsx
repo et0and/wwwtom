@@ -1,7 +1,6 @@
 import type { JSX } from "@solidjs/web";
 import {
   createContext,
-  createMemo,
   createSignal,
   For,
   merge,
@@ -55,7 +54,6 @@ interface AutocompleteContextValue {
   hasError: () => boolean;
   inputId: string;
   listId: string;
-  size: () => TomuiAutocompleteSize;
 }
 
 const AutocompleteContext = createContext<AutocompleteContextValue>({
@@ -68,7 +66,6 @@ const AutocompleteContext = createContext<AutocompleteContextValue>({
   hasError: () => false,
   inputId: "autocomplete-input",
   listId: "autocomplete-list",
-  size: () => "base",
 });
 
 export type AutocompleteProps = {
@@ -101,21 +98,6 @@ function Root(props: AutocompleteProps): JSX.Element {
     if (merged.open === undefined) setUncontrolledOpen(next);
     merged.onOpenChange?.(next);
   };
-  const rest = omit(
-    merged,
-    "items",
-    "value",
-    "defaultValue",
-    "onValueChange",
-    "open",
-    "onOpenChange",
-    "children",
-    "class",
-    "label",
-    "required",
-    "description",
-    "error",
-  );
   const value: AutocompleteContextValue = {
     query,
     setQuery,
@@ -126,9 +108,7 @@ function Root(props: AutocompleteProps): JSX.Element {
     hasError: () => merged.error !== undefined,
     inputId: "tomui-autocomplete-input",
     listId: "tomui-autocomplete-list",
-    size: () => TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS.size,
   };
-  void rest;
   return (
     <div data-tomui-component="Autocomplete" class={cn("relative", merged.class)}>
       <Show when={merged.label !== undefined}>
@@ -214,7 +194,6 @@ export type AutocompleteContentProps = {
 function Content(props: AutocompleteContentProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
   const attach = (element: HTMLDivElement): void => {
     const onOutside = (event: MouseEvent): void => {
       if (!element.contains(event.target as Node)) ctx.setOpen(false);
@@ -222,7 +201,6 @@ function Content(props: AutocompleteContentProps): JSX.Element {
     document.addEventListener("mousedown", onOutside);
     onCleanup(() => document.removeEventListener("mousedown", onOutside));
   };
-  void rest;
   return (
     <Show when={ctx.isOpen()}>
       <div
@@ -263,17 +241,6 @@ function List(props: AutocompleteListProps): JSX.Element {
   );
 }
 
-export function useAutocompleteFilter(
-  items: () => Array<string>,
-  query: () => string,
-): () => Array<string> {
-  return createMemo(() => {
-    const needle = query().trim().toLowerCase();
-    if (needle === "") return items();
-    return items().filter((item) => String(item).toLowerCase().includes(needle));
-  });
-}
-
 export type AutocompleteItemProps = {
   children?: JSX.Element;
   value: string;
@@ -284,8 +251,6 @@ export type AutocompleteItemProps = {
 function Item(props: AutocompleteItemProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "value", "class", "disabled");
-  void rest;
   return (
     <button
       data-tomui-component="Autocomplete"
@@ -303,52 +268,6 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
     </button>
   );
-}
-
-export type AutocompleteGroupLabelProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children?: JSX.Element;
-  class?: string;
-};
-
-function GroupLabel(props: AutocompleteGroupLabelProps): JSX.Element {
-  const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
-  return (
-    <div class={cn("mx-1.5 px-2 py-1.5 text-sm text-tomui-strong", merged.class)} {...rest}>
-      {merged.children}
-    </div>
-  );
-}
-
-export type AutocompleteGroupProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children?: JSX.Element;
-  class?: string;
-};
-
-function Group(props: AutocompleteGroupProps): JSX.Element {
-  const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
-  return (
-    <div
-      class={cn(
-        "mt-2 border-t border-tomui-line pt-2 first:mt-0 first:border-t-0 first:pt-0",
-        merged.class,
-      )}
-      {...rest}
-    >
-      {merged.children}
-    </div>
-  );
-}
-
-export type AutocompleteSeparatorProps = JSX.HTMLAttributes<HTMLHRElement> & {
-  class?: string;
-};
-
-function Separator(props: AutocompleteSeparatorProps): JSX.Element {
-  const merged = merge({}, props);
-  const rest = omit(merged, "class");
-  return <hr class={cn("mx-0 my-1 h-px border-0 bg-tomui-line", merged.class)} {...rest} />;
 }
 
 export type AutocompleteEmptyProps = {
@@ -369,10 +288,6 @@ export const Autocomplete = Object.assign(Root, {
   InputGroup,
   Content,
   Item,
-  GroupLabel,
-  Group,
-  Separator,
   List,
   Empty,
-  useFilter: useAutocompleteFilter,
 });

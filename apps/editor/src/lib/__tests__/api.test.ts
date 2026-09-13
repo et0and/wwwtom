@@ -1,24 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsPostInputSchema } from "@tom/schemas/cms";
-import { adapterUrl, decodeResponse, requestJson, requestVoid, runClient } from "../api";
+import { runClient } from "@tom/utils/services/http";
+import { adapterUrl, decodeResponse, requestJson, requestVoid } from "../api";
+import { fetchMock, jsonResponse, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
-
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
-const jsonResponse = <B>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+useFetchMock();
 
 describe("editor api client", () => {
   it("targets the local adapter by default", () => {

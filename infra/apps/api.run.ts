@@ -7,7 +7,7 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { resolveDeploySecrets } from "./api.secrets.ts";
-import { stageHost, sophieStageHost, tomSecrets } from "../shared.run.ts";
+import { stageHost, sophieStageHost, tomSecrets, workerObservability } from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { sophieQueue, sophieQueueDlq } from "../queues/sophie.queue.ts";
 import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
@@ -67,11 +67,7 @@ export const api = Effect.gen(function* () {
       // Local workerd dev server via `alchemy dev`; API_URL points back at it.
       port: 8787,
     },
-    observability: {
-      enabled: true,
-      logs: { enabled: true, invocationLogs: true },
-      traces: { enabled: true, headSamplingRate: 1 },
-    },
+    observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so other
     // stacks can reference it (production adopts the existing worker).
     ...(stage === "production"
@@ -136,11 +132,7 @@ export const api = Effect.gen(function* () {
     dev: {
       port: 8789,
     },
-    observability: {
-      enabled: true,
-      logs: { enabled: true, invocationLogs: true },
-      traces: { enabled: true, headSamplingRate: 1 },
-    },
+    observability: workerObservability,
     ...(stage === "production"
       ? { name: "sophie-api", domain: sophieStageHost(stage, "api") }
       : { name: `sophie-api-${stage}`, domain: sophieStageHost(stage, "api") }),

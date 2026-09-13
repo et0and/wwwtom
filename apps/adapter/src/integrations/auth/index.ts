@@ -5,8 +5,12 @@ import { HttpStatus } from "@tom/constants/http";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import { AdapterError, runAdapter } from "../../config/effect";
-import { allowLocalOriginsForAdapter, isTrustedWriteOrigin, tenantFromValue } from "../../origins";
-import type { Tenant } from "../../origins";
+import {
+  allowLocalOriginsForAdapter,
+  isTrustedWriteOrigin,
+  tenantFromValue,
+  type Tenant,
+} from "../../origins";
 
 // Hop-by-hop and framing headers never survive a proxy hop; everything else
 // (Set-Cookie, Location, Content-Type) passes through verbatim so the OAuth
@@ -45,7 +49,7 @@ type AuthProxyOptions = {
   readonly tenant: Tenant | undefined;
 };
 
-const refererOrigin = (referer: string): Effect.Effect<string, never> =>
+export const refererOrigin = (referer: string): Effect.Effect<string, never> =>
   Effect.try(() => new URL(referer).origin).pipe(Effect.orElseSucceed(() => ""));
 
 /**

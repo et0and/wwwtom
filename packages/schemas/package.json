@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     "./arena": "./src/arena.ts",
-    "./branded": "./src/branded.ts",
     "./cms": "./src/cms.ts",
     "./error": "./src/error.ts",
     "./health": "./src/health.ts",

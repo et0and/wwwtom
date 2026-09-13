@@ -1,26 +1,17 @@
 import { fireEvent, render } from "@solidjs/testing-library";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PostList } from "../PostList";
+import { fetchMock, jsonResponse, listBody, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
+useFetchMock();
 
 beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
   window.history.replaceState(null, "", "/");
 });
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   vi.unstubAllEnvs();
-  vi.restoreAllMocks();
 });
-
-const jsonResponse = <B,>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
 
 const doc = { type: "doc", content: [] };
 
@@ -39,16 +30,6 @@ const post = (overrides = {}) => ({
   createdAt: "2026-09-01T00:00:00.000Z",
   updatedAt: "2026-09-01T00:00:00.000Z",
   ...overrides,
-});
-
-const listBody = (docs: Array<unknown>) => ({
-  docs,
-  totalDocs: docs.length,
-  limit: 50,
-  page: 1,
-  totalPages: 1,
-  hasNextPage: false,
-  hasPrevPage: false,
 });
 
 describe("PostList", () => {

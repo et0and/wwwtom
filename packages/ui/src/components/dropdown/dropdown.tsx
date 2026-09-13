@@ -40,14 +40,12 @@ export function dropdownVariants(props: TomuiDropdownVariantsProps = {}): string
 
 interface DropdownContextValue {
   isOpen: () => boolean;
-  open: () => void;
   close: () => void;
   toggle: () => void;
 }
 
 const DropdownContext = createContext<DropdownContextValue>({
   isOpen: () => false,
-  open: () => undefined,
   close: () => undefined,
   toggle: () => undefined,
 });
@@ -68,7 +66,6 @@ function DropdownMenuRoot(props: DropdownMenuRootProps): JSX.Element {
   };
   const value: DropdownContextValue = {
     isOpen,
-    open: () => setOpen(true),
     close: () => setOpen(false),
     toggle: () => setOpen(!isOpen()),
   };
@@ -113,7 +110,6 @@ function DropdownMenuTrigger(props: DropdownMenuTriggerProps): JSX.Element {
 export type DropdownMenuContentProps = JSX.HTMLAttributes<HTMLDivElement> & {
   children?: JSX.Element;
   class?: string;
-  sideOffset?: number;
   /** Horizontal edge the menu aligns to. Use end for right-edge triggers. */
   align?: "start" | "end" | undefined;
 };
@@ -229,37 +225,6 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
         </Show>
       </button>
     </Show>
-  );
-}
-
-export type DropdownMenuLinkItemProps = JSX.AnchorHTMLAttributes<HTMLAnchorElement> & {
-  children?: JSX.Element;
-  class?: string;
-  icon?: JSX.Element;
-  inset?: boolean;
-  variant?: TomuiDropdownVariant;
-};
-
-function DropdownMenuLinkItem(props: DropdownMenuLinkItemProps): JSX.Element {
-  const merged = merge({ variant: TOMUI_DROPDOWN_DEFAULT_VARIANTS.variant }, props);
-  const rest = omit(merged, "children", "class", "icon", "inset", "variant");
-  return (
-    <a
-      data-tomui-component="DropdownMenu"
-      data-tomui-part="link-item"
-      role="menuitem"
-      class={cn(
-        "relative flex cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none",
-        "text-inherit no-underline",
-        merged.inset && "pl-8",
-        dropdownVariants({ variant: merged.variant }),
-        merged.class,
-      )}
-      {...rest}
-    >
-      {merged.icon}
-      {merged.children}
-    </a>
   );
 }
 
@@ -416,55 +381,14 @@ function DropdownMenuShortcut(props: DropdownMenuShortcutProps): JSX.Element {
   );
 }
 
-export type DropdownMenuSubProps = {
-  children?: JSX.Element;
-};
-
-function DropdownMenuSub(props: DropdownMenuSubProps): JSX.Element {
-  return <div class="relative">{props.children}</div>;
-}
-
-export type DropdownMenuSubTriggerProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
-  children?: JSX.Element;
-  class?: string;
-  icon?: JSX.Element;
-  inset?: boolean;
-};
-
-function DropdownMenuSubTrigger(props: DropdownMenuSubTriggerProps): JSX.Element {
-  const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "icon", "inset");
-  return (
-    <button
-      data-tomui-component="DropdownMenu"
-      data-tomui-part="submenu-trigger"
-      class={cn(
-        "flex w-full cursor-default items-center rounded-sm px-2 py-1.5 text-base outline-hidden select-none",
-        merged.inset && "pl-8",
-        merged.class,
-      )}
-      {...rest}
-    >
-      {merged.icon}
-      {merged.children}
-      <span class="ml-auto">{"›"}</span>
-    </button>
-  );
-}
-
 export const DropdownMenu = Object.assign(DropdownMenuRoot, {
   Trigger: DropdownMenuTrigger,
   Content: DropdownMenuContent,
-  SubContent: DropdownMenuContent,
   Item: DropdownMenuItem,
-  LinkItem: DropdownMenuLinkItem,
   CheckboxItem: DropdownMenuCheckboxItem,
   RadioGroup: DropdownMenuRadioGroup,
   RadioItem: DropdownMenuRadioItem,
   Label: DropdownMenuLabel,
   Separator: DropdownMenuSeparator,
   Shortcut: DropdownMenuShortcut,
-  Sub: DropdownMenuSub,
-  SubTrigger: DropdownMenuSubTrigger,
-  Group: DropdownMenuSub,
 });

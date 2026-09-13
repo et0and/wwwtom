@@ -2,16 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import { cn } from "../../utils/cn";
 
-export interface TomuiLabelVariantsProps {}
-
-export function labelVariants(_props: TomuiLabelVariantsProps = {}): string {
-  return cn("m-0 text-base font-medium text-tomui-default");
-}
-
-export function labelContentVariants(): string {
-  return cn("inline-flex items-center gap-1");
-}
-
 export type LabelProps = JSX.LabelHTMLAttributes<HTMLLabelElement> & {
   children?: JSX.Element | undefined;
   showOptional?: boolean | undefined;
@@ -53,13 +43,17 @@ export function Label(props: LabelProps): JSX.Element {
   return (
     <Show
       when={!merged.asContent}
-      fallback={<span class={cn(labelContentVariants(), merged.class)}>{content()}</span>}
+      fallback={<span class={cn("inline-flex items-center gap-1", merged.class)}>{content()}</span>}
     >
       <label
         data-tomui-component="Label"
         {...rest}
         for={merged.htmlFor ?? rest.for}
-        class={cn(labelVariants(), labelContentVariants(), merged.class)}
+        class={cn(
+          "m-0 text-base font-medium text-tomui-default",
+          "inline-flex items-center gap-1",
+          merged.class,
+        )}
       >
         {content()}
       </label>

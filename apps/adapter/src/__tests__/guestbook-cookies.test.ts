@@ -1,18 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { app } from "../index";
-import { requestWithEnv, testEnv } from "../test/helpers";
+import { requestWithEnv, testEnv, userCookie } from "../test/helpers";
 
 const env = testEnv();
-
-const userCookie = encodeURIComponent(
-  JSON.stringify({
-    username: "tom",
-    instance: "mastodon.social",
-    display_name: "Tom",
-    avatar_url: "https://mastodon.social/avatar.png",
-    access_token: "token",
-  }),
-);
 
 describe("guestbook cookie handling", () => {
   describe("GET /guestbook/me", () => {

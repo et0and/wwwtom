@@ -1,17 +1,17 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../index";
-import { jsonResponse, requestWithEnv, testEnv } from "../test/helpers";
+import {
+  fetchMock,
+  jsonResponse,
+  requestWithEnv,
+  stubFetch,
+  testEnv,
+  unstubFetch,
+} from "../test/helpers";
 
-const fetchMock = vi.fn();
+beforeEach(stubFetch);
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+afterEach(unstubFetch);
 
 const polarEnv = testEnv({ POLAR_ACCESS_TOKEN: "test-token" });
 

@@ -2,7 +2,6 @@ import { Effect } from "effect";
 import { NodeinfoError } from "@tom/types/errors";
 
 const NODEINFO_VERSIONS = {
-  "1.0": "http://nodeinfo.diaspora.software/ns/schema/1.0",
   "2.0": "http://nodeinfo.diaspora.software/ns/schema/2.0",
   "2.1": "http://nodeinfo.diaspora.software/ns/schema/2.1",
 } as const;

@@ -16,7 +16,7 @@ const LIBRE_CASLON_PATH = "/fonts/libre-caslon-condensed-regular.ttf";
 const SOLWAY_PATH = "/fonts/solway-400-normal.woff2";
 const FONT_FETCH_TIMEOUT_MS = 3000;
 
-export type OgFontSource = {
+type OgFontSource = {
   readonly origin: string;
   readonly assets?: CmsAssetsBinding | undefined;
 };
@@ -28,7 +28,7 @@ const loadFontBytes = (source: OgFontSource, path: string): Promise<Response> =>
     ? source.assets.fetch(`${source.origin}${path}`)
     : fetch(`${source.origin}${path}`, { signal: AbortSignal.timeout(FONT_FETCH_TIMEOUT_MS) });
 
-export const fontFetchEffect = (source: OgFontSource, path: string) =>
+const fontFetchEffect = (source: OgFontSource, path: string) =>
   Effect.gen(function* () {
     const url = `${source.origin}${path}`;
     const cached = fontCache.get(url);

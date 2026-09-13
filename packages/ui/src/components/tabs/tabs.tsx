@@ -12,11 +12,6 @@ export const TOMUI_TABS_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export interface TabsLabels {
-  scrollStart?: string;
-  scrollEnd?: string;
-}
-
 export interface TomuiTabsVariantsProps {
   variant?: (typeof TOMUI_TABS_VARIANTS.variant)[number];
   size?: (typeof TOMUI_TABS_VARIANTS.size)[number];
@@ -37,8 +32,6 @@ export type TabsProps = TomuiTabsVariantsProps & {
   activateOnFocus?: boolean;
   class?: string;
   listClassName?: string;
-  indicatorClassName?: string;
-  labels?: TabsLabels;
 };
 
 export function Tabs(props: TabsProps): JSX.Element {
@@ -59,8 +52,6 @@ export function Tabs(props: TabsProps): JSX.Element {
     "activateOnFocus",
     "class",
     "listClassName",
-    "indicatorClassName",
-    "labels",
     "variant",
     "size",
   );

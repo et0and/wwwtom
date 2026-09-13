@@ -35,7 +35,7 @@ Improve existing code; avoid new abstractions.
 
 ## App scripts
 
-- web: `dev|build|start|typecheck|lint|test|test:ui|test:coverage`
+- web: `dev|build|start|typecheck|lint|test`
 - editor: `dev|build|preview|typecheck|lint|test`
 - api: `dev|build|deploy|test|typecheck|lint|cf-typegen`
 

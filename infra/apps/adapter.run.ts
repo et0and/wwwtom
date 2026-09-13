@@ -10,6 +10,7 @@ import {
   sophieStageHost,
   sophieWebHost,
   tomSecrets,
+  workerObservability,
 } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
@@ -106,11 +107,7 @@ export const adapter = Effect.gen(function* () {
       // Local workerd dev server via `alchemy dev`; ADAPTER_URL points back at it.
       port: 8788,
     },
-    observability: {
-      enabled: true,
-      logs: { enabled: true, invocationLogs: true },
-      traces: { enabled: true, headSamplingRate: 1 },
-    },
+    observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so other
     // stacks can reference it (production adopts the existing worker).
     ...(stage === "production"
@@ -155,11 +152,7 @@ export const adapter = Effect.gen(function* () {
     dev: {
       port: 8790,
     },
-    observability: {
-      enabled: true,
-      logs: { enabled: true, invocationLogs: true },
-      traces: { enabled: true, headSamplingRate: 1 },
-    },
+    observability: workerObservability,
     ...(stage === "production"
       ? { name: "sophie-adapter", domain: sophieStageHost(stage, "adapter") }
       : { name: `sophie-adapter-${stage}`, domain: sophieStageHost(stage, "adapter") }),

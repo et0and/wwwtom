@@ -17,11 +17,6 @@ export const TOMUI_RADIO_VARIANTS = {
   },
 } as const;
 
-export const TOMUI_RADIO_DEFAULT_VARIANTS = {
-  variant: "default",
-  appearance: "default",
-} as const;
-
 export type TomuiRadioVariant = keyof typeof TOMUI_RADIO_VARIANTS.variant;
 export type TomuiRadioAppearance = keyof typeof TOMUI_RADIO_VARIANTS.appearance;
 

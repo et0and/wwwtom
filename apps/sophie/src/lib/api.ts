@@ -1,9 +1,10 @@
 import { treaty } from "@elysiajs/eden";
 import { isServer } from "@solidjs/web";
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import type { AdapterApp } from "@tom/adapter";
-import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
+import { adapterRequest as sharedAdapterRequest } from "@tom/utils/services/http";
+import type { EdenResult } from "@tom/utils/services/http";
 
 const DEV_ADAPTER_URL = "http://localhost:8790";
 const PROD_ADAPTER_URL = "https://adapter.sophie.st";
@@ -26,83 +27,11 @@ export const getAdapterBaseUrl = (): string => {
  */
 export const callSophie = () => treaty<AdapterApp>(getAdapterBaseUrl());
 
-type EdenResult<T> = {
-  data: T | null;
-  error: { status: unknown; value: unknown } | null;
+const SOPHIE_REQUEST_MESSAGES = {
+  failed: "Sophie request failed",
+  timedOut: "Sophie request timed out",
 };
 
-/** The adapter's error responses are RFC 9457 problem details; parse at the boundary. */
-const ProblemDetailsBody = Schema.Struct({
-  type: Schema.String,
-  status: Schema.Number,
-  title: Schema.String,
-  detail: Schema.optional(Schema.String),
-});
-
-const errorMessage = (error: NonNullable<EdenResult<unknown>["error"]>): string =>
-  Option.getOrElse(
-    Option.map(
-      Schema.decodeUnknownOption(ProblemDetailsBody)(error.value),
-      (body) => body.detail ?? body.title,
-    ),
-    () => "Sophie request failed",
-  );
-
-/** Upper bound for a single adapter round-trip; guards against a hung worker. */
-const ADAPTER_TIMEOUT_MS = 5_000;
-
-/**
- * Adapter request as an Effect: network failures and non-2xx responses
- * surface as tagged HttpErrors in the error channel instead of thrown
- * exceptions.
- */
 export const adapterRequest = <T>(
   request: () => Promise<EdenResult<T>>,
-): Effect.Effect<T, HttpError> =>
-  Effect.tryPromise(() => request()).pipe(
-    Effect.mapError(
-      () =>
-        new HttpError({
-          message: "Sophie request failed",
-          status: HttpStatus.InternalServerError,
-        }),
-    ),
-    Effect.flatMap((result) =>
-      result.error
-        ? Effect.fail(
-            new HttpError({
-              message: errorMessage(result.error),
-              status: Number(result.error.status) || 500,
-            }),
-          )
-        : Effect.succeed(result.data as T),
-    ),
-    Effect.timeoutOrElse({
-      duration: ADAPTER_TIMEOUT_MS,
-      orElse: () =>
-        Effect.fail(
-          new HttpError({
-            message: "Sophie request timed out",
-            status: HttpStatus.GatewayTimeout,
-          }),
-        ),
-    }),
-  );
-
-/** Run a client effect as a promise at the Solid boundary. */
-export const runClient = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =>
-  Effect.runPromise(effect);
-
-/**
- * Run a client read, mapping a 404 to null (absent resource). Other
- * failures still reject, so detail pages render a not-found state from
- * settled null data instead of an error banner.
- */
-export const runClientOrNull = <T>(effect: Effect.Effect<T, HttpError>): Promise<T | null> =>
-  Effect.runPromise(
-    effect.pipe(
-      Effect.catchTag("HttpError", (error) =>
-        error.status === HttpStatus.NotFound ? Effect.succeed(null) : Effect.fail(error),
-      ),
-    ),
-  );
+): Effect.Effect<T, HttpError> => sharedAdapterRequest(request, SOPHIE_REQUEST_MESSAGES);

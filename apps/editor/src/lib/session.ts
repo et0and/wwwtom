@@ -1,7 +1,8 @@
 import { createSignal, onSettled } from "solid-js";
 import { Effect, Schema } from "effect";
 import { CmsError } from "@tom/types/errors";
-import { decodeResponse, requestJson, requestVoid, runClient } from "./api";
+import { runClient } from "@tom/utils/services/http";
+import { decodeResponse, requestJson, requestVoid } from "./api";
 
 export const EditorSessionSchema = Schema.Struct({
   session: Schema.Struct({ id: Schema.String }),
@@ -109,12 +110,6 @@ export const startSocialSignIn = (
     Effect.flatMap((url) => assertAuthorizeUrl(url, effective)),
   );
 };
-
-/** Start GitHub OAuth (Tom editor default). */
-export const startGithubSignIn = (): Effect.Effect<string, CmsError> => startSocialSignIn("github");
-
-/** Start Google OAuth (Sophie editor). */
-export const startGoogleSignIn = (): Effect.Effect<string, CmsError> => startSocialSignIn("google");
 
 /** Session signal for the app shell: undefined while loading, null signed out. */
 export const createSession = () => {

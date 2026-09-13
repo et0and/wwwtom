@@ -7,6 +7,7 @@
     "./profanity": "./src/profanity.ts",
     "./retry": "./src/retry.ts",
     "./services/config": "./src/services/config.ts",
+    "./services/http": "./src/services/http.ts",
     "./services/logging": "./src/services/logging.ts",
     "./services/queue": "./src/services/queue.ts",
     "./services/session": "./src/services/session.ts",

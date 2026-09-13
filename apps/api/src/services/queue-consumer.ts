@@ -1,17 +1,20 @@
 import { Effect, Layer, Schema } from "effect";
 import { TomWorkMessage } from "@tom/schemas/queue";
 import type { TelegramError } from "@tom/types/errors";
-import { makeAppConfigLayer, readCloudflareEnv } from "@tom/utils/services/config";
-import type { CloudflareEnv } from "@tom/utils/services/config";
+import {
+  makeAppConfigLayer,
+  readCloudflareEnv,
+  type CloudflareEnv,
+} from "@tom/utils/services/config";
 import {
   logLevelFromEnv,
   otelConfigFromResolvedEnv,
   withLogging,
+  type LogContext,
 } from "@tom/utils/services/logging";
-import type { LogContext } from "@tom/utils/services/logging";
 import { TelegramService } from "@tom/utils/telegram";
 
-export type GuestbookSignMessage = Extract<TomWorkMessage, { kind: "guestbook-sign" }>;
+type GuestbookSignMessage = Extract<TomWorkMessage, { kind: "guestbook-sign" }>;
 
 // Structural subset of the queue event the runtime delivers; the Worker
 // entry needs no full @cloudflare/workers-types dependency.

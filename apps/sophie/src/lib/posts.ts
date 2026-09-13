@@ -3,7 +3,8 @@ import { CmsSlug } from "@tom/schemas/cms";
 import type { CmsCategory, CmsListResponse, CmsPost, CmsPostSummary } from "@tom/schemas/cms";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
-import { adapterRequest, callSophie, runClient, runClientOrNull } from "./api";
+import { runClient, runClientOrNull } from "@tom/utils/services/http";
+import { adapterRequest, callSophie } from "./api";
 
 const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
   year: "numeric",
@@ -99,11 +100,3 @@ export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> =>
   runClient(listCategories());
 
 export const fetchAbout = (): Promise<CmsPost | null> => runClientOrNull(getPost(ABOUT_SLUG));
-
-type CategorizedPost = {
-  readonly categories: ReadonlyArray<{ readonly slug: string }>;
-};
-
-/** Standalone pages stay off the category picker. */
-export const isPage = <P extends CategorizedPost>(post: P): boolean =>
-  post.categories.some((entry) => entry.slug === PAGES_CATEGORY);

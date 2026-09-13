@@ -1,24 +1,9 @@
 import { fireEvent, render } from "@solidjs/testing-library";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CategoriesView } from "../CategoriesView";
+import { fetchMock, jsonResponse, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
-
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
-
-const jsonResponse = <B,>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
+useFetchMock();
 
 const categories = [{ id: "cat-1", slug: "essays", title: "Essays" }];
 

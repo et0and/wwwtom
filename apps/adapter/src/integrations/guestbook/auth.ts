@@ -19,17 +19,15 @@ export const fediverseUserSchema = Schema.Struct({
 
 export type FediverseUser = Schema.Schema.Type<typeof fediverseUserSchema>;
 
-const generateSessionToken = () => {
-  const array = new Uint8Array(32);
+const randomHex = (byteLength: number) => {
+  const array = new Uint8Array(byteLength);
   crypto.getRandomValues(array);
   return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
 };
 
-const generateState = () => {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array, (byte) => byte.toString(16).padStart(2, "0")).join("");
-};
+const generateSessionToken = () => randomHex(32);
+
+const generateState = () => randomHex(16);
 
 // Megalodon is only needed for Fediverse OAuth; load it lazily so the heavy
 // client stays out of the adapter's cold-start module graph.

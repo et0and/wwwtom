@@ -181,18 +181,27 @@ const queryFirst = <T>(
       }),
   });
 
-const parseContentJson = (json: string, operation: string): Effect.Effect<TiptapDoc, CmsError> =>
-  Schema.decodeUnknownEffect(Schema.fromJsonString(TiptapDocSchema))(json).pipe(
+/** Decode an internal row against its owner schema; corrupt rows fail with 500. */
+const decodeCms = <A, I, B>(
+  schema: Schema.Codec<A, I>,
+  value: B,
+  message: string,
+  operation: string,
+): Effect.Effect<A, CmsError> =>
+  Schema.decodeUnknownEffect(schema)(value).pipe(
     Effect.mapError(
       (cause) =>
         new CmsError({
-          message: "Invalid CMS content JSON",
+          message,
           status: HttpStatus.InternalServerError,
           operation,
           cause,
         }),
     ),
   );
+
+const parseContentJson = (json: string, operation: string): Effect.Effect<TiptapDoc, CmsError> =>
+  decodeCms(Schema.fromJsonString(TiptapDocSchema), json, "Invalid CMS content JSON", operation);
 
 /** Fields shared by full and summary rows: everything except the body. */
 const baseFields = (row: PostSummaryRow) => ({
@@ -217,40 +226,30 @@ const toPost = Effect.fn("CmsService.toPost")(function* (
   categories: ReadonlyArray<CmsCategory>,
 ) {
   const content = yield* parseContentJson(row.content_json, "decode_post");
-  return yield* Schema.decodeUnknownEffect(CmsPostSchema)({
-    ...baseFields(row),
-    content,
-    html: row.html,
-    categories,
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid CMS post row",
-          status: HttpStatus.InternalServerError,
-          operation: "decode_post",
-          cause,
-        }),
-    ),
+  return yield* decodeCms(
+    CmsPostSchema,
+    {
+      ...baseFields(row),
+      content,
+      html: row.html,
+      categories,
+    },
+    "Invalid CMS post row",
+    "decode_post",
   );
 });
 
 const toWork = Effect.fn("CmsService.toWork")(function* (row: WorkRow) {
   const content = yield* parseContentJson(row.content_json, "decode_work");
-  return yield* Schema.decodeUnknownEffect(CmsWorkSchema)({
-    ...baseFields(row),
-    content,
-    html: row.html,
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid CMS work row",
-          status: HttpStatus.InternalServerError,
-          operation: "decode_work",
-          cause,
-        }),
-    ),
+  return yield* decodeCms(
+    CmsWorkSchema,
+    {
+      ...baseFields(row),
+      content,
+      html: row.html,
+    },
+    "Invalid CMS work row",
+    "decode_work",
   );
 });
 
@@ -259,74 +258,52 @@ const toPostSummary = Effect.fn("CmsService.toPostSummary")(function* (
   row: PostSummaryRow,
   categories: ReadonlyArray<CmsCategory>,
 ) {
-  return yield* Schema.decodeUnknownEffect(CmsPostSummarySchema)({
-    ...baseFields(row),
-    categories,
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid CMS post row",
-          status: HttpStatus.InternalServerError,
-          operation: "decode_post_summary",
-          cause,
-        }),
-    ),
+  return yield* decodeCms(
+    CmsPostSummarySchema,
+    {
+      ...baseFields(row),
+      categories,
+    },
+    "Invalid CMS post row",
+    "decode_post_summary",
   );
 });
 
 /** Slim work row: no Tiptap parse, no HTML. */
 const toWorkSummary = Effect.fn("CmsService.toWorkSummary")(function* (row: WorkSummaryRow) {
-  return yield* Schema.decodeUnknownEffect(CmsWorkSummarySchema)({
-    ...baseFields(row),
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid CMS work row",
-          status: HttpStatus.InternalServerError,
-          operation: "decode_work_summary",
-          cause,
-        }),
-    ),
+  return yield* decodeCms(
+    CmsWorkSummarySchema,
+    {
+      ...baseFields(row),
+    },
+    "Invalid CMS work row",
+    "decode_work_summary",
   );
 });
 
 const toMedia = Effect.fn("CmsService.toMedia")(function* (row: MediaRow) {
-  const variants = yield* Schema.decodeUnknownEffect(
+  const variants = yield* decodeCms(
     Schema.fromJsonString(Schema.Array(CmsMediaVariantSchema)),
-  )(row.variants_json).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid CMS media row",
-          status: HttpStatus.InternalServerError,
-          operation: "decode_media",
-          cause,
-        }),
-    ),
+    row.variants_json,
+    "Invalid CMS media row",
+    "decode_media",
   );
-  return yield* Schema.decodeUnknownEffect(CmsMediaSchema)({
-    id: row.id,
-    key: row.key,
-    mime: row.mime,
-    width: row.width,
-    height: row.height,
-    alt: row.alt,
-    caption: row.caption,
-    variants,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid CMS media row",
-          status: HttpStatus.InternalServerError,
-          operation: "decode_media",
-          cause,
-        }),
-    ),
+  return yield* decodeCms(
+    CmsMediaSchema,
+    {
+      id: row.id,
+      key: row.key,
+      mime: row.mime,
+      width: row.width,
+      height: row.height,
+      alt: row.alt,
+      caption: row.caption,
+      variants,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+    },
+    "Invalid CMS media row",
+    "decode_media",
   );
 });
 
@@ -347,20 +324,15 @@ const categoriesForPosts = Effect.fn("CmsService.categoriesForPosts")(function* 
     operation,
   );
   for (const row of rows) {
-    const category = yield* Schema.decodeUnknownEffect(CmsCategorySchema)({
-      id: row.id,
-      slug: row.slug,
-      title: row.title,
-    }).pipe(
-      Effect.mapError(
-        (cause) =>
-          new CmsError({
-            message: "Invalid CMS category row",
-            status: HttpStatus.InternalServerError,
-            operation,
-            cause,
-          }),
-      ),
+    const category = yield* decodeCms(
+      CmsCategorySchema,
+      {
+        id: row.id,
+        slug: row.slug,
+        title: row.title,
+      },
+      "Invalid CMS category row",
+      operation,
     );
     const existing = grouped[row.postId] ?? [];
     grouped[row.postId] = [...existing, category];
@@ -624,17 +596,7 @@ export const listCategories = Effect.fn("CmsService.listCategories")(function* (
     "list_categories",
   );
   return yield* Effect.forEach(rows, (row) =>
-    Schema.decodeUnknownEffect(CmsCategorySchema)(row).pipe(
-      Effect.mapError(
-        (cause) =>
-          new CmsError({
-            message: "Invalid CMS category row",
-            status: HttpStatus.InternalServerError,
-            operation: "list_categories",
-            cause,
-          }),
-      ),
-    ),
+    decodeCms(CmsCategorySchema, row, "Invalid CMS category row", "list_categories"),
   );
 });
 
@@ -710,18 +672,20 @@ const usageRefs = Effect.fn("CmsService.usageRefs")(function* (
     operation,
   );
   return yield* Effect.forEach(rows, (row) =>
-    Schema.decodeUnknownEffect(CmsMediaUsageRefSchema)(row).pipe(
-      Effect.mapError(
-        (cause) =>
-          new CmsError({
-            message: "Invalid CMS usage row",
-            status: HttpStatus.InternalServerError,
-            operation,
-            cause,
-          }),
-      ),
-    ),
+    decodeCms(CmsMediaUsageRefSchema, row, "Invalid CMS usage row", operation),
   );
+});
+
+const mediaUsage = Effect.fn("CmsService.mediaUsage")(function* (
+  db: CmsD1Binding,
+  id: string,
+  operation: string,
+) {
+  const [posts, works] = yield* Effect.all([
+    usageRefs(db, "posts", id, operation),
+    usageRefs(db, "works", id, operation),
+  ]);
+  return { posts, works };
 });
 
 export const getMediaUsage = Effect.fn("CmsService.getMediaUsage")(function* (
@@ -729,11 +693,7 @@ export const getMediaUsage = Effect.fn("CmsService.getMediaUsage")(function* (
   id: string,
 ) {
   yield* requireMediaRow(db, id, "get_media_usage");
-  const [posts, works] = yield* Effect.all([
-    usageRefs(db, "posts", id, "get_media_usage"),
-    usageRefs(db, "works", id, "get_media_usage"),
-  ]);
-  return { posts, works };
+  return yield* mediaUsage(db, id, "get_media_usage");
 });
 
 export type MediaUpload = {
@@ -893,22 +853,12 @@ const recordRevision = Effect.fn("CmsService.recordRevision")(function* (
   );
 });
 
-const decodeJsonSnapshot = <A, I>(
+const decodeJsonSnapshot = <A, I, B>(
   schema: Schema.Codec<A, I>,
-  json: string,
+  json: B,
   operation: string,
 ): Effect.Effect<A, CmsError> =>
-  Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(json).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid revision snapshot",
-          status: HttpStatus.InternalServerError,
-          operation,
-          cause,
-        }),
-    ),
-  );
+  decodeCms(Schema.fromJsonString(schema), json, "Invalid revision snapshot", operation);
 
 const parseSnapshot = (
   json: string,
@@ -925,21 +875,16 @@ const toRevisionMeta = Effect.fn("CmsService.toRevisionMeta")(function* (
   operation: string,
 ) {
   const snapshot = yield* parseSnapshot(row.snapshot_json, entity, operation);
-  return yield* Schema.decodeUnknownEffect(CmsRevisionMetaSchema)({
-    id: row.id,
-    createdAt: row.created_at,
-    actor: row.actor,
-    title: snapshot.title,
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid revision row",
-          status: HttpStatus.InternalServerError,
-          operation,
-          cause,
-        }),
-    ),
+  return yield* decodeCms(
+    CmsRevisionMetaSchema,
+    {
+      id: row.id,
+      createdAt: row.created_at,
+      actor: row.actor,
+      title: snapshot.title,
+    },
+    "Invalid revision row",
+    operation,
   );
 });
 
@@ -1348,7 +1293,7 @@ export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
   const row = yield* requireMediaRow(db, id, "delete_media");
   // Never orphan published content: the editor checks usage first, and
   // the service enforces it so direct API calls cannot break posts/works.
-  const usage = yield* getMediaUsage(db, id);
+  const usage = yield* mediaUsage(db, id, "delete_media");
   if (usage.posts.length > 0 || usage.works.length > 0) {
     return yield* new CmsError({
       message: `Media in use by ${usage.posts.length} posts and ${usage.works.length} works`,

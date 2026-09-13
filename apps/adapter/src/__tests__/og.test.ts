@@ -1,18 +1,11 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../index";
-import { requestWithEnv, testEnv } from "../test/helpers";
+import { fetchMock, requestWithEnv, stubFetch, testEnv, unstubFetch } from "../test/helpers";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 
-const fetchMock = vi.fn();
+beforeEach(stubFetch);
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+afterEach(unstubFetch);
 
 describe("og integration", () => {
   it("forwards to the API with the internal token header", async () => {

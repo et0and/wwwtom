@@ -1,17 +1,10 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { app } from "../index";
-import { requestWithEnv, testEnv } from "../test/helpers";
+import { fetchMock, requestWithEnv, stubFetch, testEnv, unstubFetch } from "../test/helpers";
 
-const fetchMock = vi.fn();
+beforeEach(stubFetch);
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+afterEach(unstubFetch);
 
 describe("adapter error handling", () => {
   it("returns RFC 9457 problem details for unknown routes", async () => {
