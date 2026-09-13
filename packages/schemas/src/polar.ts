@@ -57,15 +57,11 @@ const PolarProductSchema = Schema.Struct({
 
 export const polarProductSchema = PolarProductSchema;
 
-export type PolarProduct = Schema.Schema.Type<typeof PolarProductSchema>;
-
 const PolarProductsResponseSchema = Schema.Struct({
   items: Schema.Array(PolarProductSchema),
 });
 
 export const polarProductsResponseSchema = PolarProductsResponseSchema;
-
-export type PolarProductsResponse = Schema.Schema.Type<typeof PolarProductsResponseSchema>;
 
 /** POST /v1/customers/ → 201 Customer. This app consumes `id`. */
 const PolarCustomerSchema = Schema.Struct({
@@ -74,12 +70,8 @@ const PolarCustomerSchema = Schema.Struct({
 
 export const polarCustomerSchema = PolarCustomerSchema;
 
-export type PolarCustomer = Schema.Schema.Type<typeof PolarCustomerSchema>;
-
 const PolarCustomersResponseSchema = Schema.Struct({
   items: Schema.Array(PolarCustomerSchema),
 });
 
 export const polarCustomersResponseSchema = PolarCustomersResponseSchema;
-
-export type PolarCustomersResponse = Schema.Schema.Type<typeof PolarCustomersResponseSchema>;

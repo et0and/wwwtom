@@ -43,7 +43,7 @@ export const guestbookSessionCookieSchema = Schema.toStandardSchemaV1(
     guestbook_session: Schema.optional(Schema.String),
     // Elysia JSON-parses object-shaped cookie values, so the user cookie can
     // arrive as either the raw JSON string or the parsed object.
-    guestbook_user: Schema.optional(Schema.Unknown),
+    guestbook_user: Schema.optional(Schema.Json),
   }),
 );
 
@@ -51,7 +51,7 @@ export const guestbookUserCookieSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
     // Elysia JSON-parses object-shaped cookie values, so the user cookie can
     // arrive as either the raw JSON string or the parsed object.
-    guestbook_user: Schema.optional(Schema.Unknown),
+    guestbook_user: Schema.optional(Schema.Json),
   }),
 );
 

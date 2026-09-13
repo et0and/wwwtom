@@ -1,7 +1,6 @@
 import type { JSX } from "@solidjs/web";
 import { createContext, createSignal, createUniqueId, merge, Show, useContext } from "solid-js";
 import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
 
 export const TOMUI_RADIO_VARIANTS = {
   variant: {
@@ -25,33 +24,6 @@ export const TOMUI_RADIO_DEFAULT_VARIANTS = {
 
 export type TomuiRadioVariant = keyof typeof TOMUI_RADIO_VARIANTS.variant;
 export type TomuiRadioAppearance = keyof typeof TOMUI_RADIO_VARIANTS.appearance;
-
-export interface TomuiRadioVariantsProps {
-  variant?: TomuiRadioVariant | undefined;
-  appearance?: TomuiRadioAppearance | undefined;
-}
-
-export function radioVariants(props: TomuiRadioVariantsProps = {}): string {
-  const merged = merge(
-    {
-      variant: TOMUI_RADIO_DEFAULT_VARIANTS.variant,
-      appearance: TOMUI_RADIO_DEFAULT_VARIANTS.appearance,
-    },
-    props,
-  );
-  return cn(
-    resolveVariant(
-      TOMUI_RADIO_VARIANTS.variant,
-      merged.variant,
-      TOMUI_RADIO_DEFAULT_VARIANTS.variant,
-    ).classes,
-    resolveVariant(
-      TOMUI_RADIO_VARIANTS.appearance,
-      merged.appearance,
-      TOMUI_RADIO_DEFAULT_VARIANTS.appearance,
-    ).classes,
-  );
-}
 
 export type RadioVariant = TomuiRadioVariant;
 export type RadioControlPosition = "start" | "end";

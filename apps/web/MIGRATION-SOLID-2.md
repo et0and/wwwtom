@@ -84,7 +84,7 @@ heads.
 - [x] 7. `server/adapter.ts` (no `use server`), `libs/adapter.ts`
 - [x] 8. Route conversions: preload → router config, `httpHeader()`, Loading,
      Errored, async memos, plain links
-- [x] 9. Components: Nav/Link/ProgressBar, Arena/CameraRoll/BlurIn\*,
+- [x] 9. Components: Nav/Link/ProgressBar, Arena/BlurIn\*,
      hold/kawara effects; `Dynamic` replaced by static tags
 - [x] 10. feed/sitemap/robots handlers (`src/server/static-routes.ts`)
 - [x] 11. Test conversions with `createRouter`+`memoryHistory`

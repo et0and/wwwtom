@@ -11,10 +11,3 @@ const OgImageQueryParamsSchema = Schema.Struct({
 });
 
 export const ogImageQueryParamsSchema = OgImageQueryParamsSchema;
-
-const OgImageResponseSchema = Schema.Struct({
-  success: Schema.Literal(true),
-  generatedAt: Schema.Number,
-});
-
-export const ogImageResponseSchema = OgImageResponseSchema;

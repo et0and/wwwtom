@@ -1,4 +1,10 @@
 import { test, expect, type Page, type Route } from "@playwright/test";
+import { Schema } from "effect";
+import {
+  CmsCategoryInputSchema,
+  CmsPostInputSchema,
+  CmsRestoreInputSchema,
+} from "@tom/schemas/cms";
 import { fixturePosts, fixtureWorks } from "../src/fixture-stores";
 
 /**
@@ -28,10 +34,18 @@ const emptyList = {
 const postsList = { ...emptyList, docs: fixturePosts, totalDocs: fixturePosts.length };
 const worksList = { ...emptyList, docs: fixtureWorks, totalDocs: fixtureWorks.length };
 
-const stubSession = (page: Page, body: unknown) =>
+const stubSession = (page: Page, body: typeof sessionBody | null) =>
   page.route(`${ADAPTER}/auth/get-session`, (route: Route) => route.fulfill({ json: body }));
 
-const json = (route: Route, body: unknown, status = 200) => route.fulfill({ status, json: body });
+const json = (route: Route, body: Schema.Json, status = 200) =>
+  route.fulfill({ status, json: body });
+
+/** The editor's sign-in POST body, pinned at the adapter boundary. */
+const SignInRequestSchema = Schema.Struct({
+  provider: Schema.Literals(["github", "google"]),
+  callbackURL: Schema.String,
+  disableRedirect: Schema.Boolean,
+});
 
 test.describe("editor sign-in", () => {
   test("signed-out view shows Camus and GitHub sign-in", async ({ page }) => {
@@ -43,16 +57,17 @@ test.describe("editor sign-in", () => {
 
   test("sign-in posts the provider and follows the authorize URL", async ({ page }) => {
     await page.route(`${ADAPTER}/auth/get-session`, (route: Route) => json(route, null));
-    let posted: Record<string, unknown> | null = null;
+    let posted: Schema.Json = null;
     await page.route(`${ADAPTER}/auth/sign-in/social`, async (route: Route) => {
-      posted = route.request().postDataJSON() as Record<string, unknown>;
+      posted = route.request().postDataJSON();
       await json(route, { url: "http://127.0.0.1:5174/oauth-stub", redirect: true });
     });
     await page.goto("/");
     await page.getByRole("button", { name: "Sign in with GitHub" }).click();
     await expect.poll(() => posted, { timeout: 8000 }).not.toBeNull();
-    expect(posted?.["provider"]).toBe("github");
-    expect(String(posted?.["callbackURL"] ?? "")).toContain("127.0.0.1:5174");
+    const signInRequest = Schema.decodeUnknownSync(SignInRequestSchema)(posted);
+    expect(signInRequest.provider).toBe("github");
+    expect(signInRequest.callbackURL).toContain("127.0.0.1:5174");
     await page.waitForURL("**/oauth-stub");
   });
 });
@@ -74,11 +89,11 @@ test.describe("editor content", () => {
 
   test("creates a post with the built input", async ({ page }) => {
     const created = { ...fixturePosts[0], id: "post-new", slug: "e2e-post", title: "E2E Post" };
-    let posted: Record<string, unknown> | null = null;
+    let posted: Schema.Json = null;
     await page.route(`${ADAPTER}/content/categories`, (route: Route) => json(route, []));
     await page.route(`${ADAPTER}/content/posts`, async (route: Route) => {
       if (route.request().method() === "POST") {
-        posted = route.request().postDataJSON() as Record<string, unknown>;
+        posted = route.request().postDataJSON();
         await json(route, created);
       } else {
         await json(route, postsList);
@@ -90,20 +105,21 @@ test.describe("editor content", () => {
     await page.getByRole("button", { name: "Use title" }).click();
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByText("Saved")).toBeVisible();
-    expect(posted?.["slug"]).toBe("e2e-post");
-    expect(posted?.["title"]).toBe("E2E Post");
-    expect(posted?.["status"]).toBe("draft");
-    expect(posted?.["content"]).toMatchObject({ type: "doc" });
+    const postInput = Schema.decodeUnknownSync(CmsPostInputSchema)(posted);
+    expect(postInput.slug).toBe("e2e-post");
+    expect(postInput.title).toBe("E2E Post");
+    expect(postInput.status).toBe("draft");
+    expect(postInput.content).toMatchObject({ type: "doc" });
   });
 
   test("edits a post and saves the title", async ({ page }) => {
     const target = fixturePosts[0];
     const updated = { ...target, title: "Edited Title" };
-    let saved: Record<string, unknown> | null = null;
+    let saved: Schema.Json = null;
     await page.route(`${ADAPTER}/content/categories`, (route: Route) => json(route, []));
     await page.route(`${ADAPTER}/content/posts/${target.slug}`, async (route: Route) => {
       if (route.request().method() === "PUT") {
-        saved = route.request().postDataJSON() as Record<string, unknown>;
+        saved = route.request().postDataJSON();
         await json(route, updated);
       } else {
         await json(route, target);
@@ -115,16 +131,19 @@ test.describe("editor content", () => {
     await page.getByLabel("Title").fill("Edited Title");
     await page.getByRole("button", { name: "Save" }).click();
     await expect(page.getByText("Saved")).toBeVisible();
-    expect(saved?.["title"]).toBe("Edited Title");
-    expect(saved?.["slug"]).toBe(target.slug);
+    const savedInput = Schema.decodeUnknownSync(CmsPostInputSchema)(saved);
+    expect(savedInput.title).toBe("Edited Title");
+    expect(savedInput.slug).toBe(target.slug);
   });
 
   test("quote wrap round-trips through save", async ({ page }) => {
     const target = fixturePosts[1];
     await page.route(`${ADAPTER}/content/posts/${target.slug}`, async (route: Route) => {
       if (route.request().method() === "PUT") {
-        const body = route.request().postDataJSON() as Record<string, unknown>;
-        expect(JSON.stringify(body)).toContain(`"type":"blockquote"`);
+        const body = Schema.decodeUnknownSync(CmsPostInputSchema)(route.request().postDataJSON());
+        expect(body.content.content).toContainEqual(
+          expect.objectContaining({ type: "blockquote" }),
+        );
         await json(route, target);
       } else {
         await json(route, target);
@@ -160,11 +179,11 @@ test.describe("editor categories", () => {
     await stubSession(page, sessionBody);
     await page.route(`${ADAPTER}/content/posts?*`, (route: Route) => json(route, emptyList));
     await page.route(`${ADAPTER}/content/works?*`, (route: Route) => json(route, emptyList));
-    let posted: Record<string, unknown> | null = null;
+    let posted: Schema.Json = null;
     let created = false;
     await page.route(`${ADAPTER}/content/categories`, async (route: Route) => {
       if (route.request().method() === "POST") {
-        posted = route.request().postDataJSON() as Record<string, unknown>;
+        posted = route.request().postDataJSON();
         created = true;
         await json(route, { id: "cat-9", slug: "notes", title: "Notes" });
       } else {
@@ -177,7 +196,12 @@ test.describe("editor categories", () => {
     await page.getByLabel("Title").fill("Notes");
     await page.getByRole("button", { name: "Add category" }).click();
     await expect(page.getByText("Notes · notes")).toBeVisible();
-    expect(posted).toEqual({ slug: "notes", title: "Notes" });
+    expect(
+      Schema.decodeUnknownSync(CmsCategoryInputSchema, { onExcessProperty: "error" })(posted),
+    ).toEqual({
+      slug: "notes",
+      title: "Notes",
+    });
   });
 });
 
@@ -286,9 +310,9 @@ test.describe("editor history", () => {
         meta: { title: null, description: null, image: null },
       }),
     );
-    let restored: Record<string, unknown> | null = null;
+    let restored: Schema.Json = null;
     await page.route(`${ADAPTER}/content/posts/${target.slug}/restore`, async (route: Route) => {
-      restored = route.request().postDataJSON() as Record<string, unknown>;
+      restored = route.request().postDataJSON();
       await json(route, target);
     });
     await page.goto("/");
@@ -298,7 +322,11 @@ test.describe("editor history", () => {
     await page.getByText("V1").click();
     await page.getByRole("button", { name: "Restore this version" }).click();
     await expect(page.getByText("Saved")).toBeVisible();
-    expect(restored).toEqual({ revisionId: "rev-1" });
+    expect(
+      Schema.decodeUnknownSync(CmsRestoreInputSchema, { onExcessProperty: "error" })(restored),
+    ).toEqual({
+      revisionId: "rev-1",
+    });
   });
 });
 

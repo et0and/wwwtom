@@ -2,14 +2,7 @@ import type { JSX } from "@solidjs/web";
 import { createSignal, createUniqueId, merge, omit, Show } from "solid-js";
 import { cn } from "../../utils/cn";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
-import {
-  inputVariants,
-  TOMUI_INPUT_VARIANTS,
-  type TomuiInputSize,
-  type TomuiInputVariant,
-} from "../input/input";
-
-export const TOMUI_SENSITIVE_INPUT_VARIANTS = TOMUI_INPUT_VARIANTS;
+import { inputVariants, type TomuiInputSize, type TomuiInputVariant } from "../input/input";
 
 export const TOMUI_SENSITIVE_INPUT_DEFAULT_VARIANTS = {
   size: "base",

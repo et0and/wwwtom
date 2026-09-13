@@ -192,7 +192,21 @@ const dbEntries = (): Effect.Effect<readonly GuestbookEntry[], GuestbookError, D
     return data.results;
   });
 
-export const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
+const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
+
+/**
+ * Decode the guestbook_user cookie: Elysia hands back the parsed object when
+ * possible, otherwise the encoded string. Null when absent or invalid.
+ */
+export const guestbookUserFromCookie = (
+  value: Schema.Json | undefined,
+): auth.FediverseUser | null => {
+  const json = Option.getOrElse(Schema.decodeUnknownOption(Schema.String)(value), () =>
+    JSON.stringify(value),
+  );
+  return Option.getOrElse(Schema.decodeUnknownOption(userCookieSchema)(json), () => null);
+};
+
 export const guestbookIntegration = new Elysia({ name: "guestbook" })
   .get(
     "/guestbook/entries",
@@ -225,19 +239,10 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
   .get(
     "/guestbook/me",
     ({ cookie }) => {
-      const userJson = Option.getOrElse(
-        Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user.value),
-        () => JSON.stringify(cookie.guestbook_user.value),
-      );
-      const user = Option.getOrElse(
-        Schema.decodeUnknownOption(userCookieSchema)(userJson),
-        // Signed out: return JSON null. A bare null makes Elysia send an empty
-        // body, which Eden treaty parses as {} — a truthy "ghost" user that
-        // flips the guestbook to the signed-in UI. The response schema keeps
-        // the typed contract as FediverseUser | null for the web client.
-        () => null,
-      );
-      return Response.json(user);
+      // Signed out must return JSON null: a bare null makes Elysia send an
+      // empty body, which Eden treaty parses as {} — a truthy "ghost" user
+      // that flips the guestbook to the signed-in UI.
+      return Response.json(guestbookUserFromCookie(cookie.guestbook_user.value));
     },
     {
       cookie: guestbookUserCookieSchema,
@@ -355,14 +360,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
     "/guestbook/sign",
     ({ body, cookie, request }) => {
       const env = getRequestEnv(request);
-      const userJson = Option.getOrElse(
-        Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user.value),
-        () => JSON.stringify(cookie.guestbook_user.value),
-      );
-      const user = Option.getOrElse(
-        Schema.decodeUnknownOption(userCookieSchema)(userJson),
-        () => null,
-      );
+      const user = guestbookUserFromCookie(cookie.guestbook_user.value);
       if (!user) {
         return toProblemResponse(HttpStatus.Unauthorized, "Not authenticated", {
           type: ProblemType.Unauthorized,

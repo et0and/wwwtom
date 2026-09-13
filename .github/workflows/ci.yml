@@ -12,6 +12,12 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    # Turbo remote cache credentials shared by every Turbo task below.
+    env:
+      TURBO_API: https://turbo.infra.tom.so
+      TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
+      TURBO_TEAM: wwwtom
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
 
     steps:
       - name: Checkout
@@ -31,12 +37,13 @@ jobs:
       # It lives in the same required job on purpose, so existing branch
       # protection keeps enforcing it without settings changes.
       - name: Run typecheck
-        env:
-          TURBO_API: https://turbo.infra.tom.so
-          TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
-          TURBO_TEAM: wwwtom
-          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
         run: pnpm turbo run typecheck
+
+      # oxlint carries the anti-slop rules (unknown parameters, broad
+      # dictionaries, chained assertions, barrel files). Every workspace with
+      # a `lint` script must pass, so those patterns cannot merge.
+      - name: Run lint
+        run: pnpm turbo run lint
 
       # Unit tests run in every workspace with a `test` script: @tom/web,
       # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
@@ -50,8 +57,4 @@ jobs:
       - name: Run unit tests
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
-          TURBO_API: https://turbo.infra.tom.so
-          TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
-          TURBO_TEAM: wwwtom
-          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
         run: pnpm turbo run test

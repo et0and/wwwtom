@@ -33,54 +33,6 @@ export const TOMUI_CODE_DEFAULT_VARIANTS = {
   lang: "ts",
 } as const;
 
-/**
- * Styling metadata for Code component (for AI/Figma plugin consumption)
- */
-export const TOMUI_CODE_STYLING = {
-  /** Base semantic tokens used */
-  baseTokens: ["text-tomui-subtle"],
-  /** Typography and layout */
-  typography: {
-    fontFamily: "font-mono",
-    fontSize: "text-sm",
-    lineHeight: "leading-[20px]",
-  },
-  /** Container dimensions */
-  dimensions: {
-    margin: "m-0",
-    padding: "p-0",
-    width: "w-auto",
-  },
-  /** Border and background */
-  appearance: {
-    borderRadius: "rounded-none",
-    border: "border-none",
-    background: "bg-transparent",
-  },
-} as const;
-
-/**
- * Styling metadata for CodeBlock component (for AI/Figma plugin consumption)
- */
-export const TOMUI_CODEBLOCK_STYLING = {
-  /** Base semantic tokens used */
-  baseTokens: ["bg-tomui-base", "border-tomui-fill"],
-  /** Container styling */
-  container: {
-    minWidth: "min-w-0",
-    borderRadius: "rounded-md",
-    border: "border border-tomui-fill",
-    background: "bg-tomui-base",
-  },
-  /** Inner code element padding */
-  innerPadding: "[&>pre]:p-2.5",
-  /** Parsed dimensions */
-  dimensions: {
-    borderRadius: 6, // md = 6px
-    padding: 10, // p-2.5 = 10px
-  },
-} as const;
-
 // Derived types from TOMUI_CODE_VARIANTS
 export type TomuiCodeLang = keyof typeof TOMUI_CODE_VARIANTS.lang;
 
@@ -109,9 +61,6 @@ export function codeVariants(props: TomuiCodeVariantsProps = {}): string {
 
 // Legacy type alias for backwards compatibility
 export type CodeLang = TomuiCodeLang;
-
-/** @deprecated Use CodeLang instead */
-export type BundledLanguage = CodeLang;
 
 /** Template values for `{{key}}` interpolation in `code`. */
 export type CodeValues = Record<string, { value: string; highlight?: boolean }>;

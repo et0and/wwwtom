@@ -12,10 +12,6 @@ export function normalizeFieldError(
   return { message: error as string, match: true };
 }
 
-export const TOMUI_FIELD_VARIANTS = {} as const;
-
-export const TOMUI_FIELD_DEFAULT_VARIANTS = {} as const;
-
 export interface TomuiFieldVariantsProps {
   controlFirst?: boolean | undefined;
 }

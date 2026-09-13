@@ -4,10 +4,6 @@ export type TomuiColorMode = "light" | "dark";
 
 const COLOR_MODE_QUERY = "(prefers-color-scheme: dark)";
 
-export function currentColorMode(): TomuiColorMode {
-  return window.matchMedia(COLOR_MODE_QUERY).matches ? "dark" : "light";
-}
-
 export function applyColorMode(mode: TomuiColorMode): void {
   document.documentElement.dataset.mode = mode;
   document.documentElement.style.colorScheme = mode;

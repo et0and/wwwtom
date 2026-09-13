@@ -580,6 +580,13 @@ describe("cms write routes", () => {
       const deleted = await app.fetch(authedJson("http://localhost/works/hyperjam", env, "DELETE"));
       expect(deleted.status).toBe(200);
     });
+
+    it("returns 404 when deleting an unknown work", async () => {
+      const { env } = setup();
+      const response = await app.fetch(authedJson("http://localhost/works/missing", env, "DELETE"));
+      expect(response.status).toBe(HttpStatus.NotFound);
+      expect(((await response.json()) as { title: string }).title).toBe("Work not found: missing");
+    });
   });
 
   describe("categories", () => {
@@ -599,6 +606,17 @@ describe("cms write routes", () => {
       );
       expect(deleted.status).toBe(200);
       expect(store.categories).toHaveLength(1);
+    });
+
+    it("returns 404 when deleting an unknown category", async () => {
+      const { env } = setup();
+      const response = await app.fetch(
+        authedJson("http://localhost/categories/missing", env, "DELETE"),
+      );
+      expect(response.status).toBe(HttpStatus.NotFound);
+      expect(((await response.json()) as { title: string }).title).toBe(
+        "Category not found: missing",
+      );
     });
   });
 
@@ -688,6 +706,13 @@ describe("cms write routes", () => {
       expect(await deleted.json()).toEqual({ id: upload.id });
       expect(store.media).toHaveLength(0);
       expect(files.has(upload.key)).toBe(false);
+    });
+
+    it("returns 404 when deleting an unknown asset", async () => {
+      const { env } = setup();
+      const response = await app.fetch(authedJson("http://localhost/media/missing", env, "DELETE"));
+      expect(response.status).toBe(HttpStatus.NotFound);
+      expect(((await response.json()) as { title: string }).title).toBe("Media not found: missing");
     });
   });
 

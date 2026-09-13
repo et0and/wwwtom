@@ -56,9 +56,6 @@ export function comboboxVariants(props: TomuiComboboxVariantsProps = {}): string
   );
 }
 
-export type ComboboxInputSide = TomuiComboboxInputSide;
-export type ComboboxSize = TomuiComboboxSize;
-
 interface ComboboxContextValue {
   query: () => string;
   setQuery: (query: string) => void;

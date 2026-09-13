@@ -1,154 +1,31 @@
 import * as Cloudflare from "alchemy/Cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import { ConfigError } from "effect/Config";
 import { SourceError } from "effect/ConfigProvider";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
+import { resolveDeploySecrets } from "./api.secrets.ts";
 import { stageHost, sophieStageHost, tomSecrets } from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { sophieQueue, sophieQueueDlq } from "../queues/sophie.queue.ts";
 import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
 import { sophieD1, sophieMediaBucket } from "../cms/sophie.storage.ts";
-import { TomSecretsSchema } from "@tom/schemas/secrets";
-import { InfrastructureConfigError } from "@tom/types/errors";
-import { parseAdminEmails } from "@tom/utils/services/config";
 
 const rootDir = `${import.meta.dirname}/../..`;
-
-/**
- * Resolve a deploy-time admin allowlist, failing the deploy when empty.
- * Reads deploy-time env first, then the TOM_SECRETS bundle — the hardcoded
- * fallbacks this replaces must never return.
- */
-const requireAdminEmails = (
-  label: string,
-  value: string | undefined,
-): Effect.Effect<string, InfrastructureConfigError> =>
-  value !== undefined && parseAdminEmails(value).length > 0
-    ? Effect.succeed(value)
-    : Effect.fail(
-        new InfrastructureConfigError({
-          variable: label,
-          message: `${label} must list at least one admin email`,
-        }),
-      );
-
-/**
- * Resolve a required bundle secret at deploy time, failing the deploy when
- * absent. Explicit worker env wins over the opaque shared TOM_SECRETS
- * binding at runtime, so a stale bundle value can never silently break a
- * worker that depends on the key.
- */
-const requireBundleSecret = (
-  label: string,
-  value: string | undefined,
-): Effect.Effect<string, InfrastructureConfigError> =>
-  value !== undefined && value.trim() !== ""
-    ? Effect.succeed(value)
-    : Effect.fail(
-        new InfrastructureConfigError({
-          variable: label,
-          message: `${label} must be set in TOM_SECRETS`,
-        }),
-      );
-
-// Bundle-only keys never reach worker env as separate vars: each worker
-// gets the resolved value under the shared name (dev split) or via runtime
-// selection from the TOM_SECRETS binding (production, readCloudflareEnv).
-const TENANT_BUNDLE_KEYS = [
-  "TOM_BETTER_AUTH_SECRET",
-  "SOPHIE_BETTER_AUTH_SECRET",
-  "TOM_INTERNAL_API_TOKEN",
-  "SOPHIE_INTERNAL_API_TOKEN",
-  "TOM_CMS_ADMIN_EMAILS",
-  "SOPHIE_CMS_ADMIN_EMAILS",
-];
-
-/** Drop keys from a secret record (per-tenant OAuth isolation). */
-const stripKeys = (
-  secrets: Record<string, string>,
-  keys: ReadonlyArray<string>,
-): Record<string, string> =>
-  Object.fromEntries(Object.entries(secrets).filter(([key]) => !keys.includes(key)));
-
-/** Resolved value under the shared name, for the dev split only. */
-const devSecretOverride = (name: string, value: string | undefined): Record<string, string> =>
-  value === undefined ? {} : { [name]: value };
 
 export const api = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
-
-  // Deploy-time copy of the TOM_SECRETS bundle (when present). Per-tenant
-  // values (SOPHIE_*/TOM_* keys, admin allowlists) resolve here so worker
-  // env carries only its own tenant's secrets.
-  const deployBundle: Record<string, string> = {};
-  const rawBundle = process.env.TOM_SECRETS;
-  if (rawBundle) {
-    const parsed = Schema.decodeUnknownOption(TomSecretsSchema)(rawBundle);
-    if (Option.isSome(parsed)) Object.assign(deployBundle, parsed.value);
-  }
-
-  // Admin allowlists come from deploy-time env or the bundle — never from
-  // code. Fail closed on empty: the Tom worker falls back to the shared
-  // CMS_ADMIN_EMAILS bundle key, while Sophie requires its own key and
-  // never inherits Tom's.
-  const tomAdminEmails = yield* requireAdminEmails(
-    "TOM_CMS_ADMIN_EMAILS",
-    process.env.TOM_CMS_ADMIN_EMAILS ??
-      deployBundle.TOM_CMS_ADMIN_EMAILS ??
-      deployBundle.CMS_ADMIN_EMAILS,
-  );
-  const sophieAdminEmails = yield* requireAdminEmails(
-    "SOPHIE_CMS_ADMIN_EMAILS",
-    process.env.SOPHIE_CMS_ADMIN_EMAILS ?? deployBundle.SOPHIE_CMS_ADMIN_EMAILS,
-  );
-  // Google OAuth for the Sophie worker resolves here (not from the shared
-  // binding at runtime): the Secrets Store value is opaque and unreadable,
-  // so explicit env is the only way to guarantee the deployed worker sees
-  // the current keys.
-  const sophieGoogleClientId = yield* requireBundleSecret(
-    "GOOGLE_CLIENT_ID",
-    process.env.GOOGLE_CLIENT_ID ?? deployBundle.GOOGLE_CLIENT_ID,
-  );
-  const sophieGoogleClientSecret = yield* requireBundleSecret(
-    "GOOGLE_CLIENT_SECRET",
-    process.env.GOOGLE_CLIENT_SECRET ?? deployBundle.GOOGLE_CLIENT_SECRET,
-  );
-
-  // Per-tenant OAuth isolation: the Sophie worker must not receive
-  // GITHUB_* keys and the Tom worker must not receive GOOGLE_* keys. The
-  // dev split (plain vars under `alchemy dev`) strips the other tenant's
-  // keys here; in production the shared bundle rides the TOM_SECRETS
-  // binding and CMS_AUTH_PROVIDERS enforces the allowlist at runtime
-  // (createAuthFromEnv), so a stray key can never enable the wrong
-  // provider on either path. Per-tenant secrets (TOM_*/SOPHIE_*) resolve
-  // under the shared name with fallback to the shared value, so existing
-  // deploys keep working until the distinct keys are set.
-  const tomDevSecrets: Record<string, string> = isAlchemyDev
-    ? {
-        ...stripKeys(deployBundle, [
-          "GOOGLE_CLIENT_ID",
-          "GOOGLE_CLIENT_SECRET",
-          ...TENANT_BUNDLE_KEYS,
-        ]),
-        ...devSecretOverride("BETTER_AUTH_SECRET", deployBundle.TOM_BETTER_AUTH_SECRET),
-        ...devSecretOverride("INTERNAL_API_TOKEN", deployBundle.TOM_INTERNAL_API_TOKEN),
-      }
-    : {};
-  const sophieDevSecrets: Record<string, string> = isAlchemyDev
-    ? {
-        ...stripKeys(deployBundle, [
-          "GITHUB_CLIENT_ID",
-          "GITHUB_CLIENT_SECRET",
-          ...TENANT_BUNDLE_KEYS,
-        ]),
-        ...devSecretOverride("BETTER_AUTH_SECRET", deployBundle.SOPHIE_BETTER_AUTH_SECRET),
-        ...devSecretOverride("INTERNAL_API_TOKEN", deployBundle.SOPHIE_INTERNAL_API_TOKEN),
-      }
-    : {};
+  const {
+    tomDevSecrets,
+    sophieDevSecrets,
+    tomAdminEmails,
+    sophieAdminEmails,
+    sophieGoogleClientId,
+    sophieGoogleClientSecret,
+  } = yield* resolveDeploySecrets(isAlchemyDev);
 
   // The Axiom ingest token is minted by the shared stack (production only);
   // reference it there instead of re-registering, which would fight over

@@ -2,18 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { For, merge, omit } from "solid-js";
 import { cn } from "../../utils/cn";
 
-export const TOMUI_MENUBAR_VARIANTS = {} as const;
-
-export const TOMUI_MENUBAR_DEFAULT_VARIANTS = {} as const;
-
-export interface TomuiMenuBarVariantsProps {}
-
-export function menuBarVariants(_props: TomuiMenuBarVariantsProps = {}): string {
-  return cn(
-    "flex rounded-lg border border-tomui-recessed bg-tomui-recessed pl-px shadow-xs transition-colors",
-  );
-}
-
 export type MenuOptionProps = {
   icon: JSX.Element;
   id?: number | string;

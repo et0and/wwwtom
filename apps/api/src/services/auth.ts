@@ -174,11 +174,6 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
   });
 });
 
-export type AuthSession = {
-  readonly user: Auth["$Infer"]["Session"]["user"];
-  readonly session: Auth["$Infer"]["Session"]["session"];
-};
-
 /** Load the Better Auth session for request headers; 401 when absent. */
 export const requireSession = Effect.fn("Auth.requireSession")(function* (
   auth: Auth,

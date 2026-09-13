@@ -5,5 +5,3 @@ import { Schema } from "effect";
  * Secrets Store. Every value must be a string.
  */
 export const TomSecretsSchema = Schema.fromJsonString(Schema.Record(Schema.String, Schema.String));
-
-export type TomSecrets = Schema.Schema.Type<typeof TomSecretsSchema>;

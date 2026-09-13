@@ -40,26 +40,6 @@ export const TOMUI_INPUT_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-export const TOMUI_INPUT_STYLING = {
-  dimensions: {
-    xs: { height: 20, paddingX: 6, fontSize: 12, borderRadius: 2, width: 160 },
-    sm: { height: 26, paddingX: 8, fontSize: 12, borderRadius: 6, width: 200 },
-    base: { height: 36, paddingX: 12, fontSize: 16, borderRadius: 8, width: 280 },
-    lg: { height: 40, paddingX: 16, fontSize: 16, borderRadius: 8, width: 320 },
-  },
-  baseTokens: {
-    background: "color-secondary",
-    text: "text-color-surface",
-    placeholder: "text-color-muted",
-    ring: "color-border",
-  },
-  stateTokens: {
-    focus: { ring: "color-active" },
-    error: { ring: "color-error" },
-    disabled: { opacity: 0.5, text: "text-color-muted" },
-  },
-} as const;
-
 export type TomuiInputSize = keyof typeof TOMUI_INPUT_VARIANTS.size;
 export type TomuiInputVariant = keyof typeof TOMUI_INPUT_VARIANTS.variant;
 

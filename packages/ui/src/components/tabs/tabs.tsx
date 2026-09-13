@@ -12,30 +12,6 @@ export const TOMUI_TABS_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export const TOMUI_TABS_STYLING = {
-  container: {
-    height: 34,
-    borderRadius: 8,
-    background: "color-accent",
-    padding: 1,
-  },
-  tab: {
-    paddingX: 10,
-    verticalMargin: 1,
-    fontSize: 16,
-    fontWeight: 500,
-    borderRadius: 8,
-    activeColor: "text-color-surface",
-    inactiveColor: "text-color-label",
-  },
-  indicator: {
-    background: "color-surface-secondary",
-    ring: "color-color-2",
-    borderRadius: 6,
-    shadow: "shadow-sm",
-  },
-} as const;
-
 export interface TabsLabels {
   scrollStart?: string;
   scrollEnd?: string;

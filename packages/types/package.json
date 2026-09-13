@@ -7,8 +7,7 @@
     "./customer": "./src/customer.ts",
     "./db": "./src/db.ts",
     "./errors": "./src/errors.ts",
-    "./product": "./src/product.ts",
-    "./search": "./src/search.ts"
+    "./product": "./src/product.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

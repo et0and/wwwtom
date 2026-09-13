@@ -5,8 +5,6 @@ const AlertLinkSchema = Schema.Struct({
   url: Schema.String,
 });
 
-export const alertLinkSchema = AlertLinkSchema;
-
 export type AlertLink = Schema.Schema.Type<typeof AlertLinkSchema>;
 
 /**
@@ -25,8 +23,6 @@ const ErrorAlertDetailsSchema = Schema.Struct({
   userId: Schema.optional(Schema.String),
   links: Schema.optional(Schema.Array(AlertLinkSchema)),
 });
-
-export const errorAlertDetailsSchema = ErrorAlertDetailsSchema;
 
 export type ErrorAlertDetails = Schema.Schema.Type<typeof ErrorAlertDetailsSchema>;
 
@@ -48,5 +44,3 @@ const TelegramSendResponseSchema = Schema.Struct({
 });
 
 export const telegramSendResponseSchema = TelegramSendResponseSchema;
-
-export type TelegramSendResponse = Schema.Schema.Type<typeof TelegramSendResponseSchema>;
