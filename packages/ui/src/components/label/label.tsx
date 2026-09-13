@@ -2,10 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import { cn } from "../../utils/cn";
 
-export const TOMUI_LABEL_VARIANTS = {} as const;
-
-export const TOMUI_LABEL_DEFAULT_VARIANTS = {} as const;
-
 export interface TomuiLabelVariantsProps {}
 
 export function labelVariants(_props: TomuiLabelVariantsProps = {}): string {

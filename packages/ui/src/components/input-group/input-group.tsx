@@ -4,15 +4,6 @@ import { cn } from "../../utils/cn";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 import { inputVariants, type TomuiInputSize } from "../input/input";
 
-export const TOMUI_INPUT_GROUP_VARIANTS = {
-  size: {
-    xs: { classes: "h-6 text-xs", description: "Extra small size." },
-    sm: { classes: "h-7 text-xs", description: "Small size." },
-    base: { classes: "h-9 text-base", description: "Default size." },
-    lg: { classes: "h-11 text-base", description: "Large size." },
-  },
-} as const;
-
 export const TOMUI_INPUT_GROUP_DEFAULT_VARIANTS = {
   size: "base",
 } as const;

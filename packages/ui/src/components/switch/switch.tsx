@@ -51,7 +51,6 @@ export function switchVariants(props: TomuiSwitchVariantsProps = {}): string {
   );
 }
 
-export type SwitchSize = TomuiSwitchSize;
 export type SwitchVariant = TomuiSwitchVariant;
 
 const SWITCH_TRACK = {

@@ -327,6 +327,16 @@ const proxyFile = (
   );
 };
 
+const writeRoute = async ({ request }: { request: Request }) => {
+  const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
+  return proxyWrite(request, apiUrl, adapterOrigin, token, context);
+};
+
+const authoredGetRoute = async ({ request }: { request: Request }) => {
+  const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
+  return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
+};
+
 const toFeedDoc = (post: CmsPost) => ({
   id: post.id,
   title: post.title,
@@ -548,27 +558,13 @@ export const cmsIntegration = new Elysia({ name: "cms" })
       detail: { description: "Get media metadata by id", tags: ["cms"] },
     },
   )
-  .get(
-    "/content/media",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "List media, newest first (session required)", tags: ["cms"] },
-    },
-  )
-  .get(
-    "/content/media/:id/usage",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: MediaParamsSchema,
-      detail: { description: "Posts and works using an asset (session required)", tags: ["cms"] },
-    },
-  )
+  .get("/content/media", authoredGetRoute, {
+    detail: { description: "List media, newest first (session required)", tags: ["cms"] },
+  })
+  .get("/content/media/:id/usage", authoredGetRoute, {
+    params: MediaParamsSchema,
+    detail: { description: "Posts and works using an asset (session required)", tags: ["cms"] },
+  })
   .get(
     "/content/media/:id/file",
     async ({ request }) => {
@@ -596,169 +592,57 @@ export const cmsIntegration = new Elysia({ name: "cms" })
       detail: { description: "Recent posts for feeds", tags: ["cms"] },
     },
   )
-  .post(
-    "/content/posts",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Create a post", tags: ["cms"] },
-    },
-  )
-  .put(
-    "/content/posts/:slug",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Update a post", tags: ["cms"] },
-    },
-  )
-  .delete(
-    "/content/posts/:slug",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Delete a post", tags: ["cms"] },
-    },
-  )
-  .get(
-    "/content/posts/:slug/revisions",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: SlugParamsSchema,
-      detail: { description: "List a post's revisions (session required)", tags: ["cms"] },
-    },
-  )
-  .get(
-    "/content/posts/:slug/revisions/:revId",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: RevisionParamsSchema,
-      detail: { description: "Get a post revision snapshot (session required)", tags: ["cms"] },
-    },
-  )
-  .post(
-    "/content/posts/:slug/restore",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: SlugParamsSchema,
-      detail: { description: "Restore a post revision", tags: ["cms"] },
-    },
-  )
-  .post(
-    "/content/works",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Create a work", tags: ["cms"] },
-    },
-  )
-  .put(
-    "/content/works/:slug",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Update a work", tags: ["cms"] },
-    },
-  )
-  .delete(
-    "/content/works/:slug",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Delete a work", tags: ["cms"] },
-    },
-  )
-  .get(
-    "/content/works/:slug/revisions",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: SlugParamsSchema,
-      detail: { description: "List a work's revisions (session required)", tags: ["cms"] },
-    },
-  )
-  .get(
-    "/content/works/:slug/revisions/:revId",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyAuthoredGet(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: RevisionParamsSchema,
-      detail: { description: "Get a work revision snapshot (session required)", tags: ["cms"] },
-    },
-  )
-  .post(
-    "/content/works/:slug/restore",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      params: SlugParamsSchema,
-      detail: { description: "Restore a work revision", tags: ["cms"] },
-    },
-  )
-  .post(
-    "/content/categories",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Create a category", tags: ["cms"] },
-    },
-  )
-  .delete(
-    "/content/categories/:slug",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Delete a category", tags: ["cms"] },
-    },
-  )
-  .post(
-    "/content/media",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Upload media", tags: ["cms"] },
-    },
-  )
-  .delete(
-    "/content/media/:id",
-    async ({ request }) => {
-      const { apiUrl, adapterOrigin, token, context } = await cmsApi(request);
-      return proxyWrite(request, apiUrl, adapterOrigin, token, context);
-    },
-    {
-      detail: { description: "Delete media", tags: ["cms"] },
-    },
-  );
+  .post("/content/posts", writeRoute, {
+    detail: { description: "Create a post", tags: ["cms"] },
+  })
+  .put("/content/posts/:slug", writeRoute, {
+    detail: { description: "Update a post", tags: ["cms"] },
+  })
+  .delete("/content/posts/:slug", writeRoute, {
+    detail: { description: "Delete a post", tags: ["cms"] },
+  })
+  .get("/content/posts/:slug/revisions", authoredGetRoute, {
+    params: SlugParamsSchema,
+    detail: { description: "List a post's revisions (session required)", tags: ["cms"] },
+  })
+  .get("/content/posts/:slug/revisions/:revId", authoredGetRoute, {
+    params: RevisionParamsSchema,
+    detail: { description: "Get a post revision snapshot (session required)", tags: ["cms"] },
+  })
+  .post("/content/posts/:slug/restore", writeRoute, {
+    params: SlugParamsSchema,
+    detail: { description: "Restore a post revision", tags: ["cms"] },
+  })
+  .post("/content/works", writeRoute, {
+    detail: { description: "Create a work", tags: ["cms"] },
+  })
+  .put("/content/works/:slug", writeRoute, {
+    detail: { description: "Update a work", tags: ["cms"] },
+  })
+  .delete("/content/works/:slug", writeRoute, {
+    detail: { description: "Delete a work", tags: ["cms"] },
+  })
+  .get("/content/works/:slug/revisions", authoredGetRoute, {
+    params: SlugParamsSchema,
+    detail: { description: "List a work's revisions (session required)", tags: ["cms"] },
+  })
+  .get("/content/works/:slug/revisions/:revId", authoredGetRoute, {
+    params: RevisionParamsSchema,
+    detail: { description: "Get a work revision snapshot (session required)", tags: ["cms"] },
+  })
+  .post("/content/works/:slug/restore", writeRoute, {
+    params: SlugParamsSchema,
+    detail: { description: "Restore a work revision", tags: ["cms"] },
+  })
+  .post("/content/categories", writeRoute, {
+    detail: { description: "Create a category", tags: ["cms"] },
+  })
+  .delete("/content/categories/:slug", writeRoute, {
+    detail: { description: "Delete a category", tags: ["cms"] },
+  })
+  .post("/content/media", writeRoute, {
+    detail: { description: "Upload media", tags: ["cms"] },
+  })
+  .delete("/content/media/:id", writeRoute, {
+    detail: { description: "Delete media", tags: ["cms"] },
+  });

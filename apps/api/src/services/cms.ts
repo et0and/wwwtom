@@ -17,19 +17,13 @@ import type {
   CmsCategory,
   CmsCategoryInput,
   CmsListResponse,
-  CmsMedia,
   CmsMediaId,
   CmsPaging,
-  CmsPost,
   CmsPostInput,
-  CmsPostSummary,
   CmsRevisionEntity,
-  CmsRevisionMeta,
   CmsRevisionSnapshot,
   CmsStatusFilter,
-  CmsWork,
   CmsWorkInput,
-  CmsWorkSummary,
   TiptapDoc,
 } from "@tom/schemas/cms";
 import { CmsError } from "@tom/types/errors";
@@ -644,25 +638,36 @@ export const listCategories = Effect.fn("CmsService.listCategories")(function* (
   );
 });
 
-export const getMediaById = Effect.fn("CmsService.getMediaById")(function* (
+const MEDIA_COLUMNS =
+  "id, key, mime, width, height, alt, caption, variants_json, created_at, updated_at";
+
+/** Load a media row by id, failing the operation with 404 when absent. */
+const requireMediaRow = Effect.fn("CmsService.requireMediaRow")(function* (
   db: CmsD1Binding,
   id: string,
+  operation: string,
 ) {
   const row = yield* queryFirst<MediaRow>(
     db,
-    "SELECT id, key, mime, width, height, alt, caption, variants_json, " +
-      "created_at, updated_at FROM media WHERE id = ? LIMIT 1",
+    `SELECT ${MEDIA_COLUMNS} FROM media WHERE id = ? LIMIT 1`,
     [id],
-    "get_media",
+    operation,
   );
   if (!row) {
     return yield* new CmsError({
       message: `Media not found: ${id}`,
       status: HttpStatus.NotFound,
-      operation: "get_media",
+      operation,
     });
   }
-  return yield* toMedia(row);
+  return row;
+});
+
+export const getMediaById = Effect.fn("CmsService.getMediaById")(function* (
+  db: CmsD1Binding,
+  id: string,
+) {
+  return yield* toMedia(yield* requireMediaRow(db, id, "get_media"));
 });
 
 export const listMedia = Effect.fn("CmsService.listMedia")(function* (
@@ -673,8 +678,7 @@ export const listMedia = Effect.fn("CmsService.listMedia")(function* (
   const [rows, countRow] = yield* Effect.all([
     queryAll<MediaRow>(
       db,
-      "SELECT id, key, mime, width, height, alt, caption, variants_json, " +
-        "created_at, updated_at FROM media ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?",
+      `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`,
       [limit, offset],
       "list_media",
     ),
@@ -724,38 +728,13 @@ export const getMediaUsage = Effect.fn("CmsService.getMediaUsage")(function* (
   db: CmsD1Binding,
   id: string,
 ) {
-  const media = yield* queryFirst<MediaRow>(
-    db,
-    "SELECT id FROM media WHERE id = ? LIMIT 1",
-    [id],
-    "get_media_usage",
-  );
-  if (!media) {
-    return yield* new CmsError({
-      message: `Media not found: ${id}`,
-      status: HttpStatus.NotFound,
-      operation: "get_media_usage",
-    });
-  }
+  yield* requireMediaRow(db, id, "get_media_usage");
   const [posts, works] = yield* Effect.all([
     usageRefs(db, "posts", id, "get_media_usage"),
     usageRefs(db, "works", id, "get_media_usage"),
   ]);
   return { posts, works };
 });
-
-export type {
-  CmsCategory,
-  CmsListResponse,
-  CmsMedia,
-  CmsPost,
-  CmsPostSummary,
-  CmsRevisionEntity,
-  CmsRevisionMeta,
-  CmsRevisionSnapshot,
-  CmsWork,
-  CmsWorkSummary,
-};
 
 export type MediaUpload = {
   readonly name: string;
@@ -1061,14 +1040,15 @@ export const restoreRevision = Effect.fn("CmsService.restoreRevision")(function*
   return yield* updateWork(db, slug, snapshot, actor, adapterUrl);
 });
 
-const insertPostRow = (
+const insertDocRow = (
   db: CmsD1Binding,
+  table: "posts" | "works",
   row: PostRow,
   operation: string,
 ): Effect.Effect<void, CmsError> =>
   runStatement(
     db,
-    "INSERT INTO posts (id, slug, title, summary, content_json, html, status, " +
+    `INSERT INTO ${table} (id, slug, title, summary, content_json, html, status, ` +
       "published_at, hero_media_id, meta_title, meta_description, meta_image, " +
       "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -1090,19 +1070,18 @@ const insertPostRow = (
     operation,
   );
 
-const insertWorkRow = (
+const updateDocRow = (
   db: CmsD1Binding,
-  row: WorkRow,
+  table: "posts" | "works",
+  row: PostRow,
   operation: string,
 ): Effect.Effect<void, CmsError> =>
   runStatement(
     db,
-    "INSERT INTO works (id, slug, title, summary, content_json, html, status, " +
-      "published_at, hero_media_id, meta_title, meta_description, meta_image, " +
-      "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    `UPDATE ${table} SET title = ?, summary = ?, content_json = ?, html = ?, status = ?, ` +
+      "published_at = ?, hero_media_id = ?, meta_title = ?, meta_description = ?, " +
+      "meta_image = ?, updated_at = ? WHERE id = ?",
     [
-      row.id,
-      row.slug,
       row.title,
       row.summary,
       row.content_json,
@@ -1113,8 +1092,8 @@ const insertWorkRow = (
       row.meta_title,
       row.meta_description,
       row.meta_image,
-      row.created_at,
       row.updated_at,
+      row.id,
     ],
     operation,
   );
@@ -1160,7 +1139,7 @@ export const createPost = Effect.fn("CmsService.createPost")(function* (
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
-  yield* insertPostRow(db, toPostRow(input, html, id, now, now), "create_post");
+  yield* insertDocRow(db, "posts", toPostRow(input, html, id, now, now), "create_post");
   yield* replacePostCategories(db, id, input.categoryIds, "create_post");
   yield* recordRevision(db, "post", id, input, actor, "create_post");
   return yield* readPostById(db, id, "create_post");
@@ -1192,56 +1171,37 @@ export const updatePost = Effect.fn("CmsService.updatePost")(function* (
   const now = new Date().toISOString();
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
   const row = toPostRow(input, html, existing.id, now, existing.created_at);
-  yield* runStatement(
-    db,
-    "UPDATE posts SET title = ?, summary = ?, content_json = ?, html = ?, status = ?, " +
-      "published_at = ?, hero_media_id = ?, meta_title = ?, meta_description = ?, " +
-      "meta_image = ?, updated_at = ? WHERE id = ?",
-    [
-      row.title,
-      row.summary,
-      row.content_json,
-      row.html,
-      row.status,
-      row.published_at,
-      row.hero_media_id,
-      row.meta_title,
-      row.meta_description,
-      row.meta_image,
-      row.updated_at,
-      row.id,
-    ],
-    "update_post",
-  );
+  yield* updateDocRow(db, "posts", row, "update_post");
   yield* replacePostCategories(db, row.id, input.categoryIds, "update_post");
   yield* recordRevision(db, "post", row.id, input, actor, "update_post");
   return yield* readPostById(db, row.id, "update_post");
+});
+
+/** Delete a row by slug, failing the operation with 404 when absent. */
+const deleteRowBySlug = Effect.fn("CmsService.deleteRowBySlug")(function* (
+  db: CmsD1Binding,
+  table: "posts" | "works" | "categories",
+  label: string,
+  slug: string,
+  operation: string,
+) {
+  const existing = yield* findRowBySlug<{ id: string }>(db, table, slug, operation);
+  if (!existing) {
+    return yield* new CmsError({
+      message: `${label} not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  yield* runStatement(db, `DELETE FROM ${table} WHERE id = ?`, [existing.id], operation);
+  return { id: existing.id };
 });
 
 export const deletePost = Effect.fn("CmsService.deletePost")(function* (
   db: CmsD1Binding,
   slug: string,
 ) {
-  const existing = yield* findRowBySlug<PostRow>(db, "posts", slug, "delete_post");
-  if (!existing) {
-    return yield* new CmsError({
-      message: `Post not found: ${slug}`,
-      status: HttpStatus.NotFound,
-      operation: "delete_post",
-    });
-  }
-  yield* runStatement(db, "DELETE FROM posts WHERE id = ?", [existing.id], "delete_post");
-  return { id: existing.id };
-});
-
-const toWorkRow = (
-  input: CmsWorkInput,
-  html: string,
-  id: string,
-  now: string,
-  createdAt: string,
-): WorkRow => ({
-  ...toPostRow(input, html, id, now, createdAt),
+  return yield* deleteRowBySlug(db, "posts", "Post", slug, "delete_post");
 });
 
 export const createWork = Effect.fn("CmsService.createWork")(function* (
@@ -1262,7 +1222,7 @@ export const createWork = Effect.fn("CmsService.createWork")(function* (
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
-  yield* insertWorkRow(db, toWorkRow(input, html, id, now, now), "create_work");
+  yield* insertDocRow(db, "works", toPostRow(input, html, id, now, now), "create_work");
   yield* recordRevision(db, "work", id, input, actor, "create_work");
   return yield* readWorkById(db, id, "create_work");
 });
@@ -1292,28 +1252,8 @@ export const updateWork = Effect.fn("CmsService.updateWork")(function* (
   }
   const now = new Date().toISOString();
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
-  const row = toWorkRow(input, html, existing.id, now, existing.created_at);
-  yield* runStatement(
-    db,
-    "UPDATE works SET title = ?, summary = ?, content_json = ?, html = ?, status = ?, " +
-      "published_at = ?, hero_media_id = ?, meta_title = ?, meta_description = ?, " +
-      "meta_image = ?, updated_at = ? WHERE id = ?",
-    [
-      row.title,
-      row.summary,
-      row.content_json,
-      row.html,
-      row.status,
-      row.published_at,
-      row.hero_media_id,
-      row.meta_title,
-      row.meta_description,
-      row.meta_image,
-      row.updated_at,
-      row.id,
-    ],
-    "update_work",
-  );
+  const row = toPostRow(input, html, existing.id, now, existing.created_at);
+  yield* updateDocRow(db, "works", row, "update_work");
   yield* recordRevision(db, "work", row.id, input, actor, "update_work");
   return yield* readWorkById(db, row.id, "update_work");
 });
@@ -1322,16 +1262,7 @@ export const deleteWork = Effect.fn("CmsService.deleteWork")(function* (
   db: CmsD1Binding,
   slug: string,
 ) {
-  const existing = yield* findRowBySlug<WorkRow>(db, "works", slug, "delete_work");
-  if (!existing) {
-    return yield* new CmsError({
-      message: `Work not found: ${slug}`,
-      status: HttpStatus.NotFound,
-      operation: "delete_work",
-    });
-  }
-  yield* runStatement(db, "DELETE FROM works WHERE id = ?", [existing.id], "delete_work");
-  return { id: existing.id };
+  return yield* deleteRowBySlug(db, "works", "Work", slug, "delete_work");
 });
 
 export const createCategory = Effect.fn("CmsService.createCategory")(function* (
@@ -1365,16 +1296,7 @@ export const deleteCategory = Effect.fn("CmsService.deleteCategory")(function* (
   db: CmsD1Binding,
   slug: string,
 ) {
-  const existing = yield* findRowBySlug<{ id: string }>(db, "categories", slug, "delete_category");
-  if (!existing) {
-    return yield* new CmsError({
-      message: `Category not found: ${slug}`,
-      status: HttpStatus.NotFound,
-      operation: "delete_category",
-    });
-  }
-  yield* runStatement(db, "DELETE FROM categories WHERE id = ?", [existing.id], "delete_category");
-  return { id: existing.id };
+  return yield* deleteRowBySlug(db, "categories", "Category", slug, "delete_category");
 });
 
 export const createMedia = Effect.fn("CmsService.createMedia")(function* (
@@ -1404,8 +1326,7 @@ export const createMedia = Effect.fn("CmsService.createMedia")(function* (
   );
   const row = yield* queryFirst<MediaRow>(
     db,
-    "SELECT id, key, mime, width, height, alt, caption, variants_json, " +
-      "created_at, updated_at FROM media WHERE id = ? LIMIT 1",
+    `SELECT ${MEDIA_COLUMNS} FROM media WHERE id = ? LIMIT 1`,
     [id],
     "create_media",
   );
@@ -1424,20 +1345,7 @@ export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
   r2: CmsR2Binding,
   id: string,
 ) {
-  const row = yield* queryFirst<MediaRow>(
-    db,
-    "SELECT id, key, mime, width, height, alt, caption, variants_json, " +
-      "created_at, updated_at FROM media WHERE id = ? LIMIT 1",
-    [id],
-    "delete_media",
-  );
-  if (!row) {
-    return yield* new CmsError({
-      message: `Media not found: ${id}`,
-      status: HttpStatus.NotFound,
-      operation: "delete_media",
-    });
-  }
+  const row = yield* requireMediaRow(db, id, "delete_media");
   // Never orphan published content: the editor checks usage first, and
   // the service enforces it so direct API calls cannot break posts/works.
   const usage = yield* getMediaUsage(db, id);
@@ -1470,20 +1378,7 @@ export const getMediaFile = Effect.fn("CmsService.getMediaFile")(function* (
   r2: CmsR2Binding,
   id: string,
 ) {
-  const row = yield* queryFirst<MediaRow>(
-    db,
-    "SELECT id, key, mime, width, height, alt, caption, variants_json, " +
-      "created_at, updated_at FROM media WHERE id = ? LIMIT 1",
-    [id],
-    "get_media_file",
-  );
-  if (!row) {
-    return yield* new CmsError({
-      message: `Media not found: ${id}`,
-      status: HttpStatus.NotFound,
-      operation: "get_media_file",
-    });
-  }
+  const row = yield* requireMediaRow(db, id, "get_media_file");
   const object = yield* Effect.tryPromise({
     try: () => r2.get(row.key),
     catch: (cause) =>

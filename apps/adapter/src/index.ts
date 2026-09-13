@@ -26,7 +26,7 @@ import { arenaIntegration } from "./integrations/arena";
 import { authIntegration } from "./integrations/auth";
 import { cmsIntegration } from "./integrations/cms";
 import { polarIntegration } from "./integrations/polar";
-import { guestbookIntegration, userCookieSchema } from "./integrations/guestbook";
+import { guestbookIntegration, guestbookUserFromCookie } from "./integrations/guestbook";
 import { githubIntegration } from "./integrations/github";
 import { imageIntegration } from "./integrations/image";
 import { ogIntegration } from "./integrations/og";
@@ -77,17 +77,11 @@ export const app = new Elysia({
     }
 
     const guestbookSession = cookie.guestbook_session?.value;
-    const userJson = Option.getOrElse(
-      Schema.decodeUnknownOption(Schema.String)(cookie.guestbook_user?.value),
-      () => JSON.stringify(cookie.guestbook_user?.value),
+    const guestbookUser = guestbookUserFromCookie(
+      Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Json)(cookie.guestbook_user?.value)),
     );
-    const userId = Option.getOrElse(
-      Option.map(
-        Schema.decodeUnknownOption(userCookieSchema)(userJson),
-        (user) => `${user.username}@${user.instance}`,
-      ),
-      () => undefined,
-    );
+    const userId =
+      guestbookUser === null ? undefined : `${guestbookUser.username}@${guestbookUser.instance}`;
     const otel = await otelConfigFromEnv(env);
     attachRequestContext(request, {
       requestId,

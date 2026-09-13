@@ -27,94 +27,45 @@ const signedInRequest = (url: string, init: RequestInit = {}) =>
 const postJson = (url: string, body: Record<string, string>) =>
   signedInRequest(url, { method: "POST", body: JSON.stringify(body) });
 
+const expectValidationProblem = async (
+  path: string,
+  body: Record<string, string>,
+  title: string,
+): Promise<void> => {
+  const response = await app.fetch(postJson(`http://localhost${path}`, body));
+  expect(response.status).toBe(400);
+  expect(await response.json()).toEqual({
+    type: "https://errors.tom.so/validation",
+    status: 400,
+    title,
+    instance: `http://localhost${path}`,
+  });
+};
+
+const PROFANITY_TITLE = "Your message contains profanity. Please keep it clean!";
+const HANDLE_TITLE =
+  "Invalid fediverse handle format. Use: user@instance.social (without the leading @)";
+
 describe("guestbook flow error mapping", () => {
-  it("maps a profanity failure to a 400 validation problem", async () => {
-    const response = await app.fetch(
-      postJson("http://localhost/guestbook/sign", { message: "fuck" }),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Your message contains profanity. Please keep it clean!",
-      instance: "http://localhost/guestbook/sign",
-    });
+  it.each([
+    { label: "plain", message: "fuck" },
+    { label: "mixed in", message: "well fuck!" },
+  ])("maps $label profanity to a 400 validation problem", async ({ message }) => {
+    await expectValidationProblem("/guestbook/sign", { message }, PROFANITY_TITLE);
   });
 
-  it("rejects tricky profanity with 400", async () => {
-    const response = await app.fetch(
-      postJson("http://localhost/guestbook/sign", { message: "well fuck!" }),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Your message contains profanity. Please keep it clean!",
-      instance: "http://localhost/guestbook/sign",
-    });
-  });
+  it.each(["not-a-handle", "a@b@c", "tom@"])(
+    "rejects handle %s with a 400 validation problem",
+    async (handle) => {
+      await expectValidationProblem("/guestbook/auth/initiate", { handle }, HANDLE_TITLE);
+    },
+  );
 
-  it("maps a missing sign message to a 400 validation problem naming the field", async () => {
-    const response = await app.fetch(postJson("http://localhost/guestbook/sign", { message: "" }));
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Missing required field: message",
-      instance: "http://localhost/guestbook/sign",
-    });
-  });
-
-  it("maps an invalid fediverse handle to a 400 validation problem", async () => {
-    const response = await app.fetch(
-      postJson("http://localhost/guestbook/auth/initiate", { handle: "not-a-handle" }),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
-      instance: "http://localhost/guestbook/auth/initiate",
-    });
-  });
-
-  it("maps a missing handle to a 400 validation problem", async () => {
-    const response = await app.fetch(
-      postJson("http://localhost/guestbook/auth/initiate", { handle: "" }),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Missing field: handle",
-      instance: "http://localhost/guestbook/auth/initiate",
-    });
-  });
-
-  it("rejects a handle with extra parts with 400", async () => {
-    const response = await app.fetch(
-      postJson("http://localhost/guestbook/auth/initiate", { handle: "a@b@c" }),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
-      instance: "http://localhost/guestbook/auth/initiate",
-    });
-  });
-
-  it("rejects a handle with no instance with 400", async () => {
-    const response = await app.fetch(
-      postJson("http://localhost/guestbook/auth/initiate", { handle: "tom@" }),
-    );
-    expect(response.status).toBe(400);
-    expect(await response.json()).toEqual({
-      type: "https://errors.tom.so/validation",
-      status: 400,
-      title: "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
-      instance: "http://localhost/guestbook/auth/initiate",
-    });
+  it.each([
+    ["/guestbook/sign", { message: "" }, "Missing required field: message"],
+    ["/guestbook/auth/initiate", { handle: "" }, "Missing field: handle"],
+  ])("maps a missing field on %s to a 400 problem", async (path, body, title) => {
+    await expectValidationProblem(path, body, title);
   });
 
   it("rejects a sign without a signed-in user as 401 unauthorized", async () => {

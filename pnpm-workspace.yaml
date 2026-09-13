@@ -39,10 +39,6 @@ catalog:
   "@tiptap/pm": 3.31.3
   classnames: 2.5.1
   obscenity: 0.4.5
-  react: 19.2.1
-  react-dom: 19.2.1
-  "@types/react": 19.2.9
-  "@types/react-dom": 19.2.3
   postcss: 8.5.8
   eslint: 9.39.2
   "@playwright/test": 1.58.2

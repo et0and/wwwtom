@@ -16,8 +16,6 @@ export const TOMUI_LAYER_CARD_VARIANTS = {
   // LayerCard currently has no variant options but structure is ready for future additions
 } as const;
 
-export const TOMUI_LAYER_CARD_DEFAULT_VARIANTS = {} as const;
-
 // Derived types from TOMUI_LAYER_CARD_VARIANTS
 export interface TomuiLayerCardVariantsProps {}
 
