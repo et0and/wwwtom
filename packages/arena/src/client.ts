@@ -155,8 +155,6 @@ function mapArenaError(cause: unknown): HttpError {
 type ContentsQuery = NonNullable<Parameters<Arena["channels"]["contents"]>[1]>;
 type ChannelConnections = Awaited<ReturnType<Arena["channels"]["connections"]>>;
 type ConnectionsQuery = NonNullable<Parameters<Arena["channels"]["connections"]>[1]>;
-type BlockConnectionsQuery = NonNullable<Parameters<Arena["blocks"]["connections"]>[1]>;
-type BlockCommentsQuery = NonNullable<Parameters<Arena["blocks"]["comments"]>[1]>;
 type SearchQuery = NonNullable<Parameters<Arena["search"]["query"]>[0]>;
 
 interface PageParams {
@@ -172,75 +170,55 @@ const pageParams = (options: PaginationAttributes | undefined): PageParams => {
   };
 };
 
-const toContentsSort = (sort?: string, direction?: string): ContentsQuery["sort"] => {
-  const combined = formatSort(sort, direction);
-  if (
-    combined === "position_asc" ||
-    combined === "position_desc" ||
-    combined === "created_at_asc" ||
-    combined === "created_at_desc" ||
-    combined === "updated_at_asc" ||
-    combined === "updated_at_desc"
-  ) {
-    return combined;
-  }
-  return undefined;
+const pickSort = <const T extends readonly string[]>(
+  combined: string | undefined,
+  allowed: T,
+): T[number] | undefined => {
+  if (combined === undefined) return undefined;
+  return allowed.find((value) => value === combined);
 };
 
-const toConnectionsSort = (sort?: string, direction?: string): ConnectionsQuery["sort"] => {
-  const combined = formatSort(sort, direction);
-  if (combined === "created_at_asc" || combined === "created_at_desc") return combined;
-  return undefined;
+const toContentsSort = (sort?: string, direction?: string): ContentsQuery["sort"] =>
+  pickSort(formatSort(sort, direction), [
+    "position_asc",
+    "position_desc",
+    "created_at_asc",
+    "created_at_desc",
+    "updated_at_asc",
+    "updated_at_desc",
+  ]);
+
+const toConnectionsSort = (sort?: string, direction?: string): ConnectionsQuery["sort"] =>
+  pickSort(formatSort(sort, direction), ["created_at_asc", "created_at_desc"]);
+
+const toSearchSort = (sort?: string, direction?: string): SearchQuery["sort"] =>
+  pickSort(formatSort(sort, direction), [
+    "score_desc",
+    "created_at_asc",
+    "created_at_desc",
+    "updated_at_asc",
+    "updated_at_desc",
+    "name_asc",
+    "name_desc",
+    "connections_count_desc",
+  ]);
+
+const withSort = <TSort extends string>(
+  options: PaginationAttributes | undefined,
+  pick: (sort?: string, direction?: string) => TSort | undefined,
+): PageParams & { sort?: TSort } => {
+  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const result: PageParams & { sort?: TSort } = { ...pageParams(options) };
+  const picked = pick(sort, direction);
+  if (picked !== undefined) result.sort = picked;
+  return result;
 };
 
-const toSearchSort = (sort?: string, direction?: string): SearchQuery["sort"] => {
-  const combined = formatSort(sort, direction);
-  if (
-    combined === "score_desc" ||
-    combined === "created_at_asc" ||
-    combined === "created_at_desc" ||
-    combined === "updated_at_asc" ||
-    combined === "updated_at_desc" ||
-    combined === "name_asc" ||
-    combined === "name_desc" ||
-    combined === "connections_count_desc"
-  ) {
-    return combined;
-  }
-  return undefined;
-};
+const toContentsQuery = (options: PaginationAttributes | undefined): ContentsQuery =>
+  withSort(options, toContentsSort);
 
-function toContentsQuery(options: PaginationAttributes | undefined): ContentsQuery {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
-  const result: ContentsQuery = { ...pageParams(options) };
-  const sortParam = toContentsSort(sort, direction);
-  if (sortParam !== undefined) result.sort = sortParam;
-  return result;
-}
-
-function toConnectionsQuery(options: PaginationAttributes | undefined): ConnectionsQuery {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
-  const result: ConnectionsQuery = { ...pageParams(options) };
-  const sortParam = toConnectionsSort(sort, direction);
-  if (sortParam !== undefined) result.sort = sortParam;
-  return result;
-}
-
-function toBlockConnectionsQuery(options: PaginationAttributes | undefined): BlockConnectionsQuery {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
-  const result: BlockConnectionsQuery = { ...pageParams(options) };
-  const sortParam = toConnectionsSort(sort, direction);
-  if (sortParam !== undefined) result.sort = sortParam;
-  return result;
-}
-
-function toBlockCommentsQuery(options: PaginationAttributes | undefined): BlockCommentsQuery {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
-  const result: BlockCommentsQuery = { ...pageParams(options) };
-  const sortParam = toConnectionsSort(sort, direction);
-  if (sortParam !== undefined) result.sort = sortParam;
-  return result;
-}
+const toConnectionsQuery = (options: PaginationAttributes | undefined): ConnectionsQuery =>
+  withSort(options, toConnectionsSort);
 
 function toSdkSearchQuery(
   query: string,
@@ -417,7 +395,7 @@ export class ArenaClient implements ArenaApi {
       delete: (): Effect.Effect<void, HttpError> =>
         sdkEffect<void>(() => this.arena.channels.delete(slug)),
       thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
-        this.getJson(`channels/${slug}/thumb`),
+        this.makeRequest<GetChannelThumbApiResponse>(`channels/${slug}/thumb`),
     };
   }
 
@@ -427,7 +405,7 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockChannelsApiResponse, HttpError> =>
         sdkEffect<GetBlockChannelsApiResponse>(() =>
-          this.arena.blocks.connections(id, toBlockConnectionsQuery(options)),
+          this.arena.blocks.connections(id, toConnectionsQuery(options)),
         ),
       get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
         sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
@@ -441,7 +419,7 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<GetBlockCommentApiResponse, HttpError> =>
         sdkEffect<GetBlockCommentApiResponse>(() =>
-          this.arena.blocks.comments(id, toBlockCommentsQuery(options)),
+          this.arena.blocks.comments(id, toConnectionsQuery(options)),
         ),
     };
   }
@@ -484,7 +462,7 @@ export class ArenaClient implements ArenaApi {
     options?: PaginationAttributes,
   ): Effect.Effect<T, HttpError> {
     const qs = paginationQueryString(options, this.date);
-    return this.getJson<T>(`${url}?${qs}`);
+    return this.makeRequest<T>(`${url}?${qs}`);
   }
 
   private makeRequest<T>(endpoint: string): Effect.Effect<T, HttpError> {
@@ -537,9 +515,5 @@ export class ArenaClient implements ArenaApi {
 
       return json;
     });
-  }
-
-  private getJson<T>(endpoint: string): Effect.Effect<T, HttpError> {
-    return this.makeRequest<T>(endpoint);
   }
 }

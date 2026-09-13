@@ -32,6 +32,7 @@ import {
   updateWork,
 } from "../services/cms";
 import {
+  decodeBoundary,
   decodeMediaParams,
   decodePagingQuery,
   decodeSlugParams,
@@ -97,25 +98,6 @@ const failInput = (message: string, operation: string): Effect.Effect<never, Cms
       status: HttpStatus.BadRequest,
       operation,
     }),
-  );
-
-/** Decode a JSON write body at the route boundary. */
-const decodeInputBody = <A, I, B>(
-  schema: Schema.Codec<A, I>,
-  body: B,
-  message: string,
-  operation: string,
-): Effect.Effect<A, CmsError> =>
-  Schema.decodeUnknownEffect(schema)(body).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message,
-          status: HttpStatus.BadRequest,
-          operation,
-          cause,
-        }),
-    ),
   );
 
 // SVG is executable when served top-level, so it is never an upload
@@ -272,9 +254,6 @@ const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpl
     ),
   );
 
-const runWrites = <A>(effect: Effect.Effect<A, CmsError>, request: Request): Promise<A> =>
-  runEffect(effect, logContextFromRequest(request, "tom-api"));
-
 const withAuthor = <A>(
   request: Request,
   use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
@@ -303,17 +282,28 @@ const withWorksAuthor = <A>(
 ): Effect.Effect<A, CmsError> =>
   Effect.flatMap(requireWorksWritesAllowed(request), () => withAuthor(request, use));
 
+const writeAs = <A>(
+  request: Request,
+  use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
+): Promise<A> => runEffect(withAuthor(request, use), logContextFromRequest(request, "tom-api"));
+
+const writeWorksAs = <A>(
+  request: Request,
+  use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
+): Promise<A> =>
+  runEffect(withWorksAuthor(request, use), logContextFromRequest(request, "tom-api"));
+
 const decodePostInput = <B>(body: B, operation: string): Effect.Effect<CmsPostInput, CmsError> =>
-  decodeInputBody(CmsPostInputSchema, body, "Invalid post body", operation);
+  decodeBoundary(CmsPostInputSchema, body, "Invalid post body", operation);
 
 const decodeWorkInput = <B>(body: B, operation: string): Effect.Effect<CmsWorkInput, CmsError> =>
-  decodeInputBody(CmsWorkInputSchema, body, "Invalid work body", operation);
+  decodeBoundary(CmsWorkInputSchema, body, "Invalid work body", operation);
 
 const decodeCategoryInput = <B>(
   body: B,
   operation: string,
 ): Effect.Effect<CmsCategoryInput, CmsError> =>
-  decodeInputBody(CmsCategoryInputSchema, body, "Invalid category body", operation);
+  decodeBoundary(CmsCategoryInputSchema, body, "Invalid category body", operation);
 
 const CmsRevisionParamsSchema = Schema.Struct({ slug: Schema.String, revId: Schema.String });
 
@@ -338,188 +328,134 @@ const decodeRestoreInput = <B>(
   body: B,
   operation: string,
 ): Effect.Effect<{ readonly revisionId: string }, CmsError> =>
-  decodeInputBody(CmsRestoreInputSchema, body, "Invalid restore body", operation);
+  decodeBoundary(CmsRestoreInputSchema, body, "Invalid restore body", operation);
 
 export const cmsWriteRoutes = new Elysia({ name: "cms-writes" })
   .post("/posts", ({ body, request }) =>
-    runWrites(
-      withAuthor(request, ({ db, actor, adapterUrl }) =>
-        Effect.flatMap(decodePostInput(body, "create_post"), (input) =>
-          createPost(db, input, actor, adapterUrl),
-        ),
+    writeAs(request, ({ db, actor, adapterUrl }) =>
+      Effect.flatMap(decodePostInput(body, "create_post"), (input) =>
+        createPost(db, input, actor, adapterUrl),
       ),
-      request,
     ),
   )
   .put("/posts/:slug", ({ body, params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db, actor, adapterUrl }) =>
-        Effect.flatMap(decodeSlugParams(params, "update_post"), ({ slug }) =>
-          Effect.flatMap(decodePostInput(body, "update_post"), (input) =>
-            updatePost(db, slug, input, actor, adapterUrl),
-          ),
+    writeAs(request, ({ db, actor, adapterUrl }) =>
+      Effect.flatMap(decodeSlugParams(params, "update_post"), ({ slug }) =>
+        Effect.flatMap(decodePostInput(body, "update_post"), (input) =>
+          updatePost(db, slug, input, actor, adapterUrl),
         ),
       ),
-      request,
     ),
   )
   .delete("/posts/:slug", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeSlugParams(params, "delete_post"), ({ slug }) => deletePost(db, slug)),
-      ),
-      request,
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeSlugParams(params, "delete_post"), ({ slug }) => deletePost(db, slug)),
     ),
   )
   .post("/works", ({ body, request }) =>
-    runWrites(
-      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
-        Effect.flatMap(decodeWorkInput(body, "create_work"), (input) =>
-          createWork(db, input, actor, adapterUrl),
-        ),
+    writeWorksAs(request, ({ db, actor, adapterUrl }) =>
+      Effect.flatMap(decodeWorkInput(body, "create_work"), (input) =>
+        createWork(db, input, actor, adapterUrl),
       ),
-      request,
     ),
   )
   .put("/works/:slug", ({ body, params, request }) =>
-    runWrites(
-      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
-        Effect.flatMap(decodeSlugParams(params, "update_work"), ({ slug }) =>
-          Effect.flatMap(decodeWorkInput(body, "update_work"), (input) =>
-            updateWork(db, slug, input, actor, adapterUrl),
-          ),
+    writeWorksAs(request, ({ db, actor, adapterUrl }) =>
+      Effect.flatMap(decodeSlugParams(params, "update_work"), ({ slug }) =>
+        Effect.flatMap(decodeWorkInput(body, "update_work"), (input) =>
+          updateWork(db, slug, input, actor, adapterUrl),
         ),
       ),
-      request,
     ),
   )
   .delete("/works/:slug", ({ params, request }) =>
-    runWrites(
-      withWorksAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeSlugParams(params, "delete_work"), ({ slug }) => deleteWork(db, slug)),
-      ),
-      request,
+    writeWorksAs(request, ({ db }) =>
+      Effect.flatMap(decodeSlugParams(params, "delete_work"), ({ slug }) => deleteWork(db, slug)),
     ),
   )
   .get("/posts/:slug/revisions", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeSlugParams(params, "list_revisions"), ({ slug }) =>
-          listRevisions(db, "post", slug),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeSlugParams(params, "list_revisions"), ({ slug }) =>
+        listRevisions(db, "post", slug),
       ),
-      request,
     ),
   )
   .get("/posts/:slug/revisions/:revId", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeRevisionParams(params, "get_revision"), ({ slug, revId }) =>
-          getRevision(db, "post", slug, revId),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeRevisionParams(params, "get_revision"), ({ slug, revId }) =>
+        getRevision(db, "post", slug, revId),
       ),
-      request,
     ),
   )
   .post("/posts/:slug/restore", ({ body, params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db, actor, adapterUrl }) =>
-        Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
-          Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
-            restoreRevision(db, "post", slug, revisionId, actor, adapterUrl),
-          ),
+    writeAs(request, ({ db, actor, adapterUrl }) =>
+      Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
+        Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
+          restoreRevision(db, "post", slug, revisionId, actor, adapterUrl),
         ),
       ),
-      request,
     ),
   )
   .get("/works/:slug/revisions", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeSlugParams(params, "list_revisions"), ({ slug }) =>
-          listRevisions(db, "work", slug),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeSlugParams(params, "list_revisions"), ({ slug }) =>
+        listRevisions(db, "work", slug),
       ),
-      request,
     ),
   )
   .get("/works/:slug/revisions/:revId", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeRevisionParams(params, "get_revision"), ({ slug, revId }) =>
-          getRevision(db, "work", slug, revId),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeRevisionParams(params, "get_revision"), ({ slug, revId }) =>
+        getRevision(db, "work", slug, revId),
       ),
-      request,
     ),
   )
   .post("/works/:slug/restore", ({ body, params, request }) =>
-    runWrites(
-      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
-        Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
-          Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
-            restoreRevision(db, "work", slug, revisionId, actor, adapterUrl),
-          ),
+    writeWorksAs(request, ({ db, actor, adapterUrl }) =>
+      Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
+        Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
+          restoreRevision(db, "work", slug, revisionId, actor, adapterUrl),
         ),
       ),
-      request,
     ),
   )
   .post("/categories", ({ body, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeCategoryInput(body, "create_category"), (input) =>
-          createCategory(db, input),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeCategoryInput(body, "create_category"), (input) =>
+        createCategory(db, input),
       ),
-      request,
     ),
   )
   .delete("/categories/:slug", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeSlugParams(params, "delete_category"), ({ slug }) =>
-          deleteCategory(db, slug),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeSlugParams(params, "delete_category"), ({ slug }) =>
+        deleteCategory(db, slug),
       ),
-      request,
     ),
   )
   .post("/media", ({ body, request }) =>
-    runWrites(
-      withAuthor(request, ({ db, r2 }) =>
-        Effect.flatMap(decodeUploadBody(body, "create_media"), (upload) =>
-          createMedia(db, r2, upload),
-        ),
+    writeAs(request, ({ db, r2 }) =>
+      Effect.flatMap(decodeUploadBody(body, "create_media"), (upload) =>
+        createMedia(db, r2, upload),
       ),
-      request,
     ),
   )
   .delete("/media/:id", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db, r2 }) =>
-        Effect.flatMap(decodeMediaParams(params, "delete_media"), ({ id }) =>
-          deleteMedia(db, r2, id),
-        ),
+    writeAs(request, ({ db, r2 }) =>
+      Effect.flatMap(decodeMediaParams(params, "delete_media"), ({ id }) =>
+        deleteMedia(db, r2, id),
       ),
-      request,
     ),
   )
   .get("/media", ({ query, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodePagingQuery(query, "list_media"), (paging) => listMedia(db, paging)),
-      ),
-      request,
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodePagingQuery(query, "list_media"), (paging) => listMedia(db, paging)),
     ),
   )
   .get("/media/:id/usage", ({ params, request }) =>
-    runWrites(
-      withAuthor(request, ({ db }) =>
-        Effect.flatMap(decodeMediaParams(params, "get_media_usage"), ({ id }) =>
-          getMediaUsage(db, id),
-        ),
+    writeAs(request, ({ db }) =>
+      Effect.flatMap(decodeMediaParams(params, "get_media_usage"), ({ id }) =>
+        getMediaUsage(db, id),
       ),
-      request,
     ),
   );

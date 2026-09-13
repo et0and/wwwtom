@@ -1,31 +1,16 @@
 import { fireEvent, render } from "@solidjs/testing-library";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CmsPost, CmsWork } from "@tom/schemas/cms";
 import { HistoryPanel } from "../HistoryPanel";
+import { fetchMock, jsonResponse, tiptapDoc, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
+useFetchMock();
 
 beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
   vi.spyOn(window, "confirm").mockReturnValue(true);
 });
 
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
-
-const jsonResponse = <B,>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
-const doc = {
-  type: "doc",
-  content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }],
-};
+const doc = tiptapDoc("Hi");
 
 const metas = [
   { id: "rev-2", createdAt: "2026-09-05T10:00:00.000Z", actor: "gh@tomhackshaw.com", title: "V2" },

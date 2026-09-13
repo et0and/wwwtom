@@ -10,7 +10,6 @@ export const AccountFeaturesSchema = Schema.Struct({
   supportUserPermissions: Schema.optional(Schema.Boolean),
   supportMultipleContainers: Schema.optional(Schema.Boolean),
 });
-export type AccountFeatures = Schema.Schema.Type<typeof AccountFeaturesSchema>;
 
 export const ContainerFeaturesSchema = Schema.Struct({
   supportUserPermissions: Schema.optional(Schema.Boolean),
@@ -28,9 +27,7 @@ export const ContainerFeaturesSchema = Schema.Struct({
   supportZones: Schema.optional(Schema.Boolean),
   supportTransformations: Schema.optional(Schema.Boolean),
 });
-export type ContainerFeatures = Schema.Schema.Type<typeof ContainerFeaturesSchema>;
 
-export type ContainerUsageContext = "WEB" | "ANDROID" | "IOS" | (string & {});
 export const ContainerUsageContextSchema = Schema.String;
 
 // Account / Container / Workspace
@@ -145,25 +142,21 @@ export const ConditionSchema = Schema.Struct({
   type: Schema.String,
   parameter: Schema.Array(ParameterSchema),
 });
-export type Condition = Schema.Schema.Type<typeof ConditionSchema>;
 
 export const SetupTagSchema = Schema.Struct({
   tagName: Schema.String,
   stopOnSetupFailure: Schema.optional(Schema.Boolean),
 });
-export type SetupTag = Schema.Schema.Type<typeof SetupTagSchema>;
 
 export const TeardownTagSchema = Schema.Struct({
   tagName: Schema.String,
   stopTeardownOnFailure: Schema.optional(Schema.Boolean),
 });
-export type TeardownTag = Schema.Schema.Type<typeof TeardownTagSchema>;
 
 export const ConsentSettingsSchema = Schema.Struct({
   consentStatus: Schema.optional(Schema.Literals(["notSet", "notNeeded", "needed"])),
   consentType: Schema.optional(ParameterSchema),
 });
-export type ConsentSettings = Schema.Schema.Type<typeof ConsentSettingsSchema>;
 
 const tagWritableFields = {
   name: Schema.String,
@@ -229,7 +222,7 @@ const triggerWritableFields = {
   fingerprint: Schema.optional(Schema.String),
 };
 
-export const TriggerSchemaStruct = Schema.Struct({
+export const TriggerSchema = Schema.Struct({
   path: Schema.String,
   accountId: Schema.String,
   containerId: Schema.String,
@@ -238,8 +231,7 @@ export const TriggerSchemaStruct = Schema.Struct({
   ...triggerWritableFields,
   tagManagerUrl: Schema.optional(Schema.String),
 });
-export type Trigger = Schema.Schema.Type<typeof TriggerSchemaStruct>;
-export const TriggerSchema = TriggerSchemaStruct;
+export type Trigger = Schema.Schema.Type<typeof TriggerSchema>;
 
 export const TagDraftSchema = Schema.Struct(tagWritableFields);
 export type TagDraft = Schema.Schema.Type<typeof TagDraftSchema>;
@@ -272,7 +264,6 @@ export const VariableFormatValueSchema = Schema.Struct({
     Schema.Literals(["decimalSeparatorTypeUnspecified", "period", "comma", "automatic"]),
   ),
 });
-export type VariableFormatValue = Schema.Schema.Type<typeof VariableFormatValueSchema>;
 
 const variableWritableFields = {
   name: Schema.String,
@@ -402,14 +393,6 @@ export const GetWorkspaceStatusResponseSchema = Schema.Struct({
 });
 export type GetWorkspaceStatusResponse = Schema.Schema.Type<
   typeof GetWorkspaceStatusResponseSchema
->;
-
-export const ListContainerVersionsResponseSchema = Schema.Struct({
-  containerVersionHeader: Schema.optional(Schema.Array(ContainerVersionHeaderSchema)),
-  nextPageToken: Schema.optional(Schema.String),
-});
-export type ListContainerVersionsResponse = Schema.Schema.Type<
-  typeof ListContainerVersionsResponseSchema
 >;
 
 export const PublishContainerVersionResponseSchema = Schema.Struct({

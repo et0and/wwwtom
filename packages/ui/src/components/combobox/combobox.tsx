@@ -1,7 +1,6 @@
 import type { JSX } from "@solidjs/web";
 import {
   createContext,
-  createMemo,
   createSignal,
   For,
   merge,
@@ -14,12 +13,6 @@ import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
 export const TOMUI_COMBOBOX_VARIANTS = {
-  size: {
-    xs: { classes: "h-5 px-1.5 text-xs", description: "Extra small combobox" },
-    sm: { classes: "h-6.5 px-2 text-xs", description: "Small combobox" },
-    base: { classes: "h-9 px-3 text-base", description: "Default combobox" },
-    lg: { classes: "h-10 px-4 text-base", description: "Large combobox" },
-  },
   inputSide: {
     right: {
       classes: "",
@@ -33,15 +26,12 @@ export const TOMUI_COMBOBOX_VARIANTS = {
 } as const;
 
 export const TOMUI_COMBOBOX_DEFAULT_VARIANTS = {
-  size: "base",
   inputSide: "right",
 } as const;
 
-export type TomuiComboboxSize = keyof typeof TOMUI_COMBOBOX_VARIANTS.size;
 export type TomuiComboboxInputSide = keyof typeof TOMUI_COMBOBOX_VARIANTS.inputSide;
 
 export interface TomuiComboboxVariantsProps {
-  size?: TomuiComboboxSize;
   inputSide?: TomuiComboboxInputSide;
 }
 
@@ -65,9 +55,6 @@ interface ComboboxContextValue {
   select: (value: string) => void;
   remove: (value: string) => void;
   clear: () => void;
-  multiple: () => boolean;
-  hasError: () => boolean;
-  size: () => TomuiComboboxSize;
   listId: string;
 }
 
@@ -80,9 +67,6 @@ const ComboboxContext = createContext<ComboboxContextValue>({
   select: () => undefined,
   remove: () => undefined,
   clear: () => undefined,
-  multiple: () => false,
-  hasError: () => false,
-  size: () => "base",
   listId: "tomui-combobox-list",
 });
 
@@ -98,11 +82,10 @@ export type ComboboxRootProps = {
   required?: boolean;
   description?: JSX.Element;
   error?: string;
-  size?: TomuiComboboxSize;
 };
 
 function Root(props: ComboboxRootProps): JSX.Element {
-  const merged = merge({ multiple: false, size: TOMUI_COMBOBOX_DEFAULT_VARIANTS.size }, props);
+  const merged = merge({ multiple: false }, props);
   const toArray = (value: string | Array<string> | undefined): Array<string> => {
     if (value === undefined) return [];
     if (Array.isArray(value)) return value;
@@ -142,22 +125,6 @@ function Root(props: ComboboxRootProps): JSX.Element {
     setSelected(merged.multiple === true ? [] : undefined);
     setQuery("");
   };
-  const rest = omit(
-    merged,
-    "items",
-    "value",
-    "defaultValue",
-    "onValueChange",
-    "multiple",
-    "children",
-    "class",
-    "label",
-    "required",
-    "description",
-    "error",
-    "size",
-  );
-  void rest;
   const value: ComboboxContextValue = {
     query,
     setQuery,
@@ -167,9 +134,6 @@ function Root(props: ComboboxRootProps): JSX.Element {
     select,
     remove,
     clear,
-    multiple: () => merged.multiple,
-    hasError: () => merged.error !== undefined,
-    size: () => merged.size,
     listId: "tomui-combobox-list",
   };
   return (
@@ -193,17 +157,6 @@ function Root(props: ComboboxRootProps): JSX.Element {
       </Show>
     </div>
   );
-}
-
-export function useComboboxFilter(
-  items: () => Array<string>,
-  query: () => string,
-): () => Array<string> {
-  return createMemo(() => {
-    const needle = query().trim().toLowerCase();
-    if (needle === "") return items();
-    return items().filter((item) => String(item).toLowerCase().includes(needle));
-  });
 }
 
 export type ComboboxContentProps = {
@@ -501,42 +454,6 @@ function List(props: ComboboxListProps): JSX.Element {
   );
 }
 
-export type ComboboxGroupLabelProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children?: JSX.Element;
-  class?: string;
-};
-
-function GroupLabel(props: ComboboxGroupLabelProps): JSX.Element {
-  const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
-  return (
-    <div class={cn("mx-1.5 px-2 py-1.5 text-sm text-tomui-subtle", merged.class)} {...rest}>
-      {merged.children}
-    </div>
-  );
-}
-
-export type ComboboxGroupProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children?: JSX.Element;
-  class?: string;
-};
-
-function Group(props: ComboboxGroupProps): JSX.Element {
-  const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
-  return (
-    <div
-      class={cn(
-        "mt-2 border-t border-tomui-hairline pt-2 first:mt-0 first:border-t-0 first:pt-0",
-        merged.class,
-      )}
-      {...rest}
-    >
-      {merged.children}
-    </div>
-  );
-}
-
 export type ComboboxChipProps = {
   children?: JSX.Element;
   value?: string;
@@ -572,33 +489,6 @@ function Chip(props: ComboboxChipProps): JSX.Element {
   );
 }
 
-export type ComboboxInputProps = Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "onInput"> & {
-  class?: string;
-  onInput?: JSX.InputEventHandler<HTMLInputElement, InputEvent> | undefined;
-};
-
-function ComboboxInput(props: ComboboxInputProps): JSX.Element {
-  const ctx = useContext(ComboboxContext);
-  const merged = merge({}, props);
-  const rest = omit(merged, "class", "onInput");
-  return (
-    <input
-      class={cn("mx-0 -mt-1.5 w-full shrink-0 rounded-b-none", merged.class)}
-      value={ctx.query()}
-      role="combobox"
-      aria-expanded={ctx.isOpen() ? "true" : "false"}
-      aria-controls={ctx.listId}
-      aria-autocomplete="list"
-      onInput={(event) => {
-        ctx.setQuery(event.currentTarget.value);
-        ctx.setOpen(true);
-        merged.onInput?.(event);
-      }}
-      {...rest}
-    />
-  );
-}
-
 export const Combobox = Object.assign(Root, {
   Content,
   TriggerValue,
@@ -606,10 +496,6 @@ export const Combobox = Object.assign(Root, {
   TriggerMultipleWithInput,
   Chip,
   Item,
-  Input: ComboboxInput,
   Empty,
-  GroupLabel,
-  Group,
   List,
-  useFilter: useComboboxFilter,
 });

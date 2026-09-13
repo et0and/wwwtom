@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { Cause, Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
-import { ArenaClient, paginationQueryString, type Fetch, type DateProvider } from "../src/client";
+import { ArenaClient, type Fetch, type DateProvider } from "../src/client";
 
 type MockFetch = ReturnType<typeof vi.fn<Fetch>>;
 
@@ -50,115 +50,56 @@ describe("ArenaClient", () => {
   });
 
   describe("normalizeToken (via constructor)", () => {
-    it("sets Authorization header when valid token provided", async () => {
-      const client = new ArenaClient({
+    it.each([
+      {
+        label: "sets Authorization header when valid token provided",
         token: "valid-token",
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.get("Authorization")).toBe("Bearer valid-token");
-    });
-
-    it("trims whitespace from token", async () => {
-      const client = new ArenaClient({
+        expected: "Bearer valid-token",
+      },
+      {
+        label: "trims whitespace from token",
         token: "  valid-token  ",
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.get("Authorization")).toBe("Bearer valid-token");
-    });
-
-    it("omits Authorization header when token is null", async () => {
-      const client = new ArenaClient({
+        expected: "Bearer valid-token",
+      },
+      {
+        label: "omits Authorization header when token is null",
         token: null,
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.has("Authorization")).toBe(false);
-    });
-
-    it("omits Authorization header when token is undefined", async () => {
-      const client = new ArenaClient({
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.has("Authorization")).toBe(false);
-    });
-
-    it("omits Authorization header when token is 'undefined' string", async () => {
-      const client = new ArenaClient({
+        expected: null,
+      },
+      {
+        label: "omits Authorization header when token is undefined",
+        token: undefined,
+        expected: null,
+      },
+      {
+        label: "omits Authorization header when token is 'undefined' string",
         token: "undefined",
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.has("Authorization")).toBe(false);
-    });
-
-    it("omits Authorization header when token is 'null' string", async () => {
-      const client = new ArenaClient({
+        expected: null,
+      },
+      {
+        label: "omits Authorization header when token is 'null' string",
         token: "null",
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.has("Authorization")).toBe(false);
-    });
-
-    it("omits Authorization header when token is empty string", async () => {
-      const client = new ArenaClient({
+        expected: null,
+      },
+      {
+        label: "omits Authorization header when token is empty string",
         token: "",
-        fetch: mockFetch,
-      });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      expect(call).toBeDefined();
-      const headers = getRequestHeaders(call!);
-      expect(headers.has("Authorization")).toBe(false);
-    });
-
-    it("omits Authorization header when token is whitespace-only", async () => {
-      const client = new ArenaClient({
+        expected: null,
+      },
+      {
+        label: "omits Authorization header when token is whitespace-only",
         token: "   ",
-        fetch: mockFetch,
-      });
+        expected: null,
+      },
+    ])("$label", async ({ token, expected }) => {
+      const client = new ArenaClient({ token, fetch: mockFetch });
 
       await runEffect(client.me());
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
       const headers = getRequestHeaders(call!);
-      expect(headers.has("Authorization")).toBe(false);
+      expect(headers.get("Authorization")).toBe(expected);
     });
   });
 
@@ -172,6 +113,7 @@ describe("ArenaClient", () => {
       const url = getRequestUrl(call!);
       expect(url).toContain("sort=position_desc");
       expect(url).toContain("per_page=50");
+      expect(url).not.toContain("date=");
     });
 
     it("builds query string with page and per", async () => {
@@ -202,7 +144,7 @@ describe("ArenaClient", () => {
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
-      expect(url).toContain("sort=created_at");
+      expect(url).toContain("sort=created_at_desc");
     });
 
     it("combines page, per, sort, and direction", async () => {
@@ -241,16 +183,6 @@ describe("ArenaClient", () => {
   });
 
   describe("request construction", () => {
-    it("constructs correct URL with domain prefix", async () => {
-      const client = new ArenaClient({ fetch: mockFetch });
-
-      await runEffect(client.me());
-
-      const call = mockFetch.mock.calls[0];
-      const url = getRequestUrl(call!);
-      expect(url).toBe("https://api.are.na/v3/me");
-    });
-
     it("uses injected fetch function", async () => {
       const customFetch = createMockFetch();
       const client = new ArenaClient({ fetch: customFetch });
@@ -258,21 +190,6 @@ describe("ArenaClient", () => {
       await runEffect(client.me());
 
       expect(customFetch).toHaveBeenCalledTimes(1);
-    });
-
-    it("uses injected date provider for forceRefresh", async () => {
-      const fixedTime = 1234567890000;
-      const dateProvider = createDateProvider(fixedTime);
-      const client = new ArenaClient({
-        fetch: mockFetch,
-        date: dateProvider,
-      });
-
-      await runEffect(client.channels({ forceRefresh: true }));
-
-      const call = mockFetch.mock.calls[0];
-      const url = getRequestUrl(call!);
-      expect(url).toContain(`date=${fixedTime}`);
     });
   });
 
@@ -393,58 +310,5 @@ describe("ArenaClient", () => {
       expect(url).toContain("https://api.are.na/v3/search");
       expect(url).toContain("query=test");
     });
-  });
-});
-
-describe("paginationQueryString (direct)", () => {
-  const dateProvider: DateProvider = { now: () => 1700000000000 };
-
-  it("returns default values when no options provided", () => {
-    const qs = paginationQueryString(undefined, dateProvider);
-    expect(qs).toContain("sort=position_desc");
-    expect(qs).toContain("per_page=50");
-  });
-
-  it("builds query string with page and per", () => {
-    const qs = paginationQueryString({ page: 1, per: 10 }, dateProvider);
-    expect(qs).toContain("page=1");
-    expect(qs).toContain("per_page=10");
-  });
-
-  it("builds query string with combined sort and direction", () => {
-    const qs = paginationQueryString({ sort: "position", direction: "desc" }, dateProvider);
-    expect(qs).toContain("sort=position_desc");
-  });
-
-  it("builds query string with sort only (uses default direction)", () => {
-    const qs = paginationQueryString({ sort: "created_at" }, dateProvider);
-    expect(qs).toContain("sort=created_at_desc");
-  });
-
-  it("includes date when forceRefresh is true", () => {
-    const fixedTime = 1700000000000;
-    const dp: DateProvider = { now: () => fixedTime };
-    const qs = paginationQueryString({ forceRefresh: true }, dp);
-    expect(qs).toContain(`date=${fixedTime}`);
-  });
-
-  it("omits date when forceRefresh is false", () => {
-    const qs = paginationQueryString({ forceRefresh: false }, dateProvider);
-    expect(qs).not.toContain("date=");
-  });
-
-  it("omits date when forceRefresh is not specified", () => {
-    const qs = paginationQueryString({}, dateProvider);
-    expect(qs).not.toContain("date=");
-  });
-
-  it("combines all parameters correctly", () => {
-    const qs = paginationQueryString(
-      { page: 2, per: 25, sort: "date", direction: "asc" },
-      dateProvider,
-    );
-    expect(qs).toContain("page=2");
-    expect(qs).toContain("per_page=25");
-    expect(qs).toContain("sort=date_asc");
   });
 });

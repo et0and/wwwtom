@@ -12,9 +12,6 @@
     "typecheck": "tsc --noEmit",
     "lint": "oxlint"
   },
-  "dependencies": {
-    "@tom/types": "workspace:*"
-  },
   "devDependencies": {
     "typescript": "5.9.3"
   }

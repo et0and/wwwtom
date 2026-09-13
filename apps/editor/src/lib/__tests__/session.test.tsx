@@ -1,5 +1,5 @@
 import { render } from "@solidjs/testing-library";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import {
   createSession,
@@ -11,28 +11,9 @@ import {
   startSocialSignIn,
 } from "../session";
 import { runClient } from "../api";
+import { fetchMock, jsonResponse, sessionBody, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
-
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
-const jsonResponse = <B,>(body: B): Response =>
-  new Response(JSON.stringify(body), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  });
-
-const sessionBody = {
-  session: { id: "session-1" },
-  user: { id: "user-1", email: "gh@tomhackshaw.com" },
-};
+useFetchMock();
 
 const Probe = () => {
   const { session } = createSession();

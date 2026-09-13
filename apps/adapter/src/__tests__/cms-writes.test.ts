@@ -1,18 +1,18 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { app } from "../index";
-import { jsonResponse, requestWithEnv, testEnv } from "../test/helpers";
+import {
+  fetchMock,
+  jsonResponse,
+  requestWithEnv,
+  stubFetch,
+  testEnv,
+  unstubFetch,
+} from "../test/helpers";
 
-const fetchMock = vi.fn();
+beforeEach(stubFetch);
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
+afterEach(unstubFetch);
 
 const env = testEnv({
   API_URL: "http://localhost:8787",

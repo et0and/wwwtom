@@ -142,7 +142,3 @@ export const GtmCredentialsLive = Layer.effect(
     });
   }),
 );
-
-// Test helper: provide explicit credentials without env.
-export const makeFakeGtmCredentialsLayer = (value: GtmCredentialsValue) =>
-  Layer.succeed(GtmCredentials, makeCredentialsService(value));
