@@ -41,10 +41,6 @@ export const TOMUI_BADGE_VARIANTS = {
     success: { classes: "bg-tomui-success", description: "Green dot for success status" },
     warning: { classes: "bg-tomui-badge-orange", description: "Orange dot for warning status" },
     error: { classes: "bg-tomui-badge-red", description: "Red dot for error status" },
-    neutral: {
-      classes: "bg-tomui-badge-neutral",
-      description: "Neutral dot for informational status",
-    },
   },
 } as const;
 

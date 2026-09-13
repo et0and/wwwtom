@@ -56,11 +56,6 @@ export function tooltipVariants(props: TomuiTooltipVariantsProps = {}): string {
   );
 }
 
-export function TooltipProvider(props: { children?: JSX.Element }): JSX.Element {
-  return <>{props.children}</>;
-}
-
-/** Alignment on the axis perpendicular to `side`. */
 export type TooltipAlign = "start" | "center" | "end";
 
 const TOMUI_TOOLTIP_POSITIONS = {
@@ -102,7 +97,6 @@ export type TooltipProps = {
 
 /**
  * Accessible popup that shows additional information on hover/focus.
- * Wrap your app or section with `<TooltipProvider>` to enable delay grouping.
  *
  * @example
  * ```tsx

@@ -95,9 +95,8 @@
   animation: bounce-in 0.4s ease-out;
 }
 
-/* Tab list scroll behavior. Scrollbar is only hidden when scroll-driven
-   animations are supported (the fade replaces it as the affordance).
-   Unsupported browsers keep the native scrollbar. */
+/* Tab list scroll behavior. The scrollbar is hidden when scroll-driven
+   animations are supported; unsupported browsers keep the native scrollbar. */
 .tomui-tabs-list {
   overscroll-behavior-x: contain;
 }
@@ -115,7 +114,7 @@
 
 /* Popup outline offset - in dark mode, offset inward to align with inner stroke.
    This compensates for the different geometry of inner vs outer stroke paths.
-   Used by: Tooltip, Popover
+   Used by: Popover
    See: https://base-ui.com/react/components/tooltip */
 [data-mode="dark"] .tomui-popover-popup {
   outline-offset: -1px;
