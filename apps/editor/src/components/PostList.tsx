@@ -9,7 +9,7 @@ import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
 import { deletePost, deleteWork, listPosts, listWorks } from "../lib/content";
 import type { ContentKind } from "../lib/content";
-import { runClient } from "../lib/api";
+import { runClient } from "@tom/utils/services/http";
 
 export type ContentRow = {
   readonly slug: string;

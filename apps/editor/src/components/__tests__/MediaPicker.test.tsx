@@ -1,47 +1,9 @@
 import { fireEvent, render } from "@solidjs/testing-library";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MediaPicker } from "../MediaPicker";
+import { fetchMock, jsonResponse, listBody, media, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
-
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
-
-const jsonResponse = <B,>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
-const media = (id: string, name: string) => ({
-  id,
-  key: `media/${id}/${name}`,
-  mime: "image/webp",
-  width: null,
-  height: null,
-  alt: "Alt",
-  caption: null,
-  variants: [],
-  createdAt: "2026-09-01T00:00:00.000Z",
-  updatedAt: "2026-09-01T00:00:00.000Z",
-});
-
-const listBody = (docs: Array<unknown>) => ({
-  docs,
-  totalDocs: docs.length,
-  limit: 100,
-  page: 1,
-  totalPages: 1,
-  hasNextPage: false,
-  hasPrevPage: false,
-});
+useFetchMock();
 
 describe("MediaPicker", () => {
   it("lists assets, filters by filename, and picks on click", async () => {

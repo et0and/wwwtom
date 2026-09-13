@@ -10,7 +10,8 @@ import { Banner } from "@tom/ui/banner";
 import { Loader } from "@tom/ui/loader";
 import { Select } from "@tom/ui/select";
 import { Collapsible } from "@tom/ui/collapsible";
-import { adapterUrl, runClient } from "../lib/api";
+import { adapterUrl } from "../lib/api";
+import { runClient } from "@tom/utils/services/http";
 import {
   getPost,
   getWork,

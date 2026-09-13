@@ -39,6 +39,13 @@ export const requireJsonSecret = (name: string): Effect.Effect<string, Infrastru
 
 export const secretsStore = Cloudflare.SecretsStore.Store("wwwtom-secrets");
 
+/** Observability settings shared by the stack's Workers. */
+export const workerObservability = {
+  enabled: true,
+  logs: { enabled: true, invocationLogs: true },
+  traces: { enabled: true, headSamplingRate: 1 },
+} as const;
+
 /**
  * Deterministic hostname for a per-stage app subdomain.
  * Production uses the bare subdomain (adapter.tom.so); other stages are

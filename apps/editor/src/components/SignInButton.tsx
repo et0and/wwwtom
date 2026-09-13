@@ -2,7 +2,7 @@ import { Effect } from "effect";
 import { Show, createSignal } from "solid-js";
 import { Loader } from "@tom/ui/loader";
 import { Button } from "@tom/ui/button";
-import { runClient } from "../lib/api";
+import { runClient } from "@tom/utils/services/http";
 import { authProvider, startSocialSignIn } from "../lib/session";
 
 export const SignInButton = (props: {

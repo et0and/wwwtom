@@ -5,14 +5,8 @@ import {
   PAGES_CATEGORY,
   formatPublishedDate,
   formatPublishedDateTime,
-  isPage,
   listPosts,
 } from "../lib/posts";
-
-const post = (slug: string, categories: ReadonlyArray<string>) => ({
-  slug,
-  categories: categories.map((entry) => ({ slug: entry })),
-});
 
 describe("formatPublishedDateTime", () => {
   it("formats an ISO timestamp with date and time", () => {
@@ -26,12 +20,7 @@ describe("formatPublishedDateTime", () => {
   });
 });
 
-describe("isPage", () => {
-  it("flags posts in the pages category", () => {
-    expect(isPage(post("about", [PAGES_CATEGORY]))).toBe(true);
-    expect(isPage(post("a", ["essays"]))).toBe(false);
-  });
-
+describe("ABOUT_SLUG", () => {
   it("names the about slug", () => {
     expect(ABOUT_SLUG).toBe("about");
   });

@@ -1,48 +1,13 @@
 import { fireEvent, render } from "@solidjs/testing-library";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContentKind } from "../../lib/content";
 import { MediaView } from "../MediaView";
+import { fetchMock, jsonResponse, listBody, media, useFetchMock } from "../../test/helpers";
 
-const fetchMock = vi.fn();
+useFetchMock();
 
 beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
   vi.spyOn(window, "confirm").mockReturnValue(true);
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
-
-const jsonResponse = <B,>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
-const media = (id: string, name: string, createdAt: string) => ({
-  id,
-  key: `media/${id}/${name}`,
-  mime: "image/webp",
-  width: null,
-  height: null,
-  alt: null,
-  caption: null,
-  variants: [],
-  createdAt,
-  updatedAt: createdAt,
-});
-
-const listBody = (docs: Array<unknown>) => ({
-  docs,
-  totalDocs: docs.length,
-  limit: 100,
-  page: 1,
-  totalPages: 1,
-  hasNextPage: false,
-  hasPrevPage: false,
 });
 
 const usageBody = {
@@ -55,8 +20,11 @@ describe("MediaView", () => {
     fetchMock.mockResolvedValue(
       jsonResponse(
         listBody([
-          media("media-1", "old.webp", "2026-09-01T00:00:00.000Z"),
-          media("media-2", "new.webp", "2026-09-05T00:00:00.000Z"),
+          media("media-1", "old.webp", { alt: null }),
+          media("media-2", "new.webp", {
+            alt: null,
+            createdAt: "2026-09-05T00:00:00.000Z",
+          }),
         ]),
       ),
     );
@@ -73,9 +41,7 @@ describe("MediaView", () => {
 
   it("expands usage, opens the post, and deletes after confirm", async () => {
     fetchMock
-      .mockResolvedValueOnce(
-        jsonResponse(listBody([media("media-1", "hero.webp", "2026-09-01T00:00:00.000Z")])),
-      )
+      .mockResolvedValueOnce(jsonResponse(listBody([media("media-1", "hero.webp", { alt: null })])))
       .mockResolvedValueOnce(jsonResponse(usageBody))
       .mockResolvedValueOnce(jsonResponse({ id: "media-1" }));
     const edits: Array<{ kind: ContentKind; slug: string }> = [];

@@ -120,56 +120,6 @@ blockquote > p:last-child {
   }
 }
 
-.search-category {
-  font-size: 0.875rem;
-  font-weight: 600;
-  text-decoration: none;
-  letter-spacing: -0.05em;
-  background-color: rgb(230, 216, 226);
-  padding: 0.25rem 0.5rem;
-  flex-shrink: 0;
-  text-decoration: none !important;
-}
-.search-category {
-  font-size: 0.875rem;
-  font-weight: 600;
-  background-color: rgb(230, 216, 226);
-  padding: 0.25rem 0.5rem;
-  flex-shrink: 0;
-  text-decoration: none !important;
-}
-
-@media (prefers-color-scheme: dark) {
-  .search-category {
-    background-color: rgb(75, 60, 70);
-  }
-}
-
-a .search-category,
-a:visited .search-category {
-  text-decoration: none !important;
-}
-
-.search-category.work {
-  background-color: #d1e7dd;
-}
-.search-category.post {
-  background-color: #f8d7da;
-}
-
-@media (prefers-color-scheme: dark) {
-  .search-category.work {
-    background-color: #2d4a3e;
-  }
-  .search-category.post {
-    background-color: #5c3a3e;
-  }
-}
-
-.posts-lists {
-  list-style-position: inside;
-}
-
 footer {
   width: 100%;
 }

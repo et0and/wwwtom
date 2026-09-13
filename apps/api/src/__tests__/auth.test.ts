@@ -6,11 +6,10 @@ import {
   createAuth,
   createAuthFromEnv,
   isAdminEmail,
-  memoryDatabase,
   parseAuthProviders,
   requireSession,
 } from "../services/auth";
-import type { MemorySeedRow } from "../services/auth";
+import { memoryDatabase, type MemorySeedRow } from "../test/helpers";
 
 const testAuth = () =>
   createAuth({

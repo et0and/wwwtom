@@ -252,5 +252,3 @@ export const Popover = Object.assign(PopoverRoot, {
   Close: PopoverClose,
   Arrow: ArrowSvg,
 });
-
-export { ArrowSvg as PopoverArrow };

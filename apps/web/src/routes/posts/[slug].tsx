@@ -7,6 +7,7 @@ import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
+import { formatDate } from "~/libs/utils/date";
 import {
   DetailArenaBlocks,
   DetailError,
@@ -74,11 +75,7 @@ export default function PostPage() {
               <BlurInSection delay={0.5}>
                 {post.publishedAt ? (
                   <Text variant="secondary" size="sm" as="time">
-                    {new Date(post.publishedAt).toLocaleDateString("en-NZ", {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                    })}
+                    {formatDate(post.publishedAt)}
                   </Text>
                 ) : null}
               </BlurInSection>

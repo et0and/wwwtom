@@ -1,6 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
-import type { TiptapDoc } from "@tom/schemas/cms";
 import {
   createCategory,
   deleteCategory,
@@ -15,30 +14,20 @@ import {
   toWorkInput,
   uploadMedia,
 } from "../content";
-import { runClient } from "../api";
+import { runClient } from "@tom/utils/services/http";
 import type { ContentFields } from "../content";
+import {
+  fetchMock,
+  jsonResponse,
+  listBody,
+  media,
+  tiptapDoc,
+  useFetchMock,
+} from "../../test/helpers";
 
-const fetchMock = vi.fn();
+useFetchMock();
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
-
-const jsonResponse = <B>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
-const doc: TiptapDoc = {
-  type: "doc",
-  content: [{ type: "paragraph", content: [{ type: "text", text: "Hi" }] }],
-};
+const doc = tiptapDoc("Hi");
 
 const post = {
   id: "post-1",
@@ -74,17 +63,7 @@ const lastCall = () => {
 
 describe("editor content client", () => {
   it("lists posts with the admin status filter", async () => {
-    fetchMock.mockResolvedValue(
-      jsonResponse({
-        docs: [post],
-        totalDocs: 1,
-        limit: 50,
-        page: 1,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-      }),
-    );
+    fetchMock.mockResolvedValue(jsonResponse(listBody([post])));
     const list = await runClient(listPosts(1));
     expect(list.totalDocs).toBe(1);
     expect(lastCall().url).toBe(
@@ -93,17 +72,7 @@ describe("editor content client", () => {
   });
 
   it("lists posts in a category", async () => {
-    fetchMock.mockResolvedValue(
-      jsonResponse({
-        docs: [],
-        totalDocs: 0,
-        limit: 50,
-        page: 1,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-      }),
-    );
+    fetchMock.mockResolvedValue(jsonResponse(listBody([])));
     await runClient(listPosts(1, "pages"));
     expect(lastCall().url).toBe(
       "http://localhost:8788/content/posts?status=all&page=1&pageSize=10&category=pages",
@@ -111,17 +80,7 @@ describe("editor content client", () => {
   });
 
   it("lists works", async () => {
-    fetchMock.mockResolvedValue(
-      jsonResponse({
-        docs: [],
-        totalDocs: 0,
-        limit: 50,
-        page: 1,
-        totalPages: 1,
-        hasNextPage: false,
-        hasPrevPage: false,
-      }),
-    );
+    fetchMock.mockResolvedValue(jsonResponse(listBody([])));
     await runClient(listWorks(1));
     expect(lastCall().url).toBe(
       "http://localhost:8788/content/works?status=all&page=1&pageSize=10",
@@ -190,19 +149,7 @@ describe("editor content client", () => {
   });
 
   it("uploads media as multipart", async () => {
-    const media = {
-      id: "media-1",
-      key: "media/media-1/a.png",
-      mime: "image/png",
-      width: null,
-      height: null,
-      alt: "Alt",
-      caption: null,
-      variants: [],
-      createdAt: "2026-09-01T00:00:00.000Z",
-      updatedAt: "2026-09-01T00:00:00.000Z",
-    };
-    fetchMock.mockResolvedValue(jsonResponse(media));
+    fetchMock.mockResolvedValue(jsonResponse(media("media-1", "a.png", { mime: "image/png" })));
     const file = new File(["bytes"], "a.png", { type: "image/png" });
     const uploaded = await runClient(uploadMedia(file, "Alt"));
     expect(uploaded.id).toBe("media-1");

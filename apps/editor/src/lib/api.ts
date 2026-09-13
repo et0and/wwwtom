@@ -13,10 +13,6 @@ const fetchWithTimeout = (url: string, init: RequestInit): Promise<Response> => 
   return fetch(url, { ...init, signal: controller.signal }).finally(() => clearTimeout(timer));
 };
 
-/** Run a client effect as a promise at the Solid boundary. */
-export const runClient = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =>
-  Effect.runPromise(effect);
-
 /** JSON GET/POST against the adapter with session cookies. */
 export const requestJson = (
   path: string,

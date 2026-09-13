@@ -557,14 +557,6 @@
     @apply grid max-h-64 gap-1 overflow-y-auto;
   }
 
-  .history-row {
-    @apply flex items-baseline justify-between gap-2 rounded-md px-2 py-1.5 text-left hover:bg-neutral-100 dark:hover:bg-neutral-900;
-  }
-
-  .history-row.on {
-    @apply bg-neutral-200 dark:bg-neutral-800;
-  }
-
   .history-title {
     @apply text-sm font-medium;
   }

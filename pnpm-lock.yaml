@@ -97,16 +97,6 @@ catalogs:
 importers:
 
   .:
-    dependencies:
-      '@aredotna/sdk':
-        specifier: 0.0.4
-        version: 0.0.4
-      '@elysiajs/eden':
-        specifier: 1.4.9
-        version: 1.4.9(elysia@1.4.29(@sinclair/typebox@0.34.52)(exact-mirror@1.2.2)(file-type@19.3.0)(openapi-types@12.1.3)(typescript@6.0.3))
-      elysia:
-        specifier: 1.4.29
-        version: 1.4.29(@sinclair/typebox@0.34.52)(exact-mirror@1.2.2)(file-type@19.3.0)(openapi-types@12.1.3)(typescript@6.0.3)
     devDependencies:
       '@changesets/cli':
         specifier: 2.30.0
@@ -311,9 +301,6 @@ importers:
       '@tiptap/pm':
         specifier: 'catalog:'
         version: 3.31.3
-      '@tom/constants':
-        specifier: workspace:*
-        version: link:../../packages/constants
       '@tom/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -388,9 +375,6 @@ importers:
       '@elysiajs/eden':
         specifier: 'catalog:'
         version: 1.4.9(elysia@1.4.29(@sinclair/typebox@0.34.52)(exact-mirror@1.2.2)(file-type@19.3.0)(openapi-types@12.1.3)(typescript@6.0.3))
-      '@solidjs/meta':
-        specifier: 'catalog:'
-        version: 1.0.0-next.2(@solidjs/web@2.0.0-rc.6(solid-js@2.0.0-rc.6))(solid-js@2.0.0-rc.6)
       '@solidjs/router':
         specifier: 'catalog:'
         version: 2.0.0-next.19(@solidjs/web@2.0.0-rc.6(solid-js@2.0.0-rc.6))(solid-js@2.0.0-rc.6)
@@ -614,9 +598,6 @@ importers:
 
   packages/checkout:
     dependencies:
-      '@tom/constants':
-        specifier: workspace:*
-        version: link:../constants
       '@tom/types':
         specifier: workspace:*
         version: link:../types
@@ -626,10 +607,6 @@ importers:
         version: 5.9.3
 
   packages/constants:
-    dependencies:
-      '@tom/types':
-        specifier: workspace:*
-        version: link:../types
     devDependencies:
       typescript:
         specifier: 5.9.3

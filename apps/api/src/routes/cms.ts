@@ -31,55 +31,44 @@ const CmsMediaParamsSchema = Schema.Struct({ id: Schema.String });
 
 const cmsMediaParamsSchema = toOpenApiSchema(CmsMediaParamsSchema);
 
-/** Decode Elysia query input into paging at the route boundary. */
-export const decodePagingQuery = <Q>(
-  query: Q,
+/** Decode Elysia input at the route boundary; invalid input maps to 400. */
+export const decodeBoundary = <A, I, B>(
+  schema: Schema.Codec<A, I>,
+  input: B,
+  message: string,
   operation: string,
-): Effect.Effect<CmsPaging, CmsError> =>
-  Schema.decodeUnknownEffect(CmsPagingSchema)(query).pipe(
+): Effect.Effect<A, CmsError> =>
+  Schema.decodeUnknownEffect(schema)(input).pipe(
     Effect.mapError(
       (cause) =>
         new CmsError({
-          message: "Invalid paging parameters",
+          message,
           status: HttpStatus.BadRequest,
           operation,
           cause,
         }),
     ),
   );
+
+/** Decode Elysia query input into paging at the route boundary. */
+export const decodePagingQuery = <Q>(
+  query: Q,
+  operation: string,
+): Effect.Effect<CmsPaging, CmsError> =>
+  decodeBoundary(CmsPagingSchema, query, "Invalid paging parameters", operation);
 
 /** Decode Elysia route params at the boundary (Elysia types them optional). */
 export const decodeSlugParams = <P>(
   params: P,
   operation: string,
 ): Effect.Effect<{ readonly slug: string }, CmsError> =>
-  Schema.decodeUnknownEffect(CmsSlugParamsSchema)(params).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid slug parameter",
-          status: HttpStatus.BadRequest,
-          operation,
-          cause,
-        }),
-    ),
-  );
+  decodeBoundary(CmsSlugParamsSchema, params, "Invalid slug parameter", operation);
 
 export const decodeMediaParams = <P>(
   params: P,
   operation: string,
 ): Effect.Effect<{ readonly id: string }, CmsError> =>
-  Schema.decodeUnknownEffect(CmsMediaParamsSchema)(params).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid media id parameter",
-          status: HttpStatus.BadRequest,
-          operation,
-          cause,
-        }),
-    ),
-  );
+  decodeBoundary(CmsMediaParamsSchema, params, "Invalid media id parameter", operation);
 
 /** Fail closed when the CMS D1 binding is missing. */
 export const requireCmsD1 = (env: CloudflareEnv): Effect.Effect<CmsD1Binding, CmsError> =>

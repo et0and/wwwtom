@@ -29,17 +29,17 @@ const authHeaders = (accessToken: string | undefined) =>
 const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
   Layer.provideMerge(FetchHttpClient.layer, Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch));
 
-interface PolarCheckoutCreate {
+type PolarCheckoutCreate = {
   readonly products: ReadonlyArray<string>;
   readonly successUrl: string | undefined;
   readonly customerId: string | undefined;
   readonly customerEmail: string | undefined;
-}
+};
 
-interface PolarCustomerSessionCreate {
+type PolarCustomerSessionCreate = {
   readonly customerId: string;
   readonly returnUrl: string;
-}
+};
 
 const postPolarJson = <A, I>(
   url: string,

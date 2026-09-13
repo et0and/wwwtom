@@ -1,29 +1,18 @@
 import { fireEvent, render } from "@solidjs/testing-library";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { EditorView } from "../EditorView";
+import {
+  fetchMock,
+  jsonResponse,
+  listBody,
+  media,
+  tiptapDoc,
+  useFetchMock,
+} from "../../test/helpers";
 
-const fetchMock = vi.fn();
+useFetchMock();
 
-beforeEach(() => {
-  vi.stubGlobal("fetch", fetchMock);
-  fetchMock.mockReset();
-});
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-  vi.restoreAllMocks();
-});
-
-const jsonResponse = <B,>(body: B, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
-
-const doc = {
-  type: "doc",
-  content: [{ type: "paragraph", content: [{ type: "text", text: "Hello" }] }],
-};
+const doc = tiptapDoc("Hello");
 
 const post = {
   id: "post-1",
@@ -193,30 +182,10 @@ describe("EditorView", () => {
   describe("insert panels", () => {
     it("uploads media and inserts the node", async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse(categories));
-      const media = {
-        id: "media-1",
-        key: "media/media-1/a.png",
-        mime: "image/png",
-        width: null,
-        height: null,
-        alt: "Alt",
-        caption: null,
-        variants: [],
-        createdAt: "2026-09-01T00:00:00.000Z",
-        updatedAt: "2026-09-01T00:00:00.000Z",
-      };
+      fetchMock.mockResolvedValueOnce(jsonResponse(listBody([])));
       fetchMock.mockResolvedValueOnce(
-        jsonResponse({
-          docs: [],
-          totalDocs: 0,
-          limit: 100,
-          page: 1,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        }),
+        jsonResponse(media("media-1", "a.png", { mime: "image/png" })),
       );
-      fetchMock.mockResolvedValueOnce(jsonResponse(media));
       const { container, findByLabelText, findByRole } = render(() => (
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
@@ -235,30 +204,11 @@ describe("EditorView", () => {
     });
 
     it("picks existing media from the dialog", async () => {
-      fetchMock.mockResolvedValueOnce(jsonResponse(categories)).mockResolvedValueOnce(
-        jsonResponse({
-          docs: [
-            {
-              id: "media-9",
-              key: "media/media-9/picked.webp",
-              mime: "image/webp",
-              width: null,
-              height: null,
-              alt: "Picked",
-              caption: null,
-              variants: [],
-              createdAt: "2026-09-01T00:00:00.000Z",
-              updatedAt: "2026-09-01T00:00:00.000Z",
-            },
-          ],
-          totalDocs: 1,
-          limit: 100,
-          page: 1,
-          totalPages: 1,
-          hasNextPage: false,
-          hasPrevPage: false,
-        }),
-      );
+      fetchMock
+        .mockResolvedValueOnce(jsonResponse(categories))
+        .mockResolvedValueOnce(
+          jsonResponse(listBody([media("media-9", "picked.webp", { alt: "Picked" })])),
+        );
       const { container, findByRole, findByText } = render(() => (
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));

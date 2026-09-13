@@ -80,7 +80,7 @@ function bannerActionAccentVars(accent: string): JSX.CSSProperties {
 /** Props for {@link BannerAction}. */
 export type BannerActionProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
-  "ref" | "style" | "title" | "type"
+  "form" | "ref" | "style" | "title" | "type"
 > & {
   children?: JSX.Element;
   class?: string;
@@ -110,17 +110,7 @@ export type BannerActionProps = Omit<
  */
 export function BannerAction(props: BannerActionProps): JSX.Element {
   const merged = merge({ variant: "primary" as BannerActionVariant, type: "button" }, props);
-  const rest = omit(
-    merged,
-    "children",
-    "class",
-    "form",
-    "icon",
-    "style",
-    "title",
-    "type",
-    "variant",
-  );
+  const rest = omit(merged, "children", "class", "icon", "style", "title", "type", "variant");
   const banner = useContext(BannerActionContext);
   const styles = (): { accent: string; secondary: string; ghost: string } =>
     BANNER_ACTION_ACCENTS[banner.variant];

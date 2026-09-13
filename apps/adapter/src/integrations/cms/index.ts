@@ -16,7 +16,7 @@ import type { LogContext } from "@tom/utils/services/logging";
 import { callApi } from "../../callApi";
 import { AdapterError, runAdapter } from "../../config/effect";
 import { allowLocalOriginsForAdapter, isTrustedWriteOrigin, tenantFromValue } from "../../origins";
-import { forwardHeaders, toProxiedResponse } from "../auth";
+import { forwardHeaders, refererOrigin, toProxiedResponse } from "../auth";
 import { simulatorEnv } from "../../simulator";
 
 type TreatyCall<T> = Promise<{
@@ -169,15 +169,6 @@ const requireContentSession = (
           ),
     ),
   );
-
-/**
- * Origins allowed to drive CMS writes. The adapter itself always passes;
- * web origins must match the tenant-scoped allowlist (see origins). Local
- * editors pass only off production. Requests without Origin/Referer are
- * non-browser callers (curl) and pass.
- */
-const refererOrigin = (referer: string): Effect.Effect<string, never> =>
-  Effect.try(() => new URL(referer).origin).pipe(Effect.orElseSucceed(() => ""));
 
 /**
  * CSRF gate for CMS writes. Session cookies travel cross-site

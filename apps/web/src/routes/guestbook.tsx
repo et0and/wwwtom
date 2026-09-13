@@ -10,6 +10,7 @@ import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
+import { formatDateTime } from "~/libs/utils/date";
 
 export const fetchEntries = async () => {
   const result = await callAdapter().guestbook.entries.get();
@@ -269,13 +270,7 @@ export default function Guestbook() {
                             </div>
                             <Text class="guestbook-message mb-2">{entry.message}</Text>
                             <Text variant="secondary" size="xs" as="time">
-                              {new Date(entry.created_at).toLocaleDateString("en-NZ", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                              {formatDateTime(entry.created_at)}
                             </Text>
                           </div>
                         </div>

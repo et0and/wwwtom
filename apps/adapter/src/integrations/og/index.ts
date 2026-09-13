@@ -1,6 +1,5 @@
 import { Elysia } from "elysia";
-import { Schema } from "effect";
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ImageGenerationError } from "@tom/types/errors";
@@ -38,9 +37,11 @@ const OgQuerySchema = Schema.Struct({
 const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
 
 /** Rejoin the comma-split list form Elysia produces for text params. */
+const isString = Schema.is(Schema.String);
+
 const joinCommaList = (value: string | readonly string[] | undefined): string | undefined => {
   if (value === undefined) return undefined;
-  return Array.isArray(value) ? value.join(",") : (value as string);
+  return isString(value) ? value : value.join(",");
 };
 
 export const ogIntegration = new Elysia({ name: "og" }).get(
