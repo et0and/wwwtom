@@ -202,16 +202,7 @@ const detectUploadMime = (bytes: Uint8Array): string | null => {
 
 /** Decode a multipart upload body at the route boundary. */
 const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpload, CmsError> =>
-  Schema.decodeUnknownEffect(UploadFormSchema)(body).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Missing upload file",
-          status: HttpStatus.BadRequest,
-          operation,
-          cause,
-        }),
-    ),
+  decodeBoundary(UploadFormSchema, body, "Missing upload file", operation).pipe(
     Effect.flatMap(({ file, alt, caption }) =>
       Effect.gen(function* () {
         if (file.size === 0) {
@@ -312,17 +303,7 @@ const decodeRevisionParams = <P>(
   params: P,
   operation: string,
 ): Effect.Effect<{ readonly slug: string; readonly revId: string }, CmsError> =>
-  Schema.decodeUnknownEffect(CmsRevisionParamsSchema)(params).pipe(
-    Effect.mapError(
-      (cause) =>
-        new CmsError({
-          message: "Invalid revision parameter",
-          status: HttpStatus.BadRequest,
-          operation,
-          cause,
-        }),
-    ),
-  );
+  decodeBoundary(CmsRevisionParamsSchema, params, "Invalid revision parameter", operation);
 
 const decodeRestoreInput = <B>(
   body: B,

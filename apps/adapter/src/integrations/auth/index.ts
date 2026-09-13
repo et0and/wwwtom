@@ -45,7 +45,7 @@ type AuthProxyOptions = {
   readonly tenant: Tenant | undefined;
 };
 
-const refererOrigin = (referer: string): Effect.Effect<string, never> =>
+export const refererOrigin = (referer: string): Effect.Effect<string, never> =>
   Effect.try(() => new URL(referer).origin).pipe(Effect.orElseSucceed(() => ""));
 
 /**

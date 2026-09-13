@@ -90,12 +90,8 @@ export type TooltipProps = {
   children?: JSX.Element;
   /** Additional CSS classes merged via `cn()`. */
   class?: string;
-  /** How long to wait before closing the tooltip, in milliseconds. Accepted for API parity; closing is CSS-driven. */
-  closeDelay?: number;
   /** Content to display inside the tooltip popup. */
   content: JSX.Element;
-  /** How long to wait before opening the tooltip, in milliseconds. Accepted for API parity; opening is CSS-driven. */
-  delay?: number;
   ref?: HTMLSpanElement | ((element: HTMLSpanElement) => void) | undefined;
   /**
    * Preferred side of the trigger to render the tooltip.
@@ -118,17 +114,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     { align: "center" as TooltipAlign, side: TOMUI_TOOLTIP_DEFAULT_VARIANTS.side },
     props,
   );
-  const rest = omit(
-    merged,
-    "align",
-    "children",
-    "class",
-    "closeDelay",
-    "content",
-    "delay",
-    "ref",
-    "side",
-  );
+  const rest = omit(merged, "align", "children", "class", "content", "ref", "side");
   const popupId = createUniqueId();
   return (
     <span

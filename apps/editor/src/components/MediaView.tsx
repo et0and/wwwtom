@@ -8,6 +8,37 @@ import { adapterUrl, runClient } from "../lib/api";
 import { deleteMedia, getMediaUsage, listMedia, mediaFileName, mediaFileUrl } from "../lib/content";
 import type { ContentKind } from "../lib/content";
 
+export const filterMedia = (
+  items: ReadonlyArray<CmsMedia>,
+  query: string,
+): ReadonlyArray<CmsMedia> => {
+  const needle = query.trim().toLowerCase();
+  return needle === ""
+    ? items
+    : items.filter((item) => mediaFileName(item.key).toLowerCase().includes(needle));
+};
+
+export const MediaThumb = (props: { item: CmsMedia }) => (
+  <Show
+    when={props.item.mime.startsWith("video/")}
+    fallback={
+      <img
+        class="media-thumb"
+        src={mediaFileUrl(adapterUrl(), props.item.id)}
+        alt={props.item.alt ?? ""}
+        loading="lazy"
+      />
+    }
+  >
+    <video
+      class="media-thumb"
+      src={mediaFileUrl(adapterUrl(), props.item.id)}
+      muted
+      preload="metadata"
+    />
+  </Show>
+);
+
 const UsageList = (props: {
   usage: CmsMediaUsage | undefined;
   onEdit: (kind: ContentKind, slug: string) => void;
@@ -71,13 +102,7 @@ export const MediaView = (props: { onEdit: (kind: ContentKind, slug: string) => 
 
   onSettled(reload);
 
-  const visible = createMemo(() => {
-    const needle = query().trim().toLowerCase();
-    const all = items();
-    return needle === ""
-      ? all
-      : all.filter((item) => mediaFileName(item.key).toLowerCase().includes(needle));
-  });
+  const visible = createMemo(() => filterMedia(items(), query()));
 
   const toggleUsage = (id: string): void => {
     if (openUsage() === id) {
@@ -141,24 +166,7 @@ export const MediaView = (props: { onEdit: (kind: ContentKind, slug: string) => 
               <For each={visible()}>
                 {(item) => (
                   <div class="media-card">
-                    <Show
-                      when={item.mime.startsWith("video/")}
-                      fallback={
-                        <img
-                          class="media-thumb"
-                          src={mediaFileUrl(adapterUrl(), item.id)}
-                          alt={item.alt ?? ""}
-                          loading="lazy"
-                        />
-                      }
-                    >
-                      <video
-                        class="media-thumb"
-                        src={mediaFileUrl(adapterUrl(), item.id)}
-                        muted
-                        preload="metadata"
-                      />
-                    </Show>
+                    <MediaThumb item={item} />
                     <p class="media-name">{mediaFileName(item.key)}</p>
                     <div class="media-actions">
                       <Button

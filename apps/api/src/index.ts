@@ -78,7 +78,6 @@ export const app = new Elysia({
       },
     }),
   )
-  .derive(({ request }) => ({ env: getRequestEnv(request) }))
   .onRequest(async ({ set, request }) => {
     const requestId = crypto.randomUUID();
     set.headers["x-request-id"] = requestId;

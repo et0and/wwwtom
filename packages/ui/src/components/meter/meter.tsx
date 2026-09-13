@@ -2,12 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import { cn } from "../../utils/cn";
 
-export interface TomuiMeterVariantsProps {}
-
-export function meterVariants(_props: TomuiMeterVariantsProps = {}): string {
-  return cn("flex w-full flex-col gap-2");
-}
-
 export type MeterProps = JSX.HTMLAttributes<HTMLDivElement> & {
   value: number;
   min?: number | undefined;
@@ -51,7 +45,7 @@ export function Meter(props: MeterProps): JSX.Element {
       aria-valuemin={merged.min}
       aria-valuemax={merged.max}
       aria-label={merged.label}
-      class={cn(meterVariants(), merged.class)}
+      class={cn("flex w-full flex-col gap-2", merged.class)}
       {...rest}
     >
       <div class="flex items-center justify-between gap-4">

@@ -148,11 +148,8 @@ const notifyGuestbookSign = (entry: GuestbookEntry): Effect.Effect<void, never, 
  * { results, page, page_size, total_count } response shape.
  */
 const simulatorEntries = (
-  request: Request,
-): Effect.Effect<readonly GuestbookEntry[], HttpError, never> | undefined => {
-  const env = getRequestEnv(request);
-  const simulatorUrl = env.SIMULATOR_URL;
-  if (!isSimulatorRequest(request) || !simulatorUrl) return undefined;
+  simulatorUrl: string,
+): Effect.Effect<readonly GuestbookEntry[], HttpError, never> => {
   return Effect.gen(function* () {
     yield* Effect.logInfo("guestbook:entries:simulator");
     const response = yield* Effect.tryPromise({
@@ -217,18 +214,15 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
       // layer; runGuestbook always provisions DatabaseService, which is
       // unconfigured here (no D1), so route around it.
       if (isSimulatorRequest(request) && env.SIMULATOR_URL) {
-        const effect = simulatorEntries(request);
-        if (effect) {
-          return runAdapter(
-            effect,
-            (error) =>
-              new AdapterError({
-                status: guestbookStatus(error),
-                message: error.message ?? "Bad request",
-              }),
-            context,
-          );
-        }
+        return runAdapter(
+          simulatorEntries(env.SIMULATOR_URL),
+          (error) =>
+            new AdapterError({
+              status: guestbookStatus(error),
+              message: error.message ?? "Bad request",
+            }),
+          context,
+        );
       }
       return runGuestbook(env, dbEntries(), context);
     },

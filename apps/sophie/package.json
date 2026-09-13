@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@elysiajs/eden": "catalog:",
-    "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
     "@tanstack/solid-query": "catalog:",

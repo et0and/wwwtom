@@ -110,12 +110,6 @@ export const startSocialSignIn = (
   );
 };
 
-/** Start GitHub OAuth (Tom editor default). */
-export const startGithubSignIn = (): Effect.Effect<string, CmsError> => startSocialSignIn("github");
-
-/** Start Google OAuth (Sophie editor). */
-export const startGoogleSignIn = (): Effect.Effect<string, CmsError> => startSocialSignIn("google");
-
 /** Session signal for the app shell: undefined while loading, null signed out. */
 export const createSession = () => {
   const [session, setSession] = createSignal<EditorSession | null | undefined>(undefined);

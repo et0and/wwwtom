@@ -676,16 +676,24 @@ const usageRefs = Effect.fn("CmsService.usageRefs")(function* (
   );
 });
 
+const mediaUsage = Effect.fn("CmsService.mediaUsage")(function* (
+  db: CmsD1Binding,
+  id: string,
+  operation: string,
+) {
+  const [posts, works] = yield* Effect.all([
+    usageRefs(db, "posts", id, operation),
+    usageRefs(db, "works", id, operation),
+  ]);
+  return { posts, works };
+});
+
 export const getMediaUsage = Effect.fn("CmsService.getMediaUsage")(function* (
   db: CmsD1Binding,
   id: string,
 ) {
   yield* requireMediaRow(db, id, "get_media_usage");
-  const [posts, works] = yield* Effect.all([
-    usageRefs(db, "posts", id, "get_media_usage"),
-    usageRefs(db, "works", id, "get_media_usage"),
-  ]);
-  return { posts, works };
+  return yield* mediaUsage(db, id, "get_media_usage");
 });
 
 export type MediaUpload = {
@@ -1285,7 +1293,7 @@ export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
   const row = yield* requireMediaRow(db, id, "delete_media");
   // Never orphan published content: the editor checks usage first, and
   // the service enforces it so direct API calls cannot break posts/works.
-  const usage = yield* getMediaUsage(db, id);
+  const usage = yield* mediaUsage(db, id, "delete_media");
   if (usage.posts.length > 0 || usage.works.length > 0) {
     return yield* new CmsError({
       message: `Media in use by ${usage.posts.length} posts and ${usage.works.length} works`,

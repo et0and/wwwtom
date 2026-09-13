@@ -163,9 +163,6 @@ export interface CheckboxGroupProps {
   children?: JSX.Element | undefined;
   error?: string | undefined;
   description?: JSX.Element | undefined;
-  defaultValue?: Array<string> | undefined;
-  value?: Array<string> | undefined;
-  onValueChange?: ((value: Array<string>) => void) | undefined;
   disabled?: boolean | undefined;
   controlFirst?: boolean | undefined;
   class?: string | undefined;

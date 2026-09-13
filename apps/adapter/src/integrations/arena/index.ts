@@ -102,7 +102,6 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     },
     {
       params: ChannelSlugParamsSchema,
-      query: paginationQuerySchema,
       detail: { description: "Get a channel by slug", tags: ["arena"] },
     },
   )

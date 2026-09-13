@@ -99,11 +99,3 @@ export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> =>
   runClient(listCategories());
 
 export const fetchAbout = (): Promise<CmsPost | null> => runClientOrNull(getPost(ABOUT_SLUG));
-
-type CategorizedPost = {
-  readonly categories: ReadonlyArray<{ readonly slug: string }>;
-};
-
-/** Standalone pages stay off the category picker. */
-export const isPage = <P extends CategorizedPost>(post: P): boolean =>
-  post.categories.some((entry) => entry.slug === PAGES_CATEGORY);

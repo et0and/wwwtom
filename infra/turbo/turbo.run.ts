@@ -3,7 +3,7 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost, tomSecrets } from "../shared.run.ts";
+import { stageHost, tomSecrets, workerObservability } from "../shared.run.ts";
 import { turboKv } from "../kv/turbo.kv.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
@@ -45,11 +45,7 @@ export const turbo = Effect.gen(function* () {
       // Local workerd dev server via `alchemy dev`.
       port: 8790,
     },
-    observability: {
-      enabled: true,
-      logs: { enabled: true, invocationLogs: true },
-      traces: { enabled: true, headSamplingRate: 1 },
-    },
+    observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so other
     // stacks can reference it (production adopts the existing worker).
     ...(stage === "production"
