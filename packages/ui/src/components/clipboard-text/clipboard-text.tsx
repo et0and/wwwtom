@@ -74,9 +74,6 @@ export function clipboardTextVariants(props: TomuiClipboardTextVariantsProps = {
   );
 }
 
-// Legacy type alias for backwards compatibility
-export type ClipboardTextSize = TomuiClipboardTextSize;
-
 /** Tooltip config for the copy button. Shows tooltip on hover; the popup text swaps to `copiedText` after copying. */
 export interface ClipboardTextTooltip {
   /** Text shown in tooltip on hover. @default "Copy" */

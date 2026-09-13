@@ -10,7 +10,8 @@
     "test:e2e:staging": "playwright test --config=playwright.staging.config.ts",
     "test:e2e:editor": "playwright test --project=editor",
     "report": "playwright show-report",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.1",

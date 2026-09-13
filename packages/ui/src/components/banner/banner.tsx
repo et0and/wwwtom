@@ -121,13 +121,6 @@ export function bannerVariants(props: TomuiBannerVariantsProps = {}): string {
   );
 }
 
-// Legacy enum for backwards compatibility
-export enum BannerVariant {
-  DEFAULT,
-  ALERT,
-  ERROR,
-}
-
 /**
  * Banner component props.
  *
@@ -156,10 +149,6 @@ export interface BannerProps extends Omit<
    * structured mode (with `title` or `description`).
    */
   action?: JSX.Element;
-  /** @deprecated Use `title` and `description` instead. Will be removed in a future major version. */
-  text?: string;
-  /** @deprecated Use `title` and `description` instead for better i18n support. */
-  children?: JSX.Element;
   /**
    * Visual style of the banner.
    * - `"default"` — Informational blue banner for general messages
@@ -184,22 +173,15 @@ export interface BannerProps extends Omit<
 
 /**
  * Full-width message bar for informational, warning, or error notices.
- * Supports structured title/description for i18n, or simple children for basic usage.
  *
  * @example
  * ```tsx
- * // Structured (recommended for i18n)
  * <Banner
  *   variant="alert"
  *   icon={<WarningCircleIcon />}
  *   title="Review required"
  *   description="Please review your billing information."
  * />
- *
- * // Simple (backwards compatible)
- * <Banner variant="alert" icon={<WarningCircleIcon />}>
- *   Review your billing information.
- * </Banner>
  * ```
  */
 function BannerRoot(props: BannerProps): JSX.Element {
@@ -210,13 +192,11 @@ function BannerRoot(props: BannerProps): JSX.Element {
   const rest = omit(
     merged,
     "action",
-    "children",
     "class",
     "description",
     "icon",
     "ref",
     "size",
-    "text",
     "title",
     "variant",
   );
@@ -235,100 +215,72 @@ function BannerRoot(props: BannerProps): JSX.Element {
   // Compact banners keep the title and description on one line (inline spans)
   // rather than stacking them, to stay short in dialogs and other tight spaces.
   const isCompact = (): boolean => merged.size === "sm";
-  const isStructured = (): boolean =>
-    merged.title !== undefined || merged.description !== undefined;
   const alertRole = (): "alert" | undefined => (merged.variant === "error" ? "alert" : undefined);
 
   return (
     <BannerActionContext value={{ variant: merged.variant, size: sizeParts().action }}>
-      <Show
-        when={isStructured()}
-        fallback={
-          <div
-            data-tomui-component="Banner"
-            role={alertRole()}
-            class={cn(bannerVariants({ variant: merged.variant, size: merged.size }), merged.class)}
-            ref={merged.ref}
-            {...rest}
-          >
-            <Show when={merged.icon}>
-              <span class={cn("shrink-0", variantConfig().iconClasses)}>{merged.icon}</span>
-            </Show>
-            <Show when={merged.children} fallback={<p>{merged.text}</p>}>
-              {(kids) => <>{kids()}</>}
-            </Show>
-          </div>
-        }
+      <div
+        data-tomui-component="Banner"
+        role={alertRole()}
+        class={cn(bannerVariants({ variant: merged.variant, size: merged.size }), merged.class)}
+        ref={merged.ref}
+        {...rest}
       >
-        <div
-          data-tomui-component="Banner"
-          role={alertRole()}
-          class={cn(bannerVariants({ variant: merged.variant, size: merged.size }), merged.class)}
-          ref={merged.ref}
-          {...rest}
-        >
-          <Show when={merged.icon}>
-            <span
-              class={cn(
-                "flex shrink-0 items-center",
-                sizeParts().icon,
-                variantConfig().iconClasses,
-              )}
-            >
-              {merged.icon}
-            </span>
-          </Show>
-          <div
-            class={cn(
-              "flex min-w-0 flex-1 items-center justify-between",
-              sizeParts().row,
-              !merged.title ? "pt-px" : "",
-            )}
+        <Show when={merged.icon}>
+          <span
+            class={cn("flex shrink-0 items-center", sizeParts().icon, variantConfig().iconClasses)}
           >
-            <Show
-              when={isCompact()}
-              fallback={
-                <div class="flex flex-col gap-0.5">
-                  <Show when={merged.title}>
-                    <p class="leading-snug font-medium">{merged.title}</p>
-                  </Show>
-                  <Show when={merged.description}>
-                    <div class={cn(sizeParts().description, "leading-snug")}>
-                      <p>{merged.description}</p>
-                    </div>
-                  </Show>
-                </div>
-              }
-            >
-              <div class="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+            {merged.icon}
+          </span>
+        </Show>
+        <div
+          class={cn(
+            "flex min-w-0 flex-1 items-center justify-between",
+            sizeParts().row,
+            !merged.title ? "pt-px" : "",
+          )}
+        >
+          <Show
+            when={isCompact()}
+            fallback={
+              <div class="flex flex-col gap-0.5">
                 <Show when={merged.title}>
-                  <span class="leading-snug font-medium">
-                    {merged.title}
-                    <Show when={!merged.description}>
-                      <span class="ml-1.5 [&_[data-tomui-component=Link]]:inline">
-                        {merged.action}
-                      </span>
-                    </Show>
-                  </span>
+                  <p class="leading-snug font-medium">{merged.title}</p>
                 </Show>
                 <Show when={merged.description}>
-                  <span class={cn(sizeParts().description, "leading-snug")}>
-                    {merged.description}
+                  <div class={cn(sizeParts().description, "leading-snug")}>
+                    <p>{merged.description}</p>
+                  </div>
+                </Show>
+              </div>
+            }
+          >
+            <div class="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+              <Show when={merged.title}>
+                <span class="leading-snug font-medium">
+                  {merged.title}
+                  <Show when={!merged.description}>
                     <span class="ml-1.5 [&_[data-tomui-component=Link]]:inline">
                       {merged.action}
                     </span>
-                  </span>
-                </Show>
-              </div>
-            </Show>
-            <Show when={!isCompact()}>
-              <Show when={merged.action}>
-                <div class="flex shrink-0 items-center gap-2">{merged.action}</div>
+                  </Show>
+                </span>
               </Show>
+              <Show when={merged.description}>
+                <span class={cn(sizeParts().description, "leading-snug")}>
+                  {merged.description}
+                  <span class="ml-1.5 [&_[data-tomui-component=Link]]:inline">{merged.action}</span>
+                </span>
+              </Show>
+            </div>
+          </Show>
+          <Show when={!isCompact()}>
+            <Show when={merged.action}>
+              <div class="flex shrink-0 items-center gap-2">{merged.action}</div>
             </Show>
-          </div>
+          </Show>
         </div>
-      </Show>
+      </div>
     </BannerActionContext>
   );
 }

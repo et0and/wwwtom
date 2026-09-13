@@ -40,28 +40,28 @@ export const TiptapMarkSchema = Schema.Union([
 ]);
 export type TiptapMark = typeof TiptapMarkSchema.Type;
 
-interface TiptapInlineType {
+type TiptapInlineType = {
   readonly type: "text";
   readonly text: string;
   readonly marks?: ReadonlyArray<TiptapMark> | undefined;
-}
+};
 
-interface TiptapParagraphType {
+type TiptapParagraphType = {
   readonly type: "paragraph";
   readonly content?: ReadonlyArray<TiptapInlineType> | undefined;
-}
+};
 
-interface TiptapHeadingType {
+type TiptapHeadingType = {
   readonly type: "heading";
   readonly attrs: { readonly level: 1 | 2 | 3 | 4 };
   readonly content?: ReadonlyArray<TiptapInlineType> | undefined;
-}
+};
 
-interface TiptapRuleType {
+type TiptapRuleType = {
   readonly type: "horizontalRule";
-}
+};
 
-interface TiptapCodeType {
+type TiptapCodeType = {
   readonly type: "codeBlock";
   readonly attrs: {
     readonly language: string;
@@ -69,28 +69,28 @@ interface TiptapCodeType {
     readonly showLineNumbers?: boolean | undefined;
   };
   readonly content?: ReadonlyArray<TiptapInlineType> | undefined;
-}
+};
 
-interface TiptapBannerType {
+type TiptapBannerType = {
   readonly type: "banner";
   readonly attrs: { readonly style: CmsBannerStyle };
   readonly content: ReadonlyArray<TiptapBlockType>;
-}
+};
 
-interface TiptapQuoteType {
+type TiptapQuoteType = {
   readonly type: "blockquote";
   readonly content: ReadonlyArray<TiptapBlockType>;
-}
+};
 
-interface TiptapArenaType {
+type TiptapArenaType = {
   readonly type: "arena";
   readonly attrs: { readonly slug: string; readonly title?: string | undefined };
-}
+};
 
-interface TiptapMediaType {
+type TiptapMediaType = {
   readonly type: "cmsMedia";
   readonly attrs: { readonly mediaId: CmsMediaId; readonly alt?: string | undefined };
-}
+};
 
 type TiptapBlockType =
   | TiptapParagraphType
@@ -102,10 +102,10 @@ type TiptapBlockType =
   | TiptapArenaType
   | TiptapMediaType;
 
-interface TiptapDocType {
+type TiptapDocType = {
   readonly type: "doc";
   readonly content: ReadonlyArray<TiptapBlockType>;
-}
+};
 
 export const TiptapInlineSchema: Schema.Codec<TiptapInlineType> = Schema.Struct({
   type: Schema.Literal("text"),
@@ -195,7 +195,6 @@ export const CmsMetaSchema = Schema.Struct({
   description: Schema.NullOr(Schema.String),
   image: Schema.NullOr(Schema.String),
 });
-export type CmsMeta = typeof CmsMetaSchema.Type;
 
 export const CmsCategorySchema = Schema.Struct({
   id: CmsCategoryId,
@@ -209,7 +208,6 @@ export const CmsMediaVariantSchema = Schema.Struct({
   width: Schema.Number,
   format: Schema.String,
 });
-export type CmsMediaVariant = typeof CmsMediaVariantSchema.Type;
 
 export const CmsMediaSchema = Schema.Struct({
   id: CmsMediaId,
@@ -345,13 +343,11 @@ export const CmsRevisionSnapshotSchema = Schema.Union([CmsPostInputSchema, CmsWo
 export type CmsRevisionSnapshot = typeof CmsRevisionSnapshotSchema.Type;
 
 export const CmsRestoreInputSchema = Schema.Struct({ revisionId: Schema.String });
-export type CmsRestoreInput = typeof CmsRestoreInputSchema.Type;
 
 export const CmsMediaUsageRefSchema = Schema.Struct({
   slug: CmsSlug,
   title: Schema.String,
 });
-export type CmsMediaUsageRef = typeof CmsMediaUsageRefSchema.Type;
 
 /** Posts and works referencing a media asset, by content or hero image. */
 export const CmsMediaUsageSchema = Schema.Struct({

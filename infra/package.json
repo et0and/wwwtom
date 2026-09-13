@@ -31,6 +31,7 @@
     "destroy:runner": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy runner/runner.run.ts --stage $ALCHEMY_STAGE",
     "destroy:storybook": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/storybook.run.ts --stage $ALCHEMY_STAGE",
     "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
     "test": "vitest run"
   },
   "dependencies": {

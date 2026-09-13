@@ -3,19 +3,10 @@ import type {
   ChannelListResponse,
   CommentListResponse,
   ConnectableListResponse,
-  Connection,
   EverythingListResponse,
   FollowableListResponse,
   UserListResponse,
 } from "@aredotna/sdk/api";
-
-/**
- * Small client-level types not covered by the Are.na SDK.
- */
-export type ArenaBlockData = {
-  readonly slug: string;
-  readonly title?: string;
-};
 
 export type PaginationAttributes = {
   readonly page?: number;
@@ -40,7 +31,6 @@ export type GetBlockCommentApiResponse = CommentListResponse;
 export type SearchApiResponse = EverythingListResponse;
 export type GetGroupApiResponse = Group;
 export type CreateChannelApiResponse = Channel;
-export type GetConnectionsApiResponse = Connection;
 export type ArenaBlock = Block;
 export type ArenaChannelContents = ConnectableListResponse["data"][number];
 

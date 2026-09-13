@@ -129,23 +129,3 @@ export function Toaster(props: ToasterProps) {
     </div>
   );
 }
-
-export type ToastyProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  children?: JSX.Element;
-  class?: string;
-  toasts?: ReadonlyArray<ToastItem>;
-  onDismiss?: (id: string) => void;
-};
-
-export function Toasty(props: ToastyProps) {
-  const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "toasts", "onDismiss");
-  return (
-    <>
-      {merged.children}
-      <Toaster toasts={merged.toasts} onDismiss={merged.onDismiss} class={merged.class} {...rest} />
-    </>
-  );
-}
-
-export const ToastProvider = Toaster;

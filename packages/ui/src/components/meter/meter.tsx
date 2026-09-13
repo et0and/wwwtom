@@ -2,10 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import { cn } from "../../utils/cn";
 
-export const TOMUI_METER_VARIANTS = {} as const;
-
-export const TOMUI_METER_DEFAULT_VARIANTS = {} as const;
-
 export interface TomuiMeterVariantsProps {}
 
 export function meterVariants(_props: TomuiMeterVariantsProps = {}): string {

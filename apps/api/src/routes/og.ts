@@ -93,7 +93,7 @@ const joinCommaList = (value: string | string[] | undefined): string | undefined
 
 export const ogRoutes = new Elysia({ name: "og" }).get(
   "/og",
-  async ({ query, request, set }) => {
+  async ({ query, request }) => {
     const title = joinCommaList(query.title) || "Tom Hackshaw";
     const summary = joinCommaList(query.summary) || "Design engineer from Aotearoa New Zealand";
     const template = query.template;
@@ -135,11 +135,6 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
       logContextFromRequest(request, "tom-api"),
     );
 
-    if (result instanceof Response) {
-      return result;
-    }
-
-    set.headers["Cache-Control"] = "public, max-age=31536000, immutable";
     return result;
   },
   {

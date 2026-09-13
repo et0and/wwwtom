@@ -11,21 +11,6 @@ export const TOMUI_TEXT_VARIANTS = {
       classes: "text-lg font-semibold",
       description: "Heading text (16px by default, 20px at large size)",
     },
-    /** @deprecated Use `heading` and set `size` and `as` explicitly. */
-    heading1: {
-      classes: "text-3xl font-semibold",
-      description: "Deprecated large heading for page titles; use heading instead",
-    },
-    /** @deprecated Use `heading` and set `size` and `as` explicitly. */
-    heading2: {
-      classes: "text-2xl font-semibold",
-      description: "Deprecated medium heading for section titles; use heading instead",
-    },
-    /** @deprecated Use `heading` and set `size` and `as` explicitly. */
-    heading3: {
-      classes: "text-lg font-semibold",
-      description: "Deprecated small heading for subsections; use heading instead",
-    },
     body: {
       classes: "text-tomui-default",
       description: "Default body text",
@@ -76,66 +61,13 @@ export const TOMUI_TEXT_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-/**
- * TOMUI_TEXT_STYLING - Typography metadata for Figma generator
- *
- * This export provides structured styling information extracted from text.tsx
- * for use by the Figma plugin generator. It documents font sizes, weights,
- * colors, and font families used across all Text variants.
- */
-export const TOMUI_TEXT_STYLING = {
-  fontSizes: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
-    "2xl": 24,
-    "3xl": 30,
-  },
-  fontWeights: {
-    normal: 400,
-    medium: 500,
-    semibold: 600,
-  },
-  baseColor: "text-tomui-default",
-  variantColors: {
-    body: "text-tomui-default",
-    secondary: "text-tomui-subtle",
-    success: "text-tomui-link",
-    error: "text-tomui-danger",
-    mono: "text-tomui-default",
-    "mono-secondary": "text-tomui-subtle",
-  },
-  fontFamilies: {
-    default: "sans-serif",
-    mono: "monospace",
-  },
-} as const;
-
 // Derived types from TOMUI_TEXT_VARIANTS
 export type TomuiTextVariant = keyof typeof TOMUI_TEXT_VARIANTS.variant;
 export type TomuiTextSize = keyof typeof TOMUI_TEXT_VARIANTS.size;
 
-type DeprecatedHeading = "heading1" | "heading2" | "heading3";
-
-const DEPRECATED_HEADING_VARIANTS: readonly DeprecatedHeading[] = [
-  "heading1",
-  "heading2",
-  "heading3",
-];
-
-function isDeprecatedHeadingVariant(variant: TomuiTextVariant): variant is DeprecatedHeading {
-  return (DEPRECATED_HEADING_VARIANTS as readonly TomuiTextVariant[]).includes(variant);
-}
-
 function resolveTextSizeClasses(variant: TomuiTextVariant, size: TomuiTextSize): string {
   if (variant === "heading") {
     return size === "lg" ? "text-xl" : "";
-  }
-
-  if (isDeprecatedHeadingVariant(variant)) {
-    return "";
   }
 
   if (variant === "mono" || variant === "mono-secondary") {
@@ -146,20 +78,6 @@ function resolveTextSizeClasses(variant: TomuiTextVariant, size: TomuiTextSize):
   }
 
   return resolveVariant(TOMUI_TEXT_VARIANTS.size, size, TOMUI_TEXT_DEFAULT_VARIANTS.size).classes;
-}
-
-export interface TomuiTextVariantsProps {
-  variant?: TomuiTextVariant;
-  size?: TomuiTextSize;
-}
-
-export function textVariants(props: TomuiTextVariantsProps = {}): string {
-  const merged = merge(TOMUI_TEXT_DEFAULT_VARIANTS, props);
-  return cn(
-    resolveVariant(TOMUI_TEXT_VARIANTS.variant, merged.variant, TOMUI_TEXT_DEFAULT_VARIANTS.variant)
-      .classes,
-    resolveTextSizeClasses(merged.variant, merged.size),
-  );
 }
 
 /** Valid HTML elements for the Text component's `as` prop. */
@@ -203,9 +121,6 @@ export interface TextProps {
   /**
    * Text style variant. Determines color, font, and weight.
    * - `"heading"` — Heading text (16px by default, 20px with `size="lg"`; semibold)
-   * - `"heading1"` — Deprecated; use `"heading"` (30px, semibold)
-   * - `"heading2"` — Deprecated; use `"heading"` (24px, semibold)
-   * - `"heading3"` — Deprecated; use `"heading"` (16px, semibold)
    * - `"body"` — Default body text
    * - `"secondary"` — Muted text for secondary information
    * - `"success"` — Success state text
@@ -236,8 +151,6 @@ export interface TextProps {
    *
    * - **Optional** for `"heading"` (defaults to `"span"`). Pass the heading
    *   element that reflects this text's place in the document outline.
-   * - **Required** for deprecated heading variants (`"heading1"`,
-   *   `"heading2"`, `"heading3"`).
    * - **Optional** for body variants (defaults to `"p"`) and monospace
    *   variants (defaults to `"span"`).
    */
@@ -307,7 +220,7 @@ export function Text(props: TextProps): JSX.Element {
   const tag = (): TextElement => {
     if (merged.as) return merged.as;
     if (merged.variant === "mono" || merged.variant === "mono-secondary") return "span";
-    if (merged.variant === "heading" || isDeprecatedHeadingVariant(merged.variant)) return "span";
+    if (merged.variant === "heading") return "span";
     return "p";
   };
   return (

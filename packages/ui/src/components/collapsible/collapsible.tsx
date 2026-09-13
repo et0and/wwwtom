@@ -2,16 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { createContext, createSignal, Show, merge, omit, useContext } from "solid-js";
 import { cn } from "../../utils/cn";
 
-export const TOMUI_COLLAPSIBLE_VARIANTS = {} as const;
-
-export const TOMUI_COLLAPSIBLE_DEFAULT_VARIANTS = {} as const;
-
-export interface TomuiCollapsibleVariantsProps {}
-
-export function collapsibleVariants(_props: TomuiCollapsibleVariantsProps = {}): string {
-  return cn();
-}
-
 interface CollapsibleContextValue {
   isOpen: () => boolean;
   toggle: () => void;
@@ -182,5 +172,3 @@ export const Collapsible = Object.assign(CollapsibleRoot, {
   DefaultTrigger: CollapsibleDefaultTrigger,
   DefaultPanel: CollapsibleDefaultPanel,
 });
-
-export type CollapsibleProps = CollapsibleRootProps;

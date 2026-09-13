@@ -67,7 +67,6 @@ export type GridProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   class?: string;
   columns?: number;
   gap?: TomuiGridGap;
-  mobileDivider?: boolean;
   style?: JSX.CSSProperties;
   variant?: TomuiGridVariant;
 };
@@ -88,28 +87,9 @@ export function gridVariants(
   );
 }
 
-export function gridItemVariants(
-  props: { variant?: TomuiGridVariant | undefined; mobileDivider?: boolean | undefined } = {},
-): string {
-  return cn(
-    props.mobileDivider &&
-      props.variant === "4up" &&
-      "border-b border-tomui-hairline pb-8 md:border-b-0 md:pb-0",
-  );
-}
-
 export function Grid(props: GridProps) {
   const merged = merge({ gap: TOMUI_GRID_DEFAULT_VARIANTS.gap }, props);
-  const rest = omit(
-    merged,
-    "children",
-    "class",
-    "columns",
-    "gap",
-    "mobileDivider",
-    "style",
-    "variant",
-  );
+  const rest = omit(merged, "children", "class", "columns", "gap", "style", "variant");
   const baseStyle = (): JSX.CSSProperties | undefined => merged.style;
   const style = (): JSX.CSSProperties | undefined => {
     if (merged.columns === undefined) return baseStyle();

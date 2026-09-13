@@ -18,14 +18,3 @@ export type ArenaConnectionId = Schema.Schema.Type<typeof ArenaConnectionId>;
 
 export const ArenaCommentId = Schema.Number.pipe(Schema.brand("ArenaCommentId"));
 export type ArenaCommentId = Schema.Schema.Type<typeof ArenaCommentId>;
-
-/**
- * Parse and validate a numeric ID into ArenaUserId.
- * Use for parsing user IDs atAPI boundaries.
- */
-export const parseArenaUserId = Schema.decodeUnknownEffect(ArenaUserId);
-export const parseArenaChannelId = Schema.decodeUnknownEffect(ArenaChannelId);
-export const parseArenaBlockId = Schema.decodeUnknownEffect(ArenaBlockId);
-export const parseArenaGroupId = Schema.decodeUnknownEffect(ArenaGroupId);
-export const parseArenaConnectionId = Schema.decodeUnknownEffect(ArenaConnectionId);
-export const parseArenaCommentId = Schema.decodeUnknownEffect(ArenaCommentId);
