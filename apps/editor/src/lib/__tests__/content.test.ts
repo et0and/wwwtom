@@ -14,7 +14,7 @@ import {
   toWorkInput,
   uploadMedia,
 } from "../content";
-import { runClient } from "../api";
+import { runClient } from "@tom/utils/services/http";
 import type { ContentFields } from "../content";
 import {
   fetchMock,

@@ -1,18 +1,15 @@
 import { betterAuth } from "better-auth";
-import { memoryAdapter } from "better-auth/adapters/memory";
+import type { memoryAdapter } from "better-auth/adapters/memory";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
-import type { CloudflareEnv, CmsD1Binding } from "@tom/utils/services/config";
-import { parseAdminEmails } from "@tom/utils/services/config";
+import {
+  parseAdminEmails,
+  type CloudflareEnv,
+  type CmsD1Binding,
+} from "@tom/utils/services/config";
 
-export type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
-
-export type MemorySeedRow = Record<string, string | number | boolean | Date | null>;
-
-/** In-memory database for tests (same Better Auth behavior, no D1). */
-export const memoryDatabase = (seed: Record<string, Array<MemorySeedRow>> = {}): AuthDatabase =>
-  memoryAdapter(seed);
+type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
 
 /** Admin allowlist check (case-insensitive, whitespace-tolerant). */
 export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean =>
@@ -21,12 +18,12 @@ export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): b
     .filter((entry) => entry.length > 0)
     .includes(email.trim().toLowerCase());
 
-export type OAuthProvider = {
+type OAuthProvider = {
   readonly clientId: string;
   readonly clientSecret: string;
 };
 
-export type CreateAuthOptions = {
+type CreateAuthOptions = {
   readonly database: AuthDatabase;
   readonly secret: string;
   readonly baseURL: string;
@@ -91,7 +88,7 @@ const oauthProvider = (
 
 const AUTH_PROVIDERS = ["github", "google"] as const;
 
-export type CmsAuthProvider = (typeof AUTH_PROVIDERS)[number];
+type CmsAuthProvider = (typeof AUTH_PROVIDERS)[number];
 
 /**
  * Parse the comma-separated CMS_AUTH_PROVIDERS allowlist (infra sets it

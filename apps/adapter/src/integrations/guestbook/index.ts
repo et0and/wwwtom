@@ -4,7 +4,7 @@ import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import { checkProfanity } from "@tom/utils/profanity";
 import { makeTomQueueLayer, TomQueueService } from "@tom/utils/services/queue";
 import { HttpStatus } from "@tom/constants/http";
-import { readCloudflareEnv } from "@tom/utils/services/config";
+import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
 import {
   getRequestEnv,
   logContextFromRequest,
@@ -33,7 +33,6 @@ import {
   messageBodySchema,
   successResponseSchema,
 } from "../../schemas";
-import type { CloudflareEnv } from "@tom/utils/services/config";
 
 type GuestbookError =
   | MissingFieldError

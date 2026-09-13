@@ -3,7 +3,8 @@ import { CmsSlug } from "@tom/schemas/cms";
 import type { CmsCategory, CmsListResponse, CmsPost, CmsPostSummary } from "@tom/schemas/cms";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
-import { adapterRequest, callSophie, runClient, runClientOrNull } from "./api";
+import { runClient, runClientOrNull } from "@tom/utils/services/http";
+import { adapterRequest, callSophie } from "./api";
 
 const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
   year: "numeric",

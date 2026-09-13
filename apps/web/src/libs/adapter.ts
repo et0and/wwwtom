@@ -1,9 +1,14 @@
 import { treaty } from "@elysiajs/eden";
 import type { AdapterApp } from "@tom/adapter";
 import { getRequestEvent, isServer } from "@solidjs/web";
-import { Effect, Option, Schema } from "effect";
+import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import {
+  adapterErrorMessage,
+  adapterRequest as sharedAdapterRequest,
+} from "@tom/utils/services/http";
+import type { EdenResult } from "@tom/utils/services/http";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
 
@@ -48,27 +53,14 @@ export const callAdapter = () => {
   return treaty<AdapterApp>(getAdapterBaseUrl(), { fetch: fetchOptions });
 };
 
-type EdenResult<T> = {
-  data: T | null;
-  error: { status: unknown; value: unknown } | null;
+const ADAPTER_REQUEST_MESSAGES = {
+  failed: "Adapter request failed",
+  timedOut: "Adapter request timed out",
 };
 
-/** The adapter's error responses are RFC 9457 problem details; parse at the boundary. */
-const ProblemDetailsBody = Schema.Struct({
-  type: Schema.String,
-  status: Schema.Number,
-  title: Schema.String,
-  detail: Schema.optional(Schema.String),
-});
-
-const errorMessage = (error: NonNullable<EdenResult<unknown>["error"]>): string =>
-  Option.getOrElse(
-    Option.map(
-      Schema.decodeUnknownOption(ProblemDetailsBody)(error.value),
-      (body) => body.detail ?? body.title,
-    ),
-    () => "Adapter request failed",
-  );
+export const adapterRequest = <T>(
+  request: () => Promise<EdenResult<T>>,
+): Effect.Effect<T, HttpError> => sharedAdapterRequest(request, ADAPTER_REQUEST_MESSAGES);
 
 /**
  * Unwrap an Eden treaty result, throwing an HttpError with the adapter's
@@ -77,53 +69,12 @@ const errorMessage = (error: NonNullable<EdenResult<unknown>["error"]>): string 
 export const unwrapAdapter = <T>(result: EdenResult<T>): T => {
   if (result.error) {
     throw new HttpError({
-      message: errorMessage(result.error),
+      message: adapterErrorMessage(result.error, ADAPTER_REQUEST_MESSAGES.failed),
       status: Number(result.error.status) || 500,
     });
   }
   return result.data as T;
 };
-
-/** Upper bound for a single adapter round-trip; guards against a hung worker. */
-const ADAPTER_TIMEOUT_MS = 5_000;
-
-/**
- * Adapter request as an Effect: network failures and non-2xx responses
- * surface as tagged HttpErrors in the error channel instead of thrown
- * exceptions.
- */
-export const adapterRequest = <T>(
-  request: () => Promise<EdenResult<T>>,
-): Effect.Effect<T, HttpError> =>
-  Effect.tryPromise(() => request()).pipe(
-    Effect.mapError(
-      () =>
-        new HttpError({
-          message: "Adapter request failed",
-          status: HttpStatus.InternalServerError,
-        }),
-    ),
-    Effect.flatMap((result) =>
-      result.error
-        ? Effect.fail(
-            new HttpError({
-              message: errorMessage(result.error),
-              status: Number(result.error.status) || 500,
-            }),
-          )
-        : Effect.succeed(result.data as T),
-    ),
-    Effect.timeoutOrElse({
-      duration: ADAPTER_TIMEOUT_MS,
-      orElse: () =>
-        Effect.fail(
-          new HttpError({
-            message: "Adapter request timed out",
-            status: HttpStatus.GatewayTimeout,
-          }),
-        ),
-    }),
-  );
 
 /** Run a logged adapter effect to completion in the current SSR context. */
 const runLoggedAdapterRequest = <T, E>(

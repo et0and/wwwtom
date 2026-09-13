@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsPostInputSchema } from "@tom/schemas/cms";
-import { adapterUrl, decodeResponse, requestJson, requestVoid, runClient } from "../api";
+import { runClient } from "@tom/utils/services/http";
+import { adapterUrl, decodeResponse, requestJson, requestVoid } from "../api";
 import { fetchMock, jsonResponse, useFetchMock } from "../../test/helpers";
 
 useFetchMock();

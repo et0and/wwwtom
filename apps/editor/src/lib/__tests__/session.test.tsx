@@ -2,7 +2,7 @@ import { render } from "@solidjs/testing-library";
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { createSession, loadSession, signOut, siteLabel, startSocialSignIn } from "../session";
-import { runClient } from "../api";
+import { runClient } from "@tom/utils/services/http";
 import { fetchMock, jsonResponse, sessionBody, useFetchMock } from "../../test/helpers";
 
 useFetchMock();

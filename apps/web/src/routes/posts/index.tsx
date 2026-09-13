@@ -9,6 +9,7 @@ import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
+import { formatDate } from "~/libs/utils/date";
 
 export default function PostsHome() {
   httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
@@ -75,11 +76,7 @@ export default function PostsHome() {
                               {post.title}
                             </Text>
                             <Text variant="secondary" size="sm" as="time">
-                              {new Date(post.publishedAt ?? "").toLocaleDateString("en-NZ", {
-                                year: "numeric",
-                                month: "long",
-                                day: "numeric",
-                              })}
+                              {formatDate(post.publishedAt ?? "")}
                             </Text>
                             <Text>{post.summary || post.meta?.description}</Text>
                           </div>

@@ -1,7 +1,7 @@
 import { Schema } from "effect";
 import type { StandardSchemaV1 } from "@standard-schema/spec";
 
-export type OpenApiSchema = StandardSchemaV1 & {
+type OpenApiSchema = StandardSchemaV1 & {
   readonly "~standard": StandardSchemaV1["~standard"] & {
     readonly jsonSchema: {
       readonly input: () => unknown;

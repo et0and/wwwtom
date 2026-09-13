@@ -6,7 +6,8 @@ import { Button } from "@tom/ui/button";
 import { Badge } from "@tom/ui/badge";
 import { Banner } from "@tom/ui/banner";
 import { Loader } from "@tom/ui/loader";
-import { adapterUrl, runClient } from "../lib/api";
+import { adapterUrl } from "../lib/api";
+import { runClient } from "@tom/utils/services/http";
 import { getRevision, listRevisions, mediaFileUrl, restoreRevision } from "../lib/content";
 import type { ContentKind } from "../lib/content";
 

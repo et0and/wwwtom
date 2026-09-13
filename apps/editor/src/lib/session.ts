@@ -1,7 +1,8 @@
 import { createSignal, onSettled } from "solid-js";
 import { Effect, Schema } from "effect";
 import { CmsError } from "@tom/types/errors";
-import { decodeResponse, requestJson, requestVoid, runClient } from "./api";
+import { runClient } from "@tom/utils/services/http";
+import { decodeResponse, requestJson, requestVoid } from "./api";
 
 export const EditorSessionSchema = Schema.Struct({
   session: Schema.Struct({ id: Schema.String }),

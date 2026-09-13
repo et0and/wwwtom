@@ -5,7 +5,7 @@ import { Loader } from "@tom/ui/loader";
 import { DropdownMenu } from "@tom/ui/dropdown";
 import { Tabs } from "@tom/ui/tabs";
 import { useColorMode } from "@tom/ui/color-mode";
-import { runClient } from "./lib/api";
+import { runClient } from "@tom/utils/services/http";
 import { createSession, documentTitle, signOut } from "./lib/session";
 import type { ContentKind } from "./lib/content";
 import { SignInButton } from "./components/SignInButton";

@@ -1,5 +1,13 @@
+import { memoryAdapter } from "better-auth/adapters/memory";
 import type { CloudflareEnv } from "@tom/utils/services/config";
 import type { RequestWithEnv } from "@tom/utils/services/worker";
+
+export type MemorySeedRow = Record<string, string | number | boolean | Date | null>;
+
+/** In-memory database for tests (same Better Auth behavior, no D1). */
+export const memoryDatabase = (
+  seed: Record<string, Array<MemorySeedRow>> = {},
+): ReturnType<typeof memoryAdapter> => memoryAdapter(seed);
 
 /**
  * Build a Request with the Cloudflare env attached the same way the worker's

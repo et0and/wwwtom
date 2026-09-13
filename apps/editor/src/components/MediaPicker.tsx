@@ -3,7 +3,7 @@ import { Effect } from "effect";
 import type { CmsMedia } from "@tom/schemas/cms";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
-import { runClient } from "../lib/api";
+import { runClient } from "@tom/utils/services/http";
 import { listMedia, mediaFileName } from "../lib/content";
 import { MediaThumb, filterMedia } from "./MediaView";
 

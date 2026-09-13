@@ -4,7 +4,8 @@ import type { CmsMedia, CmsMediaUsage } from "@tom/schemas/cms";
 import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
-import { adapterUrl, runClient } from "../lib/api";
+import { adapterUrl } from "../lib/api";
+import { runClient } from "@tom/utils/services/http";
 import { deleteMedia, getMediaUsage, listMedia, mediaFileName, mediaFileUrl } from "../lib/content";
 import type { ContentKind } from "../lib/content";
 
