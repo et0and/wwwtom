@@ -21,7 +21,15 @@ test.describe("writing", () => {
 
   test("posts paginates to the oldest post on page 2", async ({ page }) => {
     await page.goto("/posts");
-    await page.getByRole("link", { name: "Next" }).click();
+    const next = page.getByRole("link", { name: "Next" });
+    // Hover first so the router preloads page 2: a cache hit must still
+    // replace the list on navigation.
+    const preloaded = page.waitForResponse((response) =>
+      response.url().includes("/content/posts/summary?page=2"),
+    );
+    await next.hover();
+    await preloaded;
+    await next.click();
     await expect(page).toHaveURL(/\/posts\?page=2$/);
 
     await expect(page.getByRole("heading", { name: oldestPost.title, level: 2 })).toBeVisible();

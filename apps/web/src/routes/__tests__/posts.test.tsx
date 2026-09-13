@@ -93,6 +93,31 @@ describe("posts page", () => {
     await waitFor(() => expect(screen.getByText("No posts found.")).toBeTruthy());
   });
 
+  it("re-renders the list when cached data is replaced", async () => {
+    // A preloaded page arrives as a new data object under a new key. The
+    // list must follow the identity change, not just the truthiness toggle.
+    const oldest = {
+      id: "post-9",
+      title: "Oldest post",
+      summary: "The oldest",
+      slug: "oldest-post",
+      publishedAt: "2020-01-01T00:00:00.000Z",
+      meta: { description: "Old" },
+    };
+    mockedFetchPosts.mockResolvedValue({ ...postsData, totalPages: 2 });
+    renderPosts();
+    await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
+
+    queryClient.setQueryData(["posts", 1], {
+      ...postsData,
+      docs: [oldest],
+      totalPages: 2,
+    });
+
+    await waitFor(() => expect(screen.getByText("Oldest post")).toBeTruthy());
+    expect(screen.queryByText("A pattern language")).toBeNull();
+  });
+
   it("swaps to page 2 on client navigation", async () => {
     // Placeholder data wedged this flow (the new page never replaced the
     // old one), so pin the swap: click Next, page 2 renders, page 1 clears.

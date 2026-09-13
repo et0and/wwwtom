@@ -235,56 +235,55 @@ export default function Guestbook() {
             Signatures
           </Text>
           <Loading fallback={<Loader />}>
-            <Show when={entriesQuery.data}>
-              {(data) => {
-                const d = data();
-                return (
-                  <Show
-                    when={d.length > 0}
-                    fallback={
-                      <Text variant="secondary" size="sm">
-                        No signatures yet. Be the first!
-                      </Text>
-                    }
-                  >
-                    <For each={d}>
-                      {(entry) => (
-                        <div class="guestbook-entry">
-                          <div class="flex items-start gap-3">
-                            <Show when={entry.avatar_url}>
-                              <img
-                                src={entry.avatar_url!}
-                                alt={entry.display_name ?? entry.fediverse_username}
-                                class="w-10 h-10 rounded-full"
-                              />
-                            </Show>
-                            <div class="flex-1">
-                              <div class="flex items-baseline gap-2 mb-1">
-                                <Text bold as="span">
-                                  {entry.display_name ?? entry.fediverse_username}
-                                </Text>
-                                <Text variant="secondary" size="sm" as="span">
-                                  {entry.fediverse_username}
-                                </Text>
-                              </div>
-                              <Text class="guestbook-message mb-2">{entry.message}</Text>
-                              <Text variant="secondary" size="xs" as="time">
-                                {new Date(entry.created_at).toLocaleDateString("en-NZ", {
-                                  year: "numeric",
-                                  month: "long",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                })}
+            {/* keyed: a signed entry replaces the data array without toggling
+                truthiness, which a non-keyed Show would not re-render. */}
+            <Show when={entriesQuery.data} keyed>
+              {(entries) => (
+                <Show
+                  when={entries.length > 0}
+                  fallback={
+                    <Text variant="secondary" size="sm">
+                      No signatures yet. Be the first!
+                    </Text>
+                  }
+                >
+                  <For each={entries}>
+                    {(entry) => (
+                      <div class="guestbook-entry">
+                        <div class="flex items-start gap-3">
+                          <Show when={entry.avatar_url}>
+                            <img
+                              src={entry.avatar_url!}
+                              alt={entry.display_name ?? entry.fediverse_username}
+                              class="w-10 h-10 rounded-full"
+                            />
+                          </Show>
+                          <div class="flex-1">
+                            <div class="flex items-baseline gap-2 mb-1">
+                              <Text bold as="span">
+                                {entry.display_name ?? entry.fediverse_username}
+                              </Text>
+                              <Text variant="secondary" size="sm" as="span">
+                                {entry.fediverse_username}
                               </Text>
                             </div>
+                            <Text class="guestbook-message mb-2">{entry.message}</Text>
+                            <Text variant="secondary" size="xs" as="time">
+                              {new Date(entry.created_at).toLocaleDateString("en-NZ", {
+                                year: "numeric",
+                                month: "long",
+                                day: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </Text>
                           </div>
                         </div>
-                      )}
-                    </For>
-                  </Show>
-                );
-              }}
+                      </div>
+                    )}
+                  </For>
+                </Show>
+              )}
             </Show>
           </Loading>
         </div>
