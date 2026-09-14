@@ -1,3 +1,16 @@
+# [3.1.0](https://github.com/et0and/wwwtom/compare/v3.0.5...v3.1.0) (2026-09-14)
+
+
+### Bug Fixes
+
+* **apps:** re-render cached route data on identity change ([1070c6d](https://github.com/et0and/wwwtom/commit/1070c6d2eb6c4079470ee85e88982a892691ddf4))
+* **ui:** read Metadata props in reactive scopes ([d3e7ba4](https://github.com/et0and/wwwtom/commit/d3e7ba45ecd9188fc66cad55c920d1359b9a8d08))
+
+
+### Features
+
+* **ui:** cross-fade route changes with the View Transition API ([5fc8749](https://github.com/et0and/wwwtom/commit/5fc8749d6ba685d9c79ef7f4455cf99442f9c987))
+
 ## [3.0.5](https://github.com/et0and/wwwtom/compare/v3.0.4...v3.0.5) (2026-09-12)
 
 
