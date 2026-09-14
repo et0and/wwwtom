@@ -1,3 +1,15 @@
+## [3.1.1](https://github.com/et0and/wwwtom/compare/v3.1.0...v3.1.1) (2026-09-14)
+
+
+### Bug Fixes
+
+* **ui:** keep dropdown open when its trigger is pressed ([9243f75](https://github.com/et0and/wwwtom/commit/9243f7580a33106d304578a3cfb0f14b6d298b65))
+* **web:** lock page scroll behind the mobile menu ([7ec2d33](https://github.com/et0and/wwwtom/commit/7ec2d33485e4a1643fd5a47f716124e4573b8dbd))
+* **web:** lock page scroll in the mobile menu ([8bafa80](https://github.com/et0and/wwwtom/commit/8bafa80d493da003cdda3eedc896d170d8a5056e))
+* **web:** make the mobile menu a full-page panel ([b2b15d2](https://github.com/et0and/wwwtom/commit/b2b15d2b84a39e0dd5d7c84ebb283eede67cf157))
+* **web:** square the mobile menu and enlarge its links ([ac05344](https://github.com/et0and/wwwtom/commit/ac053447b80e7bfc9bdc2cb61c2ba7f5a42fb0de))
+* **web:** use the TomUI surface token for the full-page menu ([0b7634b](https://github.com/et0and/wwwtom/commit/0b7634b09c53623425bef2fd64854357b536d24c))
+
 # [3.1.0](https://github.com/et0and/wwwtom/compare/v3.0.5...v3.1.0) (2026-09-14)
 
 
