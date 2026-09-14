@@ -34,25 +34,13 @@ exports[`Nav > matches the snapshot 1`] = `
           Writing
         </a>
       </div>
-      <div
-        class="md:hidden"
+      <button
+        class="md:hidden text-lg"
       >
-        <div
-          class="relative inline-block"
-          data-tomui-component="DropdownMenu"
-        >
-          <button
-            aria-expanded="false"
-            aria-haspopup="menu"
-            class="text-lg"
-            data-tomui-component="DropdownMenu"
-            data-tomui-part="trigger"
-          >
-            Menu
-          </button>
-        </div>
-      </div>
+        Menu
+      </button>
     </div>
+    
   </nav>
 </div>
 `;

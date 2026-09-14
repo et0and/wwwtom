@@ -1,8 +1,7 @@
-import { createEffect, createSignal, For } from "solid-js";
-import { DropdownMenu } from "./components/dropdown/dropdown";
+import { createEffect, createSignal, For, Show } from "solid-js";
 
 export function Nav() {
-  const [isMenuOpen, setIsMenuOpen] = createSignal(false);
+  const [isOpen, setIsOpen] = createSignal(false);
 
   const navItems = [
     { href: "/work", label: "Work" },
@@ -10,12 +9,12 @@ export function Nav() {
   ];
 
   createEffect(
-    () => isMenuOpen(),
-    (isOpen) => {
+    () => isOpen(),
+    (isMenuOpen) => {
       const previousBodyOverflow = document.body.style.overflow;
       const previousHtmlOverflow = document.documentElement.style.overflow;
-      document.body.style.overflow = isOpen ? "hidden" : previousBodyOverflow;
-      document.documentElement.style.overflow = isOpen ? "hidden" : previousHtmlOverflow;
+      document.body.style.overflow = isMenuOpen ? "hidden" : previousBodyOverflow;
+      document.documentElement.style.overflow = isMenuOpen ? "hidden" : previousHtmlOverflow;
       return () => {
         document.body.style.overflow = previousBodyOverflow;
         document.documentElement.style.overflow = previousHtmlOverflow;
@@ -32,21 +31,23 @@ export function Nav() {
         <div class="hidden md:flex md:items-center space-x-4 text-lg">
           <For each={navItems}>{(item) => <a href={item.href}>{item.label}</a>}</For>
         </div>
-        <div class="md:hidden">
-          <DropdownMenu onOpenChange={(open) => setIsMenuOpen(open)}>
-            <DropdownMenu.Trigger class="text-lg">Menu</DropdownMenu.Trigger>
-            <DropdownMenu.Content class="fixed! top-24! right-0! bottom-0! left-0! mt-0! max-w-none! min-w-0! overflow-y-auto! rounded-none! px-6! py-4!">
-              <For each={navItems}>
-                {(item) => (
-                  <DropdownMenu.Item href={item.href} class="rounded-none! px-0! py-3! text-4xl!">
-                    {item.label}
-                  </DropdownMenu.Item>
-                )}
-              </For>
-            </DropdownMenu.Content>
-          </DropdownMenu>
-        </div>
+        <button class="md:hidden text-lg" onClick={() => setIsOpen(!isOpen())}>
+          Menu
+        </button>
       </div>
+      <Show when={isOpen()}>
+        <div class="nav-dropdown md:hidden">
+          <div class="flex flex-col py-4 px-6 text-4xl">
+            <For each={navItems}>
+              {(item) => (
+                <a href={item.href} onClick={() => setIsOpen(false)}>
+                  {item.label}
+                </a>
+              )}
+            </For>
+          </div>
+        </div>
+      </Show>
     </nav>
   );
 }

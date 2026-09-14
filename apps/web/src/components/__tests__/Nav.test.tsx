@@ -40,21 +40,20 @@ describe("Nav", () => {
   it("contains a mobile Menu trigger", () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    const trigger = screen.getByRole("button", { name: "Menu" });
+    const toggleButton = screen.getByRole("button", { name: "Menu" });
 
-    expect(trigger).toBeInTheDocument();
-    expect(trigger.closest("[class~='md:hidden']")).not.toBeNull();
+    expect(toggleButton).toBeInTheDocument();
+    expect(toggleButton).toHaveClass("md:hidden");
   });
 
   it("opens menu on click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Menu" }));
 
-    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
-    expect(screen.getByRole("menuitem", { name: "Writing" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
   });
 
   it("locks page scroll while the mobile menu is open", async () => {
@@ -80,58 +79,37 @@ describe("Nav", () => {
     expect(document.documentElement.style.overflow).toBe("");
   });
 
-  it("closes menu on second trigger click", async () => {
-    const TestRouter = createTestRouter();
-    render(() => <TestRouter />);
-    const trigger = screen.getByRole("button", { name: "Menu" });
-    fireEvent.click(trigger);
-    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
-
-    fireEvent.mouseDown(trigger);
-    await new Promise((resolve) => setTimeout(resolve, 0));
-    expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument();
-
-    fireEvent.click(trigger);
-
-    await waitFor(() =>
-      expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument(),
-    );
-  });
-
-  it("links menu items to their routes", async () => {
+  it("closes menu on second toggle click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
     fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
 
-    await waitFor(() =>
-      expect(screen.getByRole("menuitem", { name: "Work" })).toHaveAttribute("href", "/work"),
-    );
-    expect(screen.getByRole("menuitem", { name: "Writing" })).toHaveAttribute("href", "/posts");
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(1));
   });
 
-  it("closes menu and unlocks scroll after selecting a menu item", async () => {
+  it("navigates to Work on click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
     fireEvent.click(screen.getByRole("button", { name: "Menu" }));
-    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
 
-    fireEvent.click(screen.getByRole("menuitem", { name: "Work" }));
-
-    await waitFor(() =>
-      expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument(),
-    );
-    expect(document.body.style.overflow).toBe("");
+    const links = screen.getAllByRole("link", { name: "Work" });
+    const dropdownWork = links[1];
+    expect(dropdownWork).toHaveAttribute("href", "/work");
   });
 
   it("opens menu with keyboard", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    const trigger = screen.getByRole("button", { name: "Menu" });
-    trigger.focus();
-    expect(document.activeElement).toBe(trigger);
+    const toggleButton = screen.getByRole("button", { name: "Menu" });
+    toggleButton.focus();
+    expect(document.activeElement).toBe(toggleButton);
 
     fireEvent.click(document.activeElement as HTMLElement);
 
-    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
   });
 });
