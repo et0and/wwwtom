@@ -3,6 +3,7 @@ import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
 import type { CmsPostSummary } from "@tom/schemas/cms";
 import { Metadata } from "@tom/ui/Meta";
+import { ViewTransitions } from "@tom/ui/ViewTransitions";
 import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
 import { Loader } from "@tom/ui/loader";
@@ -60,12 +61,14 @@ const About = () => {
         <Show when={aboutQuery.isError}>
           <Banner variant="error" description={aboutQuery.error?.message ?? "Load failed"} />
         </Show>
-        <Show when={aboutQuery.data} fallback={<p>Nothing here yet.</p>}>
+        {/* keyed: a preloaded post replaces the data object without toggling
+            truthiness, which a non-keyed Show would not re-render. */}
+        <Show when={aboutQuery.data} fallback={<p>Nothing here yet.</p>} keyed>
           {(post) => (
             // post.html is rendered at write time from a validated Tiptap
             // doc via renderTiptapHtml (escaped, unsafe schemes dropped),
             // so innerHTML is safe here. Pinned by html.test.ts.
-            <div class="sophie-body" innerHTML={post().html} />
+            <div class="sophie-body" innerHTML={post.html} />
           )}
         </Show>
       </Loading>
@@ -170,26 +173,28 @@ const PostDetail = () => {
             <Loader size="sm" /> Loading…
           </p>
         </Match>
-        <Match when={postQuery.data}>
+        {/* keyed: a preloaded post swap replaces the data object without
+            toggling truthiness, which a non-keyed Match would not re-render. */}
+        <Match when={postQuery.data} keyed>
           {(found) => (
             <article>
               <Metadata
-                title={found().title}
+                title={found.title}
                 metaType="description"
-                metaContent={found().summary ?? SOPHIE_DESCRIPTION}
+                metaContent={found.summary ?? SOPHIE_DESCRIPTION}
                 brand={SOPHIE_BRAND}
-                date={formatPublishedDate(found().publishedAt)}
+                date={formatPublishedDate(found.publishedAt)}
               />
               <div class="sophie-crumbs">
                 <Breadcrumbs
                   size="sm"
-                  items={[{ label: "Posts", href: "/" }, { label: found().title }]}
+                  items={[{ label: "Posts", href: "/" }, { label: found.title }]}
                 />
               </div>
               {/* post.html is rendered at write time from a validated Tiptap
                 doc via renderTiptapHtml (escaped, unsafe schemes dropped),
                 so innerHTML is safe here. Pinned by html.test.ts. */}
-              <div class="sophie-body" innerHTML={found().html} />
+              <div class="sophie-body" innerHTML={found.html} />
             </article>
           )}
         </Match>
@@ -277,7 +282,13 @@ export const App = () => {
     <QueryClientProvider client={client}>
       <div class="sophie-shell">
         <Nav />
-        <Router>{(props) => <div class="sophie-main">{props.children}</div>}</Router>
+        <Router>
+          {(props) => (
+            <ViewTransitions>
+              <div class="sophie-main">{props.children}</div>
+            </ViewTransitions>
+          )}
+        </Router>
         <footer class="sophie-footer">
           <p>All rights reserved</p>
         </footer>

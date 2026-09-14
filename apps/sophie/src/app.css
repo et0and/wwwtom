@@ -170,3 +170,67 @@
     @apply rounded-t-lg border border-b-0 border-neutral-200 bg-neutral-100 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400;
   }
 }
+
+/* View Transitions. The router swaps routes in place, and ViewTransitions
+   (@tom/ui) wraps those navigations in document.startViewTransition;
+   @view-transition covers hard document loads. Keep in sync with
+   apps/web/src/app.css. */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: fade-out 250ms ease-in-out both;
+}
+
+::view-transition-new(root) {
+  animation: fade-in 250ms ease-in-out both;
+}
+
+/* The wordmark nav is persistent chrome: only the live header shows while
+   content fades. */
+.sophie-nav {
+  view-transition-name: header;
+}
+
+::view-transition-group(header) {
+  animation: none;
+}
+
+::view-transition-old(header) {
+  display: none;
+}
+
+::view-transition-new(header) {
+  animation: none;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation: none !important;
+  }
+}

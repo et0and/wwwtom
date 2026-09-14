@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@tom/ui/progress.css";
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
 
@@ -229,30 +228,38 @@ a.page:hover {
   }
 }
 
-/* View Transitions */
+/* View Transitions. The router swaps routes in place, and ViewTransitions
+   (@tom/ui) wraps those navigations in document.startViewTransition;
+   @view-transition covers hard document loads. Keep in sync with
+   apps/sophie/src/app.css. */
 @view-transition {
   navigation: auto;
 }
 
-::view-transition {
-  animation-duration: 250ms;
-}
-
-::view-transition-group(root) {
-  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Fade transition for page content */
-::view-transition-image-pair(root) {
-  isolation: none;
-}
-
 ::view-transition-old(root) {
-  animation: fade-out 250ms ease-in-out;
+  animation: fade-out 250ms ease-in-out both;
 }
 
 ::view-transition-new(root) {
-  animation: fade-in 250ms ease-in-out;
+  animation: fade-in 250ms ease-in-out both;
+}
+
+/* The nav is persistent chrome: only the live header shows while content
+   fades. */
+.view-transition-header {
+  view-transition-name: header;
+}
+
+::view-transition-group(header) {
+  animation: none;
+}
+
+::view-transition-old(header) {
+  display: none;
+}
+
+::view-transition-new(header) {
+  animation: none;
 }
 
 @keyframes fade-in {
@@ -303,10 +310,10 @@ a.page:hover {
     navigation: none;
   }
 
-  ::view-transition,
-  ::view-transition-group(*),
-  ::view-transition-image-pair(*) {
-    animation: none;
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation: none !important;
   }
 
   .animate-blur-in,
@@ -401,24 +408,6 @@ pre code {
   .code-block[data-line-numbers="true"] pre .line::before {
     color: rgb(107 114 133);
   }
-}
-
-/* View transition names for specific elements */
-.view-transition-header {
-  view-transition-name: header;
-}
-
-.view-transition-main {
-  view-transition-name: main-content;
-}
-
-/* Prevent transition name conflicts during navigation */
-::view-transition-old(*) {
-  animation: none;
-}
-
-::view-transition-new(*) {
-  animation: none;
 }
 
 /* Are.na carousel embeds: force third-party embed iframes (fixed 640x360

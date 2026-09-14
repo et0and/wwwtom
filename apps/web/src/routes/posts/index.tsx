@@ -54,55 +54,54 @@ export default function PostsHome() {
               <Text>{postsQuery.error?.message}</Text>
             </div>
           </Show>
-          <Show when={postsQuery.data}>
-            {(result) => {
-              const postsPage = result();
-              return (
-                <>
-                  <Show
-                    when={postsPage.docs.length > 0}
-                    fallback={<Text variant="secondary">No posts found.</Text>}
-                  >
-                    <For each={postsPage.docs}>
-                      {(post) => (
-                        <Link
-                          variant="current"
-                          class="page block!"
-                          preload={true}
-                          href={`/posts/${post.slug}`}
-                        >
-                          <div>
-                            <Text variant="heading" as="h2">
-                              {post.title}
-                            </Text>
-                            <Text variant="secondary" size="sm" as="time">
-                              {formatDate(post.publishedAt ?? "")}
-                            </Text>
-                            <Text>{post.summary || post.meta?.description}</Text>
-                          </div>
-                        </Link>
-                      )}
-                    </For>
-                  </Show>
-                  <div class="justify-between flex item-center">
-                    <Show when={postsPage.page > 1}>
+          {/* keyed: a preloaded page swap replaces the data object without
+              toggling truthiness, which a non-keyed Show would not re-render. */}
+          <Show when={postsQuery.data} keyed>
+            {(postsPage) => (
+              <>
+                <Show
+                  when={postsPage.docs.length > 0}
+                  fallback={<Text variant="secondary">No posts found.</Text>}
+                >
+                  <For each={postsPage.docs}>
+                    {(post) => (
                       <Link
                         variant="current"
+                        class="page block!"
                         preload={true}
-                        href={`/posts?page=${postsPage.page - 1}`}
+                        href={`/posts/${post.slug}`}
                       >
-                        Previous
+                        <div>
+                          <Text variant="heading" as="h2">
+                            {post.title}
+                          </Text>
+                          <Text variant="secondary" size="sm" as="time">
+                            {formatDate(post.publishedAt ?? "")}
+                          </Text>
+                          <Text>{post.summary || post.meta?.description}</Text>
+                        </div>
                       </Link>
-                    </Show>
-                    <Show when={postsPage.page < postsPage.totalPages}>
-                      <Link variant="current" href={`/posts?page=${postsPage.page + 1}`}>
-                        Next
-                      </Link>
-                    </Show>
-                  </div>
-                </>
-              );
-            }}
+                    )}
+                  </For>
+                </Show>
+                <div class="justify-between flex item-center">
+                  <Show when={postsPage.page > 1}>
+                    <Link
+                      variant="current"
+                      preload={true}
+                      href={`/posts?page=${postsPage.page - 1}`}
+                    >
+                      Previous
+                    </Link>
+                  </Show>
+                  <Show when={postsPage.page < postsPage.totalPages}>
+                    <Link variant="current" href={`/posts?page=${postsPage.page + 1}`}>
+                      Next
+                    </Link>
+                  </Show>
+                </div>
+              </>
+            )}
           </Show>
         </Loading>
       </BlurInSection>

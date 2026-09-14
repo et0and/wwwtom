@@ -44,37 +44,36 @@ export default function WorkPage() {
       <Match when={workQuery.isPending}>
         <DetailLoading />
       </Match>
-      <Match when={workQuery.data}>
-        {(data) => {
-          const work = data();
-          return (
-            <PageLayout
-              title={work.title}
-              // An empty summary falls back to the meta description.
-              description={work.summary || work.meta?.description || ""}
-              canonical={`https://tom.so/work/${slug()}`}
-              jsonLd={{
-                "@context": "https://schema.org",
-                "@type": "CreativeWork",
-                name: work.title,
-                description: work.summary || work.meta?.description || "",
-                url: `https://tom.so/work/${slug()}`,
-                author: { "@type": "Person", name: "Tom Hackshaw" },
-              }}
-            >
-              <article>
-                <BlurInText text={work.title} tag="h1" baseDelay={0.1} step={0.025} />
-                <BlurInSection delay={0.3}>
-                  <Text>{work.summary ?? ""}</Text>
-                </BlurInSection>
-                <BlurInSection delay={0.5}>
-                  <div innerHTML={work.html ?? ""} />
-                </BlurInSection>
-                <DetailArenaBlocks blocks={work.arenaBlocks ?? []} baseDelay={0.7} />
-              </article>
-            </PageLayout>
-          );
-        }}
+      {/* keyed: a preloaded work swap replaces the data object without
+          toggling truthiness, which a non-keyed Match would not re-render. */}
+      <Match when={workQuery.data} keyed>
+        {(work) => (
+          <PageLayout
+            title={work.title}
+            // An empty summary falls back to the meta description.
+            description={work.summary || work.meta?.description || ""}
+            canonical={`https://tom.so/work/${slug()}`}
+            jsonLd={{
+              "@context": "https://schema.org",
+              "@type": "CreativeWork",
+              name: work.title,
+              description: work.summary || work.meta?.description || "",
+              url: `https://tom.so/work/${slug()}`,
+              author: { "@type": "Person", name: "Tom Hackshaw" },
+            }}
+          >
+            <article>
+              <BlurInText text={work.title} tag="h1" baseDelay={0.1} step={0.025} />
+              <BlurInSection delay={0.3}>
+                <Text>{work.summary ?? ""}</Text>
+              </BlurInSection>
+              <BlurInSection delay={0.5}>
+                <div innerHTML={work.html ?? ""} />
+              </BlurInSection>
+              <DetailArenaBlocks blocks={work.arenaBlocks ?? []} baseDelay={0.7} />
+            </article>
+          </PageLayout>
+        )}
       </Match>
       <Match when={workQuery.isError}>
         <DetailError kind="work" message={workQuery.error?.message ?? "Load failed"} />

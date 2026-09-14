@@ -45,48 +45,47 @@ export default function PostPage() {
       <Match when={postQuery.isPending}>
         <DetailLoading />
       </Match>
-      <Match when={postQuery.data}>
-        {(data) => {
-          const post = data();
-          return (
-            <PageLayout
-              title={post.title}
-              // An empty summary falls back to the meta description.
-              description={post.summary || post.meta?.description || ""}
-              canonical={`https://tom.so/posts/${slug()}`}
-              jsonLd={{
-                "@context": "https://schema.org",
-                "@type": "BlogPosting",
-                headline: post.title,
-                description: post.summary || post.meta?.description || "",
-                datePublished: post.publishedAt ?? "",
-                dateModified: post.updatedAt ?? "",
-                url: `https://tom.so/posts/${slug()}`,
-                author: { "@type": "Person", name: "Tom Hackshaw" },
-              }}
-            >
-              <article>
-                <BlurInText text={post.title} tag="h1" baseDelay={0.1} step={0.025} />
-                <BlurInSection delay={0.3}>
-                  <Text variant="heading" as="h2">
-                    {post.meta?.description ?? ""}
+      {/* keyed: a preloaded post swap replaces the data object without
+          toggling truthiness, which a non-keyed Match would not re-render. */}
+      <Match when={postQuery.data} keyed>
+        {(post) => (
+          <PageLayout
+            title={post.title}
+            // An empty summary falls back to the meta description.
+            description={post.summary || post.meta?.description || ""}
+            canonical={`https://tom.so/posts/${slug()}`}
+            jsonLd={{
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              headline: post.title,
+              description: post.summary || post.meta?.description || "",
+              datePublished: post.publishedAt ?? "",
+              dateModified: post.updatedAt ?? "",
+              url: `https://tom.so/posts/${slug()}`,
+              author: { "@type": "Person", name: "Tom Hackshaw" },
+            }}
+          >
+            <article>
+              <BlurInText text={post.title} tag="h1" baseDelay={0.1} step={0.025} />
+              <BlurInSection delay={0.3}>
+                <Text variant="heading" as="h2">
+                  {post.meta?.description ?? ""}
+                </Text>
+              </BlurInSection>
+              <BlurInSection delay={0.5}>
+                {post.publishedAt ? (
+                  <Text variant="secondary" size="sm" as="time">
+                    {formatDate(post.publishedAt)}
                   </Text>
-                </BlurInSection>
-                <BlurInSection delay={0.5}>
-                  {post.publishedAt ? (
-                    <Text variant="secondary" size="sm" as="time">
-                      {formatDate(post.publishedAt)}
-                    </Text>
-                  ) : null}
-                </BlurInSection>
-                <BlurInSection delay={0.7}>
-                  <div class="pt-8" innerHTML={post.html ?? ""} />
-                </BlurInSection>
-                <DetailArenaBlocks blocks={post.arenaBlocks ?? []} baseDelay={0.9} />
-              </article>
-            </PageLayout>
-          );
-        }}
+                ) : null}
+              </BlurInSection>
+              <BlurInSection delay={0.7}>
+                <div class="pt-8" innerHTML={post.html ?? ""} />
+              </BlurInSection>
+              <DetailArenaBlocks blocks={post.arenaBlocks ?? []} baseDelay={0.9} />
+            </article>
+          </PageLayout>
+        )}
       </Match>
       <Match when={postQuery.isError}>
         <DetailError kind="post" message={postQuery.error?.message ?? "Load failed"} />
