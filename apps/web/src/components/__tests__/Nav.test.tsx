@@ -37,10 +37,10 @@ describe("Nav", () => {
     expect(screen.getByRole("link", { name: "Writing" })).toHaveAttribute("href", "/posts");
   });
 
-  it("contains mobile menu toggle button", () => {
+  it("contains a mobile Menu trigger", () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    const toggleButton = screen.getByRole("button", { name: "Toggle menu" });
+    const toggleButton = screen.getByRole("button", { name: "Menu" });
 
     expect(toggleButton).toBeInTheDocument();
     expect(toggleButton).toHaveClass("md:hidden");
@@ -51,18 +51,41 @@ describe("Nav", () => {
     render(() => <TestRouter />);
     expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(1);
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
 
     await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
+  });
+
+  it("locks page scroll while the mobile menu is open", async () => {
+    const TestRouter = createTestRouter();
+    render(() => <TestRouter />);
+    expect(document.body.style.overflow).toBe("");
+
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+
+    await waitFor(() => expect(document.body.style.overflow).toBe("hidden"));
+    expect(document.documentElement.style.overflow).toBe("hidden");
+  });
+
+  it("restores page scroll when the mobile menu closes", async () => {
+    const TestRouter = createTestRouter();
+    render(() => <TestRouter />);
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await waitFor(() => expect(document.body.style.overflow).toBe("hidden"));
+
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+
+    await waitFor(() => expect(document.body.style.overflow).toBe(""));
+    expect(document.documentElement.style.overflow).toBe("");
   });
 
   it("closes menu on second toggle click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
     await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
 
     await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(1));
   });
@@ -70,7 +93,7 @@ describe("Nav", () => {
   it("navigates to Work on click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
     await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
 
     const links = screen.getAllByRole("link", { name: "Work" });
@@ -81,7 +104,7 @@ describe("Nav", () => {
   it("opens menu with keyboard", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    const toggleButton = screen.getByRole("button", { name: "Toggle menu" });
+    const toggleButton = screen.getByRole("button", { name: "Menu" });
     toggleButton.focus();
     expect(document.activeElement).toBe(toggleButton);
 
