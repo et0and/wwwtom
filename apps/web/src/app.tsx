@@ -1,7 +1,6 @@
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { Footer } from "@tom/ui/Footer";
 import { Nav } from "@tom/ui/Nav";
-import { ProgressBar } from "@tom/ui/ProgressBar";
 import { SkipLink } from "@tom/ui/SkipLink";
 import { ViewTransitions } from "@tom/ui/ViewTransitions";
 import { useColorMode } from "@tom/ui/color-mode";
@@ -15,7 +14,6 @@ function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
     <ViewTransitions>
       <div class="min-h-screen flex flex-col">
         <SkipLink />
-        <ProgressBar />
         <Nav />
         <div class="flex-1">{props.children}</div>
         <Footer />
