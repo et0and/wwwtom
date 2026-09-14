@@ -35,10 +35,10 @@ export function Nav() {
         <div class="md:hidden">
           <DropdownMenu onOpenChange={(open) => setIsMenuOpen(open)}>
             <DropdownMenu.Trigger class="text-lg">Menu</DropdownMenu.Trigger>
-            <DropdownMenu.Content align="end" class="rounded-none!">
+            <DropdownMenu.Content class="fixed! top-24! right-0! bottom-0! left-0! mt-0! max-w-none! min-w-0! overflow-y-auto! rounded-none! bg-white! px-6! py-4! dark:bg-[#0a0a0a]!">
               <For each={navItems}>
                 {(item) => (
-                  <DropdownMenu.Item href={item.href} class="rounded-none! px-3! py-2! text-lg!">
+                  <DropdownMenu.Item href={item.href} class="rounded-none! px-0! py-3! text-4xl!">
                     {item.label}
                   </DropdownMenu.Item>
                 )}
