@@ -83,10 +83,15 @@ describe("Nav", () => {
   it("closes menu on second trigger click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    const trigger = screen.getByRole("button", { name: "Menu" });
+    fireEvent.click(trigger);
     await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    fireEvent.mouseDown(trigger);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument();
+
+    fireEvent.click(trigger);
 
     await waitFor(() =>
       expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument(),

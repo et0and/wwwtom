@@ -42,12 +42,14 @@ interface DropdownContextValue {
   isOpen: () => boolean;
   close: () => void;
   toggle: () => void;
+  root: () => HTMLElement | undefined;
 }
 
 const DropdownContext = createContext<DropdownContextValue>({
   isOpen: () => false,
   close: () => undefined,
   toggle: () => undefined,
+  root: () => undefined,
 });
 
 export type DropdownMenuRootProps = {
@@ -64,13 +66,21 @@ function DropdownMenuRoot(props: DropdownMenuRootProps): JSX.Element {
     if (props.open === undefined) setUncontrolledOpen(next);
     props.onOpenChange?.(next);
   };
+  let rootElement: HTMLDivElement | undefined;
   const value: DropdownContextValue = {
     isOpen,
     close: () => setOpen(false),
     toggle: () => setOpen(!isOpen()),
+    root: () => rootElement,
   };
   return (
-    <div data-tomui-component="DropdownMenu" class="relative inline-block">
+    <div
+      ref={(el) => {
+        rootElement = el;
+      }}
+      data-tomui-component="DropdownMenu"
+      class="relative inline-block"
+    >
       <DropdownContext value={value}>{props.children}</DropdownContext>
     </div>
   );
@@ -118,10 +128,10 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
   const ctx = useContext(DropdownContext);
   const merged = merge({ align: "start" as const }, props);
   const rest = omit(merged, "children", "class", "align");
-  let element: HTMLDivElement | undefined;
   onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
-      if (element && !element.contains(event.target as Node)) ctx.close();
+      if (ctx.root()?.contains(event.target as Node)) return;
+      ctx.close();
     };
     const onKey = (event: KeyboardEvent): void => {
       if (event.key === "Escape") ctx.close();
@@ -137,9 +147,6 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
     <Show when={ctx.isOpen()}>
       <div
         {...rest}
-        ref={(el) => {
-          element = el;
-        }}
         data-tomui-component="DropdownMenu"
         data-tomui-part="content"
         role="menu"
