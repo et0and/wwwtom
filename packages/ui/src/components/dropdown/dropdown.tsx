@@ -164,7 +164,7 @@ export type DropdownMenuItemProps = Omit<JSX.ButtonHTMLAttributes<HTMLButtonElem
   selected?: boolean;
   href?: string;
   variant?: TomuiDropdownVariant;
-  onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  onClick?: JSX.EventHandler<HTMLElement, MouseEvent> | undefined;
 };
 
 function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
@@ -203,6 +203,10 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
           role="menuitem"
           href={merged.href}
           class={cn(itemClass(), "text-inherit no-underline")}
+          onClick={(event) => {
+            ctx.close();
+            merged.onClick?.(event);
+          }}
         >
           {merged.icon}
           {merged.children}

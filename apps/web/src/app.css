@@ -212,22 +212,6 @@ a.page:hover {
   }
 }
 
-.nav-dropdown {
-  position: fixed;
-  top: 4rem;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 50;
-  background-color: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .nav-dropdown {
-    background-color: #0a0a0a;
-  }
-}
-
 /* View Transitions. The router swaps routes in place, and ViewTransitions
    (@tom/ui) wraps those navigations in document.startViewTransition;
    @view-transition covers hard document loads. Keep in sync with

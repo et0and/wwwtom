@@ -37,56 +37,96 @@ describe("Nav", () => {
     expect(screen.getByRole("link", { name: "Writing" })).toHaveAttribute("href", "/posts");
   });
 
-  it("contains mobile menu toggle button", () => {
+  it("contains a mobile Menu trigger", () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    const toggleButton = screen.getByRole("button", { name: "Toggle menu" });
+    const trigger = screen.getByRole("button", { name: "Menu" });
 
-    expect(toggleButton).toBeInTheDocument();
-    expect(toggleButton).toHaveClass("md:hidden");
+    expect(trigger).toBeInTheDocument();
+    expect(trigger.closest("[class~='md:hidden']")).not.toBeNull();
   });
 
   it("opens menu on click", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(1);
+    expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
 
-    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
+    expect(screen.getByRole("menuitem", { name: "Writing" })).toBeInTheDocument();
   });
 
-  it("closes menu on second toggle click", async () => {
+  it("locks page scroll while the mobile menu is open", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
-    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
+    expect(document.body.style.overflow).toBe("");
 
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
 
-    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(1));
+    await waitFor(() => expect(document.body.style.overflow).toBe("hidden"));
+    expect(document.documentElement.style.overflow).toBe("hidden");
   });
 
-  it("navigates to Work on click", async () => {
+  it("restores page scroll when the mobile menu closes", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    fireEvent.click(screen.getByRole("button", { name: "Toggle menu" }));
-    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await waitFor(() => expect(document.body.style.overflow).toBe("hidden"));
 
-    const links = screen.getAllByRole("link", { name: "Work" });
-    const dropdownWork = links[1];
-    expect(dropdownWork).toHaveAttribute("href", "/work");
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+
+    await waitFor(() => expect(document.body.style.overflow).toBe(""));
+    expect(document.documentElement.style.overflow).toBe("");
+  });
+
+  it("closes menu on second trigger click", async () => {
+    const TestRouter = createTestRouter();
+    render(() => <TestRouter />);
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument(),
+    );
+  });
+
+  it("links menu items to their routes", async () => {
+    const TestRouter = createTestRouter();
+    render(() => <TestRouter />);
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+
+    await waitFor(() =>
+      expect(screen.getByRole("menuitem", { name: "Work" })).toHaveAttribute("href", "/work"),
+    );
+    expect(screen.getByRole("menuitem", { name: "Writing" })).toHaveAttribute("href", "/posts");
+  });
+
+  it("closes menu and unlocks scroll after selecting a menu item", async () => {
+    const TestRouter = createTestRouter();
+    render(() => <TestRouter />);
+    fireEvent.click(screen.getByRole("button", { name: "Menu" }));
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole("menuitem", { name: "Work" }));
+
+    await waitFor(() =>
+      expect(screen.queryByRole("menuitem", { name: "Work" })).not.toBeInTheDocument(),
+    );
+    expect(document.body.style.overflow).toBe("");
   });
 
   it("opens menu with keyboard", async () => {
     const TestRouter = createTestRouter();
     render(() => <TestRouter />);
-    const toggleButton = screen.getByRole("button", { name: "Toggle menu" });
-    toggleButton.focus();
-    expect(document.activeElement).toBe(toggleButton);
+    const trigger = screen.getByRole("button", { name: "Menu" });
+    trigger.focus();
+    expect(document.activeElement).toBe(trigger);
 
     fireEvent.click(document.activeElement as HTMLElement);
 
-    await waitFor(() => expect(screen.getAllByRole("link", { name: "Work" })).toHaveLength(2));
+    await waitFor(() => expect(screen.getByRole("menuitem", { name: "Work" })).toBeInTheDocument());
   });
 });
