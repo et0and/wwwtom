@@ -1,3 +1,11 @@
+## [3.2.1](https://github.com/et0and/wwwtom/compare/v3.2.0...v3.2.1) (2026-09-15)
+
+
+### Bug Fixes
+
+* **editor:** keep insert dialogs inside narrow viewports ([9e475d7](https://github.com/et0and/wwwtom/commit/9e475d7af247b42c002cea1fc347ea16a9787e28))
+* **og:** drop the developer template and brand the no-referer fallback ([190e292](https://github.com/et0and/wwwtom/commit/190e292ddef23ba3d27a944fe7a0da81648e1d2f))
+
 # [3.2.0](https://github.com/et0and/wwwtom/compare/v3.1.3...v3.2.0) (2026-09-15)
 
 
