@@ -544,7 +544,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex justify-end gap-2">
+              <div class="flex flex-wrap justify-end gap-2">
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
@@ -577,7 +577,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex justify-end gap-2">
+              <div class="flex flex-wrap justify-end gap-2">
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
@@ -610,7 +610,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex justify-end gap-2">
+              <div class="flex flex-wrap justify-end gap-2">
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>

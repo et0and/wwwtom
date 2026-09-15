@@ -182,6 +182,12 @@
     @apply rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm font-normal dark:border-neutral-700 dark:bg-neutral-900;
   }
 
+  /* File inputs keep a wide intrinsic width ("Choose File No file chosen"),
+     which would push the media dialog past narrow viewports. */
+  .field input[type="file"] {
+    @apply w-full min-w-0 text-sm font-normal;
+  }
+
   .check {
     @apply flex items-center gap-2 text-sm font-normal;
   }

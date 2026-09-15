@@ -390,6 +390,56 @@ test.describe("editor mobile", () => {
       .evaluate((element) => element.getBoundingClientRect().top);
     expect(Math.abs(toolbarTop - navHeight)).toBeLessThanOrEqual(1);
   });
+
+  test("insert dialogs fit a narrow viewport", async ({ page }) => {
+    // iPhone SE width: the tightest case anyone still uses.
+    await page.setViewportSize({ width: 320, height: 640 });
+    const target = fixturePosts[0];
+    const mediaItem = {
+      id: "media-1",
+      key: "media/media-1/a-very-long-asset-filename-that-would-blow-out-a-narrow-dialog.webp",
+      mime: "image/webp",
+      width: null,
+      height: null,
+      alt: "Hero",
+      caption: null,
+      variants: [],
+      createdAt: "2026-09-01T00:00:00.000Z",
+      updatedAt: "2026-09-01T00:00:00.000Z",
+    };
+    await page.route(`${ADAPTER}/content/posts/${target.slug}`, (route: Route) =>
+      json(route, target),
+    );
+    await page.route(`${ADAPTER}/content/media?pageSize=*`, (route: Route) =>
+      json(route, { ...emptyList, limit: 100, docs: [mediaItem], totalDocs: 1 }),
+    );
+    await page.route(`${ADAPTER}/content/media/*/file`, (route: Route) => route.abort());
+    await page.goto("/");
+    await page.getByRole("button", { name: target.title }).click();
+
+    for (const name of ["Link", "Arena", "Media"]) {
+      await page.locator(".editor-toolbar").getByRole("button", { name }).click();
+      const dialog = page.getByRole("dialog");
+      await expect(dialog).toBeVisible();
+      const box = await dialog.boundingBox();
+      expect(box, `${name} dialog has no box`).not.toBeNull();
+      expect(box?.x ?? -1).toBeGreaterThanOrEqual(0);
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(320.5);
+      // Nothing inside may scroll sideways or spill past the dialog.
+      const inner = await dialog.evaluate((element) => ({
+        overflow: element.scrollWidth - element.clientWidth,
+        spill: [...element.querySelectorAll("*")].filter(
+          (child) =>
+            child.getBoundingClientRect().right > element.getBoundingClientRect().right + 1,
+        ).length,
+      }));
+      expect(inner.overflow, `${name} dialog overflows`).toBeLessThanOrEqual(0);
+      expect(inner.spill, `${name} dialog spills children`).toBe(0);
+      expect(await xOverflow(page)).toBeLessThanOrEqual(0);
+      await page.getByRole("button", { name: "Cancel" }).click();
+      await expect(dialog).toHaveCount(0);
+    }
+  });
 });
 
 test.describe("editor sign-out", () => {
