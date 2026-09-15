@@ -76,7 +76,8 @@ describe("post page meta tags", () => {
 
     const imageUrl =
       "https://adapter.tom.so/og?title=A%20pattern%20language" +
-      "&summary=On%20imagining%20a%20monorepo%20as%20a%20shared%20house";
+      "&summary=On%20imagining%20a%20monorepo%20as%20a%20shared%20house" +
+      "&template=default";
 
     expect(headMeta('meta[property="og:image"]')).toBe(imageUrl);
     expect(headMeta('meta[name="twitter:image"]')).toBe(imageUrl);

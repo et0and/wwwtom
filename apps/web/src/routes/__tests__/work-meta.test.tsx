@@ -71,7 +71,8 @@ describe("work page meta tags", () => {
 
     const imageUrl =
       "https://adapter.tom.so/og?title=An%20idea%20for%20a%20performance" +
-      "&summary=A%20tool%20for%20generating%20performance%20ideas.";
+      "&summary=A%20tool%20for%20generating%20performance%20ideas." +
+      "&template=default";
 
     expect(headMeta('meta[property="og:image"]')).toBe(imageUrl);
     expect(headMeta('meta[name="twitter:image"]')).toBe(imageUrl);
