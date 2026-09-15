@@ -1,3 +1,15 @@
+# [3.2.0](https://github.com/et0and/wwwtom/compare/v3.1.3...v3.2.0) (2026-09-15)
+
+
+### Bug Fixes
+
+* **ui:** pin the brand OG template so crawlers get the brand card ([6a22bfb](https://github.com/et0and/wwwtom/commit/6a22bfb48f292f73fe2f652487c296ba6e6dd255))
+
+
+### Features
+
+* **editor:** responsive toolbar and dialog insert flows ([8abc6fa](https://github.com/et0and/wwwtom/commit/8abc6fa75e5d0f5bcc2b60f3d2fc1a3c081bfc04))
+
 ## [3.1.3](https://github.com/et0and/wwwtom/compare/v3.1.2...v3.1.3) (2026-09-15)
 
 
