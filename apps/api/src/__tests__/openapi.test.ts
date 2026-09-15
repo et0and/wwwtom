@@ -52,9 +52,7 @@ describe("openapi docs", () => {
         expect.objectContaining({
           name: "template",
           schema: expect.objectContaining({
-            description: expect.stringContaining(
-              "Available templates: default, minimal, developer",
-            ),
+            description: expect.stringContaining("Available templates: default, minimal, sophie"),
             examples: ["default"],
           }),
         }),

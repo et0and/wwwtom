@@ -46,16 +46,11 @@ const dateSchema = commaTolerantString(30).pipe(
 );
 
 const templateSchema = Schema.optional(
-  Schema.Union([
-    Schema.Literal("default"),
-    Schema.Literal("minimal"),
-    Schema.Literal("developer"),
-    Schema.Literal("sophie"),
-  ]),
+  Schema.Union([Schema.Literal("default"), Schema.Literal("minimal"), Schema.Literal("sophie")]),
 ).pipe(
   Schema.annotate({
     description:
-      "OG image template to use. Defaults to automatic selection based on requester. Available templates: default, minimal, developer, sophie",
+      "OG image template to use. Defaults to automatic selection based on requester. Available templates: default, minimal, sophie",
     examples: ["default"],
     default: "default",
   }),
@@ -100,9 +95,9 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
     // Template auto-select reads the Referer header only: a ?requester=
     // override would let any caller force another site's template, so the
     // query param is not honored. An explicit template param stays
-    // authoritative and is validated below.
+    // authoritative and is validated below. No Referer (the common crawler
+    // case) resolves to the tenant's own brand card.
     const referer = request.headers.get("Referer") ?? "";
-    const requester = referer || "unknown";
 
     const result = await runEffect(
       Effect.gen(function* () {
@@ -111,13 +106,14 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
         return yield* generateOgImageEffect(
           title,
           summary,
-          requester,
+          referer,
           validated.template,
           validated.date,
           {
             origin: new URL(request.url).origin,
             assets: env.ASSETS,
           },
+          env.TENANT,
         );
       }).pipe(
         Effect.catchTag("ValidationError", (error) =>

@@ -32,12 +32,6 @@ export const OgTemplates = {
       <p style="font-size: 32px; margin: 0;">${escapeHtml(params.summary)}</p>
     </div>
   `,
-  developer: (params: OgTemplateParams) => `
-    <div style="display: flex; flex-direction: column; justify-content: center; width: 1200px; height: 630px; padding: 60px; background: #0d1117; color: #58a6ff; font-family: monospace;">
-      <div style="font-size: 56px; margin-bottom: 20px; color: white;">${escapeHtml(params.title)}</div>
-      <div style="font-size: 32px; color: #8b949e;">${escapeHtml(params.summary)}</div>
-    </div>
-  `,
   sophie: (params: OgTemplateParams) => {
     const words = params.summary.split(" ").filter((word) => word !== "");
     const last = words.pop() ?? "";

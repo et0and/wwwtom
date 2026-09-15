@@ -84,7 +84,7 @@ describe("og route", () => {
   it("ignores a ?requester= override (Referer alone drives auto-select)", async () => {
     stubLocalFonts();
     const sophieSpy = vi.spyOn(OgTemplates, "sophie");
-    const minimalSpy = vi.spyOn(OgTemplates, "minimal");
+    const defaultSpy = vi.spyOn(OgTemplates, "default");
 
     const response = await app.fetch(
       requestWithEnv(
@@ -95,7 +95,7 @@ describe("og route", () => {
 
     expect(response.status).toBe(200);
     expect(sophieSpy).not.toHaveBeenCalled();
-    expect(minimalSpy).toHaveBeenCalled();
+    expect(defaultSpy).toHaveBeenCalled();
   });
 
   it("auto-selects sophie from the Referer header", async () => {
@@ -114,17 +114,17 @@ describe("og route", () => {
 
   it("treats an explicit template as authoritative over the Referer", async () => {
     stubLocalFonts();
-    const developerSpy = vi.spyOn(OgTemplates, "developer");
+    const minimalSpy = vi.spyOn(OgTemplates, "minimal");
     const sophieSpy = vi.spyOn(OgTemplates, "sophie");
 
     const response = await app.fetch(
-      requestWithEnv("http://localhost/og?title=Hi&summary=Hello&template=developer", testEnv(), {
+      requestWithEnv("http://localhost/og?title=Hi&summary=Hello&template=minimal", testEnv(), {
         headers: { Referer: "https://sophie.st/posts/hi" },
       }),
     );
 
     expect(response.status).toBe(200);
-    expect(developerSpy).toHaveBeenCalled();
+    expect(minimalSpy).toHaveBeenCalled();
     expect(sophieSpy).not.toHaveBeenCalled();
   });
 });
@@ -140,6 +140,12 @@ describe("getTemplate", () => {
 
   it("keeps Tom requesters on the default template", () => {
     expect(getTemplate("https://tom.so/posts/hi", undefined)).toBe(OgTemplates.default);
+  });
+
+  it("falls back to the tenant brand when no Referer was sent", () => {
+    expect(getTemplate("", undefined, "tom")).toBe(OgTemplates.default);
+    expect(getTemplate("", undefined, "sophie")).toBe(OgTemplates.sophie);
+    expect(getTemplate("", undefined)).toBe(OgTemplates.default);
   });
 
   it("rejects lookalike domains to the minimal template", () => {

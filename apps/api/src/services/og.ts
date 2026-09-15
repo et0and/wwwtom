@@ -71,17 +71,25 @@ const requesterHostname = (requester: string): string => {
   return Option.isSome(url) ? url.value.hostname.toLowerCase() : "";
 };
 
+/**
+ * Template for a request. An explicit template param wins. A missing
+ * Referer — crawlers and direct opens send none — falls back to the
+ * tenant's own brand card, never a neutral one: the fallback is what
+ * social previews render. Recognized hosts still pick by host, and
+ * everything else (lookalikes, foreign sites) gets the neutral card so a
+ * stray Referer cannot borrow our brand.
+ */
 export const getTemplate = (
   requester: string,
   templateParam?: OgTemplate,
+  tenant?: string,
 ): ((params: OgTemplateParams) => string) => {
   if (templateParam === "default") return OgTemplates.default;
   if (templateParam === "minimal") return OgTemplates.minimal;
-  if (templateParam === "developer") return OgTemplates.developer;
   if (templateParam === "sophie") return OgTemplates.sophie;
+  if (requester === "") return tenant === "sophie" ? OgTemplates.sophie : OgTemplates.default;
   const hostname = requesterHostname(requester);
   if (hostname === "sophie.st" || hostname.endsWith(".sophie.st")) return OgTemplates.sophie;
-  if (hostname === "dev.tom.so") return OgTemplates.developer;
   if (hostname === "tom.so" || hostname.endsWith(".tom.so")) return OgTemplates.default;
   return OgTemplates.minimal;
 };
@@ -93,13 +101,14 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
   templateParam?: OgTemplate,
   date?: string,
   fontSource?: OgFontSource,
+  tenant?: string,
 ) {
   yield* Effect.logInfo("Generating OG image");
-  const template = getTemplate(requester, templateParam);
+  const template = getTemplate(requester, templateParam, tenant);
   // Libre Caslon Condensed only serves the default template (minimal is
-  // system-ui, developer is monospace); Solway only serves sophie. Fonts
-  // load lazily from the worker's own origin so templates that never use
-  // them never pay the fetch.
+  // system-ui); Solway only serves sophie. Fonts load lazily from the
+  // worker's own origin so templates that never use them never pay the
+  // fetch.
   const source = fontSource ?? { origin: "http://localhost:8787" };
   const fontData =
     template === OgTemplates.default ? yield* fontFetchEffect(source, LIBRE_CASLON_PATH) : null;

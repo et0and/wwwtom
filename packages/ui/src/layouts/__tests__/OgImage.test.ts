@@ -60,7 +60,7 @@ describe("sophie template", () => {
 describe("og template escaping", () => {
   it("escapes title and summary in every template", () => {
     const params = { title: "<Tom> & Co", summary: 'Say "hi" <bye>', date: "D & D" };
-    for (const template of [OgTemplates.default, OgTemplates.minimal, OgTemplates.developer]) {
+    for (const template of [OgTemplates.default, OgTemplates.minimal]) {
       const html = template(params);
       expect(html).toContain("&lt;Tom&gt; &amp; Co");
       expect(html).toContain("Say &quot;hi&quot; &lt;bye&gt;");

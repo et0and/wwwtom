@@ -24,12 +24,7 @@ const OgQuerySchema = Schema.Struct({
   title: Schema.optional(commaTolerantString),
   summary: Schema.optional(commaTolerantString),
   template: Schema.optional(
-    Schema.Union([
-      Schema.Literal("default"),
-      Schema.Literal("minimal"),
-      Schema.Literal("developer"),
-      Schema.Literal("sophie"),
-    ]),
+    Schema.Union([Schema.Literal("default"), Schema.Literal("minimal"), Schema.Literal("sophie")]),
   ),
   date: Schema.optional(commaTolerantString),
 });

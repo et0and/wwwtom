@@ -1,6 +1,6 @@
 import { Schema } from "effect";
 
-export const ogTemplateSchema = Schema.Literals(["default", "minimal", "developer", "sophie"]);
+export const ogTemplateSchema = Schema.Literals(["default", "minimal", "sophie"]);
 export type OgTemplate = typeof ogTemplateSchema.Type;
 
 const OgImageQueryParamsSchema = Schema.Struct({

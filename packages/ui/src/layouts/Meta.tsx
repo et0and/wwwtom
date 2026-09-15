@@ -10,9 +10,10 @@ export interface OgBrand {
 const TOM_BRAND: OgBrand = {
   suffix: "Tom Hackshaw",
   ogBase: "https://adapter.tom.so",
-  // Pinned, never auto-selected: most crawlers fetch og:image without a
-  // Referer, and the endpoint's fallback is the neutral minimal card. An
-  // explicit template keeps the brand card for tom.so on every fetch.
+  // Pinned, never auto-selected: the param keeps every og:image URL
+  // explicit and lets a template change land on a fresh crawler cache
+  // entry. Missing a Referer is common, and the endpoint then serves the
+  // tenant brand anyway.
   template: "default",
   siteVerification: "6F8B9658A3BC5775E2F116162AF518EE",
 };
