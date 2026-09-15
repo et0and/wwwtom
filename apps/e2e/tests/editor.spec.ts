@@ -60,15 +60,24 @@ test.describe("editor sign-in", () => {
     let posted: Schema.Json = null;
     await page.route(`${ADAPTER}/auth/sign-in/social`, async (route: Route) => {
       posted = route.request().postDataJSON();
-      await json(route, { url: "http://127.0.0.1:5174/oauth-stub", redirect: true });
+      await json(route, {
+        url: "https://github.com/login/oauth/authorize?client_id=e2e&state=stub",
+        redirect: true,
+      });
     });
+    // The editor refuses to navigate anywhere but the provider host, so the
+    // fixture must hand back a real github.com authorize URL. Fulfil that
+    // navigation here rather than letting the test reach the network.
+    await page.route("https://github.com/**", (route: Route) =>
+      route.fulfill({ status: 200, contentType: "text/html", body: "authorize" }),
+    );
     await page.goto("/");
     await page.getByRole("button", { name: "Sign in with GitHub" }).click();
     await expect.poll(() => posted, { timeout: 8000 }).not.toBeNull();
     const signInRequest = Schema.decodeUnknownSync(SignInRequestSchema)(posted);
     expect(signInRequest.provider).toBe("github");
     expect(signInRequest.callbackURL).toContain("127.0.0.1:5174");
-    await page.waitForURL("**/oauth-stub");
+    await page.waitForURL("https://github.com/**");
   });
 });
 
@@ -101,10 +110,10 @@ test.describe("editor content", () => {
     });
     await page.goto("/");
     await page.getByRole("button", { name: "New" }).click();
-    await page.getByLabel("Title").fill("E2E Post");
+    await page.getByLabel("Title", { exact: true }).fill("E2E Post");
     await page.getByRole("button", { name: "Use title" }).click();
     await page.getByRole("button", { name: "Create" }).click();
-    await expect(page.getByText("Saved")).toBeVisible();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
     const postInput = Schema.decodeUnknownSync(CmsPostInputSchema)(posted);
     expect(postInput.slug).toBe("e2e-post");
     expect(postInput.title).toBe("E2E Post");
@@ -127,10 +136,10 @@ test.describe("editor content", () => {
     });
     await page.goto("/");
     await page.getByRole("button", { name: target.title }).click();
-    await expect(page.getByLabel("Title")).toHaveValue(target.title);
-    await page.getByLabel("Title").fill("Edited Title");
+    await expect(page.getByLabel("Title", { exact: true })).toHaveValue(target.title);
+    await page.getByLabel("Title", { exact: true }).fill("Edited Title");
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByText("Saved")).toBeVisible();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
     const savedInput = Schema.decodeUnknownSync(CmsPostInputSchema)(saved);
     expect(savedInput.title).toBe("Edited Title");
     expect(savedInput.slug).toBe(target.slug);
@@ -156,7 +165,7 @@ test.describe("editor content", () => {
     await page.keyboard.press("ControlOrMeta+a");
     await page.getByRole("button", { name: "Quote" }).click();
     await page.getByRole("button", { name: "Save" }).click();
-    await expect(page.getByText("Saved")).toBeVisible();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
   });
 
   test("empty saves fail validation without network traffic", async ({ page }) => {
@@ -191,7 +200,7 @@ test.describe("editor categories", () => {
       }
     });
     await page.goto("/");
-    await page.getByRole("button", { name: "Categories" }).click();
+    await page.getByRole("tab", { name: "Categories" }).click();
     await page.getByLabel("Slug").fill("notes");
     await page.getByLabel("Title").fill("Notes");
     await page.getByRole("button", { name: "Add category" }).click();
@@ -235,7 +244,7 @@ test.describe("editor media", () => {
       json(route, { posts: [{ slug: "hello", title: "Hello" }], works: [] }),
     );
     await page.goto("/");
-    await page.getByRole("button", { name: "Media" }).click();
+    await page.getByRole("tab", { name: "Media" }).click();
     await expect(page.getByText("hero.webp")).toBeVisible();
     await page.getByLabel("Search media").fill("nope");
     await expect(page.getByText("hero.webp")).toHaveCount(0);
@@ -255,10 +264,10 @@ test.describe("editor media", () => {
     );
     await page.route(`${ADAPTER}/content/categories`, (route: Route) => json(route, []));
     await page.goto("/");
-    await page.getByRole("button", { name: "Media" }).click();
+    await page.getByRole("tab", { name: "Media" }).click();
     await page.getByRole("button", { name: "Usage" }).click();
     await page.getByRole("button", { name: `Post: ${target.title}` }).click();
-    await expect(page.getByLabel("Title")).toHaveValue(target.title);
+    await expect(page.getByLabel("Title", { exact: true })).toHaveValue(target.title);
   });
 
   test("delete confirms and removes the asset", async ({ page }) => {
@@ -273,7 +282,7 @@ test.describe("editor media", () => {
       await json(route, { id: "media-1" });
     });
     await page.goto("/");
-    await page.getByRole("button", { name: "Media" }).click();
+    await page.getByRole("tab", { name: "Media" }).click();
     await page.getByRole("button", { name: "Delete" }).click();
     await expect(page.getByText("hero.webp")).toHaveCount(0);
     expect(deleted).toBe(true);
@@ -321,7 +330,7 @@ test.describe("editor history", () => {
     await expect(page.getByText("V1")).toBeVisible();
     await page.getByText("V1").click();
     await page.getByRole("button", { name: "Restore this version" }).click();
-    await expect(page.getByText("Saved")).toBeVisible();
+    await expect(page.getByText("Saved", { exact: true })).toBeVisible();
     expect(
       Schema.decodeUnknownSync(CmsRestoreInputSchema, { onExcessProperty: "error" })(restored),
     ).toEqual({
