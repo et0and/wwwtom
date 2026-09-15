@@ -71,7 +71,8 @@ describe("App", () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(sessionBody))
       .mockResolvedValueOnce(jsonResponse(listBody([])))
-      .mockResolvedValueOnce(jsonResponse([]));
+      .mockResolvedValueOnce(jsonResponse([]))
+      .mockResolvedValueOnce(jsonResponse(listBody([])));
     const { findByLabelText, findByRole, findByText } = render(() => <App />);
     await findByText("Nothing here yet.");
     fireEvent.click(await findByRole("button", { name: "New" }));

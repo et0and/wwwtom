@@ -159,4 +159,19 @@ describe("PostList", () => {
     const { findByText } = render(() => <PostList onEdit={() => undefined} />);
     expect(await findByText("Editor request failed: 500")).toBeInTheDocument();
   });
+
+  it("drops stale rows when a reload fails", async () => {
+    const pageOne = { ...listBody([post()]), totalDocs: 6, totalPages: 2, hasNextPage: true };
+    fetchMock
+      .mockResolvedValueOnce(jsonResponse(pageOne))
+      .mockResolvedValueOnce(jsonResponse({ title: "Unauthorized" }, 401));
+    const { findByRole, findByText, queryByText } = render(() => (
+      <PostList onEdit={() => undefined} />
+    ));
+    await findByText("Hello World");
+    fireEvent.click(await findByRole("button", { name: "Page 2" }));
+    expect(await findByText("Editor request failed: 401")).toBeInTheDocument();
+    expect(queryByText("Hello World")).toBeNull();
+    expect(queryByText("Nothing here yet.")).toBeNull();
+  });
 });

@@ -109,6 +109,20 @@ const authEnv = (seed: Seed) =>
     GITHUB_CLIENT_SECRET: "test-client-secret",
   });
 
+/** Production shape: auth secrets ride the TOM_SECRETS store binding. */
+const bundleEnv = (seed: Seed) =>
+  testEnv({
+    CMS_D1: fakeDb(seed),
+    TOM_SECRETS: {
+      get: async () =>
+        JSON.stringify({
+          BETTER_AUTH_SECRET: "test-secret-with-at-least-32-chars!!",
+          GITHUB_CLIENT_ID: "test-client-id",
+          GITHUB_CLIENT_SECRET: "test-client-secret",
+        }),
+    },
+  });
+
 const seed: Seed = {
   posts: [
     postRow(),
@@ -146,12 +160,11 @@ describe("cms admin reads", () => {
       expect(body.docs.map((doc) => doc.slug)).toEqual(["hello-world"]);
     });
 
-    it("ignores the status filter for anonymous readers", async () => {
+    it("rejects draft reads for anonymous readers", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/posts?status=all", authEnv(seed)),
       );
-      expect(response.status).toBe(200);
-      expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(1);
+      expect(response.status).toBe(HttpStatus.Unauthorized);
     });
 
     it("skips the session lookup without a session credential", async () => {
@@ -230,11 +243,34 @@ describe("cms admin reads", () => {
   });
 
   describe("unconfigured auth", () => {
-    it("falls back to published-only when auth secrets are missing", async () => {
+    it("rejects draft reads when auth secrets are missing", async () => {
       const env = testEnv({ CMS_D1: fakeDb(seed) });
-      const response = await app.fetch(requestWithEnv("http://localhost/posts?status=all", env));
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/posts?status=all", env, {
+          headers: { cookie: "better-auth.session_token=test" },
+        }),
+      );
+      expect(response.status).toBe(HttpStatus.Unauthorized);
+    });
+
+    it("still serves published posts without a session", async () => {
+      const env = testEnv({ CMS_D1: fakeDb(seed) });
+      const response = await app.fetch(requestWithEnv("http://localhost/posts", env));
       expect(response.status).toBe(200);
       expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(1);
+    });
+  });
+
+  describe("secret bundle auth", () => {
+    it("unlocks drafts when the secrets ride TOM_SECRETS", async () => {
+      vi.mocked(requireSession).mockReturnValue(adminSession());
+      const response = await app.fetch(
+        requestWithEnv("http://localhost/posts?status=all", bundleEnv(seed), {
+          headers: { cookie: "better-auth.session_token=test" },
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(2);
     });
   });
 });

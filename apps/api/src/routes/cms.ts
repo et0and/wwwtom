@@ -5,6 +5,7 @@ import type { CmsListResponse, CmsPaging, CmsStatusFilter } from "@tom/schemas/c
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding, CloudflareEnv } from "@tom/utils/services/config";
+import { readCloudflareEnv } from "@tom/utils/services/config";
 import { hasSessionCredential } from "@tom/utils/services/session";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
@@ -132,14 +133,25 @@ const putFileCache = (url: string, response: Response): Effect.Effect<void, neve
 /**
  * Best-effort admin check for reads: a live session unlocks drafts,
  * anything else falls back to published-only. Never fails, so anonymous
- * readers never see auth errors. Fast-path: without a session credential
- * (see hasSessionCredential) there is no session to load, so skip auth
- * init and the D1 lookup entirely — public reads stay at 2-3 D1 queries
- * instead of 3-4.
+ * readers never see auth errors. Resolve the env first: production keeps
+ * BETTER_AUTH_SECRET and the provider keys in the TOM_SECRETS bundle, so
+ * the raw worker env cannot build an auth instance. Fast-path: without a
+ * session credential (see hasSessionCredential) there is no session to
+ * load, so skip the store read, auth init and the D1 lookup entirely —
+ * public reads stay at 2-3 D1 queries instead of 3-4.
  */
 const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<boolean, never> => {
   if (!hasSessionCredential(request)) return Effect.succeed(false);
-  return createAuthFromEnv(env).pipe(
+  return Effect.tryPromise({
+    try: () => readCloudflareEnv(env),
+    catch: (cause) => cause,
+  }).pipe(
+    Effect.flatMap((resolved) => createAuthFromEnv(resolved)),
+    Effect.tapError((cause) =>
+      Effect.logWarning("CMS read auth unavailable; serving published-only", {
+        cause: String(cause),
+      }),
+    ),
     Effect.flatMap((auth) => requireSession(auth, request.headers)),
     Effect.as(true),
     Effect.orElseSucceed(() => false),
@@ -151,6 +163,29 @@ const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<bo
  * return types stay precise for treaty clients. */
 const runCms = <A>(effect: Effect.Effect<A, CmsError>, request: Request): Promise<A> =>
   runEffect(effect, logContextFromRequest(request, "tom-api"));
+
+/**
+ * List status for the caller: a verified session (author) gets the
+ * requested selector, defaulting to all; public readers always get
+ * published. A draft selector without a session fails 401 instead of
+ * narrowing to published rows, so a broken session can never look like an
+ * empty CMS list.
+ */
+const listStatus = (
+  requested: CmsStatusFilter | undefined,
+  hasSession: boolean,
+  operation: string,
+): Effect.Effect<CmsStatusFilter, CmsError> => {
+  if (hasSession) return Effect.succeed(requested ?? "all");
+  if (requested === undefined || requested === "published") return Effect.succeed("published");
+  return Effect.fail(
+    new CmsError({
+      message: "Sign in to read drafts",
+      status: HttpStatus.Unauthorized,
+      operation,
+    }),
+  );
+};
 
 /**
  * Shared list pipeline: storage gate, paging decode, admin check, then the
@@ -181,8 +216,10 @@ const runListQuery = <T, Q>(
                   operation,
                 }),
               )
-            : Effect.flatMap(optionalSession(request, env), (isAdmin) =>
-                list(db, paging, isAdmin ? (paging.status ?? "all") : "published"),
+            : Effect.flatMap(optionalSession(request, env), (hasSession) =>
+                Effect.flatMap(listStatus(paging.status, hasSession, operation), (status) =>
+                  list(db, paging, status),
+                ),
               ),
         ),
       ),

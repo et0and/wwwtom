@@ -97,6 +97,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
         Effect.catch((cause) =>
           Effect.sync(() => {
             setError(cause.message);
+            setRows([]);
             setLoading(false);
           }),
         ),
@@ -186,7 +187,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
           <Loader size="sm" /> Loading…
         </p>
       </Show>
-      <Show when={!loading()}>
+      <Show when={!loading() && error() === undefined}>
         <Show when={rows().length > 0} fallback={<p>Nothing here yet.</p>}>
           <ul class="content-rows">
             <For each={rows()}>

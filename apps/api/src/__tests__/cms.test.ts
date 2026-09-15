@@ -406,13 +406,12 @@ describe("cms routes", () => {
     }
   });
 
-  it("ignores the status filter on summaries for anonymous readers", async () => {
+  it("rejects draft status on summaries for anonymous readers", async () => {
     for (const path of ["/posts/summary?status=all", "/works/summary?status=all"]) {
       const response = await app.fetch(
         requestWithEnv(`http://localhost${path}`, seedEnv(fullSeed)),
       );
-      expect(response.status).toBe(200);
-      expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(2);
+      expect(response.status).toBe(401);
     }
   });
 
