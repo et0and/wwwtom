@@ -1,3 +1,10 @@
+## [3.1.3](https://github.com/et0and/wwwtom/compare/v3.1.2...v3.1.3) (2026-09-15)
+
+
+### Bug Fixes
+
+* **cms:** unlock drafts for signed-in readers and fail closed without a session ([2eb42a8](https://github.com/et0and/wwwtom/commit/2eb42a83e0e814573c5c246fb569d2a3b484858f))
+
 ## [3.1.2](https://github.com/et0and/wwwtom/compare/v3.1.1...v3.1.2) (2026-09-15)
 
 
