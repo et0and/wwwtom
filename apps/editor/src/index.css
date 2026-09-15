@@ -100,6 +100,32 @@
     @apply grid min-w-0 content-start;
   }
 
+  /* Mobile: the toolbar sticks under the nav and wraps instead of scrolling
+     sideways, so every control stays a full touch target. */
+  @media (max-width: 1023px) {
+    .editor-toolbar {
+      position: sticky;
+      top: var(--editor-nav-h, 0px);
+      z-index: 10;
+      @apply -mx-4 border-b border-neutral-300 bg-white px-4 py-2 dark:border-neutral-700 dark:bg-neutral-950;
+    }
+
+    .editor-toolbar [data-tomui-component="Toolbar"] {
+      @apply flex w-full flex-wrap;
+    }
+
+    .editor-toolbar [data-tomui-component="Toolbar"] > * {
+      min-height: 2.5rem;
+    }
+
+    /* Row separators only read in a single row. */
+    .editor-toolbar
+      [data-tomui-component="Toolbar"]
+      > *:not([aria-hidden="true"]):not(:first-child) {
+      border-left-width: 0;
+    }
+  }
+
   @media (min-width: 1024px) {
     .editor-shell-wide {
       max-width: none;

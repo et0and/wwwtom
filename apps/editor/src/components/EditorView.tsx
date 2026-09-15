@@ -7,6 +7,7 @@ import { Input } from "@tom/ui/input";
 import { InputGroup } from "@tom/ui/input-group";
 import { Badge } from "@tom/ui/badge";
 import { Banner } from "@tom/ui/banner";
+import { Dialog } from "@tom/ui/dialog";
 import { Loader } from "@tom/ui/loader";
 import { Select } from "@tom/ui/select";
 import { Collapsible } from "@tom/ui/collapsible";
@@ -255,6 +256,16 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
     setPanel(next);
   };
 
+  /** Inline panels and dialogs close through one path so errors never leak. */
+  const closePanel = (): void => {
+    setPanel("none");
+    setPanelError(undefined);
+  };
+
+  const onPanelOpenChange = (open: boolean): void => {
+    if (!open) closePanel();
+  };
+
   const toggleCategory = (id: string): void => {
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((current) => current !== id) : [...prev, id],
@@ -266,7 +277,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
       setPanelError("Arena slug is required");
       return;
     }
-    setPanel("none");
+    closePanel();
   };
 
   const onApplyLink = (): void => {
@@ -274,7 +285,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
       setPanelError("Use an http(s), mailto, /, or # link");
       return;
     }
-    setPanel("none");
+    closePanel();
   };
 
   const onUpload = (): void => {
@@ -288,7 +299,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
             insertMedia(handle.editor(), media.id, media.alt);
             setUploading(false);
             setPickedFile(undefined);
-            setPanel("none");
+            closePanel();
           }),
         ),
         Effect.catch((cause) =>
@@ -307,7 +318,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
       setPanelError("Editor not ready");
       return;
     }
-    setPanel("none");
+    closePanel();
   };
 
   const saveError = createMemo(() => {
@@ -484,78 +495,6 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
           <div ref={setElement} class="tiptap-editor" />
 
           <div class="editor-panels">
-            <Show when={panelError()}>
-              {(message) => <Banner variant="error" description={message()} />}
-            </Show>
-            <Show when={panel() === "link"}>
-              <div class="panel">
-                <label class="field">
-                  URL
-                  <Input
-                    type="text"
-                    value={linkUrl()}
-                    onInput={(event) => setLinkUrl(event.currentTarget.value)}
-                  />
-                </label>
-                <Button type="button" size="sm" variant="secondary" onClick={onApplyLink}>
-                  Apply
-                </Button>
-              </div>
-            </Show>
-            <Show when={panel() === "arena"}>
-              <div class="panel">
-                <label class="field">
-                  Channel slug
-                  <Input
-                    type="text"
-                    value={arenaSlug()}
-                    onInput={(event) => setArenaSlug(event.currentTarget.value)}
-                  />
-                </label>
-                <label class="field">
-                  Title (optional)
-                  <Input
-                    type="text"
-                    value={arenaTitle()}
-                    onInput={(event) => setArenaTitle(event.currentTarget.value)}
-                  />
-                </label>
-                <Button type="button" size="sm" variant="secondary" onClick={onInsertArena}>
-                  Insert
-                </Button>
-              </div>
-            </Show>
-            <Show when={panel() === "media"}>
-              <div class="panel">
-                <label class="field">
-                  File
-                  <input
-                    type="file"
-                    accept="image/*,video/*"
-                    onChange={(event) => setPickedFile(event.currentTarget.files?.[0])}
-                  />
-                </label>
-                <label class="field">
-                  Alt text
-                  <Input
-                    type="text"
-                    value={mediaAlt()}
-                    onInput={(event) => setMediaAlt(event.currentTarget.value)}
-                  />
-                </label>
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="secondary"
-                  loading={uploading()}
-                  disabled={pickedFile() === undefined || uploading()}
-                  onClick={onUpload}
-                >
-                  {uploading() ? "Uploading…" : "Upload and insert"}
-                </Button>
-                <MediaPicker onPick={onPickMedia} />
-              </div>
-            </Show>
             <Show when={codeActive()}>
               <div class="panel">
                 <label class="field">
@@ -590,6 +529,105 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               </div>
             </Show>
           </div>
+
+          <Dialog.Root open={panel() === "link"} onOpenChange={onPanelOpenChange}>
+            <Dialog size="sm" class="grid gap-3 px-4 py-3">
+              <Dialog.Title class="text-base font-semibold">Insert link</Dialog.Title>
+              <label class="field">
+                URL
+                <Input
+                  type="text"
+                  value={linkUrl()}
+                  onInput={(event) => setLinkUrl(event.currentTarget.value)}
+                />
+              </label>
+              <Show when={panelError()}>
+                {(message) => <Banner variant="error" description={message()} />}
+              </Show>
+              <div class="flex justify-end gap-2">
+                <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
+                  Cancel
+                </Button>
+                <Button type="button" size="sm" variant="secondary" onClick={onApplyLink}>
+                  Apply
+                </Button>
+              </div>
+            </Dialog>
+          </Dialog.Root>
+
+          <Dialog.Root open={panel() === "arena"} onOpenChange={onPanelOpenChange}>
+            <Dialog size="base" class="grid gap-3 px-4 py-3">
+              <Dialog.Title class="text-base font-semibold">Insert Arena channel</Dialog.Title>
+              <label class="field">
+                Channel slug
+                <Input
+                  type="text"
+                  value={arenaSlug()}
+                  onInput={(event) => setArenaSlug(event.currentTarget.value)}
+                />
+              </label>
+              <label class="field">
+                Title (optional)
+                <Input
+                  type="text"
+                  value={arenaTitle()}
+                  onInput={(event) => setArenaTitle(event.currentTarget.value)}
+                />
+              </label>
+              <Show when={panelError()}>
+                {(message) => <Banner variant="error" description={message()} />}
+              </Show>
+              <div class="flex justify-end gap-2">
+                <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
+                  Cancel
+                </Button>
+                <Button type="button" size="sm" variant="secondary" onClick={onInsertArena}>
+                  Insert
+                </Button>
+              </div>
+            </Dialog>
+          </Dialog.Root>
+
+          <Dialog.Root open={panel() === "media"} onOpenChange={onPanelOpenChange}>
+            <Dialog size="base" class="grid max-h-[80dvh] gap-3 overflow-y-auto px-4 py-3">
+              <Dialog.Title class="text-base font-semibold">Insert media</Dialog.Title>
+              <label class="field">
+                File
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={(event) => setPickedFile(event.currentTarget.files?.[0])}
+                />
+              </label>
+              <label class="field">
+                Alt text
+                <Input
+                  type="text"
+                  value={mediaAlt()}
+                  onInput={(event) => setMediaAlt(event.currentTarget.value)}
+                />
+              </label>
+              <Show when={panelError()}>
+                {(message) => <Banner variant="error" description={message()} />}
+              </Show>
+              <div class="flex justify-end gap-2">
+                <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="secondary"
+                  loading={uploading()}
+                  disabled={pickedFile() === undefined || uploading()}
+                  onClick={onUpload}
+                >
+                  {uploading() ? "Uploading…" : "Upload and insert"}
+                </Button>
+              </div>
+              <MediaPicker onPick={onPickMedia} />
+            </Dialog>
+          </Dialog.Root>
         </section>
       </div>
     </div>

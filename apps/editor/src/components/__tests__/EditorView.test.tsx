@@ -180,6 +180,19 @@ describe("EditorView", () => {
   });
 
   describe("insert panels", () => {
+    it("opens the insert dialog and cancels without inserting", async () => {
+      fetchMock.mockResolvedValue(jsonResponse(categories));
+      const { container, findByRole, queryByRole } = render(() => (
+        <EditorView kind="posts" slug={null} onExit={() => undefined} />
+      ));
+      await vi.waitFor(() => expect(container.querySelector(".tiptap")).not.toBeNull());
+      fireEvent.click(await findByRole("button", { name: "Arena" }));
+      expect(await findByRole("dialog")).toBeInTheDocument();
+      fireEvent.click(await findByRole("button", { name: "Cancel" }));
+      await vi.waitFor(() => expect(queryByRole("dialog")).toBeNull());
+      expect(container.querySelector(".tiptap-editor div[data-arena]")).toBeNull();
+    });
+
     it("uploads media and inserts the node", async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse(categories));
       fetchMock.mockResolvedValueOnce(jsonResponse(listBody([])));

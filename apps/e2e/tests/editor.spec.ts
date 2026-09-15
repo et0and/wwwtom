@@ -330,6 +330,68 @@ test.describe("editor history", () => {
   });
 });
 
+test.describe("editor mobile", () => {
+  test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
+
+  test.beforeEach(async ({ page }) => {
+    await stubSession(page, sessionBody);
+    await page.route(`${ADAPTER}/content/posts?*`, (route: Route) => json(route, postsList));
+    await page.route(`${ADAPTER}/content/works?*`, (route: Route) => json(route, worksList));
+    await page.route(`${ADAPTER}/content/categories`, (route: Route) => json(route, []));
+  });
+
+  /** Horizontal page overflow: anything above zero breaks the x axis. */
+  const xOverflow = (page: Page) =>
+    page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+
+  test("wraps the toolbar, sticks it under the nav, and opens insert dialogs", async ({ page }) => {
+    const target = fixturePosts[0];
+    await page.route(`${ADAPTER}/content/posts/${target.slug}`, (route: Route) =>
+      json(route, target),
+    );
+    await page.route(`${ADAPTER}/content/media?pageSize=*`, (route: Route) =>
+      json(route, { ...emptyList, limit: 100 }),
+    );
+    await page.goto("/");
+    await page.getByRole("button", { name: target.title }).click();
+    const toolbarButton = (name: string) =>
+      page.locator(".editor-toolbar").getByRole("button", { name });
+    await expect(toolbarButton("Arena")).toBeVisible();
+    expect(await xOverflow(page)).toBeLessThanOrEqual(0);
+
+    const toolbar = page.locator('.editor-toolbar [data-tomui-component="Toolbar"]');
+    const wrapped = await toolbar.evaluate((element) => ({
+      scrollWidth: element.scrollWidth,
+      clientWidth: element.clientWidth,
+    }));
+    expect(wrapped.scrollWidth).toBeLessThanOrEqual(wrapped.clientWidth + 1);
+
+    await toolbarButton("Media").click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    expect(await xOverflow(page)).toBeLessThanOrEqual(0);
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+
+    // Long enough to scroll past the toolbar, so the sticky top can engage.
+    await page.locator(".tiptap-editor").click();
+    await page.keyboard.type("Filler paragraph.\n".repeat(40));
+
+    const anchor = await page
+      .locator(".editor-toolbar")
+      .evaluate((element) => element.getBoundingClientRect().top + window.scrollY);
+    await page.evaluate((y) => window.scrollTo(0, y + 200), anchor);
+    const navHeight = await page
+      .locator(".editor-nav")
+      .evaluate((element) => element.getBoundingClientRect().height);
+    const toolbarTop = await page
+      .locator(".editor-toolbar")
+      .evaluate((element) => element.getBoundingClientRect().top);
+    expect(Math.abs(toolbarTop - navHeight)).toBeLessThanOrEqual(1);
+  });
+});
+
 test.describe("editor sign-out", () => {
   test("account menu signs out back to sign-in", async ({ page }) => {
     let signedIn = true;
