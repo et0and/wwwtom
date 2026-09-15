@@ -1,3 +1,10 @@
+## [3.1.2](https://github.com/et0and/wwwtom/compare/v3.1.1...v3.1.2) (2026-09-15)
+
+
+### Bug Fixes
+
+* **ci:** deploy editor and sophie from the deploy workflow ([412e48e](https://github.com/et0and/wwwtom/commit/412e48e5ebdbd47cf4bebfaf2601759857774bf7))
+
 ## [3.1.1](https://github.com/et0and/wwwtom/compare/v3.1.0...v3.1.1) (2026-09-14)
 
 
