@@ -1,3 +1,10 @@
+## [3.2.2](https://github.com/et0and/wwwtom/compare/v3.2.1...v3.2.2) (2026-09-15)
+
+
+### Bug Fixes
+
+* **e2e:** repair stale editor locators and the sign-in redirect stub ([6c38763](https://github.com/et0and/wwwtom/commit/6c387637a5d6433e07b4f5646ef61a818778b70b))
+
 ## [3.2.1](https://github.com/et0and/wwwtom/compare/v3.2.0...v3.2.1) (2026-09-15)
 
 
