@@ -5,6 +5,7 @@ export default defineConfig({
     environment: "node",
     include: [
       "apps/__tests__/**/*.test.ts",
+      "git/__tests__/**/*.test.ts",
       "gtm/__tests__/**/*.test.ts",
       "turbo/src/__tests__/**/*.test.ts",
     ],
