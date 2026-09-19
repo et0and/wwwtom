@@ -139,7 +139,7 @@ Never guess at Effect patterns - check the guide first.
 
 ## Branches / PRs
 
-- `dev` is the integration branch; treat it as main — branch off `dev` and target PRs at `dev`. `main` tracks releases only.
+- `dev` is the integration branch; treat it as main — branch off `dev` and target PRs at `dev`. `main` is unused.
 
 ## Commits
 
