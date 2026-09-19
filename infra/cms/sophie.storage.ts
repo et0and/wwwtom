@@ -16,7 +16,7 @@ export const sophieD1 = Effect.gen(function* () {
     // reason Tom uses tom-cms-v2; sophie-cms stays live for the Payload
     // worker until it retires.
     ...(stage === "production" ? { name: "sophie-cms-v2" } : undefined),
-    migrationsDir: `${import.meta.dirname}/migrations`,
+    migrations: `${import.meta.dirname}/migrations`,
   });
 });
 

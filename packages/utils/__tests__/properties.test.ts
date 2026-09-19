@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Effect, Schema } from "effect";
-import { FastCheck } from "effect/testing";
+import { Arbitrary } from "effect/unstable/arbitrary";
 import { TomWorkMessage } from "@tom/schemas/queue";
 import type { TiptapDoc } from "@tom/schemas/cms";
 import { isSafeLinkHref, renderTiptapHtml } from "../src/tiptap-html";
@@ -11,21 +11,39 @@ const mediaUrl = (mediaId: string): string => `https://cdn.tom.so/content/media/
 /** Navigable targets, pinned as literals so the test defines the contract. */
 const ALLOWED_PREFIXES: ReadonlyArray<string> = ["https://", "http://", "mailto:", "/", "#"];
 
+/** Runs a property and fails with the shrunk counterexample when it falsifies. */
+const checkProperty = <A>(
+  arbitrary: Arbitrary.Arbitrary<A>,
+  property: (value: A) => boolean | Promise<boolean>,
+  options: Arbitrary.CheckOptions,
+): Promise<void> =>
+  Effect.runPromise(
+    Arbitrary.checkEffect(
+      arbitrary,
+      (value) => Effect.promise(() => Promise.resolve(property(value))),
+      options,
+    ),
+  ).then((result) => {
+    expect(result._tag, Arbitrary.formatCheckFailure(result)).toBe("Passed");
+  });
+
 describe("link safety properties", () => {
-  it("allows only navigable targets for any href", () => {
-    FastCheck.assert(
-      FastCheck.property(FastCheck.string(), (href) => {
+  it("allows only navigable targets for any href", async () => {
+    await checkProperty(
+      Arbitrary.schema(Schema.String),
+      (href) => {
         const trimmed = href.trim();
         const expected = ALLOWED_PREFIXES.some((prefix) => trimmed.startsWith(prefix));
-        expect(isSafeLinkHref(href)).toBe(expected);
-      }),
-      { seed: 7, numRuns: 200 },
+        return isSafeLinkHref(href) === expected;
+      },
+      { seed: 7, runs: 200 },
     );
   });
 
   it("drops unsafe link targets for any href", { timeout: 30_000 }, async () => {
-    await FastCheck.assert(
-      FastCheck.asyncProperty(FastCheck.string(), async (href) => {
+    await checkProperty(
+      Arbitrary.schema(Schema.String),
+      async (href) => {
         const document: TiptapDoc = {
           type: "doc",
           content: [
@@ -36,14 +54,11 @@ describe("link safety properties", () => {
           ],
         };
         const html = await Effect.runPromise(renderTiptapHtml(document, mediaUrl));
-        if (isSafeLinkHref(href)) {
-          expect(html).toContain("<a href=");
-        } else {
-          expect(html).not.toContain("<a");
-        }
-        expect(html).not.toContain("javascript:");
-      }),
-      { seed: 11, numRuns: 50 },
+        if (html.includes("javascript:")) return false;
+        if (isSafeLinkHref(href)) return html.includes("<a href=");
+        return !html.includes("<a");
+      },
+      { seed: 11, runs: 50 },
     );
   });
 });
@@ -53,30 +68,33 @@ describe("error status properties", () => {
     "keeps error statuses and falls back otherwise for any integer",
     { timeout: 30_000 },
     async () => {
-      await FastCheck.assert(
-        FastCheck.asyncProperty(FastCheck.integer(), async (status) => {
+      await checkProperty(
+        Arbitrary.schema(Schema.Int),
+        async (status) => {
           const expected = status >= 400 && status < 600 ? status : 500;
           const response = toProblemResponse(status, "boom");
-          expect(response.status).toBe(expected);
-          expect(response.headers.get("content-type")).toBe("application/problem+json");
+          if (response.status !== expected) return false;
+          if (response.headers.get("content-type") !== "application/problem+json") return false;
           const body = (await response.json()) as { status: number };
-          expect(body.status).toBe(expected);
-        }),
-        { seed: 42, numRuns: 100 },
+          return body.status === expected;
+        },
+        { seed: 42, runs: 100 },
       );
     },
   );
 });
 
 describe("queue message properties", () => {
-  it("round-trips any work message through encode and decode", { timeout: 30_000 }, () => {
-    FastCheck.assert(
-      FastCheck.property(Schema.toArbitrary(TomWorkMessage), (value) => {
+  it("round-trips any work message through encode and decode", { timeout: 30_000 }, async () => {
+    const equals = Schema.toEquivalence(TomWorkMessage);
+    await checkProperty(
+      Arbitrary.schema(TomWorkMessage),
+      (value) => {
         const encoded = Schema.encodeSync(TomWorkMessage)(value);
         const decoded = Schema.decodeUnknownSync(TomWorkMessage)(encoded);
-        expect(decoded).toEqual(value);
-      }),
-      { seed: 99, numRuns: 25 },
+        return equals(decoded, value);
+      },
+      { seed: 99, runs: 25 },
     );
   });
 });

@@ -22,7 +22,7 @@ const parseDatabaseUrl = (
         database: parsed.pathname.replace(/^\//, ""),
         user: decodeURIComponent(parsed.username),
         password: Redacted.make(decodeURIComponent(parsed.password)),
-      };
+      } satisfies Cloudflare.Hyperdrive.PublicOrigin;
     },
     catch: (cause) =>
       new InfrastructureConfigError({

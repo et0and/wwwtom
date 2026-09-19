@@ -13,7 +13,7 @@ Improve existing code; avoid new abstractions.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, checkout, constants, email.
-- `infra` — Alchemy 2.0.0-beta.72 + Effect 4.0.0-beta.105 stacks: shared, turbo, api, adapter, web, editor, sophie.
+- `infra` — Alchemy 2.0.0-beta.78 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, editor, sophie.
 
 ## Working rules
 
@@ -136,6 +136,10 @@ Never guess at Effect patterns - check the guide first.
 ## Rule files
 
 - no `.cursor/` rules, `.cursorrules`, `.github/copilot-instructions.md`, or `CLAUDE.md`
+
+## Branches / PRs
+
+- `dev` is the integration branch; treat it as main — branch off `dev` and target PRs at `dev`. `main` is unused.
 
 ## Commits
 
