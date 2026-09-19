@@ -137,6 +137,10 @@ Never guess at Effect patterns - check the guide first.
 
 - no `.cursor/` rules, `.cursorrules`, `.github/copilot-instructions.md`, or `CLAUDE.md`
 
+## Branches / PRs
+
+- `dev` is the integration branch; treat it as main — branch off `dev` and target PRs at `dev`. `main` tracks releases only.
+
 ## Commits
 
 - conventional commits: `feat|fix|chore|refactor(scope):`; breaking = `BREAKING CHANGE:` body or `!`; PR titles same format
