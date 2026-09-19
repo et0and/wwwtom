@@ -12,7 +12,7 @@ export const cmsD1 = Effect.gen(function* () {
     // shapes, so they cannot coexist. tom-cms stays live for Payload until
     // the cutover, then retires. Other stages get isolated databases.
     ...(stage === "production" ? { name: "tom-cms-v2" } : undefined),
-    migrationsDir: `${import.meta.dirname}/migrations`,
+    migrations: `${import.meta.dirname}/migrations`,
   });
 });
 

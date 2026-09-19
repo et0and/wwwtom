@@ -145,7 +145,7 @@ pnpm install
 ALCHEMY_STAGE=dev npx alchemy deploy gtm.run.ts --stage dev
 ```
 
-Required deps: `alchemy@2.0.0-beta.72`, `effect@4.0.0-beta.105`, `vite`. No Cloudflare binding is required until you add a `Cloudflare.state()` — swap in `FileSystem.state({ rootDir: "./.alchemy" })` for a fully local standalone.
+Required deps: `alchemy@2.0.0-beta.78`, `effect@4.0.0-rc.116`, `vite`. No Cloudflare binding is required until you add a `Cloudflare.state()` — swap in `FileSystem.state({ rootDir: "./.alchemy" })` for a fully local standalone.
 
 ## Testing
 
