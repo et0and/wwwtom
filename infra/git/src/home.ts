@@ -25,22 +25,34 @@ const signIn = document.getElementById("sign-in");
 const createKey = document.getElementById("create-key");
 const keyOutput = document.getElementById("key");
 
+const requestJson = async (url, init) => {
+  try {
+    const response = await fetch(url, init);
+    return response.ok ? await response.json() : null;
+  } catch {
+    return null;
+  }
+};
+
 const createApiKey = async () => {
-  const response = await fetch("/api/auth/api-key/create", {
+  createKey.disabled = true;
+  const body = await requestJson("/api/auth/api-key/create", {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ name: "git" }),
   });
-  const body = await response.json();
-  if (body.key) {
-    keyOutput.textContent = body.key;
-    keyOutput.hidden = false;
+  createKey.disabled = false;
+  if (!body || !body.key) {
+    status.textContent = "Could not create a key. Reload and try again.";
+    return;
   }
+  keyOutput.textContent = body.key;
+  keyOutput.hidden = false;
+  status.textContent = "Copy the key now - it is shown once. Use it as the git password.";
 };
 
 const start = async () => {
-  const response = await fetch("/api/auth/get-session");
-  const session = await response.json();
+  const session = await requestJson("/api/auth/get-session");
   if (session && session.user) {
     status.textContent = "Signed in as " + session.user.email;
     createKey.hidden = false;
@@ -50,13 +62,18 @@ const start = async () => {
   status.textContent = "Sign in with GitHub to push or clone.";
   signIn.hidden = false;
   signIn.addEventListener("click", async () => {
-    const response = await fetch("/api/auth/sign-in/social", {
+    signIn.disabled = true;
+    const body = await requestJson("/api/auth/sign-in/social", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ provider: "github", callbackURL: "/" }),
     });
-    const body = await response.json();
-    if (body.url) location.href = body.url;
+    if (body && body.url) {
+      location.href = body.url;
+      return;
+    }
+    signIn.disabled = false;
+    status.textContent = "Sign-in failed. Reload and try again.";
   });
 };
 
