@@ -1,3 +1,15 @@
+# [3.3.0](https://github.com/et0and/wwwtom/compare/v3.2.3...v3.3.0) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** skip triage until the script lands on the base branch ([416b8c1](https://github.com/et0and/wwwtom/commit/416b8c1a83a27c6eb05e96df439ca7e35d175f8d))
+
+
+### Features
+
+* **ci:** triage PR changed files with classifier.dev ([90d694f](https://github.com/et0and/wwwtom/commit/90d694f4e187fb172a1c143c1ab5d57055f8803f))
+
 ## [3.2.3](https://github.com/et0and/wwwtom/compare/v3.2.2...v3.2.3) (2026-09-15)
 
 
