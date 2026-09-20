@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
-import type { CmsD1Binding, CloudflareEnv } from "@tom/utils/services/config";
+import { isAdminEmail, type CmsD1Binding, type CloudflareEnv } from "@tom/utils/services/config";
 import {
   createAuth,
   createAuthFromEnv,
-  isAdminEmail,
   parseAuthProviders,
   requireSession,
 } from "../services/auth";

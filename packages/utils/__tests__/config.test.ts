@@ -3,6 +3,7 @@ import { Effect, Redacted } from "effect";
 import type { CloudflareEnv, PartialCloudflareEnv } from "../src/services/config";
 import {
   AppConfig,
+  isAdminEmail,
   makeAppConfigLayer,
   parseAdminEmails,
   readCloudflareEnv,
@@ -23,6 +24,21 @@ describe("parseAdminEmails", () => {
 
   it("returns an empty list when unset", () => {
     expect(parseAdminEmails(undefined)).toEqual([]);
+  });
+});
+
+describe("isAdminEmail", () => {
+  it("matches case-insensitively and tolerates whitespace", () => {
+    expect(isAdminEmail(" Tom@Example.com ", [" tom@example.com "])).toBe(true);
+  });
+
+  it("rejects emails that are not on the allowlist", () => {
+    expect(isAdminEmail("mallory@example.com", ["tom@example.com"])).toBe(false);
+  });
+
+  it("rejects everyone when the allowlist is empty", () => {
+    expect(isAdminEmail("tom@example.com", [])).toBe(false);
+    expect(isAdminEmail("tom@example.com", ["", "  "])).toBe(false);
   });
 });
 

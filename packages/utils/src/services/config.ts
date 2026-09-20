@@ -190,6 +190,16 @@ export const parseAdminEmails = (value: string | undefined): Array<string> =>
     .map((entry) => entry.trim())
     .filter((entry) => entry.length > 0);
 
+/**
+ * Admin allowlist check (case-insensitive, whitespace-tolerant). An empty
+ * allowlist matches nobody, so an unconfigured deployment fails closed.
+ */
+export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean =>
+  allowlist
+    .map((entry) => entry.trim().toLowerCase())
+    .filter((entry) => entry.length > 0)
+    .includes(email.trim().toLowerCase());
+
 const TENANT_PREFIXES = { tom: "TOM_", sophie: "SOPHIE_" } as const;
 
 /** Bundle-key prefix for a tenant tag. Unknown tags select nothing. */

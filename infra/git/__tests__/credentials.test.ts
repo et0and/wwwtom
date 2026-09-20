@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import * as HttpServerRequest from "effect/unstable/http/HttpServerRequest";
-import { isAllowedEmail } from "../src/auth.ts";
 import { resolveGitUser, type GitCredentialSource } from "../src/credentials.ts";
 
 const basicRequest = (password: string): Request =>
@@ -68,16 +67,5 @@ describe("Git credential resolution", () => {
     const user = await resolve(credentialSource({}), anonymousRequest());
 
     expect(user).toBeNull();
-  });
-});
-
-describe("Git admin allowlist", () => {
-  it("matches case-insensitively and tolerates whitespace", () => {
-    expect(isAllowedEmail(" Tom@Example.com ", ["tom@example.com"])).toBe(true);
-    expect(isAllowedEmail("mallory@example.com", ["tom@example.com"])).toBe(false);
-  });
-
-  it("rejects everyone when the allowlist is empty", () => {
-    expect(isAllowedEmail("tom@example.com", [])).toBe(false);
   });
 });

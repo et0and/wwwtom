@@ -10,9 +10,9 @@ import type { CmsCategoryInput, CmsPostInput, CmsWorkInput } from "@tom/schemas/
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/services/config";
-import { parseAdminEmails, readCloudflareEnv } from "@tom/utils/services/config";
+import { isAdminEmail, parseAdminEmails, readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
-import { createAuthFromEnv, isAdminEmail, requireSession } from "../services/auth";
+import { createAuthFromEnv, requireSession } from "../services/auth";
 import type { MediaUpload } from "../services/cms";
 import {
   createCategory,

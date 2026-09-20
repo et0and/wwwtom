@@ -5,6 +5,7 @@ import { Stage } from "alchemy/Stage";
 import * as Cloudflare from "alchemy/Cloudflare";
 import { AuthenticationError, SecretsError } from "@tom/types/errors";
 import {
+  isAdminEmail,
   parseAdminEmails,
   readCloudflareEnv,
   type CloudflareEnv,
@@ -38,13 +39,6 @@ type CreateGitAuthOptions = {
   readonly adminEmails: ReadonlyArray<string>;
 };
 
-/** GitHub emails must be on the admin allowlist (fail-closed). */
-export const isAllowedEmail = (email: string, allowlist: ReadonlyArray<string>): boolean =>
-  allowlist
-    .map((entry) => entry.trim().toLowerCase())
-    .filter((entry) => entry.length > 0)
-    .includes(email.trim().toLowerCase());
-
 /**
  * Better Auth for the Git host: GitHub sign-in for browsers, plus per-user
  * API keys sent as the HTTP Basic password by `git` clients. Built per
@@ -66,7 +60,7 @@ export const createGitAuth = (options: CreateGitAuthOptions) =>
       user: {
         create: {
           before: async (user) =>
-            isAllowedEmail(user.email, options.adminEmails) ? undefined : false,
+            isAdminEmail(user.email, options.adminEmails) ? undefined : false,
         },
       },
     },
