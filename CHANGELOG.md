@@ -1,3 +1,10 @@
+# [3.4.0](https://github.com/et0and/wwwtom/compare/v3.3.0...v3.4.0) (2026-09-20)
+
+
+### Features
+
+* **ci:** add a classifier triage review-response hook ([5e29864](https://github.com/et0and/wwwtom/commit/5e29864cfbd87bb0800f2a6add693b0c67314d15))
+
 # [3.3.0](https://github.com/et0and/wwwtom/compare/v3.2.3...v3.3.0) (2026-09-20)
 
 
