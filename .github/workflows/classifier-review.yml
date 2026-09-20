@@ -18,9 +18,13 @@ permissions:
   pull-requests: write
   issues: write
 
+# One agent run per PR. Not cancel-in-progress: every comment on the PR
+# starts a run (the gate then rejects non-triggers), so cancelling would let
+# an unrelated comment — including the triage bot updating its sticky comment
+# on a push — kill a running agent. Pending runs are still coalesced.
 concurrency:
   group: classifier-review-${{ github.event.issue.number || github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   respond:
