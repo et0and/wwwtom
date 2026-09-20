@@ -558,8 +558,8 @@ importers:
         specifier: workspace:*
         version: link:../packages/utils
       alchemy:
-        specifier: 2.0.0-beta.78
-        version: 2.0.0-beta.78(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(@types/react@19.2.9)(effect@4.0.0-rc.116)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))(vitest@4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)))(ws@8.21.3)
+        specifier: 2.0.0-beta.79
+        version: 2.0.0-beta.79(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(@types/react@19.2.9)(effect@4.0.0-rc.116)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))(vitest@4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)))(ws@8.21.3)
       better-auth:
         specifier: 1.7.2
         version: 1.7.2(@cloudflare/workers-types@4.20260702.1)(react-dom@19.2.1(react@19.3.0))(react@19.3.0)(vitest@4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)))
@@ -826,8 +826,8 @@ packages:
   '@adobe/css-tools@4.4.4':
     resolution: {integrity: sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==}
 
-  '@alchemy.run/cloudflare-runtime@2.0.0-beta.78':
-    resolution: {integrity: sha512-fsNiicISo7gOFPwrfAbRQAfB8RUSwfsFtgb7n54NSinqARxiULJ4vCyn7RuLrZ9d32S0wt6/QwuNAeliGvulfw==}
+  '@alchemy.run/cloudflare-runtime@2.0.0-beta.79':
+    resolution: {integrity: sha512-v/kmQ4s9B2PcHo4NSxm76OcmaQsX2TkQoy2IzB4FBu/4kJ6gkEBYKKLz4FK6x4ewOAtwI7kQwZ8OmzAmft3xoQ==}
     peerDependencies:
       '@distilled.cloud/cloudflare': 1.0.0-rc.12
       '@effect/platform-bun': '>=4.0.0-rc.115 || >=4.0.0'
@@ -845,13 +845,13 @@ packages:
       vite:
         optional: true
 
-  '@alchemy.run/floci@2.0.0-beta.78':
-    resolution: {integrity: sha512-f+XDNleOUF/OU2GKMGGz8x674Ejg/cUf+xKeNByrTNok8OYFN8kO1Cev9gFiFB3JZjW6o6hARBb3MDEuYRAyDg==}
+  '@alchemy.run/floci@2.0.0-beta.79':
+    resolution: {integrity: sha512-Wd7DiDUhEep3APW3pix7gEHG0zZwzmE3y+twv5oiFKX8rBLhKOFCRluZ3xyx1ivIw1VpTFyE2PGLvJWwscX/Vw==}
     peerDependencies:
       effect: '>=4.0.0-rc.115 || >=4.0.0'
 
-  '@alchemy.run/node-utils@2.0.0-beta.78':
-    resolution: {integrity: sha512-tNp202VlDbN7ONlx7Zv7dDbicZerZUOzyfi1RNtTH/POXe+BaDA+Tl5CvhNCsn3l/adWpqNc/3jkQIh47K1Q0w==}
+  '@alchemy.run/node-utils@2.0.0-beta.79':
+    resolution: {integrity: sha512-2Qi3L+GBcNayAaOCo2dBTUTBszTOV2hFgX6rZkl73p//D8XFz/h6bb/Ka4NxBe+bfV7rp9JSZC6ZBBg2d+CJZw==}
 
   '@alchemy.run/sigil@0.0.0-alpha.11':
     resolution: {integrity: sha512-JzaCBeRu9kY0qWC8JKkrierstImkrK77dl+7l0RvCTR+7uhOJECL2VxmjhJ1blea+mmbYUVob8OXOH5r8Mqfpw==}
@@ -4126,11 +4126,11 @@ packages:
     resolution: {integrity: sha512-gOsf2YwSlleG6IjRYG2A7k0HmBMEo6qVNk9Bp/EaLgAJT5ngH6PXbqa4ItvnEwCm/velL5jAnQgsHsWnjhGmvw==}
     engines: {node: '>=18'}
 
-  alchemy@2.0.0-beta.78:
-    resolution: {integrity: sha512-Dv3IstS7W5AFPgU4T2PKe/SRrtqfKnMHYEKaWWCjVneE8VTl6Zz7M/oG/jz1YSmzdPaq3YinQlRQK3ZFzhTmkw==}
+  alchemy@2.0.0-beta.79:
+    resolution: {integrity: sha512-pn48ye2fenePmhVFkQHPP1zNlpPN/5HzsWerrgKE8N9ljBUJgwgQeL+3QyeWhxGwxttsaSGc/o5JZPppTTL4UQ==}
     hasBin: true
     peerDependencies:
-      '@alchemy.run/frontend-frameworks': 2.0.0-beta.78
+      '@alchemy.run/frontend-frameworks': 2.0.0-beta.79
       '@aws/durable-execution-sdk-js': ^2.1.0
       '@effect/platform-bun': '>=4.0.0-rc.115 || >=4.0.0'
       '@effect/platform-node': '>=4.0.0-rc.115 || >=4.0.0'
@@ -7596,15 +7596,16 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@alchemy.run/cloudflare-runtime@2.0.0-beta.78(@distilled.cloud/cloudflare@1.0.0-rc.12(effect@4.0.0-rc.116))(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(effect@4.0.0-rc.116)(rolldown@1.2.5)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))':
+  '@alchemy.run/cloudflare-runtime@2.0.0-beta.79(@distilled.cloud/cloudflare@1.0.0-rc.12(effect@4.0.0-rc.116))(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(effect@4.0.0-rc.116)(rolldown@1.2.5)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))':
     dependencies:
-      '@alchemy.run/node-utils': 2.0.0-beta.78
+      '@alchemy.run/node-utils': 2.0.0-beta.79
       '@cloudflare/unenv-preset': 2.16.1(unenv@2.0.0-rc.24)(workerd@1.20260901.1)
       '@distilled.cloud/cloudflare': 1.0.0-rc.12(effect@4.0.0-rc.116)
       '@puppeteer/browsers': 3.2.2(yauzl@3.4.0)
       capnp-es: 0.0.16(typescript@6.0.3)
       effect: 4.0.0-rc.116
       magic-string: 0.30.21
+      mime: 4.1.0
       sharp: 0.35.4(@types/node@24.9.1)
       unenv: 2.0.0-rc.24
       workerd: 1.20260901.1
@@ -7619,11 +7620,11 @@ snapshots:
       - proxy-agent
       - typescript
 
-  '@alchemy.run/floci@2.0.0-beta.78(effect@4.0.0-rc.116)':
+  '@alchemy.run/floci@2.0.0-beta.79(effect@4.0.0-rc.116)':
     dependencies:
       effect: 4.0.0-rc.116
 
-  '@alchemy.run/node-utils@2.0.0-beta.78':
+  '@alchemy.run/node-utils@2.0.0-beta.79':
     dependencies:
       chokidar: 5.0.0
       rolldown: 1.2.5
@@ -10714,11 +10715,11 @@ snapshots:
       clean-stack: 5.3.0
       indent-string: 5.0.0
 
-  alchemy@2.0.0-beta.78(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(@types/react@19.2.9)(effect@4.0.0-rc.116)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))(vitest@4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)))(ws@8.21.3):
+  alchemy@2.0.0-beta.79(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(@types/react@19.2.9)(effect@4.0.0-rc.116)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))(vitest@4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)))(ws@8.21.3):
     dependencies:
-      '@alchemy.run/cloudflare-runtime': 2.0.0-beta.78(@distilled.cloud/cloudflare@1.0.0-rc.12(effect@4.0.0-rc.116))(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(effect@4.0.0-rc.116)(rolldown@1.2.5)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))
-      '@alchemy.run/floci': 2.0.0-beta.78(effect@4.0.0-rc.116)
-      '@alchemy.run/node-utils': 2.0.0-beta.78
+      '@alchemy.run/cloudflare-runtime': 2.0.0-beta.79(@distilled.cloud/cloudflare@1.0.0-rc.12(effect@4.0.0-rc.116))(@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116))(@effect/platform-node@4.0.0-rc.116(effect@4.0.0-rc.116)(redis@6.2.1))(@types/node@24.9.1)(effect@4.0.0-rc.116)(rolldown@1.2.5)(typescript@6.0.3)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))
+      '@alchemy.run/floci': 2.0.0-beta.79(effect@4.0.0-rc.116)
+      '@alchemy.run/node-utils': 2.0.0-beta.79
       '@alchemy.run/sigil': 0.0.0-alpha.11(@types/react@19.2.9)
       '@aws-sdk/credential-providers': 3.1135.0
       '@distilled.cloud/aws': 1.0.0-rc.12(effect@4.0.0-rc.116)

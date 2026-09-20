@@ -48,7 +48,7 @@
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
-    "alchemy": "2.0.0-beta.78",
+    "alchemy": "2.0.0-beta.79",
     "better-auth": "1.7.2",
     "effect": "4.0.0-rc.116",
     "vite": "^8.1.5"

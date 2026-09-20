@@ -8,3 +8,6 @@ CHANGELOG.md
 # Vendored: anti-slop oxlint plugin (copied by the install skill, kept diff-able with upstream)
 .agents/skills/install-anti-slop/**
 .oxlint/anti-slop/**
+
+# Vendored: classifier.dev skill (installed by `npx skills add`, kept diff-able with upstream)
+.agents/skills/bulk-classify/**
