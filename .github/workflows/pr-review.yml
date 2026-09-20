@@ -47,6 +47,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # On the PR that introduces this workflow the base branch has no
+          # script yet; skip until it lands there.
+          if [ ! -f scripts/pr-review.ts ]; then
+            echo "scripts/pr-review.ts not on the base branch yet; skipping."
+            exit 0
+          fi
           node scripts/pr-review.ts \
             --repo="${{ github.repository }}" \
             --pr=${{ github.event.pull_request.number }}
