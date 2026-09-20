@@ -1,3 +1,10 @@
+## [3.4.1](https://github.com/et0and/wwwtom/compare/v3.4.0...v3.4.1) (2026-09-20)
+
+
+### Bug Fixes
+
+* **ci:** keep an in-flight classifier agent run from being cancelled ([c272930](https://github.com/et0and/wwwtom/commit/c27293087fc4043d5f551b9f028327c4b6e0ba5a))
+
 # [3.4.0](https://github.com/et0and/wwwtom/compare/v3.3.0...v3.4.0) (2026-09-20)
 
 
