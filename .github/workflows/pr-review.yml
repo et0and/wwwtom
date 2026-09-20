@@ -1,0 +1,58 @@
+name: PR review triage
+
+# Sort a PR's changed files by how much review attention each one needs with
+# classifier.dev (the bulk-classify skill in .agents/skills) and keep one
+# sticky comment on the PR updated. Paths, diff stats, and a bounded patch
+# excerpt leave for classifier.dev; the API is keyless and reports storing
+# nothing.
+#
+# The job checks out the base branch, not the PR merge commit, so a PR can
+# never swap the bot that runs with pull-requests: write. Fork PRs are
+# skipped: their token cannot comment.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [dev]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: pr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    name: Triage changed files
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.fork == false
+    steps:
+      # The triage script is taken from the base branch, never the PR head.
+      - name: Checkout base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      # Node 24 only: the script is dependency-free and runs on type
+      # stripping, so the pnpm install is skipped.
+      - uses: ./.github/actions/setup
+        with:
+          install: "false"
+
+      - name: Classify changed files and upsert the sticky comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # On the PR that introduces this workflow the base branch has no
+          # script yet; skip until it lands there.
+          if [ ! -f scripts/pr-review.ts ]; then
+            echo "scripts/pr-review.ts not on the base branch yet; skipping."
+            exit 0
+          fi
+          node scripts/pr-review.ts \
+            --repo="${{ github.repository }}" \
+            --pr=${{ github.event.pull_request.number }}
