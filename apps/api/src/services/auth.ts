@@ -4,19 +4,13 @@ import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import {
+  isAdminEmail,
   parseAdminEmails,
   type CloudflareEnv,
   type CmsD1Binding,
 } from "@tom/utils/services/config";
 
 type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
-
-/** Admin allowlist check (case-insensitive, whitespace-tolerant). */
-export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean =>
-  allowlist
-    .map((entry) => entry.trim().toLowerCase())
-    .filter((entry) => entry.length > 0)
-    .includes(email.trim().toLowerCase());
 
 type OAuthProvider = {
   readonly clientId: string;

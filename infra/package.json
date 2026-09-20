@@ -11,11 +11,13 @@
     "deploy:editor": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/editor.run.ts --stage $ALCHEMY_STAGE",
     "deploy:sophie": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/sophie.run.ts --stage $ALCHEMY_STAGE",
     "deploy:gtm": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy gtm/gtm.run.ts --stage $ALCHEMY_STAGE",
+    "deploy:git": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy git/git.run.ts --stage $ALCHEMY_STAGE",
     "deploy:turbo": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy turbo/turbo.run.ts --stage $ALCHEMY_STAGE",
     "deploy:runner": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy runner/runner.run.ts --stage $ALCHEMY_STAGE",
     "deploy:storybook": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/storybook.run.ts --stage $ALCHEMY_STAGE",
     "dev": "trap 'kill 0 2>/dev/null; sleep 2; pkill -9 -f \"wwwtom.*workerd\" 2>/dev/null' EXIT INT TERM; node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/api.run.ts & node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/adapter.run.ts & wait",
     "dev:adapter": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/adapter.run.ts",
+    "dev:git": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev git/git.run.ts",
     "dev:api": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/api.run.ts",
     "dev:runner": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev runner/runner.run.ts",
     "dev:turbo": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev turbo/turbo.run.ts",
@@ -27,6 +29,7 @@
     "destroy:editor": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/editor.run.ts --stage $ALCHEMY_STAGE",
     "destroy:sophie": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/sophie.run.ts --stage $ALCHEMY_STAGE",
     "destroy:gtm": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy gtm/gtm.run.ts --stage $ALCHEMY_STAGE",
+    "destroy:git": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy git/git.run.ts --stage $ALCHEMY_STAGE",
     "destroy:turbo": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy turbo/turbo.run.ts --stage $ALCHEMY_STAGE",
     "destroy:runner": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy runner/runner.run.ts --stage $ALCHEMY_STAGE",
     "destroy:storybook": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/storybook.run.ts --stage $ALCHEMY_STAGE",
@@ -35,6 +38,8 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@better-auth/api-key": "1.7.2",
+    "@better-auth/core": "1.7.2",
     "@cloudflare/sandbox": "0.12.5",
     "@cloudflare/workers-types": "^4.20250408.0",
     "@effect/platform-bun": "4.0.0-rc.116",
@@ -44,6 +49,7 @@
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
     "alchemy": "2.0.0-beta.79",
+    "better-auth": "1.7.2",
     "effect": "4.0.0-rc.116",
     "vite": "^8.1.5"
   },
