@@ -101,7 +101,7 @@ describe("renderDefinition", () => {
       description: "Bad",
       runs: { using: "composite", steps: [{ run: "echo hi" }] },
     });
-    const withShell = Schema.decodeUnknownResult(CompositeAction)({
+    const withShell = Schema.decodeResult(CompositeAction)({
       name: "Good",
       description: "Good",
       runs: { using: "composite", steps: [{ run: "echo hi", shell: "bash" }] },

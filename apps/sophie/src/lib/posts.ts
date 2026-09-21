@@ -23,7 +23,7 @@ const dayFormatter = new Intl.DateTimeFormat("en-NZ", {
 /** Format a nullable published-at timestamp. Invalid dates render empty. */
 export const formatPublishedDateTime = (value: string | null): string =>
   Option.getOrElse(
-    Option.map(Schema.decodeUnknownOption(Schema.DateFromString)(value ?? ""), (date) =>
+    Option.map(Schema.decodeOption(Schema.DateFromString)(value ?? ""), (date) =>
       dateFormatter.format(date),
     ),
     () => "",
@@ -32,7 +32,7 @@ export const formatPublishedDateTime = (value: string | null): string =>
 /** Format a nullable published-at timestamp as a full date without time. */
 export const formatPublishedDate = (value: string | null): string =>
   Option.getOrElse(
-    Option.map(Schema.decodeUnknownOption(Schema.DateFromString)(value ?? ""), (date) =>
+    Option.map(Schema.decodeOption(Schema.DateFromString)(value ?? ""), (date) =>
       dayFormatter.format(date),
     ),
     () => "",
@@ -48,7 +48,7 @@ const decodeCategoryFilter = (
   category: string | null,
 ): Effect.Effect<CmsSlug | null, HttpError> => {
   if (category === null || category === "") return Effect.succeed(null);
-  return Schema.decodeUnknownEffect(CmsSlug)(category).pipe(
+  return Schema.decodeEffect(CmsSlug)(category).pipe(
     Effect.mapError(
       () =>
         new HttpError({
@@ -60,7 +60,7 @@ const decodeCategoryFilter = (
 };
 
 /** Reserved category for standalone pages (about, etc.), branded for queries. */
-export const PAGES_CATEGORY: CmsSlug = Effect.runSync(Schema.decodeUnknownEffect(CmsSlug)("pages"));
+export const PAGES_CATEGORY: CmsSlug = Effect.runSync(Schema.decodeEffect(CmsSlug)("pages"));
 
 /** Reserved slug for the about page. Sophie edits it as a post in Camus. */
 export const ABOUT_SLUG = "about";

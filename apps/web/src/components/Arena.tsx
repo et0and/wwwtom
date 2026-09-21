@@ -75,7 +75,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
  * blocks with no renderer decode to nothing and are skipped.
  */
 const toContentBlock = (item: ArenaChannelContents): ArenaContentBlock | null =>
-  Option.getOrNull(Schema.decodeUnknownOption(ArenaContentBlockSchema)(item));
+  Option.getOrNull(Schema.decodeOption(ArenaContentBlockSchema)(item));
 
 function ArenaItem(props: { item: ArenaChannelContents }) {
   const block = createMemo(() => toContentBlock(props.item));

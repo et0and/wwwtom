@@ -200,7 +200,7 @@ export const guestbookUserFromCookie = (
   const json = Option.getOrElse(Schema.decodeUnknownOption(Schema.String)(value), () =>
     JSON.stringify(value),
   );
-  return Option.getOrElse(Schema.decodeUnknownOption(userCookieSchema)(json), () => null);
+  return Option.getOrElse(Schema.decodeOption(userCookieSchema)(json), () => null);
 };
 
 export const guestbookIntegration = new Elysia({ name: "guestbook" })

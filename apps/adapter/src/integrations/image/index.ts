@@ -40,20 +40,17 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
 
     const validateUrl = (urlStr: string): Effect.Effect<URL, ImageError> =>
       Effect.gen(function* () {
-        const parsed = yield* Option.match(
-          Schema.decodeUnknownOption(Schema.URLFromString)(urlStr),
-          {
-            onNone: () =>
-              Effect.fail(
-                new ImageError({
-                  response: toProblemResponse(HttpStatus.BadRequest, "Invalid URL", {
-                    type: ProblemType.Validation,
-                  }),
+        const parsed = yield* Option.match(Schema.decodeOption(Schema.URLFromString)(urlStr), {
+          onNone: () =>
+            Effect.fail(
+              new ImageError({
+                response: toProblemResponse(HttpStatus.BadRequest, "Invalid URL", {
+                  type: ProblemType.Validation,
                 }),
-              ),
-            onSome: (url) => Effect.succeed(url),
-          },
-        );
+              }),
+            ),
+          onSome: (url) => Effect.succeed(url),
+        });
 
         if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
           return yield* new ImageError({

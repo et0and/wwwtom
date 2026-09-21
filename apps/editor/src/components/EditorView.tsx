@@ -335,7 +335,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
     handle.version();
     const attrs = handle.editor()?.getAttributes("codeBlock");
     if (!attrs) return undefined;
-    const decoded = Schema.decodeUnknownOption(CodeAttrsSchema)(attrs);
+    const decoded = Schema.decodeOption(CodeAttrsSchema)(attrs);
     return Option.isNone(decoded) ? undefined : decoded.value;
   });
 

@@ -24,8 +24,8 @@ const works = Schema.decodeUnknownSync(Schema.Array(CmsWorkSchema))(workFixtures
  * decoded through the summary schemas, so the body never leaves the
  * simulator and shape drift fails at boot.
  */
-const postSummaries = Schema.decodeUnknownSync(Schema.Array(CmsPostSummarySchema))(posts);
-const workSummaries = Schema.decodeUnknownSync(Schema.Array(CmsWorkSummarySchema))(works);
+const postSummaries = Schema.decodeSync(Schema.Array(CmsPostSummarySchema))(posts);
+const workSummaries = Schema.decodeSync(Schema.Array(CmsWorkSummarySchema))(works);
 
 type CmsDoc = CmsPost | CmsWork;
 

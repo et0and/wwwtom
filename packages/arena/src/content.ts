@@ -41,7 +41,7 @@ const CONTENT_SORT: PaginationAttributes = { sort: "position", direction: "desc"
  * nothing (emoji-only) fall back to the channel id so decoding never throws.
  */
 const slugify = (title: string, fallback: string): ArenaSlug =>
-  Schema.decodeUnknownSync(ArenaSlug)(
+  Schema.decodeSync(ArenaSlug)(
     title
       .normalize("NFKD")
       .replace(/\p{Diacritic}/gu, "")

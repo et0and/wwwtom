@@ -67,7 +67,7 @@ const fontFetchEffect = (source: OgFontSource, path: string) =>
  * rule as the adapter origin allowlists).
  */
 const requesterHostname = (requester: string): string => {
-  const url = Schema.decodeUnknownOption(Schema.URLFromString)(requester);
+  const url = Schema.decodeOption(Schema.URLFromString)(requester);
   return Option.isSome(url) ? url.value.hostname.toLowerCase() : "";
 };
 
