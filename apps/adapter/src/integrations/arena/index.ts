@@ -45,10 +45,17 @@ const arenaOperation = <T>(
   Effect.gen(function* () {
     const arena = yield* ArenaService;
     const client = mode === "public" ? arena.publicClient : arena.client;
-    return yield* operation(client).pipe(Effect.retry(retryPolicy));
+    // Retry only upstream failures: 404s are answers, and retrying 429s
+    // ignores are.na's Retry-After and extends the rate-limit window.
+    return yield* operation(client).pipe(
+      Effect.retry({
+        schedule: retryPolicy,
+        while: (error) => error.status >= HttpStatus.InternalServerError,
+      }),
+    );
   });
 
-const runArena = <T>(
+export const runArena = <T>(
   request: Request,
   operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
   context: LogContext,

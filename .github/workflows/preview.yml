@@ -35,18 +35,17 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: ./.github/actions/setup
 
-      # Deploys shared -> api -> adapter -> web + editor (Tom CMS) + sophie
-      # (Sophie web + Sophie CMS). The web/editor stacks post or update the
-      # preview comments via infra/utils/github/preview-comment.ts.
-      # The preview api reads the dev database + bucket directly
-      # (infra/cms/cms.storage.ts), so seeded content renders as-is.
+      # Deploys shared -> api -> adapter -> web + sophie (Sophie web + Sophie
+      # CMS). The web/sophie stacks post or update the preview comments via
+      # infra/utils/github/preview-comment.ts. Tom's preview web reads are.na;
+      # the preview api still reads the dev database + bucket directly
+      # (infra/cms/cms.storage.ts) for the Sophie tenant.
       - name: Deploy preview stage
         run: >
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
-          pnpm deploy:editor --yes &&
           pnpm deploy:sophie --yes
 
   destroy:

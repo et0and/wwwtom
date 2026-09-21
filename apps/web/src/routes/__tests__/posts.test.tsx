@@ -19,20 +19,18 @@ const mockedFetchPosts = fetchPosts as Mock;
 const postsData = {
   docs: [
     {
-      id: "post-1",
+      id: 1,
       title: "A pattern language",
       summary: "On imagining a monorepo as a shared house",
       slug: "a-pattern-language",
       publishedAt: "2026-06-30T00:00:00.000Z",
-      meta: { description: "A meta description" },
     },
     {
-      id: "post-2",
+      id: 2,
       title: "On git notes",
       summary: "Using a niche git feature",
       slug: "on-git-notes",
       publishedAt: "2026-05-28T00:00:00.000Z",
-      meta: { description: "Another description" },
     },
   ],
   totalDocs: 2,
@@ -97,12 +95,11 @@ describe("posts page", () => {
     // A preloaded page arrives as a new data object under a new key. The
     // list must follow the identity change, not just the truthiness toggle.
     const oldest = {
-      id: "post-9",
+      id: 9,
       title: "Oldest post",
       summary: "The oldest",
       slug: "oldest-post",
       publishedAt: "2020-01-01T00:00:00.000Z",
-      meta: { description: "Old" },
     };
     mockedFetchPosts.mockResolvedValue({ ...postsData, totalPages: 2 });
     renderPosts();
@@ -122,12 +119,11 @@ describe("posts page", () => {
     // Placeholder data wedged this flow (the new page never replaced the
     // old one), so pin the swap: click Next, page 2 renders, page 1 clears.
     const oldest = {
-      id: "post-9",
+      id: 9,
       title: "Oldest post",
       summary: "The oldest",
       slug: "oldest-post",
       publishedAt: "2020-01-01T00:00:00.000Z",
-      meta: { description: "Old" },
     };
     mockedFetchPosts.mockImplementation((page: number) =>
       Promise.resolve(

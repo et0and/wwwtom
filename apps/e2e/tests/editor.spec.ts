@@ -5,7 +5,7 @@ import {
   CmsPostInputSchema,
   CmsRestoreInputSchema,
 } from "@tom/schemas/cms";
-import { fixturePosts, fixtureWorks } from "../src/fixture-stores";
+import { fixtureCmsPosts, fixtureCmsWorks } from "../src/fixture-stores";
 
 /**
  * Camus editor e2e. GitHub OAuth cannot run headless, so every adapter call
@@ -31,8 +31,8 @@ const emptyList = {
   hasPrevPage: false,
 };
 
-const postsList = { ...emptyList, docs: fixturePosts, totalDocs: fixturePosts.length };
-const worksList = { ...emptyList, docs: fixtureWorks, totalDocs: fixtureWorks.length };
+const postsList = { ...emptyList, docs: fixtureCmsPosts, totalDocs: fixtureCmsPosts.length };
+const worksList = { ...emptyList, docs: fixtureCmsWorks, totalDocs: fixtureCmsWorks.length };
 
 const stubSession = (page: Page, body: typeof sessionBody | null) =>
   page.route(`${ADAPTER}/auth/get-session`, (route: Route) => route.fulfill({ json: body }));
@@ -91,13 +91,13 @@ test.describe("editor content", () => {
 
   test("lists posts and switches to works", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("button", { name: fixturePosts[0].title })).toBeVisible();
+    await expect(page.getByRole("button", { name: fixtureCmsPosts[0].title })).toBeVisible();
     await page.getByRole("button", { name: "Works", exact: true }).click();
-    await expect(page.getByRole("button", { name: fixtureWorks[0].title })).toBeVisible();
+    await expect(page.getByRole("button", { name: fixtureCmsWorks[0].title })).toBeVisible();
   });
 
   test("creates a post with the built input", async ({ page }) => {
-    const created = { ...fixturePosts[0], id: "post-new", slug: "e2e-post", title: "E2E Post" };
+    const created = { ...fixtureCmsPosts[0], id: "post-new", slug: "e2e-post", title: "E2E Post" };
     let posted: Schema.Json = null;
     await page.route(`${ADAPTER}/content/categories`, (route: Route) => json(route, []));
     await page.route(`${ADAPTER}/content/posts`, async (route: Route) => {
@@ -122,7 +122,7 @@ test.describe("editor content", () => {
   });
 
   test("edits a post and saves the title", async ({ page }) => {
-    const target = fixturePosts[0];
+    const target = fixtureCmsPosts[0];
     const updated = { ...target, title: "Edited Title" };
     let saved: Schema.Json = null;
     await page.route(`${ADAPTER}/content/categories`, (route: Route) => json(route, []));
@@ -146,7 +146,7 @@ test.describe("editor content", () => {
   });
 
   test("quote wrap round-trips through save", async ({ page }) => {
-    const target = fixturePosts[1];
+    const target = fixtureCmsPosts[1];
     await page.route(`${ADAPTER}/content/posts/${target.slug}`, async (route: Route) => {
       if (route.request().method() === "PUT") {
         const body = Schema.decodeUnknownSync(CmsPostInputSchema)(route.request().postDataJSON());
@@ -255,7 +255,7 @@ test.describe("editor media", () => {
   });
 
   test("usage navigates into the editor", async ({ page }) => {
-    const target = fixturePosts[0];
+    const target = fixtureCmsPosts[0];
     await page.route(`${ADAPTER}/content/media/media-1/usage`, (route: Route) =>
       json(route, { posts: [{ slug: target.slug, title: target.title }], works: [] }),
     );
@@ -292,7 +292,7 @@ test.describe("editor media", () => {
 test.describe("editor history", () => {
   test("restores a revision through the panel", async ({ page }) => {
     page.on("dialog", (dialog) => dialog.accept());
-    const target = fixturePosts[0];
+    const target = fixtureCmsPosts[0];
     await stubSession(page, sessionBody);
     await page.route(`${ADAPTER}/content/posts?*`, (route: Route) => json(route, postsList));
     await page.route(`${ADAPTER}/content/works?*`, (route: Route) => json(route, worksList));
@@ -356,7 +356,7 @@ test.describe("editor mobile", () => {
     );
 
   test("wraps the toolbar, sticks it under the nav, and opens insert dialogs", async ({ page }) => {
-    const target = fixturePosts[0];
+    const target = fixtureCmsPosts[0];
     await page.route(`${ADAPTER}/content/posts/${target.slug}`, (route: Route) =>
       json(route, target),
     );
@@ -403,7 +403,7 @@ test.describe("editor mobile", () => {
   test("insert dialogs fit a narrow viewport", async ({ page }) => {
     // iPhone SE width: the tightest case anyone still uses.
     await page.setViewportSize({ width: 320, height: 640 });
-    const target = fixturePosts[0];
+    const target = fixtureCmsPosts[0];
     const mediaItem = {
       id: "media-1",
       key: "media/media-1/a-very-long-asset-filename-that-would-blow-out-a-narrow-dialog.webp",

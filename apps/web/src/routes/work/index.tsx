@@ -59,7 +59,7 @@ export default function WorkHome() {
                     <Text variant="heading" as="h2">
                       {work.title}
                     </Text>
-                    <Text>{work.summary}</Text>
+                    <Text>{work.summary ?? ""}</Text>
                   </Link>
                 )}
               </For>

@@ -14,15 +14,14 @@ import { fetchPostBySlug } from "~/server/adapter";
 const mockedFetchPostBySlug = fetchPostBySlug as Mock;
 
 const postData = {
-  id: "post-1",
+  id: 1,
   title: "A pattern language",
   summary: "On imagining a monorepo as a shared house",
   slug: "a-pattern-language",
+  arenaSlug: "a-pattern-language-abc123",
   publishedAt: "2026-06-30T00:00:00.000Z",
   updatedAt: "2026-06-30T00:00:00.000Z",
-  meta: { description: "A meta description" },
-  html: "<p>On imagining a monorepo as a shared house.</p>",
-  arenaBlocks: [],
+  blocks: [],
 };
 
 const TestRouter = createRouter({
@@ -67,6 +66,9 @@ describe("post page meta tags", () => {
       "On imagining a monorepo as a shared house",
     );
     expect(headMeta('meta[name="twitter:card"]')).toBe("summary_large_image");
+
+    const source = screen.getByRole("link", { name: "View on are.na" }) as HTMLAnchorElement;
+    expect(source.href).toBe("https://are.na/tom/a-pattern-language-abc123");
   });
 
   it("points og:image and twitter:image at the public adapter proxy, absolute", async () => {
@@ -87,7 +89,7 @@ describe("post page meta tags", () => {
     // The meta tags must be present once the query settles, regardless of the
     // innerHTML body content — this guards against the head flushing before
     // the async post fetch resolves.
-    const bare = { ...postData, html: "", arenaBlocks: [] };
+    const bare = { ...postData, blocks: [] };
     mockedFetchPostBySlug.mockResolvedValue(bare);
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());

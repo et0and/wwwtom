@@ -1,11 +1,8 @@
-import { For } from "solid-js";
-import type { ArenaRef } from "@tom/schemas/cms";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { ArenaCarousel } from "~/components/Arena";
 
 /** Loading shell for post/work detail pages while the query is pending. */
 export const DetailLoading = () => (
@@ -43,20 +40,11 @@ export const DetailError = (props: { kind: "post" | "work"; message: string }) =
   </PageLayout>
 );
 
-/** Arena channel embeds for a detail page, staggered after the body. */
-export const DetailArenaBlocks = (props: {
-  blocks: ReadonlyArray<ArenaRef>;
-  baseDelay: number;
-}) => (
-  <For each={props.blocks}>
-    {(block, index) => (
-      <BlurInSection delay={props.baseDelay + index() * 0.2}>
-        <ArenaCarousel
-          slug={block.slug}
-          // exactOptionalPropertyTypes: omit the prop instead of passing undefined.
-          {...(block.title ? { title: block.title } : {})}
-        />
-      </BlurInSection>
-    )}
-  </For>
+/** Source link back to the are.na channel a post or work is drawn from. */
+export const ArenaSourceLink = (props: { arenaSlug: string }) => (
+  <a href={`https://are.na/tom/${props.arenaSlug}`} target="_blank" rel="noopener noreferrer">
+    <Text variant="secondary" size="sm" as="span">
+      View on are.na
+    </Text>
+  </a>
 );

@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./arena": "./src/arena.ts",
     "./http": "./src/http.ts",
     "./headers": "./src/headers.ts",
     "./problem": "./src/problem.ts"

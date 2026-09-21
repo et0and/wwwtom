@@ -1,5 +1,6 @@
 import type { Block, Channel, Group, User } from "@aredotna/sdk";
 import type {
+  BlockImage,
   ChannelListResponse,
   CommentListResponse,
   ConnectableListResponse,
@@ -32,6 +33,7 @@ export type SearchApiResponse = EverythingListResponse;
 export type GetGroupApiResponse = Group;
 export type CreateChannelApiResponse = Channel;
 export type ArenaBlock = Block;
+export type ArenaBlockImage = BlockImage;
 export type ArenaChannelContents = ConnectableListResponse["data"][number];
 
 /**

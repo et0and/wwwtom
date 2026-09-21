@@ -113,6 +113,46 @@ const formatSort = (sort?: string, direction?: string): string | undefined => {
 
 export type DateProvider = { now(): number };
 
+type CfOptions = NonNullable<NonNullable<Parameters<Fetch>[1]>["cf"]>;
+
+/**
+ * Public reads may sit in the Cloudflare edge cache. The key carries no
+ * credentials, so only unauthenticated requests may use it. The TTL matches
+ * are.na's own `cache-control: max-age=300`; errors never cache.
+ */
+const publicCacheOptions = (url: string): CfOptions => ({
+  cacheTtl: 300,
+  cacheKey: `arena:v3:public:${url}`,
+  cacheTtlByStatus: { "400-599": 0 },
+});
+
+const workerCache = (): Cache | null =>
+  (globalThis as { caches?: { default?: Cache } }).caches?.default ?? null;
+
+const workerCacheKey = (url: string): Request =>
+  new Request(`https://arena-cache.internal/${encodeURIComponent(url)}`, { method: "GET" });
+
+/**
+ * Cloudflare's per-fetch cache is zone-scoped, so reads from a worker to
+ * api.are.na are not cached by `cf.cacheTtl` alone. The Workers Cache API
+ * holds them for the response's own max-age, which keeps anonymous browsing
+ * inside are.na's 30-requests-per-minute guest tier. Cache failures never
+ * fail the read.
+ */
+const readWorkerCache = async (url: string): Promise<Response | null> => {
+  const cache = workerCache();
+  if (!cache) return null;
+  return (await cache.match(workerCacheKey(url)).catch(() => undefined)) ?? null;
+};
+
+const writeWorkerCache = async (url: string, response: Response): Promise<void> => {
+  const cache = workerCache();
+  if (!cache) return;
+  await Promise.resolve()
+    .then(() => cache.put(workerCacheKey(url), response.clone()))
+    .catch(() => undefined);
+};
+
 export const defaultPaginationOptions: PaginationAttributes = {
   sort: "position",
   direction: "desc",
@@ -276,35 +316,53 @@ export class ArenaClient implements ArenaApi {
   private createCachedFetch(fetchImpl: Fetch): Fetch {
     return async (input, init) => {
       const url = input instanceof URL ? input.href : input instanceof Request ? input.url : input;
-      const method = init?.method ?? "GET";
-      const hasAuth = ArenaClient.hasAuthorizationHeader(init?.headers);
+      const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+      // The SDK calls fetch with a Request and no init, so a token lives on
+      // the Request headers; checking init alone would cache private reads.
+      const requestHeaders = input instanceof Request ? input.headers : init?.headers;
+      const hasAuth = ArenaClient.hasAuthorizationHeader(requestHeaders);
       const shouldUseEdgeCache = method === "GET" && !hasAuth;
 
       const requestInit: NonNullable<Parameters<Fetch>[1]> = shouldUseEdgeCache
-        ? {
-            ...init,
-            cf: {
-              cacheTtl: 86400,
-              cacheKey: `arena:v3:public:${url}`,
-              cacheTtlByStatus: { "400-599": 0 },
-            },
-          }
+        ? { ...init, cf: publicCacheOptions(url) }
         : { ...init, cf: { cacheTtl: 0 } };
 
+      if (shouldUseEdgeCache) {
+        const cached = await readWorkerCache(url);
+        if (cached) return cached;
+      }
+
       const response = await fetchImpl(input, requestInit);
+
+      if (shouldUseEdgeCache && response.ok) {
+        await writeWorkerCache(url, response);
+      }
 
       const shouldRetryWithoutAuth =
         method === "GET" && hasAuth && (response.status === 401 || response.status === 403);
 
-      if (shouldRetryWithoutAuth) {
-        const retryInit = { ...requestInit };
-        const retryHeaders = ArenaClient.removeAuthorizationHeader(requestInit.headers);
-        if (retryHeaders) retryInit.headers = retryHeaders;
-        return fetchImpl(input, retryInit);
-      }
-
-      return response;
+      if (!shouldRetryWithoutAuth) return response;
+      return retryWithoutAuth(input, init, url, requestHeaders);
     };
+
+    function retryWithoutAuth(
+      input: RequestInfo,
+      init: Parameters<Fetch>[1],
+      url: string,
+      requestHeaders: HeadersInit | undefined,
+    ): Promise<Response> {
+      const retryHeaders = ArenaClient.removeAuthorizationHeader(requestHeaders);
+      const retryInput =
+        input instanceof Request && retryHeaders
+          ? new Request(input, { headers: retryHeaders })
+          : input;
+      const retryInit: NonNullable<Parameters<Fetch>[1]> = {
+        ...init,
+        cf: publicCacheOptions(url),
+      };
+      if (retryHeaders && !(input instanceof Request)) retryInit.headers = retryHeaders;
+      return fetchImpl(retryInput, retryInit);
+    }
   }
 
   constructor(config?: {
