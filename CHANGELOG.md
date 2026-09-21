@@ -1,3 +1,16 @@
+# [3.7.0](https://github.com/et0and/wwwtom/compare/v3.6.0...v3.7.0) (2026-09-21)
+
+
+### Bug Fixes
+
+* **arena:** harden slugs, cache retry, and block renderers ([5a7a9e5](https://github.com/et0and/wwwtom/commit/5a7a9e55f901537fd039555fb9c0937d09bbc84b))
+* **ci:** keep the classifier triage off the failure path ([eb36507](https://github.com/et0and/wwwtom/commit/eb36507f9fa0a7e36dfa95c0cb3fb284be72bf1d))
+
+
+### Features
+
+* **web:** serve Tom's posts and works from are.na ([4eed76a](https://github.com/et0and/wwwtom/commit/4eed76a2c27e08c1213eed0cc49fedde29600082))
+
 # [3.6.0](https://github.com/et0and/wwwtom/compare/v3.5.0...v3.6.0) (2026-09-21)
 
 
