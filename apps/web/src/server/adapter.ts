@@ -1,41 +1,27 @@
 import { callAdapter, runAdapterRequest, runAdapterRequestOrNull } from "~/libs/adapter";
-import type {
-  ArenaRef,
-  CmsListResponse,
-  CmsPost,
-  CmsPostSummary,
-  CmsWork,
-  CmsWorkSummary,
-} from "@tom/schemas/cms";
+import type { ArenaEntry, ArenaEntryList } from "@tom/schemas/arena-content";
 
 /** Posts index page size, shared by the route and its router preload. */
 export const POSTS_PAGE_SIZE = 5;
 
-/** Single post reads carry the adapter-appended arena embeds. */
-export type PostWithArena = CmsPost & { readonly arenaBlocks: ReadonlyArray<ArenaRef> };
-
-/** Single work reads carry the adapter-appended arena embeds. */
-export type WorkWithArena = CmsWork & { readonly arenaBlocks: ReadonlyArray<ArenaRef> };
-
-export function fetchPosts(
-  page: number,
-  pageSize: number,
-): Promise<CmsListResponse<CmsPostSummary>> {
+/** One page of the are.na master channel: title, summary, and order. */
+export function fetchPosts(page: number, pageSize: number): Promise<ArenaEntryList> {
   return runAdapterRequest(() =>
-    callAdapter().content.posts.summary.get({ query: { page, pageSize } }),
+    callAdapter().content.arena.posts.get({ query: { page, pageSize } }),
   );
 }
 
-export function fetchPostBySlug(slug: string): Promise<PostWithArena | null> {
-  return runAdapterRequestOrNull(() => callAdapter().content.posts({ slug }).get());
+/** A published post with its blocks, or null when it is not in the index. */
+export function fetchPostBySlug(slug: string): Promise<ArenaEntry | null> {
+  return runAdapterRequestOrNull(() => callAdapter().content.arena.posts({ slug }).get());
 }
 
-export function fetchWorks(): Promise<CmsListResponse<CmsWorkSummary>> {
-  return runAdapterRequest(() => callAdapter().content.works.summary.get());
+export function fetchWorks(): Promise<ArenaEntryList> {
+  return runAdapterRequest(() => callAdapter().content.arena.works.get());
 }
 
-export function fetchWorkBySlug(slug: string): Promise<WorkWithArena | null> {
-  return runAdapterRequestOrNull(() => callAdapter().content.works({ slug }).get());
+export function fetchWorkBySlug(slug: string): Promise<ArenaEntry | null> {
+  return runAdapterRequestOrNull(() => callAdapter().content.arena.works({ slug }).get());
 }
 
 export function fetchProducts() {
@@ -48,6 +34,10 @@ export function fetchProduct(productId: string) {
 
 export function createCustomer(input: { email: string; name?: string; externalId: string }) {
   return runAdapterRequest(() => callAdapter().polar.customers.post(input));
+}
+
+export function fetchChannel(slug: string) {
+  return runAdapterRequest(() => callAdapter().arena.channels({ slug }).get());
 }
 
 export function fetchChannelContents(slug: string, per: number) {

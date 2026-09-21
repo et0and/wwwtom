@@ -31,26 +31,26 @@ afterEach(() => {
 
 describe("server functions", () => {
   describe("fetchPosts", () => {
-    it("calls the adapter post summaries endpoint with pagination and returns the list", async () => {
-      const body = { docs: [{ id: "post-1" }], totalDocs: 1, page: 2, totalPages: 1 };
+    it("calls the adapter are.na posts endpoint with pagination and returns the list", async () => {
+      const body = { docs: [{ id: 1 }], totalDocs: 1, page: 2, totalPages: 1 };
       fetchMock.mockResolvedValue(jsonResponse(body));
       const result = await fetchPosts(2, 5);
       expect(result).toEqual(body);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/content/posts/summary?page=2&pageSize=5",
+        "http://localhost:8788/content/arena/posts?page=2&pageSize=5",
         expect.anything(),
       );
     });
   });
 
   describe("fetchPostBySlug", () => {
-    it("calls the adapter post endpoint with the slug", async () => {
-      const post = { id: "34", title: "A pattern language" };
+    it("calls the adapter are.na post endpoint with the slug", async () => {
+      const post = { id: 34, title: "A pattern language" };
       fetchMock.mockResolvedValue(jsonResponse(post));
       const result = await fetchPostBySlug("a-pattern-language");
       expect(result).toEqual(post);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/content/posts/a-pattern-language",
+        "http://localhost:8788/content/arena/posts/a-pattern-language",
         expect.anything(),
       );
     });
@@ -91,26 +91,26 @@ describe("server functions", () => {
   });
 
   describe("fetchWorks", () => {
-    it("calls the adapter work summaries endpoint", async () => {
-      const works = { docs: [{ id: "work-1", title: "Hyperjam" }], totalDocs: 1 };
+    it("calls the adapter are.na works endpoint", async () => {
+      const works = { docs: [{ id: 1, title: "Hyperjam" }], totalDocs: 1 };
       fetchMock.mockResolvedValue(jsonResponse(works));
       const result = await fetchWorks();
       expect(result).toEqual(works);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/content/works/summary",
+        "http://localhost:8788/content/arena/works",
         expect.anything(),
       );
     });
   });
 
   describe("fetchWorkBySlug", () => {
-    it("calls the adapter work endpoint with the slug", async () => {
-      const work = { id: "1", title: "Hyperjam" };
+    it("calls the adapter are.na work endpoint with the slug", async () => {
+      const work = { id: 1, title: "Hyperjam" };
       fetchMock.mockResolvedValue(jsonResponse(work));
       const result = await fetchWorkBySlug("hyperjam");
       expect(result).toEqual(work);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/content/works/hyperjam",
+        "http://localhost:8788/content/arena/works/hyperjam",
         expect.anything(),
       );
     });

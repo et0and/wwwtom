@@ -42,16 +42,16 @@ export const api = Effect.gen(function* () {
   const queue = yield* tomQueue.pipe(retain());
   const dlq = yield* tomQueueDlq.pipe(retain());
 
-  // The CMS D1 database and media bucket are owned by the api stack, the
-  // only runtime user. Production retains them so a stage teardown never
-  // deletes content or media; preview stages stay ephemeral. PR previews
-  // read the dev database + bucket directly (see cms.storage.ts).
-  const cmsDb = yield* stage === "production"
+  // Tom's CMS is retired: the site reads are.na and the editor is gone. The
+  // storage stays declared — production retains it — so the content can be
+  // migrated by hand; no worker binds it any more. PR previews keep the
+  // retained handles to the dev database and bucket (see cms.storage.ts).
+  yield* stage === "production"
     ? cmsD1.pipe(retain())
     : stage.startsWith("pr-")
       ? previewCmsD1
       : cmsD1;
-  const cmsMedia = yield* stage === "production"
+  yield* stage === "production"
     ? cmsMediaBucket.pipe(retain())
     : stage.startsWith("pr-")
       ? previewCmsMedia
@@ -83,8 +83,6 @@ export const api = Effect.gen(function* () {
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       WORK_QUEUE: queue,
-      CMS_D1: cmsDb,
-      CMS_MEDIA: cmsMedia,
       // Admin allowlist as explicit stage config (deploy-time env or
       // bundle, never code): it wins over the opaque shared bundle value.
       CMS_ADMIN_EMAILS: tomAdminEmails,

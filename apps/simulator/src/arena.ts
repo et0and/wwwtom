@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { Schema } from "effect";
 import arenaFixtures from "../fixtures/arena.json" with { type: "json" };
+import arenaContent from "../fixtures/arena-content.json" with { type: "json" };
 
 type ArenaFixture = typeof arenaFixtures;
 
@@ -13,30 +14,57 @@ const textConnection = arenaFixtures.connections.text as ArenaFixture["connectio
 const imageConnection = arenaFixtures.connections.image as ArenaFixture["connections"]["image"];
 const comment = arenaFixtures.comment as ArenaFixture["comment"];
 
+/** Master channels and their entries (fixtures/arena-content.json). */
+const postsChannel = arenaContent.postsChannel;
+const workChannel = arenaContent.workChannel;
+const contentEntries = [...arenaContent.posts, ...arenaContent.works, ...arenaContent.channels];
+const contentChannels = [
+  postsChannel,
+  workChannel,
+  ...contentEntries.map((entry) => entry.channel),
+];
+
 const notFound = { error: "The resource you are looking for does not exist." };
 
-const paginationMeta = (total: number, per: number, page: number) => ({
-  current_page: page,
-  next_page: null,
-  prev_page: null,
-  per_page: per,
-  total_pages: total === 0 ? 0 : 1,
-  total_count: total,
-  has_more_pages: false,
-});
+const paginationMeta = (total: number, per: number, page: number) => {
+  const totalPages = per > 0 ? Math.ceil(total / per) : 0;
+  return {
+    current_page: page,
+    next_page: page < totalPages ? page + 1 : null,
+    prev_page: page > 1 ? page - 1 : null,
+    per_page: per,
+    total_pages: totalPages,
+    total_count: total,
+    has_more_pages: page < totalPages,
+  };
+};
 
 const blockWithConnection = (
   block: ArenaFixture["textBlock"] | ArenaFixture["imageBlock"],
   connection: ArenaFixture["connections"]["text"] | ArenaFixture["connections"]["image"],
 ) => ({ ...block, connection });
 
-const channels = [channel, worktable.channel];
+const channels = [channel, worktable.channel, ...contentChannels];
 
 const matchesChannelId = (id: string) =>
   channels.some((c) => id === c.slug || String(id) === String(c.id));
 
+const isId = (id: string, candidate: { readonly slug: string; readonly id: number }) =>
+  id === candidate.slug || String(id) === String(candidate.id);
+
+/** Contents of a master channel: the entry channels, in manual order. */
+const masterContents = (id: string): ReadonlyArray<unknown> | undefined => {
+  if (isId(id, postsChannel)) return arenaContent.posts.map((entry) => entry.channel);
+  if (isId(id, workChannel)) return arenaContent.works.map((entry) => entry.channel);
+  return undefined;
+};
+
+/** Contents of an entry channel: its blocks, in manual order. */
+const entryBlocks = (id: string): ReadonlyArray<unknown> | undefined =>
+  contentEntries.find((entry) => isId(id, entry.channel))?.blocks;
+
 const contentsFor = (id: string) => {
-  if (id === worktable.channel.slug || String(id) === String(worktable.channel.id)) {
+  if (isId(id, worktable.channel)) {
     return [
       blockWithConnection(worktable.textBlock, worktable.connections.text),
       blockWithConnection(worktable.imageBlock, worktable.connections.image),
@@ -78,15 +106,28 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
   .get(
     "/v3/channels/:id/contents",
     ({ params, query }) => {
+      const per = query.per ?? 10;
+      const page = query.page ?? 1;
+      const master = masterContents(params.id);
+      if (master) {
+        const start = (page - 1) * per;
+        return {
+          data: master.slice(start, start + per),
+          meta: paginationMeta(master.length, per, page),
+        };
+      }
+      const blocks = entryBlocks(params.id);
+      if (blocks) {
+        return { data: blocks, meta: paginationMeta(blocks.length, per, page) };
+      }
       if (!matchesChannelId(params.id)) {
         return notFound;
       }
-      const per = query.per ?? 10;
       const data = contentsFor(params.id);
       if (!data) {
         return notFound;
       }
-      return { data, meta: paginationMeta(data.length, per, query.page ?? 1) };
+      return { data, meta: paginationMeta(data.length, per, page) };
     },
     {
       params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.String })),

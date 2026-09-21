@@ -10,7 +10,7 @@ import { HttpStatus } from "@tom/constants/http";
 
 export const handleFeed = () =>
   Effect.runPromise(
-    adapterRequest(() => callAdapter().content.feed.get({ query: { limit: 20 } })).pipe(
+    adapterRequest(() => callAdapter().content.arena.feed.get({ query: { limit: 20 } })).pipe(
       Effect.map(({ docs }) => {
         const feed = new RSS({
           title: "Tom Hackshaw",
@@ -27,8 +27,8 @@ export const handleFeed = () =>
             title: post.title,
             description: post.summary,
             url: postUrl,
-            guid: post.id,
-            date: new Date(post.publishedAt ?? ""),
+            guid: String(post.id),
+            date: new Date(post.publishedAt),
             author: "Tom Hackshaw",
             custom_elements: [{ "content:encoded": post.content }],
           });
@@ -57,9 +57,9 @@ export const handleSitemap = () =>
   Effect.runPromise(
     Effect.all([
       adapterRequest(() =>
-        callAdapter().content.posts.summary.get({ query: { page: 1, pageSize: 500 } }),
+        callAdapter().content.arena.posts.get({ query: { page: 1, pageSize: 500 } }),
       ),
-      adapterRequest(() => callAdapter().content.works.summary.get()),
+      adapterRequest(() => callAdapter().content.arena.works.get()),
     ]).pipe(
       Effect.map(([postsResult, worksResult]) => {
         const posts = postsResult.docs;

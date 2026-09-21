@@ -311,4 +311,121 @@ describe("ArenaClient", () => {
       expect(url).toContain("query=test");
     });
   });
+
+  describe("worker cache", () => {
+    const stubCaches = (cached: Response | undefined) => {
+      const match = vi.fn(async () => cached);
+      const put = vi.fn(async () => undefined);
+      vi.stubGlobal("caches", { default: { match, put } });
+      return { match, put };
+    };
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const realFetch = () =>
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ data: [] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          }),
+      );
+
+    it("serves a cached public response without calling are.na", async () => {
+      const cached = new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+      const { match, put } = stubCaches(cached);
+      const fetchSpy = realFetch();
+      const client = new ArenaClient({ fetch: fetchSpy });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(match).toHaveBeenCalledTimes(1);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(put).not.toHaveBeenCalled();
+    });
+
+    it("stores a public response in the worker cache", async () => {
+      const { match, put } = stubCaches(undefined);
+      const fetchSpy = realFetch();
+      const client = new ArenaClient({ fetch: fetchSpy });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(match).toHaveBeenCalledTimes(1);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(put).toHaveBeenCalledTimes(1);
+    });
+
+    it("never caches token reads", async () => {
+      const { match, put } = stubCaches(undefined);
+      const client = new ArenaClient({ token: "valid-token", fetch: realFetch() });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(match).not.toHaveBeenCalled();
+      expect(put).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("edge cache", () => {
+    const cfOf = (call: unknown[]): { cacheTtl?: number } | undefined =>
+      (call[1] as { cf?: { cacheTtl?: number } } | undefined)?.cf;
+
+    it("caches unauthenticated SDK GET requests but never errors", async () => {
+      const client = new ArenaClient({ fetch: mockFetch });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(cfOf(mockFetch.mock.calls[0]!)).toMatchObject({
+        cacheTtl: 300,
+        cacheTtlByStatus: { "400-599": 0 },
+      });
+    });
+
+    it("does not cache SDK requests that carry a token", async () => {
+      const client = new ArenaClient({ token: "valid-token", fetch: mockFetch });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(cfOf(mockFetch.mock.calls[0]!)).toMatchObject({ cacheTtl: 0 });
+    });
+
+    it("retries without the token when are.na rejects it", async () => {
+      const unauthorized = {
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        headers: new Headers({ "content-type": "application/json" }),
+        text: async () => "",
+        json: async () => ({}),
+      } as Response;
+      const seen: Array<RequestInfo> = [];
+      const retryFetch = vi.fn(async (input: RequestInfo) => {
+        seen.push(input);
+        if (seen.length === 1) return unauthorized;
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({ "content-type": "application/json" }),
+          json: async () => ({ data: [], meta: {} }),
+          text: async () => JSON.stringify({ data: [], meta: {} }),
+        } as Response;
+      });
+      const client = new ArenaClient({ token: "valid-token", fetch: retryFetch });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(seen).toHaveLength(2);
+      const retryRequest = seen[1];
+      expect(retryRequest).toBeInstanceOf(Request);
+      if (!(retryRequest instanceof Request)) throw new Error("Expected a Request");
+      expect(retryRequest.headers.get("Authorization")).toBeNull();
+    });
+  });
 });

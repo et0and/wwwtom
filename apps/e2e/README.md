@@ -71,13 +71,14 @@ their normal client contract, just against the fixture host.
 asserting on exactly what the page rendered, which keeps assertions honest and
 diffs small when copy changes.
 
-| Store                    | Serves                                   | Drives                                            |
-| ------------------------ | ---------------------------------------- | ------------------------------------------------- |
-| `polar-products.json`    | `/v1/*` (products, customers, checkouts) | `/products`, `/purchase`                          |
-| `arena.json`             | `/v3/*` (channels, blocks, users)        | `/worktable` (channel `tom-s-worktable`)          |
-| `cms-posts.json`         | `/posts` (CMS list shape)                | `/posts`, pagination, `/feed.xml`, `/sitemap.xml` |
-| `cms-works.json`         | `/works`                                 | `/work`                                           |
-| `guestbook-entries.json` | `/guestbook/entries`                     | `/guestbook`                                      |
+| Store                    | Serves                                   | Drives                                     |
+| ------------------------ | ---------------------------------------- | ------------------------------------------ |
+| `polar-products.json`    | `/v1/*` (products, customers, checkouts) | `/products`, `/purchase`                   |
+| `arena.json`             | `/v3/*` (channels, blocks, users)        | `/worktable` (channel `tom-s-worktable`)   |
+| `arena-content.json`     | are.na master channels for posts + works | `/posts`, `/work`, pagination, `/feed.xml` |
+| `cms-posts.json`         | `/posts` (CMS list shape)                | the editor suite (Sophie's D1 CMS)         |
+| `cms-works.json`         | `/works`                                 | the editor suite (Sophie's D1 CMS)         |
+| `guestbook-entries.json` | `/guestbook/entries`                     | `/guestbook`                               |
 
 Runtime-mutated in-memory stores live in the simulator plugins
 (`customers` in `polar.ts`, `entries` in `guestbook.ts`) so write flows (e.g.

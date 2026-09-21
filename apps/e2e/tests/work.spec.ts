@@ -2,9 +2,9 @@ import { test, expect } from "@playwright/test";
 import { fixtureWorks } from "../src/fixture-stores";
 
 /**
- * /work — the Work index and project pages, driven by the CMS fixture
- * store. Works sort alphabetically by title (the real API contract, mirrored
- * by the simulator); a detail page renders the stored body.
+ * /work — the Work index and project pages, driven by the are.na fixture
+ * store (fixtures/arena-content.json). Order is the manual connection order
+ * in the master channel; a detail page renders the channel's blocks.
  */
 test.describe("work", () => {
   test("work index lists every fixture project", async ({ page }) => {
@@ -16,13 +16,10 @@ test.describe("work", () => {
     }
   });
 
-  test("work index sorts alphabetically by title", async ({ page }) => {
+  test("work index follows the master channel order", async ({ page }) => {
     await page.goto("/work");
     const titles = await page.getByRole("heading", { level: 2 }).allTextContents();
-    const expected = fixtureWorks
-      .map((work) => work.title)
-      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
-    expect(titles).toEqual(expected);
+    expect(titles).toEqual(fixtureWorks.map((work) => work.title));
   });
 
   test("a project detail page renders title and body", async ({ page }) => {

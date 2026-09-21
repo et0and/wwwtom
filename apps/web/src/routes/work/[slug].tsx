@@ -8,11 +8,12 @@ import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import {
-  DetailArenaBlocks,
+  ArenaSourceLink,
   DetailError,
   DetailLoading,
   DetailNotFound,
 } from "~/components/DetailStates";
+import { ContentBlocks } from "~/components/ContentBlocks";
 
 export default function WorkPage() {
   const params = useParams();
@@ -50,14 +51,13 @@ export default function WorkPage() {
         {(work) => (
           <PageLayout
             title={work.title}
-            // An empty summary falls back to the meta description.
-            description={work.summary || work.meta?.description || ""}
+            description={work.summary ?? ""}
             canonical={`https://tom.so/work/${slug()}`}
             jsonLd={{
               "@context": "https://schema.org",
               "@type": "CreativeWork",
               name: work.title,
-              description: work.summary || work.meta?.description || "",
+              description: work.summary ?? "",
               url: `https://tom.so/work/${slug()}`,
               author: { "@type": "Person", name: "Tom Hackshaw" },
             }}
@@ -68,9 +68,11 @@ export default function WorkPage() {
                 <Text>{work.summary ?? ""}</Text>
               </BlurInSection>
               <BlurInSection delay={0.5}>
-                <div innerHTML={work.html ?? ""} />
+                <ArenaSourceLink arenaSlug={work.arenaSlug} />
               </BlurInSection>
-              <DetailArenaBlocks blocks={work.arenaBlocks ?? []} baseDelay={0.7} />
+              <BlurInSection delay={0.7}>
+                <ContentBlocks blocks={work.blocks} />
+              </BlurInSection>
             </article>
           </PageLayout>
         )}

@@ -7,6 +7,12 @@ import { Stage } from "alchemy/Stage";
 import { stageHost } from "../shared.run.ts";
 import { previewComment } from "../utils/github/preview-comment.ts";
 
+/**
+ * Retired: Tom's content now lives in are.na and the site reads it directly,
+ * so cms.tom.so is no longer deployed. This stack stays only so
+ * `pnpm destroy:editor` can tear the worker and domain down; delete the file
+ * once that has run. The editor app itself still serves Sophie.
+ */
 const rootDir = `${import.meta.dirname}/../../apps/editor`;
 
 export const editor = Effect.gen(function* () {

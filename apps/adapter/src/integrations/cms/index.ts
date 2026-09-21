@@ -9,7 +9,6 @@ import {
 } from "@tom/schemas/cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
-import { hasSessionCredential } from "@tom/utils/services/session";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -18,6 +17,7 @@ import { AdapterError, runAdapter } from "../../config/effect";
 import { allowLocalOriginsForAdapter, isTrustedWriteOrigin, tenantFromValue } from "../../origins";
 import { forwardHeaders, refererOrigin, toProxiedResponse } from "../auth";
 import { simulatorEnv } from "../../simulator";
+import { setPublicContentCache } from "../content-cache";
 
 type TreatyCall<T> = Promise<{
   readonly data: T | null;
@@ -75,34 +75,9 @@ const cmsApi = async (request: Request) => {
 
 const SessionBodySchema = Schema.Struct({ session: Schema.Unknown });
 
-/**
- * Edge TTLs for anonymous CMS reads: a minute fresh at the edge, five in a
- * shared cache, a day of stale-while-revalidate. Content edits are rare and
- * readers tolerate slight staleness; session reads (drafts) never store.
- */
-const PUBLIC_CMS_CACHE = "public, max-age=60, s-maxage=300, stale-while-revalidate=86400";
-const PRIVATE_NO_STORE = "private, no-store";
-
 /** List page sizes mirror the index pages that consume them. */
 const POSTS_PAGE_SIZE = 5;
 const WORKS_PAGE_SIZE = 10;
-
-/**
- * Edge-cache public CMS reads. Anonymous responses are identical for every
- * reader (published only), so they cache at the edge with
- * stale-while-revalidate; session requests carry drafts and never store.
- * Only anonymous responses ever populate the cache, so an admin preview
- * may read stale-published but an anonymous reader can never see drafts.
- * Called only after a successful proxy — error responses never store.
- */
-const setCmsCache = (request: Request, set: { headers: Record<string, string | number> }): void => {
-  if (hasSessionCredential(request)) {
-    set.headers["Cache-Control"] = PRIVATE_NO_STORE;
-    return;
-  }
-  set.headers["Cache-Control"] = PUBLIC_CMS_CACHE;
-  set.headers["CDN-Cache-Control"] = PUBLIC_CMS_CACHE;
-};
 
 type CmsApi = Awaited<ReturnType<typeof cmsApi>>["api"];
 
@@ -119,7 +94,7 @@ const proxyCachedCms = async <T>(
 ): Promise<T> => {
   const { api, context } = await cmsApi(request);
   const data = await proxyCms(call(api), resource, context);
-  setCmsCache(request, set);
+  setPublicContentCache(request, set);
   return data;
 };
 

@@ -16,13 +16,13 @@ const mockedFetchWorks = fetchWorks as Mock;
 const worksData = {
   docs: [
     {
-      id: "work-1",
+      id: 1,
       title: "An idea for a performance",
       summary: "A tool for generating performance ideas.",
       slug: "an-idea-for-a-performance",
     },
     {
-      id: "work-2",
+      id: 2,
       title: "Hyperjam",
       summary: "A Merveilles online game festival.",
       slug: "hyperjam",

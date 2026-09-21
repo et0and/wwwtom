@@ -19,7 +19,7 @@ export const stageConcurrencyGroup = `deploy-${stageExpression}`;
  * Alchemy stacks the deploy pipeline provisions, in dependency order: later
  * stacks depend on earlier ones.
  */
-export const deployStacks = ["shared", "api", "adapter", "web", "editor", "sophie"] as const;
+export const deployStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
 
 export type DeployStack = (typeof deployStacks)[number];
 

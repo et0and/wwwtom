@@ -1,0 +1,496 @@
+{
+  "postsChannel": {
+    "id": 5748365,
+    "type": "Channel",
+    "slug": "posts-fwj0hyy6cee",
+    "title": "Posts",
+    "description": {
+      "markdown": "Posts for wwwtom",
+      "html": "<p>Posts for wwwtom</p>",
+      "plain": "Posts for wwwtom"
+    },
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "updated_at": "2026-01-01T00:00:00.000Z",
+    "counts": { "blocks": 0, "channels": 6, "contents": 6, "collaborators": 0 }
+  },
+  "workChannel": {
+    "id": 5748366,
+    "type": "Channel",
+    "slug": "work-usxogi1u-ta",
+    "title": "Work",
+    "description": {
+      "markdown": "Work for wwwtom",
+      "html": "<p>Work for wwwtom</p>",
+      "plain": "Work for wwwtom"
+    },
+    "created_at": "2026-01-01T00:00:00.000Z",
+    "updated_at": "2026-01-01T00:00:00.000Z",
+    "counts": { "blocks": 0, "channels": 3, "contents": 3, "collaborators": 0 }
+  },
+  "posts": [
+    {
+      "channel": {
+        "id": 101,
+        "type": "Channel",
+        "slug": "the-holy-grail-war-of-the-modern-web",
+        "title": "The Holy Grail War of the modern web",
+        "description": {
+          "markdown": "Seven systems, one grail. Why the modern web is a ritual you cannot opt out of.",
+          "html": "<p>Seven systems, one grail. Why the modern web is a ritual you cannot opt out of.</p>",
+          "plain": "Seven systems, one grail. Why the modern web is a ritual you cannot opt out of."
+        },
+        "created_at": "2025-02-09T09:00:00.000Z",
+        "updated_at": "2025-02-10T09:00:00.000Z",
+        "counts": { "blocks": 3, "channels": 0, "contents": 3, "collaborators": 0 },
+        "connection": { "position": 6, "connected_at": "2025-02-10T09:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 1001,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2025-02-10T09:00:00.000Z",
+          "updated_at": "2025-02-10T09:00:00.000Z",
+          "content": {
+            "markdown": "## Seven systems\n\nThe nightly e2e ritual begins here. Every route is a command seal.",
+            "html": "<h2>Seven systems</h2><p>The nightly e2e ritual begins here. Every route is a command seal.</p>",
+            "plain": "Seven systems\nThe nightly e2e ritual begins here. Every route is a command seal."
+          }
+        },
+        {
+          "id": 1002,
+          "type": "Image",
+          "title": "A grail-shaped diagram",
+          "description": null,
+          "created_at": "2025-02-10T09:00:00.000Z",
+          "updated_at": "2025-02-10T09:00:00.000Z",
+          "image": {
+            "src": "https://cdn.are.na/grail.jpg",
+            "alt_text": "A grail-shaped diagram",
+            "blurhash": null,
+            "width": 1200,
+            "height": 800,
+            "aspect_ratio": 1.5,
+            "content_type": "image/jpeg",
+            "filename": "grail.jpg",
+            "small": {
+              "src": "https://cdn.are.na/grail_small.jpg",
+              "src_2x": "https://cdn.are.na/grail_small_2x.jpg",
+              "width": 300,
+              "height": 200
+            },
+            "medium": {
+              "src": "https://cdn.are.na/grail_medium.jpg",
+              "src_2x": "https://cdn.are.na/grail_medium_2x.jpg",
+              "width": 600,
+              "height": 400
+            },
+            "large": {
+              "src": "https://cdn.are.na/grail.jpg",
+              "src_2x": "https://cdn.are.na/grail_2x.jpg",
+              "width": 1200,
+              "height": 800
+            },
+            "square": {
+              "src": "https://cdn.are.na/grail_square.jpg",
+              "src_2x": "https://cdn.are.na/grail_square_2x.jpg",
+              "width": 400,
+              "height": 400
+            }
+          }
+        },
+        {
+          "id": 1003,
+          "type": "Link",
+          "title": "Unlimited Blade Works",
+          "description": null,
+          "created_at": "2025-02-10T09:00:00.000Z",
+          "updated_at": "2025-02-10T09:00:00.000Z",
+          "source": {
+            "url": "https://example.com/unlimited-blade-works",
+            "title": "Unlimited Blade Works"
+          }
+        },
+        {
+          "id": 1004,
+          "type": "Channel",
+          "slug": "poetics-of-space",
+          "title": "Poetics of Space"
+        },
+        {
+          "id": 1005,
+          "type": "Attachment",
+          "title": "The grail war, annotated.pdf",
+          "description": null,
+          "created_at": "2025-02-10T09:00:00.000Z",
+          "updated_at": "2025-02-10T09:00:00.000Z",
+          "attachment": {
+            "url": "https://attachments.are.na/grail-war.pdf",
+            "filename": "grail-war.pdf",
+            "content_type": "application/pdf",
+            "file_size": 1229086
+          },
+          "image": {
+            "src": "https://cdn.are.na/grail-cover.png",
+            "alt_text": "The grail war, annotated",
+            "width": 900,
+            "height": 1200,
+            "medium": {
+              "src": "https://cdn.are.na/grail-cover_medium.png",
+              "src_2x": "https://cdn.are.na/grail-cover_medium_2x.png",
+              "width": 600,
+              "height": 800
+            }
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 102,
+        "type": "Channel",
+        "slug": "unlimited-blade-works-and-the-craft-of-building",
+        "title": "Unlimited Blade Works and the craft of building",
+        "description": {
+          "markdown": "Trace: On — what Shirou's reality marble teaches us about shipping.",
+          "html": "<p>Trace: On — what Shirou's reality marble teaches us about shipping.</p>",
+          "plain": "Trace: On — what Shirou's reality marble teaches us about shipping."
+        },
+        "created_at": "2025-01-21T08:30:00.000Z",
+        "updated_at": "2025-01-22T08:30:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 5, "connected_at": "2025-01-22T08:30:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 1011,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2025-01-22T08:30:00.000Z",
+          "updated_at": "2025-01-22T08:30:00.000Z",
+          "content": {
+            "markdown": "A build pipeline is a reality marble full of traced artifacts.",
+            "html": "<p>A build pipeline is a reality marble full of traced artifacts.</p>",
+            "plain": "A build pipeline is a reality marble full of traced artifacts."
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 103,
+        "type": "Channel",
+        "slug": "rin-tohsaka-would-be-a-great-engineering-manager",
+        "title": "Rin Tohsaka would be a great engineering manager",
+        "description": {
+          "markdown": "Precise gem economy management, zero tolerance for sloppy joins.",
+          "html": "<p>Precise gem economy management, zero tolerance for sloppy joins.</p>",
+          "plain": "Precise gem economy management, zero tolerance for sloppy joins."
+        },
+        "created_at": "2024-12-04T15:00:00.000Z",
+        "updated_at": "2024-12-05T15:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 4, "connected_at": "2024-12-05T15:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 1021,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2024-12-05T15:00:00.000Z",
+          "updated_at": "2024-12-05T15:00:00.000Z",
+          "content": {
+            "markdown": "Budget the gems before you spend them.",
+            "html": "<p>Budget the gems before you spend them.</p>",
+            "plain": "Budget the gems before you spend them."
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 104,
+        "type": "Channel",
+        "slug": "a-command-seal-for-your-dependency-injection",
+        "title": "A command seal for your dependency injection",
+        "description": {
+          "markdown": "Three commands. Use them sparingly — they do not come back.",
+          "html": "<p>Three commands. Use them sparingly — they do not come back.</p>",
+          "plain": "Three commands. Use them sparingly — they do not come back."
+        },
+        "created_at": "2024-10-17T10:00:00.000Z",
+        "updated_at": "2024-10-18T10:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 3, "connected_at": "2024-10-18T10:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 1031,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2024-10-18T10:00:00.000Z",
+          "updated_at": "2024-10-18T10:00:00.000Z",
+          "content": {
+            "markdown": "One seal for the layer, one for the service, one for the test.",
+            "html": "<p>One seal for the layer, one for the service, one for the test.</p>",
+            "plain": "One seal for the layer, one for the service, one for the test."
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 105,
+        "type": "Channel",
+        "slug": "avalon-the-ideal-e2e-environment",
+        "title": "Avalon: the ideal e2e environment",
+        "description": {
+          "markdown": "A fixture store is a sheath that heals every wound the real world inflicts.",
+          "html": "<p>A fixture store is a sheath that heals every wound the real world inflicts.</p>",
+          "plain": "A fixture store is a sheath that heals every wound the real world inflicts."
+        },
+        "created_at": "2024-08-29T12:00:00.000Z",
+        "updated_at": "2024-08-30T12:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 2, "connected_at": "2024-08-30T12:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 1041,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2024-08-30T12:00:00.000Z",
+          "updated_at": "2024-08-30T12:00:00.000Z",
+          "content": {
+            "markdown": "Keep the simulator honest and the suite stays green.",
+            "html": "<p>Keep the simulator honest and the suite stays green.</p>",
+            "plain": "Keep the simulator honest and the suite stays green."
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 106,
+        "type": "Channel",
+        "slug": "servant-classes-as-system-architecture",
+        "title": "Servant classes as system architecture",
+        "description": {
+          "markdown": "Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker — and your CI runner.",
+          "html": "<p>Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker — and your CI runner.</p>",
+          "plain": "Saber, Archer, Lancer, Caster, Assassin, Rider, Berserker — and your CI runner."
+        },
+        "created_at": "2023-03-13T07:00:00.000Z",
+        "updated_at": "2023-03-14T07:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 1, "connected_at": "2023-03-14T07:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 1051,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2023-03-14T07:00:00.000Z",
+          "updated_at": "2023-03-14T07:00:00.000Z",
+          "content": {
+            "markdown": "Every class has one job. So should every service.",
+            "html": "<p>Every class has one job. So should every service.</p>",
+            "plain": "Every class has one job. So should every service."
+          }
+        }
+      ]
+    }
+  ],
+  "works": [
+    {
+      "channel": {
+        "id": 201,
+        "type": "Channel",
+        "slug": "projection-unlimited-blade-works",
+        "title": "Projection: Unlimited Blade Works",
+        "description": {
+          "markdown": "A build pipeline that forgets nothing it has ever compiled.",
+          "html": "<p>A build pipeline that forgets nothing it has ever compiled.</p>",
+          "plain": "A build pipeline that forgets nothing it has ever compiled."
+        },
+        "created_at": "2024-05-31T09:00:00.000Z",
+        "updated_at": "2024-06-01T09:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 3, "connected_at": "2024-06-01T09:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 2001,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2024-06-01T09:00:00.000Z",
+          "updated_at": "2024-06-01T09:00:00.000Z",
+          "content": {
+            "markdown": "A reality marble full of traced artifacts, rebuilt on every push.",
+            "html": "<p>A reality marble full of traced artifacts, rebuilt on every push.</p>",
+            "plain": "A reality marble full of traced artifacts, rebuilt on every push."
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 202,
+        "type": "Channel",
+        "slug": "emiya-family-recipes",
+        "title": "Emiya Family Recipes",
+        "description": {
+          "markdown": "A recipe site for the curry that ends every route.",
+          "html": "<p>A recipe site for the curry that ends every route.</p>",
+          "plain": "A recipe site for the curry that ends every route."
+        },
+        "created_at": "2023-11-11T10:00:00.000Z",
+        "updated_at": "2023-11-12T10:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 2, "connected_at": "2023-11-12T10:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 2011,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2023-11-12T10:00:00.000Z",
+          "updated_at": "2023-11-12T10:00:00.000Z",
+          "content": {
+            "markdown": "Simmer the mapo tofu, then stir in the mystery curry.",
+            "html": "<p>Simmer the mapo tofu, then stir in the mystery curry.</p>",
+            "plain": "Simmer the mapo tofu, then stir in the mystery curry."
+          }
+        }
+      ]
+    },
+    {
+      "channel": {
+        "id": 203,
+        "type": "Channel",
+        "slug": "fuyuki-city-blueprint",
+        "title": "Fuyuki City Blueprint",
+        "description": {
+          "markdown": "An interactive map of the Holy Grail War: ley lines, churches and the temple.",
+          "html": "<p>An interactive map of the Holy Grail War: ley lines, churches and the temple.</p>",
+          "plain": "An interactive map of the Holy Grail War: ley lines, churches and the temple."
+        },
+        "created_at": "2022-09-07T08:00:00.000Z",
+        "updated_at": "2022-09-08T08:00:00.000Z",
+        "counts": { "blocks": 1, "channels": 0, "contents": 1, "collaborators": 0 },
+        "connection": { "position": 1, "connected_at": "2022-09-08T08:00:00.000Z" }
+      },
+      "blocks": [
+        {
+          "id": 2021,
+          "type": "Text",
+          "title": null,
+          "description": null,
+          "created_at": "2022-09-08T08:00:00.000Z",
+          "updated_at": "2022-09-08T08:00:00.000Z",
+          "content": {
+            "markdown": "Ley lines, churches and the temple, drawn to scale.",
+            "html": "<p>Ley lines, churches and the temple, drawn to scale.</p>",
+            "plain": "Ley lines, churches and the temple, drawn to scale."
+          }
+        }
+      ]
+    }
+  ],
+  "channels": [
+    {
+      "channel": {
+        "id": 301,
+        "type": "Channel",
+        "slug": "poetics-of-space",
+        "title": "Poetics of Space",
+        "description": {
+          "markdown": "A channel dedicated to spaces",
+          "html": "<p>A channel dedicated to spaces</p>",
+          "plain": "A channel dedicated to spaces"
+        },
+        "created_at": "2024-01-01T00:00:00.000Z",
+        "updated_at": "2026-09-01T00:00:00.000Z",
+        "counts": { "blocks": 3, "channels": 0, "contents": 3, "collaborators": 0 },
+        "owner": {
+          "id": 2001,
+          "type": "User",
+          "name": "Tom Hackshaw",
+          "slug": "tom-hackshaw",
+          "avatar": "https://cdn.are.na/tom.jpg",
+          "initials": "TH"
+        }
+      },
+      "blocks": [
+        {
+          "id": 3011,
+          "type": "Image",
+          "title": "A sunlit room",
+          "description": null,
+          "created_at": "2026-09-01T00:00:00.000Z",
+          "updated_at": "2026-09-01T00:00:00.000Z",
+          "image": {
+            "src": "https://cdn.are.na/room.jpg",
+            "alt_text": "A sunlit room",
+            "width": 1200,
+            "height": 800,
+            "medium": {
+              "src": "https://cdn.are.na/room_medium.jpg",
+              "src_2x": "https://cdn.are.na/room_medium_2x.jpg",
+              "width": 600,
+              "height": 400
+            }
+          }
+        },
+        {
+          "id": 3012,
+          "type": "Image",
+          "title": "A wooden staircase",
+          "description": null,
+          "created_at": "2026-09-01T00:00:00.000Z",
+          "updated_at": "2026-09-01T00:00:00.000Z",
+          "image": {
+            "src": "https://cdn.are.na/staircase.jpg",
+            "alt_text": "A wooden staircase",
+            "width": 1200,
+            "height": 900,
+            "medium": {
+              "src": "https://cdn.are.na/staircase_medium.jpg",
+              "src_2x": "https://cdn.are.na/staircase_medium_2x.jpg",
+              "width": 600,
+              "height": 450
+            }
+          }
+        },
+        {
+          "id": 3013,
+          "type": "Image",
+          "title": "A quiet library",
+          "description": null,
+          "created_at": "2026-09-01T00:00:00.000Z",
+          "updated_at": "2026-09-01T00:00:00.000Z",
+          "image": {
+            "src": "https://cdn.are.na/library.jpg",
+            "alt_text": "A quiet library",
+            "width": 1200,
+            "height": 960,
+            "medium": {
+              "src": "https://cdn.are.na/library_medium.jpg",
+              "src_2x": "https://cdn.are.na/library_medium_2x.jpg",
+              "width": 600,
+              "height": 480
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

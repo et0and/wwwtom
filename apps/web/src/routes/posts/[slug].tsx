@@ -9,11 +9,12 @@ import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { formatDate } from "~/libs/utils/date";
 import {
-  DetailArenaBlocks,
+  ArenaSourceLink,
   DetailError,
   DetailLoading,
   DetailNotFound,
 } from "~/components/DetailStates";
+import { ContentBlocks } from "~/components/ContentBlocks";
 
 export default function PostPage() {
   const params = useParams();
@@ -51,16 +52,15 @@ export default function PostPage() {
         {(post) => (
           <PageLayout
             title={post.title}
-            // An empty summary falls back to the meta description.
-            description={post.summary || post.meta?.description || ""}
+            description={post.summary ?? ""}
             canonical={`https://tom.so/posts/${slug()}`}
             jsonLd={{
               "@context": "https://schema.org",
               "@type": "BlogPosting",
               headline: post.title,
-              description: post.summary || post.meta?.description || "",
-              datePublished: post.publishedAt ?? "",
-              dateModified: post.updatedAt ?? "",
+              description: post.summary ?? "",
+              datePublished: post.publishedAt,
+              dateModified: post.updatedAt,
               url: `https://tom.so/posts/${slug()}`,
               author: { "@type": "Person", name: "Tom Hackshaw" },
             }}
@@ -69,20 +69,20 @@ export default function PostPage() {
               <BlurInText text={post.title} tag="h1" baseDelay={0.1} step={0.025} />
               <BlurInSection delay={0.3}>
                 <Text variant="heading" as="h2">
-                  {post.meta?.description ?? ""}
+                  {post.summary ?? ""}
                 </Text>
               </BlurInSection>
               <BlurInSection delay={0.5}>
-                {post.publishedAt ? (
+                <div class="flex flex-col gap-1.5">
                   <Text variant="secondary" size="sm" as="time">
                     {formatDate(post.publishedAt)}
                   </Text>
-                ) : null}
+                  <ArenaSourceLink arenaSlug={post.arenaSlug} />
+                </div>
               </BlurInSection>
               <BlurInSection delay={0.7}>
-                <div class="pt-8" innerHTML={post.html ?? ""} />
+                <ContentBlocks blocks={post.blocks} />
               </BlurInSection>
-              <DetailArenaBlocks blocks={post.arenaBlocks ?? []} baseDelay={0.9} />
             </article>
           </PageLayout>
         )}

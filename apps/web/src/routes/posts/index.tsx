@@ -76,9 +76,9 @@ export default function PostsHome() {
                             {post.title}
                           </Text>
                           <Text variant="secondary" size="sm" as="time">
-                            {formatDate(post.publishedAt ?? "")}
+                            {formatDate(post.publishedAt)}
                           </Text>
-                          <Text>{post.summary || post.meta?.description}</Text>
+                          <Text>{post.summary ?? ""}</Text>
                         </div>
                       </Link>
                     )}

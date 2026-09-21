@@ -41,14 +41,13 @@ pnpm deploy:shared
 pnpm deploy:api
 pnpm deploy:adapter
 pnpm deploy:web
-pnpm deploy:editor
 pnpm deploy:sophie
 pnpm deploy:runner
 pnpm deploy:turbo
 pnpm deploy:gtm
 ```
 
-Deployment order is `shared -> turbo -> api -> adapter -> web -> editor -> sophie`. `gtm` is
+Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`. `gtm` is
 independent and can be deployed at any time.
 
 The `runner` stack is on-demand infrastructure, not part of the default

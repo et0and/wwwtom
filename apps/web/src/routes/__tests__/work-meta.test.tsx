@@ -14,13 +14,12 @@ import { fetchWorkBySlug } from "~/server/adapter";
 const mockedFetchWorkBySlug = fetchWorkBySlug as Mock;
 
 const workData = {
-  id: "work-1",
+  id: 1,
   title: "An idea for a performance",
   summary: "A tool for generating performance ideas.",
   slug: "an-idea-for-a-performance",
-  meta: { description: "A meta description" },
-  html: "<p>A tool for generating performance ideas.</p>",
-  arenaBlocks: [],
+  arenaSlug: "an-idea-for-a-performance-xyz789",
+  blocks: [],
 };
 
 const TestRouter = createRouter({
@@ -62,6 +61,9 @@ describe("work page meta tags", () => {
     );
     expect(headMeta('meta[name="twitter:title"]')).toBe("An idea for a performance | Tom Hackshaw");
     expect(headMeta('meta[name="twitter:card"]')).toBe("summary_large_image");
+
+    const source = screen.getByRole("link", { name: "View on are.na" }) as HTMLAnchorElement;
+    expect(source.href).toBe("https://are.na/tom/an-idea-for-a-performance-xyz789");
   });
 
   it("points og:image and twitter:image at the public adapter proxy, absolute", async () => {
