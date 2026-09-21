@@ -23,7 +23,6 @@ import { ProblemType } from "@tom/constants/problem";
 import { AdapterError } from "./config/effect";
 import { allowLocalOriginsForAdapter, isTrustedWebOrigin, tenantFromValue } from "./origins";
 import { arenaIntegration } from "./integrations/arena";
-import { arenaContentIntegration } from "./integrations/arena-content";
 import { authIntegration } from "./integrations/auth";
 import { cmsIntegration } from "./integrations/cms";
 import { polarIntegration } from "./integrations/polar";
@@ -136,7 +135,6 @@ export const app = new Elysia({
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
   .use(arenaIntegration)
-  .use(arenaContentIntegration)
   .use(authIntegration)
   .use(cmsIntegration)
   .use(polarIntegration)
