@@ -2,8 +2,14 @@ import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { Headers, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { HttpError } from "@tom/types/errors";
-import { logApiFailure, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
-import { liveHttpClient } from "../../http-client";
+import { HttpStatus } from "@tom/constants/http";
+import {
+  logApiFailure,
+  logContextFromRequest,
+  runEffect,
+  toErrorMessage,
+} from "@tom/utils/services/worker";
+import { liveHttpClient } from "@tom/utils/services/http";
 
 const GITHUB_HEADERS = Headers.fromInput({
   Accept: "application/vnd.github.v3+json",
@@ -24,8 +30,8 @@ const fetchGithubJson = <A, I>(
       Effect.mapError(
         (error) =>
           new HttpError({
-            message: error instanceof Error ? error.message : "Failed to fetch from GitHub",
-            status: 0,
+            message: toErrorMessage(error),
+            status: HttpStatus.BadGateway,
           }),
       ),
     );
@@ -35,7 +41,7 @@ const fetchGithubJson = <A, I>(
         (error) =>
           new HttpError({
             message: `GitHub API error: ${error.response?.status ?? "unknown status"}`,
-            status: error.response?.status ?? 0,
+            status: error.response?.status ?? HttpStatus.BadGateway,
           }),
       ),
     );
@@ -44,8 +50,8 @@ const fetchGithubJson = <A, I>(
       Effect.mapError(
         (error) =>
           new HttpError({
-            message: error instanceof Error ? error.message : "Failed to parse GitHub response",
-            status: 0,
+            message: toErrorMessage(error),
+            status: HttpStatus.BadGateway,
           }),
       ),
     );
@@ -64,7 +70,7 @@ const getLatestCommitHashWithFallback = () =>
     Effect.catch(
       Effect.fn("getLatestCommitHashErrorHandler")(function* (error: HttpError) {
         yield* logApiFailure("Failed to fetch commit from GitHub API", error.status, error);
-        return yield* Effect.succeed("unknown");
+        return "unknown";
       }),
     ),
   );
@@ -84,7 +90,7 @@ const getLatestVersionWithFallback = () =>
     Effect.catch(
       Effect.fn("getLatestVersionErrorHandler")(function* (error: HttpError) {
         yield* logApiFailure("Failed to fetch version from GitHub API", error.status, error);
-        return yield* Effect.succeed("0.0.0");
+        return "0.0.0";
       }),
     ),
   );

@@ -2,6 +2,8 @@ import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
+import { commaTolerantString, joinCommaList } from "@tom/schemas/og";
 import { ImageGenerationError } from "@tom/types/errors";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import {
@@ -12,38 +14,22 @@ import {
 } from "@tom/utils/services/worker";
 import { ProblemType } from "@tom/constants/problem";
 
-/**
- * OG text is free text and legitimately contains commas ("Aotearoa, New
- * Zealand"). Elysia's standard-schema query parser splits comma-separated
- * values into arrays, so accept the array form and rejoin it before
- * forwarding (the API's validateOgParams enforces the real length bounds).
- */
-const commaTolerantString = Schema.Union([Schema.String, Schema.Array(Schema.String)]);
-
 const OgQuerySchema = Schema.Struct({
-  title: Schema.optional(commaTolerantString),
-  summary: Schema.optional(commaTolerantString),
+  title: Schema.optional(commaTolerantString(100)),
+  summary: Schema.optional(commaTolerantString(200)),
   template: Schema.optional(
     Schema.Union([Schema.Literal("default"), Schema.Literal("minimal"), Schema.Literal("sophie")]),
   ),
-  date: Schema.optional(commaTolerantString),
+  date: Schema.optional(commaTolerantString(30)),
 });
 
 const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
-
-/** Rejoin the comma-split list form Elysia produces for text params. */
-const isString = Schema.is(Schema.String);
-
-const joinCommaList = (value: string | readonly string[] | undefined): string | undefined => {
-  if (value === undefined) return undefined;
-  return isString(value) ? value : value.join(",");
-};
 
 export const ogIntegration = new Elysia({ name: "og" }).get(
   "/og",
   async ({ query, request }) => {
     const env = await readCloudflareEnv(getRequestEnv(request));
-    const apiUrl = env.API_URL ?? "http://localhost:8787";
+    const apiUrl = env.API_URL ?? LOCAL_SERVICE_URLS.api;
     const title = joinCommaList(query.title);
     const summary = joinCommaList(query.summary);
     const template = query.template;
@@ -84,12 +70,12 @@ export const ogIntegration = new Elysia({ name: "og" }).get(
         return yield* new ImageGenerationError({ message: "Failed to generate OG image" });
       }
 
-      const imageBuffer = yield* Effect.tryPromise({
-        try: () => response.arrayBuffer(),
-        catch: () => new ImageGenerationError({ message: "Failed to read image buffer" }),
-      });
+      if (response.body === null) {
+        return yield* new ImageGenerationError({ message: "Failed to read image buffer" });
+      }
 
-      return new Response(imageBuffer, {
+      return new Response(response.body, {
+        status: response.status,
         headers: {
           "Content-Type": "image/png",
           "Cache-Control": "public, max-age=31536000, immutable",

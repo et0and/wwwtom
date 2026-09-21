@@ -1,42 +1,10 @@
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { CmsSlug } from "@tom/schemas/cms";
 import type { CmsCategory, CmsListResponse, CmsPost, CmsPostSummary } from "@tom/schemas/cms";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { runClient, runClientOrNull } from "@tom/utils/services/http";
 import { adapterRequest, callSophie } from "./api";
-
-const dateFormatter = new Intl.DateTimeFormat("en-NZ", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
-const dayFormatter = new Intl.DateTimeFormat("en-NZ", {
-  year: "numeric",
-  month: "long",
-  day: "numeric",
-});
-
-/** Format a nullable published-at timestamp. Invalid dates render empty. */
-export const formatPublishedDateTime = (value: string | null): string =>
-  Option.getOrElse(
-    Option.map(Schema.decodeOption(Schema.DateFromString)(value ?? ""), (date) =>
-      dateFormatter.format(date),
-    ),
-    () => "",
-  );
-
-/** Format a nullable published-at timestamp as a full date without time. */
-export const formatPublishedDate = (value: string | null): string =>
-  Option.getOrElse(
-    Option.map(Schema.decodeOption(Schema.DateFromString)(value ?? ""), (date) =>
-      dayFormatter.format(date),
-    ),
-    () => "",
-  );
 
 /**
  * Parse the category filter at the boundary. Invalid slugs fail fast with
@@ -60,7 +28,7 @@ const decodeCategoryFilter = (
 };
 
 /** Reserved category for standalone pages (about, etc.), branded for queries. */
-export const PAGES_CATEGORY: CmsSlug = Effect.runSync(Schema.decodeEffect(CmsSlug)("pages"));
+export const PAGES_CATEGORY: CmsSlug = Schema.decodeSync(CmsSlug)("pages");
 
 /** Reserved slug for the about page. Sophie edits it as a post in Camus. */
 export const ABOUT_SLUG = "about";

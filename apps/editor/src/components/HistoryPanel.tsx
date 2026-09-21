@@ -1,6 +1,7 @@
 import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsPost, CmsRevisionMeta, CmsRevisionSnapshot, CmsWork } from "@tom/schemas/cms";
+import { formatDateTime } from "@tom/utils/date";
 import { renderTiptapHtml } from "@tom/utils/tiptap-html";
 import { Button } from "@tom/ui/button";
 import { Badge } from "@tom/ui/badge";
@@ -15,11 +16,6 @@ type Selected = {
   readonly meta: CmsRevisionMeta;
   readonly snapshot: CmsRevisionSnapshot;
   readonly html: string;
-};
-
-const formatWhen = (iso: string): string => {
-  const time = new Date(iso).getTime();
-  return Number.isNaN(time) ? iso : new Date(time).toLocaleString();
 };
 
 const noop = (): void => undefined;
@@ -120,7 +116,7 @@ export const HistoryPanel = (props: {
               >
                 <span class="history-title">{meta.title}</span>
                 <span class="history-meta">
-                  {formatWhen(meta.createdAt)}
+                  {formatDateTime(meta.createdAt)}
                   {meta.actor === null ? "" : ` · ${meta.actor}`}
                 </span>
               </Button>
@@ -133,7 +129,7 @@ export const HistoryPanel = (props: {
           <div class="history-preview">
             <p class="flex items-center gap-2">
               <Badge variant="secondary">{current().snapshot.status}</Badge>
-              <span class="history-meta">{formatWhen(current().meta.createdAt)}</span>
+              <span class="history-meta">{formatDateTime(current().meta.createdAt)}</span>
             </p>
             <div class="preview" innerHTML={current().html} />
             <Button

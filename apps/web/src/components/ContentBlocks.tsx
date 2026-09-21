@@ -5,6 +5,12 @@ import type { ArenaContentBlock, ArenaImage } from "@tom/schemas/arena-content";
 import { Text } from "@tom/ui/text";
 import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/libs/utils/sanitize";
 import { ChannelEmbed } from "~/components/ChannelEmbed";
+import {
+  arenaImageAlt,
+  arenaImageSource,
+  arenaImageSourceSet,
+  hasArenaImageSource,
+} from "~/libs/utils/arena-image";
 import { PdfDialog } from "~/components/PdfDialog";
 
 const DEFAULT_EMBED_ASPECT_RATIO = "16 / 9";
@@ -43,19 +49,6 @@ const asBlock = <T extends ArenaContentBlock["type"]>(
 ): Extract<ArenaContentBlock, { type: T }> | null =>
   block.type === type ? (block as Extract<ArenaContentBlock, { type: T }>) : null;
 
-const imageSource = (image: ArenaImage | null | undefined): string =>
-  image?.medium?.src ?? image?.large?.src ?? image?.src ?? "";
-
-const imageSourceSet = (image: ArenaImage | null | undefined): string | undefined => {
-  const version = image?.medium;
-  return version?.src_2x ? `${version.src} 1x, ${version.src_2x} 2x` : undefined;
-};
-
-const imageAlt = (image: ArenaImage | null | undefined, title: string | null | undefined): string =>
-  image?.alt_text || title || "";
-
-const hasImageSource = (image: ArenaImage | null | undefined): boolean => imageSource(image) !== "";
-
 function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> }) {
   return (
     <div class="prose prose-sm max-w-none break-words whitespace-normal">
@@ -69,15 +62,15 @@ function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> 
 }
 
 function ImageBlock(props: { block: Extract<ArenaContentBlock, { type: "Image" }> }) {
-  const src = () => imageSource(props.block.image);
+  const src = () => arenaImageSource(props.block.image);
   return (
     <figure class="m-0">
       <Show when={src()}>
         {(value) => (
           <img
             src={value()}
-            srcset={imageSourceSet(props.block.image)}
-            alt={imageAlt(props.block.image, props.block.title)}
+            srcset={arenaImageSourceSet(props.block.image)}
+            alt={arenaImageAlt(props.block.image, props.block.title)}
             class="w-full"
             loading="lazy"
           />
@@ -96,6 +89,20 @@ function ImageBlock(props: { block: Extract<ArenaContentBlock, { type: "Image" }
   );
 }
 
+function LinkBlockImage(props: { block: Extract<ArenaContentBlock, { type: "Link" }> }) {
+  return (
+    <Show when={hasArenaImageSource(props.block.image)}>
+      <img
+        src={arenaImageSource(props.block.image)}
+        srcset={arenaImageSourceSet(props.block.image)}
+        alt={arenaImageAlt(props.block.image, props.block.title)}
+        class="w-full"
+        loading="lazy"
+      />
+    </Show>
+  );
+}
+
 function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> }) {
   const url = () => props.block.source?.url ?? "";
   const label = () => props.block.title || props.block.source?.title || "";
@@ -104,15 +111,7 @@ function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> 
       when={url()}
       fallback={
         <>
-          <Show when={hasImageSource(props.block.image)}>
-            <img
-              src={imageSource(props.block.image)}
-              srcset={imageSourceSet(props.block.image)}
-              alt={imageAlt(props.block.image, props.block.title)}
-              class="w-full"
-              loading="lazy"
-            />
-          </Show>
+          <LinkBlockImage block={props.block} />
           <Text>{label()}</Text>
         </>
       }
@@ -124,15 +123,7 @@ function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> 
           rel="noopener noreferrer"
           class="block no-underline hover:underline"
         >
-          <Show when={hasImageSource(props.block.image)}>
-            <img
-              src={imageSource(props.block.image)}
-              srcset={imageSourceSet(props.block.image)}
-              alt={imageAlt(props.block.image, props.block.title)}
-              class="w-full"
-              loading="lazy"
-            />
-          </Show>
+          <LinkBlockImage block={props.block} />
           <Text>{label()}</Text>
         </a>
       )}
@@ -155,7 +146,7 @@ function PlayOverlay() {
 /** Videos load only after a click, so are.na serves no bytes up front. */
 function VideoAttachment(props: { url: string; name: string; cover: ArenaImage | null }) {
   const [isPlaying, setIsPlaying] = createSignal(false);
-  const cover = () => (props.cover && hasImageSource(props.cover) ? props.cover : null);
+  const cover = () => (props.cover && hasArenaImageSource(props.cover) ? props.cover : null);
   return (
     <Show
       when={isPlaying()}
@@ -177,8 +168,8 @@ function VideoAttachment(props: { url: string; name: string; cover: ArenaImage |
             {(cover) => (
               <span class="relative block">
                 <img
-                  src={imageSource(cover())}
-                  srcset={imageSourceSet(cover())}
+                  src={arenaImageSource(cover())}
+                  srcset={arenaImageSourceSet(cover())}
                   alt={props.name}
                   class="w-full"
                   loading="lazy"
@@ -208,10 +199,10 @@ function AttachmentBlock(props: { block: Extract<ArenaContentBlock, { type: "Att
     contentType().startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(displayName());
   const body = (
     <>
-      <Show when={hasImageSource(props.block.image)}>
+      <Show when={hasArenaImageSource(props.block.image)}>
         <img
-          src={imageSource(props.block.image)}
-          srcset={imageSourceSet(props.block.image)}
+          src={arenaImageSource(props.block.image)}
+          srcset={arenaImageSourceSet(props.block.image)}
           alt={displayName()}
           class="w-full"
           loading="lazy"
@@ -276,7 +267,7 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
     >
       {(html) => (
         <Show
-          when={isPlaying() || !hasImageSource(cover())}
+          when={isPlaying() || !hasArenaImageSource(cover())}
           fallback={
             <button
               type="button"
@@ -286,8 +277,8 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
             >
               <span class="relative block">
                 <img
-                  src={imageSource(cover())}
-                  srcset={imageSourceSet(cover())}
+                  src={arenaImageSource(cover())}
+                  srcset={arenaImageSourceSet(cover())}
                   alt={props.block.title ?? ""}
                   class="w-full"
                   loading="lazy"

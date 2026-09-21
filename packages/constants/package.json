@@ -7,7 +7,8 @@
     "./arena": "./src/arena.ts",
     "./http": "./src/http.ts",
     "./headers": "./src/headers.ts",
-    "./problem": "./src/problem.ts"
+    "./problem": "./src/problem.ts",
+    "./service-urls": "./src/service-urls.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",

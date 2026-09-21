@@ -3,8 +3,10 @@ import type { memoryAdapter } from "better-auth/adapters/memory";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import {
   parseAdminEmails,
+  tenantFromValue,
   type CloudflareEnv,
   type CmsD1Binding,
 } from "@tom/utils/services/config";
@@ -123,8 +125,9 @@ const providerAllowed = (
  * can mint matching hosts. Scoped per tenant; unset without one.
  */
 const previewEditorPatterns = (env: CloudflareEnv): ReadonlyArray<string> => {
-  if (env.TENANT === "sophie") return ["https://pr-*-cms.sophie.st"];
-  if (env.TENANT === "tom") return ["https://pr-*-cms.tom.so"];
+  const tenant = tenantFromValue(env.TENANT);
+  if (tenant === "sophie") return ["https://pr-*-cms.sophie.st"];
+  if (tenant === "tom") return ["https://pr-*-cms.tom.so"];
   return [];
 };
 
@@ -148,8 +151,8 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
       operation: "auth_config",
     });
   }
-  const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
-  const editorUrl = env.EDITOR_URL ?? "http://localhost:5173";
+  const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
+  const editorUrl = env.EDITOR_URL ?? LOCAL_SERVICE_URLS.editor;
   return yield* Effect.try({
     try: () =>
       createAuth({

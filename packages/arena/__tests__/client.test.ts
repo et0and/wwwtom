@@ -6,13 +6,27 @@ import { ArenaClient, type Fetch, type DateProvider } from "../src/client";
 type MockFetch = ReturnType<typeof vi.fn<Fetch>>;
 
 const createMockFetch = (response: Partial<Response> = {}): MockFetch => {
+  // Covers every makeRequest envelope (channels, user/group channels, thumb).
+  const validArenaResponse = {
+    per: 50,
+    page: 1,
+    owner: null,
+    collaborators: null,
+    total_pages: 1,
+    current_page: 1,
+    base_type: "User",
+    type: "User",
+    channels: [],
+    channel_title: null,
+    contents: null,
+  };
   const defaultResponse: Response = {
     ok: true,
     status: 200,
     statusText: "OK",
     headers: new Headers({ "content-type": "application/json" }),
-    json: async () => ({ data: {} }),
-    text: async () => JSON.stringify({ data: {} }),
+    json: async () => ({ ...validArenaResponse }),
+    text: async () => JSON.stringify(validArenaResponse),
     ...response,
   } as Response;
   return vi.fn(async () => defaultResponse);

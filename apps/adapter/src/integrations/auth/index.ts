@@ -2,9 +2,11 @@ import { Elysia } from "elysia";
 import { Effect, Option, Schema } from "effect";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { HttpStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import { AdapterError, runAdapter } from "../../config/effect";
+import { requireTrustedWriteOrigin } from "../write-origin-gate";
 import {
   allowLocalOriginsForAdapter,
   isTrustedWriteOrigin,
@@ -48,44 +50,6 @@ type AuthProxyOptions = {
   readonly allowLocalOrigins: boolean;
   readonly tenant: Tenant | undefined;
 };
-
-export const refererOrigin = (referer: string): Effect.Effect<string, never> =>
-  Effect.try(() => new URL(referer).origin).pipe(Effect.orElseSucceed(() => ""));
-
-/**
- * CSRF gate for auth writes. Mirrors the CMS write gate: session cookies
- * travel cross-site, so the proxy verifies the request came from a trusted
- * page. GET/HEAD stay exempt — the OAuth redirect flow lands on GET
- * callbacks (provider → adapter) with no trustworthy Origin.
- */
-const requireTrustedAuthOrigin = (
-  request: Request,
-  options: AuthProxyOptions,
-): Effect.Effect<void, AdapterError> =>
-  Effect.gen(function* () {
-    if (request.method === "GET" || request.method === "HEAD") return;
-    const { adapterOrigin, allowLocalOrigins, tenant } = options;
-    const direct = request.headers.get("origin");
-    if (direct !== null) {
-      return yield* isTrustedWriteOrigin(direct, adapterOrigin, allowLocalOrigins, tenant)
-        ? Effect.void
-        : Effect.fail(
-            new AdapterError({
-              status: HttpStatus.Forbidden,
-              message: "Untrusted auth origin",
-            }),
-          );
-    }
-    const referer = request.headers.get("referer");
-    if (referer === null) return;
-    const origin = yield* refererOrigin(referer);
-    if (!isTrustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins, tenant)) {
-      return yield* new AdapterError({
-        status: HttpStatus.Forbidden,
-        message: "Untrusted auth origin",
-      });
-    }
-  });
 
 const CallbackBodySchema = Schema.Struct({ callbackURL: Schema.optional(Schema.String) });
 
@@ -144,7 +108,11 @@ const proxyAuth = (
   const url = new URL(request.url);
   return runAdapter(
     Effect.gen(function* () {
-      yield* requireTrustedAuthOrigin(request, options);
+      yield* requireTrustedWriteOrigin(request, {
+        ...options,
+        exemptSafeMethods: true,
+        message: "Untrusted auth origin",
+      });
       const body =
         request.method === "GET" || request.method === "HEAD"
           ? undefined
@@ -182,8 +150,8 @@ export const authIntegration = new Elysia({ name: "auth" }).all(
   "/auth/*",
   async ({ request }) => {
     const env = await readCloudflareEnv(getRequestEnv(request));
-    return proxyAuth(request, env.API_URL ?? "http://localhost:8787", env.INTERNAL_API_TOKEN, {
-      adapterOrigin: env.ADAPTER_URL ?? "http://localhost:8788",
+    return proxyAuth(request, env.API_URL ?? LOCAL_SERVICE_URLS.api, env.INTERNAL_API_TOKEN, {
+      adapterOrigin: env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter,
       allowLocalOrigins: allowLocalOriginsForAdapter(env.ADAPTER_URL),
       tenant: tenantFromValue(env.TENANT),
     });

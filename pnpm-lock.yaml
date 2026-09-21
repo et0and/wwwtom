@@ -319,6 +319,9 @@ importers:
       '@tiptap/pm':
         specifier: 'catalog:'
         version: 3.31.3
+      '@tom/constants':
+        specifier: workspace:*
+        version: link:../../packages/constants
       '@tom/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas
@@ -688,6 +691,9 @@ importers:
 
   packages/types:
     dependencies:
+      '@tom/schemas':
+        specifier: workspace:*
+        version: link:../schemas
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.116

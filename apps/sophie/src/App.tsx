@@ -8,16 +8,10 @@ import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
 import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
+import { formatDate } from "@tom/utils/date";
 import { getAdapterBaseUrl } from "./lib/api";
 import { getQueryClient } from "./lib/query-client";
-import {
-  PAGES_CATEGORY,
-  fetchAbout,
-  fetchCategories,
-  fetchPost,
-  fetchPosts,
-  formatPublishedDate,
-} from "./lib/posts";
+import { PAGES_CATEGORY, fetchAbout, fetchCategories, fetchPost, fetchPosts } from "./lib/posts";
 import { Nav } from "./components/Nav";
 import { CategoryFilter } from "./components/CategoryFilter";
 import { PostList } from "./components/PostList";
@@ -183,7 +177,7 @@ const PostDetail = () => {
                 metaType="description"
                 metaContent={found.summary ?? SOPHIE_DESCRIPTION}
                 brand={SOPHIE_BRAND}
-                date={formatPublishedDate(found.publishedAt)}
+                date={formatDate(found.publishedAt)}
               />
               <div class="sophie-crumbs">
                 <Breadcrumbs

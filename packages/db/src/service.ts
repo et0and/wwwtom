@@ -318,6 +318,8 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           return Number(result.numDeletedRows);
         }),
 
+        // Plain Effect value (not Effect.fn): the contract types this field
+        // as Effect rather than a callable, so the span attaches via pipe.
         cleanupExpiredSessions: Effect.gen(function* () {
           const result = yield* run(
             "cleanupExpiredSessions",

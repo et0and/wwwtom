@@ -29,13 +29,12 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
   }));
 
   const activeContents = createMemo(() => contentsQuery.data);
-  const isLoading = createMemo(() => contentsQuery.isLoading);
   const hasContent = createMemo(() => {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);
   });
   createEffect(
-    () => !isLoading() && !hasContent(),
+    () => !contentsQuery.isLoading && !hasContent(),
     (isEmpty) => {
       if (isEmpty) {
         void Effect.runFork(
@@ -45,7 +44,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     },
   );
   return (
-    <Show when={!isLoading()} fallback={<Loader />}>
+    <Show when={!contentsQuery.isLoading} fallback={<Loader />}>
       <Show when={hasContent()} fallback={<Text variant="secondary">Sorry, no content found</Text>}>
         <div class="overflow-x-auto whitespace-nowrap border border-black">
           <div class="carousel-container inline-flex gap-4 p-4">

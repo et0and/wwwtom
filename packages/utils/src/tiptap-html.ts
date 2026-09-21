@@ -22,21 +22,19 @@ const escapeHtml = (value: string): string =>
     .replace(/'/g, "&#39;");
 
 /** Keep only navigable link targets; anything else renders as plain text. */
-export const isSafeLinkHref = (href: string): boolean => {
+const safeHref = (href: string): string | null => {
   const target = href.trim();
-  return (
-    target.startsWith("https://") ||
+  return target.startsWith("https://") ||
     target.startsWith("http://") ||
     target.startsWith("mailto:") ||
     target.startsWith("/") ||
     target.startsWith("#")
-  );
+    ? target
+    : null;
 };
 
-const safeHref = (href: string): string | null => {
-  const target = href.trim();
-  return isSafeLinkHref(href) ? target : null;
-};
+/** Navigability check over the same trimmed target safeHref renders. */
+export const isSafeLinkHref = (href: string): boolean => safeHref(href) !== null;
 
 /**
  * Only these link targets render; anything else (e.g. pasted
@@ -109,7 +107,7 @@ type Highlighter = Awaited<ReturnType<(typeof import("shiki/core"))["createHighl
 const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Ref.makeUnsafe(Option.none());
 
 const createHighlighter = async (): Promise<Highlighter> => {
-  const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, ...bundles] =
+  const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, langModules, themeModules] =
     await Promise.all([
       import("shiki/core"),
       import("shiki/engine/javascript"),
@@ -133,8 +131,8 @@ const createHighlighter = async (): Promise<Highlighter> => {
       ]),
     ]);
   return createHighlighterCore({
-    themes: bundles[1].map((theme) => theme.default),
-    langs: bundles[0].map((lang) => lang.default),
+    themes: themeModules.map((theme) => theme.default),
+    langs: langModules.map((lang) => lang.default),
     engine: createJavaScriptRegexEngine(),
   });
 };

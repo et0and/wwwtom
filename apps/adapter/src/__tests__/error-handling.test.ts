@@ -56,13 +56,13 @@ describe("adapter error handling", () => {
     });
   });
 
-  it("returns 500 problem details when an integration has no access token configured", async () => {
+  it("returns 502 problem details when an integration has no access token configured", async () => {
     const response = await app.fetch(requestWithEnv("http://localhost/polar/products", testEnv()));
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(502);
     const body = await response.json();
     expect(body).toEqual({
       type: "about:blank",
-      status: 500,
+      status: 502,
       title: "Network error",
       instance: "http://localhost/polar/products",
     });

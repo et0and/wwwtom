@@ -10,7 +10,7 @@ import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, unwrapAdapter } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
-import { formatDateTime } from "~/libs/utils/date";
+import { formatDateTime } from "@tom/utils/date";
 
 export const fetchEntries = async () => {
   const result = await callAdapter().guestbook.entries.get();

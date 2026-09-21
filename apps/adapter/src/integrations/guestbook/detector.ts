@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Schema } from "effect";
 import { NodeinfoError } from "@tom/types/errors";
 
 const NODEINFO_VERSIONS = {
@@ -6,22 +6,27 @@ const NODEINFO_VERSIONS = {
   "2.1": "http://nodeinfo.diaspora.software/ns/schema/2.1",
 } as const;
 
-type Links = {
-  links: Array<{ href: string; rel: string }>;
-};
+const NodeinfoLinksSchema = Schema.Struct({
+  links: Schema.Array(Schema.Struct({ href: Schema.String, rel: Schema.String })),
+});
 
-type NodeinfoData = {
-  software: { name: string };
-  metadata: { upstream?: { name: string } };
-};
+const NodeinfoDocumentSchema = Schema.Struct({
+  software: Schema.Struct({ name: Schema.String }),
+  metadata: Schema.Struct({
+    upstream: Schema.optional(Schema.Struct({ name: Schema.optional(Schema.String) })),
+  }).pipe(Schema.withDecodingDefault(Effect.succeed({}))),
+});
+
+type NodeinfoDocument = Schema.Schema.Type<typeof NodeinfoDocumentSchema>;
 
 export type SNSType = "mastodon" | "pleroma" | "friendica" | "firefish" | "gotosocial" | "pixelfed";
 
 const detectFromNodeinfo = (
-  software: NodeinfoData["software"],
-  metadata: NodeinfoData["metadata"],
+  software: NodeinfoDocument["software"],
+  metadata: NodeinfoDocument["metadata"],
 ): Effect.Effect<SNSType, NodeinfoError> => {
-  const softwareMap = {
+  // oxlint-disable-next-line anti-slop/no-known-value-widening -- open lookup keyed by runtime software name
+  const softwareMap: Record<string, SNSType> = {
     akkoma: "pleroma",
     firefish: "firefish",
     friendica: "friendica",
@@ -32,10 +37,10 @@ const detectFromNodeinfo = (
     pixelfed: "pixelfed",
     pleroma: "pleroma",
     sharkey: "mastodon",
-  } as const;
+  };
 
-  const detected = softwareMap[software.name as keyof typeof softwareMap];
-  if (detected) return Effect.succeed(detected);
+  const detected = softwareMap[software.name];
+  if (detected !== undefined) return Effect.succeed(detected);
 
   if (metadata.upstream?.name?.toLowerCase() === "mastodon") {
     return Effect.succeed("mastodon");
@@ -66,14 +71,24 @@ const fetchNodeinfoVersion = Effect.fn("fetchNodeinfoVersion")(function* (
     });
   }
 
-  const data = yield* Effect.tryPromise({
-    try: () => res.json() as Promise<NodeinfoData>,
+  const payload: unknown = yield* Effect.tryPromise({
+    try: () => res.json(),
     catch: (error) =>
       new NodeinfoError({
         message: `Failed to parse nodeinfo ${version} data`,
         cause: error,
       }),
   });
+
+  const data = yield* Schema.decodeUnknownEffect(NodeinfoDocumentSchema)(payload).pipe(
+    Effect.mapError(
+      (cause) =>
+        new NodeinfoError({
+          message: `Failed to parse nodeinfo ${version} data`,
+          cause,
+        }),
+    ),
+  );
 
   return data;
 });
@@ -97,14 +112,24 @@ export const detector = Effect.fn("detector")(function* (url: string) {
     });
   }
 
-  const data = yield* Effect.tryPromise({
-    try: () => res.json() as Promise<Links>,
+  const payload: unknown = yield* Effect.tryPromise({
+    try: () => res.json(),
     catch: (error) =>
       new NodeinfoError({
         message: "Failed to parse nodeinfo response",
         cause: error,
       }),
   });
+
+  const data = yield* Schema.decodeUnknownEffect(NodeinfoLinksSchema)(payload).pipe(
+    Effect.mapError(
+      (cause) =>
+        new NodeinfoError({
+          message: "Failed to parse nodeinfo response",
+          cause,
+        }),
+    ),
+  );
 
   const link = data.links.find(
     (l) => l.rel === NODEINFO_VERSIONS["2.0"] || l.rel === NODEINFO_VERSIONS["2.1"],

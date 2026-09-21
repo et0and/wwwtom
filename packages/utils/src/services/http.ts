@@ -1,4 +1,5 @@
-import { Effect, Option, Schema } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
+import { FetchHttpClient, HttpClient } from "effect/unstable/http";
 import { HttpStatus } from "@tom/constants/http";
 import { problemDetailsSchema } from "@tom/schemas/error";
 import { HttpError } from "@tom/types/errors";
@@ -67,6 +68,17 @@ export const adapterRequest = <T>(
         ),
     }),
   );
+
+/**
+ * HttpClient bound to the current global fetch. Built per call because the
+ * Fetch reference default pins the first-seen implementation process-wide.
+ */
+// @effect-diagnostics-next-line lazyEffect:off
+export const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
+  Layer.provideMerge(FetchHttpClient.layer, Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch));
+
+export const workerCache = (): Cache | null =>
+  (globalThis as { caches?: { default?: Cache } }).caches?.default ?? null;
 
 /** Run a client effect as a promise at the Solid boundary. */
 export const runClient = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =>

@@ -2,6 +2,7 @@ import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsError } from "@tom/types/errors";
 import type { CmsListResponse, CmsPost, CmsWork } from "@tom/schemas/cms";
+import { parsePageNumber } from "@tom/utils/page";
 import { Button } from "@tom/ui/button";
 import { Badge } from "@tom/ui/badge";
 import { Banner } from "@tom/ui/banner";
@@ -38,8 +39,8 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
     const tab = params.get("kind");
     const kind = tab === "works" && !sophieMode() ? "works" : "posts";
     const pagesOnly = sophieMode() && tab === "pages";
-    const page = Number(params.get("page"));
-    return { kind, pagesOnly, page: Number.isInteger(page) && page > 0 ? page : 1 } satisfies {
+    const page = parsePageNumber(params.get("page"));
+    return { kind, pagesOnly, page } satisfies {
       kind: ContentKind;
       pagesOnly: boolean;
       page: number;

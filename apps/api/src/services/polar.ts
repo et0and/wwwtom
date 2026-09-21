@@ -1,11 +1,5 @@
-import { Effect, Layer, Schema } from "effect";
-import {
-  FetchHttpClient,
-  Headers,
-  HttpBody,
-  HttpClient,
-  HttpClientResponse,
-} from "effect/unstable/http";
+import { Effect, Schema } from "effect";
+import { Headers, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import {
   polarCheckoutSchema,
   polarCustomerSessionSchema,
@@ -14,6 +8,7 @@ import {
 } from "@tom/schemas/polar";
 import { PolarApiError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { liveHttpClient } from "@tom/utils/services/http";
 import { logApiFailure, toProblemResponse } from "@tom/utils/services/worker";
 
 const authHeaders = (accessToken: string | undefined) =>
@@ -21,13 +16,6 @@ const authHeaders = (accessToken: string | undefined) =>
     Authorization: `Bearer ${accessToken}`,
     "Content-Type": "application/json",
   });
-
-/**
- * HttpClient bound to the current global fetch. Built per call because the
- * Fetch reference default pins the first-seen implementation process-wide.
- */
-const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
-  Layer.provideMerge(FetchHttpClient.layer, Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch));
 
 type PolarCheckoutCreate = {
   readonly products: ReadonlyArray<string>;
@@ -68,7 +56,12 @@ const postPolarJson = <A, I>(
       })
       .pipe(
         Effect.mapError(
-          () => new PolarApiError({ message: "Network error", status: 0, operation }),
+          () =>
+            new PolarApiError({
+              message: "Network error",
+              status: HttpStatus.BadGateway,
+              operation,
+            }),
         ),
       );
 

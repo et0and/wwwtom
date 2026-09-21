@@ -6,11 +6,11 @@ import {
   CmsRestoreInputSchema,
   CmsWorkInputSchema,
 } from "@tom/schemas/cms";
-import type { CmsCategoryInput, CmsPostInput, CmsWorkInput } from "@tom/schemas/cms";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/services/config";
-import { parseAdminEmails, readCloudflareEnv } from "@tom/utils/services/config";
+import { parseAdminEmails, readCloudflareEnv, tenantFromValue } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { createAuthFromEnv, isAdminEmail, requireSession } from "../services/auth";
 import type { MediaUpload } from "../services/cms";
@@ -70,9 +70,7 @@ const requireAuthor = (request: Request): Effect.Effect<AuthorContext, CmsError>
     const author = yield* requireSession(auth, request.headers);
     // Sessions outlive allowlist edits: re-check membership on every
     // write so removing an email revokes access, not just future sign-ins.
-    // The session comes from Better Auth (an I/O boundary), so decode the
-    // email instead of narrowing it.
-    const email = Schema.decodeOption(Schema.String)(author.user.email);
+    const email = Option.filter(Option.fromNullishOr(author.user.email), Schema.is(Schema.String));
     if (
       Option.isNone(email) ||
       !isAdminEmail(email.value, parseAdminEmails(env.CMS_ADMIN_EMAILS))
@@ -86,7 +84,7 @@ const requireAuthor = (request: Request): Effect.Effect<AuthorContext, CmsError>
     return {
       db,
       r2,
-      adapterUrl: env.ADAPTER_URL ?? "http://localhost:8788",
+      adapterUrl: env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter,
       actor: email.value,
     };
   });
@@ -202,51 +200,57 @@ const detectUploadMime = (bytes: Uint8Array): string | null => {
 
 /** Decode a multipart upload body at the route boundary. */
 const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpload, CmsError> =>
-  decodeBoundary(UploadFormSchema, body, "Missing upload file", operation).pipe(
-    Effect.flatMap(({ file, alt, caption }) =>
-      Effect.gen(function* () {
-        if (file.size === 0) {
-          return yield* failInput("Upload file is empty", operation);
-        }
-        if (file.size > MAX_UPLOAD_BYTES) {
-          return yield* new CmsError({
-            message: "Upload file too large",
-            status: HttpStatus.PayloadTooLarge,
-            operation,
-          });
-        }
-        if (!UPLOAD_MIMES.has(file.type)) {
-          return yield* failInput(`Unsupported upload type: ${file.type}`, operation);
-        }
-        const bytes = yield* Effect.tryPromise({
-          try: () => file.arrayBuffer(),
-          catch: (cause) =>
-            new CmsError({
-              message: "Unreadable upload file",
-              status: HttpStatus.BadRequest,
-              operation,
-              cause,
-            }),
-        });
-        const detected = detectUploadMime(new Uint8Array(bytes));
-        if (detected === null || detected !== file.type) {
-          return yield* failInput(`Upload bytes do not match type: ${file.type}`, operation);
-        }
-        return {
-          name: sanitizeFileName(file.name),
-          mime: file.type,
-          bytes,
-          alt: alt ?? null,
-          caption: caption ?? null,
-        };
-      }),
-    ),
-  );
+  Effect.gen(function* () {
+    const { file, alt, caption } = yield* decodeBoundary(
+      UploadFormSchema,
+      body,
+      "Missing upload file",
+      operation,
+    );
+    if (file.size === 0) {
+      return yield* failInput("Upload file is empty", operation);
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      return yield* new CmsError({
+        message: "Upload file too large",
+        status: HttpStatus.PayloadTooLarge,
+        operation,
+      });
+    }
+    if (!UPLOAD_MIMES.has(file.type)) {
+      return yield* failInput(`Unsupported upload type: ${file.type}`, operation);
+    }
+    const bytes = yield* Effect.tryPromise({
+      try: () => file.arrayBuffer(),
+      catch: (cause) =>
+        new CmsError({
+          message: "Unreadable upload file",
+          status: HttpStatus.BadRequest,
+          operation,
+          cause,
+        }),
+    });
+    const detected = detectUploadMime(new Uint8Array(bytes));
+    if (detected === null || detected !== file.type) {
+      return yield* failInput(`Upload bytes do not match type: ${file.type}`, operation);
+    }
+    return {
+      name: sanitizeFileName(file.name),
+      mime: file.type,
+      bytes,
+      alt: alt ?? null,
+      caption: caption ?? null,
+    };
+  });
 
 const withAuthor = <A>(
   request: Request,
   use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
-): Effect.Effect<A, CmsError> => Effect.flatMap(requireAuthor(request), use);
+): Effect.Effect<A, CmsError> =>
+  Effect.gen(function* () {
+    const context = yield* requireAuthor(request);
+    return yield* use(context);
+  });
 
 /**
  * Sophie is a posts-only tenant: the editor hides works UI-side
@@ -255,44 +259,27 @@ const withAuthor = <A>(
  * served; unset TENANT keeps the legacy shared behavior.
  */
 const requireWorksWritesAllowed = (request: Request): Effect.Effect<void, CmsError> =>
-  Effect.gen(function* () {
-    if (getRequestEnv(request).TENANT === "sophie") {
-      return yield* new CmsError({
-        message: "Works are not available on this tenant",
-        status: HttpStatus.Forbidden,
-        operation: "works_disabled",
-      });
-    }
-  });
+  tenantFromValue(getRequestEnv(request).TENANT) === "sophie"
+    ? Effect.fail(
+        new CmsError({
+          message: "Works are not available on this tenant",
+          status: HttpStatus.Forbidden,
+          operation: "works_disabled",
+        }),
+      )
+    : Effect.void;
 
 const withWorksAuthor = <A>(
   request: Request,
   use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
 ): Effect.Effect<A, CmsError> =>
-  Effect.flatMap(requireWorksWritesAllowed(request), () => withAuthor(request, use));
+  Effect.gen(function* () {
+    yield* requireWorksWritesAllowed(request);
+    return yield* withAuthor(request, use);
+  });
 
-const writeAs = <A>(
-  request: Request,
-  use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
-): Promise<A> => runEffect(withAuthor(request, use), logContextFromRequest(request, "tom-api"));
-
-const writeWorksAs = <A>(
-  request: Request,
-  use: (context: AuthorContext) => Effect.Effect<A, CmsError>,
-): Promise<A> =>
-  runEffect(withWorksAuthor(request, use), logContextFromRequest(request, "tom-api"));
-
-const decodePostInput = <B>(body: B, operation: string): Effect.Effect<CmsPostInput, CmsError> =>
-  decodeBoundary(CmsPostInputSchema, body, "Invalid post body", operation);
-
-const decodeWorkInput = <B>(body: B, operation: string): Effect.Effect<CmsWorkInput, CmsError> =>
-  decodeBoundary(CmsWorkInputSchema, body, "Invalid work body", operation);
-
-const decodeCategoryInput = <B>(
-  body: B,
-  operation: string,
-): Effect.Effect<CmsCategoryInput, CmsError> =>
-  decodeBoundary(CmsCategoryInputSchema, body, "Invalid category body", operation);
+const runWrite = <A>(request: Request, effect: Effect.Effect<A, CmsError>): Promise<A> =>
+  runEffect(effect, logContextFromRequest(request, "tom-api"));
 
 const CmsRevisionParamsSchema = Schema.Struct({ slug: Schema.String, revId: Schema.String });
 
@@ -311,130 +298,229 @@ const decodeRestoreInput = <B>(
 
 export const cmsWriteRoutes = new Elysia({ name: "cms-writes" })
   .post("/posts", ({ body, request }) =>
-    writeAs(request, ({ db, actor, adapterUrl }) =>
-      Effect.flatMap(decodePostInput(body, "create_post"), (input) =>
-        createPost(db, input, actor, adapterUrl),
+    runWrite(
+      request,
+      withAuthor(request, ({ db, actor, adapterUrl }) =>
+        Effect.gen(function* () {
+          const input = yield* decodeBoundary(
+            CmsPostInputSchema,
+            body,
+            "Invalid post body",
+            "create_post",
+          );
+          return yield* createPost(db, input, actor, adapterUrl);
+        }),
       ),
     ),
   )
   .put("/posts/:slug", ({ body, params, request }) =>
-    writeAs(request, ({ db, actor, adapterUrl }) =>
-      Effect.flatMap(decodeSlugParams(params, "update_post"), ({ slug }) =>
-        Effect.flatMap(decodePostInput(body, "update_post"), (input) =>
-          updatePost(db, slug, input, actor, adapterUrl),
-        ),
+    runWrite(
+      request,
+      withAuthor(request, ({ db, actor, adapterUrl }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "update_post");
+          const input = yield* decodeBoundary(
+            CmsPostInputSchema,
+            body,
+            "Invalid post body",
+            "update_post",
+          );
+          return yield* updatePost(db, slug, input, actor, adapterUrl);
+        }),
       ),
     ),
   )
   .delete("/posts/:slug", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeSlugParams(params, "delete_post"), ({ slug }) => deletePost(db, slug)),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "delete_post");
+          return yield* deletePost(db, slug);
+        }),
+      ),
     ),
   )
   .post("/works", ({ body, request }) =>
-    writeWorksAs(request, ({ db, actor, adapterUrl }) =>
-      Effect.flatMap(decodeWorkInput(body, "create_work"), (input) =>
-        createWork(db, input, actor, adapterUrl),
+    runWrite(
+      request,
+      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
+        Effect.gen(function* () {
+          const input = yield* decodeBoundary(
+            CmsWorkInputSchema,
+            body,
+            "Invalid work body",
+            "create_work",
+          );
+          return yield* createWork(db, input, actor, adapterUrl);
+        }),
       ),
     ),
   )
   .put("/works/:slug", ({ body, params, request }) =>
-    writeWorksAs(request, ({ db, actor, adapterUrl }) =>
-      Effect.flatMap(decodeSlugParams(params, "update_work"), ({ slug }) =>
-        Effect.flatMap(decodeWorkInput(body, "update_work"), (input) =>
-          updateWork(db, slug, input, actor, adapterUrl),
-        ),
+    runWrite(
+      request,
+      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "update_work");
+          const input = yield* decodeBoundary(
+            CmsWorkInputSchema,
+            body,
+            "Invalid work body",
+            "update_work",
+          );
+          return yield* updateWork(db, slug, input, actor, adapterUrl);
+        }),
       ),
     ),
   )
   .delete("/works/:slug", ({ params, request }) =>
-    writeWorksAs(request, ({ db }) =>
-      Effect.flatMap(decodeSlugParams(params, "delete_work"), ({ slug }) => deleteWork(db, slug)),
+    runWrite(
+      request,
+      withWorksAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "delete_work");
+          return yield* deleteWork(db, slug);
+        }),
+      ),
     ),
   )
   .get("/posts/:slug/revisions", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeSlugParams(params, "list_revisions"), ({ slug }) =>
-        listRevisions(db, "post", slug),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "list_revisions");
+          return yield* listRevisions(db, "post", slug);
+        }),
       ),
     ),
   )
   .get("/posts/:slug/revisions/:revId", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeRevisionParams(params, "get_revision"), ({ slug, revId }) =>
-        getRevision(db, "post", slug, revId),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug, revId } = yield* decodeRevisionParams(params, "get_revision");
+          return yield* getRevision(db, "post", slug, revId);
+        }),
       ),
     ),
   )
   .post("/posts/:slug/restore", ({ body, params, request }) =>
-    writeAs(request, ({ db, actor, adapterUrl }) =>
-      Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
-        Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
-          restoreRevision(db, "post", slug, revisionId, actor, adapterUrl),
-        ),
+    runWrite(
+      request,
+      withAuthor(request, ({ db, actor, adapterUrl }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "restore_revision");
+          const { revisionId } = yield* decodeRestoreInput(body, "restore_revision");
+          return yield* restoreRevision(db, "post", slug, revisionId, actor, adapterUrl);
+        }),
       ),
     ),
   )
   .get("/works/:slug/revisions", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeSlugParams(params, "list_revisions"), ({ slug }) =>
-        listRevisions(db, "work", slug),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "list_revisions");
+          return yield* listRevisions(db, "work", slug);
+        }),
       ),
     ),
   )
   .get("/works/:slug/revisions/:revId", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeRevisionParams(params, "get_revision"), ({ slug, revId }) =>
-        getRevision(db, "work", slug, revId),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug, revId } = yield* decodeRevisionParams(params, "get_revision");
+          return yield* getRevision(db, "work", slug, revId);
+        }),
       ),
     ),
   )
   .post("/works/:slug/restore", ({ body, params, request }) =>
-    writeWorksAs(request, ({ db, actor, adapterUrl }) =>
-      Effect.flatMap(decodeSlugParams(params, "restore_revision"), ({ slug }) =>
-        Effect.flatMap(decodeRestoreInput(body, "restore_revision"), ({ revisionId }) =>
-          restoreRevision(db, "work", slug, revisionId, actor, adapterUrl),
-        ),
+    runWrite(
+      request,
+      withWorksAuthor(request, ({ db, actor, adapterUrl }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "restore_revision");
+          const { revisionId } = yield* decodeRestoreInput(body, "restore_revision");
+          return yield* restoreRevision(db, "work", slug, revisionId, actor, adapterUrl);
+        }),
       ),
     ),
   )
   .post("/categories", ({ body, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeCategoryInput(body, "create_category"), (input) =>
-        createCategory(db, input),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const input = yield* decodeBoundary(
+            CmsCategoryInputSchema,
+            body,
+            "Invalid category body",
+            "create_category",
+          );
+          return yield* createCategory(db, input);
+        }),
       ),
     ),
   )
   .delete("/categories/:slug", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeSlugParams(params, "delete_category"), ({ slug }) =>
-        deleteCategory(db, slug),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "delete_category");
+          return yield* deleteCategory(db, slug);
+        }),
       ),
     ),
   )
   .post("/media", ({ body, request }) =>
-    writeAs(request, ({ db, r2 }) =>
-      Effect.flatMap(decodeUploadBody(body, "create_media"), (upload) =>
-        createMedia(db, r2, upload),
+    runWrite(
+      request,
+      withAuthor(request, ({ db, r2 }) =>
+        Effect.gen(function* () {
+          const upload = yield* decodeUploadBody(body, "create_media");
+          return yield* createMedia(db, r2, upload);
+        }),
       ),
     ),
   )
   .delete("/media/:id", ({ params, request }) =>
-    writeAs(request, ({ db, r2 }) =>
-      Effect.flatMap(decodeMediaParams(params, "delete_media"), ({ id }) =>
-        deleteMedia(db, r2, id),
+    runWrite(
+      request,
+      withAuthor(request, ({ db, r2 }) =>
+        Effect.gen(function* () {
+          const { id } = yield* decodeMediaParams(params, "delete_media");
+          return yield* deleteMedia(db, r2, id);
+        }),
       ),
     ),
   )
   .get("/media", ({ query, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodePagingQuery(query, "list_media"), (paging) => listMedia(db, paging)),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const paging = yield* decodePagingQuery(query, "list_media");
+          return yield* listMedia(db, paging);
+        }),
+      ),
     ),
   )
   .get("/media/:id/usage", ({ params, request }) =>
-    writeAs(request, ({ db }) =>
-      Effect.flatMap(decodeMediaParams(params, "get_media_usage"), ({ id }) =>
-        getMediaUsage(db, id),
+    runWrite(
+      request,
+      withAuthor(request, ({ db }) =>
+        Effect.gen(function* () {
+          const { id } = yield* decodeMediaParams(params, "get_media_usage");
+          return yield* getMediaUsage(db, id);
+        }),
       ),
     ),
   );

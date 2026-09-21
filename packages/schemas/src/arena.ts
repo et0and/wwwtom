@@ -1,3 +1,4 @@
+import { Effect, Schema } from "effect";
 import type { Block, Channel, Group, User } from "@aredotna/sdk";
 import type {
   BlockImage,
@@ -39,31 +40,88 @@ export type ArenaChannelContents = ConnectableListResponse["data"][number];
 /**
  * Legacy raw-fetch endpoints that the SDK does not cover.
  * These are the wire contracts the @tom/arena client parses for them.
+ * Channel/User stay opaque: the SDK is the source of truth for their shape,
+ * so the schemas only check they are objects and validate the envelope.
  */
-export type GetUserChannelsApiResponse = {
-  readonly total_pages: number;
-  readonly current_page: number;
-  readonly per: number;
-  readonly base_type: "User";
-  readonly type: "User";
-  readonly channels: Array<Channel>;
-};
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- declare guard over unknown wire data; SDK owns the Channel shape
+const isChannel = (input: unknown): input is Channel =>
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- opaque SDK type; object check is the boundary
+  typeof input === "object" && input !== null;
+// oxlint-disable-next-line anti-slop/no-unknown-parameters, anti-slop/no-runtime-typeof -- declare guard over unknown wire data; SDK owns the User shape
+const isUser = (input: unknown): input is User => typeof input === "object" && input !== null;
 
-export type GetGroupChannelsApiResponse = {
-  readonly total_pages: number | null;
-  readonly current_page: number;
-  readonly per: number;
-  readonly channel_title: string | null;
-  readonly channels: Array<Channel>;
-};
+export const ChannelSchema = Schema.declare<Channel>(isChannel);
+export const UserSchema = Schema.declare<User>(isUser);
 
-export type GetChannelsApiResponse = Channel & {
-  readonly per: number;
-  readonly page: number;
-  readonly owner: User | null;
-  readonly collaborators: Array<Array<unknown>> | null;
-};
+export const GetUserChannelsApiResponseSchema = Schema.Struct({
+  total_pages: Schema.Finite,
+  current_page: Schema.Finite,
+  per: Schema.Finite,
+  base_type: Schema.Literal("User").pipe(
+    Schema.withDecodingDefault(Effect.succeed("User" as const)),
+  ),
+  type: Schema.Literal("User").pipe(Schema.withDecodingDefault(Effect.succeed("User" as const))),
+  channels: Schema.Array(ChannelSchema),
+});
+export type GetUserChannelsApiResponse = Schema.Schema.Type<
+  typeof GetUserChannelsApiResponseSchema
+>;
 
-export type GetChannelThumbApiResponse = Channel & {
-  readonly contents: Array<unknown> | null;
-};
+export const GetGroupChannelsApiResponseSchema = Schema.Struct({
+  total_pages: Schema.NullOr(Schema.Finite).pipe(Schema.withDecodingDefault(Effect.succeed(null))),
+  current_page: Schema.Finite,
+  per: Schema.Finite,
+  channel_title: Schema.NullOr(Schema.String).pipe(
+    Schema.withDecodingDefault(Effect.succeed(null)),
+  ),
+  channels: Schema.Array(ChannelSchema),
+});
+export type GetGroupChannelsApiResponse = Schema.Schema.Type<
+  typeof GetGroupChannelsApiResponseSchema
+>;
+
+const GetChannelsExtrasSchema = Schema.Struct({
+  per: Schema.Finite,
+  page: Schema.Finite,
+  owner: Schema.NullOr(UserSchema).pipe(Schema.withDecodingDefault(Effect.succeed(null))),
+  collaborators: Schema.NullOr(Schema.Array(Schema.Array(Schema.Unknown))).pipe(
+    Schema.withDecodingDefault(Effect.succeed(null)),
+  ),
+});
+
+export const GetChannelsApiResponseSchema = Schema.declare<
+  Channel & {
+    readonly per: number;
+    readonly page: number;
+    readonly owner: User | null;
+    readonly collaborators: Array<Array<unknown>> | null;
+  }
+>(
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- declare guard over unknown wire data; extras Struct owns the envelope check
+  (
+    input,
+  ): input is Channel & {
+    readonly per: number;
+    readonly page: number;
+    readonly owner: User | null;
+    readonly collaborators: Array<Array<unknown>> | null;
+  } => isChannel(input) && Schema.is(GetChannelsExtrasSchema)(input),
+);
+export type GetChannelsApiResponse = Schema.Schema.Type<typeof GetChannelsApiResponseSchema>;
+
+const GetChannelThumbExtrasSchema = Schema.Struct({
+  contents: Schema.NullOr(Schema.Array(Schema.Unknown)).pipe(
+    Schema.withDecodingDefault(Effect.succeed(null)),
+  ),
+});
+
+export const GetChannelThumbApiResponseSchema = Schema.declare<
+  Channel & { readonly contents: Array<unknown> | null }
+>(
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- declare guard over unknown wire data; extras Struct owns the envelope check
+  (input): input is Channel & { readonly contents: Array<unknown> | null } =>
+    isChannel(input) && Schema.is(GetChannelThumbExtrasSchema)(input),
+);
+export type GetChannelThumbApiResponse = Schema.Schema.Type<
+  typeof GetChannelThumbApiResponseSchema
+>;

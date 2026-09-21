@@ -23,12 +23,9 @@ const ImageQuerySchema = Schema.Struct({
 
 const imageQuerySchema = Schema.toStandardSchemaV1(ImageQuerySchema);
 
-const toImageError = (message: string, cause?: unknown): ImageError => {
+const toImageError = (status: number, message: string, cause?: unknown): ImageError => {
   const fields = cause === undefined ? {} : { cause };
-  return new ImageError({
-    response: toProblemResponse(HttpStatus.InternalServerError, message),
-    ...fields,
-  });
+  return new ImageError({ status, message, ...fields });
 };
 
 export const imageIntegration = new Elysia({ name: "image" }).get(
@@ -42,20 +39,11 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
       Effect.gen(function* () {
         const parsed = yield* Effect.fromOption(
           Schema.decodeOption(Schema.URLFromString)(urlStr),
-          () =>
-            new ImageError({
-              response: toProblemResponse(HttpStatus.BadRequest, "Invalid URL", {
-                type: ProblemType.Validation,
-              }),
-            }),
+          () => toImageError(HttpStatus.BadRequest, "Invalid URL"),
         );
 
         if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
-          return yield* new ImageError({
-            response: toProblemResponse(HttpStatus.Forbidden, "Domain not allowed", {
-              type: ProblemType.Forbidden,
-            }),
-          });
+          return yield* toImageError(HttpStatus.Forbidden, "Domain not allowed");
         }
 
         return parsed;
@@ -64,11 +52,12 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
     const fetchImage = (validUrl: URL) =>
       Effect.tryPromise({
         try: () => fetch(validUrl),
-        catch: (cause) => toImageError("Failed to fetch image", cause),
+        catch: (cause) =>
+          toImageError(HttpStatus.InternalServerError, "Failed to fetch image", cause),
       }).pipe(
         Effect.filterOrFail(
           (res) => res.ok,
-          () => toImageError("Failed to fetch image"),
+          () => toImageError(HttpStatus.InternalServerError, "Failed to fetch image"),
         ),
       );
 
@@ -76,14 +65,16 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
       Effect.gen(function* () {
         const buffer = yield* Effect.tryPromise({
           try: () => response.arrayBuffer(),
-          catch: (cause) => toImageError("Failed to read image data", cause),
+          catch: (cause) =>
+            toImageError(HttpStatus.InternalServerError, "Failed to read image data", cause),
         });
 
         // Load the Photon WASM image processor lazily so it stays out of the
         // adapter's cold-start module graph (the /image route is its only user).
         const { PhotonImage, resize, SamplingFilter } = yield* Effect.tryPromise({
           try: () => import("@cf-wasm/photon"),
-          catch: (cause) => toImageError("Failed to load image processor", cause),
+          catch: (cause) =>
+            toImageError(HttpStatus.InternalServerError, "Failed to load image processor", cause),
         });
 
         return yield* Effect.try({
@@ -110,7 +101,8 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
               },
             });
           },
-          catch: (cause) => toImageError("Failed to process image", cause),
+          catch: (cause) =>
+            toImageError(HttpStatus.InternalServerError, "Failed to process image", cause),
         });
       });
 
@@ -129,8 +121,18 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
       ),
       Effect.catch(
         Effect.fn("imageErrorHandler")(function* (error: ImageError) {
-          yield* logApiFailure("image:error", (error.response as Response).status, error.cause);
-          return error.response;
+          yield* logApiFailure("image:error", error.status, error.cause);
+          if (error.status === HttpStatus.BadRequest) {
+            return toProblemResponse(error.status, error.message, {
+              type: ProblemType.Validation,
+            });
+          }
+          if (error.status === HttpStatus.Forbidden) {
+            return toProblemResponse(error.status, error.message, {
+              type: ProblemType.Forbidden,
+            });
+          }
+          return toProblemResponse(error.status, error.message);
         }),
       ),
     );

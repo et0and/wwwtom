@@ -3,7 +3,9 @@ import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { createMemo, createSignal, Loading, Errored, Show, isPending, latest } from "solid-js";
 import { useParams } from "@solidjs/router";
+import { Effect, Option, Schema } from "effect";
 import { formatPrice } from "@tom/checkout";
+import { HttpError } from "@tom/types/errors";
 import { Loader } from "@tom/ui/loader";
 import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
@@ -11,6 +13,7 @@ import { Banner } from "@tom/ui/banner";
 import { Text } from "@tom/ui/text";
 import { Label } from "@tom/ui/label";
 import { getAdapterBaseUrl } from "~/libs/adapter";
+import { runClient } from "@tom/utils/services/http";
 import { fetchProduct, createCustomer } from "~/server/adapter";
 
 export default function Purchase() {
@@ -31,17 +34,18 @@ export default function Purchase() {
     return p ? `Purchase ${p.name}` : "Purchase";
   });
 
-  const isValidEmail = (email: string) => {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  };
+  const NonEmptySchema = Schema.NonEmptyString;
+  const EmailSchema = Schema.NonEmptyString.pipe(
+    Schema.check(Schema.isPattern(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)),
+  );
 
-  const validateEmail = () => {
+  const validateEmail = (): boolean => {
     const value = email();
-    if (!value) {
+    if (Option.isNone(Schema.decodeOption(NonEmptySchema)(value))) {
       setEmailError("Email is required");
       return false;
     }
-    if (!isValidEmail(value)) {
+    if (Option.isNone(Schema.decodeOption(EmailSchema)(value))) {
       setEmailError("Please enter a valid email address");
       return false;
     }
@@ -49,7 +53,7 @@ export default function Purchase() {
     return true;
   };
 
-  const handlePurchase = async () => {
+  const handlePurchase = (): void => {
     if (!validateEmail()) {
       return;
     }
@@ -58,19 +62,32 @@ export default function Purchase() {
     setFormError("");
     setEmailError("");
 
-    try {
-      const customer = await createCustomer({
-        email: email(),
-        ...(name() && { name: name() }),
-        externalId: crypto.randomUUID(),
-      });
-
-      const checkoutUrl = `${getAdapterBaseUrl()}/polar/checkout?products=${encodeURIComponent(params.productId ?? "")}&customerId=${encodeURIComponent(customer.id)}`;
-      window.location.href = checkoutUrl;
-    } catch (error) {
-      setFormError(error instanceof Error ? error.message : "Failed to create customer");
-      setIsRedirecting(false);
-    }
+    const program = Effect.tryPromise({
+      try: () =>
+        createCustomer({
+          email: email(),
+          ...(name() && { name: name() }),
+          externalId: crypto.randomUUID(),
+        }),
+      catch: (error) =>
+        error instanceof HttpError
+          ? error
+          : new HttpError({ message: "Failed to create customer", status: 500, cause: error }),
+    }).pipe(
+      Effect.tap((customer) =>
+        Effect.sync(() => {
+          const checkoutUrl = `${getAdapterBaseUrl()}/polar/checkout?products=${encodeURIComponent(params.productId ?? "")}&customerId=${encodeURIComponent(customer.id)}`;
+          window.location.href = checkoutUrl;
+        }),
+      ),
+      Effect.catch((error) =>
+        Effect.sync(() => {
+          setFormError(error.message);
+          setIsRedirecting(false);
+        }),
+      ),
+    );
+    void runClient(program);
   };
 
   return (

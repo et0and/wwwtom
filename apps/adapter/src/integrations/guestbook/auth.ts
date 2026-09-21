@@ -1,5 +1,6 @@
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Schema, SchemaGetter, SchemaIssue } from "effect";
 import { DatabaseService } from "@tom/db/service";
+import { toErrorMessage } from "@tom/utils/services/worker";
 import { detector } from "./detector";
 import {
   GuestbookValidationError,
@@ -29,6 +30,28 @@ const generateSessionToken = () => randomHex(32);
 
 const generateState = () => randomHex(16);
 
+/**
+ * A `user@instance.social` handle split into its two parts. Decoding keeps
+ * the previous split/filter semantics: segments around a single `@` with
+ * nothing empty.
+ */
+const FediverseHandleSchema = Schema.String.pipe(
+  Schema.decodeTo(Schema.Struct({ username: Schema.String, instance: Schema.String }), {
+    decode: SchemaGetter.transformEffect((value: string, options) => {
+      const parts = value.split("@").filter(Boolean);
+      const [username, instance] = parts;
+      if (parts.length !== 2 || username === undefined || instance === undefined) {
+        return Effect.fail(new SchemaIssue.InvalidValue(undefined, value, options));
+      }
+      return Effect.succeed({ username, instance });
+    }),
+    encode: SchemaGetter.transform(
+      (handle: { readonly username: string; readonly instance: string }) =>
+        `${handle.username}@${handle.instance}`,
+    ),
+  }),
+);
+
 // Megalodon is only needed for Fediverse OAuth; load it lazily so the heavy
 // client stays out of the adapter's cold-start module graph.
 const loadGenerator = Effect.fn("loadMegalodon")(function* () {
@@ -36,9 +59,7 @@ const loadGenerator = Effect.fn("loadMegalodon")(function* () {
     try: () => import("megalodon"),
     catch: (cause) =>
       new HttpError({
-        message: `Failed to load the fediverse client: ${
-          cause instanceof Error ? cause.message : "unknown error"
-        }`,
+        message: `Failed to load the fediverse client: ${toErrorMessage(cause)}`,
         status: HttpStatus.InternalServerError,
       }),
   });
@@ -59,15 +80,17 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
 ) {
   const db = yield* DatabaseService;
 
-  const parts = fediverseHandle.split("@").filter(Boolean);
-  if (parts.length !== 2) {
-    return yield* new GuestbookValidationError({
-      message: "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
-      field: "fediverseHandle",
-    });
-  }
-
-  const [_username, instance] = parts;
+  const handle = yield* Schema.decodeEffect(FediverseHandleSchema)(fediverseHandle).pipe(
+    Effect.mapError(
+      () =>
+        new GuestbookValidationError({
+          message:
+            "Invalid fediverse handle format. Use: user@instance.social (without the leading @)",
+          field: "fediverseHandle",
+        }),
+    ),
+  );
+  const instance = handle.instance;
   const instanceUrl = `https://${instance}`;
 
   const snsType = yield* detector(instanceUrl).pipe(
@@ -81,37 +104,38 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
   const mapRegisterAppError = Effect.fn("mapRegisterAppError")(function* (cause: unknown) {
     yield* Effect.logWarning("Megalodon registerApp error:", cause);
 
+    const registerAppErrors: Record<string, { readonly status: number; readonly message: string }> =
+      // oxlint-disable-next-line anti-slop/no-known-value-widening -- open lookup keyed by runtime error code
+      {
+        ETIMEDOUT: {
+          status: HttpStatus.GatewayTimeout,
+          message: `Connection timeout trying to reach ${instance}. This might be a network/firewall issue on the server, or the instance may be down. Try a different instance like mastodon.social`,
+        },
+        ECONNABORTED: {
+          status: HttpStatus.GatewayTimeout,
+          message: `Connection timeout trying to reach ${instance}. This might be a network/firewall issue on the server, or the instance may be down. Try a different instance like mastodon.social`,
+        },
+        ENOTFOUND: {
+          status: HttpStatus.NotFound,
+          message: `Could not find ${instance}. Please check the instance name is correct.`,
+        },
+        ECONNREFUSED: {
+          status: HttpStatus.ServiceUnavailable,
+          message: `Connection refused by ${instance}. The instance may be down.`,
+        },
+        ENETUNREACH: {
+          status: HttpStatus.ServiceUnavailable,
+          message: `Network unreachable for ${instance}. This is likely a server network configuration issue.`,
+        },
+      };
+
     const code = readErrorCode(cause);
+    const direct = code === undefined ? undefined : registerAppErrors[code];
+    if (direct !== undefined) {
+      return yield* new HttpError({ message: direct.message, status: direct.status });
+    }
+
     const nestedCode = cause instanceof AggregateError ? readErrorCode(cause.errors[0]) : undefined;
-
-    if (code === "ETIMEDOUT" || code === "ECONNABORTED") {
-      return yield* new HttpError({
-        message: `Connection timeout trying to reach ${instance}. This might be a network/firewall issue on the server, or the instance may be down. Try a different instance like mastodon.social`,
-        status: HttpStatus.GatewayTimeout,
-      });
-    }
-
-    if (code === "ENOTFOUND") {
-      return yield* new HttpError({
-        message: `Could not find ${instance}. Please check the instance name is correct.`,
-        status: HttpStatus.NotFound,
-      });
-    }
-
-    if (code === "ECONNREFUSED") {
-      return yield* new HttpError({
-        message: `Connection refused by ${instance}. The instance may be down.`,
-        status: HttpStatus.ServiceUnavailable,
-      });
-    }
-
-    if (code === "ENETUNREACH") {
-      return yield* new HttpError({
-        message: `Network unreachable for ${instance}. This is likely a server network configuration issue.`,
-        status: HttpStatus.ServiceUnavailable,
-      });
-    }
-
     if (nestedCode === "ETIMEDOUT") {
       return yield* new HttpError({
         message: `Connection timeout trying to reach ${instance}. The server cannot reach this instance. Try a different instance like mastodon.social or fosstodon.org`,
@@ -137,7 +161,7 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
 
   yield* db.createOAuthSession({
     session_token: sessionToken,
-    fediverse_instance: instance ?? "",
+    fediverse_instance: instance,
     client_id: appData.client_id ?? "",
     client_secret: appData.client_secret ?? "",
     state: state,

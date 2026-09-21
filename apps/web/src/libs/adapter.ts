@@ -4,6 +4,7 @@ import { getRequestEvent, isServer } from "@solidjs/web";
 import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import {
   adapterErrorMessage,
   adapterRequest as sharedAdapterRequest,
@@ -12,7 +13,7 @@ import type { EdenResult } from "@tom/utils/services/http";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
 
-const DEV_ADAPTER_URL = "http://localhost:8788";
+const DEV_ADAPTER_URL = LOCAL_SERVICE_URLS.adapter;
 const PROD_ADAPTER_URL = "https://adapter.tom.so";
 
 /**

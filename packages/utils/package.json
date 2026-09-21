@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./date": "./src/date.ts",
+    "./page": "./src/page.ts",
     "./profanity": "./src/profanity.ts",
     "./retry": "./src/retry.ts",
     "./services/config": "./src/services/config.ts",

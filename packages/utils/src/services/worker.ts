@@ -1,4 +1,4 @@
-import { Effect, Layer, Schema } from "effect";
+import { Effect, Layer, Option, Schema } from "effect";
 import { problemDetailsSchema, type ProblemDetails } from "@tom/schemas/error";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { PROBLEM_JSON_MEDIA_TYPE, ProblemType } from "@tom/constants/problem";
@@ -169,12 +169,13 @@ export const toProblemResponse = (
   status: number,
   title: string,
   options: ProblemDetailsOptions = {},
-): Response =>
-  new Response(
+): Response => {
+  const errorStatus = toErrorStatus(status);
+  return new Response(
     JSON.stringify(
       Schema.encodeSync(problemDetailsSchema)({
         type: options.type ?? ProblemType.AboutBlank,
-        status: toErrorStatus(status),
+        status: errorStatus,
         title,
         ...(options.detail !== undefined && { detail: options.detail }),
         ...(options.instance !== undefined && { instance: options.instance }),
@@ -182,15 +183,65 @@ export const toProblemResponse = (
       }),
     ),
     {
-      status: toErrorStatus(status),
+      status: errorStatus,
       headers: { "Content-Type": PROBLEM_JSON_MEDIA_TYPE },
     },
   );
+};
+
+/** RFC 9457 problem type for a wrapped error's status, when known. */
+export const problemTypeForStatus = (status: number): ProblemType | undefined => {
+  switch (status) {
+    case HttpStatus.BadRequest:
+      return ProblemType.Validation;
+    case HttpStatus.Unauthorized:
+      return ProblemType.Unauthorized;
+    case HttpStatus.Forbidden:
+      return ProblemType.Forbidden;
+    case HttpStatus.NotFound:
+      return ProblemType.NotFound;
+    case HttpStatus.Conflict:
+      return ProblemType.Conflict;
+    default:
+      return undefined;
+  }
+};
+
+/** Dot-joined Elysia error paths become RFC 6901 JSON pointers. */
+const toPointer = (path: string): string => {
+  if (path === "root") return "#";
+  return `#/${path
+    .split(".")
+    .map((segment) => segment.replace(/~/g, "~0").replace(/\//g, "~1"))
+    .join("/")}`;
+};
+
+const ValidationProblemsSchema = Schema.Struct({
+  all: Schema.Array(Schema.Struct({ path: Schema.String, message: Schema.String })),
+});
+
+/**
+ * Field-level problems from an Elysia validation failure, as the RFC 9457
+ * `errors` extension (JSON-pointer paths, rfc9457 §3.2).
+ */
+export const toValidationProblems = (
+  // oxlint-disable-next-line anti-slop/no-unknown-parameters -- boundary decodes via Schema.decodeUnknownOption, no elysia import
+  error: unknown,
+): readonly { readonly detail: string; readonly pointer: string }[] | undefined => {
+  const parsed = Schema.decodeUnknownOption(ValidationProblemsSchema)(error);
+  if (Option.isNone(parsed) || parsed.value.all.length === 0) return undefined;
+  return parsed.value.all.map(({ path, message }) => ({
+    detail: message,
+    pointer: toPointer(path),
+  }));
+};
 
 type ProblemDetailsOptions = {
   readonly [K in "type" | "detail" | "instance" | "errors"]?: ProblemDetails[K];
 };
 
 /** Human-readable message from an unknown failure (Error or string). */
-export const toErrorMessage = (cause: unknown): string =>
-  cause instanceof Error ? cause.message : String(cause);
+export const toErrorMessage = (cause: unknown): string => {
+  if (cause === null || cause === undefined) return "unknown error";
+  return cause instanceof Error ? cause.message : String(cause);
+};

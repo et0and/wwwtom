@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
   createArena,
   ArenaApiError,
@@ -6,26 +6,32 @@ import {
   type Arena,
   type Channel,
 } from "@aredotna/sdk";
-import type {
-  GetChannelsApiResponse,
-  MeApiResponse,
-  PaginationAttributes,
-  GetGroupApiResponse,
-  GetGroupChannelsApiResponse,
-  SearchApiResponse,
-  GetBlockApiResponse,
-  GetBlockChannelsApiResponse,
-  CreateChannelApiResponse,
-  GetChannelThumbApiResponse,
-  GetChannelContentsApiResponse,
-  GetUserChannelsApiResponse,
-  GetUserApiResponse,
-  GetUserFollowersApiResponse,
-  GetUserFollowingApiResponse,
-  GetBlockCommentApiResponse,
+import {
+  GetChannelsApiResponseSchema,
+  GetChannelThumbApiResponseSchema,
+  GetGroupChannelsApiResponseSchema,
+  GetUserChannelsApiResponseSchema,
+  type GetChannelsApiResponse,
+  type MeApiResponse,
+  type PaginationAttributes,
+  type GetGroupApiResponse,
+  type GetGroupChannelsApiResponse,
+  type SearchApiResponse,
+  type GetBlockApiResponse,
+  type GetBlockChannelsApiResponse,
+  type CreateChannelApiResponse,
+  type GetChannelThumbApiResponse,
+  type GetChannelContentsApiResponse,
+  type GetUserChannelsApiResponse,
+  type GetUserApiResponse,
+  type GetUserFollowersApiResponse,
+  type GetUserFollowingApiResponse,
+  type GetBlockCommentApiResponse,
 } from "@tom/schemas/arena";
+import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { workerCache } from "@tom/utils/services/http";
 
 export interface ArenaBlockApi {
   readonly get: Effect.Effect<GetBlockApiResponse, HttpError>;
@@ -126,9 +132,6 @@ const publicCacheOptions = (url: string): CfOptions => ({
   cacheTtlByStatus: { "400-599": 0 },
 });
 
-const workerCache = (): Cache | null =>
-  (globalThis as { caches?: { default?: Cache } }).caches?.default ?? null;
-
 const workerCacheKey = (url: string): Request =>
   new Request(`https://arena-cache.internal/${encodeURIComponent(url)}`, { method: "GET" });
 
@@ -210,38 +213,40 @@ const pageParams = (options: PaginationAttributes | undefined): PageParams => {
   };
 };
 
-const pickSort = <const T extends readonly string[]>(
-  combined: string | undefined,
-  allowed: T,
-): T[number] | undefined => {
-  if (combined === undefined) return undefined;
-  return allowed.find((value) => value === combined);
-};
+const ContentsSortSchema = Schema.Literals([
+  "position_asc",
+  "position_desc",
+  "created_at_asc",
+  "created_at_desc",
+  "updated_at_asc",
+  "updated_at_desc",
+]);
+
+const ConnectionsSortSchema = Schema.Literals(["created_at_asc", "created_at_desc"]);
+
+const SearchSortSchema = Schema.Literals([
+  "score_desc",
+  "created_at_asc",
+  "created_at_desc",
+  "updated_at_asc",
+  "updated_at_desc",
+  "name_asc",
+  "name_desc",
+  "connections_count_desc",
+]);
 
 const toContentsSort = (sort?: string, direction?: string): ContentsQuery["sort"] =>
-  pickSort(formatSort(sort, direction), [
-    "position_asc",
-    "position_desc",
-    "created_at_asc",
-    "created_at_desc",
-    "updated_at_asc",
-    "updated_at_desc",
-  ]);
+  Option.getOrUndefined(
+    Schema.decodeUnknownOption(ContentsSortSchema)(formatSort(sort, direction)),
+  );
 
 const toConnectionsSort = (sort?: string, direction?: string): ConnectionsQuery["sort"] =>
-  pickSort(formatSort(sort, direction), ["created_at_asc", "created_at_desc"]);
+  Option.getOrUndefined(
+    Schema.decodeUnknownOption(ConnectionsSortSchema)(formatSort(sort, direction)),
+  );
 
 const toSearchSort = (sort?: string, direction?: string): SearchQuery["sort"] =>
-  pickSort(formatSort(sort, direction), [
-    "score_desc",
-    "created_at_asc",
-    "created_at_desc",
-    "updated_at_asc",
-    "updated_at_desc",
-    "name_asc",
-    "name_desc",
-    "connections_count_desc",
-  ]);
+  Option.getOrUndefined(Schema.decodeUnknownOption(SearchSortSchema)(formatSort(sort, direction)));
 
 const withSort = <TSort extends string>(
   options: PaginationAttributes | undefined,
@@ -283,34 +288,22 @@ export class ArenaClient implements ArenaApi {
   private readonly arena: Arena;
 
   private static normalizeToken(token?: string | null): string | null {
-    if (token === null || token === undefined) return null;
-    const normalized = token.trim();
-    if (!normalized) return null;
-    if (normalized === "undefined") return null;
-    if (normalized === "null") return null;
-    return normalized;
+    if (token === null) return null;
+    return normalizeOptionalSecret(token ?? undefined) ?? null;
   }
 
   private static hasAuthorizationHeader(headers: HeadersInit | undefined): boolean {
     if (!headers) return false;
-    if (headers instanceof Headers) return headers.has("Authorization");
-    if (Array.isArray(headers)) return headers.some(([key]) => key === "Authorization");
-    return "Authorization" in headers && Boolean(headers.Authorization);
+    return new Headers(headers).has("Authorization");
   }
 
   private static removeAuthorizationHeader(
     headers: HeadersInit | undefined,
   ): HeadersInit | undefined {
     if (!headers) return undefined;
-    if (headers instanceof Headers) {
-      const h = new Headers(headers);
-      h.delete("Authorization");
-      return h;
-    }
-    if (Array.isArray(headers)) return headers.filter(([key]) => key !== "Authorization");
-    const h = { ...headers };
-    delete h.Authorization;
-    return h;
+    const normalized = new Headers(headers);
+    normalized.delete("Authorization");
+    return normalized;
   }
 
   private createCachedFetch(fetchImpl: Fetch): Fetch {
@@ -400,7 +393,7 @@ export class ArenaClient implements ArenaApi {
   }
 
   channels(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> {
-    return this.getJsonWithPaginationQuery("channels", options);
+    return this.getJsonWithPaginationQuery("channels", options, GetChannelsApiResponseSchema);
   }
 
   user(id: number | string): ArenaUserApi {
@@ -409,7 +402,11 @@ export class ArenaClient implements ArenaApi {
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetUserChannelsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`users/${id}/channels`, options),
+        this.getJsonWithPaginationQuery(
+          `users/${id}/channels`,
+          options,
+          GetUserChannelsApiResponseSchema,
+        ),
       following: sdkEffect<GetUserFollowingApiResponse>(() => this.arena.users.following(id)),
       followers: sdkEffect<GetUserFollowersApiResponse>(() => this.arena.users.followers(id)),
     };
@@ -421,7 +418,11 @@ export class ArenaClient implements ArenaApi {
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetGroupChannelsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`groups/${slug}/channels`, options),
+        this.getJsonWithPaginationQuery(
+          `groups/${slug}/channels`,
+          options,
+          GetGroupChannelsApiResponseSchema,
+        ),
     };
   }
 
@@ -452,7 +453,7 @@ export class ArenaClient implements ArenaApi {
         }),
       get: sdkEffect<Channel>(() => this.arena.channels.get(slug)),
       delete: sdkEffect<void>(() => this.arena.channels.delete(slug)),
-      thumb: this.makeRequest<GetChannelThumbApiResponse>(`channels/${slug}/thumb`),
+      thumb: this.makeRequest(`channels/${slug}/thumb`, GetChannelThumbApiResponseSchema),
     };
   }
 
@@ -513,15 +514,19 @@ export class ArenaClient implements ArenaApi {
     };
   }
 
-  private getJsonWithPaginationQuery<T>(
+  private getJsonWithPaginationQuery<A, I>(
     url: string,
-    options?: PaginationAttributes,
-  ): Effect.Effect<T, HttpError> {
+    options: PaginationAttributes | undefined,
+    schema: Schema.Codec<A, I>,
+  ): Effect.Effect<A, HttpError> {
     const qs = paginationQueryString(options, this.date);
-    return this.makeRequest<T>(`${url}?${qs}`);
+    return this.makeRequest(`${url}?${qs}`, schema);
   }
 
-  private makeRequest<T>(endpoint: string): Effect.Effect<T, HttpError> {
+  private makeRequest<A, I>(
+    endpoint: string,
+    schema: Schema.Codec<A, I>,
+  ): Effect.Effect<A, HttpError> {
     const url = `${this.domain}${endpoint}`;
     const rawFetch = this.rawFetch;
     const headers = this.headers;
@@ -560,7 +565,7 @@ export class ArenaClient implements ArenaApi {
         });
       }
 
-      const json: T = yield* Effect.tryPromise({
+      const json: unknown = yield* Effect.tryPromise({
         try: () => response.json(),
         catch: () =>
           new HttpError({
@@ -569,7 +574,21 @@ export class ArenaClient implements ArenaApi {
           }),
       });
 
-      return json;
+      return yield* Schema.decodeUnknownEffect(schema)(json).pipe(
+        Effect.tapError((cause) =>
+          Effect.logWarning(
+            `[arena-diag] endpoint=${endpoint} decode failed cause=${String(cause)}`,
+          ),
+        ),
+        Effect.mapError(
+          (cause) =>
+            new HttpError({
+              message: "Unexpected are.na response",
+              status: HttpStatus.BadGateway,
+              cause,
+            }),
+        ),
+      );
     });
   }
 }

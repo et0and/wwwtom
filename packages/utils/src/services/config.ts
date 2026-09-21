@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted, Schema } from "effect";
-import { TomSecretsSchema } from "@tom/schemas/secrets";
+import { TomSecretsSchema, normalizeOptionalSecret } from "@tom/schemas/secrets";
 import type { TomWorkMessageEncoded } from "@tom/schemas/queue";
 import { SecretsError } from "@tom/types/errors";
 
@@ -10,14 +10,6 @@ export interface AppConfigContract {
   readonly telegramBotToken: Redacted.Redacted<string> | undefined;
   readonly telegramChatId: string | undefined;
 }
-
-const parseOptionalSecret = (value?: string): string | undefined => {
-  const v = value?.trim();
-  if (!v) return undefined;
-  const lower = v.toLowerCase();
-  if (lower === "undefined" || lower === "null") return undefined;
-  return v;
-};
 
 export type SecretBinding = {
   get(): Promise<string>;
@@ -67,19 +59,14 @@ export interface CmsR2Binding {
 }
 
 // AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
-// Secrets Store binding (production; minted by the Axiom provider). Decode
-// the union at the env boundary instead of narrowing with typeof. The
-// binding is modeled as any object, not a Struct — Struct rejects unknown
-// keys in this Effect version and the platform binding carries properties
-// beyond `get`.
-const SecretSourceSchema = Schema.Union([Schema.String, Schema.instanceOf(Object)]);
-
+// Secrets Store binding (production; minted by the Axiom provider). Narrow
+// the union with typeof at the env boundary.
 export const resolveSecretValue = (
   value: string | SecretBinding | undefined,
 ): Promise<string | undefined> => {
   if (value === undefined) return Promise.resolve(undefined);
-  Schema.decodeSync(SecretSourceSchema)(value);
-  return Schema.is(Schema.String)(value) ? Promise.resolve(value) : value.get();
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- string|binding union narrows with typeof
+  return typeof value === "string" ? Promise.resolve(value) : value.get();
 };
 
 export type CloudflareEnv = {
@@ -276,13 +263,17 @@ export type PartialCloudflareEnv = {
   [K in keyof CloudflareEnv]?: CloudflareEnv[K] | undefined;
 };
 
+/** Tenant tag from worker env. Unknown tags select nothing (shared). */
+export const tenantFromValue = (value: string | undefined): "tom" | "sophie" | undefined =>
+  value === "tom" || value === "sophie" ? value : undefined;
+
 /**
  * Create a config layer from a partial config object.
  * Useful for testing and API routes that only need subset of config.
  */
 export const makeAppConfigLayer = (config: PartialCloudflareEnv): Layer.Layer<AppConfig> => {
-  const arenaToken = parseOptionalSecret(config.ARENA_TOKEN);
-  const arenaBaseUrl = parseOptionalSecret(config.ARENA_API_URL);
+  const arenaToken = normalizeOptionalSecret(config.ARENA_TOKEN);
+  const arenaBaseUrl = normalizeOptionalSecret(config.ARENA_API_URL);
   return Layer.succeed(AppConfig, {
     arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
     arenaBaseUrl,
