@@ -20,7 +20,9 @@ const USER_AGENT = "wwwtom-pr-review/1.0 (+https://github.com/et0and/wwwtom)";
 const CLASSIFIER_URL = "https://classifier.dev";
 const COMMENT_MARKER = "<!-- classifier-pr-review -->";
 const CONFIDENCE_FLOOR = 0.8;
-const BATCH_SIZE = 500;
+// classifier.dev takes up to 20 inputs per request; larger batches 502
+// with `batch_unavailable`.
+const BATCH_SIZE = 20;
 // Page cap for both list endpoints (100 items a page; 10 pages is plenty).
 const MAX_PAGES = 10;
 const MAX_LISTED = 200;
@@ -166,6 +168,11 @@ const retryDelay = (response: Response, attempt: number): number => {
   return Number.isNaN(retryAfter) ? attempt * 1000 : retryAfter * 1000;
 };
 
+/** Unscored inputs land in the careful-review group: the comment is a routing
+ * aid, so an unavailable classifier must widen attention, never fail the run. */
+const unscored = (inputs: ReadonlyArray<string>): ReadonlyArray<ClassifierResult> =>
+  inputs.map(() => ({ label: FOCUS_LABEL, confidence: null }));
+
 const classifyBatch = async (
   inputs: ReadonlyArray<string>,
 ): Promise<ReadonlyArray<ClassifierResult>> => {
@@ -194,13 +201,16 @@ const classifyBatch = async (
       }
       return body.results;
     }
-    const isRetryable = response.status === 429 || response.status >= 500;
-    if (!isRetryable || attempt === MAX_ATTEMPTS) {
-      throw new Error(`classifier.dev ${response.status}: ${await response.text()}`);
+    const detail = `classifier.dev ${response.status}: ${await response.text()}`;
+    // 4xx means the request itself is wrong; that is ours to fix.
+    if (response.status !== 429 && response.status < 500) throw new Error(detail);
+    if (attempt === MAX_ATTEMPTS) {
+      console.warn(`${detail} — leaving ${inputs.length} files unscored`);
+      return unscored(inputs);
     }
     await sleep(retryDelay(response, attempt));
   }
-  throw new Error("classifier.dev retries exhausted");
+  return unscored(inputs);
 };
 
 const chunk = <T>(items: ReadonlyArray<T>, size: number): ReadonlyArray<ReadonlyArray<T>> => {
