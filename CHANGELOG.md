@@ -1,3 +1,10 @@
+# [3.6.0](https://github.com/et0and/wwwtom/compare/v3.5.0...v3.6.0) (2026-09-21)
+
+
+### Features
+
+* **workflows:** generate GitHub Actions YAML from Effect definitions ([d11098b](https://github.com/et0and/wwwtom/commit/d11098b4bf0665d9e347696d62bb3922ec608b6b))
+
 # [3.5.0](https://github.com/et0and/wwwtom/compare/v3.4.1...v3.5.0) (2026-09-20)
 
 
