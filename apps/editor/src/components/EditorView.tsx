@@ -204,10 +204,10 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
       : Effect.flatMap(toWorkInput(fields(), doc), (input) => saveWork(slug, input));
 
   const onSave = (): void => {
-    const doc = handle.doc() ?? { type: "doc", content: [] };
+    const doc: TiptapDoc = handle.doc() ?? { type: "doc", content: [] };
     setSaveState({ status: "saving" });
     void runClient(
-      persist(savedSlug(), doc as TiptapDoc).pipe(
+      persist(savedSlug(), doc).pipe(
         Effect.tap((saved) =>
           Effect.sync(() => {
             handle.markClean();

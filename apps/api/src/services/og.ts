@@ -1,13 +1,15 @@
 import { Effect, Option, Schema } from "effect";
 import { render } from "takumi-js";
 import { fromHtml } from "takumi-js/helpers/html";
-import { ogImageQueryParamsSchema, type OgTemplate } from "@tom/schemas/og";
+import { OgImageQueryParamsSchema, type OgTemplate } from "@tom/schemas/og";
 import { OgTemplates, type OgTemplateParams } from "@tom/ui/OgImage";
 import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import type { CmsAssetsBinding } from "@tom/utils/services/config";
-import { toProblemResponse } from "@tom/utils/services/worker";
+import { tenantFromValue } from "@tom/utils/services/config";
+import { toErrorMessage, toProblemResponse } from "@tom/utils/services/worker";
 
 // Fonts ship as static files beside the worker (apps/api/public/fonts,
 // served by Workers Static Assets) and load from the worker's own origin:
@@ -44,13 +46,7 @@ const fontFetchEffect = Effect.fn("og.fetchFont")(function* (source: OgFontSourc
     catch: (cause) =>
       new FontFetchError({
         message: "Failed to fetch font",
-        cause: Option.getOrElse(
-          Option.map(
-            Schema.decodeUnknownOption(Schema.Struct({ message: Schema.String }))(cause),
-            (failure) => failure.message,
-          ),
-          () => "Unknown error",
-        ),
+        cause: toErrorMessage(cause),
       }),
   });
 
@@ -86,7 +82,9 @@ export const getTemplate = (
   if (templateParam === "default") return OgTemplates.default;
   if (templateParam === "minimal") return OgTemplates.minimal;
   if (templateParam === "sophie") return OgTemplates.sophie;
-  if (requester === "") return tenant === "sophie" ? OgTemplates.sophie : OgTemplates.default;
+  if (requester === "") {
+    return tenantFromValue(tenant) === "sophie" ? OgTemplates.sophie : OgTemplates.default;
+  }
   const hostname = requesterHostname(requester);
   if (hostname === "sophie.st" || hostname.endsWith(".sophie.st")) return OgTemplates.sophie;
   if (hostname === "tom.so" || hostname.endsWith(".tom.so")) return OgTemplates.default;
@@ -108,7 +106,7 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
   // system-ui); Solway only serves sophie. Fonts load lazily from the
   // worker's own origin so templates that never use them never pay the
   // fetch.
-  const source = fontSource ?? { origin: "http://localhost:8787" };
+  const source = fontSource ?? { origin: LOCAL_SERVICE_URLS.api };
   const fontData =
     template === OgTemplates.default ? yield* fontFetchEffect(source, LIBRE_CASLON_PATH) : null;
   const sophieFontData =
@@ -151,7 +149,7 @@ export const validateOgParams = (
   date?: string,
   template?: string,
 ) => {
-  return Schema.decodeUnknownEffect(ogImageQueryParamsSchema)({
+  return Schema.decodeUnknownEffect(OgImageQueryParamsSchema)({
     title,
     summary,
     date,

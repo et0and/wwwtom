@@ -10,6 +10,7 @@
     "./error": "./src/error.ts",
     "./health": "./src/health.ts",
     "./jsonld": "./src/jsonld.ts",
+    "./list": "./src/list.ts",
     "./og": "./src/og.ts",
     "./polar": "./src/polar.ts",
     "./queue": "./src/queue.ts",

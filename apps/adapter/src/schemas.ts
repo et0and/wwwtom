@@ -55,10 +55,12 @@ export const guestbookUserCookieSchema = Schema.toStandardSchemaV1(
   }),
 );
 
-export const handleBodySchema = Schema.toStandardSchemaV1(Schema.Struct({ handle: Schema.String }));
+export const handleBodySchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ handle: Schema.NonEmptyString }),
+);
 
 export const messageBodySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ message: Schema.String }),
+  Schema.Struct({ message: Schema.NonEmptyString }),
 );
 
 export const callbackQuerySchema = Schema.toStandardSchemaV1(

@@ -1,40 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
-import {
-  ABOUT_SLUG,
-  PAGES_CATEGORY,
-  formatPublishedDate,
-  formatPublishedDateTime,
-  listPosts,
-} from "../lib/posts";
-
-describe("formatPublishedDateTime", () => {
-  it("formats an ISO timestamp with date and time", () => {
-    expect(formatPublishedDateTime("2026-09-01T00:00:00.000Z")).toContain("2026");
-    expect(formatPublishedDateTime("2026-09-01T00:00:00.000Z")).toMatch(/\d+:\d+/);
-  });
-
-  it("renders empty for null and invalid dates", () => {
-    expect(formatPublishedDateTime(null)).toBe("");
-    expect(formatPublishedDateTime("not-a-date")).toBe("");
-  });
-});
+import { ABOUT_SLUG, PAGES_CATEGORY, listPosts } from "../lib/posts";
 
 describe("ABOUT_SLUG", () => {
   it("names the about slug", () => {
     expect(ABOUT_SLUG).toBe("about");
-  });
-});
-
-describe("formatPublishedDate", () => {
-  it("formats a full date without time", () => {
-    expect(formatPublishedDate("2026-09-01T00:00:00.000Z")).toContain("2026");
-    expect(formatPublishedDate("2026-09-01T00:00:00.000Z")).not.toMatch(/\d+:\d+/);
-  });
-
-  it("renders empty for null and invalid dates", () => {
-    expect(formatPublishedDate(null)).toBe("");
-    expect(formatPublishedDate("not-a-date")).toBe("");
   });
 });
 

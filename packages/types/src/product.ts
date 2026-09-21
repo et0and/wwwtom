@@ -1,15 +1,4 @@
-type ProductMedia = {
-  id: string;
-  public_url: string;
-};
+import type { Schema } from "effect";
+import type { polarProductSchema } from "@tom/schemas/polar";
 
-export type Product = {
-  id: string;
-  name: string;
-  description: string | null;
-  medias: ReadonlyArray<ProductMedia>;
-  prices: ReadonlyArray<{
-    price_amount: number;
-    price_currency: string;
-  }>;
-};
+export type Product = Schema.Schema.Type<typeof polarProductSchema>;

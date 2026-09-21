@@ -1,9 +1,11 @@
 import { Elysia } from "elysia";
 import { Effect, Layer, Option, Schema } from "effect";
 import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
+import type { GuestbookEntryJson } from "@tom/types/db";
 import { checkProfanity } from "@tom/utils/profanity";
 import { makeTomQueueLayer, TomQueueService } from "@tom/utils/services/queue";
 import { HttpStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
 import {
   getRequestEnv,
@@ -42,47 +44,43 @@ type GuestbookError =
   | OAuthSessionError
   | HttpError;
 
-/** A failure from the guestbook flow channel (HttpError or a flow error). */
-type GuestbookFlowError = { readonly _tag: string };
-
 /**
- * HTTP status for a guestbook failure. HttpError carries its own status;
- * client-flow failures map to 4xx; anything else (env, database, unknown)
- * stays a 500.
+ * HTTP status and user-facing message for a guestbook failure. HttpError
+ * carries its own status; client-flow failures map to 4xx; anything else
+ * (env, database, unknown) stays a 500.
  */
+/** A failure from the guestbook flow channel (HttpError or a flow error). */
+type GuestbookFlowError = GuestbookError | { readonly _tag: string };
+
+const guestbookStatusMap = {
+  HttpError: HttpStatus.InternalServerError,
+  AuthenticationError: HttpStatus.Unauthorized,
+  MissingFieldError: HttpStatus.BadRequest,
+  ProfanityError: HttpStatus.BadRequest,
+  GuestbookValidationError: HttpStatus.BadRequest,
+  OAuthSessionError: HttpStatus.BadRequest,
+} satisfies Record<GuestbookError["_tag"], number>;
+
+const isGuestbookTag = (tag: string): tag is GuestbookError["_tag"] =>
+  Object.hasOwn(guestbookStatusMap, tag);
+
 const guestbookStatus = (error: GuestbookFlowError): number => {
-  switch (error._tag) {
-    case "HttpError":
-      return (error as HttpError).status;
-    case "AuthenticationError":
-      return HttpStatus.Unauthorized;
-    case "MissingFieldError":
-    case "ProfanityError":
-    case "GuestbookValidationError":
-    case "OAuthSessionError":
-      return HttpStatus.BadRequest;
-    default:
-      return HttpStatus.InternalServerError;
-  }
+  if (error._tag === "HttpError" && "status" in error) return error.status;
+  return isGuestbookTag(error._tag)
+    ? guestbookStatusMap[error._tag]
+    : HttpStatus.InternalServerError;
 };
 
 /**
- * User-facing message for a guestbook failure. Reads `field`/`message`
- * through Schema string decodes instead of an optional-prop intersection:
- * `exactOptionalPropertyTypes` rejects `string | undefined` against `?: string`,
- * so boundary parsing keeps schema-exact error classes assignable.
+ * User-facing message for a guestbook failure. MissingFieldError names its
+ * field; any failure carrying a message surfaces it; anything else
+ * (env, database, unknown) gets a generic bad-request message.
  */
 const guestbookMessage = (error: GuestbookFlowError): string => {
   if (error._tag === "MissingFieldError" && "field" in error) {
-    const field = Schema.decodeUnknownOption(Schema.String)(error.field);
-    return Option.isNone(field)
-      ? "Missing required field"
-      : `Missing required field: ${field.value}`;
+    return `Missing required field: ${error.field}`;
   }
-  if ("message" in error) {
-    const message = Schema.decodeUnknownOption(Schema.String)(error.message);
-    return Option.isNone(message) ? "Bad request" : message.value;
-  }
+  if ("message" in error && Schema.is(Schema.String)(error.message)) return error.message;
   return "Bad request";
 };
 
@@ -141,6 +139,21 @@ const notifyGuestbookSign = (entry: GuestbookEntry): Effect.Effect<void, never, 
       );
   });
 
+const simulatorEntriesSchema = Schema.Struct({
+  results: Schema.Array(
+    Schema.Struct({
+      id: Schema.Finite,
+      fediverse_username: Schema.String,
+      fediverse_instance: Schema.String,
+      display_name: Schema.NullOr(Schema.String),
+      avatar_url: Schema.NullOr(Schema.String),
+      message: Schema.String,
+      created_at: Schema.String,
+      updated_at: Schema.String,
+    }),
+  ),
+});
+
 /**
  * In simulator mode (x-use-simulator + SIMULATOR_URL) entries come from the
  * fixture store instead of D1; the simulator mirrors DatabaseService's
@@ -148,7 +161,7 @@ const notifyGuestbookSign = (entry: GuestbookEntry): Effect.Effect<void, never, 
  */
 const simulatorEntries = (
   simulatorUrl: string,
-): Effect.Effect<readonly GuestbookEntry[], HttpError, never> => {
+): Effect.Effect<readonly GuestbookEntryJson[], HttpError, never> => {
   return Effect.gen(function* () {
     yield* Effect.logInfo("guestbook:entries:simulator");
     const response = yield* Effect.tryPromise({
@@ -166,14 +179,24 @@ const simulatorEntries = (
         status: HttpStatus.BadGateway,
       });
     }
-    const body = yield* Effect.tryPromise({
-      try: () => response.json() as Promise<{ results: readonly GuestbookEntry[] }>,
+    const payload: unknown = yield* Effect.tryPromise({
+      try: () => response.json(),
       catch: () =>
         new HttpError({
           message: "Guestbook simulator parse error",
           status: HttpStatus.BadGateway,
         }),
     });
+    const body = yield* Schema.decodeUnknownEffect(simulatorEntriesSchema)(payload).pipe(
+      Effect.mapError(
+        (cause) =>
+          new HttpError({
+            message: "Guestbook simulator parse error",
+            status: HttpStatus.BadGateway,
+            cause,
+          }),
+      ),
+    );
     yield* Effect.logInfo("guestbook:entries:simulator:success");
     return body.results;
   });
@@ -197,9 +220,9 @@ const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
 export const guestbookUserFromCookie = (
   value: Schema.Json | undefined,
 ): auth.FediverseUser | null => {
-  const json = Option.getOrElse(Schema.decodeUnknownOption(Schema.String)(value), () =>
-    JSON.stringify(value),
-  );
+  if (value === undefined) return null;
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- cookie arrives as string or parsed object
+  const json = typeof value === "string" ? value : JSON.stringify(value);
   return Option.getOrElse(Schema.decodeOption(userCookieSchema)(json), () => null);
 };
 
@@ -250,14 +273,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
     "/guestbook/auth/initiate",
     ({ body, cookie, request }) => {
       const env = getRequestEnv(request);
-      if (!body.handle) {
-        return toProblemResponse(HttpStatus.BadRequest, "Missing field: handle", {
-          type: ProblemType.Validation,
-          instance: request.url,
-        });
-      }
-
-      const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
+      const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
       const redirectUri = `${adapterUrl}/guestbook/callback`;
 
       return runGuestbook(
@@ -303,7 +319,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
     ({ query, cookie, request }) => {
       const env = getRequestEnv(request);
       const sessionToken = cookie.guestbook_session.value ?? "";
-      const adapterUrl = env.ADAPTER_URL ?? "http://localhost:8788";
+      const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
       const redirectUri = `${adapterUrl}/guestbook/callback`;
       const returnUrl = env.GUESTBOOK_RETURN_URL ?? "http://localhost:3000/guestbook";
 
@@ -314,9 +330,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
           session_token: sessionToken,
           redirectUri,
         });
-        const userCookieValue = yield* Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(
-          user,
-        );
+        const userCookieValue = yield* Schema.encodeEffect(userCookieSchema)(user);
         yield* Effect.sync(() => {
           cookie.guestbook_session.remove();
           cookie.guestbook_user.value = userCookieValue;
@@ -364,16 +378,9 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
         env,
         Effect.gen(function* () {
           yield* Effect.logInfo("guestbook:sign:start");
-          if (!body.message) {
-            return yield* new MissingFieldError({ field: "message" });
-          }
-
           const profanityCheck = checkProfanity(body.message);
           if (profanityCheck.hasProfanity) {
-            return yield* new ProfanityError({
-              message:
-                profanityCheck.message ?? "Your message contains profanity. Please keep it clean!",
-            });
+            return yield* new ProfanityError({ message: profanityCheck.message });
           }
 
           const entry = yield* auth.signGuestbook({ user, message: body.message });

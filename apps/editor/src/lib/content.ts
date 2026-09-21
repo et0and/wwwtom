@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect";
 import { CmsError } from "@tom/types/errors";
+import { parsePageNumber } from "@tom/utils/page";
 import {
   CmsCategoryInputSchema,
   CmsCategorySchema,
@@ -36,10 +37,6 @@ export type ContentKind = "posts" | "works";
 /** Rows per content list page, shared by the list view and the API query. */
 export const PAGE_SIZE = 10;
 
-/** Clamp a requested page to a valid 1-based number. Guards NaN/Infinity. */
-const safePage = (page: number): number =>
-  Number.isFinite(page) ? Math.max(1, Math.floor(page)) : 1;
-
 const postListSchema = CmsListResponseSchema(CmsPostSchema);
 const workListSchema = CmsListResponseSchema(CmsWorkSchema);
 const categoryListSchema = Schema.Array(CmsCategorySchema);
@@ -74,19 +71,23 @@ const jsonBody = (body: string): RequestInit => ({
 });
 
 /** Encode a validated input to its JSON string body. */
-const encodeBody = (encode: () => string, operation: string): Effect.Effect<string, CmsError> =>
-  Effect.try({
-    try: encode,
-    catch: (cause) =>
-      new CmsError({ message: "Invalid editor data", status: 500, operation, cause }),
-  });
+const encodeBody = <A, I>(
+  schema: Schema.Codec<A, I>,
+  input: A,
+  operation: string,
+): Effect.Effect<I, CmsError> =>
+  Schema.encodeEffect(schema)(input).pipe(
+    Effect.mapError(
+      (cause) => new CmsError({ message: "Invalid editor data", status: 500, operation, cause }),
+    ),
+  );
 
 export const listPosts = (
   page: number,
   category?: CmsSlug | "pages",
 ): Effect.Effect<CmsListResponse<CmsPost>, CmsError> =>
   fetchAndDecode(
-    `/content/posts?status=all&page=${safePage(page)}&pageSize=${PAGE_SIZE}${
+    `/content/posts?status=all&page=${parsePageNumber(page)}&pageSize=${PAGE_SIZE}${
       category === undefined ? "" : `&category=${encodeURIComponent(category)}`
     }`,
     {},
@@ -96,7 +97,7 @@ export const listPosts = (
 
 export const listWorks = (page: number): Effect.Effect<CmsListResponse<CmsWork>, CmsError> =>
   fetchAndDecode(
-    `/content/works?status=all&page=${safePage(page)}&pageSize=${PAGE_SIZE}`,
+    `/content/works?status=all&page=${parsePageNumber(page)}&pageSize=${PAGE_SIZE}`,
     {},
     workListSchema,
     "list_works",
@@ -126,18 +127,16 @@ export const savePost = (
   slug: string | null,
   input: CmsPostInput,
 ): Effect.Effect<CmsPost, CmsError> =>
-  Effect.flatMap(
-    encodeBody(() => Schema.encodeSync(postInputJson)(input), "save_post"),
-    (body) => saveContent("posts", slug, body, CmsPostSchema, "save_post"),
+  Effect.flatMap(encodeBody(postInputJson, input, "save_post"), (body) =>
+    saveContent("posts", slug, body, CmsPostSchema, "save_post"),
   );
 
 export const saveWork = (
   slug: string | null,
   input: CmsWorkInput,
 ): Effect.Effect<CmsWork, CmsError> =>
-  Effect.flatMap(
-    encodeBody(() => Schema.encodeSync(workInputJson)(input), "save_work"),
-    (body) => saveContent("works", slug, body, CmsWorkSchema, "save_work"),
+  Effect.flatMap(encodeBody(workInputJson, input, "save_work"), (body) =>
+    saveContent("works", slug, body, CmsWorkSchema, "save_work"),
   );
 
 export const deletePost = (slug: string): Effect.Effect<{ readonly id: string }, CmsError> =>
@@ -185,7 +184,7 @@ export const restoreRevision = (
   revisionId: string,
 ): Effect.Effect<CmsPost | CmsWork, CmsError> =>
   Effect.flatMap(
-    encodeBody(() => Schema.encodeSync(restoreInputJson)({ revisionId }), "restore_revision"),
+    encodeBody(restoreInputJson, { revisionId }, "restore_revision"),
     (body): Effect.Effect<CmsPost | CmsWork, CmsError> =>
       kind === "posts"
         ? fetchAndDecode(
@@ -210,24 +209,16 @@ export const listCategories: Effect.Effect<ReadonlyArray<CmsCategory>, CmsError>
 );
 
 export const createCategory = (slug: string, title: string): Effect.Effect<CmsCategory, CmsError> =>
-  Effect.flatMap(
-    decodeResponse(
-      CmsCategoryInputSchema,
-      { slug, title },
-      "create_category",
-      "Invalid category data",
+  decodeResponse(
+    CmsCategoryInputSchema,
+    { slug, title },
+    "create_category",
+    "Invalid category data",
+  ).pipe(
+    Effect.flatMap((input) => encodeBody(categoryInputJson, input, "create_category")),
+    Effect.flatMap((body) =>
+      fetchAndDecode("/content/categories", jsonBody(body), CmsCategorySchema, "create_category"),
     ),
-    (input) =>
-      Effect.flatMap(
-        encodeBody(() => Schema.encodeSync(categoryInputJson)(input), "create_category"),
-        (body) =>
-          fetchAndDecode(
-            "/content/categories",
-            jsonBody(body),
-            CmsCategorySchema,
-            "create_category",
-          ),
-      ),
   );
 
 export const deleteCategory = (slug: string): Effect.Effect<{ readonly id: string }, CmsError> =>

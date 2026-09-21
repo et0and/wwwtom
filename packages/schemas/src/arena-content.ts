@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { ListResponseSchema } from "./list";
 
 /**
  * Content served from are.na master channels. A post or work is a channel
@@ -185,13 +186,5 @@ export const ArenaEntrySchema = Schema.Struct({
 });
 export type ArenaEntry = typeof ArenaEntrySchema.Type;
 
-export const ArenaEntryListSchema = Schema.Struct({
-  docs: Schema.Array(ArenaEntrySummarySchema),
-  totalDocs: Schema.Finite,
-  limit: Schema.Finite,
-  page: Schema.Finite,
-  totalPages: Schema.Finite,
-  hasNextPage: Schema.Boolean,
-  hasPrevPage: Schema.Boolean,
-});
+export const ArenaEntryListSchema = ListResponseSchema(ArenaEntrySummarySchema);
 export type ArenaEntryList = typeof ArenaEntryListSchema.Type;

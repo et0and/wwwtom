@@ -42,12 +42,14 @@ export const handleFeed = () =>
         });
       }),
       Effect.catch((error) =>
-        Effect.succeed(
-          new Response("Error generating RSS feed", {
-            status: HttpStatus.InternalServerError,
-            headers: { "Content-Type": "text/plain" },
-            statusText: error.message,
-          }),
+        Effect.andThen(
+          Effect.logError("Failed to generate RSS feed", error),
+          Effect.succeed(
+            new Response("Error generating RSS feed", {
+              status: HttpStatus.InternalServerError,
+              headers: { "Content-Type": "text/plain" },
+            }),
+          ),
         ),
       ),
     ),
@@ -117,11 +119,17 @@ ${works
         });
       }),
       Effect.catch((error) =>
-        Effect.succeed(
-          new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${error.message}</error>`, {
-            status: HttpStatus.InternalServerError,
-            headers: { "Content-Type": "application/xml" },
-          }),
+        Effect.andThen(
+          Effect.logError("Failed to generate sitemap", error),
+          Effect.succeed(
+            new Response(
+              `<?xml version="1.0" encoding="UTF-8"?><error>Error generating sitemap</error>`,
+              {
+                status: HttpStatus.InternalServerError,
+                headers: { "Content-Type": "application/xml" },
+              },
+            ),
+          ),
         ),
       ),
     ),

@@ -1,6 +1,7 @@
 import { Elysia } from "elysia";
 import { Schema } from "effect";
 import {
+  CmsPagingSchema,
   CmsPostSchema,
   CmsPostSummarySchema,
   CmsWorkSchema,
@@ -72,12 +73,8 @@ const findPublished = (docs: ReadonlyArray<CmsDoc>, slug: string): CmsDoc | unde
 
 const listQuery = Schema.toStandardSchemaV1(
   Schema.Struct({
-    page: Schema.optional(Schema.FiniteFromString),
-    pageSize: Schema.optional(Schema.FiniteFromString),
+    ...CmsPagingSchema.fields,
     limit: Schema.optional(Schema.FiniteFromString),
-    status: Schema.optional(Schema.String),
-    category: Schema.optional(Schema.String),
-    excludeCategory: Schema.optional(Schema.String),
   }),
 );
 

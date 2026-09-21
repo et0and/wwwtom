@@ -4,6 +4,7 @@ import type { ArenaBlockImage, ArenaChannelContents } from "@tom/schemas/arena";
 import { Loader } from "@tom/ui/loader";
 import { Text } from "@tom/ui/text";
 import { fetchChannel, fetchChannelContents } from "~/server/adapter";
+import { arenaImageAlt, arenaImageSource, arenaImageSourceSet } from "~/libs/utils/arena-image";
 
 const STRIP_ITEMS = 12;
 
@@ -17,11 +18,6 @@ const itemText = (item: ArenaChannelContents): string | null => {
   if (item.type === "Channel") return item.description?.plain ?? null;
   return item.title ?? null;
 };
-
-const imageSource = (image: ArenaBlockImage): string => image.medium.src;
-
-const imageSourceSet = (image: ArenaBlockImage): string | undefined =>
-  image.medium.src_2x ? `${image.medium.src} 1x, ${image.medium.src_2x} 2x` : undefined;
 
 function StripItem(props: { item: ArenaChannelContents }) {
   const image = createMemo(() => itemImage(props.item));
@@ -41,9 +37,9 @@ function StripItem(props: { item: ArenaChannelContents }) {
     >
       {(value) => (
         <img
-          src={imageSource(value())}
-          srcset={imageSourceSet(value())}
-          alt={value().alt_text ?? ""}
+          src={arenaImageSource(value())}
+          srcset={arenaImageSourceSet(value())}
+          alt={arenaImageAlt(value(), null)}
           class="h-44 w-auto shrink-0 object-cover"
           loading="lazy"
         />

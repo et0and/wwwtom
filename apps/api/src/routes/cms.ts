@@ -7,6 +7,7 @@ import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding, CloudflareEnv } from "@tom/utils/services/config";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { hasSessionCredential } from "@tom/utils/services/session";
+import { workerCache } from "@tom/utils/services/http";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { createAuthFromEnv, requireSession } from "../services/auth";
@@ -71,28 +72,28 @@ export const decodeMediaParams = <P>(
 ): Effect.Effect<{ readonly id: string }, CmsError> =>
   decodeBoundary(CmsMediaParamsSchema, params, "Invalid media id parameter", operation);
 
+/** Fail closed when a CMS storage binding is missing. */
+const requireBinding = <B>(
+  binding: B | undefined,
+  message: string,
+  operation: string,
+): Effect.Effect<NonNullable<B>, CmsError> =>
+  binding
+    ? Effect.succeed(binding as NonNullable<B>)
+    : Effect.fail(
+        new CmsError({
+          message,
+          status: HttpStatus.InternalServerError,
+          operation,
+        }),
+      );
+
 /** Fail closed when the CMS D1 binding is missing. */
 export const requireCmsD1 = (env: CloudflareEnv): Effect.Effect<CmsD1Binding, CmsError> =>
-  env.CMS_D1
-    ? Effect.succeed(env.CMS_D1)
-    : Effect.fail(
-        new CmsError({
-          message: "CMS storage not configured",
-          status: HttpStatus.InternalServerError,
-          operation: "require_cms_d1",
-        }),
-      );
+  requireBinding(env.CMS_D1, "CMS storage not configured", "require_cms_d1");
 /** Fail closed when the CMS media bucket binding is missing. */
 export const requireCmsR2 = (env: CloudflareEnv): Effect.Effect<CmsR2Binding, CmsError> =>
-  env.CMS_MEDIA
-    ? Effect.succeed(env.CMS_MEDIA)
-    : Effect.fail(
-        new CmsError({
-          message: "CMS media storage not configured",
-          status: HttpStatus.InternalServerError,
-          operation: "require_cms_r2",
-        }),
-      );
+  requireBinding(env.CMS_MEDIA, "CMS media storage not configured", "require_cms_r2");
 
 /**
  * Worker Cache API for hot media bytes. Edge CDN caching covers
@@ -100,23 +101,9 @@ export const requireCmsR2 = (env: CloudflareEnv): Effect.Effect<CmsR2Binding, Cm
  * absorbs repeat hits in-worker. Absent outside Workers (tests) — skip.
  * Best-effort: cache failures fall through to R2, never 500.
  */
-type DefaultCache = {
-  readonly match: (key: string) => Promise<Response | undefined>;
-  readonly put: (key: string, response: Response) => Promise<void>;
-};
-
-type CacheScope = { readonly caches?: { readonly default?: DefaultCache } };
-
-/**
- * `caches.default` is a Workers extension missing from the DOM type, so
- * reach it through a narrow structural view. Undefined outside Workers
- * (tests) — callers skip caching then.
- */
-const defaultCache = (): DefaultCache | undefined => (globalThis as CacheScope).caches?.default;
-
 const matchFileCache = (url: string): Effect.Effect<Response | undefined, never> =>
   Effect.tryPromise({
-    try: async () => (await defaultCache()?.match(url)) ?? undefined,
+    try: async () => (await workerCache()?.match(url)) ?? undefined,
     catch: () => undefined,
   }).pipe(Effect.orElseSucceed(() => undefined));
 
@@ -124,7 +111,7 @@ const putFileCache = (url: string, response: Response): Effect.Effect<void, neve
   Effect.ignore(
     Effect.tryPromise({
       try: async () => {
-        await defaultCache()?.put(url, response.clone());
+        await workerCache()?.put(url, response.clone());
       },
       catch: () => undefined,
     }),
@@ -142,26 +129,29 @@ const putFileCache = (url: string, response: Response): Effect.Effect<void, neve
  */
 const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<boolean, never> => {
   if (!hasSessionCredential(request)) return Effect.succeed(false);
-  return Effect.tryPromise({
-    try: () => readCloudflareEnv(env),
-    catch: (cause) =>
-      new CmsError({
-        message: "Failed to read Cloudflare env for CMS read auth",
-        status: HttpStatus.InternalServerError,
-        operation: "optional_session",
-        cause,
-      }),
-  }).pipe(
-    Effect.flatMap((resolved) => createAuthFromEnv(resolved)),
-    Effect.tapError((cause) =>
-      Effect.logWarning("CMS read auth unavailable; serving published-only", {
-        cause: String(cause),
-      }),
-    ),
-    Effect.flatMap((auth) => requireSession(auth, request.headers)),
-    Effect.as(true),
-    Effect.orElseSucceed(() => false),
-  );
+  return Effect.gen(function* () {
+    const auth = yield* Effect.gen(function* () {
+      const resolved = yield* Effect.tryPromise({
+        try: () => readCloudflareEnv(env),
+        catch: (cause) =>
+          new CmsError({
+            message: "Failed to read Cloudflare env for CMS read auth",
+            status: HttpStatus.InternalServerError,
+            operation: "optional_session",
+            cause,
+          }),
+      });
+      return yield* createAuthFromEnv(resolved);
+    }).pipe(
+      Effect.tapError((cause) =>
+        Effect.logWarning("CMS read auth unavailable; serving published-only", {
+          cause: String(cause),
+        }),
+      ),
+    );
+    yield* requireSession(auth, request.headers);
+    return true;
+  }).pipe(Effect.orElseSucceed(() => false));
 };
 
 /** Run a CMS effect with request logging. CmsError failures reject and the
@@ -169,6 +159,21 @@ const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<bo
  * return types stay precise for treaty clients. */
 const runCms = <A>(effect: Effect.Effect<A, CmsError>, request: Request): Promise<A> =>
   runEffect(effect, logContextFromRequest(request, "tom-api"));
+
+/** Run a CMS read needing D1 with request logging. */
+const withCms = <A>(
+  request: Request,
+  use: (db: CmsD1Binding) => Effect.Effect<A, CmsError>,
+): Promise<A> => {
+  const env = getRequestEnv(request);
+  return runCms(
+    Effect.gen(function* () {
+      const db = yield* requireCmsD1(env);
+      return yield* use(db);
+    }),
+    request,
+  );
+};
 
 /**
  * List status for the caller: a verified session (author) gets the
@@ -211,25 +216,23 @@ const runListQuery = <T, Q>(
 ): Promise<CmsListResponse<T>> => {
   const env = getRequestEnv(request);
   return runCms(
-    requireCmsD1(env).pipe(
-      Effect.flatMap((db) =>
-        Effect.flatMap(decodePagingQuery(query, operation), (paging) =>
-          !allowCategory && (paging.category !== undefined || paging.excludeCategory !== undefined)
-            ? Effect.fail(
-                new CmsError({
-                  message: "Category filter not supported for works",
-                  status: HttpStatus.BadRequest,
-                  operation,
-                }),
-              )
-            : Effect.flatMap(optionalSession(request, env), (hasSession) =>
-                Effect.flatMap(listStatus(paging.status, hasSession, operation), (status) =>
-                  list(db, paging, status),
-                ),
-              ),
-        ),
-      ),
-    ),
+    Effect.gen(function* () {
+      const db = yield* requireCmsD1(env);
+      const paging = yield* decodePagingQuery(query, operation);
+      if (
+        !allowCategory &&
+        (paging.category !== undefined || paging.excludeCategory !== undefined)
+      ) {
+        return yield* new CmsError({
+          message: "Category filter not supported for works",
+          status: HttpStatus.BadRequest,
+          operation,
+        });
+      }
+      const hasSession = yield* optionalSession(request, env);
+      const status = yield* listStatus(paging.status, hasSession, operation);
+      return yield* list(db, paging, status);
+    }),
     request,
   );
 };
@@ -258,21 +261,14 @@ export const cmsRoutes = new Elysia({ name: "cms" })
   )
   .get(
     "/posts/:slug",
-    ({ params, request }) => {
-      const env = getRequestEnv(request);
-      return runCms(
-        requireCmsD1(env).pipe(
-          Effect.flatMap((db) =>
-            Effect.flatMap(decodeSlugParams(params, "get_post"), ({ slug }) =>
-              Effect.flatMap(optionalSession(request, env), (isAdmin) =>
-                getPostBySlug(db, slug, isAdmin ? "all" : "published"),
-              ),
-            ),
-          ),
-        ),
-        request,
-      );
-    },
+    ({ params, request }) =>
+      withCms(request, (db) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "get_post");
+          const isAdmin = yield* optionalSession(request, getRequestEnv(request));
+          return yield* getPostBySlug(db, slug, isAdmin ? "all" : "published");
+        }),
+      ),
     {
       params: cmsSlugParamsSchema,
       detail: { description: "Get a post by slug (drafts need a session)", tags: ["cms"] },
@@ -301,51 +297,31 @@ export const cmsRoutes = new Elysia({ name: "cms" })
   )
   .get(
     "/works/:slug",
-    ({ params, request }) => {
-      const env = getRequestEnv(request);
-      return runCms(
-        requireCmsD1(env).pipe(
-          Effect.flatMap((db) =>
-            Effect.flatMap(decodeSlugParams(params, "get_work"), ({ slug }) =>
-              Effect.flatMap(optionalSession(request, env), (isAdmin) =>
-                getWorkBySlug(db, slug, isAdmin ? "all" : "published"),
-              ),
-            ),
-          ),
-        ),
-        request,
-      );
-    },
+    ({ params, request }) =>
+      withCms(request, (db) =>
+        Effect.gen(function* () {
+          const { slug } = yield* decodeSlugParams(params, "get_work");
+          const isAdmin = yield* optionalSession(request, getRequestEnv(request));
+          return yield* getWorkBySlug(db, slug, isAdmin ? "all" : "published");
+        }),
+      ),
     {
       params: cmsSlugParamsSchema,
       detail: { description: "Get a work by slug (drafts need a session)", tags: ["cms"] },
     },
   )
-  .get(
-    "/categories",
-    ({ request }) => {
-      const env = getRequestEnv(request);
-      return runCms(requireCmsD1(env).pipe(Effect.flatMap((db) => listCategories(db))), request);
-    },
-    {
-      detail: { description: "List categories", tags: ["cms"] },
-    },
-  )
+  .get("/categories", ({ request }) => withCms(request, (db) => listCategories(db)), {
+    detail: { description: "List categories", tags: ["cms"] },
+  })
   .get(
     "/media/:id",
-    ({ params, request }) => {
-      const env = getRequestEnv(request);
-      return runCms(
-        requireCmsD1(env).pipe(
-          Effect.flatMap((db) =>
-            Effect.flatMap(decodeMediaParams(params, "get_media"), ({ id }) =>
-              getMediaById(db, id),
-            ),
-          ),
-        ),
-        request,
-      );
-    },
+    ({ params, request }) =>
+      withCms(request, (db) =>
+        Effect.gen(function* () {
+          const { id } = yield* decodeMediaParams(params, "get_media");
+          return yield* getMediaById(db, id);
+        }),
+      ),
     {
       params: cmsMediaParamsSchema,
       detail: { description: "Get media metadata by id", tags: ["cms"] },
@@ -360,44 +336,39 @@ export const cmsRoutes = new Elysia({ name: "cms" })
           Effect.filterOrElse(
             (cached): cached is Response => cached !== undefined,
             () =>
-              requireCmsD1(env).pipe(
-                Effect.flatMap((db) =>
-                  Effect.flatMap(requireCmsR2(env), (r2) =>
-                    Effect.flatMap(decodeMediaParams(params, "get_media_file"), ({ id }) =>
-                      getMediaFile(db, r2, id),
-                    ),
-                  ),
-                ),
-                Effect.flatMap(({ mime, object }) =>
-                  Effect.tryPromise({
-                    try: () => object.arrayBuffer(),
-                    catch: (cause) =>
-                      new CmsError({
-                        message: "Media read failed",
-                        status: HttpStatus.InternalServerError,
-                        operation: "get_media_file",
-                        cause,
-                      }),
-                  }).pipe(
-                    Effect.map(
-                      (bytes) =>
-                        new Response(bytes, {
-                          headers: {
-                            "Content-Type": mime,
-                            "Cache-Control": "public, max-age=31536000, immutable",
-                            // Served bytes are renderer-trusted images/video.
-                            // nosniff stops MIME-sniffing; sandbox stops a
-                            // smuggled script from executing top-level (this
-                            // also protects pre-existing SVG rows).
-                            "X-Content-Type-Options": "nosniff",
-                            "Content-Security-Policy": "sandbox",
-                          },
-                        }),
-                    ),
-                    Effect.tap((response) => putFileCache(request.url, response)),
-                  ),
-                ),
-              ),
+              Effect.gen(function* () {
+                const db = yield* requireCmsD1(env);
+                const r2 = yield* requireCmsR2(env);
+                const { id } = yield* decodeMediaParams(params, "get_media_file");
+                const { mime, object } = yield* getMediaFile(db, r2, id);
+                // Buffered, not streamed: the best-effort workerCache write
+                // below clones the response, and a tee buffers the whole body
+                // anyway, so streaming would add complexity without a memory win.
+                const bytes = yield* Effect.tryPromise({
+                  try: () => object.arrayBuffer(),
+                  catch: (cause) =>
+                    new CmsError({
+                      message: "Media read failed",
+                      status: HttpStatus.InternalServerError,
+                      operation: "get_media_file",
+                      cause,
+                    }),
+                });
+                const response = new Response(bytes, {
+                  headers: {
+                    "Content-Type": mime,
+                    "Cache-Control": "public, max-age=31536000, immutable",
+                    // Served bytes are renderer-trusted images/video.
+                    // nosniff stops MIME-sniffing; sandbox stops a
+                    // smuggled script from executing top-level (this
+                    // also protects pre-existing SVG rows).
+                    "X-Content-Type-Options": "nosniff",
+                    "Content-Security-Policy": "sandbox",
+                  },
+                });
+                yield* putFileCache(request.url, response);
+                return response;
+              }),
           ),
         ),
         request,

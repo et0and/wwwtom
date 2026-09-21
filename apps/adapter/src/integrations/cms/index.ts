@@ -1,21 +1,25 @@
 import { Elysia } from "elysia";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import {
-  CmsSlug,
+  CmsPagingSchema,
   type ArenaRef,
   type CmsPost,
+  type CmsSlug,
+  type CmsStatusFilter,
   type TiptapBlock,
   type TiptapDoc,
 } from "@tom/schemas/cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv } from "@tom/utils/services/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/services/worker";
 import type { LogContext } from "@tom/utils/services/logging";
 import { callApi } from "../../callApi";
 import { AdapterError, runAdapter } from "../../config/effect";
-import { allowLocalOriginsForAdapter, isTrustedWriteOrigin, tenantFromValue } from "../../origins";
-import { forwardHeaders, refererOrigin, toProxiedResponse } from "../auth";
+import { allowLocalOriginsForAdapter, tenantFromValue } from "../../origins";
+import { forwardHeaders, toProxiedResponse } from "../auth";
+import { requireTrustedWriteOrigin, type WriteOriginGateOptions } from "../write-origin-gate";
 import { simulatorEnv } from "../../simulator";
 import { setPublicContentCache } from "../content-cache";
 
@@ -60,14 +64,12 @@ const proxyCms = <T>(call: TreatyCall<T>, resource: string, context: LogContext)
     context,
   );
 
-const apiBase = "http://localhost:8787";
-
 const cmsApi = async (request: Request) => {
   const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
   return {
-    api: callApi(env.API_URL ?? apiBase),
-    apiUrl: env.API_URL ?? apiBase,
-    adapterOrigin: env.ADAPTER_URL ?? "http://localhost:8788",
+    api: callApi(env.API_URL ?? LOCAL_SERVICE_URLS.api),
+    apiUrl: env.API_URL ?? LOCAL_SERVICE_URLS.api,
+    adapterOrigin: env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter,
     token: env.INTERNAL_API_TOKEN,
     context: logContextFromRequest(request, "tom-adapter"),
   };
@@ -134,14 +136,22 @@ const requireContentSession = (
       }),
     ),
     Effect.flatMap((body) =>
-      Schema.is(SessionBodySchema)(body) && body.session !== null && body.session !== undefined
-        ? Effect.void
-        : Effect.fail(
-            new AdapterError({
-              status: HttpStatus.Unauthorized,
-              message: "CMS session required",
-            }),
-          ),
+      Option.match(
+        Option.filter(
+          Schema.decodeUnknownOption(SessionBodySchema)(body),
+          (parsed) => parsed.session !== null && parsed.session !== undefined,
+        ),
+        {
+          onNone: () =>
+            Effect.fail(
+              new AdapterError({
+                status: HttpStatus.Unauthorized,
+                message: "CMS session required",
+              }),
+            ),
+          onSome: () => Effect.void,
+        },
+      ),
     ),
   );
 
@@ -150,35 +160,16 @@ const requireContentSession = (
  * (SameSite=None), and multipart POSTs are CORS-safelisted, so the proxy
  * itself verifies the request came from a trusted page.
  */
-const requireTrustedWriteOrigin = (
-  request: Request,
-  adapterOrigin: string,
-): Effect.Effect<void, AdapterError> =>
-  Effect.gen(function* () {
-    const env = getRequestEnv(request);
-    const allowLocalOrigins = allowLocalOriginsForAdapter(env.ADAPTER_URL);
-    const tenant = tenantFromValue(env.TENANT);
-    const direct = request.headers.get("origin");
-    if (direct !== null) {
-      return yield* isTrustedWriteOrigin(direct, adapterOrigin, allowLocalOrigins, tenant)
-        ? Effect.void
-        : Effect.fail(
-            new AdapterError({
-              status: HttpStatus.Forbidden,
-              message: "Untrusted write origin",
-            }),
-          );
-    }
-    const referer = request.headers.get("referer");
-    if (referer === null) return;
-    const origin = yield* refererOrigin(referer);
-    if (!isTrustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins, tenant)) {
-      return yield* new AdapterError({
-        status: HttpStatus.Forbidden,
-        message: "Untrusted write origin",
-      });
-    }
-  });
+const writeOriginOptions = (request: Request, adapterOrigin: string): WriteOriginGateOptions => {
+  const env = getRequestEnv(request);
+  return {
+    adapterOrigin,
+    allowLocalOrigins: allowLocalOriginsForAdapter(env.ADAPTER_URL),
+    tenant: tenantFromValue(env.TENANT),
+    exemptSafeMethods: false,
+    message: "Untrusted write origin",
+  };
+};
 
 /**
  * Transparent proxy for CMS writes (`/content/*` → API same path). Bodies
@@ -196,7 +187,7 @@ const proxyWrite = (
   const path = url.pathname.replace(/^\/content/, "");
   return runAdapter(
     Effect.gen(function* () {
-      yield* requireTrustedWriteOrigin(request, adapterOrigin);
+      yield* requireTrustedWriteOrigin(request, writeOriginOptions(request, adapterOrigin));
       yield* requireContentSession(request, apiUrl, token);
       const body = yield* Effect.tryPromise({
         try: () => request.arrayBuffer(),
@@ -243,7 +234,7 @@ const proxyAuthoredGet = (
   const path = url.pathname.replace(/^\/content/, "");
   return runAdapter(
     Effect.gen(function* () {
-      yield* requireTrustedWriteOrigin(request, adapterOrigin);
+      yield* requireTrustedWriteOrigin(request, writeOriginOptions(request, adapterOrigin));
       yield* requireContentSession(request, apiUrl, token);
       const upstream = yield* Effect.tryPromise({
         try: () =>
@@ -274,18 +265,21 @@ const proxyFile = (
   const url = new URL(request.url);
   const path = url.pathname.replace(/^\/content/, "");
   return runAdapter(
-    Effect.tryPromise({
-      try: () =>
-        fetch(`${apiUrl}${path}${url.search}`, {
-          headers: forwardHeaders(request.headers, token),
-          redirect: "manual",
-        }),
-      catch: () =>
-        new AdapterError({
-          status: HttpStatus.BadGateway,
-          message: "CMS media unavailable",
-        }),
-    }).pipe(Effect.map(toProxiedResponse)),
+    Effect.gen(function* () {
+      const upstream = yield* Effect.tryPromise({
+        try: () =>
+          fetch(`${apiUrl}${path}${url.search}`, {
+            headers: forwardHeaders(request.headers, token),
+            redirect: "manual",
+          }),
+        catch: () =>
+          new AdapterError({
+            status: HttpStatus.BadGateway,
+            message: "CMS media unavailable",
+          }),
+      });
+      return toProxiedResponse(upstream);
+    }),
     (error) => error,
     context,
   );
@@ -329,15 +323,7 @@ export const extractArenaRefs = (doc: TiptapDoc): Array<ArenaRef> => {
   return refs;
 };
 
-const PostQuerySchema = Schema.Struct({
-  page: Schema.optional(Schema.FiniteFromString),
-  pageSize: Schema.optional(Schema.FiniteFromString),
-  status: Schema.optional(Schema.Literals(["all", "draft", "published"])),
-  category: Schema.optional(CmsSlug),
-  excludeCategory: Schema.optional(CmsSlug),
-});
-
-type PostQuery = typeof PostQuerySchema.Type;
+type PostQuery = typeof CmsPagingSchema.Type;
 
 /**
  * Forward the session credential so the API can unlock drafts. Cookie and
@@ -354,14 +340,19 @@ const sessionHeaders = (request: Request) => {
   return headers;
 };
 
-const statusQuery = (query: PostQuery): { status?: "all" | "draft" | "published" } =>
-  query.status === undefined ? {} : { status: query.status };
+type UpstreamQuery = {
+  status?: CmsStatusFilter;
+  category?: CmsSlug;
+  excludeCategory?: CmsSlug;
+};
 
-const categoryQuery = (query: PostQuery): { category?: string } =>
-  query.category === undefined ? {} : { category: query.category };
-
-const excludeCategoryQuery = (query: PostQuery): { excludeCategory?: string } =>
-  query.excludeCategory === undefined ? {} : { excludeCategory: query.excludeCategory };
+const toUpstreamQuery = (query: PostQuery): UpstreamQuery => {
+  const upstream: UpstreamQuery = {};
+  if (query.status !== undefined) upstream.status = query.status;
+  if (query.category !== undefined) upstream.category = query.category;
+  if (query.excludeCategory !== undefined) upstream.excludeCategory = query.excludeCategory;
+  return upstream;
+};
 
 /**
  * Works have no categories: fail closed instead of 200ing an unfiltered
@@ -376,7 +367,7 @@ const rejectWorkCategory = (query: PostQuery): void => {
   }
 };
 
-const postQuerySchema = Schema.toStandardSchemaV1(PostQuerySchema);
+const postQuerySchema = Schema.toStandardSchemaV1(CmsPagingSchema);
 
 const feedQuerySchema = Schema.toStandardSchemaV1(
   Schema.Struct({ limit: Schema.optional(Schema.FiniteFromString) }),
@@ -399,9 +390,7 @@ export const cmsIntegration = new Elysia({ name: "cms" })
           query: {
             page: query.page ?? 1,
             pageSize: query.pageSize ?? POSTS_PAGE_SIZE,
-            ...statusQuery(query),
-            ...categoryQuery(query),
-            ...excludeCategoryQuery(query),
+            ...toUpstreamQuery(query),
           },
           headers: sessionHeaders(request),
         }),
@@ -420,9 +409,7 @@ export const cmsIntegration = new Elysia({ name: "cms" })
           query: {
             page: query.page ?? 1,
             pageSize: query.pageSize ?? POSTS_PAGE_SIZE,
-            ...statusQuery(query),
-            ...categoryQuery(query),
-            ...excludeCategoryQuery(query),
+            ...toUpstreamQuery(query),
           },
           headers: sessionHeaders(request),
         }),
@@ -457,7 +444,7 @@ export const cmsIntegration = new Elysia({ name: "cms" })
           query: {
             page: query.page ?? 1,
             pageSize: query.pageSize ?? WORKS_PAGE_SIZE,
-            ...statusQuery(query),
+            ...toUpstreamQuery(query),
           },
           headers: sessionHeaders(request),
         }),
@@ -478,7 +465,7 @@ export const cmsIntegration = new Elysia({ name: "cms" })
           query: {
             page: query.page ?? 1,
             pageSize: query.pageSize ?? WORKS_PAGE_SIZE,
-            ...statusQuery(query),
+            ...toUpstreamQuery(query),
           },
           headers: sessionHeaders(request),
         }),

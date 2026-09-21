@@ -2,11 +2,12 @@ import { treaty } from "@elysiajs/eden";
 import { isServer } from "@solidjs/web";
 import { Effect } from "effect";
 import type { AdapterApp } from "@tom/adapter";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { HttpError } from "@tom/types/errors";
 import { adapterRequest as sharedAdapterRequest } from "@tom/utils/services/http";
 import type { EdenResult } from "@tom/utils/services/http";
 
-const DEV_ADAPTER_URL = "http://localhost:8790";
+const DEV_ADAPTER_URL = LOCAL_SERVICE_URLS.sophieAdapter;
 const PROD_ADAPTER_URL = "https://adapter.sophie.st";
 
 /**

@@ -87,11 +87,9 @@ const withErrorHandling = (
           error.status < HttpStatus.BadRequest ||
           error.status >= HttpStatus.InternalServerError
         ) {
-          yield* Effect.sync(() => {
-            sendErrorAlert(env, errorMessage, error, details);
-          });
+          sendErrorAlert(env, errorMessage, error, details);
         }
-        return yield* Effect.succeed(handlePolarError(error));
+        return handlePolarError(error);
       }),
     ),
   );

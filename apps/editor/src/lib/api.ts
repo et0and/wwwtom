@@ -1,8 +1,10 @@
 import { Effect, Schema } from "effect";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { CmsError } from "@tom/types/errors";
 
 /** Adapter origin, inlined at build time for production. */
-export const adapterUrl = (): string => import.meta.env.VITE_ADAPTER_URL ?? "http://localhost:8788";
+export const adapterUrl = (): string =>
+  import.meta.env.VITE_ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
 
 /** Session requests never hang: abort slow fetches so the shell always settles. */
 const REQUEST_TIMEOUT_MS = 15000;

@@ -12,6 +12,7 @@
  */
 
 import { Option, Schema } from "effect";
+import { tenantFromValue } from "@tom/utils/services/config";
 
 const LOCAL_ORIGINS: ReadonlySet<string> = new Set([
   "http://localhost:5173",
@@ -23,37 +24,24 @@ const LOCAL_ORIGINS: ReadonlySet<string> = new Set([
 ]);
 
 const TomServiceSchema = Schema.Literals(["cms", "adapter", "api", "web"]);
-type TomService = typeof TomServiceSchema.Type;
 
 const SophieServiceSchema = Schema.Literals(["cms", "adapter", "api", "web", "sophie"]);
-type SophieService = typeof SophieServiceSchema.Type;
 
 const StageSchema = Schema.Literals(["dev", "staging"]);
-type Stage = typeof StageSchema.Type;
 
-const TOM_SERVICES: ReadonlySet<TomService> = new Set(["cms", "adapter", "api", "web"]);
+/** Service-label checks over the schema allowlists. Lookup takes any label. */
+const isTomService = (value: string): boolean => Schema.is(TomServiceSchema)(value);
 
-const SOPHIE_SERVICES: ReadonlySet<SophieService> = new Set([
-  "cms",
-  "adapter",
-  "api",
-  "web",
-  "sophie",
-]);
+const isSophieService = (value: string): boolean => Schema.is(SophieServiceSchema)(value);
 
-const STAGES: ReadonlySet<Stage> = new Set(["dev", "staging"]);
-
-/** Membership check over a typed allowlist. Lookup takes any label. */
-const hasLabel = <T extends string>(allowlist: ReadonlySet<T>, value: string): value is T =>
-  (allowlist as ReadonlySet<string>).has(value);
+const isStage = (value: string): boolean => Schema.is(StageSchema)(value);
 
 /** Tenant tag selecting which hosts an adapter worker trusts. */
 export const TenantSchema = Schema.Literals(["tom", "sophie"]);
 export type Tenant = typeof TenantSchema.Type;
 
 /** Tenant tag from worker env. Unknown tags select nothing (shared). */
-export const tenantFromValue = (value: string | undefined): Tenant | undefined =>
-  value === "tom" || value === "sophie" ? value : undefined;
+export { tenantFromValue };
 
 /**
  * Whether localhost web origins are trusted: true only when the worker
@@ -99,13 +87,13 @@ const prNumber = (value: string): boolean =>
   Option.isSome(Schema.decodeOption(PrNumberSchema)(value));
 
 /** `dev-web` / `staging-api` / `pr-42-cms` against a service allowlist. */
-const isStagePrefix = (prefix: string, services: ReadonlySet<string>): boolean => {
+const isStagePrefix = (prefix: string, isService: (value: string) => boolean): boolean => {
   const parts = prefix.split("-");
   const head = parts[0];
   if (head === undefined) return false;
-  if (hasLabel(STAGES, head)) return parts.length === 2 && hasLabel(services, parts[1] ?? "");
+  if (isStage(head)) return parts.length === 2 && isService(parts[1] ?? "");
   if (head !== "pr" || parts.length !== 3) return false;
-  return prNumber(parts[1] ?? "") && hasLabel(services, parts[2] ?? "");
+  return prNumber(parts[1] ?? "") && isService(parts[2] ?? "");
 };
 
 /** Hostname labels without regex: exact hosts plus stage prefixes. */
@@ -115,7 +103,7 @@ const isTomHost = (hostname: string): boolean => {
   if (labels.length !== 3 || labels[1] !== "tom" || labels[2] !== "so") return false;
   const prefix = labels[0];
   if (prefix === undefined) return false;
-  return hasLabel(TOM_SERVICES, prefix) || isStagePrefix(prefix, TOM_SERVICES);
+  return isTomService(prefix) || isStagePrefix(prefix, isTomService);
 };
 
 /** Hostname labels without regex: exact hosts plus stage prefixes. */
@@ -125,7 +113,7 @@ const isSophieHost = (hostname: string): boolean => {
   if (labels.length !== 3 || labels[1] !== "sophie" || labels[2] !== "st") return false;
   const prefix = labels[0];
   if (prefix === undefined) return false;
-  return hasLabel(SOPHIE_SERVICES, prefix) || isStagePrefix(prefix, SOPHIE_SERVICES);
+  return isSophieService(prefix) || isStagePrefix(prefix, isSophieService);
 };
 
 /**

@@ -1,26 +1,11 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { problemDetailsSchema } from "@tom/schemas/error";
+import { commaTolerantString, joinCommaList } from "@tom/schemas/og";
+import { ValidationError } from "@tom/types/errors";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/services/worker";
 import { toOpenApiSchema } from "../openapi";
 import { generateOgImageEffect, validateOgParams, handleOgError } from "../services/og";
-
-/**
- * OG text params are free text — titles and summaries legitimately contain
- * commas. Elysia's standard-schema query parser splits comma-separated
- * values into arrays, so accept the array form and rejoin it in the handler
- * (validateOgParams enforces the real length bounds on the joined value).
- */
-const commaTolerantString = (maxLength: number) =>
-  Schema.Union([
-    Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(maxLength)),
-    // Rejoined in the handler; validateOgParams enforces the real bounds on
-    // the full joined value. Bounded (10 items of 300 chars) so repeated
-    // params cannot pile up unbounded memory before the join.
-    Schema.Array(Schema.String.pipe(Schema.check(Schema.isMaxLength(300)))).pipe(
-      Schema.check(Schema.isMaxLength(10)),
-    ),
-  ]);
 
 const titleSchema = commaTolerantString(100).pipe(
   Schema.annotate({
@@ -81,10 +66,6 @@ const badGatewaySchema = problemDetailsSchema.pipe(
   Schema.annotate({ description: "Font fetch failed" }),
 );
 
-/** Rejoin the comma-split list form Elysia produces for text params. */
-const joinCommaList = (value: string | string[] | undefined): string | undefined =>
-  Array.isArray(value) ? value.join(",") : value;
-
 export const ogRoutes = new Elysia({ name: "og" }).get(
   "/og",
   async ({ query, request }) => {
@@ -116,15 +97,15 @@ export const ogRoutes = new Elysia({ name: "og" }).get(
           env.TENANT,
         );
       }).pipe(
-        Effect.catchTag("ValidationError", (error) =>
-          Effect.logWarning("Error generating OG image", error).pipe(
-            Effect.map(() => handleOgError(error)),
-          ),
-        ),
         Effect.catch((error) =>
-          Effect.logError("Error generating OG image", error).pipe(
-            Effect.map(() => handleOgError(error)),
-          ),
+          Effect.gen(function* () {
+            if (Schema.is(ValidationError)(error)) {
+              yield* Effect.logWarning("Error generating OG image", error);
+            } else {
+              yield* Effect.logError("Error generating OG image", error);
+            }
+            return handleOgError(error);
+          }),
         ),
       ),
       logContextFromRequest(request, "tom-api"),

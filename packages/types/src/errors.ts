@@ -8,7 +8,8 @@ const messageCauseFields = {
 };
 
 export class ImageError extends Schema.TaggedError<ImageError>()("ImageError", {
-  response: Schema.Unknown,
+  status: Schema.Finite,
+  message: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
 

@@ -68,7 +68,7 @@ Improve existing code; avoid new abstractions.
 
 ## Format / imports
 
-- oxfmt + oxlint; tabs (width 2), 80 cols, double quotes, semicolons, trailing commas
+- oxfmt + oxlint; 2-space indent, 80 cols, double quotes, semicolons, trailing commas
 - external imports first, then internal; `@tom/*` for shared; `~/*` alias in web; tidy import blocks
 
 ## Naming / data flow

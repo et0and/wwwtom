@@ -9,14 +9,15 @@ import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { formatDate } from "~/libs/utils/date";
+import { formatDate } from "@tom/utils/date";
+import { parsePageNumber } from "@tom/utils/page";
 
 export default function PostsHome() {
   httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
   httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
 
   const location = useLocation();
-  const currentPage = () => Math.max(1, Math.floor(Number(location.query.page) || 1));
+  const currentPage = () => parsePageNumber(location.query.page);
 
   const postsQuery = useQuery(() => ({
     queryKey: ["posts", currentPage()],

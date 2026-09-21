@@ -73,6 +73,24 @@ const decodeContents = <J>(input: J): Effect.Effect<ArenaContentsResponse, HttpE
     ),
   );
 
+const decodeEach = <A>(
+  schema: Schema.Decoder<A>,
+  items: ReadonlyArray<unknown>,
+  warning: string,
+): Effect.Effect<Array<A>, never> =>
+  Effect.gen(function* () {
+    const valid: Array<A> = [];
+    for (const item of items) {
+      const decoded = Schema.decodeUnknownOption(schema)(item);
+      if (Option.isNone(decoded)) {
+        yield* Effect.logWarning(warning);
+        continue;
+      }
+      valid.push(decoded.value);
+    }
+    return valid;
+  });
+
 /**
  * The index listing is the source of truth for titles and summaries: the
  * channel title becomes the entry title, the channel description the summary.
@@ -81,29 +99,21 @@ const readIndexEntries = (
   contents: ArenaContentsResponse,
 ): Effect.Effect<ArenaEntrySummary[], never> =>
   Effect.gen(function* () {
-    const entries: ArenaEntrySummary[] = [];
-    for (const item of contents.data) {
-      const channel = Schema.decodeUnknownOption(ArenaChannelResourceSchema)(item);
-      if (Option.isNone(channel)) {
-        yield* Effect.logWarning(
-          "Skipping an are.na item that is not a valid channel; a master channel should hold only channels",
-        );
-        continue;
-      }
-      entries.push({
-        id: channel.value.id,
-        slug: slugify(channel.value.title, `channel-${channel.value.id}`),
-        arenaSlug: channel.value.slug,
-        title: channel.value.title,
-        summary: channel.value.description?.plain ?? null,
-        publishedAt:
-          channel.value.metadata?.published_at ??
-          channel.value.connection?.connected_at ??
-          channel.value.created_at,
-        updatedAt: channel.value.updated_at,
-      });
-    }
-    return entries;
+    const channels = yield* decodeEach(
+      ArenaChannelResourceSchema,
+      contents.data,
+      "Skipping an are.na item that is not a valid channel; a master channel should hold only channels",
+    );
+    return channels.map((channel) => ({
+      id: channel.id,
+      slug: slugify(channel.title, `channel-${channel.id}`),
+      arenaSlug: channel.slug,
+      title: channel.title,
+      summary: channel.description?.plain ?? null,
+      publishedAt:
+        channel.metadata?.published_at ?? channel.connection?.connected_at ?? channel.created_at,
+      updatedAt: channel.updated_at,
+    }));
   });
 
 const indexPage = (
@@ -163,15 +173,11 @@ const blockPage = (
       .channel(channelSlug)
       .contents({ ...CONTENT_SORT, page, per: MAX_PER_PAGE });
     const contents = yield* decodeContents(response);
-    const blocks: ArenaContentBlock[] = [];
-    for (const item of contents.data) {
-      const block = Schema.decodeUnknownOption(ArenaContentBlockSchema)(item);
-      if (Option.isNone(block)) {
-        yield* Effect.logWarning("Skipping are.na block that does not match the content contract");
-        continue;
-      }
-      blocks.push(block.value);
-    }
+    const blocks = yield* decodeEach(
+      ArenaContentBlockSchema,
+      contents.data,
+      "Skipping are.na block that does not match the content contract",
+    );
     return {
       blocks,
       hasMore: contents.meta.has_more_pages,

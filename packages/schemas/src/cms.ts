@@ -1,4 +1,5 @@
 import { Schema } from "effect";
+import { ListResponseSchema } from "./list";
 
 export const CmsPostId = Schema.String.pipe(Schema.brand("CmsPostId"));
 export type CmsPostId = typeof CmsPostId.Type;
@@ -223,47 +224,14 @@ export const CmsMediaSchema = Schema.Struct({
 });
 export type CmsMedia = typeof CmsMediaSchema.Type;
 
-export const CmsPostSchema = Schema.Struct({
-  id: CmsPostId,
-  slug: CmsSlug,
-  title: Schema.String,
-  summary: Schema.NullOr(Schema.String),
-  content: TiptapDocSchema,
-  html: Schema.String,
-  status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
-  heroMediaId: Schema.NullOr(CmsMediaId),
-  categories: Schema.Array(CmsCategorySchema),
-  meta: CmsMetaSchema,
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-});
-export type CmsPost = typeof CmsPostSchema.Type;
-
-export const CmsWorkSchema = Schema.Struct({
-  id: CmsWorkId,
-  slug: CmsSlug,
-  title: Schema.String,
-  summary: Schema.NullOr(Schema.String),
-  content: TiptapDocSchema,
-  html: Schema.String,
-  status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
-  heroMediaId: Schema.NullOr(CmsMediaId),
-  meta: CmsMetaSchema,
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-});
-export type CmsWork = typeof CmsWorkSchema.Type;
-
 /**
  * Slim list item: every CmsPost field except the heavy body (content +
  * html). List views (indexes, sitemaps) never render the body; the summary
  * endpoints serve this shape so list payloads stay small over the
  * client → adapter → api hops. Single-item reads keep the full schema.
  *
- * Kept in sync with CmsPostSchema by hand (Effect 4 has no Schema.omit);
- * cms-summary.test.ts pins the key parity.
+ * The full schemas below spread these summary fields, so a new field cannot
+ * miss one side; cms-summary-shape.test.ts pins the key parity.
  */
 export const CmsPostSummarySchema = Schema.Struct({
   id: CmsPostId,
@@ -294,6 +262,22 @@ export const CmsWorkSummarySchema = Schema.Struct({
   updatedAt: Schema.String,
 });
 export type CmsWorkSummary = typeof CmsWorkSummarySchema.Type;
+
+/** Full post: the summary fields plus the heavy body. */
+export const CmsPostSchema = Schema.Struct({
+  ...CmsPostSummarySchema.fields,
+  content: TiptapDocSchema,
+  html: Schema.String,
+});
+export type CmsPost = typeof CmsPostSchema.Type;
+
+/** Full work: the summary fields plus the heavy body. */
+export const CmsWorkSchema = Schema.Struct({
+  ...CmsWorkSummarySchema.fields,
+  content: TiptapDocSchema,
+  html: Schema.String,
+});
+export type CmsWork = typeof CmsWorkSchema.Type;
 
 export const CmsPostInputSchema = Schema.Struct({
   slug: CmsSlug,
@@ -356,7 +340,23 @@ export const CmsMediaUsageSchema = Schema.Struct({
 });
 export type CmsMediaUsage = typeof CmsMediaUsageSchema.Type;
 
-const PagingNumber = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
+const PagingNumberInput = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
+
+/**
+ * Integer page value: rejects fractions, NaN and Infinity at decode time
+ * while accepting numbers and numeric strings. Zero and negatives decode
+ * fine; the service clamps them to 1.
+ */
+const PagingNumber = Schema.decodeTo(Schema.Int)(PagingNumberInput);
+
+/**
+ * Positive integer page value for URL query parsing (web/editor/simulator).
+ * Accepts numbers and numeric strings; fractions, zero, negatives and
+ * Infinity fail at decode time.
+ */
+export const PageNumberSchema = Schema.decodeTo(Schema.Int.check(Schema.isGreaterThan(0)))(
+  PagingNumberInput,
+);
 
 export const CmsPagingSchema = Schema.Struct({
   page: Schema.optional(PagingNumber),
@@ -373,16 +373,7 @@ export const CmsPagingSchema = Schema.Struct({
 });
 export type CmsPaging = typeof CmsPagingSchema.Type;
 
-export const CmsListResponseSchema = <A, I, R>(itemSchema: Schema.Codec<A, I, R>) =>
-  Schema.Struct({
-    docs: Schema.Array(itemSchema),
-    totalDocs: Schema.Finite,
-    limit: Schema.Finite,
-    page: Schema.Finite,
-    totalPages: Schema.Finite,
-    hasNextPage: Schema.Boolean,
-    hasPrevPage: Schema.Boolean,
-  });
+export const CmsListResponseSchema = ListResponseSchema;
 
 export type CmsListResponse<T> = {
   readonly docs: ReadonlyArray<T>;

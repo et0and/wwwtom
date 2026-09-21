@@ -1,5 +1,6 @@
 import { createRouter } from "@solidjs/router";
 import { getQueryClient } from "~/libs/query-client";
+import { parsePageNumber } from "@tom/utils/page";
 import {
   POSTS_PAGE_SIZE,
   fetchPostBySlug,
@@ -47,7 +48,7 @@ export const Router = createRouter({
       path: "/posts",
       component: PostsHome,
       preload: ({ location }) => {
-        const page = Math.max(1, Math.floor(Number(location.query.page) || 1));
+        const page = parsePageNumber(location.query.page);
         return getQueryClient()
           .prefetchQuery({
             queryKey: ["posts", page],

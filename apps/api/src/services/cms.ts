@@ -24,75 +24,11 @@ import type {
   CmsRevisionSnapshot,
   CmsStatusFilter,
   CmsWorkInput,
-  TiptapDoc,
 } from "@tom/schemas/cms";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/services/config";
 import { renderTiptapHtml } from "@tom/utils/tiptap-html";
-
-type PostRow = {
-  readonly id: string;
-  readonly slug: string;
-  readonly title: string;
-  readonly summary: string | null;
-  readonly content_json: string;
-  readonly html: string;
-  readonly status: string;
-  readonly published_at: string | null;
-  readonly hero_media_id: string | null;
-  readonly meta_title: string | null;
-  readonly meta_description: string | null;
-  readonly meta_image: string | null;
-  readonly created_at: string;
-  readonly updated_at: string;
-};
-
-type WorkRow = PostRow;
-
-type PostSummaryRow = {
-  readonly id: string;
-  readonly slug: string;
-  readonly title: string;
-  readonly summary: string | null;
-  readonly status: string;
-  readonly published_at: string | null;
-  readonly hero_media_id: string | null;
-  readonly meta_title: string | null;
-  readonly meta_description: string | null;
-  readonly meta_image: string | null;
-  readonly created_at: string;
-  readonly updated_at: string;
-};
-
-type WorkSummaryRow = PostSummaryRow;
-
-type MediaRow = {
-  readonly id: string;
-  readonly key: string;
-  readonly mime: string;
-  readonly width: number | null;
-  readonly height: number | null;
-  readonly alt: string | null;
-  readonly caption: string | null;
-  readonly variants_json: string;
-  readonly created_at: string;
-  readonly updated_at: string;
-};
-
-type CategoryLinkRow = {
-  readonly postId: string;
-  readonly id: string;
-  readonly slug: string;
-  readonly title: string;
-};
-
-type RevisionRow = {
-  readonly id: string;
-  readonly snapshot_json: string;
-  readonly actor: string | null;
-  readonly created_at: string;
-};
 
 /** Revisions kept per document; older snapshots prune on write. */
 const MAX_REVISIONS = 20;
@@ -124,6 +60,118 @@ const POST_COLUMNS = POST_COLUMN_LIST.join(", ");
 const POST_SUMMARY_COLUMNS = POST_COLUMN_LIST.filter(
   (column) => column !== "p.content_json" && column !== "p.html",
 ).join(", ");
+
+/**
+ * D1 row codecs: camelCase decoded fields map to snake_case columns via
+ * encodeKeys, and content_json/variants_json parse inside the same decode.
+ */
+const PostRowSchema = Schema.Struct({
+  id: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+  content: Schema.fromJsonString(TiptapDocSchema),
+  html: Schema.String,
+  status: Schema.String,
+  publishedAt: Schema.NullOr(Schema.String),
+  heroMediaId: Schema.NullOr(Schema.String),
+  metaTitle: Schema.NullOr(Schema.String),
+  metaDescription: Schema.NullOr(Schema.String),
+  metaImage: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+}).pipe(
+  Schema.encodeKeys({
+    content: "content_json",
+    publishedAt: "published_at",
+    heroMediaId: "hero_media_id",
+    metaTitle: "meta_title",
+    metaDescription: "meta_description",
+    metaImage: "meta_image",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }),
+);
+
+const PostSummaryRowSchema = Schema.Struct({
+  id: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+  status: Schema.String,
+  publishedAt: Schema.NullOr(Schema.String),
+  heroMediaId: Schema.NullOr(Schema.String),
+  metaTitle: Schema.NullOr(Schema.String),
+  metaDescription: Schema.NullOr(Schema.String),
+  metaImage: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+}).pipe(
+  Schema.encodeKeys({
+    publishedAt: "published_at",
+    heroMediaId: "hero_media_id",
+    metaTitle: "meta_title",
+    metaDescription: "meta_description",
+    metaImage: "meta_image",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }),
+);
+
+const MediaRowSchema = Schema.Struct({
+  id: Schema.String,
+  key: Schema.String,
+  mime: Schema.String,
+  width: Schema.NullOr(Schema.Finite),
+  height: Schema.NullOr(Schema.Finite),
+  alt: Schema.NullOr(Schema.String),
+  caption: Schema.NullOr(Schema.String),
+  variants: Schema.fromJsonString(Schema.Array(CmsMediaVariantSchema)),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+}).pipe(
+  Schema.encodeKeys({
+    variants: "variants_json",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }),
+);
+
+/** pc.post_id arrives aliased as postId, so no encodeKeys mapping. */
+const CategoryLinkRowSchema = Schema.Struct({
+  postId: Schema.String,
+  id: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+});
+
+const RevisionRowSchema = Schema.Struct({
+  id: Schema.String,
+  snapshotJson: Schema.String,
+  actor: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+}).pipe(Schema.encodeKeys({ snapshotJson: "snapshot_json", createdAt: "created_at" }));
+
+// COUNT(*) and id-projection rows are SQL-computed shapes, not storage
+// rows, so they stay explicit inline types instead of decoded schemas.
+
+// encodeKeys renames keys 1:1; it cannot fold meta_title/description/image
+// into one nested object, so meta stays a pure mapper.
+const withMeta = <T extends typeof PostSummaryRowSchema.Type>(
+  row: T,
+): Omit<T, "metaTitle" | "metaDescription" | "metaImage"> & {
+  readonly meta: {
+    readonly title: string | null;
+    readonly description: string | null;
+    readonly image: string | null;
+  };
+} => {
+  const { metaTitle, metaDescription, metaImage, ...rest } = row;
+  return {
+    ...rest,
+    meta: { title: metaTitle, description: metaDescription, image: metaImage },
+  };
+};
 
 /** Slugs shadowed by static API routes; single reads for them are unreachable. */
 const RESERVED_SLUGS = ["summary"];
@@ -200,111 +248,64 @@ const decodeCms = <A, I, B>(
     ),
   );
 
-const parseContentJson = (json: string, operation: string): Effect.Effect<TiptapDoc, CmsError> =>
-  decodeCms(Schema.fromJsonString(TiptapDocSchema), json, "Invalid CMS content JSON", operation);
-
-/** Fields shared by full and summary rows: everything except the body. */
-const baseFields = (row: PostSummaryRow) => ({
-  id: row.id,
-  slug: row.slug,
-  title: row.title,
-  summary: row.summary,
-  status: row.status,
-  publishedAt: row.published_at,
-  heroMediaId: row.hero_media_id,
-  meta: {
-    title: row.meta_title,
-    description: row.meta_description,
-    image: row.meta_image,
-  },
-  createdAt: row.created_at,
-  updatedAt: row.updated_at,
-});
-
 const toPost = Effect.fn("CmsService.toPost")(function* (
-  row: PostRow,
+  row: typeof PostRowSchema.Encoded,
   categories: ReadonlyArray<CmsCategory>,
 ) {
-  const content = yield* parseContentJson(row.content_json, "decode_post");
+  const decoded = yield* decodeCms(PostRowSchema, row, "Invalid CMS post row", "decode_post");
   return yield* decodeCms(
     CmsPostSchema,
-    {
-      ...baseFields(row),
-      content,
-      html: row.html,
-      categories,
-    },
+    { ...withMeta(decoded), categories },
     "Invalid CMS post row",
     "decode_post",
   );
 });
 
-const toWork = Effect.fn("CmsService.toWork")(function* (row: WorkRow) {
-  const content = yield* parseContentJson(row.content_json, "decode_work");
-  return yield* decodeCms(
-    CmsWorkSchema,
-    {
-      ...baseFields(row),
-      content,
-      html: row.html,
-    },
-    "Invalid CMS work row",
-    "decode_work",
-  );
+const toWork = Effect.fn("CmsService.toWork")(function* (row: typeof PostRowSchema.Encoded) {
+  const decoded = yield* decodeCms(PostRowSchema, row, "Invalid CMS work row", "decode_work");
+  return yield* decodeCms(CmsWorkSchema, withMeta(decoded), "Invalid CMS work row", "decode_work");
 });
 
-/** Slim post row: no Tiptap parse, no HTML — the body never leaves D1. */
+/** Slim post row: the body never leaves D1; categories attach after decode. */
 const toPostSummary = Effect.fn("CmsService.toPostSummary")(function* (
-  row: PostSummaryRow,
+  row: typeof PostSummaryRowSchema.Encoded,
   categories: ReadonlyArray<CmsCategory>,
 ) {
+  const decoded = yield* decodeCms(
+    PostSummaryRowSchema,
+    row,
+    "Invalid CMS post row",
+    "decode_post_summary",
+  );
   return yield* decodeCms(
     CmsPostSummarySchema,
-    {
-      ...baseFields(row),
-      categories,
-    },
+    { ...withMeta(decoded), categories },
     "Invalid CMS post row",
     "decode_post_summary",
   );
 });
 
 /** Slim work row: no Tiptap parse, no HTML. */
-const toWorkSummary = Effect.fn("CmsService.toWorkSummary")(function* (row: WorkSummaryRow) {
+const toWorkSummary = Effect.fn("CmsService.toWorkSummary")(function* (
+  row: typeof PostSummaryRowSchema.Encoded,
+) {
+  const decoded = yield* decodeCms(
+    PostSummaryRowSchema,
+    row,
+    "Invalid CMS work row",
+    "decode_work_summary",
+  );
   return yield* decodeCms(
     CmsWorkSummarySchema,
-    {
-      ...baseFields(row),
-    },
+    withMeta(decoded),
     "Invalid CMS work row",
     "decode_work_summary",
   );
 });
 
-const toMedia = Effect.fn("CmsService.toMedia")(function* (row: MediaRow) {
-  const variants = yield* decodeCms(
-    Schema.fromJsonString(Schema.Array(CmsMediaVariantSchema)),
-    row.variants_json,
-    "Invalid CMS media row",
-    "decode_media",
-  );
-  return yield* decodeCms(
-    CmsMediaSchema,
-    {
-      id: row.id,
-      key: row.key,
-      mime: row.mime,
-      width: row.width,
-      height: row.height,
-      alt: row.alt,
-      caption: row.caption,
-      variants,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-    },
-    "Invalid CMS media row",
-    "decode_media",
-  );
+const toMedia = Effect.fn("CmsService.toMedia")(function* (row: typeof MediaRowSchema.Encoded) {
+  const decoded = yield* decodeCms(MediaRowSchema, row, "Invalid CMS media row", "decode_media");
+  return yield* decodeCms(CmsMediaSchema, decoded, "Invalid CMS media row", "decode_media");
 });
 
 const categoriesForPosts = Effect.fn("CmsService.categoriesForPosts")(function* (
@@ -315,7 +316,7 @@ const categoriesForPosts = Effect.fn("CmsService.categoriesForPosts")(function* 
   const grouped: Record<string, Array<CmsCategory>> = {};
   if (postIds.length === 0) return grouped;
   const placeholders = postIds.map(() => "?").join(",");
-  const rows = yield* queryAll<CategoryLinkRow>(
+  const rows = yield* queryAll<typeof CategoryLinkRowSchema.Encoded>(
     db,
     "SELECT pc.post_id AS postId, c.id, c.slug, c.title FROM post_categories pc " +
       "JOIN categories c ON c.id = pc.category_id " +
@@ -324,18 +325,24 @@ const categoriesForPosts = Effect.fn("CmsService.categoriesForPosts")(function* 
     operation,
   );
   for (const row of rows) {
+    const link = yield* decodeCms(
+      CategoryLinkRowSchema,
+      row,
+      "Invalid CMS category row",
+      operation,
+    );
     const category = yield* decodeCms(
       CmsCategorySchema,
       {
-        id: row.id,
-        slug: row.slug,
-        title: row.title,
+        id: link.id,
+        slug: link.slug,
+        title: link.title,
       },
       "Invalid CMS category row",
       operation,
     );
-    const existing = grouped[row.postId] ?? [];
-    grouped[row.postId] = [...existing, category];
+    const existing = grouped[link.postId] ?? [];
+    grouped[link.postId] = [...existing, category];
   }
   return grouped;
 });
@@ -360,21 +367,9 @@ const toListResponse = <T>(
 
 const normalizePaging = (
   paging: CmsPaging,
-  operation: string,
 ): Effect.Effect<{ limit: number; current: number; offset: number }, CmsError> => {
   const limit = Math.min(Math.max(paging.pageSize ?? 10, 1), 100);
   const current = Math.max(paging.page ?? 1, 1);
-  // The paging schema rejects unparseable input at the boundary; fractions
-  // still reach here, so reject non-integers before they hit SQL.
-  if (!Number.isInteger(limit) || !Number.isInteger(current)) {
-    return Effect.fail(
-      new CmsError({
-        message: "Invalid paging parameters",
-        status: HttpStatus.BadRequest,
-        operation,
-      }),
-    );
-  }
   return Effect.succeed({ limit, current, offset: (current - 1) * limit });
 };
 
@@ -423,10 +418,10 @@ export const listPosts = Effect.fn("CmsService.listPosts")(function* (
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging, "list_posts");
+  const { limit, current, offset } = yield* normalizePaging(paging);
   const { rowFilter, countFilter, params } = postListFilters(paging);
   const [rows, countRow] = yield* Effect.all([
-    queryAll<PostRow>(
+    queryAll<typeof PostRowSchema.Encoded>(
       db,
       `SELECT ${POST_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
         rowFilter +
@@ -434,7 +429,7 @@ export const listPosts = Effect.fn("CmsService.listPosts")(function* (
       [status, status, ...params, limit, offset],
       "list_posts",
     ),
-    queryFirst<{ total: number }>(
+    queryFirst<{ readonly total: number }>(
       db,
       "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
       [status, status, ...params],
@@ -461,10 +456,10 @@ export const listPostSummaries = Effect.fn("CmsService.listPostSummaries")(funct
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging, "list_post_summaries");
+  const { limit, current, offset } = yield* normalizePaging(paging);
   const { rowFilter, countFilter, params } = postListFilters(paging);
   const [rows, countRow] = yield* Effect.all([
-    queryAll<PostSummaryRow>(
+    queryAll<typeof PostSummaryRowSchema.Encoded>(
       db,
       `SELECT ${POST_SUMMARY_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
         rowFilter +
@@ -472,7 +467,7 @@ export const listPostSummaries = Effect.fn("CmsService.listPostSummaries")(funct
       [status, status, ...params, limit, offset],
       "list_post_summaries",
     ),
-    queryFirst<{ total: number }>(
+    queryFirst<{ readonly total: number }>(
       db,
       "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
       [status, status, ...params],
@@ -494,7 +489,7 @@ export const getPostBySlug = Effect.fn("CmsService.getPostBySlug")(function* (
   slug: string,
   status: CmsStatusFilter,
 ) {
-  const row = yield* queryFirst<PostRow>(
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
     db,
     `SELECT ${POST_COLUMNS} FROM posts p WHERE p.slug = ? AND (? = 'all' OR p.status = ?) LIMIT 1`,
     [slug, status, status],
@@ -516,16 +511,16 @@ export const listWorks = Effect.fn("CmsService.listWorks")(function* (
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging, "list_works");
+  const { limit, current, offset } = yield* normalizePaging(paging);
   const [rows, countRow] = yield* Effect.all([
-    queryAll<WorkRow>(
+    queryAll<typeof PostRowSchema.Encoded>(
       db,
       `SELECT ${POST_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
         "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
       [status, status, limit, offset],
       "list_works",
     ),
-    queryFirst<{ total: number }>(
+    queryFirst<{ readonly total: number }>(
       db,
       "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
       [status, status],
@@ -546,16 +541,16 @@ export const listWorkSummaries = Effect.fn("CmsService.listWorkSummaries")(funct
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging, "list_work_summaries");
+  const { limit, current, offset } = yield* normalizePaging(paging);
   const [rows, countRow] = yield* Effect.all([
-    queryAll<WorkSummaryRow>(
+    queryAll<typeof PostSummaryRowSchema.Encoded>(
       db,
       `SELECT ${POST_SUMMARY_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
         "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
       [status, status, limit, offset],
       "list_work_summaries",
     ),
-    queryFirst<{ total: number }>(
+    queryFirst<{ readonly total: number }>(
       db,
       "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
       [status, status],
@@ -572,7 +567,7 @@ export const getWorkBySlug = Effect.fn("CmsService.getWorkBySlug")(function* (
   slug: string,
   status: CmsStatusFilter,
 ) {
-  const row = yield* queryFirst<WorkRow>(
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
     db,
     `SELECT ${POST_COLUMNS} FROM works p WHERE p.slug = ? AND (? = 'all' OR p.status = ?) LIMIT 1`,
     [slug, status, status],
@@ -589,7 +584,7 @@ export const getWorkBySlug = Effect.fn("CmsService.getWorkBySlug")(function* (
 });
 
 export const listCategories = Effect.fn("CmsService.listCategories")(function* (db: CmsD1Binding) {
-  const rows = yield* queryAll<{ id: string; slug: string; title: string }>(
+  const rows = yield* queryAll<typeof CmsCategorySchema.Encoded>(
     db,
     "SELECT id, slug, title FROM categories ORDER BY title ASC",
     [],
@@ -609,7 +604,7 @@ const requireMediaRow = Effect.fn("CmsService.requireMediaRow")(function* (
   id: string,
   operation: string,
 ) {
-  const row = yield* queryFirst<MediaRow>(
+  const row = yield* queryFirst<typeof MediaRowSchema.Encoded>(
     db,
     `SELECT ${MEDIA_COLUMNS} FROM media WHERE id = ? LIMIT 1`,
     [id],
@@ -636,25 +631,25 @@ export const listMedia = Effect.fn("CmsService.listMedia")(function* (
   db: CmsD1Binding,
   paging: CmsPaging,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging, "list_media");
+  const { limit, current, offset } = yield* normalizePaging(paging);
   const [rows, countRow] = yield* Effect.all([
-    queryAll<MediaRow>(
+    queryAll<typeof MediaRowSchema.Encoded>(
       db,
       `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`,
       [limit, offset],
       "list_media",
     ),
-    queryFirst<{ total: number }>(db, "SELECT COUNT(*) AS total FROM media", [], "count_media"),
+    queryFirst<{ readonly total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM media",
+      [],
+      "count_media",
+    ),
   ]);
   const total = countRow?.total ?? 0;
   const docs = yield* Effect.forEach(rows, (row) => toMedia(row));
   return toListResponse(docs, total, current, limit);
 });
-
-type UsageRefRow = {
-  readonly slug: string;
-  readonly title: string;
-};
 
 const usageRefs = Effect.fn("CmsService.usageRefs")(function* (
   db: CmsD1Binding,
@@ -662,7 +657,7 @@ const usageRefs = Effect.fn("CmsService.usageRefs")(function* (
   id: string,
   operation: string,
 ) {
-  const rows = yield* queryAll<UsageRefRow>(
+  const rows = yield* queryAll<typeof CmsMediaUsageRefSchema.Encoded>(
     db,
     // Match the bare id: stored JSON spacing varies (compact or spaced),
     // and a UUID never appears in prose by accident.
@@ -745,7 +740,7 @@ const readPostById = Effect.fn("CmsService.readPostById")(function* (
   id: string,
   operation: string,
 ) {
-  const row = yield* queryFirst<PostRow>(
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
     db,
     `SELECT ${POST_COLUMNS} FROM posts p WHERE p.id = ? LIMIT 1`,
     [id],
@@ -767,7 +762,7 @@ const readWorkById = Effect.fn("CmsService.readWorkById")(function* (
   id: string,
   operation: string,
 ) {
-  const row = yield* queryFirst<WorkRow>(
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
     db,
     `SELECT ${POST_COLUMNS} FROM works p WHERE p.id = ? LIMIT 1`,
     [id],
@@ -794,7 +789,7 @@ const replacePostCategories = Effect.fn("CmsService.replacePostCategories")(func
   const uniqueIds = [...new Set(categoryIds)];
   if (uniqueIds.length === 0) return;
   const placeholders = uniqueIds.map(() => "?").join(",");
-  const known = yield* queryAll<{ id: string }>(
+  const known = yield* queryAll<{ readonly id: string }>(
     db,
     `SELECT id FROM categories WHERE id IN (${placeholders})`,
     uniqueIds,
@@ -870,17 +865,18 @@ const parseSnapshot = (
     : decodeJsonSnapshot(CmsWorkInputSchema, json, operation);
 
 const toRevisionMeta = Effect.fn("CmsService.toRevisionMeta")(function* (
-  row: RevisionRow,
+  row: typeof RevisionRowSchema.Encoded,
   entity: CmsRevisionEntity,
   operation: string,
 ) {
-  const snapshot = yield* parseSnapshot(row.snapshot_json, entity, operation);
+  const decoded = yield* decodeCms(RevisionRowSchema, row, "Invalid revision row", operation);
+  const snapshot = yield* parseSnapshot(decoded.snapshotJson, entity, operation);
   return yield* decodeCms(
     CmsRevisionMetaSchema,
     {
-      id: row.id,
-      createdAt: row.created_at,
-      actor: row.actor,
+      id: decoded.id,
+      createdAt: decoded.createdAt,
+      actor: decoded.actor,
       title: snapshot.title,
     },
     "Invalid revision row",
@@ -897,7 +893,12 @@ const findRevisionTarget = Effect.fn("CmsService.findRevisionTarget")(function* 
   slug: string,
   operation: string,
 ) {
-  const row = yield* findRowBySlug<PostRow>(db, revisionTable(entity), slug, operation);
+  const row = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    revisionTable(entity),
+    slug,
+    operation,
+  );
   if (!row) {
     return yield* new CmsError({
       message: entity === "post" ? `Post not found: ${slug}` : `Work not found: ${slug}`,
@@ -914,7 +915,7 @@ export const listRevisions = Effect.fn("CmsService.listRevisions")(function* (
   slug: string,
 ) {
   const target = yield* findRevisionTarget(db, entity, slug, "list_revisions");
-  const rows = yield* queryAll<RevisionRow>(
+  const rows = yield* queryAll<typeof RevisionRowSchema.Encoded>(
     db,
     "SELECT id, snapshot_json, actor, created_at FROM revisions " +
       "WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC, rowid DESC",
@@ -931,7 +932,7 @@ const findRevisionRow = Effect.fn("CmsService.findRevisionRow")(function* (
   revisionId: string,
   operation: string,
 ) {
-  const row = yield* queryFirst<RevisionRow>(
+  const row = yield* queryFirst<typeof RevisionRowSchema.Encoded>(
     db,
     "SELECT id, snapshot_json, actor, created_at FROM revisions " +
       "WHERE entity_type = ? AND entity_id = ? AND id = ? LIMIT 1",
@@ -988,7 +989,7 @@ export const restoreRevision = Effect.fn("CmsService.restoreRevision")(function*
 const insertDocRow = (
   db: CmsD1Binding,
   table: "posts" | "works",
-  row: PostRow,
+  row: typeof PostRowSchema.Encoded,
   operation: string,
 ): Effect.Effect<void, CmsError> =>
   runStatement(
@@ -1018,7 +1019,7 @@ const insertDocRow = (
 const updateDocRow = (
   db: CmsD1Binding,
   table: "posts" | "works",
-  row: PostRow,
+  row: typeof PostRowSchema.Encoded,
   operation: string,
 ): Effect.Effect<void, CmsError> =>
   runStatement(
@@ -1049,7 +1050,7 @@ const toPostRow = (
   id: string,
   now: string,
   createdAt: string,
-): PostRow => ({
+): typeof PostRowSchema.Encoded => ({
   id,
   slug: input.slug,
   title: input.title,
@@ -1073,7 +1074,12 @@ export const createPost = Effect.fn("CmsService.createPost")(function* (
   adapterUrl: string,
 ) {
   yield* rejectReservedSlug(input.slug, "create_post");
-  const taken = yield* findRowBySlug<PostRow>(db, "posts", input.slug, "create_post");
+  const taken = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    "posts",
+    input.slug,
+    "create_post",
+  );
   if (taken) {
     return yield* new CmsError({
       message: `Post slug taken: ${input.slug}`,
@@ -1105,7 +1111,12 @@ export const updatePost = Effect.fn("CmsService.updatePost")(function* (
       operation: "update_post",
     });
   }
-  const existing = yield* findRowBySlug<PostRow>(db, "posts", slug, "update_post");
+  const existing = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    "posts",
+    slug,
+    "update_post",
+  );
   if (!existing) {
     return yield* new CmsError({
       message: `Post not found: ${slug}`,
@@ -1130,7 +1141,7 @@ const deleteRowBySlug = Effect.fn("CmsService.deleteRowBySlug")(function* (
   slug: string,
   operation: string,
 ) {
-  const existing = yield* findRowBySlug<{ id: string }>(db, table, slug, operation);
+  const existing = yield* findRowBySlug<{ readonly id: string }>(db, table, slug, operation);
   if (!existing) {
     return yield* new CmsError({
       message: `${label} not found: ${slug}`,
@@ -1156,7 +1167,12 @@ export const createWork = Effect.fn("CmsService.createWork")(function* (
   adapterUrl: string,
 ) {
   yield* rejectReservedSlug(input.slug, "create_work");
-  const taken = yield* findRowBySlug<WorkRow>(db, "works", input.slug, "create_work");
+  const taken = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    "works",
+    input.slug,
+    "create_work",
+  );
   if (taken) {
     return yield* new CmsError({
       message: `Work slug taken: ${input.slug}`,
@@ -1187,7 +1203,12 @@ export const updateWork = Effect.fn("CmsService.updateWork")(function* (
       operation: "update_work",
     });
   }
-  const existing = yield* findRowBySlug<WorkRow>(db, "works", slug, "update_work");
+  const existing = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    "works",
+    slug,
+    "update_work",
+  );
   if (!existing) {
     return yield* new CmsError({
       message: `Work not found: ${slug}`,
@@ -1214,7 +1235,7 @@ export const createCategory = Effect.fn("CmsService.createCategory")(function* (
   db: CmsD1Binding,
   input: CmsCategoryInput,
 ) {
-  const taken = yield* findRowBySlug<{ id: string }>(
+  const taken = yield* findRowBySlug<{ readonly id: string }>(
     db,
     "categories",
     input.slug,
@@ -1269,7 +1290,7 @@ export const createMedia = Effect.fn("CmsService.createMedia")(function* (
     [id, key, upload.mime, upload.alt, upload.caption, now, now],
     "create_media",
   );
-  const row = yield* queryFirst<MediaRow>(
+  const row = yield* queryFirst<typeof MediaRowSchema.Encoded>(
     db,
     `SELECT ${MEDIA_COLUMNS} FROM media WHERE id = ? LIMIT 1`,
     [id],

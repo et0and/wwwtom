@@ -1,11 +1,5 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import {
-  FetchHttpClient,
-  Headers,
-  HttpBody,
-  HttpClient,
-  HttpClientResponse,
-} from "effect/unstable/http";
+import { Headers, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
 import { TelegramError } from "@tom/types/errors";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
 import {
@@ -14,6 +8,8 @@ import {
   telegramSendResponseSchema,
 } from "@tom/schemas/telegram";
 import { AppConfig } from "./services/config";
+import { liveHttpClient } from "./services/http";
+import { toErrorMessage } from "./services/worker";
 
 export interface TelegramServiceContract {
   readonly sendAlert: (message: string) => Effect.Effect<void, TelegramError>;
@@ -39,7 +35,7 @@ const formatIdentitySection = (details?: ErrorAlertDetails): string => {
 
 const formatCauseSection = (cause?: unknown): string => {
   if (!cause) return "";
-  const errorStr = cause instanceof Error ? cause.message : String(cause);
+  const errorStr = toErrorMessage(cause);
   const stack = cause instanceof Error ? cause.stack : undefined;
   const stackSection = stack
     ? `\n\n*Stack:*\n\`\`\`\n${truncate(stack, MAX_STACK_LENGTH)}\n\`\`\``
@@ -128,7 +124,7 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
             Effect.mapError((error) => {
               const cause = "cause" in error.reason ? error.reason.cause : undefined;
               return new TelegramError({
-                message: cause instanceof Error ? cause.message : error.message,
+                message: toErrorMessage(cause ?? error),
               });
             }),
           );
@@ -149,12 +145,6 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
           ),
         );
       });
-
-      const liveHttpClient = (): Layer.Layer<HttpClient.HttpClient> =>
-        Layer.provideMerge(
-          FetchHttpClient.layer,
-          Layer.succeed(FetchHttpClient.Fetch, globalThis.fetch),
-        );
 
       const service: TelegramServiceContract = {
         // Resolve fetch per call: the Fetch reference default pins the

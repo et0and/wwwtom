@@ -7,7 +7,7 @@ import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { formatDate } from "~/libs/utils/date";
+import { formatDate } from "@tom/utils/date";
 import {
   ArenaSourceLink,
   DetailError,
