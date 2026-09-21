@@ -18,7 +18,22 @@ describe("adapter error handling", () => {
     });
   });
 
-  it("surfaces the API validation failure for an unparseable page param", async () => {
+  it("rejects an unparseable page param before calling the API", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/content/posts?page=not-a-number", testEnv()),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/validation",
+      status: 400,
+      title: "Validation error",
+      instance: "http://localhost/content/posts?page=not-a-number",
+      errors: [{ detail: "Expected a finite number", pointer: "#/page" }],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("surfaces an API validation failure for a page the API rejects", async () => {
     fetchMock.mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -30,14 +45,14 @@ describe("adapter error handling", () => {
       ),
     );
     const response = await app.fetch(
-      requestWithEnv("http://localhost/content/posts?page=not-a-number", testEnv()),
+      requestWithEnv("http://localhost/content/posts?page=0", testEnv()),
     );
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({
       type: "https://errors.tom.so/validation",
       status: 400,
       title: "CMS posts request failed",
-      instance: "http://localhost/content/posts?page=not-a-number",
+      instance: "http://localhost/content/posts?page=0",
     });
   });
 

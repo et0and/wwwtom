@@ -115,7 +115,7 @@ export const polarRoutes = new Elysia({ name: "polar" })
             customerEmail: query.customerEmail,
           }).pipe(
             Effect.flatMap((data) =>
-              Option.match(Schema.decodeUnknownOption(Schema.URLFromString)(data.url), {
+              Option.match(Schema.decodeOption(Schema.URLFromString)(data.url), {
                 onNone: () =>
                   Effect.fail(
                     new PolarApiError({

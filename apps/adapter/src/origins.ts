@@ -64,7 +64,7 @@ export const tenantFromValue = (value: string | undefined): Tenant | undefined =
  */
 export const allowLocalOriginsForAdapter = (adapterUrl: string | undefined): boolean => {
   if (adapterUrl === undefined || adapterUrl === "") return false;
-  const url = Schema.decodeUnknownOption(Schema.URLFromString)(adapterUrl);
+  const url = Schema.decodeOption(Schema.URLFromString)(adapterUrl);
   if (Option.isNone(url)) return false;
   if (url.value.protocol !== "http:") return false;
   const hostname = url.value.hostname.toLowerCase();
@@ -89,14 +89,14 @@ const SOPHIE_EXACT_HOSTS: ReadonlySet<string> = new Set([
 
 /**
  * PR stage numbers arrive as strings (`pr-42`). Positive integers only:
- * NumberFromString alone accepts Infinity and fractions, which never name
- * a real stage.
+ * `FiniteFromString` rejects Infinity and `Int` rejects fractions, neither
+ * of which names a real stage.
  */
 const PrNumberSchema = Schema.decodeTo(Schema.Int.check(Schema.isGreaterThan(0)))(
-  Schema.NumberFromString,
+  Schema.FiniteFromString,
 );
 const prNumber = (value: string): boolean =>
-  Option.isSome(Schema.decodeUnknownOption(PrNumberSchema)(value));
+  Option.isSome(Schema.decodeOption(PrNumberSchema)(value));
 
 /** `dev-web` / `staging-api` / `pr-42-cms` against a service allowlist. */
 const isStagePrefix = (prefix: string, services: ReadonlySet<string>): boolean => {
@@ -142,7 +142,7 @@ export const isTrustedWebOrigin = (
   tenant: Tenant | undefined,
 ): boolean => {
   if (LOCAL_ORIGINS.has(origin)) return allowLocalOrigins;
-  const url = Schema.decodeUnknownOption(Schema.URLFromString)(origin);
+  const url = Schema.decodeOption(Schema.URLFromString)(origin);
   if (Option.isNone(url)) return false;
   if (url.value.protocol !== "https:") return false;
   const hostname = url.value.hostname.toLowerCase();

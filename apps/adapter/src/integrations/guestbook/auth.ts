@@ -71,7 +71,7 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
   const instanceUrl = `https://${instance}`;
 
   const snsType = yield* detector(instanceUrl).pipe(
-    Effect.catch(() => Effect.succeed("mastodon" as const)),
+    Effect.orElseSucceed(() => "mastodon" as const),
   );
 
   const generator = yield* loadGenerator();
@@ -178,7 +178,7 @@ export const handleCallback = Effect.fn("handleCallback")(function* (params: {
   const instanceUrl = `https://${session.fediverse_instance}`;
 
   const snsType = yield* detector(instanceUrl).pipe(
-    Effect.catch(() => Effect.succeed("mastodon" as const)),
+    Effect.orElseSucceed(() => "mastodon" as const),
   );
 
   const generator = yield* loadGenerator();

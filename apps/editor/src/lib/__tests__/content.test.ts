@@ -132,7 +132,7 @@ describe("editor content client", () => {
 
   it("lists categories", async () => {
     fetchMock.mockResolvedValue(jsonResponse([{ id: "cat-1", slug: "essays", title: "Essays" }]));
-    const categories = await runClient(listCategories());
+    const categories = await runClient(listCategories);
     expect(categories).toHaveLength(1);
   });
 

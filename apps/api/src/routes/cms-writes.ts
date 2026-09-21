@@ -72,7 +72,7 @@ const requireAuthor = (request: Request): Effect.Effect<AuthorContext, CmsError>
     // write so removing an email revokes access, not just future sign-ins.
     // The session comes from Better Auth (an I/O boundary), so decode the
     // email instead of narrowing it.
-    const email = Schema.decodeUnknownOption(Schema.String)(author.user.email);
+    const email = Schema.decodeOption(Schema.String)(author.user.email);
     if (
       Option.isNone(email) ||
       !isAdminEmail(email.value, parseAdminEmails(env.CMS_ADMIN_EMAILS))
@@ -209,13 +209,11 @@ const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpl
           return yield* failInput("Upload file is empty", operation);
         }
         if (file.size > MAX_UPLOAD_BYTES) {
-          return yield* Effect.fail(
-            new CmsError({
-              message: "Upload file too large",
-              status: HttpStatus.PayloadTooLarge,
-              operation,
-            }),
-          );
+          return yield* new CmsError({
+            message: "Upload file too large",
+            status: HttpStatus.PayloadTooLarge,
+            operation,
+          });
         }
         if (!UPLOAD_MIMES.has(file.type)) {
           return yield* failInput(`Unsupported upload type: ${file.type}`, operation);

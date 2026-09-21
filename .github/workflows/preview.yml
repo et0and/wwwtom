@@ -1,24 +1,27 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: PR preview
-
 on:
   pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches: [dev]
-
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
 permissions:
   contents: read
   issues: write
   pull-requests: write
-
 concurrency:
   group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
-
 jobs:
   deploy:
-    if: github.event.action != 'closed'
     name: Deploy PR preview
     runs-on: ubuntu-latest
+    if: github.event.action != 'closed'
     env:
       ALCHEMY_STAGE: pr-${{ github.event.pull_request.number }}
       PULL_REQUEST: ${{ github.event.pull_request.number }}
@@ -27,31 +30,22 @@ jobs:
       TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
-      # Alchemy's GitHub provider (preview-comment resource in the web stack)
-      # needs a token to post/update the preview comment.
       GITHUB_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup
-
-      # Deploys shared -> api -> adapter -> web + sophie (Sophie web + Sophie
-      # CMS). The web/sophie stacks post or update the preview comments via
-      # infra/utils/github/preview-comment.ts. Tom's preview web reads are.na;
-      # the preview api still reads the dev database + bucket directly
-      # (infra/cms/cms.storage.ts) for the Sophie tenant.
       - name: Deploy preview stage
-        run: >
+        run: |-
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes
-
   destroy:
-    if: github.event.action == 'closed'
     name: Destroy PR preview
     runs-on: ubuntu-latest
+    if: github.event.action == 'closed'
     env:
       ALCHEMY_STAGE: pr-${{ github.event.pull_request.number }}
       PULL_REQUEST: ${{ github.event.pull_request.number }}
@@ -60,43 +54,27 @@ jobs:
       TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
-      # Parity with the deploy job: the web stack declares a GitHub
-      # preview-comment resource, so its provider needs a token even on
-      # teardown. PULL_REQUEST keeps the code path identical to deploy.
       GITHUB_TOKEN: ${{ github.token }}
     steps:
-      # Teardown needs the infra code and secrets, not the PR head (which
-      # may already be deleted on close), so check out the base branch.
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: dev
       - uses: ./.github/actions/setup
-
-      # Tears down web + editor + sophie -> adapter -> api -> shared so no
-      # preview resources linger after the PR is merged or closed. Separate
-      # steps with `if: always()` so one stack's failure never blocks the
-      # rest — a single `&&` chain orphans workers (e.g. api/adapter) when
-      # an earlier destroy fails.
       - name: Destroy web preview stage
         run: pnpm destroy:web --yes
-
       - name: Destroy editor preview stage
         if: always()
         run: pnpm destroy:editor --yes
-
       - name: Destroy sophie preview stage
         if: always()
         run: pnpm destroy:sophie --yes
-
       - name: Destroy adapter preview stage
         if: always()
         run: pnpm destroy:adapter --yes
-
       - name: Destroy api preview stage
         if: always()
         run: pnpm destroy:api --yes
-
       - name: Destroy shared preview stage
         if: always()
         run: pnpm destroy:shared --yes

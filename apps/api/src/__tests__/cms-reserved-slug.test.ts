@@ -29,7 +29,7 @@ const content: TiptapDoc = {
 };
 
 /** The shadowed slug, branded through the same schema production uses. */
-const reservedSlug = Effect.runSync(Schema.decodeUnknownEffect(CmsSlug)("summary"));
+const reservedSlug = Effect.runSync(Schema.decodeEffect(CmsSlug)("summary"));
 
 const meta = { title: null, description: null, image: null };
 

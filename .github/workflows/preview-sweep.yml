@@ -1,24 +1,16 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: Sweep orphan PR previews
-
-# Closed PRs do not reliably dispatch the preview workflow's destroy job
-# (merges do; plain closes often produce no run at all), so teardown here
-# doubles as the backstop: every night, destroy the preview stages of
-# recently closed PRs. Destroying an already-gone stage is a no-op, and
-# each stack runs even when the previous one fails.
 on:
   schedule:
-    # 03:41 UTC daily — clear of the e2e nightly (02:17).
-    - cron: "41 3 * * *"
-  workflow_dispatch:
-
+    - cron: 41 3 * * *
+  workflow_dispatch: null
 permissions:
   contents: read
   pull-requests: read
-
 concurrency:
   group: preview-sweep
   cancel-in-progress: false
-
 jobs:
   sweep:
     name: Destroy previews of closed PRs
@@ -33,11 +25,10 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup
-
       - name: Destroy preview stages of recently closed PRs
-        run: |
+        run: |-
           cutoff=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
           prs=$(gh pr list --state closed --limit 100 --json number,closedAt \
             | jq -r --arg cutoff "$cutoff" '.[] | select(.closedAt > $cutoff) | .number')

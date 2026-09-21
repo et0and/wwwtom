@@ -27,11 +27,11 @@ const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: 
 
 const IdOrSlugParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
-    id: Schema.Union([Schema.NumberFromString, Schema.String]),
+    id: Schema.Union([Schema.FiniteFromString, Schema.String]),
   }),
 );
 
-const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Number }));
+const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite }));
 
 const toPaginationAttributes = (query: PaginationQuery): PaginationAttributes | undefined => {
   const hasAny =
@@ -162,15 +162,15 @@ const arenaFeed = async (request: Request, limit: number): Promise<{ docs: Arena
 
 const arenaListQuerySchema = Schema.toStandardSchemaV1(
   Schema.Struct({
-    page: Schema.optional(Schema.NumberFromString),
-    pageSize: Schema.optional(Schema.NumberFromString),
+    page: Schema.optional(Schema.FiniteFromString),
+    pageSize: Schema.optional(Schema.FiniteFromString),
   }),
 );
 
 const arenaSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: Schema.String }));
 
 const feedQuerySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ limit: Schema.optional(Schema.NumberFromString) }),
+  Schema.Struct({ limit: Schema.optional(Schema.FiniteFromString) }),
 );
 
 export const arenaIntegration = new Elysia({ name: "arena" })
@@ -193,7 +193,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.channel(params.slug).get(),
+        (client) => client.channel(params.slug).get,
         logContextFromRequest(request, "tom-adapter"),
         "public",
       );
@@ -224,7 +224,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.channel(params.slug).thumb(),
+        (client) => client.channel(params.slug).thumb,
         logContextFromRequest(request, "tom-adapter"),
         "public",
       );
@@ -239,7 +239,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.user(params.id).get(),
+        (client) => client.user(params.id).get,
         logContextFromRequest(request, "tom-adapter"),
       );
     },
@@ -268,7 +268,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.user(params.id).following(),
+        (client) => client.user(params.id).following,
         logContextFromRequest(request, "tom-adapter"),
       );
     },
@@ -282,7 +282,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.user(params.id).followers(),
+        (client) => client.user(params.id).followers,
         logContextFromRequest(request, "tom-adapter"),
       );
     },
@@ -296,7 +296,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.block(params.id).get(),
+        (client) => client.block(params.id).get,
         logContextFromRequest(request, "tom-adapter"),
       );
     },

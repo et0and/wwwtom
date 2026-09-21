@@ -1,5 +1,5 @@
 import { ex } from "../expressions";
-import type { Env, Expression } from "../model";
+import type { Env, Expression, RunStep } from "../model";
 import { secret } from "./secrets";
 
 /**
@@ -29,6 +29,29 @@ export type DeployStack = (typeof deployStacks)[number];
  */
 export const deployChain = (stacks: ReadonlyArray<DeployStack>): string =>
   stacks.map((stack) => `pnpm deploy:${stack} --yes`).join(" &&\n");
+
+/**
+ * Teardown order: the reverse of the deploy stack order.
+ */
+export const destroyStacks = ["web", "editor", "sophie", "adapter", "api", "shared"] as const;
+
+export type DestroyStack = (typeof destroyStacks)[number];
+
+/**
+ * One step per stack, every step after the first marked `if: always()` so a
+ * failed teardown never blocks the rest — a single `&&` chain would orphan
+ * workers when an earlier destroy fails.
+ */
+export const destroySteps = (stacks: ReadonlyArray<DestroyStack>): ReadonlyArray<RunStep> =>
+  stacks.map((stack, index) =>
+    index === 0
+      ? { name: `Destroy ${stack} preview stage`, run: `pnpm destroy:${stack} --yes` }
+      : {
+          name: `Destroy ${stack} preview stage`,
+          if: "always()",
+          run: `pnpm destroy:${stack} --yes`,
+        },
+  );
 
 /**
  * Cloudflare and secrets-store credentials for Alchemy deploys. The stage is

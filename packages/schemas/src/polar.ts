@@ -42,7 +42,7 @@ const PolarProductMediaSchema = Schema.Struct({
 
 /** Price entry on a product. This app passes prices through unread. */
 const PolarProductPriceSchema = Schema.Struct({
-  price_amount: Schema.Number,
+  price_amount: Schema.Finite,
   price_currency: Schema.String,
 });
 

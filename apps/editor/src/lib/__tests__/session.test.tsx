@@ -15,19 +15,19 @@ const Probe = () => {
 describe("editor session", () => {
   it("loads a live session", async () => {
     fetchMock.mockResolvedValue(jsonResponse(sessionBody));
-    const session = await runClient(loadSession());
+    const session = await runClient(loadSession);
     expect(session?.user.email).toBe("gh@tomhackshaw.com");
   });
 
   it("returns null when signed out", async () => {
     fetchMock.mockResolvedValue(jsonResponse(null));
-    const session = await runClient(loadSession());
+    const session = await runClient(loadSession);
     expect(session).toBeNull();
   });
 
   it("rejects malformed sessions", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ session: { id: 42 } }));
-    const error = await runClient(loadSession().pipe(Effect.flip));
+    const error = await runClient(loadSession.pipe(Effect.flip));
     expect(error.status).toBe(500);
   });
 
@@ -86,7 +86,7 @@ describe("editor session", () => {
 
   it("signs out with a JSON body so the endpoint parses it", async () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 200 }));
-    await runClient(signOut());
+    await runClient(signOut);
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(init.method).toBe("POST");
     expect(new Headers(init.headers).get("content-type")).toContain("application/json");

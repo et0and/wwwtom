@@ -60,7 +60,7 @@ export interface DatabaseServiceContract {
 
   readonly deleteOAuthSession: (session_token: string) => Effect.Effect<number, OAuthSessionError>;
 
-  readonly cleanupExpiredSessions: () => Effect.Effect<number, OAuthSessionError>;
+  readonly cleanupExpiredSessions: Effect.Effect<number, OAuthSessionError>;
 }
 
 type DbFailure = GuestbookValidationError | OAuthSessionError;
@@ -318,7 +318,7 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           return Number(result.numDeletedRows);
         }),
 
-        cleanupExpiredSessions: Effect.fn("DatabaseService.cleanupExpiredSessions")(function* () {
+        cleanupExpiredSessions: Effect.gen(function* () {
           const result = yield* run(
             "cleanupExpiredSessions",
             (db) =>
@@ -329,7 +329,7 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
             oauthFailure("cleanup expired sessions"),
           );
           return Number(result.numDeletedRows);
-        }),
+        }).pipe(Effect.withSpan("DatabaseService.cleanupExpiredSessions")),
       };
     }),
   );

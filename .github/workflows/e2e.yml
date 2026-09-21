@@ -1,61 +1,45 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: E2E (fixture store)
-
 on:
-  schedule:
-    # 02:17 UTC daily — after the deploy pipeline has settled.
-    - cron: "17 2 * * *"
-  workflow_dispatch:
-  # Runs on every PR against dev so the suite is part of merge
-  # requirements. No `push` trigger: the merged dev commit already ran
-  # green as the last PR state, so post-merge re-runs would be wasted.
   pull_request:
-    branches: [dev]
-
+    branches:
+      - dev
+  schedule:
+    - cron: 17 2 * * *
+  workflow_dispatch: null
 permissions:
   contents: read
   actions: read
-
-# One run per PR number (cancelled on newer pushes, so only the latest
-# passes) and per ref for scheduled/manual runs — overlapping runs cannot
-# queue up.
 concurrency:
   group: e2e-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
-
 jobs:
   playwright:
     name: Playwright (tom.so fixture store)
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup
         with:
           install-playwright: "true"
-
-      # The web server under test is `vite dev` (not preview — see
-      # apps/e2e/playwright.config.ts for why), so no production build is
-      # needed; dev compiles on demand and is functionally identical for the
-      # suite's purposes.
       - name: Run e2e suite
+        run: pnpm --filter @tom/e2e test:e2e
         env:
           CI: "true"
           SIMULATOR_URL: http://127.0.0.1:8789
-        run: pnpm --filter @tom/e2e test:e2e
-
       - name: Upload Playwright report
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: playwright-report
           path: apps/e2e/playwright-report/
           retention-days: 7
-
       - name: Upload test traces
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: test-results
           path: apps/e2e/test-results/

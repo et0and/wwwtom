@@ -70,7 +70,7 @@ const EditorToolbar = (props: {
     props.version();
     const attrs = props.editor()?.getAttributes("banner");
     if (!attrs) return "info";
-    const decoded = Schema.decodeUnknownOption(BannerAttrsSchema)(attrs);
+    const decoded = Schema.decodeOption(BannerAttrsSchema)(attrs);
     if (Option.isNone(decoded) || decoded.value.style === undefined) return "info";
     return decoded.value.style;
   });
@@ -79,7 +79,7 @@ const EditorToolbar = (props: {
     props.version();
     const attrs = props.editor()?.getAttributes("codeBlock");
     if (!attrs) return "text";
-    const decoded = Schema.decodeUnknownOption(CodeAttrsSchema)(attrs);
+    const decoded = Schema.decodeOption(CodeAttrsSchema)(attrs);
     if (Option.isNone(decoded) || decoded.value.language === undefined) return "text";
     return decoded.value.language;
   });

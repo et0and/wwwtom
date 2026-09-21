@@ -25,12 +25,13 @@ export type Script = typeof Script.Encoded;
 // Definition-facing types are the schemas' encoded side: a script is written
 // as a string or a list of lines, everything else decodes to its written shape.
 
-const Scalar = Schema.Union([Schema.String, Schema.Number, Schema.Boolean]);
+const Scalar = Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]);
+const Value = Schema.Union([Scalar, Lines]);
 
 export const Env = Schema.Record(Schema.String, Schema.String);
 export type Env = typeof Env.Encoded;
 
-export const With = Schema.Record(Schema.String, Scalar);
+export const With = Schema.Record(Schema.String, Value);
 export type With = typeof With.Encoded;
 
 export const Permissions = Schema.Record(Schema.String, Schema.Literals(["read", "write", "none"]));
@@ -46,9 +47,14 @@ const BranchFilter = Schema.Struct({
   branches: Schema.optional(Schema.Array(Schema.String)),
   paths: Schema.optional(Schema.Array(Schema.String)),
   tags: Schema.optional(Schema.Array(Schema.String)),
+  types: Schema.optional(Schema.Array(Schema.String)),
 });
 
 const Schedule = Schema.Struct({ cron: Schema.String });
+
+const CommentTrigger = Schema.Struct({
+  types: Schema.optional(Schema.Array(Schema.String)),
+});
 
 const WorkflowDispatchInput = Schema.Struct({
   description: Schema.String,
@@ -58,13 +64,15 @@ const WorkflowDispatchInput = Schema.Struct({
 });
 
 const WorkflowDispatch = Schema.Union([
-  Schema.Boolean,
+  Schema.Null,
   Schema.Struct({ inputs: Schema.Record(Schema.String, WorkflowDispatchInput) }),
 ]);
 
 export const Triggers = Schema.Struct({
   push: Schema.optional(BranchFilter),
   pull_request: Schema.optional(BranchFilter),
+  issue_comment: Schema.optional(CommentTrigger),
+  pull_request_review_comment: Schema.optional(CommentTrigger),
   schedule: Schema.optional(Schema.Array(Schedule)),
   workflow_dispatch: Schema.optional(WorkflowDispatch),
 });
@@ -119,7 +127,7 @@ export const Job = Schema.Struct({
   needs: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
   if: Schema.optional(Schema.String),
   environment: Schema.optional(Schema.String),
-  "timeout-minutes": Schema.optional(Schema.Number),
+  "timeout-minutes": Schema.optional(Schema.Finite),
   permissions: Schema.optional(Permissions),
   concurrency: Schema.optional(Concurrency),
   env: Schema.optional(Env),

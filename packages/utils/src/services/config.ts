@@ -78,7 +78,7 @@ export const resolveSecretValue = (
   value: string | SecretBinding | undefined,
 ): Promise<string | undefined> => {
   if (value === undefined) return Promise.resolve(undefined);
-  Schema.decodeUnknownSync(SecretSourceSchema)(value);
+  Schema.decodeSync(SecretSourceSchema)(value);
   return Schema.is(Schema.String)(value) ? Promise.resolve(value) : value.get();
 };
 
@@ -205,14 +205,15 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
 
   const raw = await env.TOM_SECRETS.get();
   const parsed = Effect.runSync(
-    Effect.try({
-      try: () => Schema.decodeUnknownSync(TomSecretsSchema)(raw),
-      catch: (cause) =>
-        new SecretsError({
-          message: "TOM_SECRETS must be a JSON object of string values",
-          cause,
-        }),
-    }),
+    Schema.decodeEffect(TomSecretsSchema)(raw).pipe(
+      Effect.mapError(
+        (cause) =>
+          new SecretsError({
+            message: "TOM_SECRETS must be a JSON object of string values",
+            cause,
+          }),
+      ),
+    ),
   );
 
   const bundle = Object.fromEntries(

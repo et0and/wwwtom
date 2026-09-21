@@ -94,7 +94,7 @@ export const MediaView = (props: { onEdit: (kind: ContentKind, slug: string) => 
 
   const reload = (): void => {
     void runClient(
-      listMedia().pipe(
+      listMedia.pipe(
         Effect.tap((list) => Effect.sync(() => setItems(list.docs))),
         Effect.catch((cause) => Effect.sync(() => setError(cause.message))),
       ),

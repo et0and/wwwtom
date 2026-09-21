@@ -7,10 +7,10 @@ import { Schema } from "effect";
  * and carry only the fields the site reads.
  */
 
-export const ArenaChannelId = Schema.Number.pipe(Schema.brand("ArenaChannelId"));
+export const ArenaChannelId = Schema.Finite.pipe(Schema.brand("ArenaChannelId"));
 export type ArenaChannelId = typeof ArenaChannelId.Type;
 
-export const ArenaBlockId = Schema.Number.pipe(Schema.brand("ArenaBlockId"));
+export const ArenaBlockId = Schema.Finite.pipe(Schema.brand("ArenaBlockId"));
 export type ArenaBlockId = typeof ArenaBlockId.Type;
 
 /** are.na channel slug; also the public URL slug for a post or work. */
@@ -55,8 +55,8 @@ export type ArenaAttachment = typeof ArenaAttachmentSchema.Type;
 export const ArenaEmbedSchema = Schema.Struct({
   url: Schema.optional(Schema.NullOr(Schema.String)),
   source_url: Schema.optional(Schema.NullOr(Schema.String)),
-  width: Schema.optional(Schema.NullOr(Schema.Number)),
-  height: Schema.optional(Schema.NullOr(Schema.Number)),
+  width: Schema.optional(Schema.NullOr(Schema.Finite)),
+  height: Schema.optional(Schema.NullOr(Schema.Finite)),
   html: Schema.optional(Schema.NullOr(Schema.String)),
 });
 export type ArenaEmbed = typeof ArenaEmbedSchema.Type;
@@ -101,10 +101,10 @@ export const ArenaChannelResourceSchema = Schema.Struct({
 export type ArenaChannelResource = typeof ArenaChannelResourceSchema.Type;
 
 export const ArenaPaginationSchema = Schema.Struct({
-  current_page: Schema.Number,
-  per_page: Schema.Number,
-  total_pages: Schema.Number,
-  total_count: Schema.Number,
+  current_page: Schema.Finite,
+  per_page: Schema.Finite,
+  total_pages: Schema.Finite,
+  total_count: Schema.Finite,
   has_more_pages: Schema.Boolean,
 });
 export type ArenaPagination = typeof ArenaPaginationSchema.Type;
@@ -187,10 +187,10 @@ export type ArenaEntry = typeof ArenaEntrySchema.Type;
 
 export const ArenaEntryListSchema = Schema.Struct({
   docs: Schema.Array(ArenaEntrySummarySchema),
-  totalDocs: Schema.Number,
-  limit: Schema.Number,
-  page: Schema.Number,
-  totalPages: Schema.Number,
+  totalDocs: Schema.Finite,
+  limit: Schema.Finite,
+  page: Schema.Finite,
+  totalPages: Schema.Finite,
   hasNextPage: Schema.Boolean,
   hasPrevPage: Schema.Boolean,
 });

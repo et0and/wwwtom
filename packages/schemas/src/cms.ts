@@ -205,7 +205,7 @@ export type CmsCategory = typeof CmsCategorySchema.Type;
 
 export const CmsMediaVariantSchema = Schema.Struct({
   key: Schema.String,
-  width: Schema.Number,
+  width: Schema.Finite,
   format: Schema.String,
 });
 
@@ -213,8 +213,8 @@ export const CmsMediaSchema = Schema.Struct({
   id: CmsMediaId,
   key: Schema.String,
   mime: Schema.String,
-  width: Schema.NullOr(Schema.Number),
-  height: Schema.NullOr(Schema.Number),
+  width: Schema.NullOr(Schema.Finite),
+  height: Schema.NullOr(Schema.Finite),
   alt: Schema.NullOr(Schema.String),
   caption: Schema.NullOr(Schema.String),
   variants: Schema.Array(CmsMediaVariantSchema),
@@ -356,7 +356,7 @@ export const CmsMediaUsageSchema = Schema.Struct({
 });
 export type CmsMediaUsage = typeof CmsMediaUsageSchema.Type;
 
-const PagingNumber = Schema.Union([Schema.Number, Schema.NumberFromString]);
+const PagingNumber = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
 
 export const CmsPagingSchema = Schema.Struct({
   page: Schema.optional(PagingNumber),
@@ -376,10 +376,10 @@ export type CmsPaging = typeof CmsPagingSchema.Type;
 export const CmsListResponseSchema = <A, I, R>(itemSchema: Schema.Codec<A, I, R>) =>
   Schema.Struct({
     docs: Schema.Array(itemSchema),
-    totalDocs: Schema.Number,
-    limit: Schema.Number,
-    page: Schema.Number,
-    totalPages: Schema.Number,
+    totalDocs: Schema.Finite,
+    limit: Schema.Finite,
+    page: Schema.Finite,
+    totalPages: Schema.Finite,
     hasNextPage: Schema.Boolean,
     hasPrevPage: Schema.Boolean,
   });

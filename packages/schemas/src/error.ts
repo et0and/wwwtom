@@ -13,7 +13,7 @@ const ProblemErrorSchema = Schema.Struct({
  */
 const ProblemDetailsSchema = Schema.Struct({
   type: Schema.String,
-  status: Schema.Number,
+  status: Schema.Finite,
   title: Schema.String,
   detail: Schema.optional(Schema.String),
   instance: Schema.optional(Schema.String),

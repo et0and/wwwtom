@@ -24,8 +24,8 @@ const works = Schema.decodeUnknownSync(Schema.Array(CmsWorkSchema))(workFixtures
  * decoded through the summary schemas, so the body never leaves the
  * simulator and shape drift fails at boot.
  */
-const postSummaries = Schema.decodeUnknownSync(Schema.Array(CmsPostSummarySchema))(posts);
-const workSummaries = Schema.decodeUnknownSync(Schema.Array(CmsWorkSummarySchema))(works);
+const postSummaries = Schema.decodeSync(Schema.Array(CmsPostSummarySchema))(posts);
+const workSummaries = Schema.decodeSync(Schema.Array(CmsWorkSummarySchema))(works);
 
 type CmsDoc = CmsPost | CmsWork;
 
@@ -72,9 +72,9 @@ const findPublished = (docs: ReadonlyArray<CmsDoc>, slug: string): CmsDoc | unde
 
 const listQuery = Schema.toStandardSchemaV1(
   Schema.Struct({
-    page: Schema.optional(Schema.NumberFromString),
-    pageSize: Schema.optional(Schema.NumberFromString),
-    limit: Schema.optional(Schema.NumberFromString),
+    page: Schema.optional(Schema.FiniteFromString),
+    pageSize: Schema.optional(Schema.FiniteFromString),
+    limit: Schema.optional(Schema.FiniteFromString),
     status: Schema.optional(Schema.String),
     category: Schema.optional(Schema.String),
     excludeCategory: Schema.optional(Schema.String),

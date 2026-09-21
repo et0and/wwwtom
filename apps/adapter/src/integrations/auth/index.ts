@@ -80,12 +80,10 @@ const requireTrustedAuthOrigin = (
     if (referer === null) return;
     const origin = yield* refererOrigin(referer);
     if (!isTrustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins, tenant)) {
-      return yield* Effect.fail(
-        new AdapterError({
-          status: HttpStatus.Forbidden,
-          message: "Untrusted auth origin",
-        }),
-      );
+      return yield* new AdapterError({
+        status: HttpStatus.Forbidden,
+        message: "Untrusted auth origin",
+      });
     }
   });
 
@@ -97,7 +95,7 @@ const CallbackBodySchema = Schema.Struct({ callbackURL: Schema.optional(Schema.S
  * unparseable bodies pass for the upstream to reject.
  */
 const isTrustedCallbackURL = (callbackURL: string, options: AuthProxyOptions): boolean => {
-  const url = Schema.decodeUnknownOption(Schema.URLFromString)(callbackURL);
+  const url = Schema.decodeOption(Schema.URLFromString)(callbackURL);
   if (Option.isNone(url)) return true;
   return isTrustedWriteOrigin(
     url.value.origin,
@@ -130,12 +128,10 @@ const requireTrustedCallbackURL = (
       parsed.value.callbackURL !== undefined &&
       !isTrustedCallbackURL(parsed.value.callbackURL, options)
     ) {
-      return yield* Effect.fail(
-        new AdapterError({
-          status: HttpStatus.Forbidden,
-          message: "Untrusted auth callback",
-        }),
-      );
+      return yield* new AdapterError({
+        status: HttpStatus.Forbidden,
+        message: "Untrusted auth callback",
+      });
     }
   });
 

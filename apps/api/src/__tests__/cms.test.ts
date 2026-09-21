@@ -285,8 +285,9 @@ describe("cms routes", () => {
       requestWithEnv("http://localhost/posts?page=not-a-number", seedEnv(fullSeed)),
     );
     expect(response.status).toBe(400);
+    // The route schema rejects the query before the handler runs.
     const body = (await response.json()) as { title: string };
-    expect(body.title).toBe("Invalid paging parameters");
+    expect(body.title).toBe("Validation error");
   });
 
   it("returns page 1 if page equals 0", async () => {
