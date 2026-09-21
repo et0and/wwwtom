@@ -1,0 +1,24 @@
+{
+  "name": "@tom/workflows",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "tsx src/cli.ts",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint"
+  },
+  "dependencies": {
+    "@tom/types": "workspace:*",
+    "effect": "catalog:",
+    "yaml": "2.9.1"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.0.0-rc.116",
+    "@types/node": "^26.2.0",
+    "tsx": "4.20.3",
+    "typescript": "5.9.3",
+    "vitest": "catalog:"
+  }
+}

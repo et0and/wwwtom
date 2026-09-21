@@ -1,6 +1,10 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: Deploy
-
 on:
+  push:
+    branches:
+      - dev
   workflow_dispatch:
     inputs:
       stage:
@@ -11,19 +15,11 @@ on:
           - production
           - staging
           - dev
-  push:
-    branches:
-      - dev
-
-# Pushes to dev deploy the STAGING stage (production is a manual
-# workflow_dispatch with its own environment approval gates).
 permissions:
   contents: read
-
 concurrency:
   group: deploy-${{ github.event_name == 'push' && 'staging' || inputs.stage }}
   cancel-in-progress: true
-
 jobs:
   deploy:
     name: Deploy ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
@@ -36,14 +32,12 @@ jobs:
       TOM_SECRETS: ${{ secrets.TOM_SECRETS }}
       AXIOM_TOKEN: ${{ secrets.AXIOM_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
-
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup
-
       - name: Deploy infrastructure
-        run: >
+        run: |-
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&

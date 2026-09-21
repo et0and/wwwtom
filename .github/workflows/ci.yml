@@ -1,5 +1,6 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: CI
-
 on:
   push:
     branches:
@@ -7,54 +8,37 @@ on:
   pull_request:
     branches:
       - dev
-
 jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
-    # Turbo remote cache credentials shared by every Turbo task below.
     env:
       TURBO_API: https://turbo.infra.tom.so
       TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}
       TURBO_TEAM: wwwtom
       TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
-
     steps:
       - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup
-
-      # Fail when @tom/types/db.ts drifts from the migrations. Generation
-      # boots in-process PGlite; needs no network and no secrets.
       - name: Check generated DB types are current
-        run: |
+        run: |-
           pnpm --filter @tom/db generate
           pnpm exec oxfmt --write packages/types/src/db.ts
           git diff --exit-code packages/types/src/db.ts
-
-      # Typecheck is a hard merge gate: every workspace with a `typecheck`
-      # script must pass (tsc --noEmit via Turbo) before unit tests run.
-      # It lives in the same required job on purpose, so existing branch
-      # protection keeps enforcing it without settings changes.
+      - name: Check generated workflows are current
+        run: |-
+          pnpm workflows
+          if [ -n "$(git status --porcelain -- .github/workflows .github/actions)" ]; then
+            git status --short -- .github/workflows .github/actions
+            git diff -- .github/workflows .github/actions
+            exit 1
+          fi
       - name: Run typecheck
         run: pnpm turbo run typecheck
-
-      # oxlint carries the anti-slop rules (unknown parameters, broad
-      # dictionaries, chained assertions, barrel files). Every workspace with
-      # a `lint` script must pass, so those patterns cannot merge.
       - name: Run lint
         run: pnpm turbo run lint
-
-      # Unit tests run in every workspace with a `test` script: @tom/web,
-      # @tom/api, @tom/adapter, @tom/arena and @tom/utils. Turbo builds each
-      # package's workspace dependencies first. Task artifacts are shared
-      # through the KV-backed remote cache at turbo.infra.tom.so (TURBO_API
-      # points Turbo at a custom server; TURBO_TEAM must be set or remote
-      # caching stays disabled). The repository secrets TURBO_CACHE_TOKEN and
-      # TURBO_CACHE_SIGNATURE_KEY hold the same values seeded in the
-      # TOM_SECRETS bundle; the signature key lets Turbo sign and verify
-      # every artifact so a leaked write token cannot poison the cache.
       - name: Run unit tests
+        run: pnpm turbo run test
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
-        run: pnpm turbo run test

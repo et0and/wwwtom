@@ -1,5 +1,7 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: Setup repository
-description: >-
+description: |-
   Provision Node 24, pin pnpm, restore the pnpm store cache, and install
   dependencies with --frozen-lockfile. One definition for every workflow so
   the setup block never drifts. Call after an explicit `actions/checkout`
@@ -9,53 +11,37 @@ inputs:
     description: Run `pnpm install --frozen-lockfile` after setup.
     default: "true"
   install-playwright:
-    description: >-
+    description: |-
       Also cache (~/.cache/ms-playwright) and install the Playwright
       chromium browser (e2e-only workflows).
     default: "false"
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
       with:
         node-version: 24
-
-    - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
-
-    # The pnpm store is content-addressed and shared across every job on
-    # this runner type, so one warm store makes each parallel job's
-    # `pnpm install` a near-instant restore — the "install once, reuse
-    # everywhere" effect without actually shipping node_modules between
-    # jobs.
+    - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
     - name: Resolve the pnpm store path
-      shell: bash
       run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
-
+      shell: bash
     - name: Restore the pnpm store
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: ${{ env.PNPM_STORE_PATH }}
-        # The lockfile is the single source of truth for the dependency
-        # graph: any change invalidates the whole store cache.
         key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
-        restore-keys: |
-          ${{ runner.os }}-pnpm-store-
-
+        restore-keys: ${{ runner.os }}-pnpm-store-
     - name: Install dependencies
       if: ${{ inputs.install == 'true' }}
-      shell: bash
       run: pnpm install --frozen-lockfile
-
+      shell: bash
     - name: Cache Playwright browsers
       if: ${{ inputs.install-playwright == 'true' }}
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
       with:
         path: ~/.cache/ms-playwright
-        # The lockfile pins the playwright version, which pins the browser
-        # revisions — any lockfile change just reinstalls.
         key: ${{ runner.os }}-ms-playwright-${{ hashFiles('pnpm-lock.yaml') }}
-
     - name: Install Playwright browsers
       if: ${{ inputs.install-playwright == 'true' }}
-      shell: bash
       run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
+      shell: bash

@@ -155,3 +155,12 @@ export class TurboCacheError extends Schema.TaggedError<TurboCacheError>()(
   "TurboCacheError",
   messageCauseFields,
 ) {}
+
+export class WorkflowInvalidError extends Schema.TaggedError<WorkflowInvalidError>()(
+  "WorkflowInvalidError",
+  {
+    path: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {}
