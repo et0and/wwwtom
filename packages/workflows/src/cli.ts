@@ -1,14 +1,8 @@
 import { Effect, Path } from "effect";
 import { NodeServices } from "@effect/platform-node";
-import type { Definition } from "./builders";
-import { ocGate } from "./definitions/actions/oc-gate";
-import { setup } from "./definitions/actions/setup";
-import { ci } from "./definitions/ci";
-import { deploy } from "./definitions/deploy";
 import { removeOrphanedDefinitions, writeDefinition } from "./output";
 import { renderDefinition } from "./render";
-
-const definitions: ReadonlyArray<Definition> = [ci, deploy, setup, ocGate];
+import { definitions } from "./registry";
 
 const generate = Effect.gen(function* () {
   const path = yield* Path.Path;

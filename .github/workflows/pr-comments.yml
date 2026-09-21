@@ -1,19 +1,15 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: Respond to PR Comments
-
 on:
   issue_comment:
-    types: [created]
-    # Only run on PR comments, not issue comments
+    types:
+      - created
   pull_request_review_comment:
-    types: [created]
-
+    types:
+      - created
 jobs:
   respond:
-    # Trigger + label check moved into .github/actions/oc-gate (shared with
-    # the opencode workflow): the job runs on every comment and gates its
-    # real steps on the composite's `triggered` output. Unlike opencode, any
-    # author may trigger as long as the PR carries the `opencode` label
-    # (the create-pr workflow adds it).
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -21,37 +17,31 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      # Local composite actions (oc-gate) require the workspace first.
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           persist-credentials: false
-
       - name: OpenCode gate
         id: oc
         uses: ./.github/actions/oc-gate
         with:
           allowed-users: ""
           require-label: "true"
-
       - name: Get PR info
         id: pr
         if: steps.oc.outputs.triggered == 'true'
-        run: |
+        run: |-
           if [[ "${{ github.event_name }}" == "pull_request_review_comment" ]]; then
             echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
           else
             echo "pr_number=${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
           fi
-
       - name: Run opencode with thread context
         if: steps.oc.outputs.triggered == 'true'
         uses: anomalyco/opencode/github@latest
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
           model: deepseek/deepseek-v4-flash-0731
-          prompt: |
+          prompt: |-
             Respond to this comment on PR #${{ steps.pr.outputs.pr_number }}.
 
             Comment from @${{ github.event.comment.user.login }}:
@@ -66,14 +56,15 @@ jobs:
             - Commit with a clear message referencing the comment
             - Push to the existing branch
             - Only modify files relevant to the request
-
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
       - name: Reply with summary
         if: always() && steps.oc.outputs.triggered == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
+        run: |-
           if [[ "${{ job.status }}" == "success" ]]; then
             gh pr comment ${{ steps.pr.outputs.pr_number }} --body "✅ I've processed your request. Check the latest commits for changes."
           else
             gh pr comment ${{ steps.pr.outputs.pr_number }} --body "❌ Something went wrong while processing your request. Please check the workflow logs."
           fi
+        env:
+          GH_TOKEN: ${{ github.token }}

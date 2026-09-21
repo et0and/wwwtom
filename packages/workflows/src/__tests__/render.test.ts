@@ -8,8 +8,7 @@ import { ci } from "../definitions/ci";
 import { deploy } from "../definitions/deploy";
 import { CompositeAction } from "../model";
 import { renderDefinition } from "../render";
-
-const definitions: ReadonlyArray<Definition> = [ci, deploy, setup, ocGate];
+import { definitions } from "../registry";
 
 const render = async (definition: Definition) =>
   (await Effect.runPromise(renderDefinition(definition))).contents;
@@ -29,6 +28,16 @@ describe("renderDefinition", () => {
     expect(definitions.map((definition) => definition.path)).toEqual([
       ".github/workflows/ci.yml",
       ".github/workflows/deploy.yml",
+      ".github/workflows/e2e.yml",
+      ".github/workflows/release.yml",
+      ".github/workflows/srht.yml",
+      ".github/workflows/preview.yml",
+      ".github/workflows/preview-storybook.yml",
+      ".github/workflows/preview-sweep.yml",
+      ".github/workflows/pr-review.yml",
+      ".github/workflows/pr-comments.yml",
+      ".github/workflows/classifier-review.yml",
+      ".github/workflows/opencode.yml",
       ".github/actions/setup/action.yml",
       ".github/actions/oc-gate/action.yml",
     ]);

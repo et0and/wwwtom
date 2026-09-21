@@ -1,61 +1,37 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: PR review triage
-
-# Sort a PR's changed files by how much review attention each one needs with
-# classifier.dev (the bulk-classify skill in .agents/skills) and keep one
-# sticky comment on the PR updated. Paths, diff stats, and a bounded patch
-# excerpt leave for classifier.dev; the API is keyless and reports storing
-# nothing.
-#
-# The first triage of a PR is then addressed automatically: the `address`
-# job runs opencode (Muse 1.3 Spark Contributor) over the flagged files,
-# fixes what is genuinely wrong, and pushes to the PR branch. Later pushes
-# only refresh the sticky comment; re-runs are on demand with the
-# `/classifier` hook in classifier-review.yml.
-#
-# Both jobs check out the base branch, not the PR merge commit, so a PR can
-# never swap the bot that runs with pull-requests: write. Fork PRs are
-# skipped: their token cannot comment.
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-    branches: [dev]
-
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
 permissions:
   contents: read
   pull-requests: write
-
-# One run per PR. Not cancel-in-progress: a push would otherwise kill the
-# agent mid-review, and the replacement run (a `synchronize`) never re-enters
-# the address job. Pending runs are still coalesced.
 concurrency:
   group: pr-review-${{ github.event.pull_request.number }}
   cancel-in-progress: false
-
 jobs:
   triage:
     name: Triage changed files
     runs-on: ubuntu-latest
-    if: >-
-      github.event.pull_request.draft == false &&
-      github.event.pull_request.head.repo.fork == false
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false
     steps:
-      # The triage script is taken from the base branch, never the PR head.
       - name: Checkout base branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
-
-      # Node 24 only: the script is dependency-free and runs on type
-      # stripping, so the pnpm install is skipped.
       - uses: ./.github/actions/setup
         with:
           install: "false"
-
       - name: Classify changed files and upsert the sticky comment
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
+        run: |-
           # On the PR that introduces this workflow the base branch has no
           # script yet; skip until it lands there.
           if [ ! -f scripts/pr-review.ts ]; then
@@ -65,37 +41,28 @@ jobs:
           node scripts/pr-review.ts \
             --repo="${{ github.repository }}" \
             --pr=${{ github.event.pull_request.number }}
-
+        env:
+          GH_TOKEN: ${{ github.token }}
   address:
     name: Address the triage
-    needs: triage
-    # Only the PR's first triage, and only when et0and pushed: the opencode
-    # action asserts the triggering actor's write permission, so the agent's
-    # own commits (and bot PRs) must not re-enter here. The manual
-    # `/classifier` hook covers later re-runs.
-    if: >-
-      (github.event.action == 'opened' || github.event.action == 'ready_for_review') &&
-      github.actor == 'et0and'
     runs-on: ubuntu-latest
+    needs: triage
+    if: (github.event.action == 'opened' || github.event.action == 'ready_for_review') && github.actor == 'et0and'
     permissions:
       id-token: write
       contents: write
       pull-requests: write
     steps:
-      # The opencode action fetches and checks out the PR branch itself.
       - name: Checkout base branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
-
       - name: Address the triage
         uses: anomalyco/opencode/github@latest
-        env:
-          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
         with:
           model: opencode-go/muse-spark-1.3-contributor
-          prompt: |
+          prompt: |-
             Respond to the classifier.dev review triage on this pull request.
 
             The sticky comment whose first line is
@@ -121,3 +88,5 @@ jobs:
             keep the response short: what you fixed, what you checked and
             left alone, and the verification results. If the sticky triage
             comment is missing, say so in one line and stop.
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
