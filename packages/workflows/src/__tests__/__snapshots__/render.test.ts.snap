@@ -1,0 +1,210 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderDefinition > renders '.github/actions/oc-gate/action.yml' > .github/actions/oc-gate/action.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: OpenCode gate
+description: Decide whether a comment should invoke an agent workflow. A composite step cannot appear in \`jobs.<id>.if:\`, so the job runs unconditionally and every step that needs the go/no-go reads \`steps.<id>.outputs.triggered\`. The gate itself is a tiny bash check — no checkout required.
+inputs:
+  allowed-users:
+    description: Comma-separated login(s) allowed to trigger. Empty means anyone who wrote a trigger comment may invoke the agent.
+    default: et0and
+  require-label:
+    description: Require the PR/issue to carry the \`opencode\` label.
+    default: "false"
+  triggers:
+    description: Comma-separated trigger prefixes. A comment triggers when it starts with one, or contains it after a space (the original /oc and /opencode expressions). Workflows for other agents pass their own phrase.
+    default: /oc,/opencode
+outputs:
+  triggered:
+    description: true when the comment is an authorized trigger.
+    value: \${{ steps.check.outputs.triggered }}
+runs:
+  using: composite
+  steps:
+    - name: Evaluate trigger
+      id: check
+      run: |-
+        # Trigger check mirrors the original expressions per phrase: an
+        # explicit leading phrase, or the phrase after a space anywhere.
+        triggered="false"
+        IFS=',' read -r -a triggers <<< "$TRIGGERS"
+        for trigger in "\${triggers[@]}"; do
+          [[ -z "$trigger" ]] && continue
+          case "$BODY" in
+            "$trigger"* | *" $trigger"*)
+              triggered="true"
+              break
+              ;;
+          esac
+        done
+
+        # Label gate: only PR-comments-style workflows opt in.
+        if [[ "$triggered" == "true" && "$REQUIRE_LABEL" == "true" ]]; then
+          if [[ ",$LABELS," != *",opencode,"* ]]; then
+            triggered="false"
+          fi
+        fi
+
+        # Author gate: empty means anyone; otherwise a comma-separated list.
+        if [[ "$triggered" == "true" && -n "$ALLOWED" ]]; then
+          case ",$ALLOWED," in
+            *",$AUTHOR,"*) ;;
+            *) triggered="false" ;;
+          esac
+        fi
+
+        echo "triggered=$triggered" >> "$GITHUB_OUTPUT"
+      shell: bash
+      env:
+        BODY: \${{ github.event.comment.body }}
+        AUTHOR: \${{ github.event.comment.user.login }}
+        ALLOWED: \${{ inputs.allowed-users }}
+        LABELS: \${{ join(github.event.pull_request.labels.*.name, ',') }}, \${{ join(github.event.issue.labels.*.name, ',') }}
+        REQUIRE_LABEL: \${{ inputs.require-label }}
+        TRIGGERS: \${{ inputs.triggers }}
+"
+`;
+
+exports[`renderDefinition > renders '.github/actions/setup/action.yml' > .github/actions/setup/action.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Setup repository
+description: Provision Node 24, pin pnpm, restore the pnpm store cache, and install dependencies with --frozen-lockfile. One definition for every workflow so the setup block never drifts. Call after an explicit \`actions/checkout\` (local composite actions require the workspace to exist first).
+inputs:
+  install:
+    description: Run \`pnpm install --frozen-lockfile\` after setup.
+    default: "true"
+  install-playwright:
+    description: Also cache (~/.cache/ms-playwright) and install the Playwright chromium browser (e2e-only workflows).
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      with:
+        node-version: 24
+    - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+    - name: Resolve the pnpm store path
+      run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Restore the pnpm store
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: \${{ env.PNPM_STORE_PATH }}
+        key: \${{ runner.os }}-pnpm-store-\${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: \${{ runner.os }}-pnpm-store-
+    - name: Install dependencies
+      if: \${{ inputs.install == 'true' }}
+      run: pnpm install --frozen-lockfile
+      shell: bash
+    - name: Cache Playwright browsers
+      if: \${{ inputs.install-playwright == 'true' }}
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.cache/ms-playwright
+        key: \${{ runner.os }}-ms-playwright-\${{ hashFiles('pnpm-lock.yaml') }}
+    - name: Install Playwright browsers
+      if: \${{ inputs.install-playwright == 'true' }}
+      run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
+      shell: bash
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/ci.yml' > .github/workflows/ci.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: CI
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    env:
+      TURBO_API: https://turbo.infra.tom.so
+      TURBO_TOKEN: \${{ secrets.TURBO_CACHE_TOKEN }}
+      TURBO_TEAM: wwwtom
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: \${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+      - name: Check generated DB types are current
+        run: |-
+          pnpm --filter @tom/db generate
+          pnpm exec oxfmt --write packages/types/src/db.ts
+          git diff --exit-code packages/types/src/db.ts
+      - name: Check generated workflows are current
+        run: |-
+          pnpm workflows
+          if [ -n "$(git status --porcelain -- .github/workflows .github/actions)" ]; then
+            git status --short -- .github/workflows .github/actions
+            git diff -- .github/workflows .github/actions
+            exit 1
+          fi
+      - name: Run typecheck
+        run: pnpm turbo run typecheck
+      - name: Run lint
+        run: pnpm turbo run lint
+      - name: Run unit tests
+        run: pnpm turbo run test
+        env:
+          ARENA_TOKEN: \${{ secrets.ARENA_TOKEN }}
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/deploy.yml' > .github/workflows/deploy.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Deploy
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Alchemy stage to deploy
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - dev
+permissions:
+  contents: read
+concurrency:
+  group: deploy-\${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    name: Deploy \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+    runs-on: ubuntu-latest
+    environment: \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+    env:
+      ALCHEMY_STAGE: \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TOM_SECRETS: \${{ secrets.TOM_SECRETS }}
+      AXIOM_TOKEN: \${{ secrets.AXIOM_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+      - name: Deploy infrastructure
+        run: |-
+          pnpm deploy:shared --yes &&
+          pnpm deploy:api --yes &&
+          pnpm deploy:adapter --yes &&
+          pnpm deploy:web --yes &&
+          pnpm deploy:editor --yes &&
+          pnpm deploy:sophie --yes
+"
+`;

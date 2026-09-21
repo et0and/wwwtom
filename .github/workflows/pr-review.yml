@@ -6,7 +6,13 @@ name: PR review triage
 # excerpt leave for classifier.dev; the API is keyless and reports storing
 # nothing.
 #
-# The job checks out the base branch, not the PR merge commit, so a PR can
+# The first triage of a PR is then addressed automatically: the `address`
+# job runs opencode (Muse 1.3 Spark Contributor) over the flagged files,
+# fixes what is genuinely wrong, and pushes to the PR branch. Later pushes
+# only refresh the sticky comment; re-runs are on demand with the
+# `/classifier` hook in classifier-review.yml.
+#
+# Both jobs check out the base branch, not the PR merge commit, so a PR can
 # never swap the bot that runs with pull-requests: write. Fork PRs are
 # skipped: their token cannot comment.
 on:
@@ -18,9 +24,12 @@ permissions:
   contents: read
   pull-requests: write
 
+# One run per PR. Not cancel-in-progress: a push would otherwise kill the
+# agent mid-review, and the replacement run (a `synchronize`) never re-enters
+# the address job. Pending runs are still coalesced.
 concurrency:
   group: pr-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   triage:
@@ -56,3 +65,59 @@ jobs:
           node scripts/pr-review.ts \
             --repo="${{ github.repository }}" \
             --pr=${{ github.event.pull_request.number }}
+
+  address:
+    name: Address the triage
+    needs: triage
+    # Only the PR's first triage, and only when et0and pushed: the opencode
+    # action asserts the triggering actor's write permission, so the agent's
+    # own commits (and bot PRs) must not re-enter here. The manual
+    # `/classifier` hook covers later re-runs.
+    if: >-
+      (github.event.action == 'opened' || github.event.action == 'ready_for_review') &&
+      github.actor == 'et0and'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+    steps:
+      # The opencode action fetches and checks out the PR branch itself.
+      - name: Checkout base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+
+      - name: Address the triage
+        uses: anomalyco/opencode/github@latest
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        with:
+          model: opencode-go/muse-spark-1.3-contributor
+          prompt: |
+            Respond to the classifier.dev review triage on this pull request.
+
+            The sticky comment whose first line is
+            `<!-- classifier-pr-review -->`, posted by this workflow, groups
+            the changed files by review attention. Work through the files it
+            lists under "needs careful review".
+
+            For each flagged file:
+            1. Read the file and the part of the diff that touches it.
+            2. Review it for real defects and repo-standard violations
+               (AGENTS.md, plus the nearest AGENTS.md in its directory).
+            3. Fix genuine issues with the smallest correct change. When a
+               flag is already handled, is not a real issue, or needs a
+               human call, leave the code alone and say why.
+
+            Do not touch unrelated code, do not merge, and do not edit
+            .github/workflows/ or .github/actions/.
+
+            Verify before pushing: `pnpm turbo run typecheck`,
+            `pnpm turbo run test`, `pnpm turbo run lint`, `pnpm format`.
+
+            Then commit (conventional commits), push to this PR's branch, and
+            keep the response short: what you fixed, what you checked and
+            left alone, and the verification results. If the sticky triage
+            comment is missing, say so in one line and stop.

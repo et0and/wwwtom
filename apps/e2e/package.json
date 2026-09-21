@@ -23,6 +23,6 @@
     "@types/node": "^24.9.1",
     "effect": "catalog:",
     "tsx": "4.20.3",
-    "typescript": "6.0.3"
+    "typescript": "catalog:"
   }
 }

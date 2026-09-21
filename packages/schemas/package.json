@@ -25,6 +25,6 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   }
 }

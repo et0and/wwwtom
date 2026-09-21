@@ -1,3 +1,10 @@
+# [3.5.0](https://github.com/et0and/wwwtom/compare/v3.4.1...v3.5.0) (2026-09-20)
+
+
+### Features
+
+* **ci:** address the first triage of a PR automatically ([b1f7a14](https://github.com/et0and/wwwtom/commit/b1f7a145945c01a480e9819f4a93b92320c182b0))
+
 ## [3.4.1](https://github.com/et0and/wwwtom/compare/v3.4.0...v3.4.1) (2026-09-20)
 
 
