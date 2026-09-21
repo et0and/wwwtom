@@ -1,3 +1,10 @@
+# [3.8.0](https://github.com/et0and/wwwtom/compare/v3.7.0...v3.8.0) (2026-09-21)
+
+
+### Features
+
+* **workflows:** generate the remaining workflows from definitions ([eaf7d10](https://github.com/et0and/wwwtom/commit/eaf7d1016062bc22ab2a2f0ba2f0f46924009c69))
+
 # [3.7.0](https://github.com/et0and/wwwtom/compare/v3.6.0...v3.7.0) (2026-09-21)
 
 
