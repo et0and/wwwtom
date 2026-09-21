@@ -1,4 +1,4 @@
-import { run, script, step, workflow } from "../builders";
+import { run, step, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
 import { secret } from "../catalog/secrets";
 import { turboEnv, turboTask } from "../catalog/turbo";
@@ -25,28 +25,22 @@ export const ci = workflow("ci", {
         setupStep(),
         // Fail when @tom/types/db.ts drifts from the migrations. Generation
         // boots in-process PGlite; needs no network and no secrets.
-        script(
-          "Check generated DB types are current",
-          `
-          pnpm --filter @tom/db generate
-          pnpm exec oxfmt --write packages/types/src/db.ts
-          git diff --exit-code packages/types/src/db.ts
-        `,
-        ),
+        run("Check generated DB types are current", [
+          "pnpm --filter @tom/db generate",
+          "pnpm exec oxfmt --write packages/types/src/db.ts",
+          "git diff --exit-code packages/types/src/db.ts",
+        ]),
         // Fail when the committed GitHub Actions YAML drifts from the
         // @tom/workflows definitions, including new files that were never
         // committed.
-        script(
-          "Check generated workflows are current",
-          `
-          pnpm workflows
-          if [ -n "$(git status --porcelain -- .github/workflows .github/actions)" ]; then
-            git status --short -- .github/workflows .github/actions
-            git diff -- .github/workflows .github/actions
-            exit 1
-          fi
-        `,
-        ),
+        run("Check generated workflows are current", [
+          "pnpm workflows",
+          'if [ -n "$(git status --porcelain -- .github/workflows .github/actions)" ]; then',
+          "  git status --short -- .github/workflows .github/actions",
+          "  git diff -- .github/workflows .github/actions",
+          "  exit 1",
+          "fi",
+        ]),
         // Typecheck is a hard merge gate: every workspace with a `typecheck`
         // script must pass before unit tests run.
         run("Run typecheck", turboTask("typecheck")),

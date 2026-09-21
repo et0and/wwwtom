@@ -1,5 +1,4 @@
-import { dedent } from "./dedent";
-import type { CompositeAction, CompositeStep, RunStep, UsesStep, Workflow } from "./model";
+import type { CompositeAction, CompositeStep, RunStep, Script, UsesStep, Workflow } from "./model";
 
 export type WorkflowDefinition = {
   readonly kind: "workflow";
@@ -37,9 +36,10 @@ export const compositeAction = (name: string, definition: CompositeAction): Acti
 
 export const step = <S extends RunStep | UsesStep | CompositeStep>(input: S): S => input;
 
-export const run = (name: string, command: string): RunStep => ({
+/**
+ * A `run` step. A multi-line script is a list of lines; rendering joins them.
+ */
+export const run = (name: string, command: Script): RunStep => ({
   name,
   run: command,
 });
-
-export const script = (name: string, code: string): RunStep => run(name, dedent(code));

@@ -12,13 +12,13 @@
   "dependencies": {
     "@tom/types": "workspace:*",
     "effect": "catalog:",
-    "yaml": "2.9.1"
+    "yaml": "catalog:"
   },
   "devDependencies": {
-    "@effect/platform-node": "4.0.0-rc.116",
-    "@types/node": "^26.2.0",
-    "tsx": "4.20.3",
-    "typescript": "5.9.3",
+    "@effect/platform-node": "catalog:",
+    "@types/node": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

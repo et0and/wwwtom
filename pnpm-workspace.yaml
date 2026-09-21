@@ -13,6 +13,7 @@ onlyBuiltDependencies:
   - "workerd"
 catalog:
   effect: 4.0.0-rc.116
+  "@effect/platform-node": 4.0.0-rc.116
   kysely: 0.28.9
   postgres: 3.4.7
   solid-js: 2.0.0-rc.6
@@ -43,6 +44,10 @@ catalog:
   eslint: 9.39.2
   "@playwright/test": 1.58.2
   vitest: 4.1.10
+  yaml: 2.9.1
+  tsx: 4.20.3
+  typescript: 5.9.3
+  "@types/node": ^26.2.0
 allowBuilds:
   "@parcel/watcher": true
   core-js-pure: true

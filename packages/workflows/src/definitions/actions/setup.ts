@@ -1,6 +1,5 @@
 import { compositeAction, step } from "../../builders";
 import { actionPins } from "../../catalog/actions";
-import { dedent } from "../../dedent";
 
 /**
  * Shared setup block for every workflow. One definition keeps Node, pnpm, the
@@ -9,22 +8,16 @@ import { dedent } from "../../dedent";
  */
 export const setup = compositeAction("setup", {
   name: "Setup repository",
-  description: dedent(`
-    Provision Node 24, pin pnpm, restore the pnpm store cache, and install
-    dependencies with --frozen-lockfile. One definition for every workflow so
-    the setup block never drifts. Call after an explicit \`actions/checkout\`
-    (local composite actions require the workspace to exist first).
-  `),
+  description:
+    "Provision Node 24, pin pnpm, restore the pnpm store cache, and install dependencies with --frozen-lockfile. One definition for every workflow so the setup block never drifts. Call after an explicit `actions/checkout` (local composite actions require the workspace to exist first).",
   inputs: {
     install: {
       description: "Run `pnpm install --frozen-lockfile` after setup.",
       default: "true",
     },
     "install-playwright": {
-      description: dedent(`
-        Also cache (~/.cache/ms-playwright) and install the Playwright
-        chromium browser (e2e-only workflows).
-      `),
+      description:
+        "Also cache (~/.cache/ms-playwright) and install the Playwright chromium browser (e2e-only workflows).",
       default: "false",
     },
   },
