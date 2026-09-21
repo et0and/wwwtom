@@ -144,7 +144,13 @@ const optionalSession = (request: Request, env: CloudflareEnv): Effect.Effect<bo
   if (!hasSessionCredential(request)) return Effect.succeed(false);
   return Effect.tryPromise({
     try: () => readCloudflareEnv(env),
-    catch: (cause) => cause,
+    catch: (cause) =>
+      new CmsError({
+        message: "Failed to read Cloudflare env for CMS read auth",
+        status: HttpStatus.InternalServerError,
+        operation: "optional_session",
+        cause,
+      }),
   }).pipe(
     Effect.flatMap((resolved) => createAuthFromEnv(resolved)),
     Effect.tapError((cause) =>

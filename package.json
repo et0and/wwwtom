@@ -2,7 +2,7 @@
   "name": "@tom/monorepo",
   "private": true,
   "scripts": {
-    "prepare": "effect-language-service patch && husky",
+    "prepare": "effect-tsgo patch --typescript --no-oxlint && husky",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@tom/web",
@@ -13,9 +13,10 @@
     "lint": "turbo run lint",
     "format": "oxfmt --check .",
     "write": "oxfmt --write .",
+    "workflows": "pnpm --filter @tom/workflows generate && oxfmt --write .github/workflows .github/actions",
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",
-    "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/utils && npx vitest run --update",
+    "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/utils && npx vitest run --update && cd ../../packages/workflows && npx vitest run --update",
     "deploy": "pnpm run deploy:shared && pnpm run deploy:turbo && pnpm run deploy:api && pnpm run deploy:adapter && pnpm run deploy:web && pnpm run deploy:editor && pnpm run deploy:sophie",
     "deploy:shared": "pnpm --filter @tom/infra run deploy:shared",
     "deploy:web": "pnpm --filter @tom/infra run deploy:web",
@@ -42,7 +43,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.30.0",
-    "@effect/language-service": "0.87.2",
+    "@effect/tsgo": "catalog:",
     "@oxlint/plugins": "1.78.0",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -52,7 +53,7 @@
     "oxlint": "1.78.0",
     "semantic-release": "24.2.3",
     "turbo": "2.9.1",
-    "typescript": "6.0.3"
+    "typescript": "catalog:"
   },
   "packageManager": "pnpm@11.3.0"
 }

@@ -12,7 +12,15 @@ vi.mock("../services/auth", async (importOriginal) => {
   const { Effect: FX } = await import("effect");
   return {
     ...original,
-    requireSession: vi.fn(() => FX.fail(new Error("no session"))),
+    requireSession: vi.fn(() =>
+      FX.fail(
+        new CmsError({
+          message: "no session",
+          status: HttpStatus.Unauthorized,
+          operation: "get_session",
+        }),
+      ),
+    ),
   };
 });
 
