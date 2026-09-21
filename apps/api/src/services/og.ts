@@ -28,37 +28,36 @@ const loadFontBytes = (source: OgFontSource, path: string): Promise<Response> =>
     ? source.assets.fetch(`${source.origin}${path}`)
     : fetch(`${source.origin}${path}`, { signal: AbortSignal.timeout(FONT_FETCH_TIMEOUT_MS) });
 
-const fontFetchEffect = (source: OgFontSource, path: string) =>
-  Effect.gen(function* () {
-    const url = `${source.origin}${path}`;
-    const cached = fontCache.get(url);
-    if (cached !== undefined) return cached;
+const fontFetchEffect = Effect.fn("og.fetchFont")(function* (source: OgFontSource, path: string) {
+  const url = `${source.origin}${path}`;
+  const cached = fontCache.get(url);
+  if (cached !== undefined) return cached;
 
-    const data = yield* Effect.tryPromise({
-      try: () =>
-        loadFontBytes(source, path).then((res) => {
-          if (!res.ok) {
-            throw new Error(`Failed to fetch font: ${res.status}`);
-          }
-          return res.arrayBuffer();
-        }),
-      catch: (cause) =>
-        new FontFetchError({
-          message: "Failed to fetch font",
-          cause: Option.getOrElse(
-            Option.map(
-              Schema.decodeUnknownOption(Schema.Struct({ message: Schema.String }))(cause),
-              (failure) => failure.message,
-            ),
-            () => "Unknown error",
+  const data = yield* Effect.tryPromise({
+    try: () =>
+      loadFontBytes(source, path).then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch font: ${res.status}`);
+        }
+        return res.arrayBuffer();
+      }),
+    catch: (cause) =>
+      new FontFetchError({
+        message: "Failed to fetch font",
+        cause: Option.getOrElse(
+          Option.map(
+            Schema.decodeUnknownOption(Schema.Struct({ message: Schema.String }))(cause),
+            (failure) => failure.message,
           ),
-        }),
-    });
+          () => "Unknown error",
+        ),
+      }),
+  });
 
-    fontCache.set(url, data);
+  fontCache.set(url, data);
 
-    return data;
-  }).pipe(Effect.withSpan("og.fetchFont"));
+  return data;
+});
 
 /**
  * Requester hostname for template auto-select. Substring matching would let

@@ -18,22 +18,22 @@ export type EditorSession = typeof EditorSessionSchema.Type;
 const SessionResponseSchema = Schema.NullOr(EditorSessionSchema);
 
 /** Load the current session; null when signed out. */
-export const loadSession = (): Effect.Effect<EditorSession | null, CmsError> =>
-  requestJson("/auth/get-session", {}, "load_session").pipe(
-    Effect.flatMap((json) => decodeResponse(SessionResponseSchema, json, "load_session")),
-  );
+export const loadSession: Effect.Effect<EditorSession | null, CmsError> = requestJson(
+  "/auth/get-session",
+  {},
+  "load_session",
+).pipe(Effect.flatMap((json) => decodeResponse(SessionResponseSchema, json, "load_session")));
 
 /** Sign out, then let the caller reload the session. */
-export const signOut = () =>
-  requestVoid(
-    "/auth/sign-out",
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: "{}",
-    },
-    "sign_out",
-  );
+export const signOut: Effect.Effect<void, CmsError> = requestVoid(
+  "/auth/sign-out",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: "{}",
+  },
+  "sign_out",
+);
 
 const SignInRedirectSchema = Schema.Struct({
   url: Schema.String,
@@ -116,7 +116,7 @@ export const createSession = () => {
   const [session, setSession] = createSignal<EditorSession | null | undefined>(undefined);
   const fetchSession = (): void => {
     void runClient(
-      loadSession().pipe(
+      loadSession.pipe(
         Effect.tap((current) => Effect.sync(() => setSession(current))),
         Effect.catch(() => Effect.sync(() => setSession(null))),
       ),

@@ -76,7 +76,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
 
   const onSignOut = (): void => {
     void runClient(
-      signOut().pipe(
+      signOut.pipe(
         Effect.tap(() => Effect.sync(reloadSession)),
         Effect.catch(() => Effect.sync(() => setError("Sign out failed"))),
       ),

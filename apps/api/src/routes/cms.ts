@@ -356,47 +356,50 @@ export const cmsRoutes = new Elysia({ name: "cms" })
     ({ params, request }) => {
       const env = getRequestEnv(request);
       return runCms(
-        Effect.flatMap(matchFileCache(request.url), (cached) => {
-          if (cached !== undefined) return Effect.succeed(cached);
-          return requireCmsD1(env).pipe(
-            Effect.flatMap((db) =>
-              Effect.flatMap(requireCmsR2(env), (r2) =>
-                Effect.flatMap(decodeMediaParams(params, "get_media_file"), ({ id }) =>
-                  getMediaFile(db, r2, id),
+        matchFileCache(request.url).pipe(
+          Effect.filterOrElse(
+            (cached): cached is Response => cached !== undefined,
+            () =>
+              requireCmsD1(env).pipe(
+                Effect.flatMap((db) =>
+                  Effect.flatMap(requireCmsR2(env), (r2) =>
+                    Effect.flatMap(decodeMediaParams(params, "get_media_file"), ({ id }) =>
+                      getMediaFile(db, r2, id),
+                    ),
+                  ),
+                ),
+                Effect.flatMap(({ mime, object }) =>
+                  Effect.tryPromise({
+                    try: () => object.arrayBuffer(),
+                    catch: (cause) =>
+                      new CmsError({
+                        message: "Media read failed",
+                        status: HttpStatus.InternalServerError,
+                        operation: "get_media_file",
+                        cause,
+                      }),
+                  }).pipe(
+                    Effect.map(
+                      (bytes) =>
+                        new Response(bytes, {
+                          headers: {
+                            "Content-Type": mime,
+                            "Cache-Control": "public, max-age=31536000, immutable",
+                            // Served bytes are renderer-trusted images/video.
+                            // nosniff stops MIME-sniffing; sandbox stops a
+                            // smuggled script from executing top-level (this
+                            // also protects pre-existing SVG rows).
+                            "X-Content-Type-Options": "nosniff",
+                            "Content-Security-Policy": "sandbox",
+                          },
+                        }),
+                    ),
+                    Effect.tap((response) => putFileCache(request.url, response)),
+                  ),
                 ),
               ),
-            ),
-            Effect.flatMap(({ mime, object }) =>
-              Effect.tryPromise({
-                try: () => object.arrayBuffer(),
-                catch: (cause) =>
-                  new CmsError({
-                    message: "Media read failed",
-                    status: HttpStatus.InternalServerError,
-                    operation: "get_media_file",
-                    cause,
-                  }),
-              }).pipe(
-                Effect.map(
-                  (bytes) =>
-                    new Response(bytes, {
-                      headers: {
-                        "Content-Type": mime,
-                        "Cache-Control": "public, max-age=31536000, immutable",
-                        // Served bytes are renderer-trusted images/video.
-                        // nosniff stops MIME-sniffing; sandbox stops a
-                        // smuggled script from executing top-level (this
-                        // also protects pre-existing SVG rows).
-                        "X-Content-Type-Options": "nosniff",
-                        "Content-Security-Policy": "sandbox",
-                      },
-                    }),
-                ),
-                Effect.tap((response) => putFileCache(request.url, response)),
-              ),
-            ),
-          );
-        }),
+          ),
+        ),
         request,
       );
     },

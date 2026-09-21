@@ -16,7 +16,7 @@ export const CategoriesView = () => {
 
   const load = (): void => {
     void runClient(
-      listCategories().pipe(
+      listCategories.pipe(
         Effect.tap((items) => Effect.sync(() => setCategories(items))),
         Effect.catch((cause) => Effect.sync(() => setError(cause.message))),
       ),

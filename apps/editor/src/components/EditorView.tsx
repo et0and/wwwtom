@@ -175,7 +175,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
   onSettled(() => {
     if (props.kind !== "posts") return;
     void runClient(
-      listCategories().pipe(
+      listCategories.pipe(
         Effect.tap((categories) => Effect.sync(() => setAllCategories(categories))),
         Effect.catch((cause) =>
           Effect.sync(() => setSaveState({ status: "error", message: cause.message })),

@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ImageError } from "@tom/types/errors";
 import {
@@ -40,17 +40,15 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
 
     const validateUrl = (urlStr: string): Effect.Effect<URL, ImageError> =>
       Effect.gen(function* () {
-        const parsed = yield* Option.match(Schema.decodeOption(Schema.URLFromString)(urlStr), {
-          onNone: () =>
-            Effect.fail(
-              new ImageError({
-                response: toProblemResponse(HttpStatus.BadRequest, "Invalid URL", {
-                  type: ProblemType.Validation,
-                }),
+        const parsed = yield* Effect.fromOption(
+          Schema.decodeOption(Schema.URLFromString)(urlStr),
+          () =>
+            new ImageError({
+              response: toProblemResponse(HttpStatus.BadRequest, "Invalid URL", {
+                type: ProblemType.Validation,
               }),
-            ),
-          onSome: (url) => Effect.succeed(url),
-        });
+            }),
+        );
 
         if (!ALLOWED_DOMAINS.includes(parsed.hostname)) {
           return yield* new ImageError({
@@ -68,8 +66,9 @@ export const imageIntegration = new Elysia({ name: "image" }).get(
         try: () => fetch(validUrl),
         catch: (cause) => toImageError("Failed to fetch image", cause),
       }).pipe(
-        Effect.flatMap((res) =>
-          res.ok ? Effect.succeed(res) : Effect.fail(toImageError("Failed to fetch image")),
+        Effect.filterOrFail(
+          (res) => res.ok,
+          () => toImageError("Failed to fetch image"),
         ),
       );
 

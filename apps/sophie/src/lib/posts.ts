@@ -85,8 +85,9 @@ export const getPost = (slug: string): Effect.Effect<CmsPost, HttpError> =>
   adapterRequest(() => callSophie().content.posts({ slug }).get());
 
 /** List Sophie categories for post tagging. */
-export const listCategories = (): Effect.Effect<ReadonlyArray<CmsCategory>, HttpError> =>
-  adapterRequest(() => callSophie().content.categories.get());
+export const listCategories: Effect.Effect<ReadonlyArray<CmsCategory>, HttpError> = adapterRequest(
+  () => callSophie().content.categories.get(),
+);
 
 /** Promise fetchers for router preloads and TanStack query functions. */
 export const fetchPosts = (
@@ -96,7 +97,6 @@ export const fetchPosts = (
 
 export const fetchPost = (slug: string): Promise<CmsPost | null> => runClientOrNull(getPost(slug));
 
-export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> =>
-  runClient(listCategories());
+export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> => runClient(listCategories);
 
 export const fetchAbout = (): Promise<CmsPost | null> => runClientOrNull(getPost(ABOUT_SLUG));

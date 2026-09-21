@@ -19,7 +19,7 @@ export const MediaPicker = (props: { onPick: (item: CmsMedia) => void }) => {
 
   onSettled(() => {
     void runClient(
-      listMedia().pipe(
+      listMedia.pipe(
         Effect.tap((list) => Effect.sync(() => setItems(list.docs))),
         Effect.catch((cause) => Effect.sync(() => setError(cause.message))),
       ),

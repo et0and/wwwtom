@@ -209,13 +209,11 @@ const decodeUploadBody = <B>(body: B, operation: string): Effect.Effect<MediaUpl
           return yield* failInput("Upload file is empty", operation);
         }
         if (file.size > MAX_UPLOAD_BYTES) {
-          return yield* Effect.fail(
-            new CmsError({
-              message: "Upload file too large",
-              status: HttpStatus.PayloadTooLarge,
-              operation,
-            }),
-          );
+          return yield* new CmsError({
+            message: "Upload file too large",
+            status: HttpStatus.PayloadTooLarge,
+            operation,
+          });
         }
         if (!UPLOAD_MIMES.has(file.type)) {
           return yield* failInput(`Unsupported upload type: ${file.type}`, operation);

@@ -106,7 +106,7 @@ const CODE_LANGUAGE_ALIASES: CodeLanguageAliases = {
 
 type Highlighter = Awaited<ReturnType<(typeof import("shiki/core"))["createHighlighterCore"]>>;
 
-const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Effect.runSync(Ref.make(Option.none()));
+const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Ref.makeUnsafe(Option.none());
 
 const createHighlighter = async (): Promise<Highlighter> => {
   const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, ...bundles] =
@@ -201,9 +201,7 @@ const highlightCode = (
       catch: () => new ShikiError({ message: "shiki highlight failed" }),
     }).pipe(
       Effect.tapError((cause) => Effect.logWarning("Code highlight failed", cause)),
-      Effect.catch(() =>
-        Effect.succeed(codeFigure(plainCode(code, language), fileName, showLineNumbers)),
-      ),
+      Effect.orElseSucceed(() => codeFigure(plainCode(code, language), fileName, showLineNumbers)),
     );
   });
 

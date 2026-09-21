@@ -314,11 +314,12 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
           session_token: sessionToken,
           redirectUri,
         });
+        const userCookieValue = yield* Schema.encodeEffect(Schema.fromJsonString(Schema.Unknown))(
+          user,
+        );
         yield* Effect.sync(() => {
           cookie.guestbook_session.remove();
-          cookie.guestbook_user.value = Schema.encodeSync(Schema.fromJsonString(Schema.Unknown))(
-            user,
-          );
+          cookie.guestbook_user.value = userCookieValue;
           cookie.guestbook_user.update({
             httpOnly: true,
             secure: env.NODE_ENV === "production",
@@ -333,9 +334,7 @@ export const guestbookIntegration = new Elysia({ name: "guestbook" })
       return runGuestbook(
         env,
         callbackProgram.pipe(
-          Effect.catch(() =>
-            Effect.succeed(Response.redirect(`${returnUrl}?error=auth_failed`, 302)),
-          ),
+          Effect.orElseSucceed(() => Response.redirect(`${returnUrl}?error=auth_failed`, 302)),
         ),
         logContextFromRequest(request, "tom-adapter"),
       );

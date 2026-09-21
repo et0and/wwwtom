@@ -94,7 +94,7 @@ describe("ArenaClient", () => {
     ])("$label", async ({ token, expected }) => {
       const client = new ArenaClient({ token, fetch: mockFetch });
 
-      await runEffect(client.me());
+      await runEffect(client.me);
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
@@ -187,7 +187,7 @@ describe("ArenaClient", () => {
       const customFetch = createMockFetch();
       const client = new ArenaClient({ fetch: customFetch });
 
-      await runEffect(client.me());
+      await runEffect(client.me);
 
       expect(customFetch).toHaveBeenCalledTimes(1);
     });
@@ -200,7 +200,7 @@ describe("ArenaClient", () => {
       });
       const client = new ArenaClient({ fetch: networkErrorFetch });
 
-      const result = await Effect.runPromiseExit(client.me());
+      const result = await Effect.runPromiseExit(client.me);
 
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error("Expected Failure");
@@ -225,7 +225,7 @@ describe("ArenaClient", () => {
       const errorFetch = vi.fn(async () => errorResponse);
       const client = new ArenaClient({ fetch: errorFetch });
 
-      const result = await Effect.runPromiseExit(client.block(999).get());
+      const result = await Effect.runPromiseExit(client.block(999).get);
 
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error("Expected Failure");
@@ -240,7 +240,7 @@ describe("ArenaClient", () => {
     it("me() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.me());
+      await runEffect(client.me);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -262,7 +262,7 @@ describe("ArenaClient", () => {
     it("user(id).get() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.user(42).get());
+      await runEffect(client.user(42).get);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -283,7 +283,7 @@ describe("ArenaClient", () => {
     it("channel(slug).get() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.channel("my-channel").get());
+      await runEffect(client.channel("my-channel").get);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -293,7 +293,7 @@ describe("ArenaClient", () => {
     it("block(id).get() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.block(123).get());
+      await runEffect(client.block(123).get);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);

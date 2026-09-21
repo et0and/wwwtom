@@ -28,7 +28,7 @@ import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 
 export interface ArenaBlockApi {
-  get(): Effect.Effect<GetBlockApiResponse, HttpError>;
+  readonly get: Effect.Effect<GetBlockApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetBlockChannelsApiResponse, HttpError>;
   update(data: {
     title?: string;
@@ -39,10 +39,10 @@ export interface ArenaBlockApi {
 }
 
 export interface ArenaUserApi {
-  get(): Effect.Effect<GetUserApiResponse, HttpError>;
+  readonly get: Effect.Effect<GetUserApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetUserChannelsApiResponse, HttpError>;
-  following(): Effect.Effect<GetUserFollowingApiResponse, HttpError>;
-  followers(): Effect.Effect<GetUserFollowersApiResponse, HttpError>;
+  readonly following: Effect.Effect<GetUserFollowingApiResponse, HttpError>;
+  readonly followers: Effect.Effect<GetUserFollowersApiResponse, HttpError>;
 }
 
 export type ChannelStatus = "public" | "closed" | "private";
@@ -50,16 +50,16 @@ export type ChannelStatus = "public" | "closed" | "private";
 type ChannelUpdateBody = { title: string; visibility?: ChannelStatus };
 
 export interface ArenaGroupApi {
-  get(): Effect.Effect<GetGroupApiResponse, HttpError>;
+  readonly get: Effect.Effect<GetGroupApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetGroupChannelsApiResponse, HttpError>;
 }
 
 export interface ArenaChannelApi {
   create(status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError>;
-  get(): Effect.Effect<Channel, HttpError>;
-  delete(): Effect.Effect<void, HttpError>;
+  readonly get: Effect.Effect<Channel, HttpError>;
+  readonly delete: Effect.Effect<void, HttpError>;
   update(data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError>;
-  thumb(): Effect.Effect<GetChannelThumbApiResponse, HttpError>;
+  readonly thumb: Effect.Effect<GetChannelThumbApiResponse, HttpError>;
   contents(options?: PaginationAttributes): Effect.Effect<GetChannelContentsApiResponse, HttpError>;
   connections(options?: PaginationAttributes): Effect.Effect<ChannelConnections, HttpError>;
 }
@@ -81,7 +81,7 @@ export interface ArenaSearchApi {
 }
 
 export interface ArenaApi {
-  me(): Effect.Effect<MeApiResponse, HttpError>;
+  readonly me: Effect.Effect<MeApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError>;
   user(id: number | string): ArenaUserApi;
   group(slug: string): ArenaGroupApi;
@@ -395,7 +395,7 @@ export class ArenaClient implements ArenaApi {
     });
   }
 
-  me(): Effect.Effect<MeApiResponse, HttpError> {
+  get me(): Effect.Effect<MeApiResponse, HttpError> {
     return sdkEffect<MeApiResponse>(() => this.arena.me());
   }
 
@@ -405,23 +405,19 @@ export class ArenaClient implements ArenaApi {
 
   user(id: number | string): ArenaUserApi {
     return {
-      get: (): Effect.Effect<GetUserApiResponse, HttpError> =>
-        sdkEffect<GetUserApiResponse>(() => this.arena.users.get(id)),
+      get: sdkEffect<GetUserApiResponse>(() => this.arena.users.get(id)),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetUserChannelsApiResponse, HttpError> =>
         this.getJsonWithPaginationQuery(`users/${id}/channels`, options),
-      following: (): Effect.Effect<GetUserFollowingApiResponse, HttpError> =>
-        sdkEffect<GetUserFollowingApiResponse>(() => this.arena.users.following(id)),
-      followers: (): Effect.Effect<GetUserFollowersApiResponse, HttpError> =>
-        sdkEffect<GetUserFollowersApiResponse>(() => this.arena.users.followers(id)),
+      following: sdkEffect<GetUserFollowingApiResponse>(() => this.arena.users.following(id)),
+      followers: sdkEffect<GetUserFollowersApiResponse>(() => this.arena.users.followers(id)),
     };
   }
 
   group(slug: string): ArenaGroupApi {
     return {
-      get: (): Effect.Effect<GetGroupApiResponse, HttpError> =>
-        sdkEffect<GetGroupApiResponse>(() => this.arena.groups.get(slug)),
+      get: sdkEffect<GetGroupApiResponse>(() => this.arena.groups.get(slug)),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetGroupChannelsApiResponse, HttpError> =>
@@ -454,12 +450,9 @@ export class ArenaClient implements ArenaApi {
           if (data.status) body.visibility = data.status;
           return this.arena.channels.update(slug, body).then(() => undefined);
         }),
-      get: (): Effect.Effect<Channel, HttpError> =>
-        sdkEffect<Channel>(() => this.arena.channels.get(slug)),
-      delete: (): Effect.Effect<void, HttpError> =>
-        sdkEffect<void>(() => this.arena.channels.delete(slug)),
-      thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
-        this.makeRequest<GetChannelThumbApiResponse>(`channels/${slug}/thumb`),
+      get: sdkEffect<Channel>(() => this.arena.channels.get(slug)),
+      delete: sdkEffect<void>(() => this.arena.channels.delete(slug)),
+      thumb: this.makeRequest<GetChannelThumbApiResponse>(`channels/${slug}/thumb`),
     };
   }
 
@@ -471,8 +464,7 @@ export class ArenaClient implements ArenaApi {
         sdkEffect<GetBlockChannelsApiResponse>(() =>
           this.arena.blocks.connections(id, toConnectionsQuery(options)),
         ),
-      get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
-        sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
+      get: sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
       update: (data: {
         title?: string;
         description?: string;

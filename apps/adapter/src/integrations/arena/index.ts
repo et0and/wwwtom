@@ -193,7 +193,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.channel(params.slug).get(),
+        (client) => client.channel(params.slug).get,
         logContextFromRequest(request, "tom-adapter"),
         "public",
       );
@@ -224,7 +224,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.channel(params.slug).thumb(),
+        (client) => client.channel(params.slug).thumb,
         logContextFromRequest(request, "tom-adapter"),
         "public",
       );
@@ -239,7 +239,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.user(params.id).get(),
+        (client) => client.user(params.id).get,
         logContextFromRequest(request, "tom-adapter"),
       );
     },
@@ -268,7 +268,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.user(params.id).following(),
+        (client) => client.user(params.id).following,
         logContextFromRequest(request, "tom-adapter"),
       );
     },
@@ -282,7 +282,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.user(params.id).followers(),
+        (client) => client.user(params.id).followers,
         logContextFromRequest(request, "tom-adapter"),
       );
     },
@@ -296,7 +296,7 @@ export const arenaIntegration = new Elysia({ name: "arena" })
     ({ params, request }) => {
       return runArena(
         request,
-        (client) => client.block(params.id).get(),
+        (client) => client.block(params.id).get,
         logContextFromRequest(request, "tom-adapter"),
       );
     },

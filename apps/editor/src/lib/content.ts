@@ -202,8 +202,12 @@ export const restoreRevision = (
           ),
   );
 
-export const listCategories = (): Effect.Effect<ReadonlyArray<CmsCategory>, CmsError> =>
-  fetchAndDecode("/content/categories", {}, categoryListSchema, "list_categories");
+export const listCategories: Effect.Effect<ReadonlyArray<CmsCategory>, CmsError> = fetchAndDecode(
+  "/content/categories",
+  {},
+  categoryListSchema,
+  "list_categories",
+);
 
 export const createCategory = (slug: string, title: string): Effect.Effect<CmsCategory, CmsError> =>
   Effect.flatMap(
@@ -247,8 +251,12 @@ export const uploadMedia = (file: File, alt: string | null): Effect.Effect<CmsMe
   );
 };
 
-export const listMedia = (): Effect.Effect<CmsListResponse<CmsMedia>, CmsError> =>
-  fetchAndDecode("/content/media?pageSize=100", {}, mediaListSchema, "list_media");
+export const listMedia: Effect.Effect<CmsListResponse<CmsMedia>, CmsError> = fetchAndDecode(
+  "/content/media?pageSize=100",
+  {},
+  mediaListSchema,
+  "list_media",
+);
 
 export const getMediaUsage = (id: string): Effect.Effect<CmsMediaUsage, CmsError> =>
   fetchAndDecode(

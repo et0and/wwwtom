@@ -173,12 +173,10 @@ const requireTrustedWriteOrigin = (
     if (referer === null) return;
     const origin = yield* refererOrigin(referer);
     if (!isTrustedWriteOrigin(origin, adapterOrigin, allowLocalOrigins, tenant)) {
-      return yield* Effect.fail(
-        new AdapterError({
-          status: HttpStatus.Forbidden,
-          message: "Untrusted write origin",
-        }),
-      );
+      return yield* new AdapterError({
+        status: HttpStatus.Forbidden,
+        message: "Untrusted write origin",
+      });
     }
   });
 

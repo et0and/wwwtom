@@ -48,10 +48,7 @@ export const sendErrorAlert = (
             ...(stage && { stage }),
             links: [...(details?.links ?? []), ...dashboardLinks()],
           });
-        }).pipe(
-          Effect.provide(layer),
-          Effect.catch(() => Effect.void),
-        ),
+        }).pipe(Effect.provide(layer), Effect.ignore({ log: false })),
       );
     })
     .catch(() => undefined);
