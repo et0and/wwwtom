@@ -54,6 +54,8 @@ const imageSourceSet = (image: ArenaImage | null | undefined): string | undefine
 const imageAlt = (image: ArenaImage | null | undefined, title: string | null | undefined): string =>
   image?.alt_text || title || "";
 
+const hasImageSource = (image: ArenaImage | null | undefined): boolean => imageSource(image) !== "";
+
 function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> }) {
   return (
     <div class="prose prose-sm max-w-none break-words whitespace-normal">
@@ -67,15 +69,20 @@ function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> 
 }
 
 function ImageBlock(props: { block: Extract<ArenaContentBlock, { type: "Image" }> }) {
+  const src = () => imageSource(props.block.image);
   return (
     <figure class="m-0">
-      <img
-        src={imageSource(props.block.image)}
-        srcset={imageSourceSet(props.block.image)}
-        alt={imageAlt(props.block.image, props.block.title)}
-        class="w-full"
-        loading="lazy"
-      />
+      <Show when={src()}>
+        {(value) => (
+          <img
+            src={value()}
+            srcset={imageSourceSet(props.block.image)}
+            alt={imageAlt(props.block.image, props.block.title)}
+            class="w-full"
+            loading="lazy"
+          />
+        )}
+      </Show>
       <Show when={props.block.description?.plain}>
         {(caption) => (
           <figcaption>
@@ -90,26 +97,46 @@ function ImageBlock(props: { block: Extract<ArenaContentBlock, { type: "Image" }
 }
 
 function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> }) {
+  const url = () => props.block.source?.url ?? "";
+  const label = () => props.block.title || props.block.source?.title || "";
   return (
-    <a
-      href={props.block.source?.url ?? ""}
-      target="_blank"
-      rel="noopener noreferrer"
-      class="block no-underline hover:underline"
+    <Show
+      when={url()}
+      fallback={
+        <>
+          <Show when={hasImageSource(props.block.image)}>
+            <img
+              src={imageSource(props.block.image)}
+              srcset={imageSourceSet(props.block.image)}
+              alt={imageAlt(props.block.image, props.block.title)}
+              class="w-full"
+              loading="lazy"
+            />
+          </Show>
+          <Text>{label()}</Text>
+        </>
+      }
     >
-      <Show when={props.block.image}>
-        {(image) => (
-          <img
-            src={imageSource(image())}
-            srcset={imageSourceSet(image())}
-            alt={imageAlt(image(), props.block.title)}
-            class="w-full"
-            loading="lazy"
-          />
-        )}
-      </Show>
-      <Text>{props.block.title || props.block.source?.title || ""}</Text>
-    </a>
+      {(href) => (
+        <a
+          href={href()}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="block no-underline hover:underline"
+        >
+          <Show when={hasImageSource(props.block.image)}>
+            <img
+              src={imageSource(props.block.image)}
+              srcset={imageSourceSet(props.block.image)}
+              alt={imageAlt(props.block.image, props.block.title)}
+              class="w-full"
+              loading="lazy"
+            />
+          </Show>
+          <Text>{label()}</Text>
+        </a>
+      )}
+    </Show>
   );
 }
 
@@ -128,6 +155,7 @@ function PlayOverlay() {
 /** Videos load only after a click, so are.na serves no bytes up front. */
 function VideoAttachment(props: { url: string; name: string; cover: ArenaImage | null }) {
   const [isPlaying, setIsPlaying] = createSignal(false);
+  const cover = () => (props.cover && hasImageSource(props.cover) ? props.cover : null);
   return (
     <Show
       when={isPlaying()}
@@ -139,7 +167,7 @@ function VideoAttachment(props: { url: string; name: string; cover: ArenaImage |
           class="block w-full cursor-pointer border-0 bg-transparent p-0 text-left"
         >
           <Show
-            when={props.cover}
+            when={cover()}
             fallback={
               <span class="relative flex h-44 w-full items-center justify-center bg-gray-100">
                 <PlayOverlay />
@@ -180,16 +208,14 @@ function AttachmentBlock(props: { block: Extract<ArenaContentBlock, { type: "Att
     contentType().startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(displayName());
   const body = (
     <>
-      <Show when={props.block.image}>
-        {(cover) => (
-          <img
-            src={imageSource(cover())}
-            srcset={imageSourceSet(cover())}
-            alt={displayName()}
-            class="w-full"
-            loading="lazy"
-          />
-        )}
+      <Show when={hasImageSource(props.block.image)}>
+        <img
+          src={imageSource(props.block.image)}
+          srcset={imageSourceSet(props.block.image)}
+          alt={displayName()}
+          class="w-full"
+          loading="lazy"
+        />
       </Show>
       <Text>{displayName()}</Text>
     </>
@@ -236,14 +262,21 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
     <Show
       when={embed().html}
       fallback={
-        <a href={fallbackUrl()} target="_blank" rel="noopener noreferrer">
-          {props.block.title || fallbackUrl()}
-        </a>
+        <Show
+          when={fallbackUrl()}
+          fallback={<Text>{props.block.title || "Embedded content"}</Text>}
+        >
+          {(href) => (
+            <a href={href()} target="_blank" rel="noopener noreferrer">
+              {props.block.title || href()}
+            </a>
+          )}
+        </Show>
       }
     >
       {(html) => (
         <Show
-          when={isPlaying() || !cover()}
+          when={isPlaying() || !hasImageSource(cover())}
           fallback={
             <button
               type="button"

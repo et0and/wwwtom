@@ -37,22 +37,29 @@ const CONTENT_SORT: PaginationAttributes = { sort: "position", direction: "desc"
 /**
  * Public URL slugs come from the channel title, not the are.na slug: are.na
  * appends a random suffix when a slug is taken, which makes for ugly URLs.
- * Diacritics fold, so "Pōneke" becomes "poneke".
+ * Diacritics fold, so "Pōneke" becomes "poneke". Titles that slugify to
+ * nothing (emoji-only) fall back to the channel id so decoding never throws.
  */
-const slugify = (title: string): ArenaSlug =>
+const slugify = (title: string, fallback: string): ArenaSlug =>
   Schema.decodeUnknownSync(ArenaSlug)(
     title
       .normalize("NFKD")
       .replace(/\p{Diacritic}/gu, "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, ""),
+      .replace(/^-+|-+$/g, "") || fallback,
   );
 
-const normalizePage = (page: number | undefined): number => Math.max(Math.trunc(page ?? 1), 1);
+const normalizePage = (page: number | undefined): number => {
+  const parsed = Math.trunc(page ?? 1);
+  return Number.isFinite(parsed) ? Math.max(parsed, 1) : 1;
+};
 
-const normalizePer = (per: number | undefined): number =>
-  Math.min(Math.max(Math.trunc(per ?? DEFAULT_PER_PAGE), 1), MAX_PER_PAGE);
+const normalizePer = (per: number | undefined): number => {
+  const parsed = Math.trunc(per ?? DEFAULT_PER_PAGE);
+  if (!Number.isFinite(parsed)) return DEFAULT_PER_PAGE;
+  return Math.min(Math.max(parsed, 1), MAX_PER_PAGE);
+};
 
 const decodeContents = <J>(input: J): Effect.Effect<ArenaContentsResponse, HttpError> =>
   Schema.decodeUnknownEffect(ArenaContentsResponseSchema)(input).pipe(
@@ -85,7 +92,7 @@ const readIndexEntries = (
       }
       entries.push({
         id: channel.value.id,
-        slug: slugify(channel.value.title),
+        slug: slugify(channel.value.title, `channel-${channel.value.id}`),
         arenaSlug: channel.value.slug,
         title: channel.value.title,
         summary: channel.value.description?.plain ?? null,

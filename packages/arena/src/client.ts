@@ -351,17 +351,23 @@ export class ArenaClient implements ArenaApi {
       url: string,
       requestHeaders: HeadersInit | undefined,
     ): Promise<Response> {
-      const retryHeaders = ArenaClient.removeAuthorizationHeader(requestHeaders);
-      const retryInput =
-        input instanceof Request && retryHeaders
-          ? new Request(input, { headers: retryHeaders })
-          : input;
-      const retryInit: NonNullable<Parameters<Fetch>[1]> = {
-        ...init,
-        cf: publicCacheOptions(url),
-      };
-      if (retryHeaders && !(input instanceof Request)) retryInit.headers = retryHeaders;
-      return fetchImpl(retryInput, retryInit);
+      return (async () => {
+        const cached = await readWorkerCache(url);
+        if (cached) return cached;
+        const retryHeaders = ArenaClient.removeAuthorizationHeader(requestHeaders);
+        const retryInput =
+          input instanceof Request && retryHeaders
+            ? new Request(input, { headers: retryHeaders })
+            : input;
+        const retryInit: NonNullable<Parameters<Fetch>[1]> = {
+          ...init,
+          cf: publicCacheOptions(url),
+        };
+        if (retryHeaders && !(input instanceof Request)) retryInit.headers = retryHeaders;
+        const response = await fetchImpl(retryInput, retryInit);
+        if (response.ok) await writeWorkerCache(url, response);
+        return response;
+      })();
     }
   }
 

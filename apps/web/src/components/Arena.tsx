@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/solid-query";
 import { Effect, Option, Schema } from "effect";
-import { For, Show, createMemo } from "solid-js";
+import { For, Show, createEffect, createMemo } from "solid-js";
 import { ArenaContentBlockSchema, type ArenaContentBlock } from "@tom/schemas/arena-content";
 import type { ArenaChannelContents } from "@tom/schemas/arena";
 import { Loader } from "@tom/ui/loader";
@@ -34,21 +34,19 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
     const response = activeContents();
     return !!(response?.data && response.data.length > 0);
   });
+  createEffect(
+    () => !isLoading() && !hasContent(),
+    (isEmpty) => {
+      if (isEmpty) {
+        void Effect.runFork(
+          Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
+        );
+      }
+    },
+  );
   return (
     <Show when={!isLoading()} fallback={<Loader />}>
-      <Show
-        when={hasContent()}
-        fallback={
-          <>
-            {
-              void Effect.runFork(
-                Effect.logWarning(`Warning: no contents found for channel slug "${props.slug}"`),
-              )
-            }
-            <Text variant="secondary">Sorry, no content found</Text>
-          </>
-        }
-      >
+      <Show when={hasContent()} fallback={<Text variant="secondary">Sorry, no content found</Text>}>
         <div class="overflow-x-auto whitespace-nowrap border border-black">
           <div class="carousel-container inline-flex gap-4 p-4">
             <For each={activeContents()?.data || []} keyed={false}>
