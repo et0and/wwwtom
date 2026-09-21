@@ -2,8 +2,8 @@ import { Schema } from "effect";
 import { problemDetailsSchema as sharedProblemDetailsSchema } from "@tom/schemas/error";
 
 export const PaginationQuerySchema = Schema.Struct({
-  page: Schema.optional(Schema.NumberFromString),
-  per: Schema.optional(Schema.NumberFromString),
+  page: Schema.optional(Schema.FiniteFromString),
+  per: Schema.optional(Schema.FiniteFromString),
   sort: Schema.optional(Schema.String),
   direction: Schema.optional(Schema.Union([Schema.Literal("asc"), Schema.Literal("desc")])),
 });
@@ -22,8 +22,8 @@ export const SearchQuerySchema = Schema.Struct({
       Schema.Literal("users"),
     ]),
   ),
-  page: Schema.optional(Schema.NumberFromString),
-  per: Schema.optional(Schema.NumberFromString),
+  page: Schema.optional(Schema.FiniteFromString),
+  per: Schema.optional(Schema.FiniteFromString),
   sort: Schema.optional(Schema.String),
   direction: Schema.optional(Schema.Union([Schema.Literal("asc"), Schema.Literal("desc")])),
 });

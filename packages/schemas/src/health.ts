@@ -8,7 +8,7 @@ const HealthStatus = Schema.Union([
 
 const HealthResponseSchema = Schema.Struct({
   status: HealthStatus,
-  timestamp: Schema.Number,
+  timestamp: Schema.Finite,
 });
 
 export const healthResponseSchema = HealthResponseSchema;

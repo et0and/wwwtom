@@ -34,7 +34,7 @@ export const createDbLayer = (env: CloudflareEnv) =>
  * The global onError hook maps it to a JSON response with the right status.
  */
 export class AdapterError extends Schema.TaggedError<AdapterError>()("AdapterError", {
-  status: Schema.Number,
+  status: Schema.Finite,
   message: Schema.String,
 }) {}
 

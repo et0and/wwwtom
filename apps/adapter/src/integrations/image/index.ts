@@ -14,8 +14,8 @@ const ALLOWED_DOMAINS = ["cdn.tom.so"];
 
 const ImageQuerySchema = Schema.Struct({
   url: Schema.String,
-  width: Schema.optional(Schema.NumberFromString),
-  quality: Schema.optional(Schema.NumberFromString),
+  width: Schema.optional(Schema.FiniteFromString),
+  quality: Schema.optional(Schema.FiniteFromString),
   format: Schema.optional(
     Schema.Union([Schema.Literal("jpeg"), Schema.Literal("png"), Schema.Literal("webp")]),
   ),

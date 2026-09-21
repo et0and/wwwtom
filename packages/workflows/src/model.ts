@@ -25,7 +25,7 @@ export type Script = typeof Script.Encoded;
 // Definition-facing types are the schemas' encoded side: a script is written
 // as a string or a list of lines, everything else decodes to its written shape.
 
-const Scalar = Schema.Union([Schema.String, Schema.Number, Schema.Boolean]);
+const Scalar = Schema.Union([Schema.String, Schema.Finite, Schema.Boolean]);
 const Value = Schema.Union([Scalar, Lines]);
 
 export const Env = Schema.Record(Schema.String, Schema.String);
@@ -127,7 +127,7 @@ export const Job = Schema.Struct({
   needs: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
   if: Schema.optional(Schema.String),
   environment: Schema.optional(Schema.String),
-  "timeout-minutes": Schema.optional(Schema.Number),
+  "timeout-minutes": Schema.optional(Schema.Finite),
   permissions: Schema.optional(Permissions),
   concurrency: Schema.optional(Concurrency),
   env: Schema.optional(Env),

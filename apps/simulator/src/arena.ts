@@ -133,10 +133,10 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
       params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.String })),
       query: Schema.toStandardSchemaV1(
         Schema.Struct({
-          page: Schema.optional(Schema.NumberFromString),
-          per: Schema.optional(Schema.NumberFromString),
+          page: Schema.optional(Schema.FiniteFromString),
+          per: Schema.optional(Schema.FiniteFromString),
           sort: Schema.optional(Schema.String),
-          user_id: Schema.optional(Schema.NumberFromString),
+          user_id: Schema.optional(Schema.FiniteFromString),
         }),
       ),
       detail: { description: "Simulated Are.na channel contents", tags: ["arena"] },
@@ -169,10 +169,10 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
     {
       query: Schema.toStandardSchemaV1(
         Schema.Struct({
-          per_page: Schema.optional(Schema.NumberFromString),
-          page: Schema.optional(Schema.NumberFromString),
+          per_page: Schema.optional(Schema.FiniteFromString),
+          page: Schema.optional(Schema.FiniteFromString),
           sort: Schema.optional(Schema.String),
-          date: Schema.optional(Schema.NumberFromString),
+          date: Schema.optional(Schema.FiniteFromString),
         }),
       ),
       detail: { description: "Simulated Are.na list channels (legacy shape)", tags: ["arena"] },
@@ -220,8 +220,8 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
       params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.String })),
       query: Schema.toStandardSchemaV1(
         Schema.Struct({
-          per_page: Schema.optional(Schema.NumberFromString),
-          page: Schema.optional(Schema.NumberFromString),
+          per_page: Schema.optional(Schema.FiniteFromString),
+          page: Schema.optional(Schema.FiniteFromString),
         }),
       ),
       detail: { description: "Simulated Are.na user channels (legacy shape)", tags: ["arena"] },
@@ -261,7 +261,7 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
       return block;
     },
     {
-      params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Number })),
+      params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite })),
       detail: { description: "Simulated Are.na get block", tags: ["arena"] },
     },
   )
@@ -273,11 +273,11 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
       return { data, meta: paginationMeta(data.length, per, query.page ?? 1) };
     },
     {
-      params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Number })),
+      params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite })),
       query: Schema.toStandardSchemaV1(
         Schema.Struct({
-          page: Schema.optional(Schema.NumberFromString),
-          per: Schema.optional(Schema.NumberFromString),
+          page: Schema.optional(Schema.FiniteFromString),
+          per: Schema.optional(Schema.FiniteFromString),
           sort: Schema.optional(Schema.String),
         }),
       ),
@@ -295,11 +295,11 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
       return { data, meta: paginationMeta(data.length, per, query.page ?? 1) };
     },
     {
-      params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Number })),
+      params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite })),
       query: Schema.toStandardSchemaV1(
         Schema.Struct({
-          page: Schema.optional(Schema.NumberFromString),
-          per: Schema.optional(Schema.NumberFromString),
+          page: Schema.optional(Schema.FiniteFromString),
+          per: Schema.optional(Schema.FiniteFromString),
         }),
       ),
       detail: { description: "Simulated Are.na block comments", tags: ["arena"] },
@@ -318,14 +318,14 @@ export const arenaSimulator = new Elysia({ name: "arena-simulator" })
           query: Schema.optional(Schema.String),
           type: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
           scope: Schema.optional(Schema.String),
-          user_id: Schema.optional(Schema.NumberFromString),
-          group_id: Schema.optional(Schema.NumberFromString),
-          channel_id: Schema.optional(Schema.NumberFromString),
+          user_id: Schema.optional(Schema.FiniteFromString),
+          group_id: Schema.optional(Schema.FiniteFromString),
+          channel_id: Schema.optional(Schema.FiniteFromString),
           ext: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
           sort: Schema.optional(Schema.String),
-          seed: Schema.optional(Schema.NumberFromString),
-          page: Schema.optional(Schema.NumberFromString),
-          per: Schema.optional(Schema.NumberFromString),
+          seed: Schema.optional(Schema.FiniteFromString),
+          page: Schema.optional(Schema.FiniteFromString),
+          per: Schema.optional(Schema.FiniteFromString),
         }),
       ),
       detail: { description: "Simulated Are.na search", tags: ["arena"] },

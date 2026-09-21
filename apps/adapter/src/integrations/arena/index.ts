@@ -27,11 +27,11 @@ const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: 
 
 const IdOrSlugParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({
-    id: Schema.Union([Schema.NumberFromString, Schema.String]),
+    id: Schema.Union([Schema.FiniteFromString, Schema.String]),
   }),
 );
 
-const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Number }));
+const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite }));
 
 const toPaginationAttributes = (query: PaginationQuery): PaginationAttributes | undefined => {
   const hasAny =
@@ -162,15 +162,15 @@ const arenaFeed = async (request: Request, limit: number): Promise<{ docs: Arena
 
 const arenaListQuerySchema = Schema.toStandardSchemaV1(
   Schema.Struct({
-    page: Schema.optional(Schema.NumberFromString),
-    pageSize: Schema.optional(Schema.NumberFromString),
+    page: Schema.optional(Schema.FiniteFromString),
+    pageSize: Schema.optional(Schema.FiniteFromString),
   }),
 );
 
 const arenaSlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: Schema.String }));
 
 const feedQuerySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ limit: Schema.optional(Schema.NumberFromString) }),
+  Schema.Struct({ limit: Schema.optional(Schema.FiniteFromString) }),
 );
 
 export const arenaIntegration = new Elysia({ name: "arena" })

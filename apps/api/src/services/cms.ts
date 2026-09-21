@@ -364,8 +364,8 @@ const normalizePaging = (
 ): Effect.Effect<{ limit: number; current: number; offset: number }, CmsError> => {
   const limit = Math.min(Math.max(paging.pageSize ?? 10, 1), 100);
   const current = Math.max(paging.page ?? 1, 1);
-  // NumberFromString coerces unparseable input to NaN instead of failing,
-  // so reject non-integers here before they reach SQL.
+  // The paging schema rejects unparseable input at the boundary; fractions
+  // still reach here, so reject non-integers before they hit SQL.
   if (!Number.isInteger(limit) || !Number.isInteger(current)) {
     return Effect.fail(
       new CmsError({

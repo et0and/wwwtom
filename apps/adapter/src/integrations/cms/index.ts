@@ -332,8 +332,8 @@ export const extractArenaRefs = (doc: TiptapDoc): Array<ArenaRef> => {
 };
 
 const PostQuerySchema = Schema.Struct({
-  page: Schema.optional(Schema.NumberFromString),
-  pageSize: Schema.optional(Schema.NumberFromString),
+  page: Schema.optional(Schema.FiniteFromString),
+  pageSize: Schema.optional(Schema.FiniteFromString),
   status: Schema.optional(Schema.Literals(["all", "draft", "published"])),
   category: Schema.optional(CmsSlug),
   excludeCategory: Schema.optional(CmsSlug),
@@ -381,7 +381,7 @@ const rejectWorkCategory = (query: PostQuery): void => {
 const postQuerySchema = Schema.toStandardSchemaV1(PostQuerySchema);
 
 const feedQuerySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ limit: Schema.optional(Schema.NumberFromString) }),
+  Schema.Struct({ limit: Schema.optional(Schema.FiniteFromString) }),
 );
 
 const SlugParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ slug: Schema.String }));

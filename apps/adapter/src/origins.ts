@@ -89,11 +89,11 @@ const SOPHIE_EXACT_HOSTS: ReadonlySet<string> = new Set([
 
 /**
  * PR stage numbers arrive as strings (`pr-42`). Positive integers only:
- * NumberFromString alone accepts Infinity and fractions, which never name
- * a real stage.
+ * `FiniteFromString` rejects Infinity and `Int` rejects fractions, neither
+ * of which names a real stage.
  */
 const PrNumberSchema = Schema.decodeTo(Schema.Int.check(Schema.isGreaterThan(0)))(
-  Schema.NumberFromString,
+  Schema.FiniteFromString,
 );
 const prNumber = (value: string): boolean =>
   Option.isSome(Schema.decodeUnknownOption(PrNumberSchema)(value));

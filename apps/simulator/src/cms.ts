@@ -72,9 +72,9 @@ const findPublished = (docs: ReadonlyArray<CmsDoc>, slug: string): CmsDoc | unde
 
 const listQuery = Schema.toStandardSchemaV1(
   Schema.Struct({
-    page: Schema.optional(Schema.NumberFromString),
-    pageSize: Schema.optional(Schema.NumberFromString),
-    limit: Schema.optional(Schema.NumberFromString),
+    page: Schema.optional(Schema.FiniteFromString),
+    pageSize: Schema.optional(Schema.FiniteFromString),
+    limit: Schema.optional(Schema.FiniteFromString),
     status: Schema.optional(Schema.String),
     category: Schema.optional(Schema.String),
     excludeCategory: Schema.optional(Schema.String),

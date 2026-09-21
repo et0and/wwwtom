@@ -14,15 +14,15 @@ export const TomWorkMessage = Schema.Union([
   // queue consumer worker (apps/worker) turns it into a site-owner alert.
   Schema.Struct({
     kind: Schema.Literal("guestbook-sign"),
-    entryId: Schema.Number,
+    entryId: Schema.Finite,
     fediverseUsername: Schema.String,
     displayName: Schema.String,
     message: Schema.String,
   }),
   Schema.Struct({
     kind: Schema.Literal("publish-post"),
-    postId: Schema.Number,
-    publishAt: Schema.Number,
+    postId: Schema.Finite,
+    publishAt: Schema.Finite,
   }),
   Schema.Struct({
     kind: Schema.Literal("render-og"),
