@@ -164,3 +164,8 @@ export class WorkflowInvalidError extends Schema.TaggedError<WorkflowInvalidErro
     cause: Schema.optional(Schema.Unknown),
   },
 ) {}
+
+export class ShikiError extends Schema.TaggedError<ShikiError>()(
+  "ShikiError",
+  messageCauseFields,
+) {}

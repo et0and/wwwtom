@@ -2,7 +2,7 @@
   "name": "@tom/monorepo",
   "private": true,
   "scripts": {
-    "prepare": "effect-language-service patch && husky",
+    "prepare": "effect-tsgo patch --typescript --no-oxlint && husky",
     "build": "turbo run build",
     "dev": "turbo run dev",
     "dev:web": "turbo run dev --filter=@tom/web",
@@ -43,7 +43,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "2.30.0",
-    "@effect/language-service": "0.87.2",
+    "@effect/tsgo": "catalog:",
     "@oxlint/plugins": "1.78.0",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -53,7 +53,7 @@
     "oxlint": "1.78.0",
     "semantic-release": "24.2.3",
     "turbo": "2.9.1",
-    "typescript": "6.0.3"
+    "typescript": "catalog:"
   },
   "packageManager": "pnpm@11.3.0"
 }

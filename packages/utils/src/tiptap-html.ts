@@ -1,5 +1,6 @@
 import { Effect, Option, Ref } from "effect";
 import type { CmsBannerStyle, TiptapBlock, TiptapDoc, TiptapInline } from "@tom/schemas/cms";
+import { ShikiError } from "@tom/types/errors";
 
 /** Resolve an editor media reference to its absolute public file URL. */
 export type MediaUrlResolver = (mediaId: string) => string;
@@ -145,7 +146,7 @@ const getHighlighter = Effect.gen(function* () {
   const fresh = yield* Effect.option(
     Effect.tryPromise({
       try: () => createHighlighter(),
-      catch: () => new Error("shiki init failed"),
+      catch: () => new ShikiError({ message: "shiki init failed" }),
     }).pipe(Effect.tap((loaded) => Ref.set(highlighterRef, Option.some(loaded)))),
   );
   return fresh;
@@ -197,7 +198,7 @@ const highlightCode = (
           showLineNumbers,
         );
       },
-      catch: () => new Error("shiki highlight failed"),
+      catch: () => new ShikiError({ message: "shiki highlight failed" }),
     }).pipe(
       Effect.tapError((cause) => Effect.logWarning("Code highlight failed", cause)),
       Effect.catch(() =>

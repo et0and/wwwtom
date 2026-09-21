@@ -9,6 +9,9 @@ catalogs:
     '@effect/platform-node':
       specifier: 4.0.0-rc.116
       version: 4.0.0-rc.116
+    '@effect/tsgo':
+      specifier: 0.45.0
+      version: 0.45.0
     '@elysiajs/cors':
       specifier: 1.4.2
       version: 1.4.2
@@ -116,18 +119,18 @@ importers:
       '@changesets/cli':
         specifier: 2.30.0
         version: 2.30.0(@types/node@26.2.0)
-      '@effect/language-service':
-        specifier: 0.87.2
-        version: 0.87.2
+      '@effect/tsgo':
+        specifier: 'catalog:'
+        version: 0.45.0
       '@oxlint/plugins':
         specifier: 1.78.0
         version: 1.78.0
       '@semantic-release/changelog':
         specifier: 6.0.3
-        version: 6.0.3(semantic-release@24.2.3(typescript@6.0.3))
+        version: 6.0.3(semantic-release@24.2.3(typescript@7.0.2))
       '@semantic-release/git':
         specifier: 10.0.1
-        version: 10.0.1(semantic-release@24.2.3(typescript@6.0.3))
+        version: 10.0.1(semantic-release@24.2.3(typescript@7.0.2))
       '@turbo/gen':
         specifier: 2.8.5
         version: 2.8.5(@types/node@26.2.0)
@@ -142,13 +145,13 @@ importers:
         version: 1.78.0
       semantic-release:
         specifier: 24.2.3
-        version: 24.2.3(typescript@6.0.3)
+        version: 24.2.3(typescript@7.0.2)
       turbo:
         specifier: 2.9.1
         version: 2.9.1
       typescript:
-        specifier: 6.0.3
-        version: 6.0.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   apps/adapter:
     dependencies:
@@ -275,8 +278,8 @@ importers:
         specifier: 4.20.3
         version: 4.20.3
       typescript:
-        specifier: 6.0.3
-        version: 6.0.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   apps/editor:
     dependencies:
@@ -605,8 +608,8 @@ importers:
         version: 4.0.0-rc.116
     devDependencies:
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
       vitest:
         specifier: 3.2.4
         version: 3.2.4(@types/node@26.2.0)(jiti@2.7.0)(jsdom@27.0.0)(lightningcss@1.32.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -618,14 +621,14 @@ importers:
         version: link:../types
     devDependencies:
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/constants:
     devDependencies:
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/db:
     dependencies:
@@ -656,7 +659,7 @@ importers:
         version: 26.2.0
       kysely-codegen:
         specifier: 0.20.0
-        version: 0.20.0(kysely@0.28.9)(typescript@5.9.3)
+        version: 0.20.0(kysely@0.28.9)(typescript@7.0.2)
       pglite-server:
         specifier: 0.1.5
         version: 0.1.5(@electric-sql/pglite@0.5.5)
@@ -664,8 +667,8 @@ importers:
         specifier: 4.20.3
         version: 4.20.3
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@26.2.0)(jsdom@27.0.0)(vite@8.1.5(@types/node@26.2.0)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.20.3)(yaml@2.9.1))
@@ -680,8 +683,8 @@ importers:
         version: 4.0.0-rc.116
     devDependencies:
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/types:
     dependencies:
@@ -693,8 +696,8 @@ importers:
         version: 0.28.9
     devDependencies:
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
 
   packages/ui:
     dependencies:
@@ -718,8 +721,8 @@ importers:
         version: 2.0.0-rc.6
     devDependencies:
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@26.2.0)(@vitest/browser-playwright@4.1.11)(@vitest/coverage-v8@4.1.11)(jsdom@27.0.0)(vite@8.1.5(@types/node@26.2.0)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1))
@@ -818,8 +821,8 @@ importers:
         specifier: ^26.2.0
         version: 26.2.0
       typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+        specifier: 'catalog:'
+        version: 7.0.2
       vite:
         specifier: ^8.1.5
         version: 8.1.5(@types/node@26.2.0)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)
@@ -1487,10 +1490,6 @@ packages:
     peerDependencies:
       effect: '>=4.0.0-rc.115 || >=4.0.0'
 
-  '@effect/language-service@0.87.2':
-    resolution: {integrity: sha512-CfiSoaVQO8pZgaMZGw5VvMvRGybsJ2LaSDoLYaqiVGvo/YYPYVR2GzUKY0h1NtIweq/+SQ5XLrvtzPIttWQ0GQ==}
-    hasBin: true
-
   '@effect/platform-bun@4.0.0-rc.116':
     resolution: {integrity: sha512-gV94s1JJS92xQELdHTOEKHU/QvkGhXxZQ4LI8aBRo9QCy0wyvYNklFYOKXFZQNwp31su2LOYnMf0g1nJZOwYHw==}
     peerDependencies:
@@ -1518,6 +1517,45 @@ packages:
     resolution: {integrity: sha512-7lH9h+w4DW2tI+dus4hEac5mSCy1wgiT+uw/VvjR8YhNDemd3zEFY03NkbD81ipfOpnu2QA1YwgM58ExyPlhug==}
     peerDependencies:
       effect: ^4.0.0-rc.115
+
+  '@effect/tsgo-darwin-arm64@0.45.0':
+    resolution: {integrity: sha512-WUoiEVcm8E19QK6fl63lsssM4dkT9IFnULbmqQ6LBfv7H9uRkpE9S3thj8ZtZ+vl/QY8atwfuaTf+3A1m/kGtQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@effect/tsgo-darwin-x64@0.45.0':
+    resolution: {integrity: sha512-s3yz7ZfIzvObXJ/r5xd9sEPxHKC3L+D+yedS1BV2Kpn47Je2svYCNYKxzXIpqFLkNjK+RcOQrcfYbYEpKZZa6g==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@effect/tsgo-linux-arm64@0.45.0':
+    resolution: {integrity: sha512-N+lyzixtylOOn49demDaqg0kb/U8ISxM10Gphs1pIMSGlqlfqC4inYEoFpYej+f4T/cRlkA11Ue7wJzNz83ePA==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@effect/tsgo-linux-arm@0.45.0':
+    resolution: {integrity: sha512-f6zL6YbWA9lXdfJ//KOjUz/U3CdGtajKi5NsR/lcQaKfZiJwHfeeLBB3yetF3qbPGSA149/kuMoDMWL13RUH3A==}
+    cpu: [arm]
+    os: [linux]
+
+  '@effect/tsgo-linux-x64@0.45.0':
+    resolution: {integrity: sha512-aWt0G8celAxJOis4+xiILkyMP/3J+vukimUhSoCmUAPt8zoT9qhZcN64XYZE7jfqp88ByRdgN9GK1/C7YfPtcQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@effect/tsgo-win32-arm64@0.45.0':
+    resolution: {integrity: sha512-EAdeV366ja+M4XCx6xjXMv4Xkc0Fgzy4bapa0saDWcGhllNLqJDfOk4lk0BgAEjBUI8+0xC+PXKVB5SMz4EpVA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@effect/tsgo-win32-x64@0.45.0':
+    resolution: {integrity: sha512-1Hsr/sT5dmIafoY9L0ASJo4VqGyPNzM1nwTb4Wj1Lmjq6kGuwO/PVozFg3WZZ0piChFmgiU3nx1AKZfyqgjGUw==}
+    cpu: [x64]
+    os: [win32]
+
+  '@effect/tsgo@0.45.0':
+    resolution: {integrity: sha512-gPG0ixVHgtYBUe5DbKX9vzHlhqd9+ZEfs4m/XWy0808av0A2XqMzaG3F5rnPBN7EUJRPlo9TluIi8WHx/pBV+A==}
+    hasBin: true
 
   '@effect/vitest@4.0.0-rc.115':
     resolution: {integrity: sha512-DJR0hfdr3HNXAkzW8AzfvUz6VmrNFLrKk9tZGDURi33faMyxkc7ZewxELMMZwGpOTGN4mfqYVbX2CXgI+ZJBeQ==}
@@ -7232,11 +7270,6 @@ packages:
     resolution: {integrity: sha512-TeTSQ6H5YHvpqVwBRcnLDCBnDOHWYu7IvGbHT6N8AOymcr9PJGjc1GTtiWZTYg0NCgYwvnYWEkVChQAr9bjfwA==}
     engines: {node: '>=16'}
 
-  typescript@5.9.3:
-    resolution: {integrity: sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==}
-    engines: {node: '>=14.17'}
-    hasBin: true
-
   typescript@6.0.3:
     resolution: {integrity: sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==}
     engines: {node: '>=14.17'}
@@ -8567,8 +8600,6 @@ snapshots:
       '@distilled.cloud/core': 1.0.0-rc.12(effect@4.0.0-rc.116)
       effect: 4.0.0-rc.116
 
-  '@effect/language-service@0.87.2': {}
-
   '@effect/platform-bun@4.0.0-rc.116(effect@4.0.0-rc.116)':
     dependencies:
       '@effect/platform-node-shared': 4.0.0-rc.116(effect@4.0.0-rc.116)
@@ -8604,6 +8635,37 @@ snapshots:
   '@effect/sql-sqlite-do@4.0.0-rc.115(effect@4.0.0-rc.116)':
     dependencies:
       effect: 4.0.0-rc.116
+
+  '@effect/tsgo-darwin-arm64@0.45.0':
+    optional: true
+
+  '@effect/tsgo-darwin-x64@0.45.0':
+    optional: true
+
+  '@effect/tsgo-linux-arm64@0.45.0':
+    optional: true
+
+  '@effect/tsgo-linux-arm@0.45.0':
+    optional: true
+
+  '@effect/tsgo-linux-x64@0.45.0':
+    optional: true
+
+  '@effect/tsgo-win32-arm64@0.45.0':
+    optional: true
+
+  '@effect/tsgo-win32-x64@0.45.0':
+    optional: true
+
+  '@effect/tsgo@0.45.0':
+    optionalDependencies:
+      '@effect/tsgo-darwin-arm64': 0.45.0
+      '@effect/tsgo-darwin-x64': 0.45.0
+      '@effect/tsgo-linux-arm': 0.45.0
+      '@effect/tsgo-linux-arm64': 0.45.0
+      '@effect/tsgo-linux-x64': 0.45.0
+      '@effect/tsgo-win32-arm64': 0.45.0
+      '@effect/tsgo-win32-x64': 0.45.0
 
   '@effect/vitest@4.0.0-rc.115(effect@4.0.0-rc.116)(vitest@4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.5(@types/node@24.9.1)(esbuild@0.27.7)(jiti@2.7.0)(tsx@4.21.0)(yaml@2.9.1)))':
     dependencies:
@@ -9873,15 +9935,15 @@ snapshots:
 
   '@sec-ant/readable-stream@0.4.1': {}
 
-  '@semantic-release/changelog@6.0.3(semantic-release@24.2.3(typescript@6.0.3))':
+  '@semantic-release/changelog@6.0.3(semantic-release@24.2.3(typescript@7.0.2))':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
       fs-extra: 11.3.5
       lodash: 4.18.1
-      semantic-release: 24.2.3(typescript@6.0.3)
+      semantic-release: 24.2.3(typescript@7.0.2)
 
-  '@semantic-release/commit-analyzer@13.0.1(semantic-release@24.2.3(typescript@6.0.3))':
+  '@semantic-release/commit-analyzer@13.0.1(semantic-release@24.2.3(typescript@7.0.2))':
     dependencies:
       conventional-changelog-angular: 8.3.1
       conventional-changelog-writer: 8.4.0
@@ -9891,7 +9953,7 @@ snapshots:
       import-from-esm: 2.0.0
       lodash-es: 4.18.1
       micromatch: 4.0.8
-      semantic-release: 24.2.3(typescript@6.0.3)
+      semantic-release: 24.2.3(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -9899,7 +9961,7 @@ snapshots:
 
   '@semantic-release/error@4.0.0': {}
 
-  '@semantic-release/git@10.0.1(semantic-release@24.2.3(typescript@6.0.3))':
+  '@semantic-release/git@10.0.1(semantic-release@24.2.3(typescript@7.0.2))':
     dependencies:
       '@semantic-release/error': 3.0.0
       aggregate-error: 3.1.0
@@ -9909,11 +9971,11 @@ snapshots:
       lodash: 4.18.1
       micromatch: 4.0.8
       p-reduce: 2.1.0
-      semantic-release: 24.2.3(typescript@6.0.3)
+      semantic-release: 24.2.3(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
 
-  '@semantic-release/github@11.0.6(semantic-release@24.2.3(typescript@6.0.3))':
+  '@semantic-release/github@11.0.6(semantic-release@24.2.3(typescript@7.0.2))':
     dependencies:
       '@octokit/core': 7.0.6
       '@octokit/plugin-paginate-rest': 13.2.1(@octokit/core@7.0.6)
@@ -9929,13 +9991,13 @@ snapshots:
       lodash-es: 4.18.1
       mime: 4.1.0
       p-filter: 4.1.0
-      semantic-release: 24.2.3(typescript@6.0.3)
+      semantic-release: 24.2.3(typescript@7.0.2)
       tinyglobby: 0.2.16
       url-join: 5.0.0
     transitivePeerDependencies:
       - supports-color
 
-  '@semantic-release/npm@12.0.2(semantic-release@24.2.3(typescript@6.0.3))':
+  '@semantic-release/npm@12.0.2(semantic-release@24.2.3(typescript@7.0.2))':
     dependencies:
       '@semantic-release/error': 4.0.0
       aggregate-error: 5.0.0
@@ -9948,11 +10010,11 @@ snapshots:
       rc: 1.2.8
       read-pkg: 9.0.1
       registry-auth-token: 5.1.1
-      semantic-release: 24.2.3(typescript@6.0.3)
+      semantic-release: 24.2.3(typescript@7.0.2)
       semver: 7.8.0
       tempy: 3.2.0
 
-  '@semantic-release/release-notes-generator@14.1.1(semantic-release@24.2.3(typescript@6.0.3))':
+  '@semantic-release/release-notes-generator@14.1.1(semantic-release@24.2.3(typescript@7.0.2))':
     dependencies:
       conventional-changelog-angular: 8.3.1
       conventional-changelog-writer: 8.4.0
@@ -9962,7 +10024,7 @@ snapshots:
       import-from-esm: 2.0.0
       lodash-es: 4.18.1
       read-package-up: 11.0.0
-      semantic-release: 24.2.3(typescript@6.0.3)
+      semantic-release: 24.2.3(typescript@7.0.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -11351,23 +11413,14 @@ snapshots:
 
   core-util-is@1.0.3: {}
 
-  cosmiconfig@9.0.1(typescript@5.9.3):
+  cosmiconfig@9.0.1(typescript@7.0.2):
     dependencies:
       env-paths: 2.2.1
       import-fresh: 3.3.1
       js-yaml: 4.1.1
       parse-json: 5.2.0
     optionalDependencies:
-      typescript: 5.9.3
-
-  cosmiconfig@9.0.1(typescript@6.0.3):
-    dependencies:
-      env-paths: 2.2.1
-      import-fresh: 3.3.1
-      js-yaml: 4.1.1
-      parse-json: 5.2.0
-    optionalDependencies:
-      typescript: 6.0.3
+      typescript: 7.0.2
 
   cross-spawn@7.0.6:
     dependencies:
@@ -12270,10 +12323,10 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
-  kysely-codegen@0.20.0(kysely@0.28.9)(typescript@5.9.3):
+  kysely-codegen@0.20.0(kysely@0.28.9)(typescript@7.0.2):
     dependencies:
       chalk: 4.1.2
-      cosmiconfig: 9.0.1(typescript@5.9.3)
+      cosmiconfig: 9.0.1(typescript@7.0.2)
       diff: 8.0.4
       dotenv: 17.4.2
       dotenv-expand: 12.0.3
@@ -13361,15 +13414,15 @@ snapshots:
 
   scheduler@0.28.0: {}
 
-  semantic-release@24.2.3(typescript@6.0.3):
+  semantic-release@24.2.3(typescript@7.0.2):
     dependencies:
-      '@semantic-release/commit-analyzer': 13.0.1(semantic-release@24.2.3(typescript@6.0.3))
+      '@semantic-release/commit-analyzer': 13.0.1(semantic-release@24.2.3(typescript@7.0.2))
       '@semantic-release/error': 4.0.0
-      '@semantic-release/github': 11.0.6(semantic-release@24.2.3(typescript@6.0.3))
-      '@semantic-release/npm': 12.0.2(semantic-release@24.2.3(typescript@6.0.3))
-      '@semantic-release/release-notes-generator': 14.1.1(semantic-release@24.2.3(typescript@6.0.3))
+      '@semantic-release/github': 11.0.6(semantic-release@24.2.3(typescript@7.0.2))
+      '@semantic-release/npm': 12.0.2(semantic-release@24.2.3(typescript@7.0.2))
+      '@semantic-release/release-notes-generator': 14.1.1(semantic-release@24.2.3(typescript@7.0.2))
       aggregate-error: 5.0.0
-      cosmiconfig: 9.0.1(typescript@6.0.3)
+      cosmiconfig: 9.0.1(typescript@7.0.2)
       debug: 4.4.3
       env-ci: 11.2.0
       execa: 9.6.1
@@ -13862,8 +13915,6 @@ snapshots:
   type-fest@2.19.0: {}
 
   type-fest@4.41.0: {}
-
-  typescript@5.9.3: {}
 
   typescript@6.0.3: {}
 

@@ -27,7 +27,7 @@
     "kysely-codegen": "0.20.0",
     "pglite-server": "0.1.5",
     "tsx": "4.20.3",
-    "typescript": "5.9.3",
+    "typescript": "catalog:",
     "vitest": "catalog:"
   }
 }

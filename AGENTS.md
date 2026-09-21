@@ -61,7 +61,7 @@ Improve existing code; avoid new abstractions.
 ## TypeScript
 
 - strict; `exactOptionalPropertyTypes`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noUncheckedIndexedAccess`; bundler resolution
-- Effect language service plugin (root `prepare: effect-language-service patch`)
+- Effect language service plugin (TS 7 via `@effect/tsgo`; root `prepare: effect-tsgo patch --typescript --no-oxlint`)
 - parse unknown input at boundaries; keep internal types trusted
 - NEVER `Record<string, unknown|any>` (oxlint `typescript/no-restricted-types`) — model with Effect Schema in `@tom/schemas`; fully-typed records like `Record<string, string>` fine
 - don't hand-edit generated `**/worker-configuration.d.ts` / `**/cloudflare-env.d.ts` (oxlint-ignored)
