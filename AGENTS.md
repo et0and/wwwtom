@@ -29,7 +29,7 @@ Improve existing code; avoid new abstractions.
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
 - `pnpm workflows` — regenerate `.github/workflows/*.yml` + `.github/actions/*/action.yml` from `@tom/workflows` definitions (do not hand-edit generated files)
-- `pnpm test:update` — snapshot update (web, utils, workflows)
+- `pnpm test:update` — snapshot update (web, utils, icons, workflows)
 - `pnpm deploy` = shared → api → adapter → web → sophie (Alchemy; `ALCHEMY_STAGE` required)
 - `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:sophie`
 - `pnpm destroy` — destroy current Alchemy stage
