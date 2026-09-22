@@ -3,7 +3,7 @@
 exports[`Footer > matches the snapshot 1`] = `
 <div>
   <footer
-    class="flex flex-col sm:flex-row items-center justify-between px-6 py-4 text-sm flex-shrink-0"
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-6 py-4 text-sm flex-shrink-0"
   >
     <p>
       © 
@@ -15,13 +15,15 @@ exports[`Footer > matches the snapshot 1`] = `
       >
         Accessibility
       </a>
-      . This site is part of a 
+      . 
       <a
         href="https://webring.xxiivv.com/#random"
       >
-        webring
+        Webring
       </a>
       . 
+      
+      <!---->
     </p>
   </footer>
 </div>

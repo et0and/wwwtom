@@ -25,7 +25,6 @@
     "@tom/types": "workspace:*",
     "@tom/ui": "workspace:*",
     "@tom/utils": "workspace:*",
-    "blurhash": "2.0.5",
     "effect": "catalog:",
     "number-to-words": "1.2.4",
     "rss": "1.2.2",

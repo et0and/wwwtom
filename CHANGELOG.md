@@ -1,3 +1,29 @@
+# [3.9.0](https://github.com/et0and/wwwtom/compare/v3.8.1...v3.9.0) (2026-09-22)
+
+
+### Bug Fixes
+
+* **web:** hide footer version stamp unless version and hash are both set ([2a2c18c](https://github.com/et0and/wwwtom/commit/2a2c18cb70b3560967c74dc236dc0b3a61d32c73))
+
+
+### Features
+
+* **web:** stamp deployed version and commit hash in the footer ([73dc0a7](https://github.com/et0and/wwwtom/commit/73dc0a7d440280ca34a38fa9e9ffb6bc5316e6c9))
+
+## [3.8.1](https://github.com/et0and/wwwtom/compare/v3.8.0...v3.8.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **review:** bound page-probe concurrency, keep image dims, lazy-load takumi fully ([de7c16f](https://github.com/et0and/wwwtom/commit/de7c16f3d9eb33c796c13b385e71b11549c40584))
+* **review:** correct mistaken assumptions in perf/caching work ([c7f9ea2](https://github.com/et0and/wwwtom/commit/c7f9ea2f4c282467f3f078595f67695937f2b57d))
+* **web:** revert speculative preconnect links ([131d6c2](https://github.com/et0and/wwwtom/commit/131d6c2389c0c6c2d70282bd0b2091ec341efb96))
+
+
+### Performance Improvements
+
+* **caching:** raise TTLs, memoize env reads, fix N+1, centralize cache headers ([b83dfdd](https://github.com/et0and/wwwtom/commit/b83dfdd330a85003b5f8468696339080a06a8550))
+
 # [3.8.0](https://github.com/et0and/wwwtom/compare/v3.7.0...v3.8.0) (2026-09-21)
 
 

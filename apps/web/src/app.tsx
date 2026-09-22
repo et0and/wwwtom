@@ -16,7 +16,10 @@ function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
         <SkipLink />
         <Nav />
         <div class="flex-1">{props.children}</div>
-        <Footer />
+        <Footer
+          version={import.meta.env.VITE_APP_VERSION}
+          commitHash={import.meta.env.VITE_COMMIT_HASH}
+        />
       </div>
     </ViewTransitions>
   );

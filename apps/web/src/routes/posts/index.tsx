@@ -2,6 +2,7 @@ import { httpHeader } from "@solidjs/web";
 import { useLocation } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { POSTS_PAGE_SIZE, fetchPosts } from "~/server/adapter";
+import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Loading, Show, For } from "solid-js";
@@ -13,8 +14,8 @@ import { formatDate } from "@tom/utils/date";
 import { parsePageNumber } from "@tom/utils/page";
 
 export default function PostsHome() {
-  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
-  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+  httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
+  httpHeader("CDN-Cache-Control", PUBLIC_PAGE_CDN_CACHE_CONTROL);
 
   const location = useLocation();
   const currentPage = () => parsePageNumber(location.query.page);

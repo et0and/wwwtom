@@ -29,6 +29,8 @@ export type ArenaMarkdown = typeof ArenaMarkdownSchema.Type;
 export const ArenaImageVersionSchema = Schema.Struct({
   src: Schema.String,
   src_2x: Schema.optional(Schema.String),
+  width: Schema.optional(Schema.NullOr(Schema.Finite)),
+  height: Schema.optional(Schema.NullOr(Schema.Finite)),
 });
 export type ArenaImageVersion = typeof ArenaImageVersionSchema.Type;
 

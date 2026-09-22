@@ -1,6 +1,8 @@
 interface ArenaImageVersionLike {
   readonly src: string;
   readonly src_2x?: string | null | undefined;
+  readonly width?: number | null | undefined;
+  readonly height?: number | null | undefined;
 }
 
 interface ArenaImageLike {
@@ -25,3 +27,13 @@ export const arenaImageAlt = (image: ArenaImageInput, title: string | null | und
 
 export const hasArenaImageSource = (image: ArenaImageInput): boolean =>
   arenaImageSource(image) !== "";
+
+export const arenaImageDimensions = (image: ArenaImageInput) => {
+  const version = image?.medium ?? image?.large;
+  const width = version?.width;
+  const height = version?.height;
+  if (width != null && height != null) return { width, height };
+  if (width != null) return { width };
+  if (height != null) return { height };
+  return {};
+};

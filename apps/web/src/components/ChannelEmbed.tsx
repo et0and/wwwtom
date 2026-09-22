@@ -85,7 +85,7 @@ export function ChannelEmbed(props: ChannelEmbedProps) {
   }));
 
   const contentsQuery = useQuery(() => ({
-    queryKey: ["arena-contents", props.slug],
+    queryKey: ["arena-contents", props.slug, STRIP_ITEMS],
     queryFn: () => fetchChannelContents(props.slug, STRIP_ITEMS),
   }));
 
