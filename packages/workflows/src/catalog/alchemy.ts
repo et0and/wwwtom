@@ -16,10 +16,22 @@ export const stageLabel = `Deploy ${stageExpression}`;
 export const stageConcurrencyGroup = `deploy-${stageExpression}`;
 
 /**
- * Alchemy stacks the deploy pipeline provisions, in dependency order: later
- * stacks depend on earlier ones.
+ * The application pipeline, in dependency order: later stacks depend on
+ * earlier ones.
  */
-export const deployStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
+const appStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
+
+/**
+ * Alchemy stacks a staging or production deploy provisions: the application
+ * pipeline plus the static Storybook site.
+ */
+export const deployStacks = [...appStacks, "storybook"] as const;
+
+/**
+ * Alchemy stacks a PR preview provisions. Storybook has its own preview
+ * workflow, so it is left out here to keep two runs off one stage.
+ */
+export const previewStacks = appStacks;
 
 export type DeployStack = (typeof deployStacks)[number];
 

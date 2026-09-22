@@ -1,6 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
-import { deployChain, deployStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
+import { deployChain, previewStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
 import {
   closedAction,
   notClosedAction,
@@ -30,7 +30,7 @@ export const preview = workflow("preview", {
       name: "Deploy PR preview",
       "runs-on": "ubuntu-latest",
       env: previewEnv(prStage),
-      steps: [checkout(), setupStep(), run("Deploy preview stage", deployChain(deployStacks))],
+      steps: [checkout(), setupStep(), run("Deploy preview stage", deployChain(previewStacks))],
     },
     destroy: {
       if: closedAction,
