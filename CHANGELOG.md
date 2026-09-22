@@ -1,3 +1,17 @@
+## [3.8.1](https://github.com/et0and/wwwtom/compare/v3.8.0...v3.8.1) (2026-09-22)
+
+
+### Bug Fixes
+
+* **review:** bound page-probe concurrency, keep image dims, lazy-load takumi fully ([de7c16f](https://github.com/et0and/wwwtom/commit/de7c16f3d9eb33c796c13b385e71b11549c40584))
+* **review:** correct mistaken assumptions in perf/caching work ([c7f9ea2](https://github.com/et0and/wwwtom/commit/c7f9ea2f4c282467f3f078595f67695937f2b57d))
+* **web:** revert speculative preconnect links ([131d6c2](https://github.com/et0and/wwwtom/commit/131d6c2389c0c6c2d70282bd0b2091ec341efb96))
+
+
+### Performance Improvements
+
+* **caching:** raise TTLs, memoize env reads, fix N+1, centralize cache headers ([b83dfdd](https://github.com/et0and/wwwtom/commit/b83dfdd330a85003b5f8468696339080a06a8550))
+
 # [3.8.0](https://github.com/et0and/wwwtom/compare/v3.7.0...v3.8.0) (2026-09-21)
 
 
