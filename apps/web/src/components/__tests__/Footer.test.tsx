@@ -43,4 +43,17 @@ describe("Footer", () => {
     expect(versionLink).toHaveAttribute("href", "https://github.com/et0and/wwwtom/commit/de7c16f");
     expect(screen.getByRole("contentinfo")).toHaveTextContent("Webring. v3.8.1-de7c16f.");
   });
+
+  it("hides the release version when the version is missing", () => {
+    render(() => <Footer commitHash="de7c16f" />);
+
+    expect(screen.queryByRole("link", { name: "vundefined-de7c16f" })).not.toBeInTheDocument();
+    expect(screen.getByRole("contentinfo")).not.toHaveTextContent("vundefined");
+  });
+
+  it("hides the release version when the commit hash is missing", () => {
+    render(() => <Footer version="3.8.1" />);
+
+    expect(screen.queryByRole("link", { name: "v3.8.1" })).not.toBeInTheDocument();
+  });
 });

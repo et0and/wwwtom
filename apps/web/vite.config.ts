@@ -11,14 +11,17 @@ if (process.cwd() !== import.meta.dirname) {
 /** Best-effort git read so local builds still stamp a version and hash. */
 const readGit = (args: string[], fallback: string): string => {
   const result = spawnSync("git", args, { encoding: "utf8" });
-  if (result.status !== 0) return fallback;
-  return result.stdout.trim();
+  if (result.error !== undefined || result.status !== 0) return fallback;
+  const output = result.stdout.trim();
+  if (output === "") return fallback;
+  return output;
 };
 
 // The deploy runs from a checkout of the commit being shipped, so GITHUB_SHA is
-// the deployed revision; local builds fall back to HEAD.
+// the deployed revision; local builds fall back to HEAD. An empty hash hides
+// the footer stamp instead of linking a bogus revision.
 const commitHash =
-  process.env.GITHUB_SHA?.slice(0, 7) ?? readGit(["rev-parse", "--short", "HEAD"], "unknown");
+  process.env.GITHUB_SHA?.slice(0, 7) ?? readGit(["rev-parse", "--short", "HEAD"], "");
 // Semantic-release tags `dev`, so the nearest tag is the last released version.
 const appVersion = readGit(["describe", "--tags", "--abbrev=0"], "v0.0.0").replace(/^v/, "");
 

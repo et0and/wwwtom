@@ -7,11 +7,17 @@ export function Footer(props: { version?: string | undefined; commitHash?: strin
       <p>
         &copy; {currentYear} <a href="/accessibility">Accessibility</a>.{" "}
         <a href="https://webring.xxiivv.com/#random">Webring</a>.{" "}
-        <Show when={props.commitHash}>
-          {(commitHash) => (
+        <Show
+          when={
+            props.version && props.commitHash
+              ? { version: props.version, commitHash: props.commitHash }
+              : undefined
+          }
+        >
+          {(build) => (
             <>
-              <a href={`https://github.com/et0and/wwwtom/commit/${commitHash()}`}>
-                v{props.version}-{commitHash()}
+              <a href={`https://github.com/et0and/wwwtom/commit/${build().commitHash}`}>
+                v{build().version}-{build().commitHash}
               </a>
               .
             </>
