@@ -5,8 +5,10 @@ import {
   POSTS_PAGE_SIZE,
   fetchPostBySlug,
   fetchPosts,
-  fetchWorks,
+  fetchProduct,
+  fetchProducts,
   fetchWorkBySlug,
+  fetchWorks,
 } from "~/server/adapter";
 import NotFound from "~/routes/[...404]";
 import About from "~/routes/about";
@@ -95,8 +97,28 @@ export const Router = createRouter({
     },
     { path: "/work/wwwork/hold", component: Hold },
     { path: "/work/wwwork/kawara", component: Kawara },
-    { path: "/products", component: Products },
-    { path: "/purchase/:productId", component: Purchase },
+    {
+      path: "/products",
+      component: Products,
+      preload: () =>
+        getQueryClient()
+          .prefetchQuery({ queryKey: ["products"], queryFn: fetchProducts })
+          .catch(ignoredPrefetchError),
+    },
+    {
+      path: "/purchase/:productId",
+      component: Purchase,
+      preload: ({ params }) => {
+        const productId = params.productId;
+        if (!productId) return undefined;
+        return getQueryClient()
+          .prefetchQuery({
+            queryKey: ["product", productId],
+            queryFn: () => fetchProduct(productId),
+          })
+          .catch(ignoredPrefetchError);
+      },
+    },
     { path: "/worktable", component: Worktable },
     { path: "*404", component: NotFound },
   ],

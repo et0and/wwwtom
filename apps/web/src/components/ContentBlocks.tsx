@@ -3,7 +3,7 @@ import { isServer } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import type { ArenaContentBlock, ArenaImage } from "@tom/schemas/arena-content";
 import { Text } from "@tom/ui/text";
-import { sanitizeEmbedHtml } from "~/libs/utils/sanitize";
+import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/libs/utils/sanitize";
 import { ChannelEmbed } from "~/components/ChannelEmbed";
 import {
   arenaImageAlt,
@@ -52,10 +52,13 @@ const asBlock = <T extends ArenaContentBlock["type"]>(
 
 function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> }) {
   return (
-    <div
-      class="prose prose-sm max-w-none break-words whitespace-normal"
-      innerHTML={props.block.content.html}
-    />
+    <div class="prose prose-sm max-w-none break-words whitespace-normal">
+      <ClientHtml
+        html={props.block.content.html}
+        sanitize={sanitizeRichHtml}
+        fallback={<Text>{props.block.content.markdown}</Text>}
+      />
+    </div>
   );
 }
 

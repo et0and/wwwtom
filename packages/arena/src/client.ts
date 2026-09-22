@@ -121,13 +121,15 @@ export type DateProvider = { now(): number };
 
 type CfOptions = NonNullable<NonNullable<Parameters<Fetch>[1]>["cf"]>;
 
+const PUBLIC_CACHE_TTL_SECONDS = 86400;
+
 /**
  * Public reads may sit in the Cloudflare edge cache. The key carries no
  * credentials, so only unauthenticated requests may use it. Content is
  * held for 24 hours; errors never cache.
  */
 const publicCacheOptions = (url: string): CfOptions => ({
-  cacheTtl: 86400,
+  cacheTtl: PUBLIC_CACHE_TTL_SECONDS,
   cacheKey: `arena:v3:public:${url}`,
   cacheTtlByStatus: { "400-599": 0 },
 });
@@ -148,10 +150,25 @@ const readWorkerCache = async (url: string): Promise<Response | null> => {
   return (await cache.match(workerCacheKey(url)).catch(() => undefined)) ?? null;
 };
 
-const writeWorkerCache = (url: string, response: Response): void => {
+/**
+ * Store a public read for the full TTL. The Cache API honors the response's
+ * own `Cache-Control` — are.na sends `max-age=300` — so the header is
+ * rewritten before storing, otherwise the entry expires in five minutes.
+ * The write is awaited: unlike `ctx.waitUntil`, a bare `cache.put` can be
+ * terminated once the response is returned.
+ */
+const writeWorkerCache = async (url: string, response: Response): Promise<void> => {
   const cache = workerCache();
   if (!cache) return;
-  void cache.put(workerCacheKey(url), response.clone()).catch(() => undefined);
+  const cloned = response.clone();
+  const headers = new Headers(cloned.headers);
+  headers.set("cache-control", `public, max-age=${PUBLIC_CACHE_TTL_SECONDS}`);
+  const cacheable = new Response(cloned.body, {
+    status: cloned.status,
+    statusText: cloned.statusText,
+    headers,
+  });
+  await cache.put(workerCacheKey(url), cacheable).catch(() => undefined);
 };
 
 export const defaultPaginationOptions: PaginationAttributes = {
@@ -326,7 +343,7 @@ export class ArenaClient implements ArenaApi {
       const response = await fetchImpl(input, requestInit);
 
       if (shouldUseEdgeCache && response.ok) {
-        writeWorkerCache(url, response);
+        await writeWorkerCache(url, response);
       }
 
       const shouldRetryWithoutAuth =
@@ -356,7 +373,7 @@ export class ArenaClient implements ArenaApi {
         };
         if (retryHeaders && !(input instanceof Request)) retryInit.headers = retryHeaders;
         const response = await fetchImpl(retryInput, retryInit);
-        if (response.ok) writeWorkerCache(url, response);
+        if (response.ok) await writeWorkerCache(url, response);
         return response;
       })();
     }
