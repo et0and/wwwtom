@@ -30,7 +30,13 @@ export const preview = workflow("preview", {
       name: "Deploy PR preview",
       "runs-on": "ubuntu-latest",
       env: previewEnv(prStage),
-      steps: [checkout(), setupStep(), run("Deploy preview stage", deployChain(deployStacks))],
+      steps: [
+        // Full history so `git describe --tags` can stamp the release version
+        // into the web build.
+        checkout("Checkout", { "fetch-depth": 0 }),
+        setupStep(),
+        run("Deploy preview stage", deployChain(deployStacks)),
+      ],
     },
     destroy: {
       if: closedAction,
