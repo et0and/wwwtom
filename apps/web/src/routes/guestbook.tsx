@@ -1,5 +1,6 @@
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
+import { isServer } from "@solidjs/web";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Loader } from "@tom/ui/loader";
 import { Button } from "@tom/ui/button";
@@ -48,6 +49,7 @@ export default function Guestbook() {
   const currentUserQuery = useQuery(() => ({
     queryKey: ["guestbook-current-user"],
     queryFn: fetchCurrentUser,
+    enabled: !isServer,
   }));
 
   const [message, setMessage] = createSignal("");

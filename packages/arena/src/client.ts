@@ -121,13 +121,15 @@ export type DateProvider = { now(): number };
 
 type CfOptions = NonNullable<NonNullable<Parameters<Fetch>[1]>["cf"]>;
 
+const PUBLIC_CACHE_TTL_SECONDS = 86400;
+
 /**
  * Public reads may sit in the Cloudflare edge cache. The key carries no
- * credentials, so only unauthenticated requests may use it. The TTL matches
- * are.na's own `cache-control: max-age=300`; errors never cache.
+ * credentials, so only unauthenticated requests may use it. Content is
+ * held for 24 hours; errors never cache.
  */
 const publicCacheOptions = (url: string): CfOptions => ({
-  cacheTtl: 300,
+  cacheTtl: PUBLIC_CACHE_TTL_SECONDS,
   cacheKey: `arena:v3:public:${url}`,
   cacheTtlByStatus: { "400-599": 0 },
 });
@@ -148,12 +150,25 @@ const readWorkerCache = async (url: string): Promise<Response | null> => {
   return (await cache.match(workerCacheKey(url)).catch(() => undefined)) ?? null;
 };
 
+/**
+ * Store a public read for the full TTL. The Cache API honors the response's
+ * own `Cache-Control` — are.na sends `max-age=300` — so the header is
+ * rewritten before storing, otherwise the entry expires in five minutes.
+ * The write is awaited: unlike `ctx.waitUntil`, a bare `cache.put` can be
+ * terminated once the response is returned.
+ */
 const writeWorkerCache = async (url: string, response: Response): Promise<void> => {
   const cache = workerCache();
   if (!cache) return;
-  await Promise.resolve()
-    .then(() => cache.put(workerCacheKey(url), response.clone()))
-    .catch(() => undefined);
+  const cloned = response.clone();
+  const headers = new Headers(cloned.headers);
+  headers.set("cache-control", `public, max-age=${PUBLIC_CACHE_TTL_SECONDS}`);
+  const cacheable = new Response(cloned.body, {
+    status: cloned.status,
+    statusText: cloned.statusText,
+    headers,
+  });
+  await cache.put(workerCacheKey(url), cacheable).catch(() => undefined);
 };
 
 export const defaultPaginationOptions: PaginationAttributes = {

@@ -328,8 +328,8 @@ describe("ArenaClient", () => {
 
   describe("worker cache", () => {
     const stubCaches = (cached: Response | undefined) => {
-      const match = vi.fn(async () => cached);
-      const put = vi.fn(async () => undefined);
+      const match = vi.fn(async (_key: Request) => cached);
+      const put = vi.fn(async (_key: Request, _response: Response) => undefined);
       vi.stubGlobal("caches", { default: { match, put } });
       return { match, put };
     };
@@ -373,6 +373,10 @@ describe("ArenaClient", () => {
       expect(match).toHaveBeenCalledTimes(1);
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       expect(put).toHaveBeenCalledTimes(1);
+      // are.na sends max-age=300; the stored copy is rewritten to the 24h
+      // TTL, or the entry would expire in five minutes.
+      const stored = put.mock.calls[0]?.[1] as Response;
+      expect(stored.headers.get("cache-control")).toBe("public, max-age=86400");
     });
 
     it("never caches token reads", async () => {
@@ -396,7 +400,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channel("my-channel").contents());
 
       expect(cfOf(mockFetch.mock.calls[0]!)).toMatchObject({
-        cacheTtl: 300,
+        cacheTtl: 86400,
         cacheTtlByStatus: { "400-599": 0 },
       });
     });

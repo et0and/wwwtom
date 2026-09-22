@@ -112,7 +112,7 @@ describe("arena content integration", () => {
       ]);
       expect(body).toMatchObject({ totalDocs: 2, page: 1, hasNextPage: false });
       expect(response.headers.get("Cache-Control")).toContain("public");
-      expect(response.headers.get("Cache-Control")).toContain("s-maxage=300");
+      expect(response.headers.get("Cache-Control")).toContain("s-maxage=3600");
       const contentsUrl = new URL(requestedUrlFor(`${POSTS_CHANNEL}/contents`));
       expect(contentsUrl.searchParams.get("sort")).toBe("position_desc");
       expect(contentsUrl.searchParams.get("per")).toBe("5");

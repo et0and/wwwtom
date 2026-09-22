@@ -7,6 +7,7 @@ import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/libs/utils/sanitize";
 import { ChannelEmbed } from "~/components/ChannelEmbed";
 import {
   arenaImageAlt,
+  arenaImageDimensions,
   arenaImageSource,
   arenaImageSourceSet,
   hasArenaImageSource,
@@ -73,6 +74,7 @@ function ImageBlock(props: { block: Extract<ArenaContentBlock, { type: "Image" }
             alt={arenaImageAlt(props.block.image, props.block.title)}
             class="w-full"
             loading="lazy"
+            {...arenaImageDimensions(props.block.image)}
           />
         )}
       </Show>
@@ -98,6 +100,7 @@ function LinkBlockImage(props: { block: Extract<ArenaContentBlock, { type: "Link
         alt={arenaImageAlt(props.block.image, props.block.title)}
         class="w-full"
         loading="lazy"
+        {...arenaImageDimensions(props.block.image)}
       />
     </Show>
   );
@@ -173,6 +176,7 @@ function VideoAttachment(props: { url: string; name: string; cover: ArenaImage |
                   alt={props.name}
                   class="w-full"
                   loading="lazy"
+                  {...arenaImageDimensions(cover())}
                 />
                 <PlayOverlay />
               </span>
@@ -206,6 +210,7 @@ function AttachmentBlock(props: { block: Extract<ArenaContentBlock, { type: "Att
           alt={displayName()}
           class="w-full"
           loading="lazy"
+          {...arenaImageDimensions(props.block.image)}
         />
       </Show>
       <Text>{displayName()}</Text>
@@ -282,6 +287,7 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
                   alt={props.block.title ?? ""}
                   class="w-full"
                   loading="lazy"
+                  {...arenaImageDimensions(cover())}
                 />
                 <PlayOverlay />
               </span>
