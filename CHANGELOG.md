@@ -1,3 +1,15 @@
+# [3.9.0](https://github.com/et0and/wwwtom/compare/v3.8.1...v3.9.0) (2026-09-22)
+
+
+### Bug Fixes
+
+* **web:** hide footer version stamp unless version and hash are both set ([2a2c18c](https://github.com/et0and/wwwtom/commit/2a2c18cb70b3560967c74dc236dc0b3a61d32c73))
+
+
+### Features
+
+* **web:** stamp deployed version and commit hash in the footer ([73dc0a7](https://github.com/et0and/wwwtom/commit/73dc0a7d440280ca34a38fa9e9ffb6bc5316e6c9))
+
 ## [3.8.1](https://github.com/et0and/wwwtom/compare/v3.8.0...v3.8.1) (2026-09-22)
 
 
