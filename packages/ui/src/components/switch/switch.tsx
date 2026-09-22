@@ -152,9 +152,9 @@ function SwitchControl(props: SwitchProps): JSX.Element {
           merged.onCheckedChange?.(event.currentTarget.checked, event);
         }}
         class={cn(
-          "peer cursor-pointer appearance-none border-none p-0 ring outline-none",
+          "peer cursor-pointer appearance-none border-none p-0 ring",
+          "focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
           "transition-colors duration-150 ease-out motion-reduce:transition-none",
-          "focus-visible:ring-2 focus-visible:ring-tomui-brand",
           "disabled:cursor-not-allowed disabled:opacity-50",
           SWITCH_TRACK[merged.size],
           SQUIRCLE_RADIUS,
@@ -228,7 +228,7 @@ export function SwitchGroup(props: SwitchGroupProps): JSX.Element {
     <fieldset
       data-tomui-component="Switch"
       disabled={merged.disabled}
-      class={cn("flex flex-col gap-4", merged.class)}
+      class={cn("flex flex-col gap-4 p-0", merged.class)}
     >
       <Show when={merged.legend}>
         <SwitchLegend>{merged.legend}</SwitchLegend>
@@ -257,6 +257,7 @@ export function SwitchItem(props: SwitchItemProps): JSX.Element {
       data-tomui-part="item-label"
       class={cn(
         "relative m-0 inline-flex items-center gap-2",
+        !merged.controlFirst ? "flex-row-reverse justify-end" : "",
         merged.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         merged.class,
       )}

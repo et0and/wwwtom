@@ -50,6 +50,10 @@ export function tooltipVariants(props: TomuiTooltipVariantsProps = {}): string {
     // Base styles
     "flex origin-[var(--transform-origin)] flex-col rounded-md bg-tomui-base px-2.5 py-1.5 text-sm text-tomui-default",
     "shadow-md outline-1 outline-tomui-line",
+    "transition-[transform,scale,opacity] duration-150",
+    "data-[starting-style]:scale-90 data-[starting-style]:opacity-0",
+    "data-[ending-style]:scale-90 data-[ending-style]:opacity-0",
+    "data-[instant]:duration-0",
     // Apply side-specific styles (currently none, but extensible)
     resolveVariant(TOMUI_TOOLTIP_VARIANTS.side, merged.side, TOMUI_TOOLTIP_DEFAULT_VARIANTS.side)
       .classes,
@@ -128,10 +132,11 @@ export function Tooltip(props: TooltipProps): JSX.Element {
         data-align={merged.align}
         class={cn(
           "pointer-events-none absolute z-50",
-          "invisible opacity-0 transition-[opacity,scale] duration-150",
+          "invisible opacity-0",
           "group-hover/tooltip:visible group-hover/tooltip:opacity-100 group-focus-within/tooltip:visible group-focus-within/tooltip:opacity-100",
           TOMUI_TOOLTIP_POSITIONS[merged.side],
           tooltipVariants({ side: merged.side }),
+          "tomui-tooltip-popup",
         )}
       >
         {merged.content}

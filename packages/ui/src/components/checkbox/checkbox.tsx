@@ -95,8 +95,9 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
         }}
         class={cn(
           "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-sm border-0 bg-tomui-base ring outline-none",
-          "focus-visible:ring-2 focus-visible:ring-tomui-brand",
           merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-hairline",
+          !merged.disabled &&
+            "hover:ring-tomui-hairline focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand",
           "checked:bg-tomui-contrast checked:ring-tomui-contrast",
           merged.disabled ? "cursor-not-allowed opacity-50" : "",
           merged.class,
@@ -110,7 +111,27 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
         <Show
           when={merged.icon}
           fallback={
-            <span class="text-[12px] leading-none">{merged.indeterminate ? "–" : "✓"}</span>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <Show
+                when={merged.indeterminate}
+                fallback={
+                  <path
+                    d="M2.5 6.5L5 9L9.5 3.5"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                }
+              >
+                <path
+                  d="M2.5 6H9.5"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </Show>
+            </svg>
           }
         >
           {merged.icon}
@@ -128,7 +149,7 @@ function CheckboxBase(props: CheckboxProps): JSX.Element {
       <label
         data-tomui-component="Checkbox"
         class={cn(
-          "m-0 inline-flex min-h-0 items-start gap-2 text-base",
+          "!m-0 inline-flex !min-h-0 items-start gap-2 !text-base",
           merged.controlFirst ? "flex-row" : "flex-row-reverse justify-end",
           merged.disabled ? "cursor-not-allowed" : "cursor-pointer",
         )}
@@ -174,7 +195,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
     <fieldset
       data-tomui-component="Checkbox"
       disabled={merged.disabled}
-      class={cn("flex flex-col gap-4", merged.class)}
+      class={cn("flex flex-col gap-4 p-0", merged.class)}
     >
       <Show when={merged.legend}>
         <CheckboxLegend>{merged.legend}</CheckboxLegend>

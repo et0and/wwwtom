@@ -5,10 +5,22 @@ import { resolveVariant } from "../../utils/resolve-variant";
 
 export const TOMUI_SELECT_VARIANTS = {
   size: {
-    xs: { classes: "h-5 px-1.5 text-xs", description: "Extra small select for compact UIs" },
-    sm: { classes: "h-6.5 px-2 text-xs", description: "Small select for secondary fields" },
-    base: { classes: "h-9 px-3 text-base", description: "Default select size" },
-    lg: { classes: "h-10 px-4 text-base", description: "Large select for prominent fields" },
+    xs: {
+      classes: "h-5 gap-1 rounded-sm px-1.5 text-xs",
+      description: "Extra small select for compact UIs",
+    },
+    sm: {
+      classes: "h-6.5 gap-1 rounded-md px-2 text-xs",
+      description: "Small select for secondary fields",
+    },
+    base: {
+      classes: "h-9 gap-1.5 rounded-lg px-3 text-base",
+      description: "Default select size",
+    },
+    lg: {
+      classes: "h-10 gap-2 rounded-lg px-4 text-base",
+      description: "Large select for prominent fields",
+    },
   },
 } as const;
 
@@ -21,8 +33,13 @@ export type TomuiSelectSize = keyof typeof TOMUI_SELECT_VARIANTS.size;
 export function selectVariants(props: { size?: TomuiSelectSize } = {}): string {
   const merged = merge(TOMUI_SELECT_DEFAULT_VARIANTS, props);
   return cn(
-    "flex w-full items-center justify-between gap-1 rounded-lg bg-tomui-control font-normal text-tomui-default ring ring-tomui-line",
-    "cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand disabled:cursor-not-allowed disabled:opacity-50",
+    "flex w-max shrink-0 items-center select-none border-0 shadow-xs",
+    "bg-tomui-control disabled:bg-tomui-control/50",
+    "justify-between font-normal",
+    "cursor-pointer disabled:cursor-not-allowed disabled:text-tomui-subtle",
+    "ring ring-tomui-line outline-none",
+    "focus:opacity-100 focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:ring-inset",
+    "w-full",
     resolveVariant(TOMUI_SELECT_VARIANTS.size, merged.size, TOMUI_SELECT_DEFAULT_VARIANTS.size)
       .classes,
   );

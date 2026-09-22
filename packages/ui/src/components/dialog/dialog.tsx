@@ -49,7 +49,7 @@ export interface TomuiDialogVariantsProps {
 export function dialogVariants(props: TomuiDialogVariantsProps = {}): string {
   const merged = merge({ size: TOMUI_DIALOG_DEFAULT_VARIANTS.size }, props);
   return cn(
-    "shadow-m ring ring-tomui-line fixed top-8 left-1/2 sm:top-16 w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-xl bg-tomui-base text-tomui-default",
+    "shadow-m ring ring-tomui-line fixed top-8 left-1/2 sm:top-16 w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-xl bg-tomui-base text-tomui-default duration-150 data-ending-style:scale-90 data-ending-style:opacity-0 data-starting-style:scale-90 data-starting-style:opacity-0",
     resolveVariant(TOMUI_DIALOG_VARIANTS.size, merged.size, TOMUI_DIALOG_DEFAULT_VARIANTS.size)
       .classes,
   );
@@ -137,7 +137,7 @@ function DialogContent(props: DialogProps): JSX.Element {
         <div
           data-tomui-component="Dialog"
           data-tomui-part="backdrop"
-          class="fixed inset-0 bg-tomui-recessed opacity-80"
+          class="fixed inset-0 bg-tomui-recessed opacity-80 transition-all duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
           onClick={() => {
             if (closeOnBackdrop()) ctx.close();
           }}

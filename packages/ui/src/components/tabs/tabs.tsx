@@ -107,7 +107,7 @@ export function Tabs(props: TabsProps): JSX.Element {
           role="tablist"
           aria-orientation="horizontal"
           class={cn(
-            "tomui-tabs-list relative flex min-w-0 shrink items-stretch overflow-x-auto overflow-y-hidden",
+            "tomui-tabs-list relative flex min-w-0 shrink scroll-px-(--scroll-fade-width) items-stretch overflow-x-auto overflow-y-hidden [--scroll-fade-width:3rem]",
             isSegmented() && "rounded-lg bg-tomui-recessed px-0.5",
             isSegmented() && (isSm() ? "h-6.5 rounded-md" : "h-9"),
             isUnderline() && "gap-4 border-b border-tomui-hairline pb-2",
@@ -130,7 +130,7 @@ export function Tabs(props: TabsProps): JSX.Element {
                   tabindex={selected() ? 0 : -1}
                   disabled={tab.disabled}
                   class={cn(
-                    "relative z-2 flex cursor-pointer items-center rounded bg-transparent whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
+                    "relative z-2 flex cursor-pointer items-center rounded bg-transparent whitespace-nowrap focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
                     isSm() ? "text-xs" : "text-base",
                     isSegmented() &&
                       "my-0.5 text-tomui-subtle hover:text-tomui-default focus-visible:ring-inset aria-selected:text-tomui-default",

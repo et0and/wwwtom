@@ -5,7 +5,7 @@ import { cn } from "../../utils/cn";
 export const TOMUI_COMMAND_PALETTE_VARIANTS = {
   root: {
     classes:
-      "fixed top-[10vh] left-1/2 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-lg bg-tomui-base ring ring-tomui-line",
+      "fixed top-[10vh] left-1/2 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-lg bg-tomui-elevated ring ring-tomui-line",
     description: "Command palette dialog container",
   },
   input: {
@@ -18,7 +18,8 @@ export const TOMUI_COMMAND_PALETTE_VARIANTS = {
     description: "Command palette results list",
   },
   item: {
-    classes: "flex w-full items-center gap-2 rounded px-2 py-1.5 text-base text-tomui-default",
+    classes:
+      "group flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left text-base text-tomui-default",
     description: "Command palette result item",
   },
 } as const;
@@ -103,7 +104,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   return (
     <Show when={merged.open}>
       <div
-        class="fixed inset-0 bg-tomui-overlay opacity-80"
+        class="fixed inset-0 bg-tomui-overlay opacity-80 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
         data-tomui-component="CommandPaletteBackdrop"
         onClick={close}
         aria-hidden="true"

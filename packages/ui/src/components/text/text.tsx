@@ -11,6 +11,18 @@ export const TOMUI_TEXT_VARIANTS = {
       classes: "text-lg font-semibold",
       description: "Heading text (16px by default, 20px at large size)",
     },
+    heading1: {
+      classes: "text-3xl font-semibold",
+      description: "Deprecated large heading for page titles; use heading instead",
+    },
+    heading2: {
+      classes: "text-2xl font-semibold",
+      description: "Deprecated medium heading for section titles; use heading instead",
+    },
+    heading3: {
+      classes: "text-lg font-semibold",
+      description: "Deprecated small heading for subsections; use heading instead",
+    },
     body: {
       classes: "text-tomui-default",
       description: "Default body text",
@@ -20,7 +32,7 @@ export const TOMUI_TEXT_VARIANTS = {
       description: "Muted text for secondary information",
     },
     success: {
-      classes: "text-tomui-success",
+      classes: "text-tomui-link",
       description: "Success state text",
     },
     error: {
@@ -68,6 +80,10 @@ export type TomuiTextSize = keyof typeof TOMUI_TEXT_VARIANTS.size;
 function resolveTextSizeClasses(variant: TomuiTextVariant, size: TomuiTextSize): string {
   if (variant === "heading") {
     return size === "lg" ? "text-xl" : "";
+  }
+
+  if (variant === "heading1" || variant === "heading2" || variant === "heading3") {
+    return "";
   }
 
   if (variant === "mono" || variant === "mono-secondary") {
@@ -221,6 +237,12 @@ export function Text(props: TextProps): JSX.Element {
     if (merged.as) return merged.as;
     if (merged.variant === "mono" || merged.variant === "mono-secondary") return "span";
     if (merged.variant === "heading") return "span";
+    if (
+      merged.variant === "heading1" ||
+      merged.variant === "heading2" ||
+      merged.variant === "heading3"
+    )
+      return "span";
     return "p";
   };
   return (

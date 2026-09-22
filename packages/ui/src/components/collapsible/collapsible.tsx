@@ -116,7 +116,8 @@ function CollapsibleDefaultTrigger(props: CollapsibleDefaultTriggerProps): JSX.E
       type="button"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       class={cn(
-        "m-0 flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 text-base font-medium text-tomui-default select-none",
+        "m-0 border-none bg-transparent p-0 shadow-none",
+        "flex cursor-pointer items-center gap-1 text-base font-medium text-tomui-default select-none",
         merged.class,
       )}
       onClick={() => ctx.toggle()}
@@ -156,7 +157,13 @@ function CollapsibleDefaultPanel(props: CollapsibleDefaultPanelProps): JSX.Eleme
   const rest = omit(merged, "children", "class");
   return (
     <Show when={ctx.isOpen()}>
-      <div class={cn("overflow-hidden", merged.class)} {...rest}>
+      <div
+        class={cn(
+          "h-[var(--collapsible-panel-height)] overflow-hidden transition-[height,opacity] duration-100 ease-out data-ending-style:h-0 data-ending-style:opacity-0 data-starting-style:h-0 data-starting-style:opacity-0 [&[hidden]:not([hidden='until-found'])]:hidden",
+          merged.class,
+        )}
+        {...rest}
+      >
         <div class="my-2 space-y-4 border-l-2 border-tomui-fill py-1 pr-1 pl-4">
           {merged.children}
         </div>

@@ -4,6 +4,23 @@ import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
 export const TOMUI_TOAST_VARIANTS = {
+  root: {
+    classes:
+      "rounded-lg border border-tomui-fill bg-tomui-control p-4 shadow-lg text-tomui-default",
+    description: "Toast container with background, border, and shadow",
+  },
+  title: {
+    classes: "text-[0.975rem] leading-5 font-medium text-tomui-default",
+    description: "Toast title with primary text color",
+  },
+  description: {
+    classes: "text-[0.925rem] leading-5 text-tomui-subtle",
+    description: "Toast description with muted text color",
+  },
+  close: {
+    classes: "absolute top-2 right-2 size-5 rounded text-tomui-subtle hover:bg-current/15",
+    description: "Button-based close control with variant-aware hover tint",
+  },
   variant: {
     default: { classes: "border-tomui-fill bg-tomui-base", description: "Default toast style" },
     success: {
@@ -32,6 +49,13 @@ export const TOMUI_TOAST_VARIANTS = {
 export const TOMUI_TOAST_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
+
+const TOAST_CLOSE_CLASSES = {
+  success: "text-tomui-success",
+  error: "text-tomui-danger",
+  warning: "text-tomui-warning",
+  info: "text-tomui-info",
+} as const satisfies Record<string, string>;
 
 export type TomuiToastVariant = keyof typeof TOMUI_TOAST_VARIANTS.variant;
 
@@ -90,19 +114,25 @@ export function Toaster(props: ToasterProps) {
     <div
       data-tomui-component="Toaster"
       aria-live="polite"
-      class={cn("fixed bottom-4 right-4 z-50 flex w-[300px] flex-col gap-2", merged.class)}
+      class={cn(
+        "fixed top-auto right-4 bottom-4 z-1 mx-auto flex w-[calc(100%-2rem)] sm:right-8 sm:bottom-8 sm:w-[340px] flex-col gap-2",
+        merged.class,
+      )}
       {...rest}
     >
       <For each={items()}>
         {(toast) => (
           <div
             role="status"
-            class={toastVariants({
-              variant: toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant,
-            })}
+            class={cn(
+              "relative",
+              toastVariants({
+                variant: toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant,
+              }),
+            )}
           >
             <div class="flex items-start gap-2">
-              <div class="flex min-w-0 flex-col gap-1">
+              <div class="flex min-w-0 flex-col gap-1 overflow-hidden">
                 <p
                   data-toast-title
                   class="text-[0.975rem] leading-5 font-medium text-tomui-default"
@@ -110,13 +140,18 @@ export function Toaster(props: ToasterProps) {
                   {toast.title}
                 </p>
                 <Show when={toast.description}>
-                  <p class="text-[0.925rem] leading-5 text-tomui-subtle">{toast.description}</p>
+                  <p class="text-[0.925rem] leading-5 text-tomui-default/70">{toast.description}</p>
                 </Show>
               </div>
               <button
                 type="button"
                 aria-label="Dismiss"
-                class="ml-auto size-5 shrink-0 rounded text-tomui-subtle hover:bg-current/15"
+                class={cn(
+                  "absolute top-2 right-2 size-5 rounded text-tomui-subtle hover:bg-current/15",
+                  toast.variant &&
+                    toast.variant !== "default" &&
+                    TOAST_CLOSE_CLASSES[toast.variant],
+                )}
                 onClick={() => merged.onDismiss?.(toast.id)}
               >
                 ×

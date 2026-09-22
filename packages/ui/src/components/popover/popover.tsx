@@ -143,8 +143,12 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
           data-align={merged.align}
           role="dialog"
           class={cn(
-            "absolute z-50 flex origin-(--transform-origin) flex-col rounded-lg bg-tomui-base px-4 py-3 text-sm text-tomui-default",
+            "absolute z-50 flex flex-col rounded-lg bg-tomui-base px-4 py-3 text-sm text-tomui-default",
             "shadow-md outline outline-tomui-line",
+            "transition-opacity duration-150",
+            "data-starting-style:opacity-0",
+            "data-ending-style:opacity-0",
+            "data-instant:duration-0",
             "tomui-popover-popup",
             merged.side === "top" && "bottom-full mb-2",
             merged.side === "bottom" && "top-full mt-2",

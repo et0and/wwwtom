@@ -19,6 +19,10 @@ export const TOMUI_BADGE_VARIANTS = {
     error: { classes: "bg-tomui-danger-tint text-tomui-danger", description: "Error badge" },
     warning: { classes: "bg-tomui-warning-tint text-tomui-warning", description: "Warning badge" },
     success: { classes: "bg-tomui-success-tint text-tomui-success", description: "Success badge" },
+    destructive: {
+      classes: "bg-tomui-badge-red text-white",
+      description: "Deprecated. Use red instead.",
+    },
     info: { classes: "bg-tomui-info-tint text-tomui-info", description: "Info badge" },
     beta: {
       classes: "border border-dashed border-tomui-brand bg-transparent text-tomui-link",
@@ -28,6 +32,17 @@ export const TOMUI_BADGE_VARIANTS = {
       classes: "border border-tomui-fill bg-tomui-base text-tomui-default",
       description: "Bordered badge with base background",
     },
+    red: { classes: "bg-tomui-badge-red text-white", description: "Red badge" },
+    green: { classes: "bg-tomui-badge-green text-white", description: "Green badge" },
+    neutral: { classes: "bg-tomui-badge-neutral text-white", description: "Neutral badge" },
+    orange: { classes: "bg-tomui-badge-orange text-black", description: "Orange badge" },
+    purple: { classes: "bg-tomui-badge-purple text-white", description: "Purple badge" },
+    teal: { classes: "bg-tomui-badge-teal text-white", description: "Teal badge" },
+    "teal-subtle": {
+      classes: "bg-tomui-badge-teal-subtle text-tomui-badge-teal-subtle",
+      description: "Subtle teal badge",
+    },
+    blue: { classes: "bg-tomui-badge-blue text-white", description: "Blue badge" },
   },
   appearance: {
     filled: { classes: "", description: "Filled badge with background color (default)" },
@@ -41,6 +56,10 @@ export const TOMUI_BADGE_VARIANTS = {
     success: { classes: "bg-tomui-success", description: "Green dot for success status" },
     warning: { classes: "bg-tomui-badge-orange", description: "Orange dot for warning status" },
     error: { classes: "bg-tomui-badge-red", description: "Red dot for error status" },
+    neutral: {
+      classes: "bg-tomui-badge-neutral",
+      description: "Neutral dot for informational status",
+    },
   },
 } as const;
 

@@ -97,7 +97,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
       <fieldset
         data-tomui-component="Radio"
         disabled={merged.disabled}
-        class={cn("flex flex-col gap-4", merged.class)}
+        class={cn("flex flex-col gap-4 p-0", merged.class)}
       >
         <Show when={merged.legend}>
           <RadioLegend>{merged.legend}</RadioLegend>
@@ -171,10 +171,15 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
               aria-checked={checked() ? "true" : "false"}
               onChange={() => context.select(merged.value)}
               class={cn(
-                "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring outline-none",
+                "peer mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring outline-none",
                 merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-line",
                 "checked:bg-tomui-contrast",
-                "focus-visible:ring-2 focus-visible:ring-tomui-brand",
+                !disabled() &&
+                  merged.variant !== "error" &&
+                  "group-hover:ring-tomui-hairline focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:outline-offset-3",
+                !disabled() &&
+                  merged.variant === "error" &&
+                  "focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:outline-offset-3",
               )}
             />
             <span
@@ -197,7 +202,12 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
           merged.variant === "error"
             ? "border-tomui-danger has-[[data-checked]]:border-tomui-danger has-[[data-checked]]:bg-tomui-base"
             : "",
-          disabled() ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          disabled()
+            ? "cursor-not-allowed opacity-50"
+            : cn(
+                "cursor-pointer has-[[data-disabled]]:cursor-not-allowed has-[[data-disabled]]:opacity-50",
+                merged.variant !== "error" && "hover:not-has-[[data-disabled]]:bg-tomui-tint",
+              ),
           merged.class,
         )}
       >
@@ -220,10 +230,13 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
             data-checked={checked() ? "" : undefined}
             onChange={() => context.select(merged.value)}
             class={cn(
-              "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring-2 outline-none",
+              "peer mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring-2 outline-none",
               merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-line",
               "checked:bg-tomui-contrast",
-              "focus-visible:ring-2 focus-visible:ring-tomui-brand",
+              !disabled() &&
+                merged.variant !== "error" &&
+                "group-hover:ring-tomui-hairline focus-visible:outline-offset-3",
+              !disabled() && merged.variant === "error" && "focus-visible:outline-offset-3",
             )}
           />
           <span

@@ -6,10 +6,10 @@ import { datePickerVariants, type TomuiDatePickerSize } from "../date-picker/dat
 
 export const TOMUI_DATE_RANGE_PICKER_VARIANTS = {
   size: {
-    sm: { classes: "p-3 gap-2 text-xs", description: "Compact range picker for tight spaces" },
-    base: { classes: "p-4 gap-2.5 text-sm", description: "Default range picker size" },
+    sm: { classes: "p-3 gap-2", description: "Compact range picker for tight spaces" },
+    base: { classes: "p-4 gap-2.5", description: "Default range picker size" },
     lg: {
-      classes: "p-5 gap-3 text-base",
+      classes: "p-5 gap-3",
       description: "Large range picker for prominent date selection",
     },
   },
