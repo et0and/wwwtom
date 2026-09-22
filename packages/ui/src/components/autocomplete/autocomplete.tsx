@@ -264,6 +264,7 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       type="button"
       role="option"
       aria-selected={ctx.query() === String(merged.value) ? "true" : "false"}
+      data-selected={ctx.query() === String(merged.value) ? "" : undefined}
       disabled={merged.disabled}
       class="group mx-1.5 grid cursor-pointer grid-cols-[1fr_16px] gap-2 rounded px-2 py-1.5 text-base data-highlighted:bg-tomui-overlay data-selected:font-medium"
       onClick={() => {

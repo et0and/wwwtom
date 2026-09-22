@@ -39,7 +39,7 @@ export const TOMUI_BADGE_VARIANTS = {
     purple: { classes: "bg-tomui-badge-purple text-white", description: "Purple badge" },
     teal: { classes: "bg-tomui-badge-teal text-white", description: "Teal badge" },
     "teal-subtle": {
-      classes: "bg-tomui-badge-teal-subtle text-tomui-badge-teal-subtle",
+      classes: "bg-tomui-fill text-tomui-badge-teal-subtle",
       description: "Subtle teal badge",
     },
     blue: { classes: "bg-tomui-badge-blue text-white", description: "Blue badge" },

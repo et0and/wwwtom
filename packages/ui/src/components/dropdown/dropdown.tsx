@@ -222,7 +222,7 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
         {merged.icon}
         {merged.children}
         <Show when={merged.selected}>
-          <span class="inline-flex">{"✓"}</span>
+          <span class="ml-auto inline-flex">{"✓"}</span>
         </Show>
       </button>
     </Show>

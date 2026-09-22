@@ -33,13 +33,12 @@ export type TomuiSelectSize = keyof typeof TOMUI_SELECT_VARIANTS.size;
 export function selectVariants(props: { size?: TomuiSelectSize } = {}): string {
   const merged = merge(TOMUI_SELECT_DEFAULT_VARIANTS, props);
   return cn(
-    "flex w-max shrink-0 items-center select-none border-0 shadow-xs",
+    "flex w-full shrink-0 items-center select-none border-0 shadow-xs",
     "bg-tomui-control disabled:bg-tomui-control/50",
     "justify-between font-normal",
     "cursor-pointer disabled:cursor-not-allowed disabled:text-tomui-subtle",
     "ring ring-tomui-line outline-none",
-    "focus:opacity-100 focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:ring-inset",
-    "w-full",
+    "focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:ring-inset",
     resolveVariant(TOMUI_SELECT_VARIANTS.size, merged.size, TOMUI_SELECT_DEFAULT_VARIANTS.size)
       .classes,
   );

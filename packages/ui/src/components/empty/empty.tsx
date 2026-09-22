@@ -173,7 +173,7 @@ export function Empty(props: EmptyProps): JSX.Element {
       </div>
 
       <Show when={merged.commandLine}>
-        <div class="relative inline-flex h-10 max-w-8/10 transform-gpu items-center gap-2 rounded-lg border border-white bg-tomui-overlay pr-2 pl-3 font-mono shadow-xs ring ring-tomui-line">
+        <div class="relative inline-flex h-10 max-w-8/10 transform-gpu items-center gap-2 rounded-lg bg-tomui-overlay pr-2 pl-3 font-mono shadow-xs ring ring-tomui-line">
           <span class="inline-flex min-w-0 items-baseline gap-2">
             <span class="text-tomui-subtle select-none">$</span>
             <span class="no-scrollbar overflow-scroll text-base whitespace-nowrap">

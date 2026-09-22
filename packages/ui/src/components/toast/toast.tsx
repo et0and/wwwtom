@@ -115,7 +115,7 @@ export function Toaster(props: ToasterProps) {
       data-tomui-component="Toaster"
       aria-live="polite"
       class={cn(
-        "fixed top-auto right-4 bottom-4 z-1 mx-auto flex w-[calc(100%-2rem)] sm:right-8 sm:bottom-8 sm:w-[340px] flex-col gap-2",
+        "fixed right-4 bottom-4 z-1 flex w-[calc(100%-2rem)] sm:right-8 sm:bottom-8 sm:w-[340px] flex-col gap-2",
         merged.class,
       )}
       {...rest}

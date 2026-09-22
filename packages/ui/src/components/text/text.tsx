@@ -33,7 +33,7 @@ export const TOMUI_TEXT_VARIANTS = {
     },
     success: {
       classes: "text-tomui-link",
-      description: "Success state text",
+      description: "Success state text in link color",
     },
     error: {
       classes: "text-tomui-danger",

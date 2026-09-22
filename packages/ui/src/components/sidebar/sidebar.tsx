@@ -113,13 +113,11 @@ export function SidebarItem(props: SidebarItemProps) {
         aria-current={merged.active ? "page" : undefined}
         class={cn(
           "tomui-sidebar-menu-button group/menu-button relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-lg outline-none",
-          "before:absolute before:inset-x-0 before:-inset-y-px",
           "px-3 py-0 text-sm font-medium no-underline!",
           "min-h-8.5 text-tomui-default",
           "transition-[color,box-shadow,outline]",
           !merged.active && "hover:bg-tomui-tint",
           merged.active && "bg-tomui-tint",
-          "has-[[data-active]]:bg-transparent has-[[data-active]]:hover:bg-tomui-tint",
           "focus:outline-none focus-visible:bg-tomui-tint focus-visible:text-tomui-strong",
           merged.class,
         )}
