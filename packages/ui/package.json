@@ -68,6 +68,7 @@
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
+    "@tom/icons": "workspace:*",
     "@tom/schemas": "workspace:*",
     "classnames": "catalog:",
     "solid-js": "catalog:"

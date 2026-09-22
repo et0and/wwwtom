@@ -1,5 +1,6 @@
 import { createSignal, For, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { XIcon } from "@tom/icons/X";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -174,14 +175,14 @@ export function Toaster(props: ToasterProps) {
                 type="button"
                 aria-label="Dismiss"
                 class={cn(
-                  "absolute top-2 right-2 size-5 rounded text-tomui-subtle hover:bg-current/15",
+                  "absolute top-2 right-2 flex size-5 items-center justify-center rounded text-tomui-subtle hover:bg-current/15",
                   toast.variant &&
                     toast.variant !== "default" &&
                     TOAST_CLOSE_CLASSES[toast.variant],
                 )}
                 onClick={() => merged.onDismiss?.(toast.id)}
               >
-                ×
+                <XIcon size="sm" />
               </button>
             </div>
           </div>

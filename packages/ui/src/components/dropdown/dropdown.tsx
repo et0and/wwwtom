@@ -1,5 +1,6 @@
 import type { JSX } from "@solidjs/web";
 import { createContext, createSignal, merge, onSettled, Show, omit, useContext } from "solid-js";
+import { CheckIcon } from "@tom/icons/Check";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -222,7 +223,9 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
         {merged.icon}
         {merged.children}
         <Show when={merged.selected}>
-          <span class="ml-auto inline-flex">{"✓"}</span>
+          <span class="ml-auto inline-flex">
+            <CheckIcon size="sm" color="current" />
+          </span>
         </Show>
       </button>
     </Show>
@@ -271,7 +274,7 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
     >
       <Show when={isChecked()}>
         <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-inherit">
-          {"✓"}
+          <CheckIcon size="xs" color="current" />
         </span>
       </Show>
       {merged.children}
@@ -334,7 +337,9 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
     >
       {merged.children}
       <Show when={isChecked()}>
-        <span class="ml-auto">{"✓"}</span>
+        <span class="ml-auto inline-flex">
+          <CheckIcon size="sm" color="current" />
+        </span>
       </Show>
     </button>
   );

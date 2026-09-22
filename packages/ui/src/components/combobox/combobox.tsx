@@ -9,6 +9,9 @@ import {
   omit,
   useContext,
 } from "solid-js";
+import { CaretDownIcon } from "@tom/icons/CaretDown";
+import { CheckIcon } from "@tom/icons/Check";
+import { XIcon } from "@tom/icons/X";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -262,10 +265,10 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         data-tomui-part="clear"
         type="button"
         aria-label={merged.clearLabel}
-        class="absolute top-1/2 right-8 flex -translate-y-1/2 cursor-pointer bg-transparent p-0 data-[disabled]:pointer-events-none data-[disabled]:opacity-0"
+        class="absolute top-1/2 right-8 flex -translate-y-1/2 cursor-pointer items-center justify-center bg-transparent p-0 data-[disabled]:pointer-events-none data-[disabled]:opacity-0"
         onClick={() => ctx.clear()}
       >
-        {"✕"}
+        <XIcon size="sm" color="current" />
       </button>
       <button
         data-tomui-component="Combobox"
@@ -276,7 +279,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         class="absolute top-1/2 right-2 m-0 flex -translate-y-1/2 cursor-pointer items-center justify-center bg-transparent p-0 text-tomui-subtle"
         onClick={() => ctx.setOpen(!ctx.isOpen())}
       >
-        {"▾"}
+        <CaretDownIcon size="sm" color="current" />
       </button>
     </div>
   );
@@ -323,7 +326,7 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
     >
       {merged.children ?? label()}
       <span class="absolute top-1/2 right-2 flex -translate-y-1/2 items-center text-tomui-subtle">
-        {"▾"}
+        <CaretDownIcon size="sm" color="current" />
       </span>
     </button>
   );
@@ -420,7 +423,9 @@ function Item(props: ComboboxItemProps): JSX.Element {
     >
       <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
       <Show when={isSelected()}>
-        <span class="col-start-2 flex items-center">{"✓"}</span>
+        <span class="col-start-2 flex items-center">
+          <CheckIcon size="sm" color="current" />
+        </span>
       </Show>
     </button>
   );
@@ -495,12 +500,12 @@ function Chip(props: ComboboxChipProps): JSX.Element {
         data-tomui-part="chip-remove"
         type="button"
         aria-label={merged.removeLabel}
-        class="flex cursor-pointer rounded-md bg-transparent p-1 hover:bg-tomui-fill-hover"
+        class="flex cursor-pointer items-center justify-center rounded-md bg-transparent p-1 hover:bg-tomui-fill-hover"
         onClick={() => {
           if (merged.value !== undefined) ctx.remove(merged.value);
         }}
       >
-        {"✕"}
+        <XIcon size="sm" color="current" />
       </button>
     </span>
   );

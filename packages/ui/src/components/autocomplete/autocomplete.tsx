@@ -9,6 +9,7 @@ import {
   omit,
   useContext,
 } from "solid-js";
+import { CheckIcon } from "@tom/icons/Check";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -282,7 +283,9 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       }}
     >
       <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
-      <span class="col-start-2 hidden items-center group-data-selected:flex">{"✓"}</span>
+      <span class="col-start-2 hidden items-center group-data-selected:flex">
+        <CheckIcon size="sm" color="current" />
+      </span>
     </button>
   );
 }

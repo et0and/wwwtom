@@ -1,5 +1,6 @@
 import { createSignal, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { CaretDownIcon } from "@tom/icons/CaretDown";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -90,8 +91,8 @@ export function SidebarSection(props: SidebarSectionProps) {
         class="tomui-sidebar-group-label flex items-center justify-between px-3 pt-4 pb-2 text-sm font-medium text-tomui-subtle"
       >
         <span class="truncate">{merged.label}</span>
-        <span aria-hidden="true" class={cn("transition-transform", !isOpen() && "-rotate-90")}>
-          {"▾"}
+        <span class={cn("inline-flex transition-transform", !isOpen() && "-rotate-90")}>
+          <CaretDownIcon size="sm" />
         </span>
       </button>
       <Show when={isOpen()}>
