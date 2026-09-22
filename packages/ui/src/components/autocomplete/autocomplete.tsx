@@ -146,7 +146,16 @@ export type AutocompleteInputGroupProps = Omit<
 function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({ size: TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS.size }, props);
-  const rest = omit(merged, "class", "size", "onInput", "onFocus", "onKeyDown", "placeholder");
+  const rest = omit(
+    merged,
+    "class",
+    "size",
+    "value",
+    "onInput",
+    "onFocus",
+    "onKeyDown",
+    "placeholder",
+  );
   return (
     <input
       data-tomui-component="Autocomplete"

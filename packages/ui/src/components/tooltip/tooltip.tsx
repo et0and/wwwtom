@@ -59,7 +59,6 @@ const TOMUI_TOOLTIP_POSITIONS = {
 } satisfies Record<TomuiTooltipSide, string>;
 
 let globalWarmedUp = false;
-let globalWarmUpTimeout: ReturnType<typeof setTimeout> | undefined;
 let globalCoolDownTimeout: ReturnType<typeof setTimeout> | undefined;
 let globalSkipDelayTimeout: ReturnType<typeof setTimeout> | undefined;
 const openTooltips = new Map<string, () => void>();
@@ -106,13 +105,13 @@ export function Tooltip(props: TooltipProps): JSX.Element {
   const popupId = createUniqueId();
   const state = createDisclosureState({});
   let closeTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  let openTimeoutId: ReturnType<typeof setTimeout> | undefined;
   let isHovered = false;
   let isFocused = false;
 
   const cancelOpening = () => {
-    clearTimeout(globalWarmUpTimeout);
-    globalWarmUpTimeout = undefined;
-    globalWarmedUp = false;
+    clearTimeout(openTimeoutId);
+    openTimeoutId = undefined;
   };
 
   const cancelClosing = () => {
@@ -128,12 +127,11 @@ export function Tooltip(props: TooltipProps): JSX.Element {
 
   const showTooltip = () => {
     cancelClosing();
+    cancelOpening();
     closeOpenTooltips();
     openTooltips.set(popupId, () => state.close());
     globalWarmedUp = true;
     state.open();
-    clearTimeout(globalWarmUpTimeout);
-    globalWarmUpTimeout = undefined;
     clearTimeout(globalCoolDownTimeout);
     globalCoolDownTimeout = undefined;
     clearTimeout(globalSkipDelayTimeout);
@@ -144,8 +142,9 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     closeOpenTooltips();
     openTooltips.set(popupId, () => state.close());
 
-    if (!state.isOpen() && !globalWarmUpTimeout && !globalWarmedUp) {
-      globalWarmUpTimeout = setTimeout(() => {
+    if (!state.isOpen() && !openTimeoutId && !globalWarmedUp) {
+      openTimeoutId = setTimeout(() => {
+        openTimeoutId = undefined;
         globalWarmedUp = true;
         showTooltip();
       }, merged.openDelay);
@@ -174,13 +173,12 @@ export function Tooltip(props: TooltipProps): JSX.Element {
       }, merged.closeDelay);
     }
 
-    clearTimeout(globalWarmUpTimeout);
-    globalWarmUpTimeout = undefined;
-
     clearTimeout(globalSkipDelayTimeout);
     globalSkipDelayTimeout = setTimeout(() => {
       globalSkipDelayTimeout = undefined;
     }, merged.skipDelayDuration);
+
+    cancelOpening();
 
     if (globalWarmedUp) {
       clearTimeout(globalCoolDownTimeout);
@@ -207,9 +205,6 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     cancelOpening();
     cancelClosing();
     openTooltips.delete(popupId);
-    clearTimeout(globalWarmUpTimeout);
-    clearTimeout(globalCoolDownTimeout);
-    clearTimeout(globalSkipDelayTimeout);
   });
 
   return (

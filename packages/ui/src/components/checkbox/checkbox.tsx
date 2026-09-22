@@ -102,6 +102,7 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
 
   let inputRef: HTMLInputElement | undefined;
   let isFocused = false;
+  let isSyncing = false;
 
   createEffect(
     () => merged.indeterminate,
@@ -115,13 +116,12 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
     () => state.isSelected(),
     (checked) => {
       const el = untrack(() => inputRef);
-      if (!el) return;
-      if (el.checked !== checked) {
-        el.checked = checked;
-      }
-      el.indeterminate = merged.indeterminate;
+      if (!el || el.checked === checked) return;
+      isSyncing = true;
+      el.checked = checked;
       el.dispatchEvent(new Event("input", { bubbles: true }));
       el.dispatchEvent(new Event("change", { bubbles: true }));
+      isSyncing = false;
     },
   );
 
@@ -158,7 +158,7 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
           isFocused = false;
         }}
         onChange={(event) => {
-          event.stopPropagation();
+          if (isSyncing) return;
           state.toggle();
           const el = event.currentTarget;
           el.checked = state.isSelected();

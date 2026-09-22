@@ -100,6 +100,7 @@ export function createFocusScope(
 
       if (!mountEvent.defaultPrevented) {
         setTimeout(() => {
+          if (!el.isConnected) return;
           const [first] = getTabbableIn(el);
           focusWithoutScrolling(first ?? el);
         }, 0);
@@ -162,8 +163,7 @@ export function createHideOutside(options: HideOutsideOptions): void {
       if (!targets) return;
 
       const hiddenElements: Array<[HTMLElement, string | null]> = [];
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-      const stack: Array<HTMLElement> = [walker.currentNode as HTMLElement];
+      const stack: Array<HTMLElement> = [document.body];
 
       while (stack.length > 0) {
         const current = stack.pop()!;

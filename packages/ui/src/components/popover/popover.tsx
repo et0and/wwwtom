@@ -133,7 +133,7 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
     },
     props,
   );
-  const rest = omit(merged, "children", "class", "side", "align");
+  const rest = omit(merged, "children", "class", "side", "align", "sideOffset", "alignOffset");
 
   createDismissableLayer(ctx.contentRef, {
     enabled: ctx.isOpen,

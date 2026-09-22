@@ -100,11 +100,10 @@ export function Select(props: SelectProps) {
     () => signal.value(),
     (value) => {
       const el = untrack(() => selectRef);
-      if (el && el.value !== (value ?? "")) {
-        el.value = value ?? "";
-      }
-      el?.dispatchEvent(new Event("input", { bubbles: true }));
-      el?.dispatchEvent(new Event("change", { bubbles: true }));
+      if (!el || el.value === (value ?? "")) return;
+      el.value = value ?? "";
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
     },
   );
 

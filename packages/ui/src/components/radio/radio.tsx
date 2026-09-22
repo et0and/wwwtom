@@ -111,6 +111,10 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
   const syncInputs = () => {
     const current = signal.value();
     for (const el of inputs) {
+      if (!el.isConnected) {
+        inputs.delete(el);
+        continue;
+      }
       el.checked = el.value === current;
     }
   };

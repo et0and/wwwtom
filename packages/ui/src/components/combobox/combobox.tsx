@@ -220,6 +220,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
     "clearLabel",
     "showOptionsLabel",
     "placeholder",
+    "value",
     "onInput",
     "onFocus",
     "onKeyDown",

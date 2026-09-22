@@ -1,5 +1,5 @@
 import type { JSX } from "@solidjs/web";
-import { createContext, For, merge, omit, Show, useContext } from "solid-js";
+import { createContext, createUniqueId, For, merge, omit, Show, useContext } from "solid-js";
 import { cn } from "../../utils/cn";
 import { createControllableSignal } from "../../utils/state";
 
@@ -94,6 +94,19 @@ export function Tabs(props: TabsProps): JSX.Element {
     const buttons = Array.from(
       list.querySelectorAll<HTMLButtonElement>("[role='tab']:not([disabled])"),
     );
+
+    if (event.key === "Home" || event.key === "End") {
+      const edge = event.key === "Home" ? buttons[0] : buttons[buttons.length - 1];
+      if (!edge) return;
+      event.preventDefault();
+      edge.focus();
+      if (merged.activateOnFocus === true) {
+        const nextValue = edge.dataset.value;
+        if (nextValue !== undefined) select(nextValue);
+      }
+      return;
+    }
+
     const current = document.activeElement as HTMLElement | null;
     const currentIndex = current ? buttons.indexOf(current as HTMLButtonElement) : -1;
     if (currentIndex < 0) return;
@@ -117,7 +130,7 @@ export function Tabs(props: TabsProps): JSX.Element {
   const contextValue: TabsContextValue = {
     activeValue,
     select,
-    baseId: "tabs",
+    baseId: createUniqueId(),
   };
 
   return (
@@ -164,6 +177,7 @@ export function Tabs(props: TabsProps): JSX.Element {
                     data-value={tab.value}
                     type="button"
                     role="tab"
+                    id={`${contextValue.baseId}-tab-${tab.value}`}
                     aria-selected={selected() ? "true" : "false"}
                     aria-controls={`${contextValue.baseId}-panel-${tab.value}`}
                     tabindex={selected() ? 0 : -1}
