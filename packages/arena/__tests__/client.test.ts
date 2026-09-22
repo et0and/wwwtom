@@ -396,7 +396,7 @@ describe("ArenaClient", () => {
       await runEffect(client.channel("my-channel").contents());
 
       expect(cfOf(mockFetch.mock.calls[0]!)).toMatchObject({
-        cacheTtl: 300,
+        cacheTtl: 86400,
         cacheTtlByStatus: { "400-599": 0 },
       });
     });

@@ -3,6 +3,7 @@ import { useParams } from "@solidjs/router";
 import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPostBySlug } from "~/server/adapter";
+import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
@@ -20,8 +21,8 @@ export default function PostPage() {
   const params = useParams();
   const slug = createMemo(() => params.slug);
 
-  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
-  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+  httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
+  httpHeader("CDN-Cache-Control", PUBLIC_PAGE_CDN_CACHE_CONTROL);
 
   const postQuery = useQuery(() => ({
     queryKey: ["post", slug()],

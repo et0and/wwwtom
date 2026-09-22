@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Schema } from "effect";
 import {
   CmsPagingSchema,
   type ArenaRef,
@@ -9,7 +9,6 @@ import {
   type TiptapBlock,
   type TiptapDoc,
 } from "@tom/schemas/cms";
-import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv } from "@tom/utils/services/config";
@@ -75,8 +74,6 @@ const cmsApi = async (request: Request) => {
   };
 };
 
-const SessionBodySchema = Schema.Struct({ session: Schema.Unknown });
-
 /** List page sizes mirror the index pages that consume them. */
 const POSTS_PAGE_SIZE = 5;
 const WORKS_PAGE_SIZE = 10;
@@ -99,61 +96,6 @@ const proxyCachedCms = async <T>(
   setPublicContentCache(request, set);
   return data;
 };
-
-/**
- * Session gate for CMS writes. The browser session cookie rides the
- * request; the adapter asks the API for the session before forwarding the
- * write, so anonymous callers get a 401 without touching content. The API
- * re-checks the session itself — fail-closed on both hops.
- */
-const requireContentSession = (
-  request: Request,
-  apiUrl: string,
-  token: string | undefined,
-): Effect.Effect<void, AdapterError> =>
-  Effect.tryPromise({
-    try: () => {
-      const headers = new Headers();
-      const cookie = request.headers.get("cookie");
-      if (cookie) headers.set("cookie", cookie);
-      if (token) headers.set(INTERNAL_TOKEN_HEADER, token);
-      return fetch(`${apiUrl}/auth/get-session`, { headers, redirect: "manual" });
-    },
-    catch: () =>
-      new AdapterError({
-        status: HttpStatus.BadGateway,
-        message: "CMS auth unavailable",
-      }),
-  }).pipe(
-    Effect.flatMap((response) =>
-      Effect.tryPromise({
-        try: () => response.json() as Promise<unknown>,
-        catch: () =>
-          new AdapterError({
-            status: HttpStatus.BadGateway,
-            message: "CMS auth unavailable",
-          }),
-      }),
-    ),
-    Effect.flatMap((body) =>
-      Option.match(
-        Option.filter(
-          Schema.decodeUnknownOption(SessionBodySchema)(body),
-          (parsed) => parsed.session !== null && parsed.session !== undefined,
-        ),
-        {
-          onNone: () =>
-            Effect.fail(
-              new AdapterError({
-                status: HttpStatus.Unauthorized,
-                message: "CMS session required",
-              }),
-            ),
-          onSome: () => Effect.void,
-        },
-      ),
-    ),
-  );
 
 /**
  * CSRF gate for CMS writes. Session cookies travel cross-site
@@ -188,7 +130,6 @@ const proxyWrite = (
   return runAdapter(
     Effect.gen(function* () {
       yield* requireTrustedWriteOrigin(request, writeOriginOptions(request, adapterOrigin));
-      yield* requireContentSession(request, apiUrl, token);
       const body = yield* Effect.tryPromise({
         try: () => request.arrayBuffer(),
         catch: () =>
@@ -235,7 +176,6 @@ const proxyAuthoredGet = (
   return runAdapter(
     Effect.gen(function* () {
       yield* requireTrustedWriteOrigin(request, writeOriginOptions(request, adapterOrigin));
-      yield* requireContentSession(request, apiUrl, token);
       const upstream = yield* Effect.tryPromise({
         try: () =>
           fetch(`${apiUrl}${path}${url.search}`, {

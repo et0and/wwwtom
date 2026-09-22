@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./arena": "./src/arena.ts",
+    "./cache": "./src/cache.ts",
     "./http": "./src/http.ts",
     "./headers": "./src/headers.ts",
     "./problem": "./src/problem.ts",

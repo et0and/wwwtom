@@ -69,7 +69,7 @@ describe("cms integration", () => {
       );
       expect(response.status).toBe(200);
       expect(response.headers.get("Cache-Control")).toContain("public");
-      expect(response.headers.get("Cache-Control")).toContain("s-maxage=300");
+      expect(response.headers.get("Cache-Control")).toContain("s-maxage=3600");
     });
 
     it("never caches session reads", async () => {

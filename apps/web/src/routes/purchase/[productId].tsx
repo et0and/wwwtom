@@ -1,8 +1,9 @@
 import { PageLayout } from "@tom/ui/PageLayout";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { createMemo, createSignal, Loading, Errored, Show, isPending, latest } from "solid-js";
+import { createMemo, createSignal, Show, Switch, Match } from "solid-js";
 import { useParams } from "@solidjs/router";
+import { useQuery } from "@tanstack/solid-query";
 import { Effect, Option, Schema } from "effect";
 import { formatPrice } from "@tom/checkout";
 import { HttpError } from "@tom/types/errors";
@@ -18,11 +19,15 @@ import { fetchProduct, createCustomer } from "~/server/adapter";
 
 export default function Purchase() {
   const params = useParams();
-  const product = createMemo(() => {
-    const productId = params.productId;
-    if (!productId) throw new Error("Missing product id");
-    return fetchProduct(productId);
-  });
+  const productQuery = useQuery(() => ({
+    queryKey: ["product", params.productId],
+    queryFn: () => {
+      const productId = params.productId;
+      if (!productId) return Promise.resolve(null);
+      return fetchProduct(productId);
+    },
+  }));
+
   const [isRedirecting, setIsRedirecting] = createSignal(false);
   const [email, setEmail] = createSignal("");
   const [name, setName] = createSignal("");
@@ -30,7 +35,7 @@ export default function Purchase() {
   const [emailError, setEmailError] = createSignal("");
 
   const pageTitle = createMemo(() => {
-    const p = latest(() => product());
+    const p = productQuery.data;
     return p ? `Purchase ${p.name}` : "Purchase";
   });
 
@@ -97,26 +102,27 @@ export default function Purchase() {
           <BlurInText text="Complete your purchase" tag="h1" baseDelay={0.1} step={0.025} />
           <BlurInSection delay={0.3}>
             <div class="space-y-4">
-              <Errored fallback={<Banner variant="error" description="Failed to load product" />}>
-                <Loading fallback={<Loader />}>
-                  <Show when={product()}>
-                    {(p) => (
-                      <>
-                        <Show when={p().medias[0]?.public_url}>
-                          {(url) => <img alt={p().name} src={url()} />}
-                        </Show>
-                        <Text variant="heading" as="h2">
-                          {p().name}
-                        </Text>
-                        <Text>{p().description}</Text>
-                        <Text size="lg" bold class="text-2xl">
-                          {formatPrice(p())}
-                        </Text>
-                      </>
-                    )}
-                  </Show>
-                </Loading>
-              </Errored>
+              <Switch fallback={<Banner variant="error" description="Failed to load product" />}>
+                <Match when={productQuery.isPending}>
+                  <Loader />
+                </Match>
+                <Match when={productQuery.data} keyed>
+                  {(p) => (
+                    <>
+                      <Show when={p.medias[0]?.public_url}>
+                        {(url) => <img alt={p.name} src={url()} />}
+                      </Show>
+                      <Text variant="heading" as="h2">
+                        {p.name}
+                      </Text>
+                      <Text>{p.description}</Text>
+                      <Text size="lg" bold class="text-2xl">
+                        {formatPrice(p)}
+                      </Text>
+                    </>
+                  )}
+                </Match>
+              </Switch>
             </div>
           </BlurInSection>
           <BlurInSection delay={0.5}>
@@ -162,7 +168,7 @@ export default function Purchase() {
                 onClick={handlePurchase}
                 variant="primary"
                 loading={isRedirecting()}
-                disabled={isRedirecting() || !email() || isPending(() => product())}
+                disabled={isRedirecting() || !email() || productQuery.isPending}
                 class="w-full"
               >
                 {isRedirecting() ? "Redirecting..." : "Proceed to payment"}

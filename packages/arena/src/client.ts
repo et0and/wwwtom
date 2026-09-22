@@ -123,11 +123,11 @@ type CfOptions = NonNullable<NonNullable<Parameters<Fetch>[1]>["cf"]>;
 
 /**
  * Public reads may sit in the Cloudflare edge cache. The key carries no
- * credentials, so only unauthenticated requests may use it. The TTL matches
- * are.na's own `cache-control: max-age=300`; errors never cache.
+ * credentials, so only unauthenticated requests may use it. Content is
+ * held for 24 hours; errors never cache.
  */
 const publicCacheOptions = (url: string): CfOptions => ({
-  cacheTtl: 300,
+  cacheTtl: 86400,
   cacheKey: `arena:v3:public:${url}`,
   cacheTtlByStatus: { "400-599": 0 },
 });
@@ -148,12 +148,10 @@ const readWorkerCache = async (url: string): Promise<Response | null> => {
   return (await cache.match(workerCacheKey(url)).catch(() => undefined)) ?? null;
 };
 
-const writeWorkerCache = async (url: string, response: Response): Promise<void> => {
+const writeWorkerCache = (url: string, response: Response): void => {
   const cache = workerCache();
   if (!cache) return;
-  await Promise.resolve()
-    .then(() => cache.put(workerCacheKey(url), response.clone()))
-    .catch(() => undefined);
+  void cache.put(workerCacheKey(url), response.clone()).catch(() => undefined);
 };
 
 export const defaultPaginationOptions: PaginationAttributes = {
@@ -328,7 +326,7 @@ export class ArenaClient implements ArenaApi {
       const response = await fetchImpl(input, requestInit);
 
       if (shouldUseEdgeCache && response.ok) {
-        await writeWorkerCache(url, response);
+        writeWorkerCache(url, response);
       }
 
       const shouldRetryWithoutAuth =
@@ -358,7 +356,7 @@ export class ArenaClient implements ArenaApi {
         };
         if (retryHeaders && !(input instanceof Request)) retryInit.headers = retryHeaders;
         const response = await fetchImpl(retryInput, retryInit);
-        if (response.ok) await writeWorkerCache(url, response);
+        if (response.ok) writeWorkerCache(url, response);
         return response;
       })();
     }

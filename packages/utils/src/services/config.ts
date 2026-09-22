@@ -61,12 +61,19 @@ export interface CmsR2Binding {
 // AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
 // Secrets Store binding (production; minted by the Axiom provider). Narrow
 // the union with typeof at the env boundary.
+const secretValueCache = new WeakMap<SecretBinding, Promise<string>>();
+
 export const resolveSecretValue = (
   value: string | SecretBinding | undefined,
 ): Promise<string | undefined> => {
   if (value === undefined) return Promise.resolve(undefined);
   // oxlint-disable-next-line anti-slop/no-runtime-typeof -- string|binding union narrows with typeof
-  return typeof value === "string" ? Promise.resolve(value) : value.get();
+  if (typeof value === "string") return Promise.resolve(value);
+  const cached = secretValueCache.get(value);
+  if (cached !== undefined) return cached;
+  const pending = value.get();
+  secretValueCache.set(value, pending);
+  return pending;
 };
 
 export type CloudflareEnv = {
@@ -183,6 +190,30 @@ const TENANT_PREFIXES = { tom: "TOM_", sophie: "SOPHIE_" } as const;
 const tenantPrefix = (tenant: string | undefined): "TOM_" | "SOPHIE_" | undefined =>
   tenant === "tom" || tenant === "sophie" ? TENANT_PREFIXES[tenant] : undefined;
 
+type TomSecrets = Schema.Schema.Type<typeof TomSecretsSchema>;
+
+const tomSecretsCache = new WeakMap<SecretBinding, Promise<TomSecrets>>();
+
+const readTomSecrets = (binding: SecretBinding): Promise<TomSecrets> => {
+  const cached = tomSecretsCache.get(binding);
+  if (cached !== undefined) return cached;
+  const pending = binding.get().then((raw) =>
+    Effect.runSync(
+      Schema.decodeEffect(TomSecretsSchema)(raw).pipe(
+        Effect.mapError(
+          (cause) =>
+            new SecretsError({
+              message: "TOM_SECRETS must be a JSON object of string values",
+              cause,
+            }),
+        ),
+      ),
+    ),
+  );
+  tomSecretsCache.set(binding, pending);
+  return pending;
+};
+
 export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedCloudflareEnv> => {
   const { AXIOM_TOKEN: axiomBinding, ...rest } = env;
   const axiomToken = await resolveSecretValue(axiomBinding);
@@ -190,18 +221,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
     return axiomToken ? { ...rest, AXIOM_TOKEN: axiomToken } : rest;
   }
 
-  const raw = await env.TOM_SECRETS.get();
-  const parsed = Effect.runSync(
-    Schema.decodeEffect(TomSecretsSchema)(raw).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SecretsError({
-            message: "TOM_SECRETS must be a JSON object of string values",
-            cause,
-          }),
-      ),
-    ),
-  );
+  const parsed = await readTomSecrets(env.TOM_SECRETS);
 
   const bundle = Object.fromEntries(
     secretKeys.flatMap((key) => {

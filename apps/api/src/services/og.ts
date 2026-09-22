@@ -1,5 +1,4 @@
 import { Effect, Option, Schema } from "effect";
-import { render } from "takumi-js";
 import { fromHtml } from "takumi-js/helpers/html";
 import { OgImageQueryParamsSchema, type OgTemplate } from "@tom/schemas/og";
 import { OgTemplates, type OgTemplateParams } from "@tom/ui/OgImage";
@@ -115,8 +114,9 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
   const html = template({ title, summary, date: date ?? "" });
   const { node, css } = fromHtml(html);
   const png = yield* Effect.tryPromise({
-    try: () =>
-      render(node, {
+    try: async () => {
+      const { render } = await import("takumi-js");
+      return render(node, {
         width: 1200,
         height: 630,
         css,
@@ -128,7 +128,8 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
             ? []
             : [{ name: "Solway", data: sophieFontData, weight: 400, style: "normal" }]),
         ],
-      }),
+      });
+    },
     catch: () =>
       new ImageGenerationError({
         message: "Failed to render OG image",

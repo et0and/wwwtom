@@ -202,14 +202,24 @@ const findIndexEntry = (
   client: ArenaContentClient,
   indexSlug: string,
   entrySlug: string,
-  page: number,
 ): Effect.Effect<ArenaEntrySummary | null, HttpError> =>
   Effect.gen(function* () {
-    const result = yield* indexPage(client, indexSlug, page, MAX_PER_PAGE);
-    const found = result.entries.find((entry) => entry.slug === entrySlug);
+    const first = yield* indexPage(client, indexSlug, 1, MAX_PER_PAGE);
+    const found = first.entries.find((entry) => entry.slug === entrySlug);
     if (found !== undefined) return found;
-    if (!result.contents.meta.has_more_pages) return null;
-    return yield* findIndexEntry(client, indexSlug, entrySlug, page + 1);
+    const totalPages = first.contents.meta.total_pages;
+    if (totalPages <= 1) return null;
+    const remainingPages = Array.from({ length: totalPages - 1 }, (_, i) => i + 2);
+    const remaining = yield* Effect.forEach(
+      remainingPages,
+      (page) => indexPage(client, indexSlug, page, MAX_PER_PAGE),
+      { concurrency: "unbounded" },
+    );
+    for (const result of remaining) {
+      const match = result.entries.find((entry) => entry.slug === entrySlug);
+      if (match !== undefined) return match;
+    }
+    return null;
   });
 
 /**
@@ -223,7 +233,7 @@ export const getEntry = (
   entrySlug: string,
 ): Effect.Effect<ArenaEntry | null, HttpError> =>
   Effect.gen(function* () {
-    const indexEntry = yield* findIndexEntry(client, indexSlug, entrySlug, 1);
+    const indexEntry = yield* findIndexEntry(client, indexSlug, entrySlug);
     if (indexEntry === null) return null;
     const blocks = yield* allBlocks(client, indexEntry.arenaSlug, 1);
     return { ...indexEntry, blocks };
