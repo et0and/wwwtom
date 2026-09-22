@@ -1,33 +1,56 @@
-import { Meta } from "@storybook/addon-docs/blocks";
+import { Meta, Canvas, Controls } from "@storybook/addon-docs/blocks";
+import * as ButtonStories from "./web/TomuiButton.stories";
 
 <Meta title="web" />
 
 # TomUI
 
-TomUI is the design system for this monorepo. It brings an accessible Solid v2 component library with TomUI design tokens.
+TomUI is this monorepo's design system: accessible Solid v2 components built on
+TomUI design tokens. Interactive behaviour — focus, keyboard, dismissal — is
+hand-rolled on Solid 2 primitives, with no third-party headless dependency.
 
-## Use
+## Install
 
-Import components from exact deep paths. Never use barrel files.
+Components import from exact deep paths. There are no barrel files.
 
 ```tsx
 import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
+import { Dialog } from "@tom/ui/dialog";
 ```
 
-Import the styles once in app CSS after Tailwind.
+Load the styles once, after Tailwind, and let Tailwind scan the component
+sources so their classes are generated.
 
 ```css
 @import "tailwindcss";
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
-```
 
-Tailwind must scan the component sources for class generation.
-
-```css
 @source "../../../packages/ui/src/**/*.tsx";
 ```
+
+## Examples
+
+<Canvas of={ButtonStories.Primary} />
+<Controls of={ButtonStories.Primary} />
+
+## Colour mode
+
+TomUI follows the operating system. Call `useColorMode()` once in a root
+component: it writes `data-mode` on `<html>` and keeps it in step with
+`prefers-color-scheme`.
+
+```tsx
+import { useColorMode } from "@tom/ui/color-mode";
+
+export function App() {
+  useColorMode();
+  return <>{/* … */}</>;
+}
+```
+
+Every token is declared for both modes, so components need no `dark:` classes.
 
 ## Variants
 
@@ -37,16 +60,26 @@ Every component ships a machine-readable variant table.
 import { TOMUI_BUTTON_VARIANTS, TOMUI_BUTTON_DEFAULT_VARIANTS } from "@tom/ui/button";
 ```
 
-Prop names match the table keys. Defaults come from the matching defaults table. Unknown values fall back to the default.
+Prop names match the table keys. Defaults come from the matching defaults
+table. Unknown values fall back to the default.
 
 ## Forms
 
-Button geometry uses the `form` prop: `base`, `square`, or `circle`. Square and circle forms are icon-only and need an accessible name.
+Button geometry comes from `form`: `base`, `square`, or `circle`. Square and
+circle are icon-only, so give them an accessible name.
 
 ```tsx
 <Button variant="primary">Save</Button>
-<Button form="square" aria-label="Refresh" />
+<Button form="square" aria-label="Refresh" icon={<RefreshIcon />} />
 ```
+
+## Interactive behaviour
+
+The primitives behind the interactive components:
+
+- `state.ts` — controllable signal, toggle, and disclosure state.
+- `focus.ts` — focus scope (trap and restore), hide-outside, scroll lock.
+- `dismissable.ts` — layer stack, Escape, and outside pointer/focus detection.
 
 ## Rules
 
