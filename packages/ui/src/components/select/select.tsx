@@ -1,7 +1,8 @@
-import { For, merge, omit, Show } from "solid-js";
+import { createEffect, createUniqueId, For, merge, omit, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
+import { createControllableSignal } from "../../utils/state";
 
 export const TOMUI_SELECT_VARIANTS = {
   size: {
@@ -50,19 +51,26 @@ export type SelectOption = {
   disabled?: boolean;
 };
 
-export type SelectProps = Omit<JSX.SelectHTMLAttributes<HTMLSelectElement>, "onChange"> & {
+export type SelectProps = Omit<
+  JSX.SelectHTMLAttributes<HTMLSelectElement>,
+  "onChange" | "value" | "defaultValue"
+> & {
   class?: string;
   size?: TomuiSelectSize;
   placeholder?: string;
   options?: ReadonlyArray<SelectOption> | Record<string, string>;
   value?: string;
+  defaultValue?: string;
   onChange?: (value: string) => void;
 };
 
 function normalizeOptions(options: SelectProps["options"]): Array<SelectOption> {
   if (!options) return [];
   if (Array.isArray(options)) return [...options];
-  return Object.entries(options).map(([value, label]) => ({ label, value }));
+  return Object.entries(options).map(([value, label]) => ({
+    label,
+    value,
+  }));
 }
 
 export function Select(props: SelectProps) {
@@ -75,18 +83,45 @@ export function Select(props: SelectProps) {
     "placeholder",
     "options",
     "value",
+    "defaultValue",
     "onChange",
   );
   const normalized = () => normalizeOptions(merged.options);
-  const handleChange: JSX.EventHandler<HTMLSelectElement, Event> = (event) => {
-    merged.onChange?.(event.currentTarget.value);
-  };
+
+  const signal = createControllableSignal<string>({
+    value: () => merged.value,
+    defaultValue: merged.defaultValue,
+    onChange: (next) => merged.onChange?.(next),
+  });
+
+  let selectRef: HTMLSelectElement | undefined;
+
+  createEffect(
+    () => signal.value(),
+    (value) => {
+      const el = untrack(() => selectRef);
+      if (el && el.value !== (value ?? "")) {
+        el.value = value ?? "";
+      }
+      el?.dispatchEvent(new Event("input", { bubbles: true }));
+      el?.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+  );
+
+  const inputId = createUniqueId();
+
   return (
     <select
       data-tomui-component="Select"
+      id={inputId}
       class={cn(selectVariants({ size: merged.size }), merged.class)}
-      value={merged.value ?? ""}
-      onChange={handleChange}
+      value={signal.value() ?? ""}
+      ref={(el: HTMLSelectElement) => {
+        selectRef = el;
+      }}
+      onChange={(event) => {
+        signal.set(event.currentTarget.value);
+      }}
       {...rest}
     >
       <Show when={merged.placeholder}>

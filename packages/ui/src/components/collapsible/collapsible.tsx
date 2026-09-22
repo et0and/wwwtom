@@ -1,6 +1,7 @@
 import type { JSX } from "@solidjs/web";
-import { createContext, createSignal, Show, merge, omit, useContext } from "solid-js";
+import { createContext, merge, omit, Show, useContext } from "solid-js";
 import { cn } from "../../utils/cn";
+import { createDisclosureState } from "../../utils/state";
 
 interface CollapsibleContextValue {
   isOpen: () => boolean;
@@ -23,18 +24,17 @@ export type CollapsibleRootProps = {
 };
 
 function CollapsibleRoot(props: CollapsibleRootProps): JSX.Element {
-  const [uncontrolledOpen, setUncontrolledOpen] = createSignal(props.defaultOpen ?? false);
-  const isOpen = (): boolean => props.open ?? uncontrolledOpen();
-  const setOpen = (next: boolean): void => {
-    if (props.open === undefined) setUncontrolledOpen(next);
-    props.onOpenChange?.(next);
-  };
+  const state = createDisclosureState({
+    open: () => props.open,
+    defaultOpen: props.defaultOpen,
+    onOpenChange: props.onOpenChange,
+  });
   const merged = merge({}, props);
   const rest = omit(merged, "children", "class", "open", "defaultOpen", "onOpenChange");
   const value: CollapsibleContextValue = {
-    isOpen,
-    toggle: () => setOpen(!isOpen()),
-    setOpen,
+    isOpen: state.isOpen,
+    toggle: state.toggle,
+    setOpen: state.setIsOpen,
   };
   return (
     <div data-tomui-component="Collapsible" class={merged.class} {...rest}>

@@ -1,6 +1,13 @@
 import { createMemo, createSignal, For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { cn } from "../../utils/cn";
+import { createDismissableLayer } from "../../utils/dismissable";
+import {
+  createFocusScope,
+  createHideOutside,
+  createPreventScroll,
+  focusWithoutScrolling,
+} from "../../utils/focus";
 
 export const TOMUI_COMMAND_PALETTE_VARIANTS = {
   root: {
@@ -62,22 +69,27 @@ export function CommandPalette(props: CommandPaletteProps) {
     "onOpenChange",
     "onSelect",
   );
+
   const [query, setQuery] = createSignal("");
   const [activeIndex, setActiveIndex] = createSignal(0);
+  const [contentEl, setContentEl] = createSignal<HTMLElement>();
+
   const filtered = createMemo(() => {
     const needle = query().trim().toLowerCase();
-    const visible = merged.items.filter(
+    return merged.items.filter(
       (item) => needle === "" || item.label.toLowerCase().includes(needle),
     );
-    return visible;
   });
   const selectable = createMemo(() => filtered().filter((item) => !item.disabled));
+
   const close = () => merged.onOpenChange?.(false);
+
   const choose = (item: CommandPaletteItem | undefined) => {
     if (!item || item.disabled) return;
     merged.onSelect?.(item);
     close();
   };
+
   const handleKeyDown: JSX.EventHandler<HTMLInputElement, KeyboardEvent> = (event) => {
     const list = selectable();
     if (event.key === "ArrowDown") {
@@ -97,10 +109,34 @@ export function CommandPalette(props: CommandPaletteProps) {
       close();
     }
   };
+
   const handleInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
     setQuery(event.currentTarget.value);
     setActiveIndex(0);
   };
+
+  createDismissableLayer(contentEl, {
+    enabled: () => merged.open,
+    onDismiss: () => close(),
+  });
+
+  createFocusScope(contentEl, {
+    enabled: () => merged.open,
+    trapFocus: true,
+    onMountAutoFocus: (e) => {
+      e.preventDefault();
+      const input = contentEl()?.querySelector<HTMLInputElement>("input");
+      if (input) focusWithoutScrolling(input);
+    },
+  });
+
+  createHideOutside({
+    enabled: () => merged.open,
+    targets: () => [contentEl()],
+  });
+
+  createPreventScroll(() => merged.open);
+
   return (
     <Show when={merged.open}>
       <div
@@ -114,7 +150,9 @@ export function CommandPalette(props: CommandPaletteProps) {
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
+        tabindex={-1}
         class={cn(TOMUI_COMMAND_PALETTE_VARIANTS.root.classes, merged.class)}
+        ref={setContentEl}
         {...rest}
       >
         <input

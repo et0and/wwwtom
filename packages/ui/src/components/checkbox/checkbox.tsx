@@ -1,7 +1,8 @@
 import type { JSX } from "@solidjs/web";
-import { merge, omit, Show } from "solid-js";
+import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
+import { createToggleState } from "../../utils/state";
 import { Label } from "../label/label";
 
 export const TOMUI_CHECKBOX_VARIANTS = {
@@ -42,26 +43,35 @@ export type CheckboxVariant = TomuiCheckboxVariant;
 
 export type CheckboxProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
-  "type" | "onChange" | "ref"
+  "type" | "onChange" | "ref" | "checked" | "defaultChecked"
 > & {
   variant?: CheckboxVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   controlFirst?: boolean | undefined;
   checked?: boolean | undefined;
+  defaultChecked?: boolean | undefined;
   indeterminate?: boolean | undefined;
   disabled?: boolean | undefined;
-  onCheckedChange?: ((checked: boolean, event: Event) => void) | undefined;
+  readOnly?: boolean | undefined;
+  onCheckedChange?: ((checked: boolean) => void) | undefined;
   name?: string | undefined;
+  value?: string | undefined;
   required?: boolean | undefined;
   class?: string | undefined;
   icon?: JSX.Element | undefined;
   ref?: ((element: HTMLInputElement) => void) | undefined;
-  onChange?: JSX.ChangeEventHandler<HTMLInputElement, Event> | undefined;
 };
 
 function CheckboxControl(props: CheckboxProps): JSX.Element {
-  const merged = merge({ variant: "default" as CheckboxVariant, indeterminate: false }, props);
+  const merged = merge(
+    {
+      variant: "default" as CheckboxVariant,
+      indeterminate: false,
+      value: "on",
+    },
+    props,
+  );
   const rest = omit(
     merged,
     "variant",
@@ -69,29 +79,89 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
     "labelTooltip",
     "controlFirst",
     "checked",
+    "defaultChecked",
     "indeterminate",
     "disabled",
+    "readOnly",
     "onCheckedChange",
     "class",
     "icon",
     "ref",
-    "onChange",
+    "name",
+    "value",
   );
+
+  const inputId = createUniqueId();
+  const state = createToggleState({
+    isSelected: () => merged.checked,
+    defaultIsSelected: merged.defaultChecked,
+    isDisabled: () => merged.disabled,
+    isReadOnly: () => merged.readOnly,
+    onSelectedChange: (checked) => merged.onCheckedChange?.(checked),
+  });
+
+  let inputRef: HTMLInputElement | undefined;
+  let isFocused = false;
+
+  createEffect(
+    () => merged.indeterminate,
+    (indeterminate) => {
+      const el = untrack(() => inputRef);
+      if (el) el.indeterminate = indeterminate;
+    },
+  );
+
+  createEffect(
+    () => state.isSelected(),
+    (checked) => {
+      const el = untrack(() => inputRef);
+      if (!el) return;
+      if (el.checked !== checked) {
+        el.checked = checked;
+      }
+      el.indeterminate = merged.indeterminate;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+    },
+  );
+
   return (
-    <span class={cn("relative inline-flex", checkboxVariants({ variant: merged.variant }))}>
+    <span
+      class={cn("relative inline-flex", checkboxVariants({ variant: merged.variant }))}
+      onPointerDown={(e) => {
+        if (isFocused) e.preventDefault();
+      }}
+    >
       <input
         data-tomui-component="Checkbox"
+        id={inputId}
         type="checkbox"
-        checked={merged.checked}
+        name={merged.name}
+        value={merged.value}
+        checked={state.isSelected()}
         disabled={merged.disabled}
-        aria-checked={merged.indeterminate ? "mixed" : merged.checked ? "true" : "false"}
+        readonly={merged.readOnly}
+        required={merged.required}
+        aria-checked={merged.indeterminate ? "mixed" : state.isSelected() ? "true" : "false"}
+        aria-disabled={merged.disabled ? "true" : undefined}
+        aria-readonly={merged.readOnly ? "true" : undefined}
+        aria-required={merged.required ? "true" : undefined}
         ref={(element: HTMLInputElement) => {
+          inputRef = element;
           element.indeterminate = merged.indeterminate;
           merged.ref?.(element);
         }}
+        onFocus={() => {
+          isFocused = true;
+        }}
+        onBlur={() => {
+          isFocused = false;
+        }}
         onChange={(event) => {
-          merged.onChange?.(event);
-          merged.onCheckedChange?.(event.currentTarget.checked, event);
+          event.stopPropagation();
+          state.toggle();
+          const el = event.currentTarget;
+          el.checked = state.isSelected();
         }}
         class={cn(
           "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-sm border-0 bg-tomui-base ring outline-none",
@@ -214,7 +284,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
 export type CheckboxItemProps = Omit<CheckboxProps, "label" | "onCheckedChange"> & {
   label: JSX.Element;
   value?: string | undefined;
-  onCheckedChange?: ((checked: boolean, event: Event) => void) | undefined;
+  onCheckedChange?: ((checked: boolean) => void) | undefined;
 };
 
 export function CheckboxItem(props: CheckboxItemProps): JSX.Element {

@@ -1,4 +1,4 @@
-import { createSignal, createUniqueId, For, merge, omit, onCleanup, Show } from "solid-js";
+import { createSignal, For, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
@@ -22,7 +22,10 @@ export const TOMUI_TOAST_VARIANTS = {
     description: "Button-based close control with variant-aware hover tint",
   },
   variant: {
-    default: { classes: "border-tomui-fill bg-tomui-base", description: "Default toast style" },
+    default: {
+      classes: "border-tomui-fill bg-tomui-base",
+      description: "Default toast style",
+    },
     success: {
       classes:
         "ring-[0.3px] ring-tomui-success bg-tomui-base [&_[data-toast-icon]]:text-tomui-success [&_[data-toast-title]]:text-tomui-success",
@@ -81,22 +84,45 @@ export type ToastItem = {
 
 export type ToastOptions = Omit<ToastItem, "id">;
 
-export function createToastStore() {
+let toastCounter = 0;
+
+export interface ToastStore {
+  toasts: () => ReadonlyArray<ToastItem>;
+  notify: (options: ToastOptions) => string;
+  dismiss: (id: string) => void;
+}
+
+export function createToastStore(): ToastStore {
   const [toasts, setToasts] = createSignal<ReadonlyArray<ToastItem>>([]);
+  const timers = new Map<string, ReturnType<typeof setTimeout>>();
+
   const dismiss = (id: string) => {
+    const timer = timers.get(id);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      timers.delete(id);
+    }
     setToasts((current) => current.filter((toast) => toast.id !== id));
   };
+
   const notify = (options: ToastOptions): string => {
-    const id = createUniqueId();
+    toastCounter += 1;
+    const id = `toast-${toastCounter}`;
     const item: ToastItem = { ...options, id };
     setToasts((current) => [...current, item]);
     const duration = options.duration ?? 4000;
     if (duration > 0) {
       const timer = setTimeout(() => dismiss(id), duration);
-      onCleanup(() => clearTimeout(timer));
+      timers.set(id, timer);
     }
     return id;
   };
+
+  onCleanup(() => {
+    for (const timer of timers.values()) clearTimeout(timer);
+    timers.clear();
+  });
+
   return { toasts, notify, dismiss };
 }
 
@@ -113,6 +139,7 @@ export function Toaster(props: ToasterProps) {
   return (
     <div
       data-tomui-component="Toaster"
+      data-tomui-top-layer
       aria-live="polite"
       class={cn(
         "fixed right-4 bottom-4 z-1 flex w-[calc(100%-2rem)] sm:right-8 sm:bottom-8 sm:w-[340px] flex-col gap-2",
