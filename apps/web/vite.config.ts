@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import solid from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
@@ -7,12 +8,35 @@ if (process.cwd() !== import.meta.dirname) {
   process.chdir(import.meta.dirname);
 }
 
+/** Best-effort git read so local builds still stamp a version and hash. */
+const readGit = (args: string[], fallback: string): string => {
+  const result = spawnSync("git", args, { encoding: "utf8" });
+  if (result.error !== undefined || result.status !== 0) return fallback;
+  const output = result.stdout.trim();
+  if (output === "") return fallback;
+  return output;
+};
+
+// The deploy runs from a checkout of the commit being shipped, so GITHUB_SHA is
+// the deployed revision; local builds fall back to HEAD. An empty hash hides
+// the footer stamp instead of linking a bogus revision.
+const commitHash =
+  process.env.GITHUB_SHA?.slice(0, 7) ?? readGit(["rev-parse", "--short", "HEAD"], "");
+// Semantic-release tags `dev`, so the nearest tag is the last released version.
+const appVersion = readGit(["describe", "--tags", "--abbrev=0"], "v0.0.0").replace(/^v/, "");
+
 export default defineConfig(({ command }) => {
   if (command === "serve" && existsSync(".dev.vars")) {
     process.loadEnvFile(".dev.vars");
   }
 
   return {
+    // Stamped into the client and SSR bundles so the footer shows the
+    // deployed version without any runtime fetch.
+    define: {
+      "import.meta.env.VITE_APP_VERSION": JSON.stringify(appVersion),
+      "import.meta.env.VITE_COMMIT_HASH": JSON.stringify(commitHash),
+    },
     plugins: [
       // Start mode replaces SolidStart: it owns entries, dev SSR serving,
       // and the production build (dist/client + dist/server). SSR via

@@ -37,7 +37,13 @@ export const deploy = workflow("deploy", {
       "runs-on": "ubuntu-latest",
       environment: stageExpression,
       env: alchemyEnv(stageExpression),
-      steps: [checkout(), setupStep(), run("Deploy infrastructure", deployChain(deployStacks))],
+      steps: [
+        // Full history so `git describe --tags` can stamp the release version
+        // into the web build.
+        checkout("Checkout", { "fetch-depth": 0 }),
+        setupStep(),
+        run("Deploy infrastructure", deployChain(deployStacks)),
+      ],
     },
   },
 });
