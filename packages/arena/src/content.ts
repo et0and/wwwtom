@@ -213,7 +213,7 @@ const findIndexEntry = (
     const remaining = yield* Effect.forEach(
       remainingPages,
       (page) => indexPage(client, indexSlug, page, MAX_PER_PAGE),
-      { concurrency: "unbounded" },
+      { concurrency: 5 },
     );
     for (const result of remaining) {
       const match = result.entries.find((entry) => entry.slug === entrySlug);

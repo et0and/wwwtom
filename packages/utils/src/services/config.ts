@@ -73,6 +73,11 @@ export const resolveSecretValue = (
   if (cached !== undefined) return cached;
   const pending = value.get();
   secretValueCache.set(value, pending);
+  // A rejected read must not poison the isolate: evict so the next
+  // request retries instead of replaying the same failure forever.
+  void pending.catch(() => {
+    if (secretValueCache.get(value) === pending) secretValueCache.delete(value);
+  });
   return pending;
 };
 
@@ -211,6 +216,11 @@ const readTomSecrets = (binding: SecretBinding): Promise<TomSecrets> => {
     ),
   );
   tomSecretsCache.set(binding, pending);
+  // A rejected read must not poison the isolate: evict so the next
+  // request retries instead of replaying the same failure forever.
+  void pending.catch(() => {
+    if (tomSecretsCache.get(binding) === pending) tomSecretsCache.delete(binding);
+  });
   return pending;
 };
 

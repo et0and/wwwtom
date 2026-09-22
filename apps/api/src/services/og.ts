@@ -1,5 +1,4 @@
 import { Effect, Option, Schema } from "effect";
-import { fromHtml } from "takumi-js/helpers/html";
 import { OgImageQueryParamsSchema, type OgTemplate } from "@tom/schemas/og";
 import { OgTemplates, type OgTemplateParams } from "@tom/ui/OgImage";
 import { FontFetchError, ValidationError, ImageGenerationError } from "@tom/types/errors";
@@ -112,10 +111,13 @@ export const generateOgImageEffect = Effect.fn("og.generate")(function* (
     template === OgTemplates.sophie ? yield* fontFetchEffect(source, SOLWAY_PATH) : null;
 
   const html = template({ title, summary, date: date ?? "" });
-  const { node, css } = fromHtml(html);
   const png = yield* Effect.tryPromise({
     try: async () => {
-      const { render } = await import("takumi-js");
+      const [{ render }, { fromHtml }] = await Promise.all([
+        import("takumi-js"),
+        import("takumi-js/helpers/html"),
+      ]);
+      const { node, css } = fromHtml(html);
       return render(node, {
         width: 1200,
         height: 630,

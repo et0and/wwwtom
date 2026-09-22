@@ -26,6 +26,7 @@ export default function Purchase() {
       if (!productId) return Promise.resolve(null);
       return fetchProduct(productId);
     },
+    enabled: params.productId !== undefined,
   }));
 
   const [isRedirecting, setIsRedirecting] = createSignal(false);
