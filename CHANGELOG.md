@@ -1,3 +1,16 @@
+# [3.10.0](https://github.com/et0and/wwwtom/compare/v3.9.0...v3.10.0) (2026-09-23)
+
+
+### Bug Fixes
+
+* **web:** drop the footer background on desktop ([f29d2bb](https://github.com/et0and/wwwtom/commit/f29d2bb5024e0d2a608e219de05358af94184ba5))
+* **web:** drop the sticky chrome hairlines ([fbea2e1](https://github.com/et0and/wwwtom/commit/fbea2e1499deabaee8e551d28b28ca266b7b4050))
+
+
+### Features
+
+* **web:** pin the nav and footer on desktop ([427c172](https://github.com/et0and/wwwtom/commit/427c172b9977277b959179805aa053a92f1d2c13))
+
 # [3.9.0](https://github.com/et0and/wwwtom/compare/v3.8.1...v3.9.0) (2026-09-22)
 
 
