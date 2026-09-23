@@ -3,7 +3,7 @@
 exports[`Footer > matches the snapshot 1`] = `
 <div>
   <footer
-    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-6 py-4 text-sm flex-shrink-0"
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between px-6 py-4 text-sm flex-shrink-0 md:sticky md:bottom-0 md:border-t md:border-tomui-line md:bg-white md:dark:bg-[#0a0a0a]"
   >
     <p>
       © 
