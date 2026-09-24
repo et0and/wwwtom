@@ -1,3 +1,23 @@
+# [3.11.0](https://github.com/et0and/wwwtom/compare/v3.10.1...v3.11.0) (2026-09-24)
+
+
+### Bug Fixes
+
+* **storybook:** restore component CSS and improve docs ([1c9278c](https://github.com/et0and/wwwtom/commit/1c9278cdca4e4dd363e84dff215a837182ec40f0))
+* **tests:** allow extra time for slow component suites ([18ce475](https://github.com/et0and/wwwtom/commit/18ce475ed9f6c25f5c6f39748c9c414a479ebde2))
+* **ui:** correct defects flagged in kumo parity review triage ([bac1150](https://github.com/et0and/wwwtom/commit/bac1150aed99e71027f1356be55d6665326656c7))
+* **ui:** correct interactive-primitive defects flagged in review triage ([9f9fa8a](https://github.com/et0and/wwwtom/commit/9f9fa8a0ba788e9ba1e319d37b2380e47bd9e6a4))
+* **ui:** match kumo-ui visual parity across TomUI components ([ac4d268](https://github.com/et0and/wwwtom/commit/ac4d26899070d8ecb361819390a95a31a533aff9))
+* **workflows:** deploy storybook to staging and production ([4a78b5c](https://github.com/et0and/wwwtom/commit/4a78b5c27f4275b12c2e6c7c87dd0a28c5309e91))
+
+
+### Features
+
+* **icons:** add @tom/icons Phosphor icon library ([1e22c91](https://github.com/et0and/wwwtom/commit/1e22c91cdf78e54df8eb231ebbcff351ab87c24e))
+* **storybook:** browse all icons with select control ([2403359](https://github.com/et0and/wwwtom/commit/2403359397035227fed3837733c62eed55e581b8))
+* **storybook:** render @tom/icons in Storybook ([b287c09](https://github.com/et0and/wwwtom/commit/b287c09c3eece56741719da3bde720788d330f09))
+* **ui:** hand-roll Solid 2 interactive behavior for TomUI ([68eae23](https://github.com/et0and/wwwtom/commit/68eae23dc8315fea94d10b93d0246cb30ef4f7cd))
+
 ## [3.10.1](https://github.com/et0and/wwwtom/compare/v3.10.0...v3.10.1) (2026-09-24)
 
 
