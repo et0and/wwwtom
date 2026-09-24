@@ -1,11 +1,32 @@
-import { createSignal, createUniqueId, For, merge, omit, onCleanup, Show } from "solid-js";
+import { createSignal, For, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { XIcon } from "@tom/icons/X";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
 export const TOMUI_TOAST_VARIANTS = {
+  root: {
+    classes:
+      "rounded-lg border border-tomui-fill bg-tomui-control p-4 shadow-lg text-tomui-default",
+    description: "Toast container with background, border, and shadow",
+  },
+  title: {
+    classes: "text-[0.975rem] leading-5 font-medium text-tomui-default",
+    description: "Toast title with primary text color",
+  },
+  description: {
+    classes: "text-[0.925rem] leading-5 text-tomui-subtle",
+    description: "Toast description with muted text color",
+  },
+  close: {
+    classes: "absolute top-2 right-2 size-5 rounded text-tomui-subtle hover:bg-current/15",
+    description: "Button-based close control with variant-aware hover tint",
+  },
   variant: {
-    default: { classes: "border-tomui-fill bg-tomui-base", description: "Default toast style" },
+    default: {
+      classes: "border-tomui-fill bg-tomui-base",
+      description: "Default toast style",
+    },
     success: {
       classes:
         "ring-[0.3px] ring-tomui-success bg-tomui-base [&_[data-toast-icon]]:text-tomui-success [&_[data-toast-title]]:text-tomui-success",
@@ -33,6 +54,13 @@ export const TOMUI_TOAST_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
+const TOAST_CLOSE_CLASSES = {
+  success: "text-tomui-success",
+  error: "text-tomui-danger",
+  warning: "text-tomui-warning",
+  info: "text-tomui-info",
+} as const satisfies Record<string, string>;
+
 export type TomuiToastVariant = keyof typeof TOMUI_TOAST_VARIANTS.variant;
 
 export function toastVariants(props: { variant?: TomuiToastVariant } = {}): string {
@@ -57,22 +85,45 @@ export type ToastItem = {
 
 export type ToastOptions = Omit<ToastItem, "id">;
 
-export function createToastStore() {
+let toastCounter = 0;
+
+export interface ToastStore {
+  toasts: () => ReadonlyArray<ToastItem>;
+  notify: (options: ToastOptions) => string;
+  dismiss: (id: string) => void;
+}
+
+export function createToastStore(): ToastStore {
   const [toasts, setToasts] = createSignal<ReadonlyArray<ToastItem>>([]);
+  const timers = new Map<string, ReturnType<typeof setTimeout>>();
+
   const dismiss = (id: string) => {
+    const timer = timers.get(id);
+    if (timer !== undefined) {
+      clearTimeout(timer);
+      timers.delete(id);
+    }
     setToasts((current) => current.filter((toast) => toast.id !== id));
   };
+
   const notify = (options: ToastOptions): string => {
-    const id = createUniqueId();
+    toastCounter += 1;
+    const id = `toast-${toastCounter}`;
     const item: ToastItem = { ...options, id };
     setToasts((current) => [...current, item]);
     const duration = options.duration ?? 4000;
     if (duration > 0) {
       const timer = setTimeout(() => dismiss(id), duration);
-      onCleanup(() => clearTimeout(timer));
+      timers.set(id, timer);
     }
     return id;
   };
+
+  onCleanup(() => {
+    for (const timer of timers.values()) clearTimeout(timer);
+    timers.clear();
+  });
+
   return { toasts, notify, dismiss };
 }
 
@@ -89,20 +140,27 @@ export function Toaster(props: ToasterProps) {
   return (
     <div
       data-tomui-component="Toaster"
+      data-tomui-top-layer
       aria-live="polite"
-      class={cn("fixed bottom-4 right-4 z-50 flex w-[300px] flex-col gap-2", merged.class)}
+      class={cn(
+        "fixed right-4 bottom-4 z-1 flex w-[calc(100%-2rem)] sm:right-8 sm:bottom-8 sm:w-[340px] flex-col gap-2",
+        merged.class,
+      )}
       {...rest}
     >
       <For each={items()}>
         {(toast) => (
           <div
             role="status"
-            class={toastVariants({
-              variant: toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant,
-            })}
+            class={cn(
+              "relative",
+              toastVariants({
+                variant: toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant,
+              }),
+            )}
           >
             <div class="flex items-start gap-2">
-              <div class="flex min-w-0 flex-col gap-1">
+              <div class="flex min-w-0 flex-col gap-1 overflow-hidden">
                 <p
                   data-toast-title
                   class="text-[0.975rem] leading-5 font-medium text-tomui-default"
@@ -110,16 +168,21 @@ export function Toaster(props: ToasterProps) {
                   {toast.title}
                 </p>
                 <Show when={toast.description}>
-                  <p class="text-[0.925rem] leading-5 text-tomui-subtle">{toast.description}</p>
+                  <p class="text-[0.925rem] leading-5 text-tomui-default/70">{toast.description}</p>
                 </Show>
               </div>
               <button
                 type="button"
                 aria-label="Dismiss"
-                class="ml-auto size-5 shrink-0 rounded text-tomui-subtle hover:bg-current/15"
+                class={cn(
+                  "absolute top-2 right-2 flex size-5 items-center justify-center rounded text-tomui-subtle hover:bg-current/15",
+                  toast.variant &&
+                    toast.variant !== "default" &&
+                    TOAST_CLOSE_CLASSES[toast.variant],
+                )}
                 onClick={() => merged.onDismiss?.(toast.id)}
               >
-                ×
+                <XIcon size="sm" />
               </button>
             </div>
           </div>

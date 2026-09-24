@@ -1,14 +1,18 @@
 import type { JSX } from "@solidjs/web";
-import { merge, omit, Show } from "solid-js";
+import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
+import { createToggleState } from "../../utils/state";
 import { Field } from "../field/field";
 
 export const TOMUI_SWITCH_VARIANTS = {
   size: {
     sm: { classes: "h-5.5 w-8.5", description: "Small switch for compact UIs" },
     base: { classes: "h-6.5 w-10.5", description: "Default switch size" },
-    lg: { classes: "h-7.5 w-12.5", description: "Large switch for prominent toggles" },
+    lg: {
+      classes: "h-7.5 w-12.5",
+      description: "Large switch for prominent toggles",
+    },
   },
   variant: {
     default: {
@@ -37,7 +41,10 @@ export interface TomuiSwitchVariantsProps {
 
 export function switchVariants(props: TomuiSwitchVariantsProps = {}): string {
   const merged = merge(
-    { size: TOMUI_SWITCH_DEFAULT_VARIANTS.size, variant: TOMUI_SWITCH_DEFAULT_VARIANTS.variant },
+    {
+      size: TOMUI_SWITCH_DEFAULT_VARIANTS.size,
+      variant: TOMUI_SWITCH_DEFAULT_VARIANTS.variant,
+    },
     props,
   );
   return cn(
@@ -82,7 +89,7 @@ const SQUIRCLE_RADIUS =
 
 export type SwitchProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
-  "type" | "size" | "onChange"
+  "type" | "size" | "onChange" | "checked" | "defaultChecked"
 > & {
   variant?: SwitchVariant | undefined;
   label?: JSX.Element | undefined;
@@ -91,20 +98,21 @@ export type SwitchProps = Omit<
   controlFirst?: boolean | undefined;
   size?: TomuiSwitchSize | undefined;
   checked?: boolean | undefined;
+  defaultChecked?: boolean | undefined;
   disabled?: boolean | undefined;
-  onCheckedChange?: ((checked: boolean, event: Event) => void) | undefined;
+  readOnly?: boolean | undefined;
+  onCheckedChange?: ((checked: boolean) => void) | undefined;
   transitioning?: boolean | undefined;
   class?: string | undefined;
-  onChange?: JSX.ChangeEventHandler<HTMLInputElement, Event> | undefined;
+  ref?: ((element: HTMLInputElement) => void) | undefined;
 };
-
-function isStringValue(value: JSX.Element | undefined): value is string {
-  return value === String(value);
-}
 
 function SwitchControl(props: SwitchProps): JSX.Element {
   const merged = merge(
-    { size: TOMUI_SWITCH_DEFAULT_VARIANTS.size, variant: TOMUI_SWITCH_DEFAULT_VARIANTS.variant },
+    {
+      size: TOMUI_SWITCH_DEFAULT_VARIANTS.size,
+      variant: TOMUI_SWITCH_DEFAULT_VARIANTS.variant,
+    },
     props,
   );
   const rest = omit(
@@ -116,49 +124,100 @@ function SwitchControl(props: SwitchProps): JSX.Element {
     "required",
     "controlFirst",
     "checked",
+    "defaultChecked",
     "disabled",
+    "readOnly",
     "onCheckedChange",
     "transitioning",
     "class",
     "id",
-    "onChange",
-    "aria-label",
+    "ref",
   );
+
+  const inputId = createUniqueId();
+  const state = createToggleState({
+    isSelected: () => merged.checked,
+    defaultIsSelected: merged.defaultChecked,
+    isDisabled: () => merged.disabled,
+    isReadOnly: () => merged.readOnly,
+    onSelectedChange: (checked) => merged.onCheckedChange?.(checked),
+  });
+
+  let inputRef: HTMLInputElement | undefined;
+  let isFocused = false;
+  let isSyncing = false;
+
+  createEffect(
+    () => state.isSelected(),
+    (checked) => {
+      const el = untrack(() => inputRef);
+      if (!el || el.checked === checked) return;
+      isSyncing = true;
+      el.checked = checked;
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      isSyncing = false;
+    },
+  );
+
   const ariaLabel = (): string | undefined => {
     const direct = merged["aria-label"];
-    if (direct === undefined || direct === false)
+    if (direct === undefined || direct === false) {
       return isStringValue(merged.label) ? merged.label : "Switch";
+    }
     return direct;
   };
+
   return (
     <span
       class={cn(
         "relative inline-flex",
         switchVariants({ size: merged.size, variant: merged.variant }),
       )}
+      onPointerDown={(e) => {
+        if (isFocused) e.preventDefault();
+      }}
     >
       <input
         data-tomui-component="Switch"
         type="checkbox"
         role="switch"
-        id={merged.id}
-        checked={merged.checked}
+        id={merged.id ?? inputId}
+        name={merged.name}
+        value={merged.value ?? "on"}
+        checked={state.isSelected()}
         disabled={merged.disabled}
-        aria-checked={merged.checked ? "true" : "false"}
+        readonly={merged.readOnly}
+        required={merged.required}
+        aria-checked={state.isSelected() ? "true" : "false"}
         aria-busy={merged.transitioning ? "true" : undefined}
         aria-label={ariaLabel()}
+        aria-disabled={merged.disabled ? "true" : undefined}
+        aria-readonly={merged.readOnly ? "true" : undefined}
+        ref={(element: HTMLInputElement) => {
+          inputRef = element;
+          merged.ref?.(element);
+        }}
+        onFocus={() => {
+          isFocused = true;
+        }}
+        onBlur={() => {
+          isFocused = false;
+        }}
         onChange={(event) => {
-          merged.onChange?.(event);
-          merged.onCheckedChange?.(event.currentTarget.checked, event);
+          if (isSyncing) return;
+          state.toggle();
+          const el = event.currentTarget;
+          el.checked = state.isSelected();
         }}
         class={cn(
-          "peer cursor-pointer appearance-none border-none p-0 ring outline-none",
+          "peer cursor-pointer appearance-none border-none p-0 ring",
+          "focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
           "transition-colors duration-150 ease-out motion-reduce:transition-none",
-          "focus-visible:ring-2 focus-visible:ring-tomui-brand",
           "disabled:cursor-not-allowed disabled:opacity-50",
           SWITCH_TRACK[merged.size],
           SQUIRCLE_RADIUS,
-          trackColors(merged.variant, merged.checked ?? false),
+          trackColors(merged.variant, state.isSelected()),
           merged.class,
         )}
         {...rest}
@@ -171,12 +230,16 @@ function SwitchControl(props: SwitchProps): JSX.Element {
           merged.size === "base" ? "w-4.5 peer-checked:left-4.5" : "",
           merged.size === "lg" ? "w-5 peer-checked:left-5" : "",
           SQUIRCLE_RADIUS,
-          thumbColors(merged.variant, merged.checked ?? false),
+          thumbColors(merged.variant, state.isSelected()),
           "transition-all duration-150 ease-out motion-reduce:transition-none",
         )}
       />
     </span>
   );
+}
+
+function isStringValue(value: JSX.Element | undefined): value is string {
+  return value === String(value);
 }
 
 function SwitchBase(props: SwitchProps): JSX.Element {
@@ -228,7 +291,7 @@ export function SwitchGroup(props: SwitchGroupProps): JSX.Element {
     <fieldset
       data-tomui-component="Switch"
       disabled={merged.disabled}
-      class={cn("flex flex-col gap-4", merged.class)}
+      class={cn("flex flex-col gap-4 p-0", merged.class)}
     >
       <Show when={merged.legend}>
         <SwitchLegend>{merged.legend}</SwitchLegend>
@@ -257,6 +320,7 @@ export function SwitchItem(props: SwitchItemProps): JSX.Element {
       data-tomui-part="item-label"
       class={cn(
         "relative m-0 inline-flex items-center gap-2",
+        !merged.controlFirst ? "flex-row-reverse justify-end" : "",
         merged.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         merged.class,
       )}

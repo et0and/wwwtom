@@ -1,25 +1,24 @@
 import type { JSX } from "@solidjs/web";
-import { createContext, createSignal, merge, onCleanup, Show, omit, useContext } from "solid-js";
+import {
+  createContext,
+  createSignal,
+  createUniqueId,
+  merge,
+  omit,
+  Show,
+  useContext,
+} from "solid-js";
 import { cn } from "../../utils/cn";
+import { createDismissableLayer } from "../../utils/dismissable";
+import { createFocusScope, focusWithoutScrolling } from "../../utils/focus";
+import { createDisclosureState } from "../../utils/state";
 
 export const TOMUI_POPOVER_VARIANTS = {
   side: {
-    top: {
-      classes: "",
-      description: "Popover appears above the trigger",
-    },
-    bottom: {
-      classes: "",
-      description: "Popover appears below the trigger",
-    },
-    left: {
-      classes: "",
-      description: "Popover appears to the left of the trigger",
-    },
-    right: {
-      classes: "",
-      description: "Popover appears to the right of the trigger",
-    },
+    top: { classes: "", description: "Popover appears above the trigger" },
+    bottom: { classes: "", description: "Popover appears below the trigger" },
+    left: { classes: "", description: "Popover appears to the left of the trigger" },
+    right: { classes: "", description: "Popover appears to the right of the trigger" },
   },
 } as const;
 
@@ -38,6 +37,11 @@ interface PopoverContextValue {
   open: () => void;
   close: () => void;
   toggle: () => void;
+  contentId: string;
+  triggerRef: () => HTMLElement | undefined;
+  setTriggerRef: (el: HTMLElement | undefined) => void;
+  contentRef: () => HTMLElement | undefined;
+  setContentRef: (el: HTMLElement | undefined) => void;
 }
 
 const PopoverContext = createContext<PopoverContextValue>({
@@ -45,6 +49,11 @@ const PopoverContext = createContext<PopoverContextValue>({
   open: () => undefined,
   close: () => undefined,
   toggle: () => undefined,
+  contentId: "",
+  triggerRef: () => undefined,
+  setTriggerRef: () => undefined,
+  contentRef: () => undefined,
+  setContentRef: () => undefined,
 });
 
 export type PopoverRootProps = {
@@ -55,17 +64,25 @@ export type PopoverRootProps = {
 };
 
 export function PopoverRoot(props: PopoverRootProps): JSX.Element {
-  const [uncontrolledOpen, setUncontrolledOpen] = createSignal(props.defaultOpen ?? false);
-  const isOpen = (): boolean => props.open ?? uncontrolledOpen();
-  const setOpen = (next: boolean): void => {
-    if (props.open === undefined) setUncontrolledOpen(next);
-    props.onOpenChange?.(next);
-  };
+  const state = createDisclosureState({
+    open: () => props.open,
+    defaultOpen: props.defaultOpen,
+    onOpenChange: props.onOpenChange,
+  });
+  const contentId = createUniqueId();
+  const [triggerEl, setTriggerEl] = createSignal<HTMLElement>();
+  const [contentEl, setContentEl] = createSignal<HTMLElement>();
+
   const value: PopoverContextValue = {
-    isOpen,
-    open: () => setOpen(true),
-    close: () => setOpen(false),
-    toggle: () => setOpen(!isOpen()),
+    isOpen: state.isOpen,
+    open: state.open,
+    close: state.close,
+    toggle: state.toggle,
+    contentId,
+    triggerRef: () => triggerEl(),
+    setTriggerRef: setTriggerEl,
+    contentRef: () => contentEl(),
+    setContentRef: setContentEl,
   };
   return <PopoverContext value={value}>{props.children}</PopoverContext>;
 }
@@ -85,7 +102,9 @@ export function PopoverTrigger(props: PopoverTriggerProps): JSX.Element {
       data-tomui-component="Popover"
       data-tomui-part="trigger"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
+      aria-controls={ctx.isOpen() ? ctx.contentId : undefined}
       class={merged.class}
+      ref={(el: HTMLButtonElement) => ctx.setTriggerRef(el)}
       onClick={(event) => {
         ctx.toggle();
         merged.onClick?.(event);
@@ -105,46 +124,57 @@ export type PopoverContentProps = TomuiPopoverVariantsProps & {
   alignOffset?: number;
 };
 
-function onClickOutside(element: HTMLElement, onOutside: () => void): () => void {
-  const handler = (event: MouseEvent): void => {
-    if (!element.contains(event.target as Node)) onOutside();
-  };
-  const keyHandler = (event: KeyboardEvent): void => {
-    if (event.key === "Escape") onOutside();
-  };
-  document.addEventListener("mousedown", handler);
-  document.addEventListener("keydown", keyHandler);
-  return () => {
-    document.removeEventListener("mousedown", handler);
-    document.removeEventListener("keydown", keyHandler);
-  };
-}
-
 export function PopoverContent(props: PopoverContentProps): JSX.Element {
   const ctx = useContext(PopoverContext);
   const merged = merge(
-    { side: TOMUI_POPOVER_DEFAULT_VARIANTS.side, align: "center" as const },
+    {
+      side: TOMUI_POPOVER_DEFAULT_VARIANTS.side,
+      align: "center" as const,
+    },
     props,
   );
-  const rest = omit(merged, "children", "class", "side", "align");
-  const attach = (element: HTMLDivElement): void => {
-    const detach = onClickOutside(element, () => ctx.close());
-    onCleanup(detach);
-  };
+  const rest = omit(merged, "children", "class", "side", "align", "sideOffset", "alignOffset");
+
+  createDismissableLayer(ctx.contentRef, {
+    enabled: ctx.isOpen,
+    excludedElements: [ctx.triggerRef],
+    onDismiss: () => ctx.close(),
+  });
+
+  createFocusScope(ctx.contentRef, {
+    enabled: ctx.isOpen,
+    trapFocus: false,
+    onMountAutoFocus: (e) => {
+      e.preventDefault();
+      const el = ctx.contentRef();
+      if (el) focusWithoutScrolling(el);
+    },
+    onUnmountAutoFocus: (e) => {
+      e.preventDefault();
+      const trigger = ctx.triggerRef();
+      if (trigger) focusWithoutScrolling(trigger);
+    },
+  });
+
   return (
     <Show when={ctx.isOpen()}>
       <div class="relative">
         <div
           {...rest}
-          ref={attach}
+          id={ctx.contentId}
           data-tomui-component="Popover"
           data-tomui-part="content"
           data-side={merged.side}
           data-align={merged.align}
           role="dialog"
+          tabindex={-1}
           class={cn(
-            "absolute z-50 flex origin-(--transform-origin) flex-col rounded-lg bg-tomui-base px-4 py-3 text-sm text-tomui-default",
+            "absolute z-50 flex flex-col rounded-lg bg-tomui-base px-4 py-3 text-sm text-tomui-default",
             "shadow-md outline outline-tomui-line",
+            "transition-opacity duration-150",
+            "data-starting-style:opacity-0",
+            "data-ending-style:opacity-0",
+            "data-instant:duration-0",
             "tomui-popover-popup",
             merged.side === "top" && "bottom-full mb-2",
             merged.side === "bottom" && "top-full mt-2",
@@ -152,6 +182,7 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
             merged.side === "right" && "left-full ml-2",
             merged.class,
           )}
+          ref={(el: HTMLDivElement) => ctx.setContentRef(el)}
         >
           {merged.children}
         </div>
@@ -213,6 +244,8 @@ export function PopoverClose(props: PopoverCloseProps): JSX.Element {
   return (
     <button
       data-tomui-component="Popover"
+      data-tomui-part="close"
+      aria-label="Close"
       class={merged.class}
       onClick={(event) => {
         ctx.close();

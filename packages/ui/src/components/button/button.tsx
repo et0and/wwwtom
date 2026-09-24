@@ -177,11 +177,16 @@ export function Button(props: ButtonProps) {
     if (!emphasis) return merged.style;
     return { ...emphasis, ...merged.style };
   };
+  const iconNode = (): JSX.Element => {
+    if (merged.loading) return <Loader size={merged.size === "lg" ? 16 : 14} />;
+    return merged.icon;
+  };
   return (
     <button
       data-tomui-component="Button"
       class={cn(
         buttonVariants({ variant: merged.variant, size: merged.size, form: merged.form }),
+        merged.disabled && "cursor-not-allowed opacity-50",
         merged.class,
       )}
       disabled={merged.loading || merged.disabled}
@@ -190,16 +195,13 @@ export function Button(props: ButtonProps) {
       title={merged.title}
       {...rest}
     >
-      <Show when={merged.loading}>
-        <Loader size={merged.size === "lg" ? 16 : 14} />
-      </Show>
-      <Show when={!merged.loading && merged.icon && !hasEmphasis(merged.variant)}>
-        {merged.icon}
-      </Show>
       <Show
         when={hasEmphasis(merged.variant)}
         fallback={
-          <Show when={merged.children}>{(kids) => <span class="contents">{kids()}</span>}</Show>
+          <>
+            {iconNode()}
+            <Show when={merged.children}>{(kids) => <span class="contents">{kids()}</span>}</Show>
+          </>
         }
       >
         <span
@@ -207,7 +209,7 @@ export function Button(props: ButtonProps) {
           class="absolute inset-0 rounded-[inherit] bg-linear-to-b from-(--tomui-button-emphasis-gradient-start) to-(--tomui-button-emphasis-gradient-end) shadow-[inset_0_1px_0_0_var(--tomui-button-emphasis-bg)] group-hover:from-(--tomui-button-emphasis-bg)"
         />
         <span class="relative flex items-center gap-1.5">
-          {merged.icon}
+          {iconNode()}
           <Show when={merged.children}>{(kids) => <span class="contents">{kids()}</span>}</Show>
         </span>
       </Show>

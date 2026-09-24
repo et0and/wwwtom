@@ -76,9 +76,9 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
                 fallback={
                   <span
                     aria-current={index() === lastIndex() ? "page" : undefined}
-                    class="truncate font-medium text-tomui-default"
+                    class="flex max-w-full min-w-0 items-center gap-1 font-medium"
                   >
-                    {item.label}
+                    <span class="truncate">{item.label}</span>
                   </span>
                 }
               >
@@ -131,10 +131,10 @@ export function BreadcrumbCurrent(props: BreadcrumbCurrentProps) {
     <span
       data-tomui-component="BreadcrumbCurrent"
       aria-current="page"
-      class={cn("truncate font-medium text-tomui-default", merged.class)}
+      class={cn("flex max-w-full min-w-0 items-center gap-1 font-medium", merged.class)}
       {...rest}
     >
-      {merged.children}
+      <span class="truncate">{merged.children}</span>
     </span>
   );
 }

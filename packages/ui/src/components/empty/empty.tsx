@@ -107,7 +107,6 @@ function CopyMarkIcon(): JSX.Element {
       stroke-width="16"
       stroke-linecap="round"
       stroke-linejoin="round"
-      class="text-tomui-inactive group-hover:text-tomui-brand"
       aria-hidden="true"
     >
       <rect x="40" y="40" width="120" height="120" rx="8" />
@@ -163,27 +162,26 @@ export function Empty(props: EmptyProps): JSX.Element {
       {...rest}
     >
       <Show when={merged.icon}>{merged.icon}</Show>
-      <h2 class="text-2xl font-semibold">{merged.title}</h2>
+      <div class="flex flex-col items-center gap-2.5">
+        <h2 class="text-2xl font-semibold">{merged.title}</h2>
 
-      <Show when={merged.description}>
-        <p class="max-w-140 text-center text-tomui-subtle">{merged.description}</p>
-      </Show>
+        <Show when={merged.description}>
+          <p class="max-w-140 text-center text-balance leading-normal text-tomui-subtle">
+            {merged.description}
+          </p>
+        </Show>
+      </div>
 
       <Show when={merged.commandLine}>
-        <div
-          class={cn(
-            "group/cmd relative inline-flex h-10 max-w-8/10 transform-gpu items-center gap-2 rounded-lg font-mono shadow-sm",
-            "bg-tomui-overlay pr-2 pl-3",
-            "transition-all duration-300 hover:border-tomui-interact/80 hover:shadow-md",
-            "border border-tomui-fill/60",
-          )}
-        >
-          <span class="text-xs text-tomui-inactive select-none">$</span>
-          <span class="no-scrollbar overflow-scroll text-base whitespace-nowrap text-tomui-brand">
-            {merged.commandLine}
+        <div class="relative inline-flex h-10 max-w-8/10 transform-gpu items-center gap-2 rounded-lg bg-tomui-overlay pr-2 pl-3 font-mono shadow-xs ring ring-tomui-line">
+          <span class="inline-flex min-w-0 items-baseline gap-2">
+            <span class="text-tomui-subtle select-none">$</span>
+            <span class="no-scrollbar overflow-scroll text-base whitespace-nowrap">
+              {merged.commandLine}
+            </span>
           </span>
           <Button
-            class="group"
+            class="text-tomui-subtle"
             size="sm"
             variant="ghost"
             form="square"

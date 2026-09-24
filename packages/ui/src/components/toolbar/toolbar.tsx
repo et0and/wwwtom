@@ -59,7 +59,7 @@ const ToolbarSizeContext = createContext<{ size: ToolbarSize }>({ size: "base" }
 
 const TOOLBAR_CONTROL_STYLES = cn(
   "relative min-w-0 rounded-none border-0 bg-transparent shadow-none ring-0",
-  "focus-within:z-2 focus:z-2 focus-visible:z-2",
+  "focus-within:z-2 focus:z-2 focus-visible:z-2 has-[:focus-visible]:z-2",
 );
 
 function Root(props: ToolbarProps): JSX.Element {
@@ -73,6 +73,8 @@ function Root(props: ToolbarProps): JSX.Element {
         role="toolbar"
         class={cn(
           "inline-flex w-fit items-stretch rounded-lg bg-tomui-control shadow-xs ring ring-tomui-line",
+          "[&>*:first-child]:rounded-l-lg [&>*:not([aria-hidden='true']):not([type='hidden']):not(:has(~_:not([aria-hidden='true']):not([type='hidden'])))]:rounded-r-lg",
+          "[&>*_[data-tomui-toolbar-input]:focus]:rounded-[inherit]",
           "[&>*:not([aria-hidden='true']):not(:first-child)]:border-l [&>*:not([aria-hidden='true']):not(:first-child)]:border-tomui-line",
           TOMUI_TOOLBAR_VARIANTS.size[merged.size].classes,
           merged.class,

@@ -1,15 +1,16 @@
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { ArrowRightIcon } from "@tom/icons/ArrowRight";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 import { datePickerVariants, type TomuiDatePickerSize } from "../date-picker/date-picker";
 
 export const TOMUI_DATE_RANGE_PICKER_VARIANTS = {
   size: {
-    sm: { classes: "p-3 gap-2 text-xs", description: "Compact range picker for tight spaces" },
-    base: { classes: "p-4 gap-2.5 text-sm", description: "Default range picker size" },
+    sm: { classes: "p-3 gap-2", description: "Compact range picker for tight spaces" },
+    base: { classes: "p-4 gap-2.5", description: "Default range picker size" },
     lg: {
-      classes: "p-5 gap-3 text-base",
+      classes: "p-5 gap-3",
       description: "Large range picker for prominent date selection",
     },
   },
@@ -115,9 +116,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
           max={merged.end || merged.max}
           onChange={handleStart}
         />
-        <span aria-hidden="true" class="text-tomui-subtle">
-          →
-        </span>
+        <ArrowRightIcon size="sm" color="subtle" />
         <input
           type="date"
           aria-label="End date"

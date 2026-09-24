@@ -1,6 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
-import { deployChain, deployStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
+import { deployChain, previewStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
 import {
   closedAction,
   notClosedAction,
@@ -35,7 +35,7 @@ export const preview = workflow("preview", {
         // into the web build.
         checkout("Checkout", { "fetch-depth": 0 }),
         setupStep(),
-        run("Deploy preview stage", deployChain(deployStacks)),
+        run("Deploy preview stage", deployChain(previewStacks)),
       ],
     },
     destroy: {

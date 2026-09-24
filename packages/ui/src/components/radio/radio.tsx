@@ -1,11 +1,26 @@
 import type { JSX } from "@solidjs/web";
-import { createContext, createSignal, createUniqueId, merge, Show, useContext } from "solid-js";
+import {
+  createContext,
+  createEffect,
+  createUniqueId,
+  merge,
+  Show,
+  untrack,
+  useContext,
+} from "solid-js";
 import { cn } from "../../utils/cn";
+import { createControllableSignal } from "../../utils/state";
 
 export const TOMUI_RADIO_VARIANTS = {
   variant: {
-    default: { classes: "ring-tomui-hairline", description: "Default radio appearance" },
-    error: { classes: "ring-tomui-danger", description: "Error state for validation failures" },
+    default: {
+      classes: "ring-tomui-hairline",
+      description: "Default radio appearance",
+    },
+    error: {
+      classes: "ring-tomui-danger",
+      description: "Error state for validation failures",
+    },
   },
   appearance: {
     default: { classes: "", description: "Standard inline radio item" },
@@ -30,6 +45,7 @@ interface RadioGroupContextValue {
   appearance: TomuiRadioAppearance;
   controlPosition: RadioControlPosition | undefined;
   select: (value: string) => void;
+  registerInput: (el: HTMLInputElement) => void;
 }
 
 const RadioGroupContext = createContext<RadioGroupContextValue>({
@@ -39,6 +55,7 @@ const RadioGroupContext = createContext<RadioGroupContextValue>({
   appearance: "default",
   controlPosition: undefined,
   select: () => undefined,
+  registerInput: () => undefined,
 });
 
 export interface RadioLegendProps {
@@ -68,6 +85,7 @@ export interface RadioGroupProps {
   value?: string | undefined;
   onValueChange?: ((value: string) => void) | undefined;
   disabled?: boolean | undefined;
+  readOnly?: boolean | undefined;
   controlPosition?: RadioControlPosition | undefined;
   name?: string | undefined;
   class?: string | undefined;
@@ -75,34 +93,69 @@ export interface RadioGroupProps {
 
 export function RadioGroup(props: RadioGroupProps): JSX.Element {
   const merged = merge(
-    { orientation: "vertical" as const, appearance: "default" as TomuiRadioAppearance },
+    {
+      orientation: "vertical" as const,
+      appearance: "default" as TomuiRadioAppearance,
+    },
     props,
   );
   const generatedName = createUniqueId();
-  const [internal, setInternal] = createSignal(merged.defaultValue);
-  const current = (): string | undefined => merged.value ?? internal();
+  const signal = createControllableSignal<string>({
+    value: () => merged.value,
+    defaultValue: merged.defaultValue,
+    onChange: (next) => merged.onValueChange?.(next),
+  });
+
+  const inputs = new Set<HTMLInputElement>();
+
+  const syncInputs = () => {
+    const current = signal.value();
+    for (const el of inputs) {
+      if (!el.isConnected) {
+        inputs.delete(el);
+        continue;
+      }
+      el.checked = el.value === current;
+    }
+  };
+
+  createEffect(
+    () => signal.value(),
+    () => {
+      untrack(syncInputs);
+    },
+  );
+
   const contextValue: RadioGroupContextValue = {
     name: merged.name ?? generatedName,
-    current,
+    current: () => signal.value(),
     disabled: merged.disabled ?? false,
     appearance: merged.appearance,
     controlPosition: merged.controlPosition,
     select: (next: string) => {
-      if (merged.value === undefined) setInternal(next);
-      merged.onValueChange?.(next);
+      if (merged.readOnly || merged.disabled) return;
+      signal.set(next);
+    },
+    registerInput: (el: HTMLInputElement) => {
+      inputs.add(el);
     },
   };
+
   return (
     <RadioGroupContext value={contextValue}>
       <fieldset
         data-tomui-component="Radio"
         disabled={merged.disabled}
-        class={cn("flex flex-col gap-4", merged.class)}
+        class={cn("flex flex-col gap-4 p-0", merged.class)}
       >
         <Show when={merged.legend}>
           <RadioLegend>{merged.legend}</RadioLegend>
         </Show>
         <div
+          role="radiogroup"
+          aria-orientation={merged.orientation}
+          aria-disabled={merged.disabled ? "true" : undefined}
+          aria-readonly={merged.readOnly ? "true" : undefined}
           class={cn(
             merged.orientation === "vertical"
               ? cn("flex flex-col", merged.appearance === "card" ? "gap-3" : "gap-2")
@@ -145,6 +198,9 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
   const checked = (): boolean => context.current() === merged.value;
   const disabled = (): boolean => merged.disabled ?? context.disabled;
   const name = (): string => merged.name ?? context.name;
+
+  let isFocused = false;
+
   return (
     <Show
       when={isCard()}
@@ -158,6 +214,9 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
             disabled() ? "cursor-not-allowed opacity-50" : "cursor-pointer",
             merged.class,
           )}
+          onPointerDown={(e) => {
+            if (isFocused) e.preventDefault();
+          }}
         >
           <span class="relative mt-0.5 inline-flex">
             <input
@@ -169,12 +228,26 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
               checked={checked()}
               disabled={disabled()}
               aria-checked={checked() ? "true" : "false"}
+              ref={(el: HTMLInputElement) => {
+                context.registerInput(el);
+              }}
+              onFocus={() => {
+                isFocused = true;
+              }}
+              onBlur={() => {
+                isFocused = false;
+              }}
               onChange={() => context.select(merged.value)}
               class={cn(
-                "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring outline-none",
+                "peer mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring outline-none",
                 merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-line",
                 "checked:bg-tomui-contrast",
-                "focus-visible:ring-2 focus-visible:ring-tomui-brand",
+                !disabled() &&
+                  merged.variant !== "error" &&
+                  "group-hover:ring-tomui-hairline focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:outline-offset-3",
+                !disabled() &&
+                  merged.variant === "error" &&
+                  "focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:outline-offset-3",
               )}
             />
             <span
@@ -197,9 +270,17 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
           merged.variant === "error"
             ? "border-tomui-danger has-[[data-checked]]:border-tomui-danger has-[[data-checked]]:bg-tomui-base"
             : "",
-          disabled() ? "cursor-not-allowed opacity-50" : "cursor-pointer",
+          disabled()
+            ? "cursor-not-allowed opacity-50"
+            : cn(
+                "cursor-pointer has-[[data-disabled]]:cursor-not-allowed has-[[data-disabled]]:opacity-50",
+                merged.variant !== "error" && "hover:not-has-[[data-disabled]]:bg-tomui-tint",
+              ),
           merged.class,
         )}
+        onPointerDown={(e) => {
+          if (isFocused) e.preventDefault();
+        }}
       >
         <div class="flex min-w-0 flex-1 flex-col gap-0.5">
           <span class="text-base font-medium text-tomui-default">{merged.label}</span>
@@ -218,12 +299,24 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
             disabled={disabled()}
             aria-checked={checked() ? "true" : "false"}
             data-checked={checked() ? "" : undefined}
+            ref={(el: HTMLInputElement) => {
+              context.registerInput(el);
+            }}
+            onFocus={() => {
+              isFocused = true;
+            }}
+            onBlur={() => {
+              isFocused = false;
+            }}
             onChange={() => context.select(merged.value)}
             class={cn(
-              "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring-2 outline-none",
+              "peer mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring-2 outline-none",
               merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-line",
               "checked:bg-tomui-contrast",
-              "focus-visible:ring-2 focus-visible:ring-tomui-brand",
+              !disabled() &&
+                merged.variant !== "error" &&
+                "group-hover:ring-tomui-hairline focus-visible:outline-offset-3",
+              !disabled() && merged.variant === "error" && "focus-visible:outline-offset-3",
             )}
           />
           <span

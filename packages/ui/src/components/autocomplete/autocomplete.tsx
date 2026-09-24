@@ -9,14 +9,15 @@ import {
   omit,
   useContext,
 } from "solid-js";
+import { CheckIcon } from "@tom/icons/Check";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
 export const TOMUI_INPUT_SIZE_VARIANTS = {
-  xs: { classes: "h-5 px-1.5 text-xs", description: "Extra small input" },
-  sm: { classes: "h-6.5 px-2 text-xs", description: "Small input" },
-  base: { classes: "h-9 px-3 text-base", description: "Default input" },
-  lg: { classes: "h-10 px-4 text-base", description: "Large input" },
+  xs: { classes: "h-5 gap-1 rounded-sm px-1.5 text-xs", description: "Extra small input" },
+  sm: { classes: "h-6.5 gap-1 rounded-md px-2 text-xs", description: "Small input" },
+  base: { classes: "h-9 gap-1.5 rounded-lg px-3 text-base", description: "Default input" },
+  lg: { classes: "h-10 gap-2 rounded-lg px-4 text-base", description: "Large input" },
 } as const;
 
 export const TOMUI_AUTOCOMPLETE_VARIANTS = {
@@ -146,7 +147,16 @@ export type AutocompleteInputGroupProps = Omit<
 function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({ size: TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS.size }, props);
-  const rest = omit(merged, "class", "size", "onInput", "onFocus", "onKeyDown", "placeholder");
+  const rest = omit(
+    merged,
+    "class",
+    "size",
+    "value",
+    "onInput",
+    "onFocus",
+    "onKeyDown",
+    "placeholder",
+  );
   return (
     <input
       data-tomui-component="Autocomplete"
@@ -160,8 +170,11 @@ function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
         ctx.activeIndex() >= 0 ? `${ctx.listId}-option-${ctx.activeIndex()}` : undefined
       }
       class={cn(
-        "w-full rounded-lg bg-tomui-base text-tomui-default ring ring-tomui-line focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
-        ctx.hasError() && "ring-tomui-danger",
+        "w-full border-0 bg-tomui-control text-tomui-default ring ring-tomui-line outline-none focus:outline-none",
+        "tomui-input-placeholder disabled:text-tomui-disabled",
+        ctx.hasError()
+          ? "!ring-tomui-danger focus:ring-tomui-danger/50 focus:ring-[1.5px]"
+          : "focus:ring-tomui-focus/50 focus:ring-[1.5px]",
         autocompleteVariants({ size: merged.size }),
         merged.class,
       )}
@@ -232,7 +245,10 @@ function List(props: AutocompleteListProps): JSX.Element {
       data-tomui-component="Autocomplete"
       id={ctx.listId}
       role="listbox"
-      class={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain", merged.class)}
+      class={cn(
+        "min-h-0 flex-1 scroll-pt-2 scroll-pb-2 overflow-y-auto overscroll-contain",
+        merged.class,
+      )}
     >
       <For each={merged.items ?? []}>
         {(item, index) => <>{merged.children?.(item, index())}</>}
@@ -258,6 +274,7 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       type="button"
       role="option"
       aria-selected={ctx.query() === String(merged.value) ? "true" : "false"}
+      data-selected={ctx.query() === String(merged.value) ? "" : undefined}
       disabled={merged.disabled}
       class="group mx-1.5 grid cursor-pointer grid-cols-[1fr_16px] gap-2 rounded px-2 py-1.5 text-base data-highlighted:bg-tomui-overlay data-selected:font-medium"
       onClick={() => {
@@ -266,6 +283,9 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       }}
     >
       <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
+      <span class="col-start-2 hidden items-center group-data-selected:flex">
+        <CheckIcon size="sm" color="current" />
+      </span>
     </button>
   );
 }

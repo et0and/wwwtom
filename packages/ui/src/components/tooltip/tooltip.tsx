@@ -1,9 +1,9 @@
-import { createUniqueId, merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { createUniqueId, merge, omit, onCleanup, Show } from "solid-js";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
+import { createDisclosureState } from "../../utils/state";
 
-/** Tooltip side variant definitions mapping positions to their Tailwind classes. */
 export const TOMUI_TOOLTIP_VARIANTS = {
   side: {
     top: {
@@ -29,28 +29,21 @@ export const TOMUI_TOOLTIP_DEFAULT_VARIANTS = {
   side: "top",
 } as const;
 
-// Derived types from TOMUI_TOOLTIP_VARIANTS
 export type TomuiTooltipSide = keyof typeof TOMUI_TOOLTIP_VARIANTS.side;
 
 export interface TomuiTooltipVariantsProps {
-  /**
-   * Preferred side of the trigger to render the tooltip.
-   * - `"top"` — Tooltip appears above the trigger
-   * - `"bottom"` — Tooltip appears below the trigger
-   * - `"left"` — Tooltip appears to the left of the trigger
-   * - `"right"` — Tooltip appears to the right of the trigger
-   * @default "top"
-   */
   side?: TomuiTooltipSide;
 }
 
 export function tooltipVariants(props: TomuiTooltipVariantsProps = {}): string {
   const merged = merge(TOMUI_TOOLTIP_DEFAULT_VARIANTS, props);
   return cn(
-    // Base styles
     "flex origin-[var(--transform-origin)] flex-col rounded-md bg-tomui-base px-2.5 py-1.5 text-sm text-tomui-default",
     "shadow-md outline-1 outline-tomui-line",
-    // Apply side-specific styles (currently none, but extensible)
+    "transition-[transform,scale,opacity] duration-150",
+    "data-[starting-style]:scale-90 data-[starting-style]:opacity-0",
+    "data-[ending-style]:scale-90 data-[ending-style]:opacity-0",
+    "data-[instant]:duration-0",
     resolveVariant(TOMUI_TOOLTIP_VARIANTS.side, merged.side, TOMUI_TOOLTIP_DEFAULT_VARIANTS.side)
       .classes,
   );
@@ -65,77 +58,220 @@ const TOMUI_TOOLTIP_POSITIONS = {
   right: "top-1/2 left-full ml-2.5 -translate-y-1/2",
 } satisfies Record<TomuiTooltipSide, string>;
 
-/**
- * Tooltip component props.
- *
- * @example
- * ```tsx
- * <Tooltip content="Add new item">Add</Tooltip>
- * ```
- */
+let globalWarmedUp = false;
+let globalCoolDownTimeout: ReturnType<typeof setTimeout> | undefined;
+let globalSkipDelayTimeout: ReturnType<typeof setTimeout> | undefined;
+const openTooltips = new Map<string, () => void>();
+
 export type TooltipProps = {
-  /**
-   * Alignment on the axis perpendicular to `side`.
-   * - `"start"` — Align to the start edge
-   * - `"center"` — Center-aligned
-   * - `"end"` — Align to the end edge
-   */
   align?: TooltipAlign;
-  /** Element that triggers the tooltip on hover/focus. */
   children?: JSX.Element;
-  /** Additional CSS classes merged via `cn()`. */
   class?: string;
-  /** Content to display inside the tooltip popup. */
   content: JSX.Element;
   ref?: HTMLSpanElement | ((element: HTMLSpanElement) => void) | undefined;
-  /**
-   * Preferred side of the trigger to render the tooltip.
-   * @default "top"
-   */
   side?: TomuiTooltipSide;
+  openDelay?: number;
+  closeDelay?: number;
+  skipDelayDuration?: number;
+  disabled?: boolean;
 };
 
-/**
- * Accessible popup that shows additional information on hover/focus.
- *
- * @example
- * ```tsx
- * <Tooltip content="Save changes">Save</Tooltip>
- * ```
- */
 export function Tooltip(props: TooltipProps): JSX.Element {
   const merged = merge(
-    { align: "center" as TooltipAlign, side: TOMUI_TOOLTIP_DEFAULT_VARIANTS.side },
+    {
+      align: "center" as TooltipAlign,
+      side: TOMUI_TOOLTIP_DEFAULT_VARIANTS.side,
+      openDelay: 700,
+      closeDelay: 300,
+      skipDelayDuration: 300,
+      disabled: false,
+    },
     props,
   );
-  const rest = omit(merged, "align", "children", "class", "content", "ref", "side");
+  const rest = omit(
+    merged,
+    "align",
+    "children",
+    "class",
+    "content",
+    "ref",
+    "side",
+    "openDelay",
+    "closeDelay",
+    "skipDelayDuration",
+    "disabled",
+  );
+
   const popupId = createUniqueId();
+  const state = createDisclosureState({});
+  let closeTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  let openTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  let isHovered = false;
+  let isFocused = false;
+
+  const cancelOpening = () => {
+    clearTimeout(openTimeoutId);
+    openTimeoutId = undefined;
+  };
+
+  const cancelClosing = () => {
+    clearTimeout(closeTimeoutId);
+    closeTimeoutId = undefined;
+  };
+
+  const closeOpenTooltips = () => {
+    for (const [id, hide] of openTooltips) {
+      if (id !== popupId) hide();
+    }
+  };
+
+  const showTooltip = () => {
+    cancelClosing();
+    cancelOpening();
+    closeOpenTooltips();
+    openTooltips.set(popupId, () => state.close());
+    globalWarmedUp = true;
+    state.open();
+    clearTimeout(globalCoolDownTimeout);
+    globalCoolDownTimeout = undefined;
+    clearTimeout(globalSkipDelayTimeout);
+    globalSkipDelayTimeout = undefined;
+  };
+
+  const warmupTooltip = () => {
+    closeOpenTooltips();
+    openTooltips.set(popupId, () => state.close());
+
+    if (!state.isOpen() && !openTimeoutId && !globalWarmedUp) {
+      openTimeoutId = setTimeout(() => {
+        openTimeoutId = undefined;
+        globalWarmedUp = true;
+        showTooltip();
+      }, merged.openDelay);
+    } else if (!state.isOpen()) {
+      showTooltip();
+    }
+  };
+
+  const openTooltip = (immediate = false) => {
+    if (merged.disabled) return;
+    if (!immediate && merged.openDelay > 0 && !closeTimeoutId && !globalSkipDelayTimeout) {
+      warmupTooltip();
+    } else {
+      showTooltip();
+    }
+  };
+
+  const hideTooltip = (immediate = false) => {
+    if (immediate || merged.closeDelay <= 0) {
+      cancelClosing();
+      state.close();
+    } else if (!closeTimeoutId) {
+      closeTimeoutId = setTimeout(() => {
+        state.close();
+        closeTimeoutId = undefined;
+      }, merged.closeDelay);
+    }
+
+    clearTimeout(globalSkipDelayTimeout);
+    globalSkipDelayTimeout = setTimeout(() => {
+      globalSkipDelayTimeout = undefined;
+    }, merged.skipDelayDuration);
+
+    cancelOpening();
+
+    if (globalWarmedUp) {
+      clearTimeout(globalCoolDownTimeout);
+      globalCoolDownTimeout = setTimeout(() => {
+        openTooltips.delete(popupId);
+        globalWarmedUp = false;
+      }, merged.closeDelay);
+    }
+  };
+
+  const handleShow = () => {
+    if (!state.isOpen() && (isHovered || isFocused)) {
+      openTooltip(isFocused);
+    }
+  };
+
+  const handleHide = (immediate = false) => {
+    if (state.isOpen() && !isHovered && !isFocused) {
+      hideTooltip(immediate);
+    }
+  };
+
+  onCleanup(() => {
+    cancelOpening();
+    cancelClosing();
+    openTooltips.delete(popupId);
+  });
+
   return (
     <span
       data-tomui-component="Tooltip"
       data-side={merged.side}
       class={cn("group/tooltip relative inline-flex cursor-default", merged.class)}
       tabindex={0}
-      aria-describedby={popupId}
+      aria-describedby={state.isOpen() ? popupId : undefined}
       ref={merged.ref}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "touch" || merged.disabled) return;
+        isHovered = true;
+        handleShow();
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "touch") return;
+        isHovered = false;
+        isFocused = false;
+        if (state.isOpen()) handleHide();
+        else cancelOpening();
+      }}
+      onPointerDown={() => {
+        isHovered = false;
+        isFocused = false;
+        handleHide(true);
+      }}
+      onClick={() => {
+        isHovered = false;
+        isFocused = false;
+        handleHide(true);
+      }}
+      onFocus={() => {
+        if (merged.disabled) return;
+        isFocused = true;
+        handleShow();
+      }}
+      onBlur={() => {
+        isFocused = false;
+        handleHide(true);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && state.isOpen()) {
+          e.stopPropagation();
+          hideTooltip(true);
+        }
+      }}
       {...rest}
     >
       {merged.children}
-      <span
-        id={popupId}
-        role="tooltip"
-        data-side={merged.side}
-        data-align={merged.align}
-        class={cn(
-          "pointer-events-none absolute z-50",
-          "invisible opacity-0 transition-[opacity,scale] duration-150",
-          "group-hover/tooltip:visible group-hover/tooltip:opacity-100 group-focus-within/tooltip:visible group-focus-within/tooltip:opacity-100",
-          TOMUI_TOOLTIP_POSITIONS[merged.side],
-          tooltipVariants({ side: merged.side }),
-        )}
-      >
-        {merged.content}
-      </span>
+      <Show when={state.isOpen()}>
+        <span
+          id={popupId}
+          role="tooltip"
+          data-side={merged.side}
+          data-align={merged.align}
+          class={cn(
+            "pointer-events-none absolute z-50",
+            "visible opacity-100",
+            TOMUI_TOOLTIP_POSITIONS[merged.side],
+            tooltipVariants({ side: merged.side }),
+            "tomui-tooltip-popup",
+          )}
+        >
+          {merged.content}
+        </span>
+      </Show>
     </span>
   );
 }

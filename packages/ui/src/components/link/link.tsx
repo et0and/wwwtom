@@ -139,7 +139,7 @@ function LinkBase(props: LinkProps): JSX.Element {
       data-tomui-component="Link"
       class={cn(
         linkVariants({ variant: merged.variant }),
-        "group/link inline-flex items-center gap-[0.1875em]",
+        "group/link inline-flex items-center gap-[0.1875em] has-[>[data-tomui-component=Badge]]:rounded-full",
         merged.class,
       )}
       ref={merged.ref}

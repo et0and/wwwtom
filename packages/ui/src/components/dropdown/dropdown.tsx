@@ -1,5 +1,6 @@
 import type { JSX } from "@solidjs/web";
 import { createContext, createSignal, merge, onSettled, Show, omit, useContext } from "solid-js";
+import { CheckIcon } from "@tom/icons/Check";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -145,6 +146,7 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
         role="menu"
         class={cn(
           "absolute z-50 max-w-[calc(100vw-2rem)] min-w-36 overflow-hidden rounded-lg bg-tomui-control p-1.5 text-tomui-default shadow-lg ring ring-tomui-line",
+          "max-h-[var(--available-height)] overflow-y-auto",
           "top-full mt-2",
           merged.align === "end" ? "right-0" : "left-0",
           merged.class,
@@ -184,7 +186,7 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
   );
   const itemClass = (): string =>
     cn(
-      "relative flex w-full cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none focus:text-tomui-default data-disabled:pointer-events-none data-disabled:opacity-50",
+      "relative flex w-full cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none focus:text-tomui-default focus:ring-tomui-focus/50 focus-visible:ring-2 focus-visible:ring-tomui-brand data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-tomui-overlay",
       merged.inset && "pl-8",
       dropdownVariants({ variant: merged.variant }),
       merged.class,
@@ -202,7 +204,7 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
           data-tomui-part="item"
           role="menuitem"
           href={merged.href}
-          class={cn(itemClass(), "text-inherit no-underline")}
+          class={cn(itemClass(), "w-full text-inherit! no-underline!")}
         >
           {merged.icon}
           {merged.children}
@@ -221,7 +223,9 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
         {merged.icon}
         {merged.children}
         <Show when={merged.selected}>
-          <span class="ml-auto inline-flex">{"✓"}</span>
+          <span class="ml-auto inline-flex">
+            <CheckIcon size="sm" color="current" />
+          </span>
         </Show>
       </button>
     </Show>
@@ -258,7 +262,7 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
       aria-checked={isChecked() ? "true" : "false"}
       disabled={merged.disabled}
       class={cn(
-        "relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-2 pl-8 text-base outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50",
+        "relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-2 pl-8 text-base outline-hidden transition-colors select-none focus:bg-tomui-tint focus:text-tomui-default focus:ring-tomui-focus/50 focus-visible:ring-2 focus-visible:ring-tomui-brand data-disabled:pointer-events-none data-disabled:opacity-50",
         merged.class,
       )}
       onClick={() => {
@@ -269,7 +273,9 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
       {...rest}
     >
       <Show when={isChecked()}>
-        <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">{"✓"}</span>
+        <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-inherit">
+          <CheckIcon size="xs" color="current" />
+        </span>
       </Show>
       {merged.children}
     </button>
@@ -323,7 +329,7 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
       role="menuitemradio"
       aria-checked={isChecked() ? "true" : "false"}
       class={cn(
-        "relative flex w-full cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none",
+        "relative flex w-full cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-tomui-tint",
         merged.class,
       )}
       onClick={() => group.select(merged.value)}
@@ -331,7 +337,9 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
     >
       {merged.children}
       <Show when={isChecked()}>
-        <span class="ml-auto">{"✓"}</span>
+        <span class="ml-auto inline-flex">
+          <CheckIcon size="sm" color="current" />
+        </span>
       </Show>
     </button>
   );

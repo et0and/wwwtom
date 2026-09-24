@@ -9,6 +9,9 @@ import {
   omit,
   useContext,
 } from "solid-js";
+import { CaretDownIcon } from "@tom/icons/CaretDown";
+import { CheckIcon } from "@tom/icons/Check";
+import { XIcon } from "@tom/icons/X";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -220,12 +223,13 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
     "clearLabel",
     "showOptionsLabel",
     "placeholder",
+    "value",
     "onInput",
     "onFocus",
     "onKeyDown",
   );
   return (
-    <div class="relative inline-block w-full">
+    <div class="relative inline-block w-full has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
       <input
         data-tomui-component="Combobox"
         data-tomui-part="input"
@@ -234,7 +238,9 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         aria-controls={ctx.listId}
         aria-autocomplete="list"
         class={cn(
-          "w-full rounded-lg bg-tomui-base pr-12 text-tomui-default ring ring-tomui-line focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
+          "w-full border-0 bg-tomui-control pr-12 text-tomui-default ring ring-tomui-line outline-none focus:outline-none",
+          "tomui-input-placeholder disabled:text-tomui-disabled disabled:cursor-not-allowed",
+          "focus:ring-tomui-focus/50 focus:ring-[1.5px]",
           merged.class,
         )}
         placeholder={merged.placeholder}
@@ -259,10 +265,10 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         data-tomui-part="clear"
         type="button"
         aria-label={merged.clearLabel}
-        class="absolute top-1/2 right-8 flex -translate-y-1/2 cursor-pointer bg-transparent p-0"
+        class="absolute top-1/2 right-8 flex -translate-y-1/2 cursor-pointer items-center justify-center bg-transparent p-0 data-[disabled]:pointer-events-none data-[disabled]:opacity-0"
         onClick={() => ctx.clear()}
       >
-        {"✕"}
+        <XIcon size="sm" color="current" />
       </button>
       <button
         data-tomui-component="Combobox"
@@ -270,10 +276,10 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         type="button"
         aria-label={merged.showOptionsLabel}
         aria-expanded={ctx.isOpen() ? "true" : "false"}
-        class="absolute top-1/2 right-2 m-0 flex -translate-y-1/2 cursor-pointer items-center bg-transparent p-0 text-tomui-subtle"
+        class="absolute top-1/2 right-2 m-0 flex -translate-y-1/2 cursor-pointer items-center justify-center bg-transparent p-0 text-tomui-subtle"
         onClick={() => ctx.setOpen(!ctx.isOpen())}
       >
-        {"▾"}
+        <CaretDownIcon size="sm" color="current" />
       </button>
     </div>
   );
@@ -306,7 +312,10 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
       aria-haspopup="listbox"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       class={cn(
-        "relative flex w-full items-center rounded-lg bg-tomui-base pr-8 text-tomui-default ring ring-tomui-line",
+        "relative flex w-full items-center border-0 bg-tomui-control pr-8 text-tomui-default ring ring-tomui-line outline-none focus:outline-none",
+        "tomui-input-placeholder disabled:text-tomui-disabled disabled:cursor-not-allowed disabled:opacity-50",
+        "data-[placeholder]:text-tomui-placeholder",
+        "focus:ring-tomui-focus/50 focus:ring-[1.5px]",
         merged.class,
       )}
       onClick={(event) => {
@@ -317,7 +326,7 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
     >
       {merged.children ?? label()}
       <span class="absolute top-1/2 right-2 flex -translate-y-1/2 items-center text-tomui-subtle">
-        {"▾"}
+        <CaretDownIcon size="sm" color="current" />
       </span>
     </button>
   );
@@ -336,7 +345,8 @@ function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps):
   return (
     <div
       class={cn(
-        "flex h-auto min-h-9 flex-col gap-1 rounded-lg bg-tomui-base px-1.5 py-1 ring ring-tomui-line",
+        "flex h-auto min-h-9 flex-col gap-1 border-0 bg-tomui-control px-1.5 py-1 ring ring-tomui-line",
+        "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
         comboboxVariants({ inputSide: merged.inputSide }),
         merged.class,
       )}
@@ -404,14 +414,18 @@ function Item(props: ComboboxItemProps): JSX.Element {
       aria-selected={isSelected() ? "true" : "false"}
       disabled={merged.disabled}
       class={cn(
-        "group mx-1.5 grid cursor-pointer grid-cols-[1fr_16px] gap-2 rounded px-2 py-1.5 text-base data-disabled:cursor-not-allowed",
+        "group mx-1.5 grid grid-cols-[1fr_16px] gap-2 rounded px-2 py-1.5 text-base",
+        "cursor-pointer data-highlighted:bg-tomui-tint",
+        "data-[disabled]:cursor-not-allowed data-[disabled]:text-tomui-subtle data-[disabled]:opacity-60 data-[disabled]:data-highlighted:bg-transparent",
         merged.class,
       )}
       onClick={() => ctx.select(merged.value)}
     >
       <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
       <Show when={isSelected()}>
-        <span class="col-start-2 flex items-center">{"✓"}</span>
+        <span class="col-start-2 flex items-center">
+          <CheckIcon size="sm" color="current" />
+        </span>
       </Show>
     </button>
   );
@@ -425,7 +439,12 @@ export type ComboboxEmptyProps = {
 function Empty(props: ComboboxEmptyProps): JSX.Element {
   const merged = merge({}, props);
   return (
-    <div class={cn("mx-1.5 shrink-0 px-4 py-2 text-sm text-tomui-subtle", merged.class)}>
+    <div
+      class={cn(
+        "mx-1.5 shrink-0 px-4 py-2 text-[0.925rem] leading-4 text-tomui-subtle empty:m-0 empty:p-0",
+        merged.class,
+      )}
+    >
       {merged.children ?? "No labels found."}
     </div>
   );
@@ -445,7 +464,10 @@ function List(props: ComboboxListProps): JSX.Element {
       data-tomui-component="Combobox"
       id={ctx.listId}
       role="listbox"
-      class={cn("min-h-0 flex-1 overflow-y-auto overscroll-contain", merged.class)}
+      class={cn(
+        "min-h-0 flex-1 scroll-pt-2 scroll-pb-2 overflow-y-auto overscroll-contain",
+        merged.class,
+      )}
     >
       <For each={merged.items ?? []}>
         {(item, index) => <>{merged.children?.(item, index())}</>}
@@ -478,12 +500,12 @@ function Chip(props: ComboboxChipProps): JSX.Element {
         data-tomui-part="chip-remove"
         type="button"
         aria-label={merged.removeLabel}
-        class="flex cursor-pointer rounded-md bg-transparent p-1 hover:bg-tomui-fill-hover"
+        class="flex cursor-pointer items-center justify-center rounded-md bg-transparent p-1 hover:bg-tomui-fill-hover"
         onClick={() => {
           if (merged.value !== undefined) ctx.remove(merged.value);
         }}
       >
-        {"✕"}
+        <XIcon size="sm" color="current" />
       </button>
     </span>
   );

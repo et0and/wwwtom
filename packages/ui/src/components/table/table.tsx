@@ -19,6 +19,16 @@ export const TOMUI_TABLE_VARIANTS = {
       description: "Selected row variant",
     },
   },
+  sticky: {
+    left: {
+      classes: "sticky left-0",
+      description: "Pin column to the left edge of the scroll container",
+    },
+    right: {
+      classes: "sticky right-0",
+      description: "Pin column to the right edge of the scroll container",
+    },
+  },
 } as const;
 
 export const TOMUI_TABLE_DEFAULT_VARIANTS = {
@@ -69,7 +79,7 @@ export function TableHeader(props: TableHeaderProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "class");
   return (
-    <thead data-tomui-component="TableHeader" class={merged.class} {...rest}>
+    <thead data-tomui-component="TableHeader" class={cn("group/header", merged.class)} {...rest}>
       {merged.children}
     </thead>
   );
@@ -126,7 +136,7 @@ export function TableHead(props: TableHeadProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "class");
   return (
-    <th data-tomui-component="TableHead" class={merged.class} {...rest}>
+    <th data-tomui-component="TableHead" class={cn("group relative", merged.class)} {...rest}>
       {merged.children}
     </th>
   );

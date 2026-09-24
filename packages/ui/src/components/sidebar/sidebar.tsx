@@ -1,5 +1,6 @@
 import { createSignal, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import { CaretDownIcon } from "@tom/icons/CaretDown";
 import { cn } from "../../utils/cn";
 import { resolveVariant } from "../../utils/resolve-variant";
 
@@ -90,12 +91,12 @@ export function SidebarSection(props: SidebarSectionProps) {
         class="tomui-sidebar-group-label flex items-center justify-between px-3 pt-4 pb-2 text-sm font-medium text-tomui-subtle"
       >
         <span class="truncate">{merged.label}</span>
-        <span aria-hidden="true" class={cn("transition-transform", !isOpen() && "-rotate-90")}>
-          {"▾"}
+        <span class={cn("inline-flex transition-transform", !isOpen() && "-rotate-90")}>
+          <CaretDownIcon size="sm" />
         </span>
       </button>
       <Show when={isOpen()}>
-        <ul class="tomui-sidebar-menu m-0 flex min-w-0 list-none flex-col gap-y-px p-0">
+        <ul class="tomui-sidebar-menu m-0 flex min-w-0 list-none flex-col items-stretch gap-y-px p-0">
           {merged.children}
         </ul>
       </Show>
@@ -112,10 +113,13 @@ export function SidebarItem(props: SidebarItemProps) {
         data-active={merged.active || undefined}
         aria-current={merged.active ? "page" : undefined}
         class={cn(
-          "tomui-sidebar-menu-button group/menu-button relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-lg px-3 py-0 text-sm font-medium no-underline!",
+          "tomui-sidebar-menu-button group/menu-button relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-lg outline-none",
+          "px-3 py-0 text-sm font-medium no-underline!",
           "min-h-8.5 text-tomui-default",
+          "transition-[color,box-shadow,outline]",
           !merged.active && "hover:bg-tomui-tint",
           merged.active && "bg-tomui-tint",
+          "focus:outline-none focus-visible:bg-tomui-tint focus-visible:text-tomui-strong",
           merged.class,
         )}
         {...rest}

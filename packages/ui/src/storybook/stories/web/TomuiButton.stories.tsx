@@ -82,3 +82,27 @@ export const Disabled = meta.story({
     children: "Disabled",
   },
 });
+
+export const Square = meta.story({
+  args: {
+    form: "square",
+    "aria-label": "Refresh",
+    children: "↻",
+  },
+});
+
+export const Circle = meta.story({
+  args: {
+    form: "circle",
+    "aria-label": "Close",
+    children: "×",
+  },
+});
+
+export const WithIcon = meta.story({
+  args: {
+    variant: "secondary",
+    children: "Download",
+    icon: <span aria-hidden="true">↓</span>,
+  },
+});
