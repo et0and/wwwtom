@@ -1,3 +1,10 @@
+## [3.10.1](https://github.com/et0and/wwwtom/compare/v3.10.0...v3.10.1) (2026-09-24)
+
+
+### Bug Fixes
+
+* **web:** remove nav background colors ([5c2251d](https://github.com/et0and/wwwtom/commit/5c2251d8f6d357ea7263451fa5706df0ae8e8d7d))
+
 # [3.10.0](https://github.com/et0and/wwwtom/compare/v3.9.0...v3.10.0) (2026-09-23)
 
 
