@@ -13,6 +13,7 @@
     "lint": "turbo run lint",
     "format": "oxfmt --check .",
     "write": "oxfmt --write .",
+    "check:bundles": "bash scripts/build-bundle-inputs.sh && bash scripts/check-bundles.sh",
     "workflows": "pnpm --filter @tom/workflows generate && oxfmt --write .github/workflows .github/actions",
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",

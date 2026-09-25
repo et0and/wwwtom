@@ -1,0 +1,31 @@
+{
+  "apps": [
+    {
+      "name": "web",
+      "assetsPath": "apps/web/dist/client",
+      "budgets": {
+        "maxTotalJavaScriptBytes": 500000,
+        "maxTotalCssBytes": 110000,
+        "maxAssetBytes": 450000
+      }
+    },
+    {
+      "name": "sophie",
+      "assetsPath": "apps/sophie/dist/client",
+      "budgets": {
+        "maxTotalJavaScriptBytes": 350000,
+        "maxTotalCssBytes": 110000,
+        "maxAssetBytes": 320000
+      }
+    },
+    {
+      "name": "editor",
+      "assetsPath": "apps/editor/dist",
+      "budgets": {
+        "maxTotalJavaScriptBytes": 1700000,
+        "maxTotalCssBytes": 120000,
+        "maxAssetBytes": 600000
+      }
+    }
+  ]
+}

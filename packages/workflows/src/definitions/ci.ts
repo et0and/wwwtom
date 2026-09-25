@@ -48,6 +48,9 @@ export const ci = workflow("ci", {
         // dictionaries, chained assertions, barrel files). Every workspace with
         // a `lint` script must pass, so those patterns cannot merge.
         run("Run lint", turboTask("lint")),
+        // Build the client applications and enforce the checked-in bundle
+        // budgets with the pinned OCaml checker container.
+        run("Build and check bundle budgets", "pnpm check:bundles"),
         // Unit tests run in every workspace with a `test` script. Task
         // artifacts are shared through the KV-backed remote cache; the
         // signature key lets Turbo sign and verify every artifact so a leaked

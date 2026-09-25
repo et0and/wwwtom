@@ -1,0 +1,3 @@
+(library
+ (name bundle_checker)
+ (libraries unix yojson))
