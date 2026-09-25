@@ -12,8 +12,17 @@ import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { sophieQueue, sophieQueueDlq } from "../queues/sophie.queue.ts";
 import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
 import { sophieD1, sophieMediaBucket } from "../cms/sophie.storage.ts";
+import { crmD1, crmMediaBucket } from "../crm/crm.storage.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
+
+const crmStorage = (stage: string) =>
+  Effect.gen(function* () {
+    return {
+      db: yield* stage === "production" ? crmD1.pipe(retain()) : crmD1,
+      media: yield* stage === "production" ? crmMediaBucket.pipe(retain()) : crmMediaBucket,
+    };
+  });
 
 export const api = Effect.gen(function* () {
   const stage = yield* Stage;
@@ -57,6 +66,10 @@ export const api = Effect.gen(function* () {
       ? previewCmsMedia
       : cmsMediaBucket;
 
+  const crmResources = yield* crmStorage(stage);
+  const crmDb = crmResources.db;
+  const crmMedia = crmResources.media;
+
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
@@ -86,12 +99,15 @@ export const api = Effect.gen(function* () {
       // Admin allowlist as explicit stage config (deploy-time env or
       // bundle, never code): it wins over the opaque shared bundle value.
       CMS_ADMIN_EMAILS: tomAdminEmails,
+      CRM_D1: crmDb,
+      CRM_MEDIA: crmMedia,
       // Better Auth builds OAuth redirect URLs from the adapter origin and
       // only returns to trusted editor origins after sign-in.
       ADAPTER_URL: isAlchemyDev
         ? "http://localhost:8788"
         : `https://${stageHost(stage, "adapter")}`,
       EDITOR_URL: isAlchemyDev ? "http://localhost:5173" : `https://${stageHost(stage, "cms")}`,
+      CRM_URL: isAlchemyDev ? "http://localhost:5175" : `https://${stageHost(stage, "crm")}`,
     },
   });
 

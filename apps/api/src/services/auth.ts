@@ -127,13 +127,13 @@ const providerAllowed = (
 const previewEditorPatterns = (env: CloudflareEnv): ReadonlyArray<string> => {
   const tenant = tenantFromValue(env.TENANT);
   if (tenant === "sophie") return ["https://pr-*-cms.sophie.st"];
-  if (tenant === "tom") return ["https://pr-*-cms.tom.so"];
+  if (tenant === "tom") return ["https://pr-*-cms.tom.so", "https://pr-*-crm.tom.so"];
   return [];
 };
 
 /** Build an auth instance from worker env. Fails closed when unset. */
 export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: CloudflareEnv) {
-  const database = env.CMS_D1;
+  const database = env.CRM_D1 ?? env.CMS_D1;
   const secret = env.BETTER_AUTH_SECRET?.trim();
   // Belt-and-braces tenant isolation: even if the other tenant's OAuth
   // keys leak into this worker's env, the allowlist keeps them disabled.
@@ -153,13 +153,20 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
   }
   const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
   const editorUrl = env.EDITOR_URL ?? LOCAL_SERVICE_URLS.editor;
+  const crmUrl = env.CRM_URL;
+  const crmOrigins =
+    crmUrl === undefined
+      ? []
+      : crmUrl === LOCAL_SERVICE_URLS.crm
+        ? [crmUrl, "http://127.0.0.1:5175"]
+        : [crmUrl];
   return yield* Effect.try({
     try: () =>
       createAuth({
         database,
         secret,
         baseURL: adapterUrl,
-        trustedOrigins: [adapterUrl, editorUrl, ...previewEditorPatterns(env)],
+        trustedOrigins: [adapterUrl, editorUrl, ...crmOrigins, ...previewEditorPatterns(env)],
         ...(github && { github }),
         ...(google && { google }),
         adminEmails: parseAdminEmails(env.CMS_ADMIN_EMAILS),

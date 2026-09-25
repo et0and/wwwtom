@@ -42,6 +42,7 @@ jobs:
           pnpm deploy:shared --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
+          pnpm deploy:crm --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes
   destroy:
@@ -65,6 +66,9 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Destroy web preview stage
         run: pnpm destroy:web --yes
+      - name: Destroy crm preview stage
+        if: always()
+        run: pnpm destroy:crm --yes
       - name: Destroy editor preview stage
         if: always()
         run: pnpm destroy:editor --yes

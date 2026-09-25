@@ -78,6 +78,7 @@ describe("renderDefinition", () => {
         "pnpm deploy:shared --yes",
         "pnpm deploy:api --yes",
         "pnpm deploy:adapter --yes",
+        "pnpm deploy:crm --yes",
         "pnpm deploy:web --yes",
         "pnpm deploy:sophie --yes",
         "pnpm deploy:storybook --yes",

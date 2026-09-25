@@ -19,7 +19,7 @@ export const stageConcurrencyGroup = `deploy-${stageExpression}`;
  * The application pipeline, in dependency order: later stacks depend on
  * earlier ones.
  */
-const appStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
+const appStacks = ["shared", "api", "adapter", "crm", "web", "sophie"] as const;
 
 /**
  * Alchemy stacks a staging or production deploy provisions: the application
@@ -45,7 +45,15 @@ export const deployChain = (stacks: ReadonlyArray<DeployStack>): string =>
 /**
  * Teardown order: the reverse of the deploy stack order.
  */
-export const destroyStacks = ["web", "editor", "sophie", "adapter", "api", "shared"] as const;
+export const destroyStacks = [
+  "web",
+  "crm",
+  "editor",
+  "sophie",
+  "adapter",
+  "api",
+  "shared",
+] as const;
 
 export type DestroyStack = (typeof destroyStacks)[number];
 

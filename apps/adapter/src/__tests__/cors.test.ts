@@ -33,6 +33,8 @@ describe("adapter CORS", () => {
     "http://localhost:3000",
     "http://localhost:5174",
     "http://localhost:3001",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
     "https://tom.so",
     "https://cms.tom.so",
     "https://adapter.tom.so",
@@ -44,6 +46,8 @@ describe("adapter CORS", () => {
     "https://adapter.sophie.st",
     "https://api.sophie.st",
     "https://dev-cms.sophie.st",
+    "https://crm.tom.so",
+    "https://dev-crm.tom.so",
   ])("allows the %s origin on preflight", async (origin) => {
     const response = await app.fetch(preflight(origin));
     expect(response.status).toBe(204);

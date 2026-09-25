@@ -7,6 +7,7 @@
     "./arena": "./src/arena.ts",
     "./arena-content": "./src/arena-content.ts",
     "./cms": "./src/cms.ts",
+    "./crm": "./src/crm.ts",
     "./error": "./src/error.ts",
     "./health": "./src/health.ts",
     "./jsonld": "./src/jsonld.ts",

@@ -21,16 +21,22 @@ export interface CmsD1Statement {
   readonly bind: (...values: ReadonlyArray<string | number | null>) => CmsD1Statement;
   readonly first: <T>(column?: string) => Promise<T | null>;
   readonly all: <T>() => Promise<{ readonly results: ReadonlyArray<T> }>;
-  readonly run: () => Promise<{ readonly success: boolean }>;
+  readonly run: () => Promise<{
+    readonly success: boolean;
+    readonly meta?: { readonly changes?: number };
+  }>;
 }
 
 export interface CmsD1Binding {
   readonly prepare: (query: string) => CmsD1Statement;
   // Batch + exec exist on the real D1 binding; Better Auth detects and
   // uses them, CmsService only uses prepare.
-  readonly batch: (
-    statements: ReadonlyArray<CmsD1Statement>,
-  ) => Promise<ReadonlyArray<{ readonly success: boolean }>>;
+  readonly batch: (statements: ReadonlyArray<CmsD1Statement>) => Promise<
+    ReadonlyArray<{
+      readonly success: boolean;
+      readonly meta?: { readonly changes?: number };
+    }>
+  >;
   readonly exec: (query: string) => Promise<unknown>;
 }
 
@@ -52,7 +58,10 @@ export interface CmsR2Binding {
   readonly put: (
     key: string,
     value: ArrayBuffer | Uint8Array | string,
-    options?: { readonly httpMetadata?: { readonly contentType?: string } },
+    options?: {
+      readonly httpMetadata?: { readonly contentType?: string };
+      readonly sha256?: ArrayBuffer | string;
+    },
   ) => Promise<{ readonly key: string }>;
   readonly get: (key: string) => Promise<CmsR2Object | null>;
   readonly delete: (key: string) => Promise<void>;
@@ -107,6 +116,7 @@ export type CloudflareEnv = {
   API_URL?: string;
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
   EDITOR_URL?: string;
+  CRM_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
   // Slim CMS auth (Better Auth + GitHub OAuth), owned by the api stack.
   BETTER_AUTH_SECRET?: string;
@@ -132,6 +142,8 @@ export type CloudflareEnv = {
   // api stack (infra/cms/cms.storage.ts). Only the API binds them.
   CMS_D1?: CmsD1Binding;
   CMS_MEDIA?: CmsR2Binding;
+  CRM_D1?: CmsD1Binding;
+  CRM_MEDIA?: CmsR2Binding;
   // Workers Static Assets binding serving apps/api/public (OG fonts). Set
   // by the api stack; absent in tests, which fall back to same-origin fetch.
   ASSETS?: CmsAssetsBinding;

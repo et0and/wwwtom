@@ -21,7 +21,8 @@
     "better-auth": "^1.7.2",
     "effect": "catalog:",
     "elysia": "catalog:",
-    "takumi-js": "2.13.7"
+    "takumi-js": "2.13.7",
+    "uqr": "0.1.3"
   },
   "devDependencies": {
     "@better-auth/kysely-adapter": "1.7.2",

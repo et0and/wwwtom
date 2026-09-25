@@ -26,6 +26,7 @@ import { guestbookIntegration, guestbookUserFromCookie } from "./integrations/gu
 import { githubIntegration } from "./integrations/github";
 import { imageIntegration } from "./integrations/image";
 import { ogIntegration } from "./integrations/og";
+import { crmIntegration } from "./integrations/crm";
 
 const VISITOR_SESSION_MAX_AGE = 60 * 60 * 24 * 90;
 
@@ -144,6 +145,7 @@ export const app = new Elysia({
   .use(githubIntegration)
   .use(imageIntegration)
   .use(ogIntegration)
+  .use(crmIntegration)
   .compile();
 
 export type AdapterApp = typeof app;

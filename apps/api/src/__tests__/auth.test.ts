@@ -160,6 +160,14 @@ describe("createAuthFromEnv provider allowlist", () => {
 });
 
 describe("preview editor origins", () => {
+  it("trusts both local CRM origins", async () => {
+    const auth = await Effect.runPromise(
+      createAuthFromEnv(bothProvidersEnv({ CRM_URL: "http://localhost:5175" })),
+    );
+    expect(auth.options.trustedOrigins).toContain("http://localhost:5175");
+    expect(auth.options.trustedOrigins).toContain("http://127.0.0.1:5175");
+  });
+
   it("trusts the PR editor pattern for a Tom tenant", async () => {
     const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv({ TENANT: "tom" })));
     expect(auth.options.trustedOrigins).toContain("https://pr-*-cms.tom.so");

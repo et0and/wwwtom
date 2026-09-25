@@ -47,6 +47,7 @@ export const previewSweep = workflow("preview-sweep", {
           '  export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"',
           "  pnpm destroy:storybook --yes || true",
           "  pnpm destroy:web --yes || true",
+          "  pnpm destroy:crm --yes || true",
           "  pnpm destroy:editor --yes || true",
           "  pnpm destroy:sophie --yes || true",
           "  pnpm destroy:adapter --yes || true",
