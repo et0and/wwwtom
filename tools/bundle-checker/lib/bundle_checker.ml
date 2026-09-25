@@ -51,60 +51,81 @@ let object_fields context = function
   | `Assoc fields -> Ok fields
   | _ -> fail "%s must be an object" context
 
+let reject_unknown_fields ~context ~allowed fields =
+  match List.find_opt (fun (name, _) -> not (List.mem name allowed)) fields with
+  | None -> Ok ()
+  | Some (name, _) -> fail "Unknown field %s in %s" name context
+
 let parse_budget json =
   match object_fields "budgets" json with
   | Error message -> Error message
   | Ok fields ->
-      (match optional_non_negative_int fields "maxTotalJavaScriptBytes" with
+      (match
+         reject_unknown_fields ~context:"budgets"
+           ~allowed:[ "maxTotalJavaScriptBytes"; "maxTotalCssBytes"; "maxAssetBytes" ]
+           fields
+       with
       | Error message -> Error message
-      | Ok max_total_javascript_bytes ->
-          match optional_non_negative_int fields "maxTotalCssBytes" with
+      | Ok () ->
+          (match optional_non_negative_int fields "maxTotalJavaScriptBytes" with
           | Error message -> Error message
-          | Ok max_total_css_bytes ->
-              (match optional_non_negative_int fields "maxAssetBytes" with
+          | Ok max_total_javascript_bytes ->
+              match optional_non_negative_int fields "maxTotalCssBytes" with
               | Error message -> Error message
-              | Ok max_asset_bytes ->
-                  Ok
-                    {
-                      max_total_javascript_bytes;
-                      max_total_css_bytes;
-                      max_asset_bytes;
-                    }))
+              | Ok max_total_css_bytes ->
+                  (match optional_non_negative_int fields "maxAssetBytes" with
+                  | Error message -> Error message
+                  | Ok max_asset_bytes ->
+                      Ok
+                        {
+                          max_total_javascript_bytes;
+                          max_total_css_bytes;
+                          max_asset_bytes;
+                        })))
 
 let parse_app json =
   match object_fields "app" json with
   | Error message -> Error message
   | Ok fields ->
-      (match string_field fields "name" with
+      (match
+         reject_unknown_fields ~context:"app"
+           ~allowed:[ "name"; "assetsPath"; "budgets" ] fields
+       with
       | Error message -> Error message
-      | Ok name ->
-          match string_field fields "assetsPath" with
+      | Ok () ->
+          (match string_field fields "name" with
           | Error message -> Error message
-          | Ok assets_path ->
-              (match field fields "budgets" with
+          | Ok name ->
+              match string_field fields "assetsPath" with
               | Error message -> Error message
-              | Ok budgets ->
-                  (match parse_budget budgets with
+              | Ok assets_path ->
+                  (match field fields "budgets" with
                   | Error message -> Error message
-                  | Ok budget -> Ok { name; assets_path; budget })))
+                  | Ok budgets ->
+                      (match parse_budget budgets with
+                      | Error message -> Error message
+                      | Ok budget -> Ok { name; assets_path; budget }))))
 
 let parse_config json =
   match object_fields "configuration" json with
   | Error message -> Error message
   | Ok fields ->
-      (match field fields "apps" with
+      (match reject_unknown_fields ~context:"configuration" ~allowed:[ "apps" ] fields with
       | Error message -> Error message
-      | Ok (`List apps) when apps <> [] ->
-          let rec parse_apps parsed = function
-            | [] -> Ok (List.rev parsed)
-            | app :: rest ->
-                (match parse_app app with
-                | Error message -> Error message
-                | Ok app -> parse_apps (app :: parsed) rest)
-          in
-          parse_apps [] apps
-      | Ok (`List _) -> fail "The apps list must not be empty"
-      | Ok _ -> fail "Field apps must be a list")
+      | Ok () ->
+          match field fields "apps" with
+          | Error message -> Error message
+          | Ok (`List apps) when apps <> [] ->
+              let rec parse_apps parsed = function
+                | [] -> Ok (List.rev parsed)
+                | app :: rest ->
+                    (match parse_app app with
+                    | Error message -> Error message
+                    | Ok app -> parse_apps (app :: parsed) rest)
+              in
+              parse_apps [] apps
+          | Ok (`List _) -> fail "The apps list must not be empty"
+          | Ok _ -> fail "Field apps must be a list")
 
 let load_config ~path =
   try

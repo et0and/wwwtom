@@ -12,8 +12,10 @@ From the repository root:
 pnpm check:bundles
 ```
 
-The root command builds the Vite applications, builds the checker image, and
-mounts the repository read-only in the container. Docker must be running.
+The root command builds the Vite applications, builds the editor with the
+production Sophie flags (`VITE_SOPHIE=true` and Google auth), builds the
+checker image, and mounts the repository read-only in the container. Docker
+must be running.
 
 To check an existing build without rebuilding the applications:
 

@@ -78,6 +78,20 @@ let test_reports_budget_violation () =
           assert_equal ~expected:2 ~actual:(List.length report.violations) "violation count";
           assert_true (has_failures [ report ]) "budget failure")
 
+let test_rejects_unknown_budget_fields () =
+  with_temp_dir (fun root ->
+      let config_path = Filename.concat root "budgets.json" in
+      write_file config_path
+        {|{"apps":[{"name":"test","assetsPath":"assets","budgets":{"maxTotalJavascriptBytes":1}}]}|};
+      match load_config ~path:config_path with
+      | Error message ->
+          assert_equal
+            ~expected:"Unknown field maxTotalJavascriptBytes in budgets"
+            ~actual:message
+            "unknown budget field"
+      | Ok _ -> fail "Unknown budget field was accepted")
+
 let () =
   test_inspects_javascript_and_css_assets ();
-  test_reports_budget_violation ()
+  test_reports_budget_violation ();
+  test_rejects_unknown_budget_fields ()

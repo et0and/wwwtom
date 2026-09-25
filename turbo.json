@@ -6,6 +6,7 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": ["VITE_ADAPTER_URL", "VITE_AUTH_PROVIDER", "VITE_SOPHIE"],
       "outputs": ["dist/**", ".output/**"]
     },
     "dev": {
