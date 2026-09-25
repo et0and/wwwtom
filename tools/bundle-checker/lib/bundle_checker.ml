@@ -56,6 +56,18 @@ let reject_unknown_fields ~context ~allowed fields =
   | None -> Ok ()
   | Some (name, _) -> fail "Unknown field %s in %s" name context
 
+let path_components path =
+  String.split_on_char '/' path
+  |> List.concat_map (fun segment -> String.split_on_char '\\' segment)
+
+let validate_relative_path ~context path =
+  let components = path_components path in
+  if path = "" || String.contains path '\000' || not (Filename.is_relative path) then
+    fail "%s must be a non-empty relative path" context
+  else if List.exists (fun component -> component = "" || component = "." || component = "..") components then
+    fail "%s must not contain empty, '.' or '..' components" context
+  else Ok ()
+
 let parse_budget json =
   match object_fields "budgets" json with
   | Error message -> Error message
@@ -96,15 +108,18 @@ let parse_app json =
           (match string_field fields "name" with
           | Error message -> Error message
           | Ok name ->
-              match string_field fields "assetsPath" with
+              (match string_field fields "assetsPath" with
               | Error message -> Error message
               | Ok assets_path ->
-                  (match field fields "budgets" with
+                  (match validate_relative_path ~context:"assetsPath" assets_path with
                   | Error message -> Error message
-                  | Ok budgets ->
-                      (match parse_budget budgets with
+                  | Ok () ->
+                      (match field fields "budgets" with
                       | Error message -> Error message
-                      | Ok budget -> Ok { name; assets_path; budget }))))
+                      | Ok budgets ->
+                          (match parse_budget budgets with
+                          | Error message -> Error message
+                          | Ok budget -> Ok { name; assets_path; budget }))))))
 
 let parse_config json =
   match object_fields "configuration" json with
@@ -135,8 +150,31 @@ let load_config ~path =
   | Sys_error message -> fail "Could not read %s: %s" path message
   | Yojson.Json_error message -> fail "Invalid JSON in %s: %s" path message
 
-let resolve_path ~root path =
+let resolve_config_path ~root path =
   if Filename.is_relative path then Filename.concat root path else path
+
+let path_is_within ~root path =
+  let root_prefix = if root = Filename.dir_sep then root else root ^ Filename.dir_sep in
+  path = root
+  || (String.length path > String.length root_prefix
+     && String.sub path 0 (String.length root_prefix) = root_prefix)
+
+let resolve_asset_path ~root path =
+  match validate_relative_path ~context:"Asset path" path with
+  | Error message -> Error message
+  | Ok () ->
+      (try
+         let real_root = Unix.realpath root in
+         let candidate = Filename.concat real_root path in
+         let resolved = if Sys.file_exists candidate then Unix.realpath candidate else candidate in
+         if path_is_within ~root:real_root resolved then Ok resolved
+         else fail "Asset path resolves outside the repository root: %s" path
+       with
+      | Unix.Unix_error (error, function_name, argument) ->
+          fail "Could not resolve asset path %s: %s (%s %s)" path
+            (Unix.error_message error)
+            function_name
+            argument)
 
 let asset_kind_of_path path =
   match String.lowercase_ascii (Filename.extension path) with
@@ -154,7 +192,7 @@ let rec collect_relative_files ~directory ~relative_prefix =
           else Filename.concat relative_prefix entry
         in
         let path = Filename.concat directory entry in
-        let stats = Unix.stat path in
+        let stats = Unix.lstat path in
         let files =
           if stats.Unix.st_kind = Unix.S_DIR then
             collect_relative_files ~directory:path ~relative_prefix:relative_path @ files
@@ -170,78 +208,92 @@ let make_asset ~assets_root ~assets_path relative_path =
   | None -> None
   | Some kind ->
       let path = Filename.concat assets_root relative_path in
-      let size_bytes = Unix.stat path |> fun stats -> stats.Unix.st_size in
-      Some
-        {
-          path = Filename.concat assets_path relative_path;
-          size_bytes;
-          kind;
-        }
+      let stats = Unix.lstat path in
+      if stats.Unix.st_kind <> Unix.S_REG then None
+      else
+        Some
+          {
+            path = Filename.concat assets_path relative_path;
+            size_bytes = stats.Unix.st_size;
+            kind;
+          }
 
 let inspect_assets ~root ~app =
-  let assets_root = resolve_path ~root app.assets_path in
-  if not (Sys.file_exists assets_root) then
-    fail "Asset directory for %s does not exist: %s" app.name assets_root
-  else
-    try
-      let assets =
-        collect_relative_files ~directory:assets_root ~relative_prefix:""
-        |> List.filter_map (make_asset ~assets_root ~assets_path:app.assets_path)
-        |> List.sort (fun left right ->
-               let size_comparison = compare right.size_bytes left.size_bytes in
-               if size_comparison = 0 then String.compare left.path right.path
-               else size_comparison)
-      in
-      if assets = [] then fail "No JavaScript or CSS assets found for %s" app.name
+  match resolve_asset_path ~root app.assets_path with
+  | Error message -> Error message
+  | Ok assets_root ->
+      if not (Sys.file_exists assets_root) then
+        fail "Asset directory for %s does not exist: %s" app.name assets_root
       else
-        let total_javascript_bytes =
-          List.fold_left
-            (fun total asset ->
-              match asset.kind with JavaScript -> total + asset.size_bytes | Css -> total)
-            0 assets
-        in
-        let total_css_bytes =
-          List.fold_left
-            (fun total asset ->
-              match asset.kind with Css -> total + asset.size_bytes | JavaScript -> total)
-            0 assets
-        in
-        let largest_asset = List.hd assets in
-        let check_limit label actual limit =
-          match limit with
-          | None -> []
-          | Some maximum when actual <= maximum -> []
-          | Some maximum ->
-              [
-                Printf.sprintf "%s is %d bytes; budget is %d bytes" label actual
-                  maximum;
-              ]
-        in
-        let violations =
-          check_limit "total JavaScript" total_javascript_bytes
-            app.budget.max_total_javascript_bytes
-          @ check_limit "total CSS" total_css_bytes app.budget.max_total_css_bytes
-          @ check_limit "largest asset" largest_asset.size_bytes
-              app.budget.max_asset_bytes
-        in
-        Ok
-          {
-            app;
-            assets;
-            total_javascript_bytes;
-            total_css_bytes;
-            largest_asset = Some largest_asset;
-            violations;
-          }
-    with
-    | Sys_error message -> fail "Could not inspect %s: %s" app.name message
-    | Unix.Unix_error (error, function_name, argument) ->
-        fail "Could not inspect %s: %s (%s %s)" app.name
-          (Unix.error_message error)
-          function_name argument
+        try
+          let root_stats = Unix.lstat assets_root in
+          if root_stats.Unix.st_kind <> Unix.S_DIR then
+            fail "Asset path for %s is not a directory: %s" app.name app.assets_path
+          else
+            let assets =
+              collect_relative_files ~directory:assets_root ~relative_prefix:""
+              |> List.filter_map (make_asset ~assets_root ~assets_path:app.assets_path)
+              |> List.sort (fun left right ->
+                     let size_comparison = compare right.size_bytes left.size_bytes in
+                     if size_comparison = 0 then String.compare left.path right.path
+                     else size_comparison)
+            in
+            if assets = [] then fail "No JavaScript or CSS assets found for %s" app.name
+            else
+              let total_javascript_bytes =
+                List.fold_left
+                  (fun total asset ->
+                    match asset.kind with
+                    | JavaScript -> total + asset.size_bytes
+                    | Css -> total)
+                  0 assets
+              in
+              let total_css_bytes =
+                List.fold_left
+                  (fun total asset ->
+                    match asset.kind with
+                    | Css -> total + asset.size_bytes
+                    | JavaScript -> total)
+                  0 assets
+              in
+              let largest_asset = List.hd assets in
+              let check_limit label actual limit =
+                match limit with
+                | None -> []
+                | Some maximum when actual <= maximum -> []
+                | Some maximum ->
+                    [
+                      Printf.sprintf "%s is %d bytes; budget is %d bytes" label actual
+                        maximum;
+                    ]
+              in
+              let violations =
+                check_limit "total JavaScript" total_javascript_bytes
+                  app.budget.max_total_javascript_bytes
+                @ check_limit "total CSS" total_css_bytes
+                    app.budget.max_total_css_bytes
+                @ check_limit "largest asset" largest_asset.size_bytes
+                    app.budget.max_asset_bytes
+              in
+              Ok
+                {
+                  app;
+                  assets;
+                  total_javascript_bytes;
+                  total_css_bytes;
+                  largest_asset = Some largest_asset;
+                  violations;
+                }
+        with
+        | Sys_error message -> fail "Could not inspect %s: %s" app.name message
+        | Unix.Unix_error (error, function_name, argument) ->
+            fail "Could not inspect %s: %s (%s %s)" app.name
+              (Unix.error_message error)
+              function_name
+              argument
 
 let check ~root ~config_path =
-  let config_path = resolve_path ~root config_path in
+  let config_path = resolve_config_path ~root config_path in
   match load_config ~path:config_path with
   | Error message -> Error message
   | Ok apps ->

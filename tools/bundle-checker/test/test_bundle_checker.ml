@@ -28,17 +28,21 @@ let with_temp_dir run =
 
 let test_inspects_javascript_and_css_assets () =
   with_temp_dir (fun root ->
-      let assets_path = Filename.concat root "dist/assets" in
-      Unix.mkdir (Filename.concat root "dist") 0o755;
-      Unix.mkdir assets_path 0o755;
-      write_file (Filename.concat assets_path "entry.js") "12345";
-      write_file (Filename.concat assets_path "styles.css") "123";
-      write_file (Filename.concat assets_path "entry.js.map") "ignored";
-      write_file (Filename.concat assets_path "notes.txt") "ignored";
+      let output_path = Filename.concat root "dist" in
+      let nested_assets_path = Filename.concat output_path "assets" in
+      Unix.mkdir output_path 0o755;
+      Unix.mkdir nested_assets_path 0o755;
+      write_file (Filename.concat output_path "entry.js") "12345";
+      write_file (Filename.concat nested_assets_path "styles.css") "123";
+      write_file (Filename.concat output_path "entry.js.map") "ignored";
+      write_file (Filename.concat output_path "notes.txt") "ignored";
+      let outside_path = Filename.concat root "outside.js" in
+      write_file outside_path "999999";
+      Unix.symlink outside_path (Filename.concat output_path "linked.js");
       let app =
         {
           name = "test";
-          assets_path = "dist/assets";
+          assets_path = "dist";
           budget =
             {
               max_total_javascript_bytes = Some 5;
@@ -78,6 +82,24 @@ let test_reports_budget_violation () =
           assert_equal ~expected:2 ~actual:(List.length report.violations) "violation count";
           assert_true (has_failures [ report ]) "budget failure")
 
+let test_rejects_unsafe_asset_paths () =
+  with_temp_dir (fun root ->
+      let app =
+        {
+          name = "test";
+          assets_path = "../outside";
+          budget =
+            {
+              max_total_javascript_bytes = None;
+              max_total_css_bytes = None;
+              max_asset_bytes = None;
+            };
+        }
+      in
+      match inspect_assets ~root ~app with
+      | Error _ -> ()
+      | Ok _ -> fail "Unsafe asset path was accepted")
+
 let test_rejects_unknown_budget_fields () =
   with_temp_dir (fun root ->
       let config_path = Filename.concat root "budgets.json" in
@@ -94,4 +116,5 @@ let test_rejects_unknown_budget_fields () =
 let () =
   test_inspects_javascript_and_css_assets ();
   test_reports_budget_violation ();
+  test_rejects_unsafe_asset_paths ();
   test_rejects_unknown_budget_fields ()

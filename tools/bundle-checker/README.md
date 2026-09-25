@@ -12,10 +12,9 @@ From the repository root:
 pnpm check:bundles
 ```
 
-The root command builds the Vite applications, builds the editor with the
-production Sophie flags (`VITE_SOPHIE=true` and Google auth), builds the
-checker image, and mounts the repository read-only in the container. Docker
-must be running.
+The root command cleans and builds the Vite applications with their production
+inputs, builds the checker image, and mounts the repository read-only in the
+container. Docker must be running.
 
 To check an existing build without rebuilding the applications:
 
@@ -24,12 +23,13 @@ bash scripts/check-bundles.sh
 ```
 
 The checker reads `tools/bundle-checker/budgets.json`, scans each configured
-assets directory, measures emitted file bytes, and exits with status `1` when a
-budget is exceeded. Source maps and non-JavaScript/CSS files are ignored.
+client output root, measures emitted JavaScript/CSS file bytes, and exits with
+status `1` when a budget is exceeded. Source maps and non-JavaScript/CSS files
+are ignored.
 
 ## Configuration
 
-Each app has an assets directory and optional byte budgets:
+Each app has a client output root and optional byte budgets:
 
 - `maxTotalJavaScriptBytes`
 - `maxTotalCssBytes`
