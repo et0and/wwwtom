@@ -12,6 +12,7 @@ Effect V4.
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, polar, guestbook, github, image, og; same tenant split)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
+- `turso`: Turso databases as code (`infra/turso` — see `turso/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
 The `production` stage adopts the existing resources instead of replacing
@@ -23,6 +24,10 @@ them:
 - `guestbook-hyperdrive`
 
 Other explicit stages create isolated resources automatically.
+
+`gtm` and `turso` are not in the `pnpm deploy` chain and run only when asked
+for with `pnpm deploy:gtm` / `pnpm deploy:turso`. Both provision real, billable
+cloud resources, so they stay a deliberate step.
 
 ## Deploy
 
@@ -158,6 +163,8 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "SOPHIE_BETTER_AUTH_SECRET": "...",
   "SOPHIE_INTERNAL_API_TOKEN": "...",
   "CONTROL_TOKEN": "...",
+  "TURSO_ORG": "...",
+  "TURSO_API_TOKEN": "...",
   "TURBO_CACHE_TOKEN": "...",
   "TURBO_CACHE_SIGNATURE_KEY": "..."
 }
@@ -173,6 +180,12 @@ closed); Sophie never inherits the shared allowlist.
 **Administration: write** permission (used to mint runner registration
 tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
 random value of at least 32 characters.
+
+`TURSO_ORG` and `TURSO_API_TOKEN` are only read by `pnpm deploy:turso`. The
+token must be scoped to a single organization — Turso deprecated unrestricted
+cross-org tokens. The `turso` stack also reads the plain, non-secret
+`TURSO_LOCATION`, `TURSO_GROUP`, `TURSO_SIZE_LIMIT` and
+`TURSO_TOKEN_TTL_DAYS`; see `turso/README.md`.
 
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
 credentials for Tom CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
