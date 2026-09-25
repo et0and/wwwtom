@@ -16,6 +16,7 @@ pnpm run build # Production build
 pnpm run lint # Run oxlint
 pnpm run format # Check formatting with oxfmt
 pnpm run write # Format files with oxfmt
+pnpm run check:bundles # Build clients and enforce bundle budgets in the pinned OCaml container
 ```
 
 External packages and dependencies have been deliberately kept small in order to keep the project lean.

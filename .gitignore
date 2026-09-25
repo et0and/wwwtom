@@ -54,3 +54,6 @@ blob-report/
 
 # Vitest coverage artifacts
 coverage/
+
+# OCaml build artifacts
+tools/bundle-checker/_build/

@@ -38,6 +38,8 @@ jobs:
         run: pnpm turbo run typecheck
       - name: Run lint
         run: pnpm turbo run lint
+      - name: Build and check bundle budgets
+        run: pnpm check:bundles
       - name: Run unit tests
         run: pnpm turbo run test
         env:

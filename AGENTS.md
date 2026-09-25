@@ -13,6 +13,7 @@ Improve existing code; avoid new abstractions.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, checkout, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
+- `tools/bundle-checker` — OCaml/Dune client bundle budget checker, built and run through a pinned Docker image.
 - `infra` — Alchemy 2.0.0-beta.78 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
@@ -27,6 +28,7 @@ Improve existing code; avoid new abstractions.
 
 - `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
+- `pnpm check:bundles` — build client apps and enforce bundle budgets in the pinned OCaml container
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
 - `pnpm workflows` — regenerate `.github/workflows/*.yml` + `.github/actions/*/action.yml` from `@tom/workflows` definitions (do not hand-edit generated files)
 - `pnpm test:update` — snapshot update (web, utils, icons, workflows)

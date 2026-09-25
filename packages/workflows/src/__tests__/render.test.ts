@@ -49,7 +49,7 @@ describe("renderDefinition", () => {
     expect(contents).not.toMatch(/actions\/checkout@v\d/);
   });
 
-  it("gates CI on generated files, typecheck, lint and tests", async () => {
+  it("gates CI on generated files, typecheck, lint, bundle budgets and tests", async () => {
     const names = stepsOf(await render(ci), "test").map((step) => step.name);
     expect(names).toEqual([
       "Checkout",
@@ -58,6 +58,7 @@ describe("renderDefinition", () => {
       "Check generated workflows are current",
       "Run typecheck",
       "Run lint",
+      "Build and check bundle budgets",
       "Run unit tests",
     ]);
   });
