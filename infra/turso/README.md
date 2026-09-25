@@ -22,6 +22,25 @@ it is behind the live API in three ways that each break a resource here:
 Check the gap list against the pinned spec before re-adding the dependency. If
 the client catches up, `http.ts` and `schemas.ts` are the only files that change.
 
+### The spec is the best contract, not a guaranteed current one
+
+The published spec lags the live API in at least one place, in the opposite
+direction from the table above: it has no engine field at all, while the client
+posts `use_tursodb` to `POST .../databases`. So verify a field exists in the spec
+before assuming Turso does not support it.
+
+The concrete consequence: **this stack creates libSQL databases, which allow one
+writer at a time.** Turso Cloud also offers TursoDB, which allows concurrent
+writes by default, selected with `turso db create --tursodb`. `CreateDatabaseSchema`
+sends no engine field, so every database here is libSQL. That is a deliberate
+choice for now — wwwtom writes from one Worker at a time. The engine cannot be
+changed after creation, so moving a database to TursoDB means recreating it and
+losing its data.
+
+Do not confuse this with the `PRAGMA journal_mode = 'mvcc'` guide. That is
+connection-level SQL with no Platform API equivalent, and its examples all use a
+local database file.
+
 ## Architecture
 
 ```
