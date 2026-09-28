@@ -22,7 +22,6 @@ const manifest = {
   ui: "ui.html",
   editorType: ["figma"],
   documentAccess: "dynamic-page",
-  networkAccess: { allowedDomains: ["none"] },
 };
 
 const options = {

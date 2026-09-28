@@ -90,13 +90,14 @@ function paintFromRef(ref: PaintRef, context: GenerationContext): SolidPaint {
     };
   }
   const base = context.tokens.get(ref.token)?.light ?? { r: 0, g: 0, b: 0, a: 1 };
+  const opacity = base.a * ref.alpha;
   const paint: SolidPaint = {
     type: "SOLID",
     color: { r: base.r, g: base.g, b: base.b },
-    opacity: ref.alpha,
+    opacity,
   };
   const variable = context.variables.get(ref.token);
-  if (variable === undefined) return { ...paint, opacity: base.a * ref.alpha };
+  if (variable === undefined) return paint;
   return figma.variables.setBoundVariableForPaint(paint, "color", variable);
 }
 

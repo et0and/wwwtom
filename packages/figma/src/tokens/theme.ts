@@ -81,15 +81,17 @@ export function parseThemeCss(css: string): ThemeTokens {
 
   const lightDeclarations = parseDeclarations(lightBlock.body);
   const darkDeclarations = parseDeclarations(darkBlock.body);
-  const lookup = (name: string): string | undefined => lightDeclarations.get(name);
+  const lightLookup = (name: string): string | undefined => lightDeclarations.get(name);
+  const darkLookup = (name: string): string | undefined =>
+    darkDeclarations.get(name) ?? lightDeclarations.get(name);
 
   const colors: Array<ColorToken> = [];
   const missing: Array<string> = [];
   for (const name of lightDeclarations.keys()) {
     if (!name.startsWith("--color-tomui-") && !name.startsWith("--text-color-tomui-")) continue;
-    const light = resolveColorValue(lightDeclarations.get(name) ?? "", lookup);
+    const light = resolveColorValue(lightDeclarations.get(name) ?? "", lightLookup);
     const darkSource = darkDeclarations.get(name);
-    const dark = darkSource === undefined ? light : resolveColorValue(darkSource, lookup);
+    const dark = darkSource === undefined ? light : resolveColorValue(darkSource, darkLookup);
     if (light === null || dark === null) {
       missing.push(name);
       continue;

@@ -21,6 +21,7 @@ export function parseHex(input: string): Rgba | null {
   const value = input.trim();
   if (!value.startsWith("#")) return null;
   const digits = value.slice(1);
+  if (!/^[0-9a-fA-F]+$/.test(digits)) return null;
   if (digits.length === 3 || digits.length === 4) {
     return parseHex(`#${[...digits].map((digit) => `${digit}${digit}`).join("")}`);
   }
