@@ -1,0 +1,71 @@
+import { Meta } from "@storybook/addon-docs/blocks";
+
+<Meta title="Figma resources" />
+
+# Figma resources
+
+TomUI ships a Figma kit generator that builds Figma ComponentSets from the same
+source of truth as the Solid components. Semantic colour tokens become a Figma
+Variables collection, so design and code stay in step.
+
+The tooling lives in `packages/figma` (`@tom/figma`).
+
+## Build and import the plugin
+
+```sh
+pnpm figma:build
+```
+
+Output goes to `packages/figma/dist/`. In Figma Desktop:
+
+1. Open **Plugins → Development → Import plugin from manifest…**
+2. Select `packages/figma/dist/manifest.json`
+3. Run **TomUI Kit Generator** from the development plugins list
+
+For iterative work, watch the bundle and hot-reload inside Figma:
+
+```sh
+pnpm figma:dev
+```
+
+Then press `Cmd+Opt+P` (macOS) or `Ctrl+Alt+P` (Windows) to reload the plugin
+after each change. Run the plugin from **Plugins → Development** or the quick
+action `Cmd+/`.
+
+## Generate components
+
+The plugin panel lists every registry component with its variant count. Select
+the components to generate and press **Generate**. Each component becomes a
+ComponentSet:
+
+- **Variants** — one variant per class-bearing combination of the exported
+  `TOMUI_*_VARIANTS` maps, capped at 60 combinations
+- **Variable bindings** — fills, strokes and text colours bind to the
+  `TomUI` colour variables, which the plugin creates on first run
+- **Auto-layout** — spacing, padding, radius and sizes come from the component
+  classes
+
+Generation is additive: each run appends fresh ComponentSets. Do not edit
+generated components by hand; regenerate instead.
+
+## Regenerate the registry
+
+The plugin reads `src/registry.generated.ts`, built statically from the
+component sources:
+
+```sh
+pnpm figma:generate
+```
+
+`generate` runs `generate:tokens` (theme tokens) then `generate:registry`
+(component variant maps). Run it after changing a theme token, adding a
+component, or adding a variant. The registry test fails when a component
+directory is missing from the registry.
+
+## How it fits together
+
+- `scripts/generate-tokens.ts` — `theme-tomui.css` → `src/tokens.generated.ts`
+- `scripts/generate-registry.ts` — component sources → `src/registry.generated.ts`
+- `src/plugin/plan.ts` — pure variant planning (tested without Figma)
+- `src/plugin/generate.ts` — renders a plan to Figma nodes and variables
+- `src/plugin/parse-classes.ts` — Tailwind class → Figma style resolution

@@ -1,0 +1,25 @@
+{
+  "name": "@tom/figma",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Figma kit generator for TomUI",
+  "type": "module",
+  "scripts": {
+    "generate:registry": "tsx scripts/generate-registry.ts",
+    "generate:tokens": "tsx scripts/generate-tokens.ts",
+    "generate": "pnpm run generate:tokens && pnpm run generate:registry",
+    "dev": "tsx scripts/build.ts --watch",
+    "build": "tsx scripts/build.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@figma/plugin-typings": "^1.139.0",
+    "@types/node": "^26.2.0",
+    "esbuild": "0.25.12",
+    "tsx": "4.20.3",
+    "typescript": "5.9.3",
+    "vitest": "catalog:"
+  }
+}
