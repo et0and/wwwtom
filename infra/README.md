@@ -11,7 +11,6 @@ Effect V4.
 - `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated D1+R2 per tenant)
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, polar, guestbook, github, image, og; same tenant split)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
-- `gtm`: Google Tag Manager configuration as code (`infra/gtm` — see `gtm/README.md`)
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
 The `production` stage adopts the existing resources instead of replacing
@@ -44,11 +43,9 @@ pnpm deploy:web
 pnpm deploy:sophie
 pnpm deploy:runner
 pnpm deploy:turbo
-pnpm deploy:gtm
 ```
 
-Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`. `gtm` is
-independent and can be deployed at any time.
+Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`.
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
