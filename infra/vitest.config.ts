@@ -6,6 +6,7 @@ export default defineConfig({
     include: [
       "apps/__tests__/**/*.test.ts",
       "gtm/__tests__/**/*.test.ts",
+      "turso/__tests__/**/*.test.ts",
       "turbo/src/__tests__/**/*.test.ts",
     ],
   },
