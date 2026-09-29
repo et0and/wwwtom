@@ -1,11 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  createCustomer,
   fetchChannelContents,
   fetchPostBySlug,
   fetchPosts,
-  fetchProduct,
-  fetchProducts,
   fetchWorkBySlug,
   fetchWorks,
 } from "~/server/adapter";
@@ -147,48 +144,6 @@ describe("server functions", () => {
         expect(error).toBeInstanceOf(HttpError);
         expect(error).toMatchObject({ status: 500, message: "Internal error" });
       }
-    });
-  });
-
-  describe("fetchProducts", () => {
-    it("calls the adapter products endpoint", async () => {
-      const products = [{ id: "prod_1" }];
-      fetchMock.mockResolvedValue(jsonResponse(products));
-      const result = await fetchProducts();
-      expect(result).toEqual(products);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/polar/products",
-        expect.anything(),
-      );
-    });
-  });
-
-  describe("fetchProduct", () => {
-    it("calls the adapter product endpoint with the id", async () => {
-      const product = { id: "prod_1" };
-      fetchMock.mockResolvedValue(jsonResponse(product));
-      const result = await fetchProduct("prod_1");
-      expect(result).toEqual(product);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/polar/products/prod_1",
-        expect.anything(),
-      );
-    });
-  });
-
-  describe("createCustomer", () => {
-    it("posts the customer to the adapter", async () => {
-      const customer = { id: "cust_1" };
-      fetchMock.mockResolvedValue(jsonResponse(customer));
-      const result = await createCustomer({ email: "tom@example.com", externalId: "uuid-1" });
-      expect(result).toEqual(customer);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8788/polar/customers",
-        expect.objectContaining({
-          method: "POST",
-          body: JSON.stringify({ email: "tom@example.com", externalId: "uuid-1" }),
-        }),
-      );
     });
   });
 

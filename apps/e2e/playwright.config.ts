@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
  * E2E suites for tom.so (all local).
  *
  * Topology (in order of startup):
- *   simulator (8789)  ← fixture stores: polar, arena, cms, guestbook, api
+ *   simulator (8789)  ← fixture stores: arena, cms, guestbook
  *   adapter   (8788)  ← real adapter Worker entry run under tsx (env attaches
  *                       SIMULATOR_URL; the x-use-simulator header does the swap)
  *   web       (3000)  ← `vite dev` of apps/web (see below for why dev)

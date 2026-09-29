@@ -2,11 +2,9 @@ import { Schema } from "effect";
 import { CmsPostSchema, CmsWorkSchema } from "@tom/schemas/cms";
 import { ArenaChannelResourceSchema, ArenaContentBlockSchema } from "@tom/schemas/arena-content";
 import type { GuestbookEntryJson } from "@tom/types/db";
-import type { Product } from "@tom/types/product";
 import cmsPosts from "../../simulator/fixtures/cms-posts.json" with { type: "json" };
 import cmsWorks from "../../simulator/fixtures/cms-works.json" with { type: "json" };
 import guestbookEntries from "../../simulator/fixtures/guestbook-entries.json" with { type: "json" };
-import polarProducts from "../../simulator/fixtures/polar-products.json" with { type: "json" };
 import arena from "../../simulator/fixtures/arena.json" with { type: "json" };
 import arenaContent from "../../simulator/fixtures/arena-content.json" with { type: "json" };
 
@@ -28,7 +26,6 @@ export const fixtureCmsPosts = Schema.decodeUnknownSync(Schema.Array(CmsPostSche
 export const fixtureCmsWorks = Schema.decodeUnknownSync(Schema.Array(CmsWorkSchema))(cmsWorks);
 
 export const fixtureGuestbookEntries: ReadonlyArray<GuestbookEntryJson> = guestbookEntries;
-export const fixturePolarProducts: ReadonlyArray<Product> = polarProducts;
 
 const decodeEntries = (
   entries: ReadonlyArray<{ channel: unknown; blocks: ReadonlyArray<unknown> }>,

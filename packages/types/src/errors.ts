@@ -13,12 +13,6 @@ export class ImageError extends Schema.TaggedError<ImageError>()("ImageError", {
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
-export class PolarApiError extends Schema.TaggedError<PolarApiError>()("PolarApiError", {
-  message: Schema.String,
-  status: Schema.Finite,
-  operation: Schema.String,
-}) {}
-
 export class CmsError extends Schema.TaggedError<CmsError>()("CmsError", {
   message: Schema.String,
   status: Schema.Finite,

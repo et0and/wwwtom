@@ -12,7 +12,6 @@
     "./jsonld": "./src/jsonld.ts",
     "./list": "./src/list.ts",
     "./og": "./src/og.ts",
-    "./polar": "./src/polar.ts",
     "./queue": "./src/queue.ts",
     "./secrets": "./src/secrets.ts",
     "./telegram": "./src/telegram.ts"
