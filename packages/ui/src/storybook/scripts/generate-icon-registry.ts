@@ -59,7 +59,7 @@ import type { IconProps } from "@tom/icons/types";
 ${imports.join("\n")}
 
 // oxfmt-ignore
-const iconRegistry = { ${entries.join(", ")} } satisfies Record<string, Component<IconProps>>;
+export const iconRegistry = { ${entries.join(", ")} } satisfies Record<string, Component<IconProps>>;
 
 const byName = new Map(Object.entries(iconRegistry));
 
