@@ -186,7 +186,7 @@ latter).
 
 `INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
 `x-internal-token` header when calling the API's protected routes
-(`/og`, `/checkout`, `/portal`, `/auth/*`). Generate a long random value; requests
+(`/og`, `/auth/*`, `/cms/*`). Generate a long random value; requests
 without a matching token are rejected with 401.
 
 `DATABASE_URL` is also used to configure the Hyperdrive origin. At runtime,

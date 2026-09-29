@@ -14,7 +14,7 @@ import { defineConfig, devices } from "@playwright/test";
  * - fixture: every page on tom.so against the fixture stack. Every browser
  *   request carries `x-use-simulator: 1` (extraHTTPHeaders), so both
  *   browser→adapter calls (guestbook) and SSR web→adapter calls (posts,
- *   work, products, arena) hit the fixture data. Production never sets
+ *   work, arena) hit the fixture data. Production never sets
  *   SIMULATOR_URL, so the header is inert there.
  * - editor: the Camus SPA with every adapter call intercepted per test
  *   (VITE_ADAPTER_URL falls back to localhost:8788, which never needs to
