@@ -21,7 +21,7 @@ const FOCUSABLE_SELECTOR = [
 
 const TABBABLE_SELECTOR = `${FOCUSABLE_SELECTOR}:not([tabindex="-1"])`;
 
-export function getTabbableIn(container: HTMLElement, includeContainer = false): HTMLElement[] {
+function getTabbableIn(container: HTMLElement, includeContainer = false): HTMLElement[] {
   const elements = Array.from(container.querySelectorAll<HTMLElement>(TABBABLE_SELECTOR)).filter(
     isTabbable,
   );
@@ -33,14 +33,14 @@ export function getTabbableIn(container: HTMLElement, includeContainer = false):
   return elements;
 }
 
-export function isTabbable(el: HTMLElement): boolean {
+function isTabbable(el: HTMLElement): boolean {
   if (el.hasAttribute("disabled")) return false;
   if (el.getAttribute("aria-hidden") === "true") return false;
   if (el.tabIndex < 0) return false;
   return isElementVisible(el);
 }
 
-export function isElementVisible(el: HTMLElement): boolean {
+function isElementVisible(el: HTMLElement): boolean {
   if (el.hidden) return false;
   const style = window.getComputedStyle(el);
   if (style.display === "none" || style.visibility === "hidden") return false;
@@ -72,7 +72,7 @@ export function focusWithoutScrolling(el: HTMLElement): void {
   }
 }
 
-export interface FocusScopeOptions {
+interface FocusScopeOptions {
   enabled: () => boolean;
   trapFocus?: boolean | undefined;
   onMountAutoFocus?: ((event: Event) => void) | undefined;
@@ -147,7 +147,7 @@ export function createFocusScope(
   );
 }
 
-export interface HideOutsideOptions {
+interface HideOutsideOptions {
   enabled: () => boolean;
   targets: () => Array<HTMLElement | undefined>;
 }

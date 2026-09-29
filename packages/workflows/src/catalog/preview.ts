@@ -2,7 +2,7 @@ import { ex } from "../expressions";
 import type { Env } from "../model";
 import { secret } from "./secrets";
 
-export const prNumberExpression = ex("github.event.pull_request.number");
+const prNumberExpression = ex("github.event.pull_request.number");
 
 export const prStage = `pr-${prNumberExpression}`;
 

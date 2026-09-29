@@ -34,14 +34,12 @@ export type Env = typeof Env.Encoded;
 export const With = Schema.Record(Schema.String, Value);
 export type With = typeof With.Encoded;
 
-export const Permissions = Schema.Record(Schema.String, Schema.Literals(["read", "write", "none"]));
-export type Permissions = typeof Permissions.Encoded;
+const Permissions = Schema.Record(Schema.String, Schema.Literals(["read", "write", "none"]));
 
-export const Concurrency = Schema.Struct({
+const Concurrency = Schema.Struct({
   group: Schema.String,
   "cancel-in-progress": Schema.optional(Schema.Boolean),
 });
-export type Concurrency = typeof Concurrency.Encoded;
 
 const BranchFilter = Schema.Struct({
   branches: Schema.optional(Schema.Array(Schema.String)),
@@ -68,7 +66,7 @@ const WorkflowDispatch = Schema.Union([
   Schema.Struct({ inputs: Schema.Record(Schema.String, WorkflowDispatchInput) }),
 ]);
 
-export const Triggers = Schema.Struct({
+const Triggers = Schema.Struct({
   push: Schema.optional(BranchFilter),
   pull_request: Schema.optional(BranchFilter),
   issue_comment: Schema.optional(CommentTrigger),
@@ -76,7 +74,6 @@ export const Triggers = Schema.Struct({
   schedule: Schema.optional(Schema.Array(Schedule)),
   workflow_dispatch: Schema.optional(WorkflowDispatch),
 });
-export type Triggers = typeof Triggers.Encoded;
 
 const StepBase = {
   name: Schema.optional(Schema.String),
@@ -102,26 +99,24 @@ export const UsesStep = Schema.Struct({
 });
 export type UsesStep = typeof UsesStep.Encoded;
 
-export const Step = Schema.Union([RunStep, UsesStep]);
-export type Step = typeof Step.Encoded;
+const Step = Schema.Union([RunStep, UsesStep]);
 
 /**
  * Composite `run` steps must declare a shell, unlike workflow steps where it
  * is optional.
  */
-export const CompositeRunStep = Schema.Struct({
+const CompositeRunStep = Schema.Struct({
   ...StepBase,
   run: Script,
   shell: Schema.String,
   env: Schema.optional(Env),
   "continue-on-error": Schema.optional(Schema.Boolean),
 });
-export type CompositeRunStep = typeof CompositeRunStep.Encoded;
 
 export const CompositeStep = Schema.Union([CompositeRunStep, UsesStep]);
 export type CompositeStep = typeof CompositeStep.Encoded;
 
-export const Job = Schema.Struct({
+const Job = Schema.Struct({
   name: Schema.optional(Schema.String),
   "runs-on": Schema.Union([Schema.String, Schema.Array(Schema.String)]),
   needs: Schema.optional(Schema.Union([Schema.String, Schema.Array(Schema.String)])),
@@ -133,7 +128,6 @@ export const Job = Schema.Struct({
   env: Schema.optional(Env),
   steps: Schema.Array(Step),
 });
-export type Job = typeof Job.Encoded;
 
 export const Workflow = Schema.Struct({
   name: Schema.String,
@@ -145,18 +139,16 @@ export const Workflow = Schema.Struct({
 });
 export type Workflow = typeof Workflow.Encoded;
 
-export const ActionInput = Schema.Struct({
+const ActionInput = Schema.Struct({
   description: Schema.String,
   required: Schema.optional(Schema.Boolean),
   default: Schema.optional(Schema.String),
 });
-export type ActionInput = typeof ActionInput.Encoded;
 
-export const ActionOutput = Schema.Struct({
+const ActionOutput = Schema.Struct({
   description: Schema.String,
   value: Schema.String,
 });
-export type ActionOutput = typeof ActionOutput.Encoded;
 
 export const CompositeAction = Schema.Struct({
   name: Schema.String,

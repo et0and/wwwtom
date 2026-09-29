@@ -8,7 +8,7 @@ interface LayerRecord {
 
 const layerStack: LayerRecord[] = [];
 
-export function isTopMostLayer(node: HTMLElement): boolean {
+function isTopMostLayer(node: HTMLElement): boolean {
   const top = layerStack[layerStack.length - 1];
   return top?.node === node;
 }
@@ -38,88 +38,7 @@ function getEventTarget(e: Event): Node | null {
   return target instanceof Node ? target : e.target instanceof Node ? e.target : null;
 }
 
-export interface InteractOutsideOptions {
-  enabled: () => boolean;
-  shouldExcludeElement?: ((el: HTMLElement) => boolean) | undefined;
-  onPointerDownOutside?: ((e: CustomEvent) => void) | undefined;
-  onFocusOutside?: ((e: CustomEvent) => void) | undefined;
-  onInteractOutside?: ((e: Event) => void) | undefined;
-}
-
-export function createInteractOutside(
-  ref: () => HTMLElement | undefined,
-  options: InteractOutsideOptions,
-): void {
-  createEffect(
-    () => (options.enabled() ? ref() : undefined),
-    (el) => {
-      if (!el) return;
-
-      let hasPointerDownOutside = false;
-
-      const isTargetInside = (e: Event): boolean => {
-        const target = getEventTarget(e);
-        if (!target) return false;
-        if (containsComposed(el, target)) return true;
-        if (target instanceof Element) {
-          if (target.closest("[data-tomui-top-layer]")) return true;
-          if (options.shouldExcludeElement?.(target as HTMLElement)) return true;
-        }
-        return false;
-      };
-
-      const handlePointerDown = (e: Event) => {
-        if (isTargetInside(e)) return;
-        const isContextMenu =
-          (e as MouseEvent).button === 2 ||
-          ((e as MouseEvent).ctrlKey && navigator.platform.includes("Mac"));
-
-        const customEvent = new CustomEvent("interactOutside.pointerDownOutside", {
-          bubbles: true,
-          cancelable: true,
-          detail: { originalEvent: e, isContextMenu },
-        });
-        options.onPointerDownOutside?.(customEvent);
-
-        if (!customEvent.defaultPrevented) {
-          hasPointerDownOutside = true;
-          options.onInteractOutside?.(e);
-        }
-      };
-
-      const handleFocusIn = (e: Event) => {
-        if (isTargetInside(e)) return;
-        if (hasPointerDownOutside) {
-          hasPointerDownOutside = false;
-          return;
-        }
-        const customEvent = new CustomEvent("interactOutside.focusOutside", {
-          bubbles: true,
-          cancelable: true,
-          detail: { originalEvent: e },
-        });
-        options.onFocusOutside?.(customEvent);
-
-        if (!customEvent.defaultPrevented) {
-          options.onInteractOutside?.(e);
-        }
-      };
-
-      const timer = setTimeout(() => {
-        document.addEventListener("pointerdown", handlePointerDown, true);
-        document.addEventListener("focusin", handleFocusIn, true);
-      }, 0);
-
-      onCleanup(() => {
-        clearTimeout(timer);
-        document.removeEventListener("pointerdown", handlePointerDown, true);
-        document.removeEventListener("focusin", handleFocusIn, true);
-      });
-    },
-  );
-}
-
-export interface DismissableLayerOptions {
+interface DismissableLayerOptions {
   enabled: () => boolean;
   disableOutsidePointerEvents?: boolean | undefined;
   excludedElements?: Array<() => HTMLElement | undefined> | undefined;

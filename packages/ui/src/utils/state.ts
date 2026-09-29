@@ -1,12 +1,12 @@
 import { createSignal, untrack, type Accessor } from "solid-js";
 
-export interface ControllableSignalOptions<T> {
+interface ControllableSignalOptions<T> {
   value?: (() => T | undefined) | undefined;
   defaultValue?: T | undefined;
   onChange?: ((value: T) => void) | undefined;
 }
 
-export interface ControllableSignal<T> {
+interface ControllableSignal<T> {
   value: Accessor<T | undefined>;
   set: (value: T) => void;
   update: (updater: (prev: T | undefined) => T) => void;
@@ -38,13 +38,13 @@ export function createControllableSignal<T>(
   };
 }
 
-export interface ControllableBooleanSignal {
+interface ControllableBooleanSignal {
   value: Accessor<boolean>;
   set: (value: boolean) => void;
   update: (updater: (prev: boolean) => boolean) => void;
 }
 
-export function createControllableBooleanSignal(
+function createControllableBooleanSignal(
   options: ControllableSignalOptions<boolean>,
 ): ControllableBooleanSignal {
   const signal = createControllableSignal<boolean>(options);
@@ -55,7 +55,7 @@ export function createControllableBooleanSignal(
   };
 }
 
-export interface ToggleStateOptions {
+interface ToggleStateOptions {
   isSelected?: (() => boolean | undefined) | undefined;
   defaultIsSelected?: boolean | undefined;
   isDisabled?: (() => boolean | undefined) | undefined;
@@ -63,7 +63,7 @@ export interface ToggleStateOptions {
   onSelectedChange?: ((isSelected: boolean) => void) | undefined;
 }
 
-export interface ToggleState {
+interface ToggleState {
   isSelected: Accessor<boolean>;
   setIsSelected: (isSelected: boolean) => void;
   toggle: () => void;
@@ -88,13 +88,13 @@ export function createToggleState(options: ToggleStateOptions): ToggleState {
   };
 }
 
-export interface DisclosureStateOptions {
+interface DisclosureStateOptions {
   open?: (() => boolean | undefined) | undefined;
   defaultOpen?: boolean | undefined;
   onOpenChange?: ((isOpen: boolean) => void) | undefined;
 }
 
-export interface DisclosureState {
+interface DisclosureState {
   isOpen: Accessor<boolean>;
   setIsOpen: (isOpen: boolean) => void;
   open: () => void;
