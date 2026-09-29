@@ -30,8 +30,25 @@ if (names.length < 1500) {
   throw new Error(`Expected at least 1500 icons, found ${names.length} in ${iconsSrcDir}`);
 }
 
-const imports = names.map((name) => `import { ${name}Icon } from "@tom/icons/${name}";`);
-const entries = names.map((name) => `  ${name}: ${name}Icon,`);
+/** Names whose generated module has no bare alias (shadows a browser/JS global). */
+const GLOBAL_ALIAS_BLOCKLIST: ReadonlyArray<string> = [
+  "File",
+  "Function",
+  "Image",
+  "Infinity",
+  "Option",
+  "Scroll",
+  "Stop",
+];
+
+const imports = names.map((name) =>
+  GLOBAL_ALIAS_BLOCKLIST.includes(name)
+    ? `import { ${name}Icon } from "@tom/icons/${name}";`
+    : `import { ${name} } from "@tom/icons/${name}";`,
+);
+const entries = names.map((name) =>
+  GLOBAL_ALIAS_BLOCKLIST.includes(name) ? `${name}: ${name}Icon` : name,
+);
 
 const content = `/**
  * GENERATED FILE - DO NOT EDIT. Regenerate with \`pnpm --filter @tom/storybook generate:icons\`.
@@ -41,9 +58,8 @@ import type { Component } from "solid-js";
 import type { IconProps } from "@tom/icons/types";
 ${imports.join("\n")}
 
-export const iconRegistry = {
-${entries.join("\n")}
-} satisfies Record<string, Component<IconProps>>;
+// oxfmt-ignore
+const iconRegistry = { ${entries.join(", ")} } satisfies Record<string, Component<IconProps>>;
 
 const byName = new Map(Object.entries(iconRegistry));
 
