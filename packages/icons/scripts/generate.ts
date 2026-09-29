@@ -110,13 +110,10 @@ const renderFile = (pascal: string, kebab: string): string => {
     /shape/i.test(pascal) === true
       ? "// oxlint-disable anti-slop/no-shape-in-symbol-names -- required: Phosphor canonical icon name\n"
       : "";
-  const alias = GLOBAL_ALIAS_BLOCKLIST.includes(pascal)
-    ? ""
-    : `export const ${pascal} = ${pascal}Icon;\n`;
+  const alias = GLOBAL_ALIAS_BLOCKLIST.includes(pascal) ? "" : `, ${pascal} = ${pascal}Icon`;
   return `import { defineIcon } from "./IconBase.tsx"; // GENERATED FILE - DO NOT EDIT. Source: @phosphor-icons/core ${kebab}. Regenerate with \`pnpm --filter @tom/icons generate\`.
-${lintBanner}// oxfmt-ignore
-export const ${pascal}Icon = defineIcon({ ${entries.join(", ")} });
-${alias}`;
+${lintBanner}export const ${pascal}Icon = defineIcon({ ${entries.join(", ")} })${alias};
+`;
 };
 
 type SocialModule = {
