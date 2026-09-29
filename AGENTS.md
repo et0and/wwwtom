@@ -29,6 +29,7 @@ Improve existing code; avoid new abstractions.
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
 - `pnpm workflows` — regenerate `.github/workflows/*.yml` + `.github/actions/*/action.yml` from `@tom/workflows` definitions (do not hand-edit generated files)
+- `pnpm figma:generate | figma:dev | figma:build` — TomUI Figma kit (`packages/figma`); regenerate the registry/tokens, watch-build the plugin, or build it. Details: `packages/ui/src/storybook/stories/figma.mdx`
 - `pnpm test:update` — snapshot update (web, utils, icons, workflows)
 - `pnpm deploy` = shared → api → adapter → web → sophie (Alchemy; `ALCHEMY_STAGE` required)
 - `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:sophie`

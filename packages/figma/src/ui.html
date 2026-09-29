@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family: Inter, sans-serif;
+        font-size: 12px;
+        margin: 0;
+        padding: 12px;
+        color: var(--figma-color-text);
+        background: var(--figma-color-bg);
+      }
+      h1 {
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0 0 4px;
+      }
+      p {
+        margin: 0 0 12px;
+        color: var(--figma-color-text-secondary);
+      }
+      .toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 8px;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 10px;
+        color: var(--figma-color-text);
+        background: var(--figma-color-bg-secondary);
+      }
+      button.primary {
+        background: var(--figma-color-bg-brand);
+        color: var(--figma-color-text-onbrand);
+        width: 100%;
+        padding: 8px;
+        margin-top: 10px;
+      }
+      button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+      ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        max-height: 360px;
+        overflow-y: auto;
+        border: 1px solid var(--figma-color-border);
+        border-radius: 6px;
+      }
+      li {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--figma-color-border);
+      }
+      li:last-child {
+        border-bottom: none;
+      }
+      li span.count {
+        margin-left: auto;
+        color: var(--figma-color-text-secondary);
+      }
+      #status {
+        margin-top: 8px;
+        min-height: 16px;
+        color: var(--figma-color-text-secondary);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TomUI Kit Generator</h1>
+    <p>Select components, then generate Figma ComponentSets bound to TomUI variables.</p>
+    <div class="toolbar">
+      <button id="all" type="button">Select all</button>
+      <button id="none" type="button">Clear</button>
+    </div>
+    <ul id="list"></ul>
+    <button id="generate" class="primary" type="button" disabled>Generate</button>
+    <div id="status">Loading components…</div>
+    <script>
+      const list = document.getElementById("list");
+      const status = document.getElementById("status");
+      const generate = document.getElementById("generate");
+      const selected = new Set();
+
+      function updateButton() {
+        generate.disabled = selected.size === 0;
+        generate.textContent = selected.size > 0 ? `Generate ${selected.size}` : "Generate";
+      }
+
+      function render(components) {
+        list.innerHTML = "";
+        selected.clear();
+        for (const component of components) {
+          const item = document.createElement("li");
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.value = component.slug;
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) selected.add(component.slug);
+            else selected.delete(component.slug);
+            updateButton();
+          });
+          const name = document.createElement("span");
+          name.textContent = component.name;
+          const count = document.createElement("span");
+          count.className = "count";
+          count.textContent = String(component.variantCount);
+          item.append(checkbox, name, count);
+          list.append(item);
+        }
+        status.textContent = `${components.length} components ready.`;
+        updateButton();
+      }
+
+      document.getElementById("all").addEventListener("click", () => {
+        for (const checkbox of list.querySelectorAll("input")) {
+          checkbox.checked = true;
+          selected.add(checkbox.value);
+        }
+        updateButton();
+      });
+
+      document.getElementById("none").addEventListener("click", () => {
+        for (const checkbox of list.querySelectorAll("input")) checkbox.checked = false;
+        selected.clear();
+        updateButton();
+      });
+
+      generate.addEventListener("click", () => {
+        status.textContent = "Generating…";
+        parent.postMessage({ pluginMessage: { type: "generate", slugs: [...selected] } }, "*");
+      });
+
+      window.onmessage = (event) => {
+        const message = event.data.pluginMessage;
+        if (!message) return;
+        if (message.type === "registry") render(message.components);
+        if (message.type === "done")
+          status.textContent = `Generated ${message.count} component sets.`;
+        if (message.type === "failed") status.textContent = `Failed: ${message.message}`;
+      };
+
+      parent.postMessage({ pluginMessage: { type: "ready" } }, "*");
+    </script>
+  </body>
+</html>
