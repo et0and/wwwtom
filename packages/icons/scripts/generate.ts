@@ -93,17 +93,18 @@ const extractPaths = (kebab: string, weight: IconWeight): Array<IconPathEntry> =
   });
 };
 
-const renderPaths = (entries: Array<IconPathEntry>): string => {
-  const rendered = entries.map((entry) => {
-    const opacityLine = entry.opacity === undefined ? "" : `\n      opacity: "${entry.opacity}",`;
-    return `    {\n      d: "${entry.d}",${opacityLine}\n    }`;
-  });
-  return `[\n${rendered.join(",\n")},\n  ]`;
-};
+const renderEntries = (entries: Array<IconPathEntry>): string =>
+  `[${entries
+    .map((entry) =>
+      entry.opacity === undefined
+        ? `{ d: "${entry.d}" }`
+        : `{ d: "${entry.d}", opacity: "${entry.opacity}" }`,
+    )
+    .join(", ")}]`;
 
 const renderFile = (pascal: string, kebab: string): string => {
   const entries = ICON_WEIGHTS.map(
-    (weight) => `  ${weight}: ${renderPaths(extractPaths(kebab, weight))},`,
+    (weight) => `  ${weight}: ${renderEntries(extractPaths(kebab, weight))},`,
   );
   const lintBanner =
     /shape/i.test(pascal) === true
@@ -111,24 +112,13 @@ const renderFile = (pascal: string, kebab: string): string => {
       : "";
   const alias = GLOBAL_ALIAS_BLOCKLIST.includes(pascal)
     ? ""
-    : `\nexport const ${pascal} = ${pascal}Icon;\n`;
-  return `/**
- * GENERATED FILE - DO NOT EDIT.
- * Source: @phosphor-icons/core ${kebab}. Regenerate with \`pnpm --filter @tom/icons generate\`.
- */
-${lintBanner}
-import type { JSX } from "@solidjs/web";
-import { IconBase } from "./IconBase.tsx";
-import type { IconPathData, IconProps } from "./types.ts";
-
-const ${pascal}Paths: IconPathData = {
+    : `export const ${pascal} = ${pascal}Icon;\n`;
+  return `// GENERATED FILE - DO NOT EDIT. Source: @phosphor-icons/core ${kebab}. Regenerate with \`pnpm --filter @tom/icons generate\`.
+${lintBanner}import { defineIcon } from "./IconBase.tsx";
+// oxfmt-ignore
+export const ${pascal}Icon = defineIcon({
 ${entries.join("\n")}
-};
-
-/** ${pascal} icon in six Phosphor weights. Defaults to regular weight. */
-export function ${pascal}Icon(props: IconProps): JSX.Element {
-  return <IconBase paths={${pascal}Paths} {...props} />;
-}
+});
 ${alias}`;
 };
 
