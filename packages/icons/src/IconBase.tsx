@@ -8,6 +8,8 @@ import {
   iconSizePx,
   type IconBaseProps,
   type IconPath,
+  type IconPathData,
+  type IconProps,
 } from "./types.ts";
 
 /**
@@ -68,4 +70,12 @@ export function IconBase(props: IconBaseProps): JSX.Element {
       </g>
     </svg>
   );
+}
+
+/**
+ * Bind one icon's path data into a component. Generated icon modules call
+ * this so the per-icon wrapper lives in one place.
+ */
+export function defineIcon(paths: IconPathData): (props: IconProps) => JSX.Element {
+  return (props) => <IconBase paths={paths} {...props} />;
 }
