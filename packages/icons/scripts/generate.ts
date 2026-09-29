@@ -104,7 +104,7 @@ const renderEntries = (entries: Array<IconPathEntry>): string =>
 
 const renderFile = (pascal: string, kebab: string): string => {
   const entries = ICON_WEIGHTS.map(
-    (weight) => `  ${weight}: ${renderEntries(extractPaths(kebab, weight))},`,
+    (weight) => `${weight}: ${renderEntries(extractPaths(kebab, weight))}`,
   );
   const lintBanner =
     /shape/i.test(pascal) === true
@@ -113,12 +113,9 @@ const renderFile = (pascal: string, kebab: string): string => {
   const alias = GLOBAL_ALIAS_BLOCKLIST.includes(pascal)
     ? ""
     : `export const ${pascal} = ${pascal}Icon;\n`;
-  return `// GENERATED FILE - DO NOT EDIT. Source: @phosphor-icons/core ${kebab}. Regenerate with \`pnpm --filter @tom/icons generate\`.
-${lintBanner}import { defineIcon } from "./IconBase.tsx";
-// oxfmt-ignore
-export const ${pascal}Icon = defineIcon({
-${entries.join("\n")}
-});
+  return `import { defineIcon } from "./IconBase.tsx"; // GENERATED FILE - DO NOT EDIT. Source: @phosphor-icons/core ${kebab}. Regenerate with \`pnpm --filter @tom/icons generate\`.
+${lintBanner}// oxfmt-ignore
+export const ${pascal}Icon = defineIcon({ ${entries.join(", ")} });
 ${alias}`;
 };
 
