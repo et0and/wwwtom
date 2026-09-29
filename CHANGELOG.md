@@ -1,3 +1,10 @@
+## [3.11.1](https://github.com/et0and/wwwtom/compare/v3.11.0...v3.11.1) (2026-09-29)
+
+
+### Bug Fixes
+
+* **ui:** restore iconRegistry export in storybook generator ([14e29ab](https://github.com/et0and/wwwtom/commit/14e29ab8e4d810ced87e7a58e29a760803e97fc7))
+
 # [3.11.0](https://github.com/et0and/wwwtom/compare/v3.10.1...v3.11.0) (2026-09-24)
 
 
