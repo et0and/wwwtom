@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CmsPost, CmsWork } from "@tom/schemas/cms";
 import { HistoryPanel } from "../HistoryPanel";
@@ -57,10 +58,10 @@ describe("HistoryPanel", () => {
       <HistoryPanel {...panelProps({ onRestored: (item) => saved.push(item) })} />
     ));
     await findByText("V2");
-    fireEvent.click(getByText("V1"));
+    await userEvent.click(getByText("V1"));
     const restore = await findByText("Restore this version");
     expect(fetchMock).toHaveBeenCalledTimes(2);
-    fireEvent.click(restore);
+    await userEvent.click(restore);
     await vi.waitFor(() => expect(saved).toHaveLength(1));
     expect(saved[0]?.title).toBe("V1");
     const restoreCall = fetchMock.mock.calls[2];

@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { createMemo, createSignal } from "solid-js";
 import { describe, expect, it } from "vitest";
 
@@ -42,9 +43,9 @@ describe("solid reactivity sanity", () => {
       </button>
     );
     const { findByRole } = render(() => <Probe />);
-    fireEvent.click(await findByRole("button"));
+    await userEvent.click(await findByRole("button"));
     expect(await findByRole("button")).toHaveTextContent("1");
-    fireEvent.click(await findByRole("button"));
+    await userEvent.click(await findByRole("button"));
     expect(await findByRole("button")).toHaveTextContent("2");
   });
 });

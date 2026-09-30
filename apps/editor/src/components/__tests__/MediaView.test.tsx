@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ContentKind } from "../../lib/content";
 import { MediaView } from "../MediaView";
@@ -34,7 +35,7 @@ describe("MediaView", () => {
     ));
     await findByText("old.webp");
     await findByText("new.webp");
-    fireEvent.input(await findByLabelText("Search media"), { target: { value: "new" } });
+    await userEvent.type(await findByLabelText("Search media"), "new");
     await vi.waitFor(() => expect(queryByText("old.webp")).toBeNull());
     expect(queryByText("new.webp")).not.toBeNull();
   });
@@ -49,11 +50,11 @@ describe("MediaView", () => {
       <MediaView onEdit={(kind, slug) => edits.push({ kind, slug })} />
     ));
     await findByText("hero.webp");
-    fireEvent.click(await findByRole("button", { name: "Usage" }));
+    await userEvent.click(await findByRole("button", { name: "Usage" }));
     await findByText("Post: Hello World");
-    fireEvent.click(await findByRole("button", { name: "Post: Hello World" }));
+    await userEvent.click(await findByRole("button", { name: "Post: Hello World" }));
     expect(edits).toEqual([{ kind: "posts", slug: "hello-world" }]);
-    fireEvent.click(await findByRole("button", { name: "Delete" }));
+    await userEvent.click(await findByRole("button", { name: "Delete" }));
     await vi.waitFor(() => expect(queryByText("hero.webp")).toBeNull());
     const [deleteUrl, deleteInit] = fetchMock.mock.calls[2] as [string, RequestInit];
     expect(deleteUrl).toBe("http://localhost:8788/content/media/media-1");

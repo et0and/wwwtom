@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PostList } from "../PostList";
 import { fetchMock, jsonResponse, listBody, useFetchMock } from "../../test/helpers";
@@ -41,7 +42,7 @@ describe("PostList", () => {
     ));
     const row = await findByText("Hello World");
     expect(row.textContent ?? "").toContain("Hello World");
-    fireEvent.click(row.closest("button") ?? row);
+    await userEvent.click(row.closest("button") ?? row);
     expect(edits).toEqual([{ kind: "posts", slug: "hello-world" }]);
   });
 
@@ -51,7 +52,7 @@ describe("PostList", () => {
     const { findByRole } = render(() => (
       <PostList onEdit={(kind, slug) => edits.push({ kind, slug })} />
     ));
-    fireEvent.click(await findByRole("button", { name: "New" }));
+    await userEvent.click(await findByRole("button", { name: "New" }));
     expect(edits).toEqual([{ kind: "posts", slug: null }]);
   });
 
@@ -61,7 +62,7 @@ describe("PostList", () => {
       .mockResolvedValueOnce(jsonResponse(listBody([])));
     const { findByRole, findByText } = render(() => <PostList onEdit={() => undefined} />);
     await findByText("Hello World");
-    fireEvent.click(await findByRole("button", { name: "Works" }));
+    await userEvent.click(await findByRole("button", { name: "Works" }));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const [worksUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(worksUrl).toBe("http://localhost:8788/content/works?status=all&page=1&pageSize=10");
@@ -87,7 +88,7 @@ describe("PostList", () => {
       .mockResolvedValueOnce(jsonResponse(listBody([])));
     const { findByRole, findByText } = render(() => <PostList onEdit={() => undefined} />);
     await findByText("Hello World");
-    fireEvent.click(await findByRole("button", { name: "Pages" }));
+    await userEvent.click(await findByRole("button", { name: "Pages" }));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const [pagesUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(pagesUrl).toBe(
@@ -111,7 +112,7 @@ describe("PostList", () => {
       .mockResolvedValueOnce(jsonResponse(pageTwo));
     const { findByRole, findByText } = render(() => <PostList onEdit={() => undefined} />);
     await findByText("Hello World");
-    fireEvent.click(await findByRole("button", { name: "Page 2" }));
+    await userEvent.click(await findByRole("button", { name: "Page 2" }));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const [pageTwoUrl] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(pageTwoUrl).toBe("http://localhost:8788/content/posts?status=all&page=2&pageSize=10");
@@ -148,7 +149,7 @@ describe("PostList", () => {
       .mockResolvedValueOnce(jsonResponse(listBody([])));
     vi.spyOn(window, "confirm").mockReturnValue(true);
     const { findByRole } = render(() => <PostList onEdit={() => undefined} />);
-    fireEvent.click(await findByRole("button", { name: "Delete hello-world" }));
+    await userEvent.click(await findByRole("button", { name: "Delete hello-world" }));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
     const [, deleteInit] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(deleteInit.method).toBe("DELETE");
@@ -169,7 +170,7 @@ describe("PostList", () => {
       <PostList onEdit={() => undefined} />
     ));
     await findByText("Hello World");
-    fireEvent.click(await findByRole("button", { name: "Page 2" }));
+    await userEvent.click(await findByRole("button", { name: "Page 2" }));
     expect(await findByText("Editor request failed: 401")).toBeInTheDocument();
     expect(queryByText("Hello World")).toBeNull();
     expect(queryByText("Nothing here yet.")).toBeNull();

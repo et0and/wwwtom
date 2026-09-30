@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { EditorView } from "../EditorView";
 import {
@@ -56,10 +57,10 @@ describe("EditorView", { timeout: 30_000 }, () => {
       const { findByLabelText, findByRole, findByText } = render(() => (
         <EditorView kind="posts" slug={null} onExit={onExit} />
       ));
-      fireEvent.input(await findByLabelText("Title"), { target: { value: "Hello World" } });
-      fireEvent.click(await findByRole("button", { name: "Use title" }));
+      await userEvent.type(await findByLabelText("Title"), "Hello World");
+      await userEvent.click(await findByRole("button", { name: "Use title" }));
       expect(((await findByLabelText("Slug")) as HTMLInputElement).value).toBe("hello-world");
-      fireEvent.click(await findByRole("button", { name: "Create" }));
+      await userEvent.click(await findByRole("button", { name: "Create" }));
       await findByText("Saved");
       expect(fetchMock).toHaveBeenCalledTimes(2);
       const [saveUrl, saveInit] = fetchMock.mock.calls[1] as [string, RequestInit];
@@ -75,11 +76,11 @@ describe("EditorView", { timeout: 30_000 }, () => {
       const { findByLabelText, findByRole, findByText } = render(() => (
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
-      fireEvent.input(await findByLabelText("Title"), { target: { value: "Hello World" } });
-      fireEvent.click(await findByRole("button", { name: "Use title" }));
-      fireEvent.click(await findByRole("button", { name: "</>" }));
+      await userEvent.type(await findByLabelText("Title"), "Hello World");
+      await userEvent.click(await findByRole("button", { name: "Use title" }));
+      await userEvent.click(await findByRole("button", { name: "</>" }));
       expect(await findByLabelText("Language")).toBeInTheDocument();
-      fireEvent.click(await findByRole("button", { name: "Create" }));
+      await userEvent.click(await findByRole("button", { name: "Create" }));
       await findByText("Saved");
       expect(JSON.stringify(saveBody(1))).toContain(`"language":"text"`);
     });
@@ -89,7 +90,7 @@ describe("EditorView", { timeout: 30_000 }, () => {
       const { findByRole, findByText } = render(() => (
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
-      fireEvent.click(await findByRole("button", { name: "Create" }));
+      await userEvent.click(await findByRole("button", { name: "Create" }));
       expect(await findByText("Invalid post data")).toBeInTheDocument();
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });
@@ -108,8 +109,9 @@ describe("EditorView", { timeout: 30_000 }, () => {
       await vi.waitFor(() =>
         expect(container.querySelector(".tiptap")?.textContent).toContain("Hello"),
       );
-      fireEvent.input(await findByLabelText("Title"), { target: { value: "Hello Again" } });
-      fireEvent.click(await findByRole("button", { name: "Save" }));
+      await userEvent.clear(await findByLabelText("Title"));
+      await userEvent.type(await findByLabelText("Title"), "Hello Again");
+      await userEvent.click(await findByRole("button", { name: "Save" }));
       await findByText("Saved");
       const [saveUrl, saveInit] = fetchMock.mock.calls[2] as [string, RequestInit];
       expect(saveUrl).toBe("http://localhost:8788/content/posts/hello-world");
@@ -125,9 +127,9 @@ describe("EditorView", { timeout: 30_000 }, () => {
       const { findByRole, findByLabelText } = render(() => (
         <EditorView kind="posts" slug="hello-world" onExit={() => undefined} />
       ));
-      fireEvent.click(await findByRole("button", { name: /Categories/ }));
-      fireEvent.click(await findByLabelText("Notes"));
-      fireEvent.click(await findByRole("button", { name: "Save" }));
+      await userEvent.click(await findByRole("button", { name: /Categories/ }));
+      await userEvent.click(await findByLabelText("Notes"));
+      await userEvent.click(await findByRole("button", { name: "Save" }));
       await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
       expect(saveBody(2).categoryIds).toEqual(["cat-1", "cat-2"]);
     });
@@ -142,7 +144,7 @@ describe("EditorView", { timeout: 30_000 }, () => {
       const { findByRole } = render(() => (
         <EditorView kind="posts" slug="hello-world" onExit={onExit} />
       ));
-      fireEvent.click(await findByRole("button", { name: "Delete" }));
+      await userEvent.click(await findByRole("button", { name: "Delete" }));
       await vi.waitFor(() => expect(onExit).toHaveBeenCalled());
       const [deleteUrl, deleteInit] = fetchMock.mock.calls[2] as [string, RequestInit];
       expect(deleteUrl).toBe("http://localhost:8788/content/posts/hello-world");
@@ -156,7 +158,7 @@ describe("EditorView", { timeout: 30_000 }, () => {
         <EditorView kind="posts" slug="nope" onExit={onExit} />
       ));
       expect(await findByText("Editor request failed: 404")).toBeInTheDocument();
-      fireEvent.click(await findByRole("button", { name: "Back" }));
+      await userEvent.click(await findByRole("button", { name: "Back" }));
       expect(onExit).toHaveBeenCalled();
     });
 
@@ -187,9 +189,9 @@ describe("EditorView", { timeout: 30_000 }, () => {
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
       await vi.waitFor(() => expect(container.querySelector(".tiptap")).not.toBeNull());
-      fireEvent.click(await findByRole("button", { name: "Arena" }));
+      await userEvent.click(await findByRole("button", { name: "Arena" }));
       expect(await findByRole("dialog")).toBeInTheDocument();
-      fireEvent.click(await findByRole("button", { name: "Cancel" }));
+      await userEvent.click(await findByRole("button", { name: "Cancel" }));
       await vi.waitFor(() => expect(queryByRole("dialog")).toBeNull());
       expect(container.querySelector(".tiptap-editor div[data-arena]")).toBeNull();
     });
@@ -204,13 +206,11 @@ describe("EditorView", { timeout: 30_000 }, () => {
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
       await vi.waitFor(() => expect(container.querySelector(".tiptap")).not.toBeNull());
-      fireEvent.click(await findByRole("button", { name: "Media" }));
+      await userEvent.click(await findByRole("button", { name: "Media" }));
       const picker = (await findByLabelText("File")) as HTMLInputElement;
-      fireEvent.change(picker, {
-        target: { files: [new File(["bytes"], "a.png", { type: "image/png" })] },
-      });
-      fireEvent.input(await findByLabelText("Alt text"), { target: { value: "Alt" } });
-      fireEvent.click(await findByRole("button", { name: "Upload and insert" }));
+      await userEvent.upload(picker, new File(["bytes"], "a.png", { type: "image/png" }));
+      await userEvent.type(await findByLabelText("Alt text"), "Alt");
+      await userEvent.click(await findByRole("button", { name: "Upload and insert" }));
       await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(3));
       const [uploadUrl, uploadInit] = fetchMock.mock.calls[2] as [string, RequestInit];
       expect(uploadUrl).toBe("http://localhost:8788/content/media");
@@ -227,8 +227,8 @@ describe("EditorView", { timeout: 30_000 }, () => {
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
       await vi.waitFor(() => expect(container.querySelector(".tiptap")).not.toBeNull());
-      fireEvent.click(await findByRole("button", { name: "Media" }));
-      fireEvent.click(await findByText("picked.webp"));
+      await userEvent.click(await findByRole("button", { name: "Media" }));
+      await userEvent.click(await findByText("picked.webp"));
       await vi.waitFor(() =>
         expect(container.querySelector(".tiptap-editor figure img")).not.toBeNull(),
       );
@@ -242,9 +242,9 @@ describe("EditorView", { timeout: 30_000 }, () => {
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
       await vi.waitFor(() => expect(container.querySelector(".tiptap")).not.toBeNull());
-      fireEvent.click(await findByRole("button", { name: "Arena" }));
-      fireEvent.input(await findByLabelText("Channel slug"), { target: { value: "toms-place" } });
-      fireEvent.click(await findByRole("button", { name: "Insert" }));
+      await userEvent.click(await findByRole("button", { name: "Arena" }));
+      await userEvent.type(await findByLabelText("Channel slug"), "toms-place");
+      await userEvent.click(await findByRole("button", { name: "Insert" }));
       await vi.waitFor(() => {
         const node = container.querySelector(
           '.tiptap-editor div[data-arena="toms-place"]',
@@ -258,9 +258,9 @@ describe("EditorView", { timeout: 30_000 }, () => {
       const { findByLabelText, findByRole, findByText } = render(() => (
         <EditorView kind="posts" slug={null} onExit={() => undefined} />
       ));
-      fireEvent.click(await findByRole("button", { name: "Link" }));
-      fireEvent.input(await findByLabelText("URL"), { target: { value: "javascript:alert(1)" } });
-      fireEvent.click(await findByRole("button", { name: "Apply" }));
+      await userEvent.click(await findByRole("button", { name: "Link" }));
+      await userEvent.type(await findByLabelText("URL"), "javascript:alert(1)");
+      await userEvent.click(await findByRole("button", { name: "Apply" }));
       expect(await findByText("Use an http(s), mailto, /, or # link")).toBeInTheDocument();
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });

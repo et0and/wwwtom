@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { Effect } from "effect";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { SignInButton } from "../SignInButton";
@@ -23,7 +24,7 @@ describe("SignInButton", () => {
     expect(button).not.toBeDisabled();
     expect(rendered.queryByRole("status")).toBeNull();
 
-    fireEvent.click(button);
+    await userEvent.click(button);
 
     await rendered.findByRole("status");
     expect(button).toBeDisabled();
