@@ -30,6 +30,8 @@ export type OtelConfig = {
 
 export type LogContext = {
   readonly serviceName: string;
+  /** Alchemy stage (staging, pr-*, perf-*), on OTLP resources + annotations. */
+  readonly stage?: string;
   readonly requestId?: string;
   readonly sessionId?: string;
   readonly userId?: string;
@@ -79,6 +81,7 @@ export const logLevelFromEnv = (env: CloudflareEnv): "Debug" | "Info" =>
   env.LOG_LEVEL === "Debug" ? "Debug" : "Info";
 
 type LogAnnotations = {
+  stage?: string;
   requestId?: string;
   sessionId?: string;
   userId?: string;
@@ -88,12 +91,26 @@ type LogAnnotations = {
 };
 
 const logAnnotations = (context: LogContext): LogAnnotations => ({
+  ...(context.stage && { stage: context.stage }),
   ...(context.requestId && { requestId: context.requestId }),
   ...(context.sessionId && { sessionId: context.sessionId }),
   ...(context.userId && { userId: context.userId }),
   ...(context.method && { method: context.method }),
   ...(context.path && { path: context.path }),
   ...(context.url && { url: context.url }),
+});
+
+/**
+ * OTLP resource identifying a worker and its Alchemy stage in Axiom. The
+ * `stage` attribute lets per-stage queries separate candidate and baseline
+ * deployments that share a service name (e.g. `tom-api`).
+ */
+export const otelResource = (context: LogContext) => ({
+  serviceName: context.serviceName,
+  attributes: {
+    app: context.serviceName,
+    ...(context.stage && { stage: context.stage }),
+  },
 });
 
 /**
@@ -105,10 +122,7 @@ const logAnnotations = (context: LogContext): LogAnnotations => ({
 const makeLoggingLayer = (context: LogContext) => {
   const otel = context.otel;
   if (!otel) return Logger.layer([Logger.consoleStructured]);
-  const resource = {
-    serviceName: context.serviceName,
-    attributes: { app: context.serviceName },
-  };
+  const resource = otelResource(context);
   const commonHeaders = { Authorization: otel.authorization };
   return Layer.mergeAll(
     Logger.layer([

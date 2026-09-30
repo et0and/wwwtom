@@ -192,6 +192,48 @@ without a matching token are rejected with 401.
 `DATABASE_URL` is also used to configure the Hyperdrive origin. At runtime,
 web code prefers the `HYPERDRIVE` binding’s connection string.
 
+## Performance telemetry
+
+Stages listed in `otelEnabledStages` (production, staging, `pr-*`, `perf-*`)
+bind the Axiom ingest token and export OTLP traces/logs with a `stage`
+resource attribute, so the performance harness can compare a candidate
+stage against `staging`. Workers on other stages stay console-only.
+
+The shared stack also mints a read-only Axiom query token
+(`wwwtom-otel-query`) and mirrors it into the Secrets Store as
+`AXIOM_QUERY_TOKEN`. Copy that value from the Cloudflare Secrets Store into
+the GitHub Actions repository secret `AXIOM_QUERY_TOKEN`; the perf workflow
+uses it to run APL queries. Querying Cloudflare Workers analytics
+additionally needs a token with Account Analytics: Read (the existing
+`CLOUDFLARE_API_TOKEN`, or a dedicated `CLOUDFLARE_ANALYTICS_TOKEN`).
+
+GitHub runner IPs trip Cloudflare bot protection, so the perf probe needs a
+WAF skip rule for a secret `x-perf-probe` header on non-production hosts
+(dashboard prerequisite; see `apps/e2e/README.md` for the same restriction).
+
+### Performance harness
+
+`infra/perf` compares a candidate stage against `staging` on server-side
+metrics: Workers invocation CPU/wall time, errors, and subrequests (GraphQL
+Analytics API) plus span p95 per operation (Axiom, filtered by the `stage`
+annotation). It probes both stages with the same read-only request mix in one
+window and reports medians and deltas; thresholds live in
+`infra/perf/compare.ts`.
+
+- PR run: `pnpm --filter @tom/infra perf:pr` with `PULL_REQUEST` (or
+  `PERF_CANDIDATE_STAGE`), `CLOUDFLARE_ACCOUNT_ID`, and
+  `CLOUDFLARE_ANALYTICS_TOKEN` (or `CLOUDFLARE_API_TOKEN`). Set
+  `AXIOM_QUERY_TOKEN` for span latency and `PERF_PROBE_TOKEN` when the WAF
+  rule is active. The report is written to `perf-report.json` and
+  `perf-report.md`, logged, and appended to `GITHUB_STEP_SUMMARY` when set.
+- Preview workflow: the `perf` job runs the harness automatically after the
+  preview deploy (same `pr-<n>` stage), updates one marker comment per PR
+  with the report, and uploads the JSON artifact for 14 days.
+- Manual isolated run: `PERF_LIVE=1 ALCHEMY_TEST_STAGE=perf-local pnpm
+--filter @tom/infra perf:live` deploys the candidate stacks with the
+  Alchemy Test API, measures them, then destroys them. The `perf-` prefix is
+  required for OTLP export.
+
 ## Previews
 
 When `PULL_REQUEST` is set, the web, editor, and sophie stacks post or

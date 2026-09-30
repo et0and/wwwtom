@@ -3,7 +3,7 @@ import * as GitHub from "alchemy/GitHub";
 import { Effect, Layer } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost } from "../shared.run.ts";
+import { stageHost } from "../utils/stage-hosts.ts";
 import { previewComment } from "../utils/github/preview-comment.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;

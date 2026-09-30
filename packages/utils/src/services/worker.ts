@@ -124,6 +124,7 @@ export type RequestContext = {
   readonly path?: string;
   readonly url?: string;
   readonly logLevel?: "Debug" | "Info";
+  readonly stage?: string;
   readonly otel?: OtelConfig;
 };
 

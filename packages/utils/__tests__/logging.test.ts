@@ -1,7 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
-import { otelConfigFromResolvedEnv, withLogging } from "../src/services/logging";
-import { attachRequestContext, getRequestContext } from "../src/services/worker";
+import { otelConfigFromResolvedEnv, otelResource, withLogging } from "../src/services/logging";
+import {
+  attachRequestContext,
+  getRequestContext,
+  logContextFromRequest,
+} from "../src/services/worker";
 import { readCloudflareEnv } from "../src/services/config";
 
 type ConsoleLogRecord = {
@@ -93,6 +97,16 @@ describe("withLogging", () => {
     });
   });
 
+  it("carries the stage from the request context into the log context", () => {
+    const request = new Request("https://example.com/guestbook");
+    attachRequestContext(request, { requestId: "req-1", stage: "pr-123" });
+    expect(logContextFromRequest(request, "tom-api")).toMatchObject({
+      serviceName: "tom-api",
+      requestId: "req-1",
+      stage: "pr-123",
+    });
+  });
+
   it("includes Debug logs when logLevel is Debug", async () => {
     const logs = captureLogs();
     await Effect.runPromise(
@@ -139,6 +153,27 @@ describe("withLogging", () => {
     expect(urls).toContain("https://example.com/v1/logs");
     expect(urls).toContain("https://example.com/v1/traces");
     expect(fetches.every((f) => f.authorization === "Bearer token")).toBe(true);
+  });
+
+  it("annotates logs and spans with the stage", async () => {
+    const logs = captureLogs();
+    await Effect.runPromise(
+      withLogging(Effect.logInfo("hello"), { serviceName: "tom-api", stage: "pr-123" }),
+    );
+    expect(logs[0]?.annotations).toMatchObject({ stage: "pr-123" });
+
+    const annotations = await Effect.runPromise(
+      withLogging(Effect.spanAnnotations, { serviceName: "tom-api", stage: "pr-123" }),
+    );
+    expect(annotations).toMatchObject({ stage: "pr-123" });
+  });
+
+  it("stamps the stage on the OTLP resource", () => {
+    expect(otelResource({ serviceName: "tom-api", stage: "staging" })).toEqual({
+      serviceName: "tom-api",
+      attributes: { app: "tom-api", stage: "staging" },
+    });
+    expect(otelResource({ serviceName: "tom-api" }).attributes).toEqual({ app: "tom-api" });
   });
 });
 
