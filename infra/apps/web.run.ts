@@ -8,7 +8,8 @@ import { retain } from "alchemy/RemovalPolicy";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
+import { otelEnabledStages, stageHost, stageWebHost } from "../utils/stage-hosts.ts";
+import { tomSecrets } from "../shared.run.ts";
 import { previewComment } from "../utils/github/preview-comment.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
@@ -18,13 +19,18 @@ export const web = Effect.gen(function* () {
   const isAlchemyDev = yield* ALCHEMY_DEV;
   const adapterHost = stageHost(stage, "adapter");
 
-  // The Axiom ingest token is minted by the shared stack (production only);
-  // reference it there instead of re-registering, which would fight over
-  // dataset ownership. Secrets Store bindings are unsupported in local
+  // The Axiom ingest token is minted by the production stage of the shared
+  // stack; reference that stage explicitly, because a ref without a `stage`
+  // resolves in the current stage, where the production-only secret does not
+  // exist. Only stages in `otelEnabledStages` export telemetry (production,
+  // staging, pr-*/perf-*). Secrets Store bindings are unsupported in local
   // workerd mode, so skip the ref under `alchemy dev`.
   const axiomToken =
-    stage === "production" && !isAlchemyDev
-      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
+    otelEnabledStages(stage) && !isAlchemyDev
+      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", {
+          stack: "wwwtom",
+          stage: "production",
+        })
       : undefined;
 
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
@@ -37,6 +43,7 @@ export const web = Effect.gen(function* () {
       : { name: `wwwtom-${stage}`, domain: stageWebHost(stage) }),
     env: {
       NODE_ENV: "production",
+      TOM_STAGE: stage,
       TOM_SECRETS: tomSecrets,
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       TOM_RATE_LIMIT_KV: webKv,

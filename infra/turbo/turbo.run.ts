@@ -3,7 +3,8 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost, tomSecrets, workerObservability } from "../shared.run.ts";
+import { stageHost } from "../utils/stage-hosts.ts";
+import { tomSecrets, workerObservability } from "../shared.run.ts";
 import { turboKv } from "../kv/turbo.kv.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 

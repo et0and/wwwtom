@@ -67,6 +67,7 @@ export const app = new Elysia({
     attachRequestContext(request, {
       requestId,
       logLevel: logLevelFromEnv(env),
+      ...(env.TOM_STAGE && { stage: env.TOM_STAGE }),
       ...(otel && { otel }),
     });
   })

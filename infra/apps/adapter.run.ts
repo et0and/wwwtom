@@ -5,13 +5,13 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import {
+  otelEnabledStages,
   stageHost,
   stageWebHost,
   sophieStageHost,
   sophieWebHost,
-  tomSecrets,
-  workerObservability,
-} from "../shared.run.ts";
+} from "../utils/stage-hosts.ts";
+import { tomSecrets, workerObservability } from "../shared.run.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
 import { sophieQueue } from "../queues/sophie.queue.ts";
@@ -91,13 +91,18 @@ export const adapter = Effect.gen(function* () {
       }
     : {};
 
-  // The Axiom ingest token is minted by the shared stack (production only);
-  // reference it there instead of re-registering, which would fight over
-  // dataset ownership. Secrets Store bindings are unsupported in local
+  // The Axiom ingest token is minted by the production stage of the shared
+  // stack; reference that stage explicitly, because a ref without a `stage`
+  // resolves in the current stage, where the production-only secret does not
+  // exist. Only stages in `otelEnabledStages` export telemetry (production,
+  // staging, pr-*/perf-*). Secrets Store bindings are unsupported in local
   // workerd mode, so skip the ref under `alchemy dev`.
   const axiomToken =
-    stage === "production" && !isAlchemyDev
-      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
+    otelEnabledStages(stage) && !isAlchemyDev
+      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", {
+          stack: "wwwtom",
+          stage: "production",
+        })
       : undefined;
 
   const worker = yield* Cloudflare.Worker("wwwtom-adapter", {

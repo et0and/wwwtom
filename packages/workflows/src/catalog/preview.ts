@@ -41,3 +41,17 @@ export const previewEnv = (stage: string): Env => ({
   ALCHEMY_ENV_FILE: "/dev/null",
   GITHUB_TOKEN: ex("github.token"),
 });
+
+/**
+ * Perf-harness credentials. Analytics prefers the dedicated token and falls
+ * back to the deploy token; the Axiom query token and the WAF probe token are
+ * optional until the manual prerequisites are done.
+ */
+export const perfEnv = (stage: string): Env => ({
+  ...previewEnv(stage),
+  CLOUDFLARE_ANALYTICS_TOKEN: secret("CLOUDFLARE_ANALYTICS_TOKEN"),
+  AXIOM_QUERY_TOKEN: secret("AXIOM_QUERY_TOKEN"),
+  PERF_PROBE_TOKEN: secret("PERF_PROBE_TOKEN"),
+  PERF_REPORT_PATH: "infra/perf-report.json",
+  PERF_MARKDOWN_PATH: "infra/perf-report.md",
+});

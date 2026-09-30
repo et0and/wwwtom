@@ -47,33 +47,6 @@ export const workerObservability = {
 } as const;
 
 /**
- * Deterministic hostname for a per-stage app subdomain.
- * Production uses the bare subdomain (adapter.tom.so); other stages are
- * prefixed with the stage name (dev-adapter.tom.so).
- */
-export const stageHost = (stage: string, sub: string): string =>
-  stage === "production" ? `${sub}.tom.so` : `${stage}-${sub}.tom.so`;
-
-/**
- * Hostname for the web app, which is an apex domain in production.
- */
-export const stageWebHost = (stage: string): string =>
-  stage === "production" ? "tom.so" : `${stage}-web.tom.so`;
-
-/**
- * Deterministic hostname for a per-stage Sophie subdomain.
- * Production uses sophie.st hosts; other stages prefix the stage name.
- */
-export const sophieStageHost = (stage: string, sub: string): string =>
-  stage === "production" ? `${sub}.sophie.st` : `${stage}-${sub}.sophie.st`;
-
-/**
- * Hostname for the Sophie web app (apex in production).
- */
-export const sophieWebHost = (stage: string): string =>
-  stage === "production" ? "sophie.st" : `${stage}-sophie.sophie.st`;
-
-/**
  * Axiom datasets and ingest token for OpenTelemetry shipping, owned by the
  * production stage (see the shared stack below).
  *
@@ -113,6 +86,23 @@ export const axiomResources = Effect.gen(function* () {
       "tom-logs": { ingest: ["create"] },
     },
   }).pipe(retain());
+  // Read-only query token for the performance harness
+  // (GitHub Actions secret AXIOM_QUERY_TOKEN). Ingest tokens cannot run APL
+  // queries, and Axiom never echoes a minted token back, so mirror it into
+  // the Secrets Store to keep the value retrievable.
+  const queryToken = yield* Axiom.ApiToken("wwwtom-otel-query", {
+    name: "wwwtom-otel-query",
+    description: "APL query access to the wwwtom traces and logs datasets",
+    datasetCapabilities: {
+      "tom-traces": { query: ["read"] },
+      "tom-logs": { query: ["read"] },
+    },
+  }).pipe(retain());
+  const axiomQueryToken = yield* Cloudflare.SecretsStore.Secret("AXIOM_QUERY_TOKEN", {
+    store,
+    value: queryToken.token,
+    comment: "APL query token for tom-traces/tom-logs, used by the perf harness",
+  }).pipe(retain());
   // Workers bind this same store key across stacks via
   // Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" });
   // the runtime resolves the binding in readCloudflareEnv. AXIOM_TOKEN no
@@ -123,7 +113,7 @@ export const axiomResources = Effect.gen(function* () {
     comment: "wwwtom OTLP ingest token minted by the Axiom provider",
   }).pipe(retain());
 
-  return { traces, logs, ingestToken, axiomToken };
+  return { traces, logs, ingestToken, axiomToken, queryToken, axiomQueryToken };
 }).pipe(adopt(true));
 
 export const tomSecrets = Effect.gen(function* () {
@@ -173,6 +163,8 @@ export default Stack(
           logs: axiom.logs.name,
           ingestToken: axiom.ingestToken.name,
           axiomToken: axiom.axiomToken.secretName,
+          queryToken: axiom.queryToken.name,
+          axiomQueryToken: axiom.axiomQueryToken.secretName,
         },
       }),
     };

@@ -17,6 +17,8 @@
     "dev:api": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev apps/api.run.ts",
     "dev:runner": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev runner/runner.run.ts",
     "dev:turbo": "node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js dev turbo/turbo.run.ts",
+    "perf:pr": "tsx perf/main.ts",
+    "perf:live": "PERF_LIVE=1 node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/vitest/vitest.mjs run perf/__tests__/live.test.ts",
     "destroy": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy shared.run.ts --stage $ALCHEMY_STAGE",
     "destroy:shared": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy shared.run.ts --stage $ALCHEMY_STAGE",
     "destroy:api": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/api.run.ts --stage $ALCHEMY_STAGE",
@@ -45,7 +47,9 @@
     "vite": "^8.1.5"
   },
   "devDependencies": {
+    "@effect/vitest": "catalog:",
     "@types/node": "^24.9.1",
+    "tsx": "catalog:",
     "vitest": "catalog:"
   }
 }

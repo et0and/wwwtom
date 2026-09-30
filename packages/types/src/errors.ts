@@ -121,6 +121,11 @@ export class InfrastructureConfigError extends Schema.TaggedError<Infrastructure
   },
 ) {}
 
+export class PerformanceHarnessError extends Schema.TaggedError<PerformanceHarnessError>()(
+  "PerformanceHarnessError",
+  messageCauseFields,
+) {}
+
 export class SecretsError extends Schema.TaggedError<SecretsError>()(
   "SecretsError",
   messageCauseFields,

@@ -93,6 +93,7 @@ export const app = new Elysia({
       ),
       ...(userId && { userId }),
       logLevel: logLevelFromEnv(env),
+      ...(env.TOM_STAGE && { stage: env.TOM_STAGE }),
       ...(otel && { otel }),
     });
   })

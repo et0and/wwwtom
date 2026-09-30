@@ -4,7 +4,7 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Layer } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost } from "../shared.run.ts";
+import { stageHost } from "../utils/stage-hosts.ts";
 import { previewComment } from "../utils/github/preview-comment.ts";
 
 /**

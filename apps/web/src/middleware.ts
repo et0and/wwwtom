@@ -15,6 +15,7 @@ export default async function middleware(request: Request, next: () => Promise<R
   const env: CloudflareEnv = {
     ...(process.env.LOG_LEVEL !== undefined && { LOG_LEVEL: process.env.LOG_LEVEL }),
     ...(process.env.AXIOM_TOKEN !== undefined && { AXIOM_TOKEN: process.env.AXIOM_TOKEN }),
+    ...(process.env.TOM_STAGE !== undefined && { TOM_STAGE: process.env.TOM_STAGE }),
     ...(process.env.OTEL_ENDPOINT !== undefined && { OTEL_ENDPOINT: process.env.OTEL_ENDPOINT }),
     ...(process.env.OTEL_TRACES_DATASET !== undefined && {
       OTEL_TRACES_DATASET: process.env.OTEL_TRACES_DATASET,
@@ -27,6 +28,7 @@ export default async function middleware(request: Request, next: () => Promise<R
 
   const logContext: LogContext = {
     serviceName: "tom-web",
+    ...(env.TOM_STAGE && { stage: env.TOM_STAGE }),
     requestId: crypto.randomUUID(),
     method: request.method,
     path: new URL(request.url).pathname,
