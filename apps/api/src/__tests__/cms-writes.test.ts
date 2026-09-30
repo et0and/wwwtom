@@ -1,24 +1,35 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Effect } from "effect";
+import { describe, expect, it, vi } from "vitest";
 import type { CmsCategoryId, CmsPostInput, CmsSlug, CmsWorkInput } from "@tom/schemas/cms";
-import type { CmsD1Binding, CmsD1Statement, CmsR2Binding } from "@tom/utils/services/config";
+import type {
+  CmsD1Binding,
+  CmsD1Statement,
+  CmsR2Binding,
+  CloudflareEnv,
+} from "@tom/utils/services/config";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
-import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { app } from "../index";
-import { requireSession } from "../services/auth";
 import { requestWithEnv, testEnv } from "../test/helpers";
+import { signedSessionCookie } from "../test/session";
 
+// Only the env-to-auth construction is mocked: the real requireSession then
+// verifies the signed session cookie against the real Better Auth instance.
 vi.mock("../services/auth", async (importOriginal) => {
   const original = await importOriginal<typeof import("../services/auth")>();
-  const { Effect: FX } = await import("effect");
+  const { Effect } = await import("effect");
+  const { cmsSessionAuth: sessionAuth } = await import("../test/session");
   return {
     ...original,
-    requireSession: vi.fn(() =>
-      FX.succeed({ user: { id: "admin-1", email: "gh@tomhackshaw.com" } }),
-    ),
+    createAuthFromEnv: (env: CloudflareEnv) =>
+      env.BETTER_AUTH_SECRET
+        ? Effect.succeed(sessionAuth(original.createAuth, env.BETTER_AUTH_SECRET))
+        : original.createAuthFromEnv(env),
   };
 });
+
+const AUTH_SECRET = "test-secret-with-at-least-32-chars!!";
+
+const adminCookie = await signedSessionCookie(AUTH_SECRET);
 
 type Row = Record<string, string | number | null>;
 
@@ -400,7 +411,7 @@ const setup = () => {
   const env = testEnv({
     CMS_D1: fakeDb(store),
     CMS_MEDIA: fakeR2(files),
-    BETTER_AUTH_SECRET: "test-secret-with-at-least-32-chars!!",
+    BETTER_AUTH_SECRET: AUTH_SECRET,
     GITHUB_CLIENT_ID: "test-client-id",
     GITHUB_CLIENT_SECRET: "test-client-secret",
     CMS_ADMIN_EMAILS: "gh@tomhackshaw.com",
@@ -409,6 +420,24 @@ const setup = () => {
   return { store, files, env };
 };
 
+const jsonHeaders = {
+  [INTERNAL_TOKEN_HEADER]: "test-internal-token",
+  "Content-Type": "application/json",
+};
+
+const jsonRequest = <B>(
+  url: string,
+  env: ReturnType<typeof testEnv>,
+  method: string,
+  body?: B,
+): Request =>
+  requestWithEnv(url, env, {
+    method,
+    headers: jsonHeaders,
+    body: body === undefined ? undefined : JSON.stringify(body),
+  });
+
+/** Internal-token request that also carries a real signed admin session. */
 const authedJson = <B>(
   url: string,
   env: ReturnType<typeof testEnv>,
@@ -417,21 +446,11 @@ const authedJson = <B>(
 ): Request =>
   requestWithEnv(url, env, {
     method,
-    headers: {
-      [INTERNAL_TOKEN_HEADER]: "test-internal-token",
-      "Content-Type": "application/json",
-    },
+    headers: { ...jsonHeaders, cookie: adminCookie },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
 describe("cms write routes", () => {
-  beforeEach(() => {
-    vi.mocked(requireSession).mockReset();
-    vi.mocked(requireSession).mockReturnValue(
-      Effect.succeed({ user: { id: "admin-1", email: "gh@tomhackshaw.com" } }) as never,
-    );
-  });
-
   describe("POST /posts", () => {
     it("creates a draft with rendered HTML and category links", async () => {
       const { store, env } = setup();
@@ -624,7 +643,7 @@ describe("cms write routes", () => {
     const uploadRequest = (env: ReturnType<typeof testEnv>, file: File): Request =>
       requestWithEnv("http://localhost/media", env, {
         method: "POST",
-        headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token" },
+        headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token", cookie: adminCookie },
         body: (() => {
           const form = new FormData();
           form.append("file", file);
@@ -671,7 +690,7 @@ describe("cms write routes", () => {
       const missing = await app.fetch(
         requestWithEnv("http://localhost/media", env, {
           method: "POST",
-          headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token" },
+          headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token", cookie: adminCookie },
           body: form,
         }),
       );
@@ -982,17 +1001,8 @@ describe("cms write routes", () => {
 
     it("rejects writes without a session", async () => {
       const { env } = setup();
-      vi.mocked(requireSession).mockReturnValueOnce(
-        Effect.fail(
-          new CmsError({
-            message: "No session",
-            status: HttpStatus.Unauthorized,
-            operation: "require_session",
-          }),
-        ) as never,
-      );
       const response = await app.fetch(
-        authedJson("http://localhost/posts", env, "POST", postInput()),
+        jsonRequest("http://localhost/posts", env, "POST", postInput()),
       );
       expect(response.status).toBe(HttpStatus.Unauthorized);
     });
