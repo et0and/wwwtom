@@ -37,12 +37,6 @@ test.describe("site chrome", () => {
     await expect(page.getByRole("link", { name: /access@tomhackshaw.com/ })).toBeVisible();
   });
 
-  test("purchase thanks page", async ({ page }) => {
-    await page.goto("/thanks");
-    await expect(page.getByRole("heading", { name: "Thank you!", level: 1 })).toBeVisible();
-    await expect(page.getByText(/purchase has been completed successfully/i)).toBeVisible();
-  });
-
   test("unknown route renders the 404 page", async ({ page }) => {
     await page.goto("/definitely-not-a-page");
     await expect(page.locator("main")).toContainText("Not found");

@@ -13,7 +13,7 @@ test.describe("accessibility", () => {
   // exceed the goto timeout under parallel load, and it is already
   // covered functionally in guestbook.spec. Audit the server-rendered
   // content pages.
-  const pages = ["/", "/posts", "/work", "/products", "/worktable"];
+  const pages = ["/", "/posts", "/work", "/worktable"];
 
   for (const path of pages) {
     test(`no serious or critical violations on ${path}`, async ({ page }) => {

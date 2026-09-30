@@ -19,7 +19,6 @@
     "@solidjs/web": "catalog:",
     "@tanstack/solid-query": "catalog:",
     "@tom/adapter": "workspace:*",
-    "@tom/checkout": "workspace:*",
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",

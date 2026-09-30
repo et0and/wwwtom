@@ -24,18 +24,6 @@ export function fetchWorkBySlug(slug: string): Promise<ArenaEntry | null> {
   return runAdapterRequestOrNull(() => callAdapter().content.arena.works({ slug }).get());
 }
 
-export function fetchProducts() {
-  return runAdapterRequest(() => callAdapter().polar.products.get());
-}
-
-export function fetchProduct(productId: string) {
-  return runAdapterRequest(() => callAdapter().polar.products({ productId }).get());
-}
-
-export function createCustomer(input: { email: string; name?: string; externalId: string }) {
-  return runAdapterRequest(() => callAdapter().polar.customers.post(input));
-}
-
 export function fetchChannel(slug: string) {
   return runAdapterRequest(() => callAdapter().arena.channels({ slug }).get());
 }

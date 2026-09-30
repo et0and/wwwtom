@@ -40,7 +40,6 @@ test.describe("staging site chrome", () => {
     for (const [path, heading] of [
       ["/about", "About"],
       ["/accessibility", "Accessibility"],
-      ["/thanks", "Thank you!"],
       ["/worktable", "Worktable"],
     ] as const) {
       await gotoWithBackoff(page, path);

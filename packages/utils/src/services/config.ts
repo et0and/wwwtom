@@ -99,9 +99,6 @@ export type CloudflareEnv = {
   };
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
-  SUCCESS_URL?: string;
-  POLAR_ACCESS_TOKEN?: string;
-  POLAR_API_URL?: string;
   INTERNAL_API_TOKEN?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
@@ -136,7 +133,7 @@ export type CloudflareEnv = {
   // by the api stack; absent in tests, which fall back to same-origin fetch.
   ASSETS?: CmsAssetsBinding;
   // When set, requests carrying the `x-use-simulator` header have their
-  // upstream service URLs (arena/polar/api) rewritten to this base
+  // upstream service URLs (arena/api) rewritten to this base
   // URL — the e2e fixture simulator (apps/simulator).
   SIMULATOR_URL?: string;
   NODE_ENV?: string;
@@ -171,8 +168,6 @@ const secretKeys = [
   "CMS_ADMIN_EMAILS",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
-  "SUCCESS_URL",
-  "POLAR_ACCESS_TOKEN",
   "INTERNAL_API_TOKEN",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",

@@ -23,7 +23,6 @@ const env: CloudflareEnv = {
   GUESTBOOK_RETURN_URL: "http://127.0.0.1:3000/guestbook",
   API_URL: SIMULATOR_URL,
   ARENA_API_URL: SIMULATOR_URL,
-  POLAR_API_URL: SIMULATOR_URL,
   SIMULATOR_URL,
   // Telegram error alerts must no-op (no real credentials in CI); failures
   // are swallowed by sendErrorAlert itself.

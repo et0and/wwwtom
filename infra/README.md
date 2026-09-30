@@ -9,7 +9,7 @@ Effect V4.
 - `apps/sophie`: Sophie SSR blog, built by `Cloudflare.Website.Vite`
 - `apps/editor`: Camus CMS SPA, built by `Cloudflare.Website.Vite` (Tom instance + Sophie instance via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`)
 - `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated D1+R2 per tenant)
-- `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, polar, guestbook, github, image, og; same tenant split)
+- `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; same tenant split)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 
@@ -140,8 +140,6 @@ Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
   "DATABASE_URL": "postgresql://...",
   "TELEGRAM_BOT_TOKEN": "...",
   "TELEGRAM_CHAT_ID": "...",
-  "POLAR_ACCESS_TOKEN": "...",
-  "SUCCESS_URL": "https://tom.so/thanks",
   "INTERNAL_API_TOKEN": "...",
   "GITHUB_TOKEN": "...",
   "GITHUB_CLIENT_ID": "...",
@@ -188,7 +186,7 @@ latter).
 
 `INTERNAL_API_TOKEN` is the shared secret the adapter presents as the
 `x-internal-token` header when calling the API's protected routes
-(`/og`, `/checkout`, `/portal`, `/auth/*`). Generate a long random value; requests
+(`/og`, `/auth/*`, `/cms/*`). Generate a long random value; requests
 without a matching token are rejected with 401.
 
 `DATABASE_URL` is also used to configure the Hyperdrive origin. At runtime,

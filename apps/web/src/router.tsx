@@ -5,8 +5,6 @@ import {
   POSTS_PAGE_SIZE,
   fetchPostBySlug,
   fetchPosts,
-  fetchProduct,
-  fetchProducts,
   fetchWorkBySlug,
   fetchWorks,
 } from "~/server/adapter";
@@ -17,9 +15,6 @@ import Guestbook, { fetchEntries } from "~/routes/guestbook";
 import Home from "~/routes/index";
 import PostPage from "~/routes/posts/[slug]";
 import PostsHome from "~/routes/posts/index";
-import Products from "~/routes/products";
-import Purchase from "~/routes/purchase/[productId]";
-import Thanks from "~/routes/thanks";
 import WorkPage from "~/routes/work/[slug]";
 import WorkHome from "~/routes/work/index";
 import Kawara from "~/routes/work/wwwork/kawara";
@@ -37,7 +32,6 @@ export const Router = createRouter({
     { path: "/", component: Home },
     { path: "/about", component: About },
     { path: "/accessibility", component: Accessibility },
-    { path: "/thanks", component: Thanks },
     {
       path: "/guestbook",
       component: Guestbook,
@@ -97,28 +91,6 @@ export const Router = createRouter({
     },
     { path: "/work/wwwork/hold", component: Hold },
     { path: "/work/wwwork/kawara", component: Kawara },
-    {
-      path: "/products",
-      component: Products,
-      preload: () =>
-        getQueryClient()
-          .prefetchQuery({ queryKey: ["products"], queryFn: fetchProducts })
-          .catch(ignoredPrefetchError),
-    },
-    {
-      path: "/purchase/:productId",
-      component: Purchase,
-      preload: ({ params }) => {
-        const productId = params.productId;
-        if (!productId) return undefined;
-        return getQueryClient()
-          .prefetchQuery({
-            queryKey: ["product", productId],
-            queryFn: () => fetchProduct(productId),
-          })
-          .catch(ignoredPrefetchError);
-      },
-    },
     { path: "/worktable", component: Worktable },
     { path: "*404", component: NotFound },
   ],

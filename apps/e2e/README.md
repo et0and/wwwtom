@@ -4,7 +4,7 @@ One config (`playwright.config.ts`) with two projects, plus the staging config:
 
 - **Fixture project** (`tests/`, minus `editor.spec.ts`): every page on tom.so
   against a fully local stack whose services serve **fixture stores** instead
-  of real upstreams (Polar, Are.na, the CMS API, D1, the internal API). Runs
+  of real upstreams (Are.na, the CMS API, D1, the internal API). Runs
   on every PR against `dev` (merge requirement) and nightly. Tests assert
   user-visible behaviour only — never wire formats, request shapes or
   headers — so they stay service-agnostic and break only when the site
@@ -34,8 +34,6 @@ web (vite dev, :3000) ── SSR forward ─┐   browser calls (guestbook) carr
 adapter proxies upstreams            │
    │  cms      → http://127.0.0.1:8789/posts, /works, /categories (API URL swap)
    │  arena    → http://127.0.0.1:8789/v3/*      (ArenaService URL swap)
-   │  polar    → http://127.0.0.1:8789/v1/*      (polarBaseUrl URL swap)
-   │  api      → http://127.0.0.1:8789/*         (callApi URL swap: /checkout, /portal)
    │  guestbook→ http://127.0.0.1:8789/guestbook/entries (D1 bypass branch)
    ▼
 simulator (:8789) — Elysia, fixture stores only
@@ -49,8 +47,8 @@ simulator (:8789) — Elysia, fixture stores only
   worker also has a `SIMULATOR_URL` env var. Production never sets
   `SIMULATOR_URL`, so the header alone cannot redirect real traffic — the
   switch is opt-in per environment, not per visitor.
-- `simulatorEnv(resolved, request)` rewrites `ARENA_API_URL`, `POLAR_API_URL`
-  and `API_URL` to the simulator base. The guestbook entries
+- `simulatorEnv(resolved, request)` rewrites `ARENA_API_URL` and `API_URL` to
+  the simulator base. The guestbook entries
   route has a small branch that fetches the simulator instead of D1 (the
   simulator mirrors `DatabaseService.getGuestbookEntries`'s
   `{ results, page, page_size, total_count }` shape).
@@ -60,7 +58,7 @@ simulator (:8789) — Elysia, fixture stores only
   context. Adapter CORS allows the header for the browser calls.
 
 Because the swap happens at the adapter's _service-boundary env_, no
-integration code knows about the simulator — cms/arena/polar still speak
+integration code knows about the simulator — cms/arena still speak
 their normal client contract, just against the fixture host.
 
 ## Fixture stores (single source of truth)
@@ -73,7 +71,6 @@ diffs small when copy changes.
 
 | Store                    | Serves                                   | Drives                                     |
 | ------------------------ | ---------------------------------------- | ------------------------------------------ |
-| `polar-products.json`    | `/v1/*` (products, customers, checkouts) | `/products`, `/purchase`                   |
 | `arena.json`             | `/v3/*` (channels, blocks, users)        | `/worktable` (channel `tom-s-worktable`)   |
 | `arena-content.json`     | are.na master channels for posts + works | `/posts`, `/work`, pagination, `/feed.xml` |
 | `cms-posts.json`         | `/posts` (CMS list shape)                | the editor suite (Sophie's D1 CMS)         |
@@ -81,11 +78,11 @@ diffs small when copy changes.
 | `guestbook-entries.json` | `/guestbook/entries`                     | `/guestbook`                               |
 
 Runtime-mutated in-memory stores live in the simulator plugins
-(`customers` in `polar.ts`, `entries` in `guestbook.ts`) so write flows (e.g.
+(`entries` in `guestbook.ts`) so write flows (e.g.
 a future sign-in) behave like a real database within a run.
 
 To add a fixture store: drop the JSON in `apps/simulator/fixtures/`, add an
-Elysia plugin that serves the real service's wire shape (follow `polar.ts` /
+Elysia plugin that serves the real service's wire shape (follow `arena.ts` /
 `arena.ts`), mount it in `apps/simulator/src/index.ts`, then type the new
 fixture in `apps/e2e/src/fixture-stores.ts` and write specs against it.
 
@@ -166,11 +163,11 @@ locally.
 
 ## The staging suite
 
-`tests-staging/` runs against the **deployed staging stack** (real CMS, Polar,
+`tests-staging/` runs against the **deployed staging stack** (real CMS,
 Are.na — whatever the `staging` Alchemy stage holds), so assertions are
 content-agnostic: structure, headings, valid feeds/sitemap, 404s, og
-meta, and read-only navigation into the first live post/work/product. The
-guestbook and checkout flows are rendered but never submitted (they mutate
+meta, and read-only navigation into the first live post/work. The
+guestbook flow is rendered but never submitted (it mutates
 real data). Run it locally against any deployed stage:
 
 ```sh
