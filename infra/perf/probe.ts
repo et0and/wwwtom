@@ -1,4 +1,4 @@
-import { Clock, Effect } from "effect";
+import { Clock, Effect, Result } from "effect";
 import { PerformanceHarnessError } from "@tom/types/errors";
 import { toErrorMessage } from "@tom/utils/services/worker";
 import { stageHost, stageWebHost } from "../utils/stage-hosts.ts";
@@ -92,16 +92,14 @@ export const runProbeRequest = (
         await response.arrayBuffer();
         return response.status;
       },
-      catch: (cause) => cause,
-    }).pipe(
-      Effect.map((status) => ({ ok: true as const, status })),
-      Effect.catch((cause) => Effect.succeed({ ok: false as const, cause })),
-    );
+      catch: (cause) => toErrorMessage(cause),
+    }).pipe(Effect.result);
     const finishedAt = yield* Clock.currentTimeMillis;
     const durationMs = finishedAt - startedAt;
-    return outcome.ok
-      ? { ...request, status: outcome.status, durationMs }
-      : { ...request, status: 0, durationMs, error: toErrorMessage(outcome.cause) };
+    return Result.match(outcome, {
+      onFailure: (error) => ({ ...request, status: 0, durationMs, error }),
+      onSuccess: (status) => ({ ...request, status, durationMs }),
+    });
   });
 
 /** One sequential pass over every request in the mix. */

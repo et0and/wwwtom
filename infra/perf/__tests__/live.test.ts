@@ -45,7 +45,9 @@ describe.skipIf(!live)("perf live run", () => {
     yield* test.destroy(sharedStack).pipe(Effect.ignore);
   });
 
-  test.beforeAll(deployAll, { timeout: 45 * 60_000 });
+  // beforeAll registers the hook and returns an accessor for its result;
+  // the deploy has no outputs to read, so discard it explicitly.
+  void test.beforeAll(deployAll, { timeout: 45 * 60_000 });
 
   test.afterAll(destroyAll, { timeout: 45 * 60_000 });
 
