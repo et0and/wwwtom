@@ -1,3 +1,10 @@
+## [3.11.2](https://github.com/et0and/wwwtom/compare/v3.11.1...v3.11.2) (2026-09-30)
+
+
+### Bug Fixes
+
+* **e2e:** drop stale store references after Polar removal ([e2a7fef](https://github.com/et0and/wwwtom/commit/e2a7fef4c8f899cb660baf24ac4a4b8de6b657ea))
+
 ## [3.11.1](https://github.com/et0and/wwwtom/compare/v3.11.0...v3.11.1) (2026-09-29)
 
 
