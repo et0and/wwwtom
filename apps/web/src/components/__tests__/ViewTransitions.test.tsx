@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
+import { render, screen, waitFor } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { ViewTransitions } from "@tom/ui/ViewTransitions";
@@ -56,7 +57,8 @@ describe("ViewTransitions", () => {
     const startViewTransition = stubViewTransition();
     renderWithTransitions();
 
-    expect(fireEvent.click(screen.getByRole("link", { name: "Work" }))).toBe(false);
+    await userEvent.click(screen.getByRole("link", { name: "Work" }));
+
     expect(startViewTransition).toHaveBeenCalledTimes(1);
     await waitFor(() => expect(screen.getByText("Work page")).toBeInTheDocument());
   });
@@ -64,12 +66,12 @@ describe("ViewTransitions", () => {
   it("navigates without the API when the browser lacks it", async () => {
     renderWithTransitions();
 
-    fireEvent.click(screen.getByRole("link", { name: "Work" }));
+    await userEvent.click(screen.getByRole("link", { name: "Work" }));
 
     await waitFor(() => expect(screen.getByText("Work page")).toBeInTheDocument());
   });
 
-  it("leaves hash-only jumps to the router", () => {
+  it("leaves hash-only jumps to the router", async () => {
     const startViewTransition = stubViewTransition();
     const TestRouter = createRouter({
       history: memoryHistory("/"),
@@ -79,12 +81,12 @@ describe("ViewTransitions", () => {
       <TestRouter>{(props) => <ViewTransitions>{props.children}</ViewTransitions>}</TestRouter>
     ));
 
-    fireEvent.click(screen.getByRole("link", { name: "Skip" }));
+    await userEvent.click(screen.getByRole("link", { name: "Skip" }));
 
     expect(startViewTransition).not.toHaveBeenCalled();
   });
 
-  it("wraps navigations that carry router state", () => {
+  it("wraps navigations that carry router state", async () => {
     const startViewTransition = stubViewTransition();
     const TestRouter = createRouter({
       history: memoryHistory("/"),
@@ -104,19 +106,21 @@ describe("ViewTransitions", () => {
       <TestRouter>{(props) => <ViewTransitions>{props.children}</ViewTransitions>}</TestRouter>
     ));
 
-    fireEvent.click(screen.getByRole("link", { name: "Work" }));
+    await userEvent.click(screen.getByRole("link", { name: "Work" }));
 
     expect(startViewTransition).toHaveBeenCalledTimes(1);
   });
 
-  it("leaves modified clicks to the browser", () => {
+  it("leaves modified clicks to the browser", async () => {
     const startViewTransition = stubViewTransition();
     const preventNavigation = (event: MouseEvent) => event.preventDefault();
     document.addEventListener("click", preventNavigation);
 
     try {
       renderWithTransitions();
-      fireEvent.click(screen.getByRole("link", { name: "Work" }), { metaKey: true });
+      await userEvent.keyboard("{Meta>}");
+      await userEvent.click(screen.getByRole("link", { name: "Work" }));
+      await userEvent.keyboard("{/Meta}");
 
       expect(startViewTransition).not.toHaveBeenCalled();
     } finally {
@@ -124,7 +128,7 @@ describe("ViewTransitions", () => {
     }
   });
 
-  it("skips the transition when reduced motion is preferred", () => {
+  it("skips the transition when reduced motion is preferred", async () => {
     const startViewTransition = stubViewTransition();
     const restoreMatchMedia = stubReducedMotion();
     const preventNavigation = (event: MouseEvent) => event.preventDefault();
@@ -132,7 +136,7 @@ describe("ViewTransitions", () => {
 
     try {
       renderWithTransitions();
-      fireEvent.click(screen.getByRole("link", { name: "Work" }));
+      await userEvent.click(screen.getByRole("link", { name: "Work" }));
 
       expect(startViewTransition).not.toHaveBeenCalled();
     } finally {

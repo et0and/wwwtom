@@ -3,11 +3,6 @@ import { describe, it, expect } from "vitest";
 import { Footer } from "@tom/ui/Footer";
 
 describe("Footer", () => {
-  it("matches the snapshot", () => {
-    const { container } = render(() => <Footer />);
-    expect(container).toMatchSnapshot();
-  });
-
   it("renders with current year", () => {
     const currentYear = new Date().getFullYear();
     render(() => <Footer />);

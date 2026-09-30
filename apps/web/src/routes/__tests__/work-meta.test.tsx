@@ -1,17 +1,11 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
-import { HttpError } from "@tom/types/errors";
 import WorkPage from "~/routes/work/[slug]";
+import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 
-vi.mock("~/server/adapter", () => ({
-  fetchWorkBySlug: vi.fn(),
-}));
-
-import { fetchWorkBySlug } from "~/server/adapter";
-
-const mockedFetchWorkBySlug = fetchWorkBySlug as Mock;
+const fetchMock = stubAdapterFetch();
 
 const workData = {
   id: 1,
@@ -42,12 +36,12 @@ const headMeta = (selector: string): string | null | undefined =>
   document.head.querySelector(selector)?.getAttribute("content");
 
 beforeEach(() => {
-  mockedFetchWorkBySlug.mockReset();
+  fetchMock.mockReset();
 });
 
 describe("work page meta tags", () => {
   it("renders title, description and og/twitter meta into the document head", async () => {
-    mockedFetchWorkBySlug.mockResolvedValue(workData);
+    fetchMock.mockResolvedValue(jsonResponse(workData));
     renderWorkPage();
     await waitFor(() => expect(screen.getByText("An idea for a performance")).toBeTruthy());
 
@@ -67,7 +61,7 @@ describe("work page meta tags", () => {
   });
 
   it("points og:image and twitter:image at the public adapter proxy, absolute", async () => {
-    mockedFetchWorkBySlug.mockResolvedValue(workData);
+    fetchMock.mockResolvedValue(jsonResponse(workData));
     renderWorkPage();
     await waitFor(() => expect(screen.getByText("An idea for a performance")).toBeTruthy());
 
@@ -81,14 +75,19 @@ describe("work page meta tags", () => {
   });
 
   it("shows a spinner — not Not found — while the work is loading", async () => {
-    mockedFetchWorkBySlug.mockReturnValue(new Promise(() => {}));
+    fetchMock.mockReturnValue(new Promise(() => {}));
     renderWorkPage();
     await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
     expect(screen.queryByText("Not found")).toBeNull();
   });
 
-  it("shows Not found once a missing slug settles to null", async () => {
-    mockedFetchWorkBySlug.mockResolvedValue(null);
+  it("shows Not found once a missing slug settles to a 404", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(
+        { type: "https://errors.tom.so/not-found", status: 404, title: "Not found" },
+        404,
+      ),
+    );
     renderWorkPage();
     await waitFor(() => expect(screen.getByText("Not found")).toBeTruthy());
     expect(screen.getByText('The work "an-idea-for-a-performance" does not exist.')).toBeTruthy();
@@ -96,8 +95,11 @@ describe("work page meta tags", () => {
   });
 
   it("shows an error banner — not Not found — on a server error", async () => {
-    mockedFetchWorkBySlug.mockRejectedValue(
-      new HttpError({ message: "Adapter request failed", status: 500 }),
+    fetchMock.mockResolvedValue(
+      jsonResponse(
+        { type: "https://errors.tom.so/internal", status: 500, title: "Internal error" },
+        500,
+      ),
     );
     renderWorkPage();
     await waitFor(() => expect(screen.getByText("Error loading work")).toBeTruthy());

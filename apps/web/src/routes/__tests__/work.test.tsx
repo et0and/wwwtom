@@ -1,17 +1,12 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { queryClient } from "~/libs/query-client";
 import WorkHome from "~/routes/work/index";
+import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 
-vi.mock("~/server/adapter", () => ({
-  fetchWorks: vi.fn(),
-}));
-
-import { fetchWorks } from "~/server/adapter";
-
-const mockedFetchWorks = fetchWorks as Mock;
+const fetchMock = stubAdapterFetch();
 
 const worksData = {
   docs: [
@@ -50,21 +45,24 @@ const renderWorkHome = () =>
 
 beforeEach(() => {
   queryClient.clear();
-  mockedFetchWorks.mockReset();
+  fetchMock.mockReset();
 });
 
 describe("work page", () => {
-  it("renders works fetched through the server function", async () => {
-    mockedFetchWorks.mockResolvedValue(worksData);
+  it("renders works fetched through the adapter", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(worksData));
     renderWorkHome();
     await waitFor(() => expect(screen.getByText("An idea for a performance")).toBeTruthy());
     expect(screen.getByText("Hyperjam")).toBeTruthy();
     expect(screen.getByText("A tool for generating performance ideas.")).toBeTruthy();
-    expect(mockedFetchWorks).toHaveBeenCalledTimes(1);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8788/content/arena/works",
+      expect.anything(),
+    );
   });
 
-  it("shows the error banner when the server function fails", async () => {
-    mockedFetchWorks.mockRejectedValue(new Error("Adapter request failed"));
+  it("shows the error banner when the adapter request fails", async () => {
+    fetchMock.mockRejectedValue(new Error("network down"));
     renderWorkHome();
     // The query client retries once, so the error state takes >1s to surface.
     await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy(), { timeout: 5000 });

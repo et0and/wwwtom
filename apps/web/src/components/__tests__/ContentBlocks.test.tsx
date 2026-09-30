@@ -1,27 +1,20 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
+import { beforeEach, describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { Schema } from "effect";
 import { ArenaContentBlockSchema } from "@tom/schemas/arena-content";
 import { queryClient } from "~/libs/query-client";
 import { ContentBlocks } from "~/components/ContentBlocks";
+import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 
-vi.mock("~/server/adapter", () => ({
-  fetchChannel: vi.fn(),
-  fetchChannelContents: vi.fn(),
-}));
-
-import { fetchChannel, fetchChannelContents } from "~/server/adapter";
-
-const mockedFetchChannel = fetchChannel as Mock;
-const mockedFetchChannelContents = fetchChannelContents as Mock;
+const fetchMock = stubAdapterFetch();
 
 const decodeBlock = Schema.decodeUnknownSync(ArenaContentBlockSchema);
 
 beforeEach(() => {
   queryClient.clear();
-  mockedFetchChannel.mockReset();
-  mockedFetchChannelContents.mockReset();
+  fetchMock.mockReset();
 });
 
 describe("ContentBlocks", () => {
@@ -85,7 +78,7 @@ describe("ContentBlocks", () => {
   });
 
   it("renders a connected channel as an are.na channel embed", async () => {
-    mockedFetchChannel.mockResolvedValue({
+    const channel = {
       id: 7001,
       type: "Channel",
       slug: "poetics-of-space-gvdouhcpye0",
@@ -104,8 +97,8 @@ describe("ContentBlocks", () => {
       },
       counts: { blocks: 3, channels: 0, contents: 3, collaborators: 0 },
       _links: {},
-    });
-    mockedFetchChannelContents.mockResolvedValue({
+    };
+    const contents = {
       data: [
         {
           id: 9001,
@@ -128,7 +121,10 @@ describe("ContentBlocks", () => {
         total_count: 1,
         has_more_pages: false,
       },
-    });
+    };
+    fetchMock.mockImplementation((url: string) =>
+      Promise.resolve(jsonResponse(url.includes("/contents") ? contents : channel)),
+    );
     const blocks = [
       decodeBlock({
         id: 5,
@@ -151,8 +147,14 @@ describe("ContentBlocks", () => {
         "https://are.na/tom-hackshaw/poetics-of-space-gvdouhcpye0",
       ),
     );
-    expect(mockedFetchChannel).toHaveBeenCalledWith("poetics-of-space-gvdouhcpye0");
-    expect(mockedFetchChannelContents).toHaveBeenCalledWith("poetics-of-space-gvdouhcpye0", 12);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8788/arena/channels/poetics-of-space-gvdouhcpye0",
+      expect.anything(),
+    );
+    expect(fetchMock).toHaveBeenCalledWith(
+      "http://localhost:8788/arena/channels/poetics-of-space-gvdouhcpye0/contents?per=12",
+      expect.anything(),
+    );
     expect(await screen.findByAltText("A nested image")).toBeTruthy();
   });
 
@@ -174,7 +176,7 @@ describe("ContentBlocks", () => {
 
     expect(container.querySelector("video")).toBeNull();
 
-    fireEvent.click(screen.getByRole("button", { name: "Play jung-at-bollingen.mp4" }));
+    await userEvent.click(screen.getByRole("button", { name: "Play jung-at-bollingen.mp4" }));
 
     await waitFor(() => expect(container.querySelector("video")).toBeTruthy());
     const video = container.querySelector("video") as HTMLVideoElement;
@@ -212,7 +214,7 @@ describe("ContentBlocks", () => {
       const cover = screen.getByAltText("reading-machines.pdf") as HTMLImageElement;
       expect(cover.src).toBe("https://images.are.na/cover.png");
 
-      fireEvent.click(screen.getByRole("link", { name: /reading-machines\.pdf/ }));
+      await userEvent.click(screen.getByRole("link", { name: /reading-machines\.pdf/ }));
 
       await waitFor(() => expect(screen.getByTitle("reading-machines.pdf")).toBeTruthy());
       const viewer = screen.getByTitle("reading-machines.pdf");
@@ -228,14 +230,14 @@ describe("ContentBlocks", () => {
     }
   });
 
-  it("sends a pdf attachment to the native viewer on phone widths", () => {
+  it("sends a pdf attachment to the native viewer on phone widths", async () => {
     render(() => <ContentBlocks blocks={pdfBlocks} />);
 
     const link = screen.getByRole("link", { name: /reading-machines\.pdf/ }) as HTMLAnchorElement;
     expect(link.href).toBe("https://attachments.are.na/reading-machines.pdf");
     expect(link.target).toBe("_blank");
 
-    fireEvent.click(link);
+    await userEvent.click(link);
 
     expect(screen.queryByTitle("reading-machines.pdf")).toBeNull();
   });
@@ -245,6 +247,6 @@ describe("ContentBlocks", () => {
 
     const { container } = render(() => <ContentBlocks blocks={blocks} />);
 
-    expect(container.querySelector("img, a, p")).toBeNull();
+    expect(container.querySelector("img, a, p, video, iframe")).toBeNull();
   });
 });

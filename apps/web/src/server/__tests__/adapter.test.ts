@@ -7,14 +7,9 @@ import {
   fetchWorks,
 } from "~/server/adapter";
 import { HttpError } from "@tom/types/errors";
+import { jsonResponse } from "~/test/adapter-fetch";
 
 const fetchMock = vi.fn();
-
-const jsonResponse = <T>(body: T, status = 200): Response =>
-  new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json" },
-  });
 
 beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
