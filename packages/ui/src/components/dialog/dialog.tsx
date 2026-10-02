@@ -8,63 +8,103 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import * as stylex from "@stylexjs/stylex";
 import { createDismissableLayer } from "../../utils/dismissable";
 import { createFocusScope, createHideOutside, createPreventScroll } from "../../utils/focus";
 import { createDisclosureState } from "../../utils/state";
-
-export const TOMUI_DIALOG_VARIANTS = {
-  size: {
-    base: {
-      classes: "sm:w-96",
-      description: "Default dialog width (384px)",
-    },
-    sm: {
-      classes: "sm:w-72",
-      description: "Small dialog for simple confirmations (288px)",
-    },
-    lg: {
-      classes: "sm:w-[32rem]",
-      description: "Large dialog for complex content (512px)",
-    },
-    xl: {
-      classes: "sm:w-[48rem]",
-      description: "Extra large dialog for detailed views (768px)",
-    },
-  },
-  role: {
-    dialog: {
-      classes: "",
-      description: "Standard dialog for general-purpose modals",
-    },
-    alertdialog: {
-      classes: "",
-      description: "Alert dialog for confirmation flows requiring explicit user acknowledgment",
-    },
-  },
-} as const;
+import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_DIALOG_DEFAULT_VARIANTS = {
   size: "base",
   role: "dialog",
 } as const;
 
-export type TomuiDialogSize = keyof typeof TOMUI_DIALOG_VARIANTS.size;
-export type TomuiDialogRole = keyof typeof TOMUI_DIALOG_VARIANTS.role;
+export type TomuiDialogSize = "sm" | "base" | "lg" | "xl";
+export type TomuiDialogRole = "dialog" | "alertdialog";
 
-export interface TomuiDialogVariantsProps {
-  size?: TomuiDialogSize;
-}
+/**
+ * Which responsive layout the panel uses.
+ * - `"panel"` — centred, capped width. The default.
+ * - `"full"` — full-viewport, square corners. For embedded viewers such as a
+ *   PDF that need the whole screen.
+ *
+ * StyleX emits media-query rules that a caller's plain style cannot outrank, so
+ * a caller that needs to own the responsive layout picks `full` rather than
+ * overriding `top` and friends with `!important`.
+ */
+export type TomuiDialogSurface = "panel" | "full";
 
-export function dialogVariants(props: TomuiDialogVariantsProps = {}): string {
-  const merged = merge({ size: TOMUI_DIALOG_DEFAULT_VARIANTS.size }, props);
-  return cn(
-    "shadow-m ring ring-tomui-line fixed top-8 left-1/2 sm:top-16 w-full max-w-[calc(100vw-2rem)] -translate-x-1/2 overflow-hidden rounded-xl bg-tomui-base text-tomui-default duration-150 data-ending-style:scale-90 data-ending-style:opacity-0 data-starting-style:scale-90 data-starting-style:opacity-0",
-    resolveVariant(TOMUI_DIALOG_VARIANTS.size, merged.size, TOMUI_DIALOG_DEFAULT_VARIANTS.size)
-      .classes,
-  );
-}
+/** Open/close transition states, driven by the dismissable layer utilities. */
+const OPEN = ":is([data-starting-style])";
+const CLOSING = ":is([data-ending-style])";
+
+const styles = stylex.create({
+  overlay: { position: "fixed", inset: 0, zIndex: 50 },
+  backdrop: {
+    position: "fixed",
+    inset: 0,
+    backgroundColor: textColors["--text-color-tomui-default"],
+    opacity: 0.8,
+    transitionDuration: "150ms",
+    transitionProperty: "all",
+    [OPEN]: { opacity: 0 },
+    [CLOSING]: { opacity: 0 },
+  },
+  content: {
+    position: "fixed",
+    top: "2rem",
+    left: "50%",
+    width: "100%",
+    maxWidth: "calc(100vw - 2rem)",
+    transform: "translateX(-50%)",
+    overflow: "hidden",
+    borderRadius: "0.75rem",
+    backgroundColor: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 0 0 1px " + textColors["--text-color-tomui-default"],
+    transitionDuration: "150ms",
+    "@media (min-width: 640px)": { top: "4rem" },
+    [OPEN]: { transform: "translateX(-50%) scale(0.9)", opacity: 0 },
+    [CLOSING]: { transform: "translateX(-50%) scale(0.9)", opacity: 0 },
+  },
+
+  // Widths apply from the small breakpoint up, matching the old sm: prefix.
+  // StyleX types a media-query key as its own variant, so the width lives on the
+  // same style object as the rest rather than in a separate size style.
+  sizeSm: { width: "100%", "@media (min-width: 640px)": { width: "18rem" } },
+  sizeBase: { width: "100%", "@media (min-width: 640px)": { width: "24rem" } },
+  sizeLg: { width: "100%", "@media (min-width: 640px)": { width: "32rem" } },
+  sizeXl: { width: "100%", "@media (min-width: 640px)": { width: "48rem" } },
+
+  // Full-viewport surface: owns every responsive rule itself, so nothing here
+  // needs overriding from the caller.
+  full: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100dvh",
+    maxWidth: "none",
+    transform: "none",
+    borderRadius: 0,
+    "@media (min-width: 640px)": {
+      top: "4rem",
+      left: "50%",
+      height: "80vh",
+      maxWidth: "calc(100vw - 2rem)",
+      transform: "translateX(-50%)",
+    },
+  },
+});
+
+// The media-query widths are not assignable to StyleXStyles, so this map keeps
+// its inferred type rather than widening to a StyleX one.
+const sizeStyles = {
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+  xl: styles.sizeXl,
+} as const;
 
 interface DialogContextValue {
   isOpen: () => boolean;
@@ -134,16 +174,20 @@ export function DialogRoot(props: DialogRootProps): JSX.Element {
   return <DialogContext value={value}>{merged.children}</DialogContext>;
 }
 
-export type DialogTriggerProps = Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
+export type DialogTriggerProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function DialogTrigger(props: DialogTriggerProps): JSX.Element {
   const ctx = useContext(DialogContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "onClick");
+  const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
       data-tomui-component="Dialog"
@@ -151,7 +195,6 @@ export function DialogTrigger(props: DialogTriggerProps): JSX.Element {
       aria-haspopup="dialog"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       aria-controls={ctx.isOpen() ? ctx.contentId : undefined}
-      class={merged.class}
       ref={(el: HTMLButtonElement) => ctx.setTriggerRef(el)}
       onClick={(event) => {
         ctx.toggle();
@@ -164,16 +207,19 @@ export function DialogTrigger(props: DialogTriggerProps): JSX.Element {
   );
 }
 
-export type DialogProps = TomuiDialogVariantsProps & {
+export type DialogProps = {
   children?: JSX.Element;
-  class?: string;
-  style?: JSX.CSSProperties;
+  size?: TomuiDialogSize;
+  /** Responsive layout. Defaults to the centred panel. */
+  surface?: TomuiDialogSurface;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DialogContent(props: DialogProps): JSX.Element {
   const ctx = useContext(DialogContext);
   const merged = merge({ size: TOMUI_DIALOG_DEFAULT_VARIANTS.size }, props);
-  const rest = omit(merged, "children", "class", "style", "size");
+  const rest = omit(merged, "children", "style", "size", "surface");
   const closeOnBackdrop = (): boolean => ctx.role() === "dialog";
 
   createDismissableLayer(ctx.contentRef, {
@@ -206,17 +252,16 @@ function DialogContent(props: DialogProps): JSX.Element {
 
   return (
     <Show when={ctx.isOpen()}>
-      <div class="fixed inset-0 z-50">
+      <div {...stylex.attrs(styles.overlay)}>
         <div
           data-tomui-component="Dialog"
           data-tomui-part="backdrop"
-          class="fixed inset-0 bg-tomui-recessed opacity-80 transition-all duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0"
+          {...stylex.attrs(styles.backdrop)}
           onClick={() => {
             if (closeOnBackdrop()) ctx.close();
           }}
         />
         <div
-          {...rest}
           data-tomui-component="Dialog"
           id={ctx.contentId}
           role={ctx.role()}
@@ -224,9 +269,13 @@ function DialogContent(props: DialogProps): JSX.Element {
           aria-labelledby={ctx.titleId}
           aria-describedby={ctx.descriptionId}
           tabindex={-1}
-          class={cn(dialogVariants({ size: merged.size }), merged.class)}
-          style={merged.style}
           ref={(el: HTMLDivElement) => ctx.setContentRef(el)}
+          {...stylex.attrs(
+            styles.content,
+            merged.surface === "full" ? styles.full : sizeStyles[merged.size],
+            merged.style,
+          )}
+          {...rest}
         >
           {merged.children}
         </div>
@@ -235,66 +284,59 @@ function DialogContent(props: DialogProps): JSX.Element {
   );
 }
 
-export type DialogTitleProps = JSX.HTMLAttributes<HTMLHeadingElement> & {
+export type DialogTitleProps = Omit<JSX.HTMLAttributes<HTMLHeadingElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function DialogTitle(props: DialogTitleProps): JSX.Element {
   const ctx = useContext(DialogContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <h2
-      data-tomui-component="Dialog"
-      data-tomui-part="title"
-      id={ctx.titleId}
-      class={merged.class}
-      {...rest}
-    >
+    <h2 data-tomui-component="Dialog" data-tomui-part="title" id={ctx.titleId} {...rest}>
       {merged.children}
     </h2>
   );
 }
 
-export type DialogDescriptionProps = JSX.HTMLAttributes<HTMLParagraphElement> & {
+export type DialogDescriptionProps = Omit<JSX.HTMLAttributes<HTMLParagraphElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function DialogDescription(props: DialogDescriptionProps): JSX.Element {
   const ctx = useContext(DialogContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <p
-      data-tomui-component="Dialog"
-      data-tomui-part="description"
-      id={ctx.descriptionId}
-      class={merged.class}
-      {...rest}
-    >
+    <p data-tomui-component="Dialog" data-tomui-part="description" id={ctx.descriptionId} {...rest}>
       {merged.children}
     </p>
   );
 }
 
-export type DialogCloseProps = Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
+export type DialogCloseProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function DialogClose(props: DialogCloseProps): JSX.Element {
   const ctx = useContext(DialogContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "onClick");
+  const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
       data-tomui-component="Dialog"
       data-tomui-part="close"
       aria-label="Close"
-      class={merged.class}
       onClick={(event) => {
         ctx.close();
         merged.onClick?.(event);

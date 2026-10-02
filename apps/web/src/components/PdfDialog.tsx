@@ -3,6 +3,7 @@ import { Portal } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import { Dialog } from "@tom/ui/dialog";
 import { Text } from "@tom/ui/text";
+import { pdfDialogStyles } from "./pdf-dialog.stylex";
 
 interface PdfDialogProps {
   url: string;
@@ -49,12 +50,9 @@ export function PdfDialog(props: PdfDialogProps) {
         {props.children}
       </a>
       <Portal>
-        <Dialog
-          size="xl"
-          class="rounded-none! top-0! left-0! h-dvh max-w-none! translate-x-0! sm:top-16! sm:left-1/2! sm:h-[80vh]! sm:max-w-[calc(100vw-2rem)]! sm:-translate-x-1/2! flex flex-col"
-        >
+        <Dialog surface="full" style={pdfDialogStyles.panel}>
           <div class="flex min-w-0 flex-col gap-2 border-b border-tomui-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5">
-            <Dialog.Title class="min-w-0 truncate">
+            <Dialog.Title style={pdfDialogStyles.title}>
               <Text variant="heading" as="span">
                 {props.title}
               </Text>
@@ -65,7 +63,7 @@ export function PdfDialog(props: PdfDialogProps) {
                   Open in a new tab
                 </Text>
               </a>
-              <Dialog.Close class="cursor-pointer border-0 bg-transparent p-0">
+              <Dialog.Close style={pdfDialogStyles.close}>
                 <Text variant="secondary" size="sm" as="span">
                   Close
                 </Text>
