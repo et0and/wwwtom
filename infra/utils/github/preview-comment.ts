@@ -1,6 +1,14 @@
 import * as GitHub from "alchemy/GitHub";
 import * as Output from "alchemy/Output";
-import { Effect } from "effect";
+import { Effect, Option, Schema } from "effect";
+
+/** A PR number from the CI env. Anything else is no comment at all. */
+const pullRequestNumber = (value: string | undefined): Option.Option<number> =>
+  Option.fromNullishOr(
+    Option.getOrUndefined(
+      Schema.decodeUnknownOption(Schema.Int.check(Schema.isGreaterThan(0)))(value),
+    ),
+  );
 
 type PreviewCommentProps = {
   id?: string;
@@ -10,14 +18,15 @@ type PreviewCommentProps = {
 
 export const previewComment = ({ id = "preview-comment", name, url }: PreviewCommentProps) =>
   Effect.gen(function* () {
-    if (!process.env.PULL_REQUEST) {
+    const issueNumber = pullRequestNumber(process.env.PULL_REQUEST);
+    if (Option.isNone(issueNumber)) {
       return;
     }
 
     yield* GitHub.Comment(id, {
       owner: "et0and",
       repository: "wwwtom",
-      issueNumber: Number(process.env.PULL_REQUEST),
+      issueNumber: issueNumber.value,
       body: Output.interpolate`
 ## ${name} Preview Deployed
 
