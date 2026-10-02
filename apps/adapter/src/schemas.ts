@@ -75,4 +75,24 @@ export const successResponseSchema = Schema.toStandardSchemaV1(
   Schema.Struct({ success: Schema.Boolean }),
 );
 
+/**
+ * One guestbook entry on the wire. `created_at`/`updated_at` are ISO strings,
+ * not the `Date` objects Postgres returns: Kysely types the column as
+ * `Date | string`, and that union leaked all the way into the web client
+ * through Eden, where the value is a string at runtime. Declaring the response
+ * keeps the type honest.
+ */
+export const GuestbookEntrySchema = Schema.Struct({
+  id: Schema.Finite,
+  fediverse_username: Schema.String,
+  fediverse_instance: Schema.String,
+  display_name: Schema.NullOr(Schema.String),
+  avatar_url: Schema.NullOr(Schema.String),
+  message: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+
+export const guestbookEntriesSchema = Schema.toStandardSchemaV1(Schema.Array(GuestbookEntrySchema));
+
 export const problemDetailsSchema = Schema.toStandardSchemaV1(sharedProblemDetailsSchema);

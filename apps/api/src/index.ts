@@ -117,7 +117,10 @@ export const app = new Elysia({
       getRequestEnv(request),
       "Unhandled API error",
       error,
-      errorDetailsFromRequest(request, { service: "tom-api", status: 500 }),
+      errorDetailsFromRequest(request, {
+        service: "tom-api",
+        status: HttpStatus.InternalServerError,
+      }),
     );
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })

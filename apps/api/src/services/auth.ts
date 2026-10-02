@@ -1,8 +1,9 @@
 import { betterAuth } from "better-auth";
 import type { memoryAdapter } from "better-auth/adapters/memory";
-import { Effect } from "effect";
+import { Array, Effect, Option, Schema, SchemaGetter } from "effect";
 import { CmsError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import {
   parseAdminEmails,
@@ -13,12 +14,18 @@ import {
 
 type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
 
-/** Admin allowlist check (case-insensitive, whitespace-tolerant). */
-export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean =>
-  allowlist
-    .map((entry) => entry.trim().toLowerCase())
-    .filter((entry) => entry.length > 0)
-    .includes(email.trim().toLowerCase());
+/**
+ * Admin allowlist check (case-insensitive, whitespace-tolerant).
+ *
+ * Normalises with a short-circuiting `some` rather than building a normalised
+ * copy of the allowlist: this runs on every authenticated CMS request, and the
+ * allowlist is only a handful of entries but the copy is pure waste.
+ */
+export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean => {
+  const candidate = email.trim().toLowerCase();
+  if (candidate.length === 0) return false;
+  return allowlist.some((entry) => entry.trim().toLowerCase() === candidate);
+};
 
 type OAuthProvider = {
   readonly clientId: string;
@@ -83,14 +90,34 @@ export type Auth = ReturnType<typeof createAuth>;
 const oauthProvider = (
   clientId: string | undefined,
   clientSecret: string | undefined,
-): OAuthProvider | undefined =>
-  clientId !== undefined && clientId !== "" && clientSecret !== undefined && clientSecret !== ""
-    ? { clientId, clientSecret }
-    : undefined;
+): OAuthProvider | undefined => {
+  const id = normalizeOptionalSecret(clientId);
+  const secret = normalizeOptionalSecret(clientSecret);
+  return id === undefined || secret === undefined
+    ? undefined
+    : { clientId: id, clientSecret: secret };
+};
 
-const AUTH_PROVIDERS = ["github", "google"] as const;
+const CmsAuthProviderSchema = Schema.Literals(["github", "google"]);
 
-type CmsAuthProvider = (typeof AUTH_PROVIDERS)[number];
+type CmsAuthProvider = typeof CmsAuthProviderSchema.Type;
+
+/** One allowlist entry, normalised: trimmed and lowercased. */
+const ProviderEntry = Schema.String.pipe(
+  Schema.decode({
+    decode: SchemaGetter.transform((entry: string) => entry.trim().toLowerCase()),
+    encode: SchemaGetter.transform((entry: string) => entry.trim()),
+  }),
+);
+
+/** The allowlist itself: unset or blank means "not configured". */
+const ProviderAllowlist = Schema.Trim.pipe(
+  Schema.check(Schema.isMinLength(1)),
+  Schema.decodeTo(Schema.Array(ProviderEntry), {
+    decode: SchemaGetter.transform((allowlist: string) => allowlist.split(",")),
+    encode: SchemaGetter.transform((entries: ReadonlyArray<string>) => entries.join(",")),
+  }),
+);
 
 /**
  * Parse the comma-separated CMS_AUTH_PROVIDERS allowlist (infra sets it
@@ -98,15 +125,21 @@ type CmsAuthProvider = (typeof AUTH_PROVIDERS)[number];
  * legacy enable-when-configured behavior; a set value filters providers,
  * and a value with no known provider fails closed downstream (no OAuth
  * provider configures, so createAuthFromEnv reports auth unconfigured).
+ *
+ * `Schema.is` is the filter, so a provider added to `CmsAuthProviderSchema`
+ * is accepted here without touching this function.
  */
 export const parseAuthProviders = (
   value: string | undefined,
 ): ReadonlyArray<CmsAuthProvider> | undefined => {
-  if (value === undefined || value.trim() === "") return undefined;
-  return value
-    .split(",")
-    .map((entry) => entry.trim().toLowerCase())
-    .filter((entry): entry is CmsAuthProvider => entry === "github" || entry === "google");
+  const entries = Option.getOrUndefined(
+    Schema.decodeOption(Schema.UndefinedOr(ProviderAllowlist))(value),
+  );
+  if (entries === undefined) return undefined;
+  return Array.filter(
+    Array.map(entries, (entry) => Option.getOrUndefined(Schema.decodeOption(ProviderEntry)(entry))),
+    Schema.is(CmsAuthProviderSchema),
+  );
 };
 
 /** Provider allowlist check. Unset allowlists keep legacy behavior. */
@@ -134,15 +167,15 @@ const previewEditorPatterns = (env: CloudflareEnv): ReadonlyArray<string> => {
 /** Build an auth instance from worker env. Fails closed when unset. */
 export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: CloudflareEnv) {
   const database = env.CMS_D1;
-  const secret = env.BETTER_AUTH_SECRET?.trim();
+  const secret = normalizeOptionalSecret(env.BETTER_AUTH_SECRET);
   // Belt-and-braces tenant isolation: even if the other tenant's OAuth
   // keys leak into this worker's env, the allowlist keeps them disabled.
   const allowlist = parseAuthProviders(env.CMS_AUTH_PROVIDERS);
   const github = providerAllowed(allowlist, "github")
-    ? oauthProvider(env.GITHUB_CLIENT_ID?.trim(), env.GITHUB_CLIENT_SECRET?.trim())
+    ? oauthProvider(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET)
     : undefined;
   const google = providerAllowed(allowlist, "google")
-    ? oauthProvider(env.GOOGLE_CLIENT_ID?.trim(), env.GOOGLE_CLIENT_SECRET?.trim())
+    ? oauthProvider(env.GOOGLE_CLIENT_ID, env.GOOGLE_CLIENT_SECRET)
     : undefined;
   if (!database || !secret || (github === undefined && google === undefined)) {
     return yield* new CmsError({

@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { DateTime, Effect, Schema } from "effect";
 import {
   CmsMediaVariantSchema,
   TiptapDocSchema,
@@ -25,10 +25,21 @@ import type {
   CmsStatusFilter,
   CmsWorkInput,
 } from "@tom/schemas/cms";
+import { NullableTimestamp } from "@tom/schemas/timestamp";
 import { CmsError } from "@tom/types/errors";
+import { DEFAULT_PAGE_SIZE } from "@tom/schemas/cms";
 import { HttpStatus } from "@tom/constants/http";
 import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/services/config";
 import { renderTiptapHtml } from "@tom/utils/tiptap-html";
+
+/** The authoring schema owns the instant; the column stores its ISO form. */
+const encodeTimestamp = Schema.encodeSync(NullableTimestamp);
+
+/**
+ * Current instant as a wire timestamp, read once through `DateTime.now`
+ * rather than calling `new Date()` at each of the six CMS write sites.
+ */
+const nowTimestamp = DateTime.now.pipe(Effect.map((now) => DateTime.toDateUtc(now).toISOString()));
 
 /** Revisions kept per document; older snapshots prune on write. */
 const MAX_REVISIONS = 20;
@@ -365,12 +376,15 @@ const toListResponse = <T>(
   };
 };
 
-const normalizePaging = (
-  paging: CmsPaging,
-): Effect.Effect<{ limit: number; current: number; offset: number }, CmsError> => {
-  const limit = Math.min(Math.max(paging.pageSize ?? 10, 1), 100);
-  const current = Math.max(paging.page ?? 1, 1);
-  return Effect.succeed({ limit, current, offset: (current - 1) * limit });
+/**
+ * The SQL window for a validated paging request. The bounds live in
+ * `CmsPagingSchema`, so a decoded `page`/`pageSize` is already in range and
+ * this is arithmetic: nothing to clamp, nothing to fail on.
+ */
+const toPageWindow = (paging: CmsPaging) => {
+  const limit = paging.pageSize ?? DEFAULT_PAGE_SIZE;
+  const current = paging.page ?? 1;
+  return { limit, current, offset: (current - 1) * limit };
 };
 
 /**
@@ -418,7 +432,7 @@ export const listPosts = Effect.fn("CmsService.listPosts")(function* (
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging);
+  const { limit, current, offset } = toPageWindow(paging);
   const { rowFilter, countFilter, params } = postListFilters(paging);
   const [rows, countRow] = yield* Effect.all([
     queryAll<typeof PostRowSchema.Encoded>(
@@ -456,7 +470,7 @@ export const listPostSummaries = Effect.fn("CmsService.listPostSummaries")(funct
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging);
+  const { limit, current, offset } = toPageWindow(paging);
   const { rowFilter, countFilter, params } = postListFilters(paging);
   const [rows, countRow] = yield* Effect.all([
     queryAll<typeof PostSummaryRowSchema.Encoded>(
@@ -511,7 +525,7 @@ export const listWorks = Effect.fn("CmsService.listWorks")(function* (
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging);
+  const { limit, current, offset } = toPageWindow(paging);
   const [rows, countRow] = yield* Effect.all([
     queryAll<typeof PostRowSchema.Encoded>(
       db,
@@ -541,7 +555,7 @@ export const listWorkSummaries = Effect.fn("CmsService.listWorkSummaries")(funct
   paging: CmsPaging,
   status: CmsStatusFilter,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging);
+  const { limit, current, offset } = toPageWindow(paging);
   const [rows, countRow] = yield* Effect.all([
     queryAll<typeof PostSummaryRowSchema.Encoded>(
       db,
@@ -631,7 +645,7 @@ export const listMedia = Effect.fn("CmsService.listMedia")(function* (
   db: CmsD1Binding,
   paging: CmsPaging,
 ) {
-  const { limit, current, offset } = yield* normalizePaging(paging);
+  const { limit, current, offset } = toPageWindow(paging);
   const [rows, countRow] = yield* Effect.all([
     queryAll<typeof MediaRowSchema.Encoded>(
       db,
@@ -735,6 +749,28 @@ const findRowBySlug = <T>(
     operation,
   );
 
+/**
+ * The stored post/work row, decoded. The update path needs the real
+ * `createdAt` instant, so it cannot read the raw D1 string.
+ */
+const requireDecodedRow = Effect.fn("CmsService.requireDecodedRow")(function* (
+  db: CmsD1Binding,
+  table: "posts" | "works",
+  slug: string,
+  label: string,
+  operation: string,
+) {
+  const row = yield* findRowBySlug<typeof PostRowSchema.Encoded>(db, table, slug, operation);
+  if (!row) {
+    return yield* new CmsError({
+      message: `${label} not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  return yield* decodeCms(PostRowSchema, row, `Invalid CMS ${label.toLowerCase()} row`, operation);
+});
+
 const readPostById = Effect.fn("CmsService.readPostById")(function* (
   db: CmsD1Binding,
   id: string,
@@ -830,12 +866,12 @@ const recordRevision = Effect.fn("CmsService.recordRevision")(function* (
   actor: string,
   operation: string,
 ) {
-  const now = new Date().toISOString();
+  const now = yield* nowTimestamp;
   yield* runStatement(
     db,
     "INSERT INTO revisions (id, entity_type, entity_id, snapshot_json, actor, created_at) " +
       "VALUES (?, ?, ?, ?, ?, ?)",
-    [crypto.randomUUID(), entity, entityId, JSON.stringify(snapshot), actor, now],
+    [crypto.randomUUID(), entity, entityId, JSON.stringify(snapshot), actor, now.toString()],
     operation,
   );
   yield* runStatement(
@@ -986,85 +1022,97 @@ export const restoreRevision = Effect.fn("CmsService.restoreRevision")(function*
   return yield* updateWork(db, slug, snapshot, actor, adapterUrl);
 });
 
+/** A validated row in decoded shape: the row codec owns both directions. */
+type PostRow = typeof PostRowSchema.Type;
+
 const insertDocRow = (
   db: CmsD1Binding,
   table: "posts" | "works",
-  row: typeof PostRowSchema.Encoded,
+  row: PostRow,
   operation: string,
-): Effect.Effect<void, CmsError> =>
-  runStatement(
+): Effect.Effect<void, CmsError> => {
+  const encoded = Schema.encodeSync(PostRowSchema)(row);
+  return runStatement(
     db,
     `INSERT INTO ${table} (id, slug, title, summary, content_json, html, status, ` +
       "published_at, hero_media_id, meta_title, meta_description, meta_image, " +
       "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
-      row.id,
-      row.slug,
-      row.title,
-      row.summary,
-      row.content_json,
-      row.html,
-      row.status,
-      row.published_at,
-      row.hero_media_id,
-      row.meta_title,
-      row.meta_description,
-      row.meta_image,
-      row.created_at,
-      row.updated_at,
+      encoded.id,
+      encoded.slug,
+      encoded.title,
+      encoded.summary,
+      encoded.content_json,
+      encoded.html,
+      encoded.status,
+      encoded.published_at,
+      encoded.hero_media_id,
+      encoded.meta_title,
+      encoded.meta_description,
+      encoded.meta_image,
+      encoded.created_at,
+      encoded.updated_at,
     ],
     operation,
   );
+};
 
 const updateDocRow = (
   db: CmsD1Binding,
   table: "posts" | "works",
-  row: typeof PostRowSchema.Encoded,
+  row: PostRow,
   operation: string,
-): Effect.Effect<void, CmsError> =>
-  runStatement(
+): Effect.Effect<void, CmsError> => {
+  const encoded = Schema.encodeSync(PostRowSchema)(row);
+  return runStatement(
     db,
     `UPDATE ${table} SET title = ?, summary = ?, content_json = ?, html = ?, status = ?, ` +
       "published_at = ?, hero_media_id = ?, meta_title = ?, meta_description = ?, " +
       "meta_image = ?, updated_at = ? WHERE id = ?",
     [
-      row.title,
-      row.summary,
-      row.content_json,
-      row.html,
-      row.status,
-      row.published_at,
-      row.hero_media_id,
-      row.meta_title,
-      row.meta_description,
-      row.meta_image,
-      row.updated_at,
-      row.id,
+      encoded.title,
+      encoded.summary,
+      encoded.content_json,
+      encoded.html,
+      encoded.status,
+      encoded.published_at,
+      encoded.hero_media_id,
+      encoded.meta_title,
+      encoded.meta_description,
+      encoded.meta_image,
+      encoded.updated_at,
+      encoded.id,
     ],
     operation,
   );
+};
 
+/**
+ * Build the stored row in decoded shape. `content` becomes a JSON string and
+ * the timestamps ISO strings through `encodeSync`, so nothing here formats a
+ * timestamp or serialises JSON by hand.
+ */
 const toPostRow = (
   input: CmsPostInput | CmsWorkInput,
   html: string,
   id: string,
   now: string,
   createdAt: string,
-): typeof PostRowSchema.Encoded => ({
+): PostRow => ({
   id,
   slug: input.slug,
   title: input.title,
   summary: input.summary,
-  content_json: JSON.stringify(input.content),
+  content: input.content,
   html,
   status: input.status,
-  published_at: input.publishedAt,
-  hero_media_id: input.heroMediaId,
-  meta_title: input.meta.title,
-  meta_description: input.meta.description,
-  meta_image: input.meta.image,
-  created_at: createdAt,
-  updated_at: now,
+  publishedAt: encodeTimestamp(input.publishedAt),
+  heroMediaId: input.heroMediaId,
+  metaTitle: input.meta.title,
+  metaDescription: input.meta.description,
+  metaImage: input.meta.image,
+  createdAt,
+  updatedAt: now,
 });
 
 export const createPost = Effect.fn("CmsService.createPost")(function* (
@@ -1088,7 +1136,7 @@ export const createPost = Effect.fn("CmsService.createPost")(function* (
     });
   }
   const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = yield* nowTimestamp;
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
   yield* insertDocRow(db, "posts", toPostRow(input, html, id, now, now), "create_post");
   yield* replacePostCategories(db, id, input.categoryIds, "create_post");
@@ -1111,22 +1159,10 @@ export const updatePost = Effect.fn("CmsService.updatePost")(function* (
       operation: "update_post",
     });
   }
-  const existing = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
-    db,
-    "posts",
-    slug,
-    "update_post",
-  );
-  if (!existing) {
-    return yield* new CmsError({
-      message: `Post not found: ${slug}`,
-      status: HttpStatus.NotFound,
-      operation: "update_post",
-    });
-  }
-  const now = new Date().toISOString();
+  const existing = yield* requireDecodedRow(db, "posts", slug, "Post", "update_post");
+  const now = yield* nowTimestamp;
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
-  const row = toPostRow(input, html, existing.id, now, existing.created_at);
+  const row = toPostRow(input, html, existing.id, now, existing.createdAt);
   yield* updateDocRow(db, "posts", row, "update_post");
   yield* replacePostCategories(db, row.id, input.categoryIds, "update_post");
   yield* recordRevision(db, "post", row.id, input, actor, "update_post");
@@ -1181,7 +1217,7 @@ export const createWork = Effect.fn("CmsService.createWork")(function* (
     });
   }
   const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = yield* nowTimestamp;
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
   yield* insertDocRow(db, "works", toPostRow(input, html, id, now, now), "create_work");
   yield* recordRevision(db, "work", id, input, actor, "create_work");
@@ -1203,22 +1239,10 @@ export const updateWork = Effect.fn("CmsService.updateWork")(function* (
       operation: "update_work",
     });
   }
-  const existing = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
-    db,
-    "works",
-    slug,
-    "update_work",
-  );
-  if (!existing) {
-    return yield* new CmsError({
-      message: `Work not found: ${slug}`,
-      status: HttpStatus.NotFound,
-      operation: "update_work",
-    });
-  }
-  const now = new Date().toISOString();
+  const existing = yield* requireDecodedRow(db, "works", slug, "Work", "update_work");
+  const now = yield* nowTimestamp;
   const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
-  const row = toPostRow(input, html, existing.id, now, existing.created_at);
+  const row = toPostRow(input, html, existing.id, now, existing.createdAt);
   yield* updateDocRow(db, "works", row, "update_work");
   yield* recordRevision(db, "work", row.id, input, actor, "update_work");
   return yield* readWorkById(db, row.id, "update_work");
@@ -1271,7 +1295,7 @@ export const createMedia = Effect.fn("CmsService.createMedia")(function* (
   upload: MediaUpload,
 ) {
   const id = crypto.randomUUID();
-  const now = new Date().toISOString();
+  const now = yield* nowTimestamp;
   const key = `media/${id}/${upload.name}`;
   yield* Effect.tryPromise({
     try: () => r2.put(key, upload.bytes, { httpMetadata: { contentType: upload.mime } }),
@@ -1287,7 +1311,7 @@ export const createMedia = Effect.fn("CmsService.createMedia")(function* (
     db,
     "INSERT INTO media (id, key, mime, width, height, alt, caption, variants_json, " +
       "created_at, updated_at) VALUES (?, ?, ?, NULL, NULL, ?, ?, '[]', ?, ?)",
-    [id, key, upload.mime, upload.alt, upload.caption, now, now],
+    [id, key, upload.mime, upload.alt, upload.caption, now.toString(), now.toString()],
     "create_media",
   );
   const row = yield* queryFirst<typeof MediaRowSchema.Encoded>(

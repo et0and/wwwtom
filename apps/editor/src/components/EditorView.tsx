@@ -13,6 +13,7 @@ import { Select } from "@tom/ui/select";
 import { Collapsible } from "@tom/ui/collapsible";
 import { adapterUrl } from "../lib/api";
 import { runClient } from "@tom/utils/services/http";
+import { toSlug } from "@tom/utils/slug";
 import {
   getPost,
   getWork,
@@ -69,12 +70,6 @@ const toInitial = (item: CmsPost | CmsWork, slug: string): InitialData => ({
   categoryIds: "categories" in item ? item.categories.map((category) => category.id) : [],
   slug,
 });
-
-const slugify = (title: string): string =>
-  title
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
 
 /**
  * Edit view shell: loads the post/work (or a blank form) then mounts the
@@ -420,7 +415,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
                 />
                 <InputGroup.Button
                   type="button"
-                  onClick={() => setField("slug", slugify(fields().title))}
+                  onClick={() => setField("slug", toSlug(fields().title))}
                 >
                   Use title
                 </InputGroup.Button>

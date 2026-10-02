@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getAdapterBaseUrl, unwrapAdapter } from "~/libs/adapter";
+import { getAdapterBaseUrl, runAdapterCall } from "~/libs/adapter";
+import type { EdenResult } from "@tom/utils/services/http";
 import { HttpError } from "@tom/types/errors";
 
 describe("getAdapterBaseUrl", () => {
@@ -17,92 +18,90 @@ describe("getAdapterBaseUrl", () => {
   });
 });
 
-describe("unwrapAdapter", () => {
-  it("returns the data on success", () => {
-    const result = { data: { docs: [] }, error: null };
-    expect(unwrapAdapter(result)).toEqual({ docs: [] });
+const call = <T>(result: EdenResult<T>) => runAdapterCall(() => Promise.resolve(result));
+
+const rejection = async (result: EdenResult<unknown>): Promise<unknown> => {
+  let caught: unknown;
+  try {
+    await call(result);
+  } catch (error) {
+    caught = error;
+  }
+  return caught;
+};
+
+describe("runAdapterCall", () => {
+  it("returns the data on success", async () => {
+    await expect(call({ data: { docs: [] }, error: null })).resolves.toEqual({ docs: [] });
   });
 
-  it("returns data even when it is falsy", () => {
-    const result = { data: "", error: null };
-    expect(unwrapAdapter(result)).toBe("");
+  it("returns data even when it is falsy", async () => {
+    await expect(call({ data: "", error: null })).resolves.toBe("");
   });
 
-  it("throws an HttpError with the adapter message and status", () => {
-    let error: unknown;
-    try {
-      unwrapAdapter({
-        data: null,
-        error: {
-          status: 404,
-          value: {
-            type: "https://errors.tom.so/not-found",
-            status: 404,
-            title: "Not found",
-          },
-        },
-      });
-    } catch (caught) {
-      error = caught;
-    }
+  it("fails with an HttpError carrying the adapter message and status", async () => {
+    const error = await rejection({
+      data: null,
+      error: {
+        status: 404,
+        value: { type: "https://errors.tom.so/not-found", status: 404, title: "Not found" },
+      },
+    });
     expect(error).toBeInstanceOf(HttpError);
     expect(error).toMatchObject({ message: "Not found", status: 404 });
   });
 
-  it("prefers detail over title for the user-facing message", () => {
-    let error: unknown;
-    try {
-      unwrapAdapter({
-        data: null,
-        error: {
+  it("prefers detail over title for the user-facing message", async () => {
+    const error = await rejection({
+      data: null,
+      error: {
+        status: 400,
+        value: {
+          type: "https://errors.tom.so/validation",
           status: 400,
-          value: {
-            type: "https://errors.tom.so/validation",
-            status: 400,
-            title: "Validation error",
-            detail: "title - too long",
-          },
+          title: "Validation error",
+          detail: "title - too long",
         },
-      });
-    } catch (caught) {
-      error = caught;
-    }
+      },
+    });
     expect(error).toBeInstanceOf(HttpError);
     expect(error).toMatchObject({ message: "title - too long", status: 400 });
   });
 
-  it("falls back to a generic message when the error body is not problem details", () => {
-    expect(() =>
-      unwrapAdapter({ data: null, error: { status: 400, value: { error: "legacy" } } }),
-    ).toThrow("Adapter request failed");
+  it("falls back to a generic message when the error body is not problem details", async () => {
+    const error = await rejection({
+      data: null,
+      error: { status: 400, value: { error: "legacy" } },
+    });
+    expect(error).toBeInstanceOf(HttpError);
+    expect(error).toMatchObject({ message: "Adapter request failed" });
   });
 
-  it("falls back to status 500 when the error status is missing", () => {
-    let error: unknown;
-    try {
-      unwrapAdapter({
-        data: null,
-        error: {
-          status: null,
-          value: { type: "about:blank", status: 500, title: "boom" },
-        },
-      });
-    } catch (caught) {
-      error = caught;
-    }
+  it("falls back to status 500 when the error status is missing", async () => {
+    const error = await rejection({
+      data: null,
+      error: { status: null, value: { type: "about:blank", status: 500, title: "boom" } },
+    });
     expect(error).toBeInstanceOf(HttpError);
     expect(error).toMatchObject({ status: 500 });
   });
 
-  it("throws an HttpError instance", () => {
-    try {
-      unwrapAdapter({
-        data: null,
-        error: { status: 500, value: { type: "about:blank", status: 500, title: "boom" } },
-      });
-      expect.unreachable();
-    } catch (error) {
-      expect(error).toBeInstanceOf(HttpError);
-    }
+  it("falls back to status 500 for a status that is not an error code", async () => {
+    // `Number(x) || 500` used to pass a truthy non-error status straight through
+    // as the response status.
+    const error = await rejection({
+      data: null,
+      error: { status: 302, value: { type: "about:blank", status: 302, title: "moved" } },
+    });
+    expect(error).toBeInstanceOf(HttpError);
+    expect(error).toMatchObject({ status: 500 });
+  });
+
+  it("fails with an HttpError instance", async () => {
+    const error = await rejection({
+      data: null,
+      error: { status: 500, value: { type: "about:blank", status: 500, title: "boom" } },
+    });
+    expect(error).toBeInstanceOf(HttpError);
   });
 });
