@@ -1,26 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Effect } from "effect";
-import type { CmsD1Binding, CmsD1Statement } from "@tom/utils/services/config";
-import { CmsError } from "@tom/types/errors";
+import { describe, expect, it, vi } from "vitest";
+import type { CmsD1Binding, CmsD1Statement, CloudflareEnv } from "@tom/utils/services/config";
 import { HttpStatus } from "@tom/constants/http";
 import { app } from "../index";
-import { requireSession } from "../services/auth";
 import { requestWithEnv, testEnv } from "../test/helpers";
+import { signedSessionCookie } from "../test/session";
 
+// Only the env-to-auth construction is mocked: the real requireSession then
+// verifies the signed session cookie against the real Better Auth instance.
 vi.mock("../services/auth", async (importOriginal) => {
   const original = await importOriginal<typeof import("../services/auth")>();
-  const { Effect: FX } = await import("effect");
+  const { Effect } = await import("effect");
+  const { cmsSessionAuth } = await import("../test/session");
   return {
     ...original,
-    requireSession: vi.fn(() =>
-      FX.fail(
-        new CmsError({
-          message: "no session",
-          status: HttpStatus.Unauthorized,
-          operation: "get_session",
-        }),
-      ),
-    ),
+    createAuthFromEnv: (env: CloudflareEnv) =>
+      env.BETTER_AUTH_SECRET
+        ? Effect.succeed(cmsSessionAuth(original.createAuth, env.BETTER_AUTH_SECRET))
+        : original.createAuthFromEnv(env),
   };
 });
 
@@ -109,10 +105,12 @@ const read = (
     .slice(offset, offset + limit);
 };
 
+const AUTH_SECRET = "test-secret-with-at-least-32-chars!!";
+
 const authEnv = (seed: Seed) =>
   testEnv({
     CMS_D1: fakeDb(seed),
-    BETTER_AUTH_SECRET: "test-secret-with-at-least-32-chars!!",
+    BETTER_AUTH_SECRET: AUTH_SECRET,
     GITHUB_CLIENT_ID: "test-client-id",
     GITHUB_CLIENT_SECRET: "test-client-secret",
   });
@@ -124,7 +122,7 @@ const bundleEnv = (seed: Seed) =>
     TOM_SECRETS: {
       get: async () =>
         JSON.stringify({
-          BETTER_AUTH_SECRET: "test-secret-with-at-least-32-chars!!",
+          BETTER_AUTH_SECRET: AUTH_SECRET,
           GITHUB_CLIENT_ID: "test-client-id",
           GITHUB_CLIENT_SECRET: "test-client-secret",
         }),
@@ -141,24 +139,13 @@ const seed: Seed = {
   links: [],
 };
 
-const anonymousSession = () =>
-  Effect.fail(
-    new CmsError({
-      message: "No session",
-      status: HttpStatus.Unauthorized,
-      operation: "require_session",
-    }),
-  ) as never;
-
-const adminSession = () =>
-  Effect.succeed({ user: { id: "admin-1" }, session: { id: "session-1" } }) as never;
-
-describe("cms admin reads", () => {
-  beforeEach(() => {
-    vi.mocked(requireSession).mockReset();
-    vi.mocked(requireSession).mockReturnValue(anonymousSession());
+/** A request carrying a session cookie Better Auth actually signed. */
+const adminRequest = async (url: string, env: CloudflareEnv): Promise<Request> =>
+  requestWithEnv(url, env, {
+    headers: { cookie: await signedSessionCookie(AUTH_SECRET) },
   });
 
+describe("cms admin reads", () => {
   describe("GET /posts", () => {
     it("lists published posts for anonymous readers", async () => {
       const response = await app.fetch(requestWithEnv("http://localhost/posts", authEnv(seed)));
@@ -175,13 +162,7 @@ describe("cms admin reads", () => {
       expect(response.status).toBe(HttpStatus.Unauthorized);
     });
 
-    it("skips the session lookup without a session credential", async () => {
-      const response = await app.fetch(requestWithEnv("http://localhost/posts", authEnv(seed)));
-      expect(response.status).toBe(200);
-      expect(vi.mocked(requireSession)).not.toHaveBeenCalled();
-    });
-
-    it("skips the session lookup on every read without a credential", async () => {
+    it("serves every read to anonymous readers", async () => {
       for (const path of [
         "/posts/summary",
         "/works",
@@ -189,40 +170,30 @@ describe("cms admin reads", () => {
         "/posts/hello-world",
         "/works/hyperjam",
       ]) {
-        vi.mocked(requireSession).mockClear();
         const response = await app.fetch(requestWithEnv(`http://localhost${path}`, authEnv(seed)));
         expect(response.status).toBe(200);
-        expect(vi.mocked(requireSession)).not.toHaveBeenCalled();
       }
     });
 
-    it("checks the session on bearer credentials", async () => {
+    it("treats an invalid bearer credential as anonymous", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/posts", authEnv(seed), {
           headers: { authorization: "Bearer test-token" },
         }),
       );
       expect(response.status).toBe(200);
-      expect(vi.mocked(requireSession)).toHaveBeenCalled();
+      expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(1);
     });
 
     it("lists everything for admins by default", async () => {
-      vi.mocked(requireSession).mockReturnValue(adminSession());
-      const response = await app.fetch(
-        requestWithEnv("http://localhost/posts", authEnv(seed), {
-          headers: { cookie: "better-auth.session_token=test" },
-        }),
-      );
+      const response = await app.fetch(await adminRequest("http://localhost/posts", authEnv(seed)));
       expect(response.status).toBe(200);
       expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(2);
     });
 
     it("filters drafts for admins on request", async () => {
-      vi.mocked(requireSession).mockReturnValue(adminSession());
       const response = await app.fetch(
-        requestWithEnv("http://localhost/posts?status=draft", authEnv(seed), {
-          headers: { cookie: "better-auth.session_token=test" },
-        }),
+        await adminRequest("http://localhost/posts?status=draft", authEnv(seed)),
       );
       expect(response.status).toBe(200);
       const body = (await response.json()) as { docs: Array<{ slug: string }> };
@@ -239,11 +210,8 @@ describe("cms admin reads", () => {
     });
 
     it("shows drafts to admins", async () => {
-      vi.mocked(requireSession).mockReturnValue(adminSession());
       const response = await app.fetch(
-        requestWithEnv("http://localhost/posts/draft-post", authEnv(seed), {
-          headers: { cookie: "better-auth.session_token=test" },
-        }),
+        await adminRequest("http://localhost/posts/draft-post", authEnv(seed)),
       );
       expect(response.status).toBe(200);
       expect(((await response.json()) as { slug: string }).slug).toBe("draft-post");
@@ -271,11 +239,8 @@ describe("cms admin reads", () => {
 
   describe("secret bundle auth", () => {
     it("unlocks drafts when the secrets ride TOM_SECRETS", async () => {
-      vi.mocked(requireSession).mockReturnValue(adminSession());
       const response = await app.fetch(
-        requestWithEnv("http://localhost/posts?status=all", bundleEnv(seed), {
-          headers: { cookie: "better-auth.session_token=test" },
-        }),
+        await adminRequest("http://localhost/posts?status=all", bundleEnv(seed)),
       );
       expect(response.status).toBe(200);
       expect(((await response.json()) as { totalDocs: number }).totalDocs).toBe(2);

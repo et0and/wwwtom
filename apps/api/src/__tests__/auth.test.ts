@@ -10,11 +10,14 @@ import {
   requireSession,
 } from "../services/auth";
 import { memoryDatabase, type MemorySeedRow } from "../test/helpers";
+import { signedSessionCookie } from "../test/session";
+
+const TEST_SECRET = "test-secret-with-enough-entropy-0123456789";
 
 const testAuth = () =>
   createAuth({
     database: memoryDatabase(),
-    secret: "test-secret-with-enough-entropy-0123456789",
+    secret: TEST_SECRET,
     baseURL: "http://localhost:8788",
     trustedOrigins: ["http://localhost:8788"],
     github: { clientId: "test-github-id", clientSecret: "test-github-secret" },
@@ -25,7 +28,7 @@ describe("social providers", () => {
   it("enables Google only for Sophie", () => {
     const auth = createAuth({
       database: memoryDatabase(),
-      secret: "test-secret-with-enough-entropy-0123456789",
+      secret: TEST_SECRET,
       baseURL: "http://localhost:8790",
       trustedOrigins: ["http://localhost:8790"],
       google: { clientId: "test-google-id", clientSecret: "test-google-secret" },
@@ -38,7 +41,7 @@ describe("social providers", () => {
   it("enables both providers when both configure", () => {
     const auth = createAuth({
       database: memoryDatabase(),
-      secret: "test-secret-with-enough-entropy-0123456789",
+      secret: TEST_SECRET,
       baseURL: "http://localhost:8788",
       trustedOrigins: ["http://localhost:8788"],
       github: { clientId: "test-github-id", clientSecret: "test-github-secret" },
@@ -77,7 +80,7 @@ const stubDb: CmsD1Binding = {
 
 const bothProvidersEnv = (overrides: Partial<CloudflareEnv> = {}): CloudflareEnv => ({
   CMS_D1: stubDb,
-  BETTER_AUTH_SECRET: "test-secret-with-enough-entropy-0123456789",
+  BETTER_AUTH_SECRET: TEST_SECRET,
   GITHUB_CLIENT_ID: "test-github-id",
   GITHUB_CLIENT_SECRET: "test-github-secret",
   GOOGLE_CLIENT_ID: "test-google-id",
@@ -228,29 +231,12 @@ const liveSessionRow = {
 const sessionAuth = (sessions: Array<MemorySeedRow>) =>
   createAuth({
     database: memoryDatabase({ user: [userRow], session: sessions }),
-    secret: "test-secret-with-enough-entropy-0123456789",
+    secret: TEST_SECRET,
     baseURL: "http://localhost:8788",
     trustedOrigins: ["http://localhost:8788"],
     github: { clientId: "test-github-id", clientSecret: "test-github-secret" },
     adminEmails: ["tom@example.com"],
   });
-
-/** Sign a session token the way Better Auth signs cookies (HMAC-SHA256). */
-const signedCookie = async (token: string, secret: string): Promise<string> => {
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(secret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"],
-  );
-  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(token));
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
-  return encodeURIComponent(`${token}.${base64}`);
-};
-
-const sessionHeaders = (cookie: string): Headers =>
-  new Headers({ cookie: `better-auth.session_token=${cookie}` });
 
 describe("requireSession", () => {
   it("fails 401 without a session cookie", async () => {
@@ -261,8 +247,8 @@ describe("requireSession", () => {
 
   it("returns the session user for a live token", async () => {
     const auth = sessionAuth([liveSessionRow]);
-    const cookie = await signedCookie("live-token", "test-secret-with-enough-entropy-0123456789");
-    const result = await Effect.runPromise(requireSession(auth, sessionHeaders(cookie)));
+    const cookie = await signedSessionCookie(TEST_SECRET);
+    const result = await Effect.runPromise(requireSession(auth, new Headers({ cookie })));
     expect(result.user.email).toBe("tom@example.com");
   });
 
@@ -275,12 +261,9 @@ describe("requireSession", () => {
         expiresAt: new Date(Date.now() - 3600_000),
       },
     ]);
-    const cookie = await signedCookie(
-      "expired-token",
-      "test-secret-with-enough-entropy-0123456789",
-    );
+    const cookie = await signedSessionCookie(TEST_SECRET, "expired-token");
     const result = await Effect.runPromise(
-      Effect.flip(requireSession(auth, sessionHeaders(cookie))),
+      Effect.flip(requireSession(auth, new Headers({ cookie }))),
     );
     expect(result).toBeInstanceOf(CmsError);
     expect(result.status).toBe(401);

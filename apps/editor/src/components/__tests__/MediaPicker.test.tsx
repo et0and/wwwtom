@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { MediaPicker } from "../MediaPicker";
 import { fetchMock, jsonResponse, listBody, media, useFetchMock } from "../../test/helpers";
@@ -16,9 +17,9 @@ describe("MediaPicker", () => {
     ));
     await findByText("old.webp");
     await findByText("new.webp");
-    fireEvent.input(await findByLabelText("Choose existing"), { target: { value: "new" } });
+    await userEvent.type(await findByLabelText("Choose existing"), "new");
     await vi.waitFor(() => expect(queryByText("old.webp")).toBeNull());
-    fireEvent.click(await findByText("new.webp"));
+    await userEvent.click(await findByText("new.webp"));
     expect(picked.map((item) => item.id)).toEqual(["media-2"]);
   });
 

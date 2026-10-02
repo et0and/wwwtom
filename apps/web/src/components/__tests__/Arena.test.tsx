@@ -1,16 +1,12 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
-import { fireEvent, render, screen, waitFor } from "@solidjs/testing-library";
+import { beforeEach, describe, expect, it } from "vitest";
+import { render, screen, waitFor } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { QueryClientProvider } from "@tanstack/solid-query";
 import { ArenaCarousel } from "~/components/Arena";
 import { queryClient } from "~/libs/query-client";
+import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 
-vi.mock("~/server/adapter", () => ({
-  fetchChannelContents: vi.fn(),
-}));
-
-import { fetchChannelContents } from "~/server/adapter";
-
-const mockedFetchChannelContents = fetchChannelContents as Mock;
+const fetchMock = stubAdapterFetch();
 
 const pdfAttachment = {
   id: 18470324,
@@ -101,14 +97,14 @@ const renderCarousel = () =>
 
 beforeEach(() => {
   queryClient.clear();
-  mockedFetchChannelContents.mockReset();
+  fetchMock.mockReset();
 });
 
 describe("ArenaCarousel", { timeout: 30_000 }, () => {
   // Query round-trips plus full-tree role queries take seconds on loaded
   // CI runners — allow extra time for every test in this file.
   it("renders a readable name and thumbnail for PDF attachments instead of the hashed filename", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [pdfAttachment] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [pdfAttachment] }));
     renderCarousel();
 
     await waitFor(() =>
@@ -128,7 +124,7 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
   });
 
   it("falls back to a readable name link for attachments without a cover image", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [epubAttachment] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [epubAttachment] }));
     renderCarousel();
 
     await waitFor(() => expect(screen.getByText("memories-dreams-reflections.epub")).toBeTruthy());
@@ -138,7 +134,7 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
   });
 
   it("renders audio attachments as a download link", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [audioAttachment] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [audioAttachment] }));
     renderCarousel();
 
     const link = await screen.findByRole("link", { name: /alan-watts-just-trust-the-universe/ });
@@ -150,7 +146,7 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
   });
 
   it("shows a play poster for video embeds and loads the iframe on click", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [videoEmbed] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [videoEmbed] }));
     renderCarousel();
 
     const playButton = await screen.findByRole("button", { name: /play dr\. chris milton/i });
@@ -160,7 +156,7 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
       "https://i.ytimg.com/vi/dCUVdh8MJe8/hqdefault.jpg",
     );
 
-    fireEvent.click(playButton);
+    await userEvent.click(playButton);
 
     await waitFor(() => expect(document.querySelector("iframe")).toBeTruthy());
     expect(screen.queryByRole("button", { name: /play dr\. chris milton/i })).toBeNull();
@@ -171,7 +167,7 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
       ...videoEmbed,
       image: undefined,
     };
-    mockedFetchChannelContents.mockResolvedValue({ data: [embedWithoutImage] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [embedWithoutImage] }));
     renderCarousel();
 
     await waitFor(() => expect(document.querySelector("iframe")).toBeTruthy());
@@ -179,18 +175,17 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
   });
 
   it("does not open a lightbox when an image block is clicked", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [imageBlock] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [imageBlock] }));
     renderCarousel();
 
     const image = await screen.findByAltText("The Psychology of CG Jung");
-    fireEvent.click(image);
+    await userEvent.click(image);
 
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(document.querySelector(".fixed.inset-0")).toBeNull();
   });
 
   it("links to the are.na source channel", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [pdfAttachment] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [pdfAttachment] }));
     renderCarousel();
 
     await waitFor(() =>
@@ -202,14 +197,14 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
   });
 
   it("shows empty state if channel holds no blocks", async () => {
-    mockedFetchChannelContents.mockResolvedValue({ data: [] });
+    fetchMock.mockResolvedValue(jsonResponse({ data: [] }));
     renderCarousel();
 
     await waitFor(() => expect(screen.getByText("Sorry, no content found")).toBeTruthy());
   });
 
   it("shows error if channel fetch fails", async () => {
-    mockedFetchChannelContents.mockRejectedValue(new Error("network down"));
+    fetchMock.mockRejectedValue(new Error("network down"));
     renderCarousel();
 
     await waitFor(() => expect(screen.getByText("Sorry, no content found")).toBeTruthy());

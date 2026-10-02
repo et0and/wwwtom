@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { queryClient } from "../lib/query-client";
 import { App } from "../App";
@@ -57,7 +58,7 @@ describe("Sophie App", () => {
     });
 
     const { findByRole } = render(() => <App />);
-    fireEvent.click(await findByRole("link", { name: "About" }));
+    await userEvent.click(await findByRole("link", { name: "About" }));
 
     expect(startViewTransition).toHaveBeenCalledTimes(1);
   });

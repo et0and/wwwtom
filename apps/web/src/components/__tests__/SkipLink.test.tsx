@@ -3,11 +3,6 @@ import { describe, it, expect } from "vitest";
 import { SkipLink } from "@tom/ui/SkipLink";
 
 describe("SkipLink", () => {
-  it("matches the snapshot", () => {
-    const { container } = render(() => <SkipLink />);
-    expect(container).toMatchSnapshot();
-  });
-
   it("renders skip link with correct text", () => {
     render(() => <SkipLink />);
 

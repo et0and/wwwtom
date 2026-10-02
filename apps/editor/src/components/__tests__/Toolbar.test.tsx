@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { Toolbar } from "../Toolbar";
 import { createTiptap } from "../../lib/tiptap";
@@ -47,7 +48,7 @@ describe("Toolbar", { timeout: 30_000 }, () => {
     await vi.waitFor(() => expect(getByTestId("version").textContent).toBe("1"));
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain("hello"));
     handle.editor()?.commands.selectAll();
-    fireEvent.click(getByRole("button", { name: "B" }));
+    await userEvent.click(getByRole("button", { name: "B" }));
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain(`"type":"bold"`));
     await vi.waitFor(() => expect(handle.version()).toBeGreaterThan(1));
     await vi.waitFor(() =>
@@ -63,7 +64,7 @@ describe("Toolbar", { timeout: 30_000 }, () => {
     withHello(handle);
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain("hello"));
     handle.editor()?.commands.selectAll();
-    fireEvent.click(getByRole("button", { name: "H2" }));
+    await userEvent.click(getByRole("button", { name: "H2" }));
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain(`"type":"heading"`));
   });
 
@@ -74,7 +75,7 @@ describe("Toolbar", { timeout: 30_000 }, () => {
     withHello(handle);
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain("hello"));
     handle.editor()?.commands.selectAll();
-    fireEvent.click(getByRole("button", { name: "Banner" }));
+    await userEvent.click(getByRole("button", { name: "Banner" }));
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain(`"type":"banner"`));
   });
 
@@ -85,7 +86,7 @@ describe("Toolbar", { timeout: 30_000 }, () => {
     withHello(handle);
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain("hello"));
     handle.editor()?.commands.selectAll();
-    fireEvent.click(getByRole("button", { name: "Quote" }));
+    await userEvent.click(getByRole("button", { name: "Quote" }));
     await vi.waitFor(() => expect(JSON.stringify(handle.doc())).toContain(`"type":"blockquote"`));
   });
 });

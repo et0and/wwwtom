@@ -19,15 +19,12 @@ function updateBodyPointerEvents(): void {
 }
 
 function containsComposed(parent: Node | null, child: Node | null): boolean {
-  let node = child;
+  if (!parent || !child) return false;
+  if (parent.contains(child)) return true;
+  let node: Node | null = child;
   while (node) {
     if (node === parent) return true;
-    const root = node.getRootNode();
-    if (root instanceof ShadowRoot && root.host) {
-      node = root.host;
-    } else {
-      return false;
-    }
+    node = node.parentNode ?? (node instanceof ShadowRoot ? node.host : null);
   }
   return false;
 }
