@@ -150,6 +150,14 @@ const notifyGuestbookSign = (entry: GuestbookEntry): Effect.Effect<void, never, 
   });
 
 /**
+ * The simulator mirrors DatabaseService's paged response envelope, so the
+ * payload is a paged object wrapping the entries — not a bare array.
+ */
+const SimulatorEntriesSchema = Schema.Struct({
+  results: Schema.Array(GuestbookEntrySchema),
+});
+
+/**
  * In simulator mode (x-use-simulator + SIMULATOR_URL) entries come from the
  * fixture store instead of D1; the simulator mirrors DatabaseService's
  * { results, page, page_size, total_count } response shape.
@@ -182,9 +190,7 @@ const simulatorEntries = (
           status: HttpStatus.BadGateway,
         }),
     });
-    const body = yield* Schema.decodeUnknownEffect(Schema.Array(GuestbookEntrySchema))(
-      payload,
-    ).pipe(
+    const body = yield* Schema.decodeUnknownEffect(SimulatorEntriesSchema)(payload).pipe(
       Effect.mapError(
         (cause) =>
           new HttpError({
@@ -195,7 +201,7 @@ const simulatorEntries = (
       ),
     );
     yield* Effect.logInfo("guestbook:entries:simulator:success");
-    return body;
+    return body.results;
   });
 };
 
