@@ -1,4 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
+import { colors } from "./colors.stylex";
+import { textColors } from "./tokens.stylex";
 
 /**
  * Layout primitives shared across TomUI components.
@@ -139,7 +141,77 @@ export const select = stylex.create({
   text: { userSelect: "text" },
 });
 
+const brandColor = colors["--color-tomui-brand"];
+const tintColor = colors["--color-tomui-tint"];
+const hairlineColor = colors["--color-tomui-hairline"];
+const dangerText = textColors["--text-color-tomui-danger"];
+
 /** Monospace stack, matching the old Tailwind `font-mono`. */
 export const monoFont = stylex.defineConsts({
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+});
+
+/**
+ * Menu item chrome, shared by DropdownMenu, Combobox, Autocomplete, and
+ * CommandPalette. All four render the same selectable-row pattern, and each
+ * drives its highlighted state from a data attribute.
+ */
+export const menuItem = stylex.create({
+  base: {
+    position: "relative",
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    cursor: "default",
+    userSelect: "none",
+    fontSize: "0.875rem",
+    outlineWidth: 0,
+    ":focus-visible": { boxShadow: "0 0 0 2px " + brandColor },
+    ":is([data-highlighted])": { backgroundColor: tintColor },
+    ":is([data-disabled])": { pointerEvents: "none", opacity: 0.5 },
+  },
+  /** Indented to clear the check column. */
+  checkable: { paddingLeft: "2rem" },
+  plain: { paddingInline: "0.5rem" },
+  vertical: { paddingBlock: "0.375rem" },
+  rounded: { borderRadius: "0.375rem" },
+  danger: {
+    color: dangerText,
+    ":is([data-highlighted])": {
+      backgroundColor: "color-mix(in srgb, " + dangerText + " 5%, transparent)",
+      color: dangerText,
+    },
+  },
+  /** Check mark column, pinned to the leading edge. */
+  checkColumn: {
+    position: "absolute",
+    left: "0.5rem",
+    display: "inline-flex",
+    width: "0.875rem",
+    height: "0.875rem",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "inherit",
+  },
+  trailing: { marginInlineStart: "auto", display: "inline-flex" },
+  label: {
+    paddingInline: "0.5rem",
+    paddingBlock: "0.375rem",
+    fontSize: "0.875rem",
+    fontWeight: 600,
+  },
+  labelInset: { paddingInlineStart: "2rem" },
+  separator: {
+    marginInline: "-0.25rem",
+    marginBlock: "0.25rem",
+    height: "1px",
+    backgroundColor: hairlineColor,
+    borderWidth: 0,
+  },
+  shortcut: {
+    marginInlineStart: "auto",
+    fontSize: "0.75rem",
+    letterSpacing: "0.1em",
+    opacity: 0.6,
+  },
 });
