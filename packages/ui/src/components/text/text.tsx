@@ -2,123 +2,16 @@ import { merge, omit } from "solid-js";
 import { Dynamic } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-/** Text variant and size definitions mapping names to their Tailwind classes. */
-export const TOMUI_TEXT_VARIANTS = {
-  variant: {
-    heading: {
-      classes: "text-lg font-semibold",
-      description: "Heading text (16px by default, 20px at large size)",
-    },
-    heading1: {
-      classes: "text-3xl font-semibold",
-      description: "Deprecated large heading for page titles; use heading instead",
-    },
-    heading2: {
-      classes: "text-2xl font-semibold",
-      description: "Deprecated medium heading for section titles; use heading instead",
-    },
-    heading3: {
-      classes: "text-lg font-semibold",
-      description: "Deprecated small heading for subsections; use heading instead",
-    },
-    body: {
-      classes: "text-tomui-default",
-      description: "Default body text",
-    },
-    secondary: {
-      classes: "text-tomui-subtle",
-      description: "Muted text for secondary information",
-    },
-    success: {
-      classes: "text-tomui-link",
-      description: "Success state text in link color",
-    },
-    error: {
-      classes: "text-tomui-danger",
-      description: "Error state text",
-    },
-    mono: {
-      classes: "font-mono",
-      description: "Monospace text for code",
-    },
-    "mono-secondary": {
-      classes: "font-mono text-tomui-subtle",
-      description: "Muted monospace text",
-    },
-  },
-  size: {
-    xs: {
-      classes: "text-xs/[inherit]",
-      description: "Extra small text",
-    },
-    sm: {
-      classes: "text-sm/[inherit]",
-      description: "Small text",
-    },
-    base: {
-      classes: "text-base/[inherit]",
-      description: "Default text size",
-    },
-    lg: {
-      classes: "text-lg/[inherit]",
-      description: "Large text",
-    },
-  },
-} as const;
-
-export const TOMUI_TEXT_DEFAULT_VARIANTS = {
-  variant: "body",
-  size: "base",
-} as const;
-
-// Derived types from TOMUI_TEXT_VARIANTS
-export type TomuiTextVariant = keyof typeof TOMUI_TEXT_VARIANTS.variant;
-export type TomuiTextSize = keyof typeof TOMUI_TEXT_VARIANTS.size;
-
-function resolveTextSizeClasses(variant: TomuiTextVariant, size: TomuiTextSize): string {
-  if (variant === "heading") {
-    return size === "lg" ? "text-xl" : "";
-  }
-
-  if (variant === "heading1" || variant === "heading2" || variant === "heading3") {
-    return "";
-  }
-
-  if (variant === "mono" || variant === "mono-secondary") {
-    // Monospace fonts need to be 1pt smaller than body text to optically match.
-    return size === "lg"
-      ? TOMUI_TEXT_VARIANTS.size.base.classes
-      : TOMUI_TEXT_VARIANTS.size.sm.classes;
-  }
-
-  return resolveVariant(TOMUI_TEXT_VARIANTS.size, size, TOMUI_TEXT_DEFAULT_VARIANTS.size).classes;
-}
-
-/** Valid HTML elements for the Text component's `as` prop. */
-export type TextElement =
-  | "h1"
-  | "h2"
-  | "h3"
-  | "h4"
-  | "h5"
-  | "h6"
-  | "p"
-  | "span"
-  | "label"
-  | "dt"
-  | "dd"
-  | "li"
-  | "figcaption"
-  | "legend"
-  | "pre"
-  | "code"
-  | "em"
-  | "strong"
-  | "small"
-  | "abbr"
-  | "time";
+import {
+  BOLDABLE_VARIANTS,
+  DEFAULT_ELEMENT_BY_VARIANT,
+  TOMUI_TEXT_DEFAULT_VARIANTS,
+  TOMUI_TEXT_VARIANTS,
+  resolveTextSizeClasses,
+  type TextElement,
+  type TomuiTextSize,
+  type TomuiTextVariant,
+} from "./variants";
 
 /**
  * Text component props.
@@ -173,11 +66,7 @@ export interface TextProps {
   as?: TextElement;
   /** Text content. */
   children?: JSX.Element;
-  /** Escape hatch class merged after computed classes. Prefer `class`. */
-  DANGEROUS_className?: string;
-  /** Escape hatch styles merged after `style`. */
-  DANGEROUS_style?: JSX.CSSProperties;
-  /** Additional CSS classes merged via `cn()`. */
+  /** Additional CSS classes, merged after the computed variant classes. */
   class?: string;
   id?: string;
   /** Language of the text content (e.g. `"ja"`). */
@@ -216,8 +105,6 @@ export function Text(props: TextProps): JSX.Element {
     "bold",
     "children",
     "class",
-    "DANGEROUS_className",
-    "DANGEROUS_style",
     "id",
     "ref",
     "size",
@@ -226,43 +113,19 @@ export function Text(props: TextProps): JSX.Element {
     "truncate",
     "variant",
   );
-  const isCopy = (): boolean =>
-    merged.variant === "body" ||
-    merged.variant === "secondary" ||
-    merged.variant === "success" ||
-    merged.variant === "error";
-  // Heading variants do not auto-select h1/h2/h3, keeping visual presentation
-  // separate from the document outline. Use `as` to opt into semantic HTML.
-  const tag = (): TextElement => {
-    if (merged.as) return merged.as;
-    if (merged.variant === "mono" || merged.variant === "mono-secondary") return "span";
-    if (merged.variant === "heading") return "span";
-    if (
-      merged.variant === "heading1" ||
-      merged.variant === "heading2" ||
-      merged.variant === "heading3"
-    )
-      return "span";
-    return "p";
-  };
   return (
     <Dynamic
-      component={tag()}
+      component={merged.as ?? DEFAULT_ELEMENT_BY_VARIANT[merged.variant]}
       data-tomui-component="Text"
       class={cn(
         "text-tomui-default",
-        resolveVariant(
-          TOMUI_TEXT_VARIANTS.variant,
-          merged.variant,
-          TOMUI_TEXT_DEFAULT_VARIANTS.variant,
-        ).classes,
+        TOMUI_TEXT_VARIANTS.variant[merged.variant].classes,
         resolveTextSizeClasses(merged.variant, merged.size),
-        isCopy() && merged.bold ? "font-medium" : "",
+        BOLDABLE_VARIANTS.has(merged.variant) && merged.bold ? "font-medium" : "",
         merged.truncate ? "min-w-0 truncate" : "",
         merged.class,
-        merged.DANGEROUS_className,
       )}
-      style={{ ...merged.style, ...merged.DANGEROUS_style }}
+      style={merged.style}
       id={merged.id}
       title={merged.title}
       ref={merged.ref}

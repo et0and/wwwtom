@@ -1,8 +1,9 @@
-import { createSignal, onSettled } from "solid-js";
 import { Effect, Schema } from "effect";
+import { createSignal, onSettled } from "solid-js";
 import { CmsError } from "@tom/types/errors";
-import { runClient } from "@tom/utils/services/http";
+import { HttpStatus } from "@tom/constants/http";
 import { decodeResponse, requestJson, requestVoid } from "./api";
+import { runClient } from "@tom/utils/services/http";
 
 export const EditorSessionSchema = Schema.Struct({
   session: Schema.Struct({ id: Schema.String }),
@@ -70,13 +71,21 @@ const assertAuthorizeUrl = (url: string, provider: AuthProvider): Effect.Effect<
   Effect.try({
     try: () => new URL(url),
     catch: () =>
-      new CmsError({ message: "Invalid sign-in URL", status: 500, operation: "sign_in" }),
+      new CmsError({
+        message: "Invalid sign-in URL",
+        status: HttpStatus.InternalServerError,
+        operation: "sign_in",
+      }),
   }).pipe(
     Effect.flatMap((parsed) =>
       parsed.protocol === "https:" && parsed.hostname === AUTHORIZE_HOSTS[provider]
         ? Effect.succeed(url)
         : Effect.fail(
-            new CmsError({ message: "Invalid sign-in URL", status: 500, operation: "sign_in" }),
+            new CmsError({
+              message: "Invalid sign-in URL",
+              status: HttpStatus.InternalServerError,
+              operation: "sign_in",
+            }),
           ),
     ),
   );

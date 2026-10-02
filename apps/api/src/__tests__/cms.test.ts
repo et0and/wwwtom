@@ -290,19 +290,25 @@ describe("cms routes", () => {
     expect(body.title).toBe("Validation error");
   });
 
-  it("returns page 1 if page equals 0", async () => {
+  it("rejects page 0 with 400", async () => {
+    // The bounds live in CmsPagingSchema, so an out-of-range page is a 400 at
+    // the boundary rather than a silent clamp to 1.
     const response = await app.fetch(
       requestWithEnv("http://localhost/posts?page=0&pageSize=10", seedEnv(fullSeed)),
     );
-    expect(response.status).toBe(200);
-    const body = (await response.json()) as { page: number; hasPrevPage: boolean };
-    expect(body.page).toBe(1);
-    expect(body.hasPrevPage).toBe(false);
+    expect(response.status).toBe(400);
   });
 
-  it("clamps pageSize over 100 to 100", async () => {
+  it("rejects pageSize over the maximum with 400", async () => {
     const response = await app.fetch(
       requestWithEnv("http://localhost/posts?page=1&pageSize=1000", seedEnv(fullSeed)),
+    );
+    expect(response.status).toBe(400);
+  });
+
+  it("accepts the maximum pageSize", async () => {
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/posts?page=1&pageSize=100", seedEnv(fullSeed)),
     );
     expect(response.status).toBe(200);
     const body = (await response.json()) as { limit: number };

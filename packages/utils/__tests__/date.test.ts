@@ -8,15 +8,15 @@ describe("formatDate", () => {
     expect(formatted).toContain("September");
   });
 
-  it("formats Date input", () => {
-    expect(formatDate(new Date("2026-09-21"))).toContain("2026");
+  it("returns empty for null and unparseable input", () => {
+    expect(formatDate(null)).toBe("");
+    expect(formatDate("not-a-date")).toBe("");
   });
 
-  it("returns empty for null, undefined, and invalid input", () => {
-    expect(formatDate(null)).toBe("");
-    expect(formatDate(undefined)).toBe("");
-    expect(formatDate("not-a-date")).toBe("");
-    expect(formatDate(new Date("invalid"))).toBe("");
+  it("reads a zone-less string as UTC, not as the host timezone", () => {
+    // Without the UTC pin this value shifts with the host zone, so the same
+    // stored timestamp renders as a different day depending on where it runs.
+    expect(formatDate("2026-09-21T10:30")).toBe(formatDate("2026-09-21T10:30:00.000Z"));
   });
 });
 
@@ -27,10 +27,21 @@ describe("formatDateTime", () => {
     expect(formatted).toContain("September");
   });
 
-  it("returns empty for null, undefined, and invalid input", () => {
+  it("returns empty for null and unparseable input", () => {
     expect(formatDateTime(null)).toBe("");
-    expect(formatDateTime(undefined)).toBe("");
     expect(formatDateTime("not-a-date")).toBe("");
-    expect(formatDateTime(new Date("invalid"))).toBe("");
+  });
+
+  it("is stable across host timezones", () => {
+    const previous = process.env.TZ;
+    try {
+      process.env.TZ = "Pacific/Auckland";
+      const nz = formatDateTime("2026-09-21T10:30:00.000Z");
+      process.env.TZ = "America/New_York";
+      expect(formatDateTime("2026-09-21T10:30:00.000Z")).toBe(nz);
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
   });
 });

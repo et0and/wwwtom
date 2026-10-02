@@ -1,4 +1,4 @@
-import { Effect, Option, Schema } from "effect";
+import { Cause, Effect, Option, Schema } from "effect";
 import {
   createArena,
   ArenaApiError,
@@ -181,10 +181,7 @@ export function paginationQueryString(
   options: PaginationAttributes | undefined,
   dateProvider: DateProvider,
 ): string {
-  const { page, per, sort, direction, forceRefresh } = {
-    ...defaultPaginationOptions,
-    ...options,
-  };
+  const { page, per, sort, direction, forceRefresh } = resolvePagination(options);
   const attrs: string[] = [];
   if (page) attrs.push(`page=${page}`);
   if (per) attrs.push(`per_page=${per}`);
@@ -221,7 +218,7 @@ interface PageParams {
 }
 
 const pageParams = (options: PaginationAttributes | undefined): PageParams => {
-  const { page, per } = { ...defaultPaginationOptions, ...options };
+  const { page, per } = resolvePagination(options);
   return {
     ...(page !== undefined && { page }),
     ...(per !== undefined && { per }),
@@ -250,44 +247,47 @@ const SearchSortSchema = Schema.Literals([
   "connections_count_desc",
 ]);
 
-const toContentsSort = (sort?: string, direction?: string): ContentsQuery["sort"] =>
-  Option.getOrUndefined(
-    Schema.decodeUnknownOption(ContentsSortSchema)(formatSort(sort, direction)),
-  );
+/**
+ * Decode a `<field>_<direction>` sort into one endpoint's allowlist. An unknown
+ * combination yields no sort rather than an error, so a caller can ask for a
+ * sort are.na does not support and still get results.
+ */
+const pickSort = <TSort extends string>(
+  sort: string | undefined,
+  direction: string | undefined,
+  schema: Schema.Codec<TSort>,
+): TSort | undefined =>
+  Option.getOrUndefined(Schema.decodeUnknownOption(schema)(formatSort(sort, direction)));
 
-const toConnectionsSort = (sort?: string, direction?: string): ConnectionsQuery["sort"] =>
-  Option.getOrUndefined(
-    Schema.decodeUnknownOption(ConnectionsSortSchema)(formatSort(sort, direction)),
-  );
-
-const toSearchSort = (sort?: string, direction?: string): SearchQuery["sort"] =>
-  Option.getOrUndefined(Schema.decodeUnknownOption(SearchSortSchema)(formatSort(sort, direction)));
+/** Caller paging over the endpoint defaults, resolved once. */
+const resolvePagination = (options: PaginationAttributes | undefined): PaginationAttributes => ({
+  ...defaultPaginationOptions,
+  ...options,
+});
 
 const withSort = <TSort extends string>(
   options: PaginationAttributes | undefined,
-  pick: (sort?: string, direction?: string) => TSort | undefined,
+  schema: Schema.Codec<TSort>,
 ): PageParams & { sort?: TSort } => {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
-  const result: PageParams & { sort?: TSort } = { ...pageParams(options) };
-  const picked = pick(sort, direction);
-  if (picked !== undefined) result.sort = picked;
-  return result;
+  const { sort, direction } = resolvePagination(options);
+  const picked = pickSort(sort, direction, schema);
+  return { ...pageParams(options), ...(picked !== undefined && { sort: picked }) };
 };
 
 const toContentsQuery = (options: PaginationAttributes | undefined): ContentsQuery =>
-  withSort(options, toContentsSort);
+  withSort(options, ContentsSortSchema);
 
 const toConnectionsQuery = (options: PaginationAttributes | undefined): ConnectionsQuery =>
-  withSort(options, toConnectionsSort);
+  withSort(options, ConnectionsSortSchema);
 
 function toSdkSearchQuery(
   query: string,
   type: "users" | "channels" | "blocks" | undefined,
   options: PaginationAttributes | undefined,
 ): SearchQuery {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const { sort, direction } = resolvePagination(options);
   const result: SearchQuery = { query, ...pageParams(options) };
-  const sortParam = toSearchSort(sort, direction);
+  const sortParam = pickSort(sort, direction, SearchSortSchema);
   if (sortParam !== undefined) result.sort = sortParam;
   if (type === "users") result.type = ["User"];
   if (type === "channels") result.type = ["Channel"];
@@ -303,7 +303,6 @@ export class ArenaClient implements ArenaApi {
   private readonly arena: Arena;
 
   private static normalizeToken(token?: string | null): string | null {
-    if (token === null) return null;
     return normalizeOptionalSecret(token ?? undefined) ?? null;
   }
 
@@ -353,29 +352,32 @@ export class ArenaClient implements ArenaApi {
       return retryWithoutAuth(input, init, url, requestHeaders);
     };
 
-    function retryWithoutAuth(
+    /**
+     * A private GET that the token cannot read (401/403) still has a public
+     * twin on the other side of the same wall, so retry once from cache with
+     * the Authorization header removed.
+     */
+    async function retryWithoutAuth(
       input: RequestInfo,
       init: Parameters<Fetch>[1],
       url: string,
       requestHeaders: HeadersInit | undefined,
     ): Promise<Response> {
-      return (async () => {
-        const cached = await readWorkerCache(url);
-        if (cached) return cached;
-        const retryHeaders = ArenaClient.removeAuthorizationHeader(requestHeaders);
-        const retryInput =
-          input instanceof Request && retryHeaders
-            ? new Request(input, { headers: retryHeaders })
-            : input;
-        const retryInit: NonNullable<Parameters<Fetch>[1]> = {
-          ...init,
-          cf: publicCacheOptions(url),
-        };
-        if (retryHeaders && !(input instanceof Request)) retryInit.headers = retryHeaders;
-        const response = await fetchImpl(retryInput, retryInit);
-        if (response.ok) await writeWorkerCache(url, response);
-        return response;
-      })();
+      const cached = await readWorkerCache(url);
+      if (cached) return cached;
+      const retryHeaders = ArenaClient.removeAuthorizationHeader(requestHeaders);
+      const isRequest = input instanceof Request;
+      const retryInit: NonNullable<Parameters<Fetch>[1]> = {
+        ...init,
+        cf: publicCacheOptions(url),
+      };
+      if (retryHeaders && !isRequest) retryInit.headers = retryHeaders;
+      const response = await fetchImpl(
+        isRequest && retryHeaders ? new Request(input, { headers: retryHeaders }) : input,
+        retryInit,
+      );
+      if (response.ok) await writeWorkerCache(url, response);
+      return response;
     }
   }
 
@@ -590,9 +592,12 @@ export class ArenaClient implements ArenaApi {
       });
 
       return yield* Schema.decodeUnknownEffect(schema)(json).pipe(
-        Effect.tapError((cause) =>
+        // A SchemaIssue has no useful `toString`, so `String(cause)` logged a
+        // literal "undefined". Render it through Cause.pretty instead, which
+        // is what makes this diagnostic worth having.
+        Effect.tapError((issue) =>
           Effect.logWarning(
-            `[arena-diag] endpoint=${endpoint} decode failed cause=${String(cause)}`,
+            `[arena-diag] endpoint=${endpoint} decode failed cause=${Cause.pretty(Cause.fail(issue))}`,
           ),
         ),
         Effect.mapError(

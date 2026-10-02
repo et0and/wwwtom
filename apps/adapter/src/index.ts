@@ -131,7 +131,10 @@ export const app = new Elysia({
       getRequestEnv(request),
       "Unhandled adapter error",
       error,
-      errorDetailsFromRequest(request, { service: "tom-adapter", status: 500 }),
+      errorDetailsFromRequest(request, {
+        service: "tom-adapter",
+        status: HttpStatus.InternalServerError,
+      }),
     );
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })

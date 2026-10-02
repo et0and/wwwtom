@@ -2,6 +2,13 @@
 
 Design rules. Follow always when building or reviewing TomUI.
 
+## Components
+
+- no escape-hatch props. No `DANGEROUS_*`, no "merge last, bypasses the
+  cascade" variants. A caller that needs a one-off class uses `class` or
+  `style`, which go through `cn()` like every other override. Zero callers
+  means delete the prop outright
+
 ## Text
 
 - content text 14px. 16px+ headings only.

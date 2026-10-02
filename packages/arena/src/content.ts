@@ -1,4 +1,5 @@
 import { Effect, Option, Schema } from "effect";
+import { toSlug } from "@tom/utils/slug";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import type { PaginationAttributes } from "@tom/schemas/arena";
@@ -41,14 +42,7 @@ const CONTENT_SORT: PaginationAttributes = { sort: "position", direction: "desc"
  * nothing (emoji-only) fall back to the channel id so decoding never throws.
  */
 const slugify = (title: string, fallback: string): ArenaSlug =>
-  Schema.decodeSync(ArenaSlug)(
-    title
-      .normalize("NFKD")
-      .replace(/\p{Diacritic}/gu, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "") || fallback,
-  );
+  Schema.decodeSync(ArenaSlug)(toSlug(title) || fallback);
 
 const normalizePage = (page: number | undefined): number => {
   const parsed = Math.trunc(page ?? 1);

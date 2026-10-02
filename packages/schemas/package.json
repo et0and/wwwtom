@@ -14,7 +14,9 @@
     "./og": "./src/og.ts",
     "./queue": "./src/queue.ts",
     "./secrets": "./src/secrets.ts",
-    "./telegram": "./src/telegram.ts"
+    "./telegram": "./src/telegram.ts",
+    "./timestamp": "./src/timestamp.ts",
+    "./env": "./src/env.ts"
   },
   "scripts": {
     "lint": "oxlint",

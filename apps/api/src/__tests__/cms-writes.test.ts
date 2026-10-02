@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+import { Schema } from "effect";
 import type { CmsCategoryId, CmsPostInput, CmsSlug, CmsWorkInput } from "@tom/schemas/cms";
+import { NullableTimestamp } from "@tom/schemas/timestamp";
 import type {
   CmsD1Binding,
   CmsD1Statement,
@@ -380,6 +382,9 @@ const validPostBase: CmsPostInput = {
   meta: { title: null, description: null, image: null },
 };
 
+/** What Elysia hands the handler: the wire string, already decoded. */
+const utc = (iso: string) => Schema.decodeSync(NullableTimestamp)(iso);
+
 const postInput = (overrides: Partial<CmsPostInput> = {}): CmsPostInput => ({
   ...validPostBase,
   ...overrides,
@@ -472,6 +477,34 @@ describe("cms write routes", () => {
       expect(store.links).toEqual([{ postId: store.posts[0]?.["id"], categoryId: "cat-1" }]);
     });
 
+    it("stores a zone-less publishedAt as one fixed instant", async () => {
+      // The editor's datetime-local input yields a wall-clock reading with no
+      // offset. It must mean exactly one instant, not the host's timezone: a
+      // Worker (UTC) and local dev would otherwise store different values for
+      // the same string.
+      const { store, env } = setup();
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", {
+          ...postInput(),
+          status: "published",
+          publishedAt: utc("2026-09-21T10:30"),
+        }),
+      );
+      expect(response.status).toBe(200);
+      expect(store.posts[0]?.["published_at"]).toBe("2026-09-21T10:30:00.000Z");
+    });
+
+    it("rejects an unparseable publishedAt with 400", async () => {
+      const { env } = setup();
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", {
+          ...postInput(),
+          publishedAt: "not-a-date",
+        }),
+      );
+      expect(response.status).toBe(400);
+    });
+
     it("rejects a taken slug with 409", async () => {
       const { env } = setup();
       await app.fetch(authedJson("http://localhost/posts", env, "POST", postInput()));
@@ -518,7 +551,7 @@ describe("cms write routes", () => {
           postInput({
             title: "Hello Again",
             status: "published",
-            publishedAt: "2026-09-05T00:00:00.000Z",
+            publishedAt: utc("2026-09-05T00:00:00.000Z"),
             categoryIds: [],
           }),
         ),

@@ -1,6 +1,7 @@
 import { Effect, Schema } from "effect";
-import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { CmsError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 
 /** Adapter origin, inlined at build time for production. */
 export const adapterUrl = (): string =>
@@ -24,7 +25,12 @@ export const requestJson = (
   Effect.tryPromise({
     try: () => fetchWithTimeout(`${adapterUrl()}${path}`, { ...init, credentials: "include" }),
     catch: (cause) =>
-      new CmsError({ message: "Editor request failed", status: 500, operation, cause }),
+      new CmsError({
+        message: "Editor request failed",
+        status: HttpStatus.InternalServerError,
+        operation,
+        cause,
+      }),
   }).pipe(
     Effect.flatMap((response) =>
       response.ok
@@ -33,7 +39,7 @@ export const requestJson = (
             catch: (cause) =>
               new CmsError({
                 message: "Invalid editor response",
-                status: 500,
+                status: HttpStatus.InternalServerError,
                 operation,
                 cause,
               }),
@@ -57,7 +63,12 @@ export const requestVoid = (
   Effect.tryPromise({
     try: () => fetchWithTimeout(`${adapterUrl()}${path}`, { ...init, credentials: "include" }),
     catch: (cause) =>
-      new CmsError({ message: "Editor request failed", status: 500, operation, cause }),
+      new CmsError({
+        message: "Editor request failed",
+        status: HttpStatus.InternalServerError,
+        operation,
+        cause,
+      }),
   }).pipe(
     Effect.flatMap((response) =>
       response.ok
@@ -81,5 +92,8 @@ export const decodeResponse = <A, I, J>(
   message = "Invalid editor response",
 ): Effect.Effect<A, CmsError> =>
   Schema.decodeUnknownEffect(schema)(json).pipe(
-    Effect.mapError((cause) => new CmsError({ message, status: 500, operation, cause })),
+    Effect.mapError(
+      (cause) =>
+        new CmsError({ message, status: HttpStatus.InternalServerError, operation, cause }),
+    ),
   );
