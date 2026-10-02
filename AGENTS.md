@@ -13,7 +13,7 @@ Improve existing code; avoid new abstractions.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
-- `infra` — Alchemy 2.0.0-beta.78 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
+- `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
@@ -74,9 +74,14 @@ Improve existing code; avoid new abstractions.
 ## Naming / data flow
 
 - names read like English; descriptive booleans (`isEnabled`, `hasAccess`); no multi-behavior flags
+- no deprecation paths: never keep a "Deprecated, use X instead" variant or prop
+  alongside its replacement. Update every caller in the same change and delete
+  the old one. Zero callers means delete it outright
 - explicit return types at boundaries; make invalid states hard to represent
 
 ## Effect
+
+Pinned to `4.0.0-rc.116` via the `effect` catalog entry. **Do not move this to 4.0.0 final yet**: Alchemy 2.0.0-beta.79 imports `effect/unstable/process*`, which final removed, so `pnpm deploy` breaks at module load. Its peer range claims `>=4.0.0`, so the mismatch is invisible to `pnpm peers check` and to typecheck — only a runtime import or a deploy reveals it.
 
 - `Effect.gen` | `Effect.succeed` | `Effect.fail` | `Effect.try` / `Effect.tryPromise`
 - `Effect.catch` for recovery — `catchAll` does not exist in Effect 4
