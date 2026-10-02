@@ -31,6 +31,34 @@ export const adapterErrorMessage = (
   );
 
 /**
+ * A real HTTP error status. A schema rather than `Number(x) || 500`, which
+ * passed a truthy non-error status (a 302, say) straight through as the
+ * response status.
+ */
+const ErrorStatus = Schema.Int.check(Schema.isBetween({ minimum: 400, maximum: 599 }));
+
+/** The adapter's error envelope, reduced to the two fields a client acts on. */
+type UpstreamProblem = {
+  readonly status: number;
+  readonly message: string;
+};
+
+/**
+ * Reduce an adapter error envelope to a status and a message. An unusable
+ * status becomes 500 rather than reaching the wire.
+ */
+const toUpstreamProblem = (
+  error: NonNullable<EdenResult<unknown>["error"]>,
+  fallbackMessage: string,
+): UpstreamProblem => ({
+  status: Option.getOrElse(
+    Schema.decodeUnknownOption(ErrorStatus)(error.status),
+    () => HttpStatus.InternalServerError,
+  ),
+  message: adapterErrorMessage(error, fallbackMessage),
+});
+
+/**
  * Adapter request as an Effect: network failures and non-2xx responses
  * surface as tagged HttpErrors in the error channel instead of thrown
  * exceptions.
@@ -47,16 +75,10 @@ export const adapterRequest = <T>(
           status: HttpStatus.InternalServerError,
         }),
     ),
-    Effect.flatMap((result) =>
-      result.error
-        ? Effect.fail(
-            new HttpError({
-              message: adapterErrorMessage(result.error, messages.failed),
-              status: Number(result.error.status) || 500,
-            }),
-          )
-        : Effect.succeed(result.data as T),
-    ),
+    Effect.flatMap((result) => {
+      if (!result.error) return Effect.succeed(result.data as T);
+      return Effect.fail(new HttpError(toUpstreamProblem(result.error, messages.failed)));
+    }),
     Effect.timeoutOrElse({
       duration: ADAPTER_TIMEOUT_MS,
       orElse: () =>

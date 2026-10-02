@@ -15,7 +15,8 @@
     "./services/session": "./src/services/session.ts",
     "./services/worker": "./src/services/worker.ts",
     "./telegram": "./src/telegram.ts",
-    "./tiptap-html": "./src/tiptap-html.ts"
+    "./tiptap-html": "./src/tiptap-html.ts",
+    "./slug": "./src/slug.ts"
   },
   "scripts": {
     "test": "vitest",
