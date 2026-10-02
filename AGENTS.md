@@ -30,6 +30,11 @@ Improve existing code; avoid new abstractions.
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
 - `pnpm workflows` — regenerate `.github/workflows/*.yml` + `.github/actions/*/action.yml` from `@tom/workflows` definitions (do not hand-edit generated files)
 - `pnpm test:update` — snapshot update (web, utils, icons, workflows)
+- `pnpm test:e2e` — Playwright fixture suite. Self-contained: the config's `webServer`
+  boots simulator, adapter, web and editor, so no manual `pnpm dev` first
+- `pnpm test:all` = `test` then `test:e2e`. A pre-push hook runs `test` always and
+  `test:e2e` when `apps/{e2e,simulator,adapter,web,api}` or
+  `packages/{schemas,utils,arena,ui}` changed — the surfaces the fixture stack serves
 - `pnpm deploy` = shared → api → adapter → web → sophie (Alchemy; `ALCHEMY_STAGE` required)
 - `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:sophie`
 - `pnpm destroy` — destroy current Alchemy stage

@@ -16,6 +16,8 @@
     "workflows": "pnpm --filter @tom/workflows generate && oxfmt --write .github/workflows .github/actions",
     "typecheck": "turbo run typecheck",
     "test": "echo 'Running vitest via turbo...' && turbo run test",
+    "test:e2e": "pnpm --filter @tom/e2e test:e2e",
+    "test:all": "pnpm test && pnpm test:e2e",
     "test:update": "cd apps/web && npx vitest run --update && cd ../../packages/utils && npx vitest run --update && cd ../icons && npx vitest run --update && cd ../workflows && npx vitest run --update",
     "deploy": "pnpm run deploy:shared && pnpm run deploy:turbo && pnpm run deploy:api && pnpm run deploy:adapter && pnpm run deploy:web && pnpm run deploy:sophie",
     "deploy:shared": "pnpm --filter @tom/infra run deploy:shared",
