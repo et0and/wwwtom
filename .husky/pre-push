@@ -1,0 +1,34 @@
+# Verify before the push lands, not just in CI.
+#
+# Unit tests always. The Playwright fixture suite only when a surface it
+# actually serves changed — it boots four dev servers, so running it on
+# unrelated commits (docs, icons, the release workflow) is pure waiting.
+
+set -eu
+
+pnpm test
+
+# Push the commits on this branch; compare against the upstream branch when
+# the branch has one, otherwise against the integration branch.
+if git rev-parse --abbrev-ref '@{u}' >/dev/null 2>&1; then
+  base='@{u}'
+else
+  base='origin/dev'
+fi
+
+changed=$(git diff --name-only "$base"...HEAD 2>/dev/null || true)
+
+if [ -z "$changed" ]; then
+  echo "pre-push: no upstream diff available, running the fixture suite."
+  changed='.'
+fi
+
+# Surfaces the fixture stack serves: simulator fixture stores, the adapter
+# branches that read them, the web client that renders them, and the shared
+# schemas/utils both sides decode through.
+if printf '%s\n' "$changed" | grep -qE '^(apps/(e2e|simulator|adapter|web|api)/|packages/(schemas|utils|arena|ui)/)'; then
+  echo "pre-push: fixture-stack surfaces changed, running Playwright."
+  pnpm test:e2e
+else
+  echo "pre-push: no fixture-stack changes, skipping Playwright."
+fi

@@ -1,4 +1,4 @@
-import { Effect, Option, Schema, SchemaGetter, SchemaIssue } from "effect";
+import { DateTime, Duration, Effect, Option, Schema, SchemaGetter, SchemaIssue } from "effect";
 import { DatabaseService } from "@tom/db/service";
 import { toErrorMessage } from "@tom/utils/services/worker";
 import { detector } from "./detector";
@@ -157,7 +157,9 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
   ).pipe(Effect.catch(mapRegisterAppError));
 
   const sessionToken = generateSessionToken();
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  const expiresAt = yield* DateTime.now.pipe(
+    Effect.map((now) => DateTime.toDateUtc(DateTime.addDuration(now, Duration.minutes(15)))),
+  );
 
   yield* db.createOAuthSession({
     session_token: sessionToken,

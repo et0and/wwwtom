@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect";
 import { CmsError } from "@tom/types/errors";
+import { HttpStatus } from "@tom/constants/http";
 import { parsePageNumber } from "@tom/utils/page";
 import {
   CmsCategoryInputSchema,
@@ -78,7 +79,13 @@ const encodeBody = <A, I>(
 ): Effect.Effect<I, CmsError> =>
   Schema.encodeEffect(schema)(input).pipe(
     Effect.mapError(
-      (cause) => new CmsError({ message: "Invalid editor data", status: 500, operation, cause }),
+      (cause) =>
+        new CmsError({
+          message: "Invalid editor data",
+          status: HttpStatus.InternalServerError,
+          operation,
+          cause,
+        }),
     ),
   );
 

@@ -5,10 +5,7 @@ import { Effect } from "effect";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
-import {
-  adapterErrorMessage,
-  adapterRequest as sharedAdapterRequest,
-} from "@tom/utils/services/http";
+import { adapterRequest as sharedAdapterRequest } from "@tom/utils/services/http";
 import type { EdenResult } from "@tom/utils/services/http";
 import { withLogging } from "@tom/utils/services/logging";
 import type { LogContext } from "@tom/utils/services/logging";
@@ -64,18 +61,15 @@ export const adapterRequest = <T>(
 ): Effect.Effect<T, HttpError> => sharedAdapterRequest(request, ADAPTER_REQUEST_MESSAGES);
 
 /**
- * Unwrap an Eden treaty result, throwing an HttpError with the adapter's
- * error message and status when the request failed.
+ * Run an adapter call as a promise, failing with `HttpError`.
+ *
+ * The guestbook flow is promise-based (it runs in the browser and inside TanStack
+ * Query), so this is the promise face of the same `adapterRequest` pipeline the
+ * rest of the app uses: one error mapping, one message set, one timeout, one
+ * span. It used to be a separate hand-rolled unwrap with its own status coercion.
  */
-export const unwrapAdapter = <T>(result: EdenResult<T>): T => {
-  if (result.error) {
-    throw new HttpError({
-      message: adapterErrorMessage(result.error, ADAPTER_REQUEST_MESSAGES.failed),
-      status: Number(result.error.status) || 500,
-    });
-  }
-  return result.data as T;
-};
+export const runAdapterCall = <T>(request: () => Promise<EdenResult<T>>): Promise<T> =>
+  runLoggedAdapterRequest(adapterRequest(request), "web.adapterCall");
 
 /** Run a logged adapter effect to completion in the current SSR context. */
 const runLoggedAdapterRequest = <T, E>(

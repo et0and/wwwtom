@@ -1,5 +1,12 @@
 import { Context, Effect, Layer, Redacted, Schema } from "effect";
 import { TomSecretsSchema, normalizeOptionalSecret } from "@tom/schemas/secrets";
+import {
+  parseCommaSeparated,
+  tenantPrefixFor,
+  tenantTagFrom,
+  type TenantPrefix,
+  type TenantTag,
+} from "@tom/schemas/env";
 import type { TomWorkMessageEncoded } from "@tom/schemas/queue";
 import { SecretsError } from "@tom/types/errors";
 
@@ -177,18 +184,9 @@ const secretKeys = [
 
 export type ResolvedCloudflareEnv = CloudflareEnv & { AXIOM_TOKEN?: string };
 
-/** Parse the comma-separated admin allowlist into a string[]. */
-export const parseAdminEmails = (value: string | undefined): Array<string> =>
-  (value ?? "")
-    .split(",")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
-
-const TENANT_PREFIXES = { tom: "TOM_", sophie: "SOPHIE_" } as const;
-
-/** Bundle-key prefix for a tenant tag. Unknown tags select nothing. */
-const tenantPrefix = (tenant: string | undefined): "TOM_" | "SOPHIE_" | undefined =>
-  tenant === "tom" || tenant === "sophie" ? TENANT_PREFIXES[tenant] : undefined;
+/** Parse the comma-separated admin allowlist into a readonly list. */
+export const parseAdminEmails = (value: string | undefined): readonly string[] =>
+  parseCommaSeparated(value);
 
 type TomSecrets = Schema.Schema.Type<typeof TomSecretsSchema>;
 
@@ -238,7 +236,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
     }),
   );
 
-  const prefix = tenantPrefix(rest.TENANT);
+  const prefix = tenantPrefixFor(rest.TENANT);
   const tenantValue = (name: string): string | undefined =>
     prefix === undefined ? undefined : parsed[`${prefix}${name}`];
   const tenantAuthSecret = tenantValue("BETTER_AUTH_SECRET");
@@ -259,14 +257,13 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
   // Explicit worker env wins over the opaque bundle for provider keys:
   // stage config is the only deploy-time guarantee when the store value
   // is unreadable, so a stale bundle can never silently break a worker.
-  type ExplicitProviderSecrets = {
-    GOOGLE_CLIENT_ID?: string;
-    GOOGLE_CLIENT_SECRET?: string;
-  };
-  const explicitProviderSecrets: ExplicitProviderSecrets = {};
-  if (rest.GOOGLE_CLIENT_ID) explicitProviderSecrets.GOOGLE_CLIENT_ID = rest.GOOGLE_CLIENT_ID;
-  if (rest.GOOGLE_CLIENT_SECRET)
-    explicitProviderSecrets.GOOGLE_CLIENT_SECRET = rest.GOOGLE_CLIENT_SECRET;
+  // Keyed off the provider pair so adding one needs no change here.
+  const explicitProviderSecrets = Object.fromEntries(
+    Object.entries({
+      GOOGLE_CLIENT_ID: rest.GOOGLE_CLIENT_ID,
+      GOOGLE_CLIENT_SECRET: rest.GOOGLE_CLIENT_SECRET,
+    }).filter(([, value]) => value !== undefined),
+  );
 
   return {
     ...rest,
@@ -288,10 +285,6 @@ export type PartialCloudflareEnv = {
   [K in keyof CloudflareEnv]?: CloudflareEnv[K] | undefined;
 };
 
-/** Tenant tag from worker env. Unknown tags select nothing (shared). */
-export const tenantFromValue = (value: string | undefined): "tom" | "sophie" | undefined =>
-  value === "tom" || value === "sophie" ? value : undefined;
-
 /**
  * Create a config layer from a partial config object.
  * Useful for testing and API routes that only need subset of config.
@@ -309,3 +302,7 @@ export const makeAppConfigLayer = (config: PartialCloudflareEnv): Layer.Layer<Ap
     telegramChatId: config.TELEGRAM_CHAT_ID,
   });
 };
+
+/** Tenant tag from worker env. Unknown tags select nothing (shared). */
+export const tenantFromValue = tenantTagFrom;
+export type { TenantPrefix, TenantTag };

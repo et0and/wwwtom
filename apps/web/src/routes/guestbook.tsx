@@ -9,36 +9,23 @@ import { Banner } from "@tom/ui/banner";
 import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
-import { callAdapter, unwrapAdapter } from "~/libs/adapter";
+import { callAdapter, runAdapterCall } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 import { formatDateTime } from "@tom/utils/date";
 
-export const fetchEntries = async () => {
-  const result = await callAdapter().guestbook.entries.get();
-  return unwrapAdapter(result);
-};
+export const fetchEntries = () => runAdapterCall(() => callAdapter().guestbook.entries.get());
 
 // The guestbook user lives in an adapter-domain cookie, so this must run in
 // the browser (client-only) — never preloaded server-side.
-const fetchCurrentUser = async () => {
-  const result = await callAdapter().guestbook.me.get();
-  return unwrapAdapter(result);
-};
+const fetchCurrentUser = () => runAdapterCall(() => callAdapter().guestbook.me.get());
 
-const initiateAuth = async (handle: string) => {
-  const result = await callAdapter().guestbook.auth.initiate.post({ handle });
-  return unwrapAdapter(result);
-};
+const initiateAuth = (handle: string) =>
+  runAdapterCall(() => callAdapter().guestbook.auth.initiate.post({ handle }));
 
-const signGuestbook = async (message: string) => {
-  const result = await callAdapter().guestbook.sign.post({ message });
-  return unwrapAdapter(result);
-};
+const signGuestbook = (message: string) =>
+  runAdapterCall(() => callAdapter().guestbook.sign.post({ message }));
 
-const logout = async () => {
-  const result = await callAdapter().guestbook.logout.post();
-  return unwrapAdapter(result);
-};
+const logout = () => runAdapterCall(() => callAdapter().guestbook.logout.post());
 
 export default function Guestbook() {
   const entriesQuery = useQuery(() => ({

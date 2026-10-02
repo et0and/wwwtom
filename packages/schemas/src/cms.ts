@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 import { ListResponseSchema } from "./list";
+import { NullableTimestamp } from "./timestamp";
 
 export const CmsPostId = Schema.String.pipe(Schema.brand("CmsPostId"));
 export type CmsPostId = typeof CmsPostId.Type;
@@ -279,13 +280,21 @@ export const CmsWorkSchema = Schema.Struct({
 });
 export type CmsWork = typeof CmsWorkSchema.Type;
 
+/**
+ * A write payload. `publishedAt` is a `NullableTimestamp` while the matching
+ * response field is a plain string, because this is the one boundary that
+ * receives an unvalidated timestamp: the editor's `datetime-local` input is a
+ * zone-less wall-clock reading, which `Schema.Date` would silently interpret in
+ * the host timezone. Decoding it here pins UTC and canonicalises it to a real
+ * instant before storage, so the stored value is never ambiguous.
+ */
 export const CmsPostInputSchema = Schema.Struct({
   slug: CmsSlug,
   title: Schema.String,
   summary: Schema.NullOr(Schema.String),
   content: TiptapDocSchema,
   status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
+  publishedAt: NullableTimestamp,
   heroMediaId: Schema.NullOr(CmsMediaId),
   categoryIds: Schema.Array(CmsCategoryId),
   meta: CmsMetaSchema,
@@ -298,7 +307,7 @@ export const CmsWorkInputSchema = Schema.Struct({
   summary: Schema.NullOr(Schema.String),
   content: TiptapDocSchema,
   status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
+  publishedAt: NullableTimestamp,
   heroMediaId: Schema.NullOr(CmsMediaId),
   meta: CmsMetaSchema,
 });
@@ -342,25 +351,39 @@ export type CmsMediaUsage = typeof CmsMediaUsageSchema.Type;
 
 const PagingNumberInput = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
 
+/** Largest page a list endpoint will serve. */
+export const MAX_PAGE_SIZE = 100;
+
+/** Page size a list endpoint serves when the caller names none. */
+export const DEFAULT_PAGE_SIZE = 10;
+
 /**
- * Integer page value: rejects fractions, NaN and Infinity at decode time
- * while accepting numbers and numeric strings. Zero and negatives decode
- * fine; the service clamps them to 1.
+ * 1-based page. Accepts numbers and numeric strings; fractions, zero,
+ * negatives, NaN and Infinity fail at decode time. The bounds live here rather
+ * than in the service, so an out-of-range request is a 400 at the boundary
+ * instead of a silent clamp downstream.
  */
-const PagingNumber = Schema.decodeTo(Schema.Int)(PagingNumberInput);
+const Page = Schema.decodeTo(Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)))(PagingNumberInput);
+
+/** Page size within [1, MAX_PAGE_SIZE], same reasoning as {@link Page}. */
+const PageSize = Schema.decodeTo(
+  Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: MAX_PAGE_SIZE })),
+)(PagingNumberInput);
 
 /**
  * Positive integer page value for URL query parsing (web/editor/simulator).
  * Accepts numbers and numeric strings; fractions, zero, negatives and
  * Infinity fail at decode time.
  */
-export const PageNumberSchema = Schema.decodeTo(Schema.Int.check(Schema.isGreaterThan(0)))(
-  PagingNumberInput,
-);
+export const PageNumberSchema = Page;
 
 export const CmsPagingSchema = Schema.Struct({
-  page: Schema.optional(PagingNumber),
-  pageSize: Schema.optional(PagingNumber),
+  // The bounds live in Page/PageSize, so an out-of-range request is rejected at
+  // the boundary instead of being silently clamped in the service. The keys stay
+  // optional because a query string may simply omit them; `toPageWindow` in the
+  // CMS service applies the defaults once.
+  page: Schema.optional(Page),
+  pageSize: Schema.optional(PageSize),
   status: Schema.optional(CmsStatusFilterSchema),
   category: Schema.optional(CmsSlug),
   /**

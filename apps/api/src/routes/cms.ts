@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { CmsPagingSchema } from "@tom/schemas/cms";
 import type { CmsListResponse, CmsPaging, CmsStatusFilter } from "@tom/schemas/cms";
 import { CmsError } from "@tom/types/errors";
@@ -72,21 +72,25 @@ export const decodeMediaParams = <P>(
 ): Effect.Effect<{ readonly id: string }, CmsError> =>
   decodeBoundary(CmsMediaParamsSchema, params, "Invalid media id parameter", operation);
 
-/** Fail closed when a CMS storage binding is missing. */
+/**
+ * Fail closed when a CMS storage binding is missing. `Option` does the
+ * narrowing, so the non-null binding is a type-level fact rather than an
+ * assertion the caller has to trust.
+ */
 const requireBinding = <B>(
   binding: B | undefined,
   message: string,
   operation: string,
 ): Effect.Effect<NonNullable<B>, CmsError> =>
-  binding
-    ? Effect.succeed(binding as NonNullable<B>)
-    : Effect.fail(
-        new CmsError({
-          message,
-          status: HttpStatus.InternalServerError,
-          operation,
-        }),
-      );
+  Effect.fromOption(
+    Option.fromNullishOr(binding),
+    () =>
+      new CmsError({
+        message,
+        status: HttpStatus.InternalServerError,
+        operation,
+      }),
+  );
 
 /** Fail closed when the CMS D1 binding is missing. */
 export const requireCmsD1 = (env: CloudflareEnv): Effect.Effect<CmsD1Binding, CmsError> =>

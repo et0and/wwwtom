@@ -33,17 +33,10 @@ describe("adapter error handling", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("surfaces an API validation failure for a page the API rejects", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          type: "https://errors.tom.so/validation",
-          status: 400,
-          title: "Invalid paging parameters",
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      ),
-    );
+  it("rejects an out-of-range page param before calling the API", async () => {
+    // The bounds live in the shared CmsPagingSchema, so the adapter rejects
+    // page=0 at its own boundary instead of forwarding a request the API would
+    // only reject anyway.
     const response = await app.fetch(
       requestWithEnv("http://localhost/content/posts?page=0", testEnv()),
     );
@@ -51,8 +44,29 @@ describe("adapter error handling", () => {
     expect(await response.json()).toEqual({
       type: "https://errors.tom.so/validation",
       status: 400,
-      title: "CMS posts request failed",
+      title: "Validation error",
       instance: "http://localhost/content/posts?page=0",
+      errors: [{ detail: "Expected a value greater than or equal to 1", pointer: "#/page" }],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards an upstream problem status from the API", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ status: 409, title: "Post slug taken" }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/content/posts?page=1", testEnv()),
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/conflict",
+      status: 409,
+      title: "CMS posts request failed",
+      instance: "http://localhost/content/posts?page=1",
     });
   });
 });

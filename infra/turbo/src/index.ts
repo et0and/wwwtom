@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, Option, Schema, SchemaGetter } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { TurboCacheError } from "@tom/types/errors";
@@ -42,6 +42,34 @@ export const ARTIFACT_TTL_SECONDS = 7 * 24 * 60 * 60;
 // Turbo artifact hashes are URL-safe opaque strings (usually 64-char hex).
 // The range also caps the KV key at the platform's 512-byte limit.
 const ARTIFACT_ROUTE_PATTERN = /^\/v8\/artifacts\/([A-Za-z0-9._~-]{8,512})$/;
+
+/**
+ * A numeric request header. Blank is not a number — `Number("")` is 0 and
+ * `Number("12abc")` is NaN — so a blank or malformed header decodes to
+ * nothing instead of a plausible-looking wrong value.
+ */
+const HeaderNumber = Schema.Trim.pipe(
+  Schema.check(Schema.isMinLength(1)),
+  Schema.decodeTo(Schema.Number, {
+    decode: SchemaGetter.transform(Number),
+    encode: SchemaGetter.transform(String),
+  }),
+);
+
+/** A build duration in milliseconds. A negative one is not a duration. */
+const HeaderDuration = HeaderNumber.pipe(Schema.check(Schema.isGreaterThanOrEqualTo(0)));
+
+/**
+ * Turbo artifact metadata, decoded from the request headers that carry it.
+ * A header that is absent, unparseable, or negative is simply not metadata,
+ * so every field is optional and a bad one never fails the whole decode.
+ */
+const ArtifactMetadataSchema = Schema.Struct({
+  duration: Schema.optional(Schema.NullOr(HeaderDuration)),
+  tag: Schema.optional(Schema.NullOr(Schema.String)),
+  sha: Schema.optional(Schema.NullOr(Schema.String)),
+  dirtyHash: Schema.optional(Schema.NullOr(Schema.String)),
+});
 
 export type ArtifactMetadata = {
   readonly duration?: number;
@@ -173,16 +201,19 @@ const authenticate = (
 };
 
 const metadataFromHeaders = (headers: Headers): ArtifactMetadata => {
-  const duration = headers.get("x-artifact-duration");
-  const parsedDuration = duration === null ? NaN : Number.parseInt(duration, 10);
-  const tag = headers.get("x-artifact-tag");
-  const sha = headers.get("x-artifact-sha");
-  const dirtyHash = headers.get("x-artifact-dirty-hash");
+  const decoded = Schema.decodeUnknownOption(ArtifactMetadataSchema)({
+    duration: headers.get("x-artifact-duration"),
+    tag: headers.get("x-artifact-tag"),
+    sha: headers.get("x-artifact-sha"),
+    dirtyHash: headers.get("x-artifact-dirty-hash"),
+  });
+  if (Option.isNone(decoded)) return {};
+  const { duration, tag, sha, dirtyHash } = decoded.value;
   return {
-    ...(Number.isFinite(parsedDuration) && { duration: parsedDuration }),
-    ...(tag !== null && { tag }),
-    ...(sha !== null && { sha }),
-    ...(dirtyHash !== null && { dirtyHash }),
+    ...(duration !== null && duration !== undefined && { duration }),
+    ...(tag !== null && tag !== undefined && { tag }),
+    ...(sha !== null && sha !== undefined && { sha }),
+    ...(dirtyHash !== null && dirtyHash !== undefined && { dirtyHash }),
   };
 };
 
@@ -238,8 +269,13 @@ const putArtifact = ({
   secrets: TurboCacheSecrets;
 }): Effect.Effect<Response, TurboCacheError> =>
   Effect.gen(function* () {
-    const contentLength = request.headers.get("Content-Length");
-    if (contentLength !== null && Number.parseInt(contentLength, 10) > MAX_ARTIFACT_BYTES) {
+    // An early exit only: Content-Length is client-asserted, so an absent or
+    // malformed value simply skips this and the authoritative byteLength check
+    // below still rejects an oversized body.
+    const contentLength = Schema.decodeUnknownOption(HeaderNumber)(
+      request.headers.get("Content-Length"),
+    );
+    if (Option.isSome(contentLength) && contentLength.value > MAX_ARTIFACT_BYTES) {
       return toProblemResponse(
         HttpStatus.PayloadTooLarge,
         "Artifact exceeds the 25 MiB Cloudflare KV value limit",
