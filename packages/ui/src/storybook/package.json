@@ -27,6 +27,8 @@
     "@storybook/addon-onboarding": "^10.2.13",
     "@storybook/addon-vitest": "^10.2.13",
     "@storybook/builder-vite": "^10.2.13",
+    "@stylexjs/stylex": "catalog:",
+    "@stylexjs/unplugin": "catalog:",
     "@tailwindcss/vite": "4.3.3",
     "@tom/icons": "workspace:*",
     "@tom/ui": "workspace:*",
