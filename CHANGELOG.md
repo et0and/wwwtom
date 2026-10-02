@@ -1,3 +1,10 @@
+## [3.11.4](https://github.com/et0and/wwwtom/compare/v3.11.3...v3.11.4) (2026-10-02)
+
+
+### Bug Fixes
+
+* **ui:** walk light DOM in the dismissable layer containment check ([5fd05d9](https://github.com/et0and/wwwtom/commit/5fd05d949d8e7caa716484528701ca99d714a5c2))
+
 ## [3.11.3](https://github.com/et0and/wwwtom/compare/v3.11.2...v3.11.3) (2026-10-02)
 
 
