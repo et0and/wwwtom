@@ -2,6 +2,8 @@ import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import solid from "@solidjs/vite-plugin";
 import tailwindcss from "@tailwindcss/vite";
+import stylex from "@stylexjs/unplugin";
+import { stylexOptions } from "@tom/ui/stylex.config";
 import { defineConfig } from "vite";
 
 if (process.cwd() !== import.meta.dirname) {
@@ -43,6 +45,9 @@ export default defineConfig(({ command }) => {
       // @solidjs/web; providers adopt the `ssr` environment. The middleware
       // fronts pages AND non-HTML endpoints (/feed.xml, /sitemap.xml,
       // /robots.txt) plus decorates the request event for logging.
+      // StyleX must come before solid(): its Babel transform also has to reach
+      // `.stylex.ts` token files, which vite-plugin-solid skips (no JSX).
+      stylex.vite(stylexOptions),
       solid({ start: { middleware: "./src/middleware.ts" }, ssr: true }),
       tailwindcss(),
     ],

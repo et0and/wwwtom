@@ -16,6 +16,7 @@
     "@elysiajs/eden": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "@tanstack/solid-query": "catalog:",
     "@tom/adapter": "workspace:*",
     "@tom/constants": "workspace:*",
@@ -29,6 +30,7 @@
   "devDependencies": {
     "@solidjs/testing-library": "1.0.0-beta.3",
     "@solidjs/vite-plugin": "catalog:",
+    "@stylexjs/unplugin": "catalog:",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",
     "@testing-library/user-event": "14.6.1",

@@ -12,6 +12,8 @@ Design rules. Follow always when building or reviewing TomUI.
 ## Text
 
 - content text 14px. 16px+ headings only.
+- sizes come from `styles/typography.stylex.ts`. body Text inherits line height
+  from its block, so set spacing on the parent rather than on the Text itself
 - headings sentence case. product names title case.
 - never `tracking-*`.
 - never `font-bold`. headings `font-semibold`. inline bold `font-medium`.

@@ -12,6 +12,7 @@ import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, runAdapterCall } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 import { formatDateTime } from "@tom/utils/date";
+import { bannerTitleStyles, layoutStyles } from "../components/layout.stylex";
 
 export const fetchEntries = () => runAdapterCall(() => callAdapter().guestbook.entries.get());
 
@@ -76,11 +77,11 @@ export default function Guestbook() {
               when={currentUserQuery.data}
               fallback={
                 <div class="mb-8">
-                  <Text class="mb-4">
+                  <Text style={layoutStyles.mb4}>
                     Sign in with your Fediverse account (Mastodon, Pleroma, etc.) to leave a
                     message.
                   </Text>
-                  <Text variant="secondary" size="sm" class="mb-3">
+                  <Text variant="secondary" size="sm" style={layoutStyles.mb3}>
                     Enter your full Fediverse handle (e.g., user@mastodon.social or
                     user@fosstodon.org).
                   </Text>
@@ -139,10 +140,10 @@ export default function Guestbook() {
                           class="w-12 h-12 rounded-full"
                         />
                         <div>
-                          <Text bold as="span" class="block">
+                          <Text bold as="span" style={layoutStyles.block}>
                             {u.display_name}
                           </Text>
-                          <Text variant="secondary" size="sm" as="span" class="block">
+                          <Text variant="secondary" size="sm" as="span" style={layoutStyles.block}>
                             @{u.username}@{u.instance}
                           </Text>
                         </div>
@@ -221,7 +222,7 @@ export default function Guestbook() {
       </BlurInSection>
       <BlurInSection delay={0.5}>
         <div class="space-y-4">
-          <Text variant="heading" as="h2" class="mb-4">
+          <Text variant="heading" as="h2" style={layoutStyles.mb4}>
             Signatures
           </Text>
           <Loading fallback={<Loader />}>
@@ -257,7 +258,9 @@ export default function Guestbook() {
                                 {entry.fediverse_username}
                               </Text>
                             </div>
-                            <Text class="guestbook-message mb-2">{entry.message}</Text>
+                            <Text style={[bannerTitleStyles.guestbookMessage, layoutStyles.mb2]}>
+                              {entry.message}
+                            </Text>
                             <Text variant="secondary" size="xs" as="time">
                               {formatDateTime(entry.created_at)}
                             </Text>

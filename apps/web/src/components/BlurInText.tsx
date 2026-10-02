@@ -1,16 +1,19 @@
 import { For, merge, type Merge } from "solid-js";
+import type * as stylex from "@stylexjs/stylex";
 import { Text } from "@tom/ui/text";
 
 interface BlurInTextProps {
   text: string;
-  class?: string;
+  style?: stylex.StyleXStyles;
   baseDelay?: number;
   step?: number;
   tag?: "h1" | "h2" | "span";
 }
 
 const BlurInTextBody = (props: {
-  merged: Merge<[{ class: string; baseDelay: number; step: number }, BlurInTextProps]>;
+  merged: Merge<
+    [{ style?: stylex.StyleXStyles; baseDelay: number; step: number }, BlurInTextProps]
+  >;
 }) => {
   const words = () => {
     const rawWords = props.merged.text.split(" ");
@@ -68,25 +71,25 @@ const BlurInTextBody = (props: {
 };
 
 export function BlurInText(props: BlurInTextProps) {
-  const merged = merge({ class: "", baseDelay: 0, step: 0.025 }, props);
+  const merged = merge({ baseDelay: 0, step: 0.025 }, props);
   const tag = props.tag ?? "span";
 
   if (tag === "h1") {
     return (
-      <Text variant="heading" size="lg" as="h1" class={merged.class}>
+      <Text variant="heading" size="lg" as="h1" style={merged.style}>
         <BlurInTextBody merged={merged} />
       </Text>
     );
   }
   if (tag === "h2") {
     return (
-      <Text variant="heading" as="h2" class={merged.class}>
+      <Text variant="heading" as="h2" style={merged.style}>
         <BlurInTextBody merged={merged} />
       </Text>
     );
   }
   return (
-    <Text as="span" class={merged.class}>
+    <Text as="span" style={merged.style}>
       <BlurInTextBody merged={merged} />
     </Text>
   );

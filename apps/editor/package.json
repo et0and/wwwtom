@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@solidjs/web": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "@tiptap/core": "catalog:",
     "@tiptap/extension-bold": "catalog:",
     "@tiptap/extension-code-block": "catalog:",
@@ -36,6 +37,7 @@
   "devDependencies": {
     "@solidjs/testing-library": "1.0.0-beta.3",
     "@solidjs/vite-plugin": "catalog:",
+    "@stylexjs/unplugin": "catalog:",
     "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",
     "@testing-library/user-event": "14.6.1",

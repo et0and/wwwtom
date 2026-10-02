@@ -5,6 +5,7 @@ import { Effect } from "effect";
 import { Loader } from "@tom/ui/loader";
 import { Button } from "@tom/ui/button";
 import { Text } from "@tom/ui/text";
+import { layoutStyles } from "../../../components/layout.stylex";
 
 export default function Hold() {
   const [timer, setTimer] = createSignal(0);
@@ -112,7 +113,7 @@ export default function Hold() {
 				`}</style>
         <div class="hold-container max-h-screen">
           <main class="flex flex-col">
-            <Text class="text-2xl">You have been waiting for {formatTime()}</Text>
+            <Text style={layoutStyles.text2xl}>You have been waiting for {formatTime()}</Text>
             <div>
               <Show when={!isPlaybackInitiated()}>
                 <Button variant="secondary" onClick={handleAudioStart}>

@@ -7,6 +7,7 @@ import { Loader } from "@tom/ui/loader";
 import { Text } from "@tom/ui/text";
 import { ContentBlocks } from "~/components/ContentBlocks";
 import { fetchChannelContents } from "~/server/adapter";
+import { layoutStyles } from "./layout.stylex";
 
 interface ArenaCarouselProps {
   slug: string;
@@ -57,7 +58,7 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
             </For>
           </div>
         </div>
-        <Text variant="secondary" size="xs" class="mt-2">
+        <Text variant="secondary" size="xs" style={layoutStyles.mt2}>
           Source:{" "}
           <a href={`https://are.na/tom/${props.slug}`} target="_blank" rel="noopener noreferrer">
             {props.title || props.slug}

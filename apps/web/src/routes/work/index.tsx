@@ -9,6 +9,7 @@ import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
+import { bannerTitleStyles } from "../../components/layout.stylex";
 
 export default function WorkHome() {
   httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
@@ -43,7 +44,7 @@ export default function WorkHome() {
         <Loading fallback={<Loader />}>
           <Show when={worksQuery.isError}>
             <div class="banner" role="alert">
-              <Text class="banner-title">Error loading works</Text>
+              <Text style={bannerTitleStyles.bannerTitle}>Error loading works</Text>
               <Text>{worksQuery.error?.message}</Text>
             </div>
           </Show>

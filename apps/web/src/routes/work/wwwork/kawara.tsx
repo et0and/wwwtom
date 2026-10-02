@@ -4,12 +4,13 @@ import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
+import { layoutStyles } from "../../../components/layout.stylex";
 
 const TOTAL_COUNT = 1000000;
 const ITEM_HEIGHT = 40;
 
 const NumberItem = (props: { index: number }) => (
-  <Text class="mb-1" style={{ height: `${ITEM_HEIGHT}px` }}>
+  <Text style={[layoutStyles.mb1, layoutStyles.itemHeight(`${ITEM_HEIGHT}px`)]}>
     {numberToWords.toWords(props.index + 1)}
   </Text>
 );

@@ -12,6 +12,7 @@ import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { formatDate } from "@tom/utils/date";
 import { parsePageNumber } from "@tom/utils/page";
+import { bannerTitleStyles } from "../../components/layout.stylex";
 
 export default function PostsHome() {
   httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
@@ -52,7 +53,7 @@ export default function PostsHome() {
         <Loading fallback={<Loader />}>
           <Show when={postsQuery.isError}>
             <div class="banner" role="alert">
-              <Text class="banner-title">Error loading posts</Text>
+              <Text style={bannerTitleStyles.bannerTitle}>Error loading posts</Text>
               <Text>{postsQuery.error?.message}</Text>
             </div>
           </Show>

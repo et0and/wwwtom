@@ -3,6 +3,7 @@ import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
+import { bannerTitleStyles } from "./layout.stylex";
 
 /** Loading shell for post/work detail pages while the query is pending. */
 export const DetailLoading = () => (
@@ -32,7 +33,7 @@ export const DetailError = (props: { kind: "post" | "work"; message: string }) =
       <BlurInText text="Error" tag="h1" baseDelay={0.1} step={0.025} />
       <BlurInSection delay={0.3}>
         <div class="banner" role="alert">
-          <Text class="banner-title">Error loading {props.kind}</Text>
+          <Text style={bannerTitleStyles.bannerTitle}>Error loading {props.kind}</Text>
           <Text>{props.message}</Text>
         </div>
       </BlurInSection>

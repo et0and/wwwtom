@@ -39,6 +39,8 @@ catalog:
   "@tiptap/extension-paragraph": 3.31.3
   "@tiptap/extension-text": 3.31.3
   "@tiptap/pm": 3.31.3
+  "@stylexjs/stylex": 0.19.1
+  "@stylexjs/unplugin": 0.19.1
   classnames: 2.5.1
   obscenity: 0.4.5
   postcss: 8.5.8

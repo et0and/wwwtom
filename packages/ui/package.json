@@ -22,6 +22,7 @@
     "./code": "./src/components/code/code.tsx",
     "./collapsible": "./src/components/collapsible/collapsible.tsx",
     "./color-mode": "./src/utils/color-mode.ts",
+    "./colors.stylex": "./src/styles/colors.stylex.ts",
     "./combobox": "./src/components/combobox/combobox.tsx",
     "./command-palette": "./src/components/command-palette/command-palette.tsx",
     "./date-picker": "./src/components/date-picker/date-picker.tsx",
@@ -45,6 +46,7 @@
     "./select": "./src/components/select/select.tsx",
     "./sensitive-input": "./src/components/sensitive-input/sensitive-input.tsx",
     "./sidebar": "./src/components/sidebar/sidebar.tsx",
+    "./stylex.config": "./stylex.config.ts",
     "./switch": "./src/components/switch/switch.tsx",
     "./table": "./src/components/table/table.tsx",
     "./table-of-contents": "./src/components/table-of-contents/table-of-contents.tsx",
@@ -52,10 +54,12 @@
     "./text": "./src/components/text/text.tsx",
     "./text-variants": "./src/components/text/variants.ts",
     "./toast": "./src/components/toast/toast.tsx",
+    "./tokens.stylex": "./src/styles/tokens.stylex.ts",
     "./tomui.css": "./src/styles/tomui.css",
     "./tomui/theme-tomui.css": "./src/styles/theme-tomui.css",
     "./toolbar": "./src/components/toolbar/toolbar.tsx",
-    "./tooltip": "./src/components/tooltip/tooltip.tsx"
+    "./tooltip": "./src/components/tooltip/tooltip.tsx",
+    "./typography.stylex": "./src/styles/typography.stylex.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -69,13 +73,20 @@
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "@tom/icons": "workspace:*",
     "@tom/schemas": "workspace:*",
     "classnames": "catalog:",
     "solid-js": "catalog:"
   },
   "devDependencies": {
+    "@solidjs/testing-library": "1.0.0-beta.3",
+    "@solidjs/vite-plugin": "catalog:",
+    "@stylexjs/unplugin": "catalog:",
+    "@testing-library/jest-dom": "6.8.0",
+    "jsdom": "27.0.0",
     "typescript": "catalog:",
+    "vite": "^8.1.5",
     "vitest": "catalog:"
   }
 }

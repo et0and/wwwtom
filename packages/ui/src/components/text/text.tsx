@@ -1,13 +1,13 @@
 import { merge, omit } from "solid-js";
 import { Dynamic } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
+import * as stylex from "@stylexjs/stylex";
 import {
   BOLDABLE_VARIANTS,
   DEFAULT_ELEMENT_BY_VARIANT,
   TOMUI_TEXT_DEFAULT_VARIANTS,
-  TOMUI_TEXT_VARIANTS,
-  resolveTextSizeClasses,
+  resolveTextSizeStyle,
+  textStyles,
   type TextElement,
   type TomuiTextSize,
   type TomuiTextVariant,
@@ -50,7 +50,7 @@ export interface TextProps {
   size?: TomuiTextSize;
   /** Whether to use bold font weight (only applies to body variants). */
   bold?: boolean;
-  /** Whether to truncate overflowing text with an ellipsis. Adds `truncate min-w-0` classes. */
+  /** Whether to truncate overflowing text with an ellipsis. */
   truncate?: boolean;
   /**
    * The HTML element to render. Accepts headings (`"h1"`–`"h6"`), block text
@@ -66,14 +66,12 @@ export interface TextProps {
   as?: TextElement;
   /** Text content. */
   children?: JSX.Element;
-  /** Additional CSS classes, merged after the computed variant classes. */
-  class?: string;
+  /** Caller styles, merged last so they win over the variant styles. */
+  style?: stylex.StyleXStyles;
   id?: string;
   /** Language of the text content (e.g. `"ja"`). */
   lang?: string;
   ref?: HTMLElement | ((element: HTMLElement) => void) | undefined;
-  /** Inline styles. */
-  style?: JSX.CSSProperties;
   title?: string;
 }
 
@@ -104,7 +102,6 @@ export function Text(props: TextProps): JSX.Element {
     "as",
     "bold",
     "children",
-    "class",
     "id",
     "ref",
     "size",
@@ -113,19 +110,19 @@ export function Text(props: TextProps): JSX.Element {
     "truncate",
     "variant",
   );
+  const attrs = () =>
+    stylex.attrs(
+      textStyles[merged.variant],
+      resolveTextSizeStyle(merged.variant, merged.size),
+      BOLDABLE_VARIANTS.has(merged.variant) && merged.bold ? textStyles.bold : undefined,
+      merged.truncate ? textStyles.truncate : undefined,
+      merged.style,
+    );
   return (
     <Dynamic
       component={merged.as ?? DEFAULT_ELEMENT_BY_VARIANT[merged.variant]}
       data-tomui-component="Text"
-      class={cn(
-        "text-tomui-default",
-        TOMUI_TEXT_VARIANTS.variant[merged.variant].classes,
-        resolveTextSizeClasses(merged.variant, merged.size),
-        BOLDABLE_VARIANTS.has(merged.variant) && merged.bold ? "font-medium" : "",
-        merged.truncate ? "min-w-0 truncate" : "",
-        merged.class,
-      )}
-      style={merged.style}
+      {...attrs()}
       id={merged.id}
       title={merged.title}
       ref={merged.ref}
