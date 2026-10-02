@@ -42,6 +42,7 @@
     "./meter": "./src/components/meter/meter.tsx",
     "./pagination": "./src/components/pagination/pagination.tsx",
     "./popover": "./src/components/popover/popover.tsx",
+    "./primitives.stylex": "./src/styles/primitives.stylex.ts",
     "./radio": "./src/components/radio/radio.tsx",
     "./select": "./src/components/select/select.tsx",
     "./sensitive-input": "./src/components/sensitive-input/sensitive-input.tsx",

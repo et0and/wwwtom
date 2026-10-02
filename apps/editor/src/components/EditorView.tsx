@@ -34,6 +34,7 @@ import { HistoryPanel } from "./HistoryPanel";
 import { MediaPicker } from "./MediaPicker";
 import { Toolbar } from "./Toolbar";
 import type { InsertPanel } from "./Toolbar";
+import { layoutStyles } from "./layout.stylex";
 
 type InitialData = {
   readonly fields: ContentFields;
@@ -110,7 +111,7 @@ export const EditorView = (props: {
               type="button"
               size="sm"
               variant="ghost"
-              class="justify-self-start"
+              style={layoutStyles.justifySelfStart}
               onClick={props.onExit}
             >
               Back

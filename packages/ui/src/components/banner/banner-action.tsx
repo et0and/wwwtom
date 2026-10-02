@@ -1,7 +1,11 @@
 import { createContext, merge, omit, Show, useContext } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import * as stylex from "@stylexjs/stylex";
 import { Button } from "../button/button";
-import { cn } from "../../utils/cn";
+import { customProperties } from "../../utils/stylex-vars";
+import { bannerAccentVars } from "./banner-vars.stylex";
+import { colors } from "../../styles/colors.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 import type { TomuiBannerVariant } from "./banner";
 
 /**
@@ -40,42 +44,58 @@ export const BannerActionContext = createContext<BannerActionContextValue>({
   size: "sm",
 });
 
-/** Per-banner-variant colors passed to the underlying `Button`. */
+/**
+ * The accent colour per banner variant. It is read from context at runtime, so
+ * it cannot live in a static StyleX rule; the styles below reference the
+ * `--banner-accent` custom property instead, and this value is set inline.
+ */
 const BANNER_ACTION_ACCENTS = {
-  default: {
-    accent: "var(--color-tomui-info)",
-    secondary:
-      "text-inherit ring-tomui-info/50 fill-tomui-info hover:!text-inherit hover:!ring-tomui-info/50 hover:bg-tomui-info/10",
-    ghost: "text-inherit fill-tomui-info hover:bg-tomui-info/10",
-  },
-  alert: {
-    accent: "var(--color-tomui-warning)",
-    secondary:
-      "text-inherit ring-tomui-warning/50 fill-tomui-warning hover:!text-inherit hover:!ring-tomui-warning/50 hover:bg-tomui-warning/10",
-    ghost: "text-inherit fill-tomui-warning hover:bg-tomui-warning/10",
-  },
-  error: {
-    accent: "var(--color-tomui-danger)",
-    secondary:
-      "text-inherit ring-tomui-danger/50 fill-tomui-danger hover:!text-inherit hover:!ring-tomui-danger/50 hover:bg-tomui-danger/10",
-    ghost: "text-inherit fill-tomui-danger hover:bg-tomui-danger/10",
-  },
-  secondary: {
-    accent: "var(--color-neutral-700, oklch(37.1% 0 0))",
-    secondary:
-      "text-inherit ring-tomui-focus/20 fill-tomui-subtle hover:!text-inherit hover:!ring-tomui-focus/20 hover:bg-tomui-contrast/10",
-    ghost: "text-inherit fill-tomui-subtle hover:bg-tomui-contrast/10",
-  },
-} satisfies Record<TomuiBannerVariant, { accent: string; secondary: string; ghost: string }>;
+  default: colors["--color-tomui-info"],
+  alert: colors["--color-tomui-warning"],
+  error: colors["--color-tomui-danger"],
+  secondary: colors["--color-tomui-focus"],
+} satisfies Record<TomuiBannerVariant, string>;
 
-function bannerActionAccentVars(accent: string): JSX.CSSProperties {
-  return {
-    "--tomui-button-emphasis-ring": `color-mix(in oklch, ${accent}, black 10%)`,
-    "--tomui-button-emphasis-bg": `color-mix(in oklch, ${accent}, white 30%)`,
-    "--tomui-button-emphasis-gradient-start": `color-mix(in oklch, ${accent}, white 15%)`,
-    "--tomui-button-emphasis-gradient-end": accent,
-  } as JSX.CSSProperties;
-}
+const styles = stylex.create({
+  secondary: {
+    color: "inherit",
+    boxShadow: "0 0 0 1px color-mix(in srgb, " + bannerAccentVars.accent + " 50%, transparent)",
+    fill: bannerAccentVars.accent,
+    ":hover": {
+      color: "inherit",
+      boxShadow: "0 0 0 1px color-mix(in srgb, " + bannerAccentVars.accent + " 50%, transparent)",
+      backgroundColor: "color-mix(in srgb, " + bannerAccentVars.accent + " 10%, transparent)",
+    },
+  },
+  ghost: {
+    color: "inherit",
+    fill: bannerAccentVars.accent,
+    ":hover": {
+      backgroundColor: "color-mix(in srgb, " + bannerAccentVars.accent + " 10%, transparent)",
+    },
+  },
+  secondaryMuted: {
+    color: "inherit",
+    boxShadow:
+      "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
+    fill: textColors["--text-color-tomui-subtle"],
+    ":hover": {
+      color: "inherit",
+      boxShadow:
+        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
+      backgroundColor:
+        "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+    },
+  },
+  ghostMuted: {
+    color: "inherit",
+    fill: textColors["--text-color-tomui-subtle"],
+    ":hover": {
+      backgroundColor:
+        "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+    },
+  },
+});
 
 /** Props for {@link BannerAction}. */
 export type BannerActionProps = Omit<
@@ -83,7 +103,6 @@ export type BannerActionProps = Omit<
   "form" | "ref" | "style" | "title" | "type"
 > & {
   children?: JSX.Element;
-  class?: string;
   icon?: JSX.Element;
   /**
    * Visual variant of the CTA, aligned with `Button`'s `variant` naming.
@@ -93,7 +112,8 @@ export type BannerActionProps = Omit<
    * @default "primary"
    */
   variant?: BannerActionVariant;
-  style?: JSX.CSSProperties | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   title?: string | undefined;
   type?: "button" | "submit" | "reset" | undefined;
 };
@@ -110,23 +130,25 @@ export type BannerActionProps = Omit<
  */
 export function BannerAction(props: BannerActionProps): JSX.Element {
   const merged = merge({ variant: "primary" as BannerActionVariant, type: "button" }, props);
-  const rest = omit(merged, "children", "class", "icon", "style", "title", "type", "variant");
+  const rest = omit(merged, "children", "icon", "style", "title", "type", "variant");
   const banner = useContext(BannerActionContext);
-  const styles = (): { accent: string; secondary: string; ghost: string } =>
-    BANNER_ACTION_ACCENTS[banner.variant];
   const buttonVariant = (): "primary" | "outline" | "ghost" =>
     merged.variant === "secondary" ? "outline" : merged.variant;
-  const baseStyle = (): JSX.CSSProperties | undefined => merged.style;
-  const style = (): JSX.CSSProperties | undefined => {
-    if (merged.variant !== "primary") return baseStyle();
-    return { ...bannerActionAccentVars(styles().accent), ...baseStyle() };
+  const isMuted = (): boolean => banner.variant === "secondary";
+  const accentStyle = (): Record<string, string> =>
+    customProperties({ [bannerAccentVars.accent]: BANNER_ACTION_ACCENTS[banner.variant] });
+  const variantStyles = () => {
+    if (merged.variant === "secondary") {
+      return isMuted() ? styles.secondaryMuted : styles.secondary;
+    }
+    return isMuted() ? styles.ghostMuted : styles.ghost;
   };
   return (
     <Button
       variant={buttonVariant()}
       size={banner.size}
-      class={cn(merged.variant !== "primary" ? styles()[merged.variant] : "", merged.class)}
-      style={style()}
+      style={merged.variant === "primary" ? merged.style : [variantStyles(), merged.style]}
+      cssVars={accentStyle()}
       title={merged.title}
       type={merged.type === "submit" || merged.type === "reset" ? merged.type : "button"}
       {...rest}

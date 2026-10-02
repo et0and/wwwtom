@@ -1,66 +1,44 @@
 import { For, merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-/** Code language variant definitions. */
-export const TOMUI_CODE_VARIANTS = {
-  lang: {
-    ts: {
-      classes: "",
-      description: "TypeScript code",
-    },
-    tsx: {
-      classes: "",
-      description: "TypeScript JSX code",
-    },
-    jsonc: {
-      classes: "",
-      description: "JSON with comments",
-    },
-    bash: {
-      classes: "",
-      description: "Shell/Bash commands",
-    },
-    css: {
-      classes: "",
-      description: "CSS styles",
-    },
-  },
-} as const;
+import * as stylex from "@stylexjs/stylex";
+import { monoFont } from "../../styles/primitives.stylex";
+import { colors } from "../../styles/colors.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm } from "../../styles/typography.stylex";
 
 export const TOMUI_CODE_DEFAULT_VARIANTS = {
   lang: "ts",
 } as const;
 
-// Derived types from TOMUI_CODE_VARIANTS
-export type TomuiCodeLang = keyof typeof TOMUI_CODE_VARIANTS.lang;
+/** Languages the component documents. All share one visual treatment. */
+export const TOMUI_CODE_LANGS = ["ts", "tsx", "jsonc", "bash", "css"] as const;
 
-export interface TomuiCodeVariantsProps {
-  /**
-   * Language hint for the code content.
-   * - `"ts"` — TypeScript code
-   * - `"tsx"` — TypeScript JSX code
-   * - `"jsonc"` — JSON with comments
-   * - `"bash"` — Shell/Bash commands
-   * - `"css"` — CSS styles
-   * @default "ts"
-   */
-  lang?: TomuiCodeLang;
-}
+export type TomuiCodeLang = (typeof TOMUI_CODE_LANGS)[number];
 
-export function codeVariants(props: TomuiCodeVariantsProps = {}): string {
-  const merged = merge(TOMUI_CODE_DEFAULT_VARIANTS, props);
-  return cn(
-    // Base styles
-    "m-0 w-auto rounded-none border-none bg-transparent p-0 font-mono text-sm leading-[20px] text-tomui-subtle",
-    // Apply lang-specific styles (fallback to default if lang not in map)
-    resolveVariant(TOMUI_CODE_VARIANTS.lang, merged.lang, TOMUI_CODE_DEFAULT_VARIANTS.lang).classes,
-  );
-}
-
-// Legacy type alias for backwards compatibility
-export type CodeLang = TomuiCodeLang;
+const styles = stylex.create({
+  pre: {
+    margin: 0,
+    width: "auto",
+    borderRadius: 0,
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    padding: 0,
+    fontFamily: monoFont.fontFamily,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
+    color: textColors["--text-color-tomui-subtle"],
+  },
+  block: {
+    minWidth: 0,
+    borderRadius: "0.375rem",
+    borderWidth: 1,
+    borderColor: colors["--color-tomui-fill"],
+    backgroundColor: colors["--color-tomui-base"],
+  },
+  /** Inset for the code inside a block. Passed to the inner Code. */
+  blockInset: { padding: "0.625rem" },
+  highlighted: { color: textColors["--text-color-tomui-brand"] },
+});
 
 /** Template values for `{{key}}` interpolation in `code`. */
 export type CodeValues = Record<string, { value: string; highlight?: boolean }>;
@@ -76,15 +54,15 @@ export type CodeValues = Record<string, { value: string; highlight?: boolean }>;
  * />
  * ```
  */
-export interface CodeProps extends TomuiCodeVariantsProps {
+export interface CodeProps {
   /** The code string to display. */
   code: string;
+  /** Language hint for the code content. All languages share one treatment. */
+  lang?: TomuiCodeLang;
   /** Template values for `{{key}}` interpolation. Values with `highlight: true` are visually emphasized. */
   values?: CodeValues;
-  /** Additional CSS classes merged via `cn()`. */
-  class?: string;
-  /** Inline styles. */
-  style?: JSX.CSSProperties;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 function renderCodeSegments(code: string, values: CodeValues | undefined): JSX.Element {
@@ -97,7 +75,7 @@ function renderCodeSegments(code: string, values: CodeValues | undefined): JSX.E
         const entry = values[key];
         if (part.startsWith("{{") && entry) {
           return (
-            <span class={entry.highlight ? "text-tomui-brand" : undefined}>{entry.value}</span>
+            <span {...stylex.attrs(entry.highlight && styles.highlighted)}>{entry.value}</span>
           );
         }
         return <>{part}</>;
@@ -109,19 +87,14 @@ function renderCodeSegments(code: string, values: CodeValues | undefined): JSX.E
 /**
  * Simple code component without syntax highlighting.
  *
- * Renders code in a monospace font with customizable language metadata.
- * For a bordered container version, use `Code.Block` or `CodeBlock`.
+ * Renders code in a monospace font. For a bordered container version, use
+ * `Code.Block` or `CodeBlock`.
  */
 function CodeComponent(props: CodeProps): JSX.Element {
   const merged = merge({ lang: TOMUI_CODE_DEFAULT_VARIANTS.lang }, props);
-  const rest = omit(merged, "class", "code", "lang", "style", "values");
+  const rest = omit(merged, "code", "lang", "style", "values");
   return (
-    <pre
-      data-tomui-component="Code"
-      class={cn(codeVariants({ lang: merged.lang }), merged.class)}
-      style={merged.style}
-      {...rest}
-    >
+    <pre data-tomui-component="Code" {...stylex.attrs(styles.pre, merged.style)} {...rest}>
       {renderCodeSegments(merged.code, merged.values)}
     </pre>
   );
@@ -132,33 +105,30 @@ function CodeComponent(props: CodeProps): JSX.Element {
  *
  * @example
  * ```tsx
- * <CodeBlock lang="tsx" code={`const greeting = "Hello!";`} />
+ * <Code.Block lang="tsx" code={`const greeting = "Hello!";`} />
  * ```
  */
 export interface CodeBlockProps {
   /** The code string to display. */
   code: string;
-  /**
-   * Language hint for the code content.
-   * @default "ts"
-   */
-  lang?: CodeLang;
+  /** Language hint for the code content. */
+  lang?: TomuiCodeLang;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 /**
  * Code block with border and background container.
  *
- * A styled wrapper around Code that adds a bordered container with surface background.
- * Useful for displaying code snippets with visual separation from surrounding content.
+ * A styled wrapper around Code that adds a bordered container with surface
+ * background. Useful for displaying code snippets with visual separation from
+ * surrounding text.
  */
 function CodeBlockComponent(props: CodeBlockProps): JSX.Element {
   const merged = merge({ lang: TOMUI_CODE_DEFAULT_VARIANTS.lang }, props);
   return (
-    <div
-      data-tomui-component="CodeBlock"
-      class="min-w-0 rounded-md border border-tomui-fill bg-tomui-base [&>pre]:p-2.5!"
-    >
-      <CodeComponent lang={merged.lang} code={merged.code} />
+    <div {...stylex.attrs(styles.block, merged.style)}>
+      <CodeComponent lang={merged.lang} code={merged.code} style={styles.blockInset} />
     </div>
   );
 }

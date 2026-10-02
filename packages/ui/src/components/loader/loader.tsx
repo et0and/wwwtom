@@ -1,34 +1,36 @@
 import { merge, omit } from "solid-js";
-import { cn } from "../../utils/cn";
-
-export const TOMUI_LOADER_VARIANTS = {
-  size: {
-    sm: { value: 16, description: "Small loader for inline use" },
-    base: { value: 24, description: "Default loader size" },
-    lg: { value: 32, description: "Large loader for prominent loading states" },
-  },
-} as const;
+import * as stylex from "@stylexjs/stylex";
 
 export const TOMUI_LOADER_DEFAULT_VARIANTS = { size: "base" } as const;
 
-export type TomuiLoaderSize = keyof typeof TOMUI_LOADER_VARIANTS.size;
+export type TomuiLoaderSize = "sm" | "base" | "lg";
+
+/** Pixel extents per size. Loader accepts a raw number for one-off sizing. */
+const SIZES = {
+  sm: 16,
+  base: 24,
+  lg: 32,
+} as const satisfies Record<TomuiLoaderSize, number>;
 
 export function loaderVariants(
   props: { size?: TomuiLoaderSize | number | undefined } = {},
 ): number {
-  const merged = merge(TOMUI_LOADER_DEFAULT_VARIANTS, props);
-  const size = merged.size;
-  if (size === "sm" || size === "base" || size === "lg") {
-    return TOMUI_LOADER_VARIANTS.size[size].value;
-  }
-  if (size === undefined) return TOMUI_LOADER_VARIANTS.size.base.value;
+  const size = props.size;
+  if (size === undefined) return SIZES.base;
+  if (size === "sm" || size === "base" || size === "lg") return SIZES[size];
   return size;
 }
 
+const styles = stylex.create({
+  /** Dynamic square size, since callers may pass an arbitrary pixel value. */
+  extent: (size: number) => ({ width: `${size}px`, height: `${size}px` }),
+});
+
 export type LoaderProps = {
-  class?: string;
   size?: TomuiLoaderSize | number;
   "aria-label"?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Loader(props: LoaderProps) {
@@ -36,17 +38,14 @@ export function Loader(props: LoaderProps) {
     { size: TOMUI_LOADER_DEFAULT_VARIANTS.size, "aria-label": "Loading" } as LoaderProps,
     props,
   );
-  const rest = omit(merged, "class", "size", "aria-label");
+  const rest = omit(merged, "size", "aria-label", "style");
   const sizeValue = () => loaderVariants({ size: merged.size });
   return (
     <svg
-      width="24"
-      height="24"
+      {...stylex.attrs(styles.extent(sizeValue()), merged.style)}
       viewBox="0 0 24 24"
       xmlns="http://www.w3.org/2000/svg"
       stroke="currentColor"
-      class={cn(merged.class)}
-      style={{ height: `${sizeValue()}px`, width: `${sizeValue()}px` }}
       role="status"
       aria-label={merged["aria-label"]}
       data-tomui-component="Loader"

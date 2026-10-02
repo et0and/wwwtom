@@ -6,6 +6,7 @@ import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
 import { createCategory, deleteCategory, listCategories } from "../lib/content";
 import { runClient } from "@tom/utils/services/http";
+import { layoutStyles } from "./layout.stylex";
 
 /** Category manager: list, add, delete. Posts link by id from the edit view. */
 export const CategoriesView = () => {
@@ -100,7 +101,7 @@ export const CategoriesView = () => {
               type="button"
               size="sm"
               variant="secondary"
-              class="justify-self-start"
+              style={layoutStyles.justifySelfStart}
               onClick={onAdd}
             >
               Add category

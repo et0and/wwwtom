@@ -11,6 +11,7 @@ import { adapterUrl } from "../lib/api";
 import { runClient } from "@tom/utils/services/http";
 import { getRevision, listRevisions, mediaFileUrl, restoreRevision } from "../lib/content";
 import type { ContentKind } from "../lib/content";
+import { layoutStyles } from "./layout.stylex";
 
 type Selected = {
   readonly meta: CmsRevisionMeta;
@@ -111,7 +112,7 @@ export const HistoryPanel = (props: {
                 type="button"
                 size="sm"
                 variant={selected()?.meta.id === meta.id ? "secondary" : "ghost"}
-                class="w-full justify-between"
+                style={[layoutStyles.fullWidth, layoutStyles.justifyBetween]}
                 onClick={() => onSelect(meta)}
               >
                 <span class="history-title">{meta.title}</span>
