@@ -1,3 +1,11 @@
+## [3.11.3](https://github.com/et0and/wwwtom/compare/v3.11.2...v3.11.3) (2026-10-02)
+
+
+### Bug Fixes
+
+* **adapter:** decode the simulator guestbook envelope, not a bare array ([cf08e17](https://github.com/et0and/wwwtom/commit/cf08e17587be996269dddd7e71a54cc99441c78c))
+* **infra:** scheme-aware Hyperdrive port and schema-bound header parsing ([992bdf0](https://github.com/et0and/wwwtom/commit/992bdf0a02572ddecbd8f661a9126dd8412e7b77))
+
 ## [3.11.2](https://github.com/et0and/wwwtom/compare/v3.11.1...v3.11.2) (2026-09-30)
 
 
