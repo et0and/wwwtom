@@ -161,3 +161,15 @@ a:hover [data-tomui-component="Badge"] {
 [data-tomui-component="Switch"][data-size="lg"]:checked + [data-slot="switch-thumb"] {
   left: 1.25rem;
 }
+
+/* Radio indicator and hover ring. StyleX 0.19 supports no sibling selector, so
+   the checked indicator is toggled here. The hover ring only applies to a
+   non-error, enabled radio, which is what the old group-hover rule did. */
+[data-tomui-part="item"]:checked + [data-tomui-part="indicator"] {
+  display: flex;
+}
+
+[data-tomui-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
+  [data-tomui-part="item"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+}
