@@ -15,6 +15,16 @@ export const colors = stylex.defineVars({
   /** Tailwind's own text-white and text-black, which several badges relied on. */
   "--color-white": "#fff",
   "--color-black": "#000",
+  /**
+   * TomUI's own neutral and blue primitives. These were already declared in
+   * tomui-binding.css; they are TomUI values, not Tailwind's default palette.
+   * Only the steps the design system actually uses are carried over.
+   */
+  "--color-tomui-neutral-450": "oklch(89% 0 0)",
+  "--color-tomui-neutral-750": "oklch(32% 0 0)",
+  "--color-tomui-neutral-850": "oklch(24% 0 0)",
+  "--color-blue-400": "oklch(70.7% 0.165 254.624)",
+  "--color-blue-800": "oklch(42.4% 0.199 265.638)",
   "--color-tomui-canvas": {
     default: "var(--color-tomui-neutral-25, oklch(98.75% 0 0))",
     [DARK]: "var(--color-tomui-neutral-1000, oklch(10% 0 0))",
