@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import {
   createContext,
@@ -12,42 +13,186 @@ import {
 import { CaretDownIcon } from "@tom/icons/CaretDown";
 import { CheckIcon } from "@tom/icons/Check";
 import { XIcon } from "@tom/icons/X";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-export const TOMUI_COMBOBOX_VARIANTS = {
-  inputSide: {
-    right: {
-      classes: "",
-      description: "Input positioned inline to the right of chips",
-    },
-    top: {
-      classes: "",
-      description: "Input positioned above chips",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_COMBOBOX_DEFAULT_VARIANTS = {
   inputSide: "right",
 } as const;
 
-export type TomuiComboboxInputSide = keyof typeof TOMUI_COMBOBOX_VARIANTS.inputSide;
+export type TomuiComboboxInputSide = "right" | "top";
 
-export interface TomuiComboboxVariantsProps {
-  inputSide?: TomuiComboboxInputSide;
-}
+const lineColor = colors["--color-tomui-line"];
+const hairlineColor = colors["--color-tomui-hairline"];
+const focusColor = colors["--color-tomui-focus"];
+/** Matches Tailwind's `ring-<color>/50` alpha modifier. StyleX needs literals. */
+const focusRing = "0 0 0 1.5px color-mix(in srgb, " + focusColor + " 50%, transparent)";
+const controlRing = "0 0 0 1px " + lineColor;
 
-export function comboboxVariants(props: TomuiComboboxVariantsProps = {}): string {
-  const merged = merge({ inputSide: TOMUI_COMBOBOX_DEFAULT_VARIANTS.inputSide }, props);
-  return cn(
-    resolveVariant(
-      TOMUI_COMBOBOX_VARIANTS.inputSide,
-      merged.inputSide,
-      TOMUI_COMBOBOX_DEFAULT_VARIANTS.inputSide,
-    ).classes,
-  );
-}
+const styles = stylex.create({
+  root: { position: "relative" },
+  label: {
+    display: "block",
+    marginBottom: "0.25rem",
+    fontSize: "0.8125rem",
+    fontWeight: 500,
+  },
+  message: { marginTop: "0.25rem", fontSize: "0.8125rem" },
+  messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
+  messageDanger: { color: textColors["--text-color-tomui-danger"] },
+  content: {
+    position: "absolute",
+    zIndex: 50,
+    display: "flex",
+    flexDirection: "column",
+    maxHeight: "24rem",
+    minWidth: "100%",
+    marginTop: "0.25rem",
+    overflow: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    paddingBlock: "0.375rem",
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: controlRing + ", 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+  },
+  triggerWrap: {
+    position: "relative",
+    display: "inline-block",
+    width: "100%",
+    ":has(:disabled)": { cursor: "not-allowed", opacity: 0.5 },
+  },
+  triggerInput: {
+    width: "100%",
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-control"],
+    paddingInlineEnd: "3rem",
+    color: textColors["--text-color-tomui-default"],
+    outlineWidth: 0,
+    boxShadow: controlRing,
+    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
+    ":disabled": { cursor: "not-allowed" },
+    ":focus": { outlineWidth: 0, boxShadow: focusRing },
+  },
+  iconButton: {
+    position: "absolute",
+    top: "50%",
+    display: "flex",
+    margin: 0,
+    padding: 0,
+    cursor: "pointer",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "transparent",
+    transform: "translateY(-50%)",
+  },
+  clearButton: { right: "2rem" },
+  triggerButton: { right: "0.5rem", color: textColors["--text-color-tomui-subtle"] },
+  triggerValue: {
+    position: "relative",
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-control"],
+    paddingInlineEnd: "2rem",
+    color: textColors["--text-color-tomui-default"],
+    outlineWidth: 0,
+    boxShadow: controlRing,
+    ":disabled": { cursor: "not-allowed", opacity: 0.5 },
+    ":focus": { outlineWidth: 0, boxShadow: focusRing },
+  },
+  caret: {
+    position: "absolute",
+    top: "50%",
+    right: "0.5rem",
+    display: "flex",
+    alignItems: "center",
+    color: textColors["--text-color-tomui-subtle"],
+    transform: "translateY(-50%)",
+  },
+  multiple: {
+    display: "flex",
+    height: "auto",
+    minHeight: "2.25rem",
+    flexDirection: "column",
+    gap: "0.25rem",
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-control"],
+    padding: "0.375rem 0.625rem",
+    boxShadow: controlRing,
+  },
+  multipleInput: {
+    width: "100%",
+    borderWidth: 0,
+    backgroundColor: "inherit",
+    padding: "0.25rem 0.5rem",
+  },
+  multipleInputInline: {
+    minWidth: "6.25rem",
+    flexGrow: 1,
+    borderWidth: 0,
+    backgroundColor: "inherit",
+    padding: "0.25rem 0.5rem",
+  },
+  chipRow: {
+    display: "flex",
+    flexGrow: 1,
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: "0.375rem",
+  },
+  item: {
+    display: "grid",
+    gridTemplateColumns: "1fr 16px",
+    gap: "0.5rem",
+    margin: "0.375rem",
+    borderRadius: radius.sm.borderRadius,
+    padding: "0.375rem 0.5rem",
+    fontSize: "0.875rem",
+    cursor: "pointer",
+  },
+  itemLabel: { gridColumnStart: "1" },
+  itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
+  empty: {
+    flexShrink: 0,
+    margin: "0.375rem",
+    padding: "0.5rem 1rem",
+    fontSize: "0.925rem",
+    lineHeight: "1rem",
+    color: textColors["--text-color-tomui-subtle"],
+    ":empty": { margin: 0, padding: 0 },
+  },
+  list: {
+    minHeight: 0,
+    flexGrow: 1,
+    overflowY: "auto",
+    overscrollBehaviorY: "contain",
+    scrollPaddingBlock: "0.5rem",
+  },
+  chip: {
+    display: "flex",
+    height: "1.5rem",
+    alignItems: "center",
+    gap: "0.625rem",
+    borderRadius: radius.sm.borderRadius,
+    backgroundColor: colors["--color-tomui-overlay"],
+    paddingInlineStart: "0.5rem",
+    paddingInlineEnd: "3px",
+    fontSize: "0.8125rem",
+    boxShadow: "0 0 0 1px " + hairlineColor,
+  },
+  chipRemove: {
+    display: "flex",
+    cursor: "pointer",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md.borderRadius,
+    backgroundColor: "transparent",
+    padding: "0.25rem",
+    ":hover": { backgroundColor: colors["--color-tomui-fill-hover"] },
+  },
+});
 
 interface ComboboxContextValue {
   query: () => string;
@@ -80,11 +225,12 @@ export type ComboboxRootProps = {
   onValueChange?: (value: string | Array<string> | undefined) => void;
   multiple?: boolean;
   children?: JSX.Element;
-  class?: string;
   label?: JSX.Element;
   required?: boolean;
   description?: JSX.Element;
   error?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Root(props: ComboboxRootProps): JSX.Element {
@@ -140,9 +286,9 @@ function Root(props: ComboboxRootProps): JSX.Element {
     listId: "tomui-combobox-list",
   };
   return (
-    <div data-tomui-component="Combobox" class={cn("relative", merged.class)}>
+    <div data-tomui-component="Combobox" {...stylex.attrs(styles.root, merged.style)}>
       <Show when={merged.label !== undefined}>
-        <label class="mb-1 block text-sm font-medium">
+        <label {...stylex.attrs(styles.label)}>
           {merged.label}
           <Show when={merged.required}>
             <span aria-hidden="true">{" *"}</span>
@@ -151,10 +297,10 @@ function Root(props: ComboboxRootProps): JSX.Element {
       </Show>
       <ComboboxContext value={value}>{merged.children}</ComboboxContext>
       <Show when={merged.description !== undefined}>
-        <p class="mt-1 text-sm text-tomui-subtle">{merged.description}</p>
+        <p {...stylex.attrs(styles.message, styles.messageSubtle)}>{merged.description}</p>
       </Show>
       <Show when={merged.error !== undefined}>
-        <p role="alert" class="mt-1 text-sm text-tomui-danger">
+        <p role="alert" {...stylex.attrs(styles.message, styles.messageDanger)}>
           {merged.error}
         </p>
       </Show>
@@ -164,7 +310,8 @@ function Root(props: ComboboxRootProps): JSX.Element {
 
 export type ComboboxContentProps = {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Content(props: ComboboxContentProps): JSX.Element {
@@ -190,10 +337,7 @@ function Content(props: ComboboxContentProps): JSX.Element {
         ref={attach}
         data-tomui-component="Combobox"
         data-tomui-part="content"
-        class={cn(
-          "absolute z-50 mt-1 flex max-h-96 min-w-full flex-col rounded-lg bg-tomui-base py-1.5 text-tomui-default shadow-lg ring ring-tomui-line",
-          merged.class,
-        )}
+        {...stylex.attrs(styles.content, merged.style)}
       >
         {merged.children}
       </div>
@@ -203,15 +347,16 @@ function Content(props: ComboboxContentProps): JSX.Element {
 
 export type ComboboxTriggerInputProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
-  "onInput" | "onFocus" | "onKeyDown"
+  "onInput" | "onFocus" | "onKeyDown" | "style"
 > & {
-  class?: string;
   clearLabel?: string;
   showOptionsLabel?: string;
   placeholder?: string;
   onInput?: JSX.InputEventHandler<HTMLInputElement, InputEvent> | undefined;
   onFocus?: JSX.FocusEventHandler<HTMLInputElement, FocusEvent> | undefined;
   onKeyDown?: JSX.EventHandler<HTMLInputElement, KeyboardEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
@@ -219,7 +364,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
   const merged = merge({ clearLabel: "Clear selection", showOptionsLabel: "Show options" }, props);
   const rest = omit(
     merged,
-    "class",
+    "style",
     "clearLabel",
     "showOptionsLabel",
     "placeholder",
@@ -229,7 +374,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
     "onKeyDown",
   );
   return (
-    <div class="relative inline-block w-full has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-50">
+    <div {...stylex.attrs(styles.triggerWrap)}>
       <input
         data-tomui-component="Combobox"
         data-tomui-part="input"
@@ -237,12 +382,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         aria-expanded={ctx.isOpen() ? "true" : "false"}
         aria-controls={ctx.listId}
         aria-autocomplete="list"
-        class={cn(
-          "w-full border-0 bg-tomui-control pr-12 text-tomui-default ring ring-tomui-line outline-none focus:outline-none",
-          "tomui-input-placeholder disabled:text-tomui-disabled disabled:cursor-not-allowed",
-          "focus:ring-tomui-focus/50 focus:ring-[1.5px]",
-          merged.class,
-        )}
+        {...stylex.attrs(styles.triggerInput, merged.style)}
         placeholder={merged.placeholder}
         value={ctx.query()}
         onInput={(event) => {
@@ -265,7 +405,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         data-tomui-part="clear"
         type="button"
         aria-label={merged.clearLabel}
-        class="absolute top-1/2 right-8 flex -translate-y-1/2 cursor-pointer items-center justify-center bg-transparent p-0 data-[disabled]:pointer-events-none data-[disabled]:opacity-0"
+        {...stylex.attrs(styles.iconButton, styles.clearButton)}
         onClick={() => ctx.clear()}
       >
         <XIcon size="sm" color="current" />
@@ -276,7 +416,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         type="button"
         aria-label={merged.showOptionsLabel}
         aria-expanded={ctx.isOpen() ? "true" : "false"}
-        class="absolute top-1/2 right-2 m-0 flex -translate-y-1/2 cursor-pointer items-center justify-center bg-transparent p-0 text-tomui-subtle"
+        {...stylex.attrs(styles.iconButton, styles.triggerButton)}
         onClick={() => ctx.setOpen(!ctx.isOpen())}
       >
         <CaretDownIcon size="sm" color="current" />
@@ -287,18 +427,19 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
 
 export type ComboboxTriggerValueProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
-  "onClick"
+  "onClick" | "style"
 > & {
   children?: JSX.Element;
-  class?: string;
   placeholder?: string;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "placeholder", "onClick");
+  const rest = omit(merged, "children", "style", "placeholder", "onClick");
   const label = (): string => {
     const first = ctx.selected()[0];
     if (first === undefined) return merged.placeholder ?? "Select…";
@@ -311,13 +452,7 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
       type="button"
       aria-haspopup="listbox"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
-      class={cn(
-        "relative flex w-full items-center border-0 bg-tomui-control pr-8 text-tomui-default ring ring-tomui-line outline-none focus:outline-none",
-        "tomui-input-placeholder disabled:text-tomui-disabled disabled:cursor-not-allowed disabled:opacity-50",
-        "data-[placeholder]:text-tomui-placeholder",
-        "focus:ring-tomui-focus/50 focus:ring-[1.5px]",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.triggerValue, merged.style)}
       onClick={(event) => {
         ctx.setOpen(!ctx.isOpen());
         merged.onClick?.(event);
@@ -325,7 +460,7 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
       {...rest}
     >
       {merged.children ?? label()}
-      <span class="absolute top-1/2 right-2 flex -translate-y-1/2 items-center text-tomui-subtle">
+      <span {...stylex.attrs(styles.caret)}>
         <CaretDownIcon size="sm" color="current" />
       </span>
     </button>
@@ -334,26 +469,20 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
 
 export type ComboboxTriggerMultipleWithInputProps = {
   placeholder?: string;
-  class?: string;
   inputSide?: TomuiComboboxInputSide;
   renderItem?: (value: string) => JSX.Element;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({ inputSide: TOMUI_COMBOBOX_DEFAULT_VARIANTS.inputSide }, props);
   return (
-    <div
-      class={cn(
-        "flex h-auto min-h-9 flex-col gap-1 border-0 bg-tomui-control px-1.5 py-1 ring ring-tomui-line",
-        "data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50",
-        comboboxVariants({ inputSide: merged.inputSide }),
-        merged.class,
-      )}
-    >
+    <div {...stylex.attrs(styles.multiple, merged.style)}>
       <Show when={merged.inputSide === "top"}>
         <input
-          class="w-full border-0 bg-inherit px-2 py-1"
+          {...stylex.attrs(styles.multipleInput)}
           placeholder={merged.placeholder}
           value={ctx.query()}
           aria-expanded={ctx.isOpen() ? "true" : "false"}
@@ -366,17 +495,20 @@ function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps):
           }}
         />
       </Show>
-      <div class="flex flex-1 flex-wrap items-center gap-1.5">
+      <div {...stylex.attrs(styles.chipRow)}>
         <For each={ctx.selected()}>
           {(item) => (
-            <Show when={merged.renderItem !== undefined} fallback={<Chip>{String(item)}</Chip>}>
+            <Show
+              when={merged.renderItem !== undefined}
+              fallback={<Chip value={item}>{String(item)}</Chip>}
+            >
               {merged.renderItem?.(item)}
             </Show>
           )}
         </For>
         <Show when={merged.inputSide === "right"}>
           <input
-            class="min-w-[100px] flex-1 border-0 bg-inherit px-2 py-1"
+            {...stylex.attrs(styles.multipleInputInline)}
             placeholder={merged.placeholder}
             value={ctx.query()}
             aria-expanded={ctx.isOpen() ? "true" : "false"}
@@ -397,8 +529,9 @@ function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps):
 export type ComboboxItemProps = {
   children?: JSX.Element;
   value: string;
-  class?: string;
   disabled?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Item(props: ComboboxItemProps): JSX.Element {
@@ -413,17 +546,12 @@ function Item(props: ComboboxItemProps): JSX.Element {
       role="option"
       aria-selected={isSelected() ? "true" : "false"}
       disabled={merged.disabled}
-      class={cn(
-        "group mx-1.5 grid grid-cols-[1fr_16px] gap-2 rounded px-2 py-1.5 text-base",
-        "cursor-pointer data-highlighted:bg-tomui-tint",
-        "data-[disabled]:cursor-not-allowed data-[disabled]:text-tomui-subtle data-[disabled]:opacity-60 data-[disabled]:data-highlighted:bg-transparent",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.item, merged.style)}
       onClick={() => ctx.select(merged.value)}
     >
-      <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
+      <div {...stylex.attrs(styles.itemLabel)}>{merged.children ?? String(merged.value)}</div>
       <Show when={isSelected()}>
-        <span class="col-start-2 flex items-center">
+        <span {...stylex.attrs(styles.itemCheck)}>
           <CheckIcon size="sm" color="current" />
         </span>
       </Show>
@@ -433,27 +561,22 @@ function Item(props: ComboboxItemProps): JSX.Element {
 
 export type ComboboxEmptyProps = {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Empty(props: ComboboxEmptyProps): JSX.Element {
   const merged = merge({}, props);
   return (
-    <div
-      class={cn(
-        "mx-1.5 shrink-0 px-4 py-2 text-[0.925rem] leading-4 text-tomui-subtle empty:m-0 empty:p-0",
-        merged.class,
-      )}
-    >
-      {merged.children ?? "No labels found."}
-    </div>
+    <div {...stylex.attrs(styles.empty, merged.style)}>{merged.children ?? "No labels found."}</div>
   );
 }
 
 export type ComboboxListProps = {
   children?: (item: string, index: number) => JSX.Element;
-  class?: string;
   items?: Array<string>;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function List(props: ComboboxListProps): JSX.Element {
@@ -464,10 +587,7 @@ function List(props: ComboboxListProps): JSX.Element {
       data-tomui-component="Combobox"
       id={ctx.listId}
       role="listbox"
-      class={cn(
-        "min-h-0 flex-1 scroll-pt-2 scroll-pb-2 overflow-y-auto overscroll-contain",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.list, merged.style)}
     >
       <For each={merged.items ?? []}>
         {(item, index) => <>{merged.children?.(item, index())}</>}
@@ -479,28 +599,23 @@ function List(props: ComboboxListProps): JSX.Element {
 export type ComboboxChipProps = {
   children?: JSX.Element;
   value?: string;
-  class?: string;
   removeLabel?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Chip(props: ComboboxChipProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({ removeLabel: "Remove" }, props);
   return (
-    <span
-      data-tomui-component="Combobox"
-      class={cn(
-        "flex h-6 items-center gap-2.5 rounded-sm bg-tomui-overlay pr-[3px] pl-2 text-sm ring-1 ring-tomui-hairline",
-        merged.class,
-      )}
-    >
+    <span data-tomui-component="Combobox" {...stylex.attrs(styles.chip, merged.style)}>
       {merged.children}
       <button
         data-tomui-component="Combobox"
         data-tomui-part="chip-remove"
         type="button"
         aria-label={merged.removeLabel}
-        class="flex cursor-pointer items-center justify-center rounded-md bg-transparent p-1 hover:bg-tomui-fill-hover"
+        {...stylex.attrs(styles.chipRemove)}
         onClick={() => {
           if (merged.value !== undefined) ctx.remove(merged.value);
         }}
