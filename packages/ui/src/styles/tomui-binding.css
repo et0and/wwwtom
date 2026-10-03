@@ -168,3 +168,15 @@
 [data-slot="input-group-addon-end"] > * {
   pointer-events: auto;
 }
+
+/* A badge inside a link picks up a ring on hover, and its icon is pinned to
+   12px. StyleX 0.19 supports no ancestor or descendant selectors, so these two
+   rules stay here. See badge.tsx for the variant values. */
+a:hover [data-tomui-component="Badge"] {
+  box-shadow: 0 0 0 1px currentColor;
+}
+
+[data-tomui-component="Badge"] [data-slot="badge-icon"] > svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}

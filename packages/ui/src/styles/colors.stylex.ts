@@ -12,6 +12,9 @@ const DARK = "@media (prefers-color-scheme: dark)";
  * existing consumers that read `var(--color-tomui-*)` directly still resolve.
  */
 export const colors = stylex.defineVars({
+  /** Tailwind's own text-white and text-black, which several badges relied on. */
+  "--color-white": "#fff",
+  "--color-black": "#000",
   "--color-tomui-canvas": {
     default: "var(--color-tomui-neutral-25, oklch(98.75% 0 0))",
     [DARK]: "var(--color-tomui-neutral-1000, oklch(10% 0 0))",
