@@ -1,6 +1,9 @@
+import * as stylex from "@stylexjs/stylex";
 import { createMemo, createSignal, For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 import { createDismissableLayer } from "../../utils/dismissable";
 import {
   createFocusScope,
@@ -9,27 +12,71 @@ import {
   focusWithoutScrolling,
 } from "../../utils/focus";
 
-export const TOMUI_COMMAND_PALETTE_VARIANTS = {
+const styles = stylex.create({
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    backgroundColor: colors["--color-tomui-overlay"],
+    opacity: 0.8,
+    transitionProperty: "all",
+    transitionDuration: "150ms",
+    ":is([data-ending-style])": { opacity: 0 },
+    ":is([data-starting-style])": { opacity: 0 },
+  },
   root: {
-    classes:
-      "fixed top-[10vh] left-1/2 w-full max-w-2xl -translate-x-1/2 overflow-hidden rounded-lg bg-tomui-elevated ring ring-tomui-line",
-    description: "Command palette dialog container",
+    position: "fixed",
+    top: "10vh",
+    left: "50%",
+    width: "100%",
+    maxWidth: "42rem",
+    overflow: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-elevated"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    transform: "translateX(-50%)",
   },
   input: {
-    classes:
-      "w-full bg-transparent px-4 py-3 text-base text-tomui-default outline-none placeholder:text-tomui-subtle",
-    description: "Command palette search input",
+    width: "100%",
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    padding: "0.75rem 1rem",
+    fontSize: "0.875rem",
+    color: textColors["--text-color-tomui-default"],
+    outlineWidth: 0,
+    "::placeholder": { color: textColors["--text-color-tomui-subtle"] },
   },
   list: {
-    classes: "max-h-80 overflow-y-auto p-1.5",
-    description: "Command palette results list",
+    maxHeight: "20rem",
+    overflowY: "auto",
+    padding: "0.375rem",
+  },
+  empty: {
+    padding: "1.5rem 0.5rem",
+    textAlign: "center",
+    fontSize: "0.8125rem",
+    color: textColors["--text-color-tomui-subtle"],
   },
   item: {
-    classes:
-      "group flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left text-base text-tomui-default",
-    description: "Command palette result item",
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    gap: "0.75rem",
+    borderRadius: radius.lg.borderRadius,
+    padding: "0.375rem 0.5rem",
+    textAlign: "left",
+    fontSize: "0.875rem",
+    color: textColors["--text-color-tomui-default"],
+    ":is([data-active])": { backgroundColor: colors["--color-tomui-tint"] },
+    ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
-} as const;
+  itemLabel: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  itemHint: {
+    marginInlineStart: "auto",
+    flexShrink: 0,
+    fontSize: "0.75rem",
+    color: textColors["--text-color-tomui-subtle"],
+  },
+});
 
 export type CommandPaletteItem = {
   id: string;
@@ -38,8 +85,9 @@ export type CommandPaletteItem = {
   disabled?: boolean;
 };
 
-export type CommandPaletteProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "onSelect"> & {
-  class?: string;
+export type CommandPaletteProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "onSelect" | "style"> & {
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   open?: boolean;
   items?: ReadonlyArray<CommandPaletteItem>;
   placeholder?: string;
@@ -61,7 +109,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   const rest = omit(
     merged,
     "children",
-    "class",
+    "style",
     "open",
     "items",
     "placeholder",
@@ -140,7 +188,7 @@ export function CommandPalette(props: CommandPaletteProps) {
   return (
     <Show when={merged.open}>
       <div
-        class="fixed inset-0 bg-tomui-overlay opacity-80 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
+        {...stylex.attrs(styles.overlay)}
         data-tomui-component="CommandPaletteBackdrop"
         onClick={close}
         aria-hidden="true"
@@ -151,7 +199,7 @@ export function CommandPalette(props: CommandPaletteProps) {
         aria-modal="true"
         aria-label="Command palette"
         tabindex={-1}
-        class={cn(TOMUI_COMMAND_PALETTE_VARIANTS.root.classes, merged.class)}
+        {...stylex.attrs(styles.root, merged.style)}
         ref={setContentEl}
         {...rest}
       >
@@ -165,18 +213,12 @@ export function CommandPalette(props: CommandPaletteProps) {
           value={query()}
           onInput={handleInput}
           onKeyDown={handleKeyDown}
-          class={TOMUI_COMMAND_PALETTE_VARIANTS.input.classes}
+          {...stylex.attrs(styles.input)}
         />
-        <div
-          id="tomui-command-palette-list"
-          role="listbox"
-          class={TOMUI_COMMAND_PALETTE_VARIANTS.list.classes}
-        >
+        <div id="tomui-command-palette-list" role="listbox" {...stylex.attrs(styles.list)}>
           <Show
             when={filtered().length > 0}
-            fallback={
-              <p class="px-2 py-6 text-center text-sm text-tomui-subtle">{merged.emptyMessage}</p>
-            }
+            fallback={<p {...stylex.attrs(styles.empty)}>{merged.emptyMessage}</p>}
           >
             <For each={filtered()}>
               {(item) => {
@@ -192,20 +234,16 @@ export function CommandPalette(props: CommandPaletteProps) {
                     aria-selected={isActive() ? "true" : "false"}
                     disabled={item.disabled}
                     data-active={isActive() ? "true" : undefined}
-                    class={cn(
-                      TOMUI_COMMAND_PALETTE_VARIANTS.item.classes,
-                      isActive() && "bg-tomui-tint",
-                      item.disabled && "cursor-not-allowed opacity-50",
-                    )}
+                    {...stylex.attrs(styles.item)}
                     onClick={() => choose(item)}
                     onMouseMove={() => {
                       const index = selectableIndex();
                       if (index >= 0) setActiveIndex(index);
                     }}
                   >
-                    <span class="truncate">{item.label}</span>
+                    <span {...stylex.attrs(styles.itemLabel)}>{item.label}</span>
                     <Show when={item.hint}>
-                      <span class="ml-auto shrink-0 text-xs text-tomui-subtle">{item.hint}</span>
+                      <span {...stylex.attrs(styles.itemHint)}>{item.hint}</span>
                     </Show>
                   </button>
                 );
