@@ -112,19 +112,6 @@
   }
 }
 
-/* Popup outline offset - in dark mode, offset inward to align with inner stroke.
-   This compensates for the different geometry of inner vs outer stroke paths.
-   Used by: Popover
-   See: https://base-ui.com/react/components/tooltip */
-[data-mode="dark"] .tomui-popover-popup {
-  outline-offset: -1px;
-}
-
-/* Input placeholder color - vanilla CSS to avoid Tailwind parsing issues */
-.tomui-input-placeholder::placeholder {
-  color: var(--text-color-tomui-placeholder);
-}
-
 /* InputGroup styles its inner input from which child parts are present.
    StyleX 0.19 supports no descendant selectors, so these rules stay here.
    See the addon padding table in input-group.tsx for the per-size values. */

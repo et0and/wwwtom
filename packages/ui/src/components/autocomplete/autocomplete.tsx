@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import {
   createContext,
@@ -10,40 +11,78 @@ import {
   useContext,
 } from "solid-js";
 import { CheckIcon } from "@tom/icons/Check";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-export const TOMUI_INPUT_SIZE_VARIANTS = {
-  xs: { classes: "h-5 gap-1 rounded-sm px-1.5 text-xs", description: "Extra small input" },
-  sm: { classes: "h-6.5 gap-1 rounded-md px-2 text-xs", description: "Small input" },
-  base: { classes: "h-9 gap-1.5 rounded-lg px-3 text-base", description: "Default input" },
-  lg: { classes: "h-10 gap-2 rounded-lg px-4 text-base", description: "Large input" },
-} as const;
-
-export const TOMUI_AUTOCOMPLETE_VARIANTS = {
-  size: TOMUI_INPUT_SIZE_VARIANTS,
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { inputVariants, type TomuiInputSize } from "../input/input";
 
 export const TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiAutocompleteSize = keyof typeof TOMUI_AUTOCOMPLETE_VARIANTS.size;
+/** The input chrome is shared with Input, so the sizes match. */
+export type TomuiAutocompleteSize = TomuiInputSize;
 
 export interface TomuiAutocompleteVariantsProps {
   size?: TomuiAutocompleteSize;
 }
 
-export function autocompleteVariants(props: TomuiAutocompleteVariantsProps = {}): string {
-  const merged = merge({ size: TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS.size }, props);
-  return cn(
-    resolveVariant(
-      TOMUI_AUTOCOMPLETE_VARIANTS.size,
-      merged.size,
-      TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS.size,
-    ).classes,
-  );
-}
+const lineColor = colors["--color-tomui-line"];
+const controlRing = "0 0 0 1px " + lineColor;
+
+const styles = stylex.create({
+  root: { position: "relative" },
+  label: {
+    display: "block",
+    marginBottom: "0.25rem",
+    fontSize: "0.8125rem",
+    fontWeight: 500,
+  },
+  message: { marginTop: "0.25rem", fontSize: "0.8125rem" },
+  messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
+  messageDanger: { color: textColors["--text-color-tomui-danger"] },
+  content: {
+    position: "absolute",
+    zIndex: 50,
+    display: "flex",
+    flexDirection: "column",
+    maxHeight: "24rem",
+    minWidth: "100%",
+    marginTop: "0.25rem",
+    overflow: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-control"],
+    paddingBlock: "0.375rem",
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: controlRing + ", 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+  },
+  list: {
+    minHeight: 0,
+    flexGrow: 1,
+    overflowY: "auto",
+    overscrollBehaviorY: "contain",
+    scrollPaddingBlock: "0.5rem",
+  },
+  item: {
+    display: "grid",
+    gridTemplateColumns: "1fr 16px",
+    gap: "0.5rem",
+    margin: "0.375rem",
+    borderRadius: radius.sm.borderRadius,
+    padding: "0.375rem 0.5rem",
+    fontSize: "0.875rem",
+    cursor: "pointer",
+    ":is([data-selected])": { fontWeight: 500 },
+  },
+  itemLabel: { gridColumnStart: "1" },
+  itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
+  empty: {
+    margin: "0.375rem",
+    padding: "0.5rem 1rem",
+    fontSize: "0.8125rem",
+    color: textColors["--text-color-tomui-subtle"],
+  },
+});
 
 interface AutocompleteContextValue {
   query: () => string;
@@ -77,7 +116,8 @@ export type AutocompleteProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   label?: JSX.Element;
   required?: boolean;
   description?: JSX.Element;
@@ -111,9 +151,9 @@ function Root(props: AutocompleteProps): JSX.Element {
     listId: "tomui-autocomplete-list",
   };
   return (
-    <div data-tomui-component="Autocomplete" class={cn("relative", merged.class)}>
+    <div data-tomui-component="Autocomplete" {...stylex.attrs(styles.root, merged.style)}>
       <Show when={merged.label !== undefined}>
-        <label class="mb-1 block text-sm font-medium">
+        <label {...stylex.attrs(styles.label)}>
           {merged.label}
           <Show when={merged.required}>
             <span aria-hidden="true">{" *"}</span>
@@ -122,10 +162,10 @@ function Root(props: AutocompleteProps): JSX.Element {
       </Show>
       <AutocompleteContext value={value}>{merged.children}</AutocompleteContext>
       <Show when={merged.description !== undefined}>
-        <p class="mt-1 text-sm text-tomui-subtle">{merged.description}</p>
+        <p {...stylex.attrs(styles.message, styles.messageSubtle)}>{merged.description}</p>
       </Show>
       <Show when={merged.error !== undefined}>
-        <p role="alert" class="mt-1 text-sm text-tomui-danger">
+        <p role="alert" {...stylex.attrs(styles.message, styles.messageDanger)}>
           {merged.error}
         </p>
       </Show>
@@ -135,13 +175,14 @@ function Root(props: AutocompleteProps): JSX.Element {
 
 export type AutocompleteInputGroupProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
-  "onInput" | "onFocus" | "onKeyDown"
+  "onInput" | "onFocus" | "onKeyDown" | "style"
 > & {
-  class?: string;
   size?: TomuiAutocompleteSize;
   onInput?: JSX.InputEventHandler<HTMLInputElement, InputEvent> | undefined;
   onFocus?: JSX.FocusEventHandler<HTMLInputElement, FocusEvent> | undefined;
   onKeyDown?: JSX.EventHandler<HTMLInputElement, KeyboardEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
@@ -149,7 +190,7 @@ function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
   const merged = merge({ size: TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS.size }, props);
   const rest = omit(
     merged,
-    "class",
+    "style",
     "size",
     "value",
     "onInput",
@@ -169,14 +210,13 @@ function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
       aria-activedescendant={
         ctx.activeIndex() >= 0 ? `${ctx.listId}-option-${ctx.activeIndex()}` : undefined
       }
-      class={cn(
-        "w-full border-0 bg-tomui-control text-tomui-default ring ring-tomui-line outline-none focus:outline-none",
-        "tomui-input-placeholder disabled:text-tomui-disabled",
-        ctx.hasError()
-          ? "!ring-tomui-danger focus:ring-tomui-danger/50 focus:ring-[1.5px]"
-          : "focus:ring-tomui-focus/50 focus:ring-[1.5px]",
-        autocompleteVariants({ size: merged.size }),
-        merged.class,
+      {...stylex.attrs(
+        ...inputVariants({
+          size: merged.size,
+          variant: ctx.hasError() ? "error" : "default",
+          focusIndicator: true,
+        }),
+        merged.style,
       )}
       placeholder={merged.placeholder}
       value={ctx.query()}
@@ -201,7 +241,8 @@ function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
 
 export type AutocompleteContentProps = {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Content(props: AutocompleteContentProps): JSX.Element {
@@ -220,10 +261,7 @@ function Content(props: AutocompleteContentProps): JSX.Element {
         ref={attach}
         data-tomui-component="Autocomplete"
         data-tomui-part="content"
-        class={cn(
-          "absolute z-50 mt-1 flex max-h-96 min-w-full flex-col rounded-lg bg-tomui-control py-1.5 text-tomui-default shadow-lg ring ring-tomui-line",
-          merged.class,
-        )}
+        {...stylex.attrs(styles.content, merged.style)}
       >
         {merged.children}
       </div>
@@ -233,8 +271,9 @@ function Content(props: AutocompleteContentProps): JSX.Element {
 
 export type AutocompleteListProps = {
   children?: (item: string, index: number) => JSX.Element;
-  class?: string;
   items?: Array<string>;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function List(props: AutocompleteListProps): JSX.Element {
@@ -245,10 +284,7 @@ function List(props: AutocompleteListProps): JSX.Element {
       data-tomui-component="Autocomplete"
       id={ctx.listId}
       role="listbox"
-      class={cn(
-        "min-h-0 flex-1 scroll-pt-2 scroll-pb-2 overflow-y-auto overscroll-contain",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.list, merged.style)}
     >
       <For each={merged.items ?? []}>
         {(item, index) => <>{merged.children?.(item, index())}</>}
@@ -260,8 +296,9 @@ function List(props: AutocompleteListProps): JSX.Element {
 export type AutocompleteItemProps = {
   children?: JSX.Element;
   value: string;
-  class?: string;
   disabled?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Item(props: AutocompleteItemProps): JSX.Element {
@@ -276,29 +313,34 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       aria-selected={ctx.query() === String(merged.value) ? "true" : "false"}
       data-selected={ctx.query() === String(merged.value) ? "" : undefined}
       disabled={merged.disabled}
-      class="group mx-1.5 grid cursor-pointer grid-cols-[1fr_16px] gap-2 rounded px-2 py-1.5 text-base data-highlighted:bg-tomui-overlay data-selected:font-medium"
+      {...stylex.attrs(styles.item, merged.style)}
       onClick={() => {
         ctx.setQuery(String(merged.value));
         ctx.setOpen(false);
       }}
     >
-      <div class="col-start-1">{merged.children ?? String(merged.value)}</div>
-      <span class="col-start-2 hidden items-center group-data-selected:flex">
-        <CheckIcon size="sm" color="current" />
-      </span>
+      <div {...stylex.attrs(styles.itemLabel)}>{merged.children ?? String(merged.value)}</div>
+      {/* The old group-data-selected rule only had room to switch display, so
+          rendering the mark conditionally is equivalent. */}
+      <Show when={ctx.query() === String(merged.value)}>
+        <span {...stylex.attrs(styles.itemCheck)}>
+          <CheckIcon size="sm" color="current" />
+        </span>
+      </Show>
     </button>
   );
 }
 
 export type AutocompleteEmptyProps = {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function Empty(props: AutocompleteEmptyProps): JSX.Element {
   const merged = merge({}, props);
   return (
-    <div class={cn("mx-1.5 px-4 py-2 text-sm text-tomui-subtle", merged.class)}>
+    <div {...stylex.attrs(styles.empty, merged.style)}>
       {merged.children ?? "No results found."}
     </div>
   );

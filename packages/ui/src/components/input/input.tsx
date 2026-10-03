@@ -35,7 +35,7 @@ const styles = stylex.create({
     color: textColors["--text-color-tomui-default"],
     outlineWidth: 0,
     boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    // StyleX compiles this to a real ::placeholder rule, replacing the old
+    // StyleX compiles this to a real ::placeholder rule, which replaces the old
     // vanilla .tomui-input-placeholder class.
     "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
   },
