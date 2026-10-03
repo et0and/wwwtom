@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { Loading, Match, Show, Switch, createSignal } from "solid-js";
 import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
@@ -16,6 +17,8 @@ import { Nav } from "./components/Nav";
 import { CategoryFilter } from "./components/CategoryFilter";
 import { PostList } from "./components/PostList";
 import "./app.css";
+
+const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
 
 const SOPHIE_DESCRIPTION = "Sophie — writing";
 
@@ -117,7 +120,7 @@ const Posts = () => {
         <PostList posts={visible()} />
         <Show when={totalPages() > 1}>
           <Pagination
-            class="mt-4"
+            style={styles.paginationSpacing}
             page={page()}
             pageCount={totalPages()}
             onChange={(next) => setPage(next)}

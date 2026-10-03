@@ -1,80 +1,123 @@
+import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 import { BannerAction, BannerActionContext, type BannerActionSize } from "./banner-action";
 
-/** Structural base styles applied to all banners; size-specific spacing/alignment lives in `TOMUI_BANNER_VARIANTS.size`. */
-export const TOMUI_BANNER_BASE_STYLES = "flex w-full";
+const contrastColor = colors["--color-tomui-contrast"];
+const defaultTextColor = textColors["--text-color-tomui-default"];
 
-/** Banner variant definitions mapping style options to their Tailwind classes and descriptions. */
-export const TOMUI_BANNER_VARIANTS = {
-  variant: {
-    default: {
-      classes: "bg-tomui-info-tint text-tomui-info",
-      iconClasses: "fill-tomui-info",
-      description: "Informational banner for general messages",
-    },
-    alert: {
-      classes: "bg-tomui-warning-tint text-tomui-warning",
-      iconClasses: "fill-tomui-warning",
-      description: "Warning banner for cautionary messages",
-    },
-    error: {
-      classes: "bg-tomui-danger-tint text-tomui-danger",
-      iconClasses: "fill-tomui-danger",
-      description: "Error banner for critical issues",
-    },
-    secondary: {
-      classes: "bg-tomui-contrast/5 text-tomui-default/70",
-      iconClasses: "fill-tomui-interact",
-      description: "Neutral banner for secondary messages",
-    },
+const styles = stylex.create({
+  base: { display: "flex", width: "100%" },
+  variantDefault: {
+    backgroundColor: colors["--color-tomui-info-tint"],
+    color: textColors["--text-color-tomui-info"],
   },
-  size: {
-    base: {
-      classes: "items-start gap-3 rounded-lg px-4 py-3 text-base",
-      description: "Default banner size",
-    },
-    sm: {
-      classes: "items-center gap-2 rounded-md px-3 py-2 text-sm",
-      description: "Compact banner for dialogs and tight spaces",
-    },
+  variantAlert: {
+    backgroundColor: colors["--color-tomui-warning-tint"],
+    color: textColors["--text-color-tomui-warning"],
   },
-} as const;
+  variantError: {
+    backgroundColor: colors["--color-tomui-danger-tint"],
+    color: textColors["--text-color-tomui-danger"],
+  },
+  variantSecondary: {
+    backgroundColor: "color-mix(in srgb, " + contrastColor + " 5%, transparent)",
+    color: "color-mix(in srgb, " + defaultTextColor + " 70%, transparent)",
+  },
+  sizeBase: {
+    alignItems: "flex-start",
+    gap: "0.75rem",
+    borderRadius: radius.lg.borderRadius,
+    paddingInline: "1rem",
+    paddingBlock: "0.75rem",
+    ...fontSizeBase,
+  },
+  sizeSm: {
+    alignItems: "center",
+    gap: "0.5rem",
+    borderRadius: radius.md.borderRadius,
+    paddingInline: "0.75rem",
+    paddingBlock: "0.5rem",
+    ...fontSizeSm,
+  },
+  iconWrap: { display: "flex", flexShrink: 0, alignItems: "center" },
+  iconBase: { height: "1.375em" },
+  iconSm: { height: "1.25em" },
+  iconFillInfo: { fill: colors["--color-tomui-info"] },
+  iconFillWarning: { fill: colors["--color-tomui-warning"] },
+  iconFillDanger: { fill: colors["--color-tomui-danger"] },
+  iconFillInteract: { fill: colors["--color-tomui-interact"] },
+  body: {
+    display: "flex",
+    minWidth: 0,
+    flexGrow: 1,
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  rowBase: { gap: "0.75rem" },
+  rowSm: { gap: "0.5rem" },
+  noTitlePad: { paddingTop: "1px" },
+  stack: { display: "flex", flexDirection: "column", gap: "0.125rem" },
+  title: { lineHeight: "1.375", fontWeight: 500 },
+  description: { ...fontSizeSm, lineHeight: "1.375" },
+  compactWrap: {
+    display: "flex",
+    minWidth: 0,
+    flexWrap: "wrap",
+    alignItems: "baseline",
+    columnGap: "0.375rem",
+  },
+  /** The display:inline override for a nested Link lives in tomui-binding.css; see the report. */
+  inlineActionGap: { marginInlineStart: "0.375rem" },
+  trailingAction: { display: "flex", flexShrink: 0, alignItems: "center", gap: "0.5rem" },
+});
+
+export type TomuiBannerVariant = "default" | "alert" | "error" | "secondary";
+export type TomuiBannerSize = "base" | "sm";
 
 export const TOMUI_BANNER_DEFAULT_VARIANTS = {
   variant: "default",
   size: "base",
 } as const;
 
-// Derived types from TOMUI_BANNER_VARIANTS
-export type TomuiBannerVariant = keyof typeof TOMUI_BANNER_VARIANTS.variant;
-export type TomuiBannerSize = keyof typeof TOMUI_BANNER_VARIANTS.size;
+const variantStyles = {
+  default: styles.variantDefault,
+  alert: styles.variantAlert,
+  error: styles.variantError,
+  secondary: styles.variantSecondary,
+} as const satisfies Record<TomuiBannerVariant, stylex.StyleXStyles>;
 
-/**
- * Per-size render-site classes not carried by `bannerVariants` (which only emits
- * the container classes). `row` is the title↔action flex gap, `icon` the icon
- * wrapper height, `description` the description text size, and `action` the size
- * that child `Banner.Action`s inherit via `BannerActionContext`.
- */
-const BANNER_SIZE_PARTS = {
-  base: {
-    row: "gap-3",
-    icon: "h-[1.375em]",
-    description: "text-sm",
-    action: "sm",
-  },
-  sm: {
-    row: "gap-2",
-    icon: "h-[1.25em]",
-    description: "text-sm",
-    action: "xs",
-  },
-} satisfies Record<
-  TomuiBannerSize,
-  { row: string; icon: string; description: string; action: BannerActionSize }
->;
+const sizeStyles = {
+  base: styles.sizeBase,
+  sm: styles.sizeSm,
+} as const satisfies Record<TomuiBannerSize, stylex.StyleXStyles>;
+
+const iconHeightStyles = {
+  base: styles.iconBase,
+  sm: styles.iconSm,
+} as const satisfies Record<TomuiBannerSize, stylex.StyleXStyles>;
+
+const iconFillStyles = {
+  default: styles.iconFillInfo,
+  alert: styles.iconFillWarning,
+  error: styles.iconFillDanger,
+  secondary: styles.iconFillInteract,
+} as const satisfies Record<TomuiBannerVariant, stylex.StyleXStyles>;
+
+const rowGapStyles = {
+  base: styles.rowBase,
+  sm: styles.rowSm,
+} as const satisfies Record<TomuiBannerSize, stylex.StyleXStyles>;
+
+/** The action size a `Banner.Action` child inherits, one step down from the banner size. */
+const actionSizeBySize = {
+  base: "sm",
+  sm: "xs",
+} as const satisfies Record<TomuiBannerSize, BannerActionSize>;
 
 // The `Banner.Action` CTA compound lives in ./banner-action
 // and is attached to `Banner` via Object.assign at the bottom of this file.
@@ -98,27 +141,9 @@ export interface TomuiBannerVariantsProps {
   size?: TomuiBannerSize;
 }
 
-export function bannerVariants(props: TomuiBannerVariantsProps = {}): string {
+export function bannerVariants(props: TomuiBannerVariantsProps = {}): stylex.StyleXStyles[] {
   const merged = merge(TOMUI_BANNER_DEFAULT_VARIANTS, props);
-  const resolvedVariant = resolveVariant(
-    TOMUI_BANNER_VARIANTS.variant,
-    merged.variant,
-    TOMUI_BANNER_DEFAULT_VARIANTS.variant,
-  );
-  const resolvedSize = resolveVariant(
-    TOMUI_BANNER_VARIANTS.size,
-    merged.size,
-    TOMUI_BANNER_DEFAULT_VARIANTS.size,
-  );
-
-  return cn(
-    // Structural base styles (exported as TOMUI_BANNER_BASE_STYLES for Figma plugin)
-    TOMUI_BANNER_BASE_STYLES,
-    // Apply variant styles from TOMUI_BANNER_VARIANTS
-    resolvedVariant.classes,
-    // Apply size styles (spacing / radius / text) from TOMUI_BANNER_VARIANTS
-    resolvedSize.classes,
-  );
+  return [styles.base, variantStyles[merged.variant], sizeStyles[merged.size]];
 }
 
 /**
@@ -133,7 +158,7 @@ export function bannerVariants(props: TomuiBannerVariantsProps = {}): string {
  */
 export interface BannerProps extends Omit<
   JSX.HTMLAttributes<HTMLDivElement>,
-  "children" | "title" | "ref"
+  "children" | "title" | "ref" | "class" | "style"
 > {
   /** Icon element rendered before the banner content. */
   icon?: JSX.Element;
@@ -166,8 +191,8 @@ export interface BannerProps extends Omit<
    * @default "base"
    */
   size?: TomuiBannerSize;
-  /** Additional CSS classes merged via `cn()`. */
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   ref?: HTMLDivElement | ((element: HTMLDivElement) => void) | undefined;
 }
 
@@ -192,91 +217,91 @@ function BannerRoot(props: BannerProps): JSX.Element {
   const rest = omit(
     merged,
     "action",
-    "class",
     "description",
     "icon",
     "ref",
     "size",
+    "style",
     "title",
     "variant",
   );
-  const variantConfig = () =>
-    resolveVariant(
-      TOMUI_BANNER_VARIANTS.variant,
-      merged.variant,
-      TOMUI_BANNER_DEFAULT_VARIANTS.variant,
-    );
-  const sizeParts = (): {
-    row: string;
-    icon: string;
-    description: string;
-    action: BannerActionSize;
-  } => BANNER_SIZE_PARTS[merged.size] ?? BANNER_SIZE_PARTS.base;
   // Compact banners keep the title and description on one line (inline spans)
   // rather than stacking them, to stay short in dialogs and other tight spaces.
   const isCompact = (): boolean => merged.size === "sm";
   const alertRole = (): "alert" | undefined => (merged.variant === "error" ? "alert" : undefined);
 
   return (
-    <BannerActionContext value={{ variant: merged.variant, size: sizeParts().action }}>
+    <BannerActionContext value={{ variant: merged.variant, size: actionSizeBySize[merged.size] }}>
       <div
         data-tomui-component="Banner"
         role={alertRole()}
-        class={cn(bannerVariants({ variant: merged.variant, size: merged.size }), merged.class)}
         ref={merged.ref}
+        {...stylex.attrs(
+          ...bannerVariants({ variant: merged.variant, size: merged.size }),
+          merged.style,
+        )}
         {...rest}
       >
         <Show when={merged.icon}>
           <span
-            class={cn("flex shrink-0 items-center", sizeParts().icon, variantConfig().iconClasses)}
+            {...stylex.attrs(
+              styles.iconWrap,
+              iconHeightStyles[merged.size],
+              iconFillStyles[merged.variant],
+            )}
           >
             {merged.icon}
           </span>
         </Show>
         <div
-          class={cn(
-            "flex min-w-0 flex-1 items-center justify-between",
-            sizeParts().row,
-            !merged.title ? "pt-px" : "",
+          {...stylex.attrs(
+            styles.body,
+            rowGapStyles[merged.size],
+            merged.title ? undefined : styles.noTitlePad,
           )}
         >
           <Show
             when={isCompact()}
             fallback={
-              <div class="flex flex-col gap-0.5">
+              <div {...stylex.attrs(styles.stack)}>
                 <Show when={merged.title}>
-                  <p class="leading-snug font-medium">{merged.title}</p>
+                  <p {...stylex.attrs(styles.title)}>{merged.title}</p>
                 </Show>
                 <Show when={merged.description}>
-                  <div class={cn(sizeParts().description, "leading-snug")}>
+                  <div {...stylex.attrs(styles.description)}>
                     <p>{merged.description}</p>
                   </div>
                 </Show>
               </div>
             }
           >
-            <div class="flex min-w-0 flex-wrap items-baseline gap-x-1.5">
+            <div {...stylex.attrs(styles.compactWrap)}>
               <Show when={merged.title}>
-                <span class="leading-snug font-medium">
+                <span {...stylex.attrs(styles.title)}>
                   {merged.title}
                   <Show when={!merged.description}>
-                    <span class="ml-1.5 [&_[data-tomui-component=Link]]:inline">
+                    <span
+                      data-slot="banner-action-inline"
+                      {...stylex.attrs(styles.inlineActionGap)}
+                    >
                       {merged.action}
                     </span>
                   </Show>
                 </span>
               </Show>
               <Show when={merged.description}>
-                <span class={cn(sizeParts().description, "leading-snug")}>
+                <span {...stylex.attrs(styles.description)}>
                   {merged.description}
-                  <span class="ml-1.5 [&_[data-tomui-component=Link]]:inline">{merged.action}</span>
+                  <span data-slot="banner-action-inline" {...stylex.attrs(styles.inlineActionGap)}>
+                    {merged.action}
+                  </span>
                 </span>
               </Show>
             </div>
           </Show>
           <Show when={!isCompact()}>
             <Show when={merged.action}>
-              <div class="flex shrink-0 items-center gap-2">{merged.action}</div>
+              <div {...stylex.attrs(styles.trailingAction)}>{merged.action}</div>
             </Show>
           </Show>
         </div>

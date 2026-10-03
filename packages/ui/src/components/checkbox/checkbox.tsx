@@ -1,49 +1,97 @@
+import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 import { createToggleState } from "../../utils/state";
 import { Label } from "../label/label";
 
-export const TOMUI_CHECKBOX_VARIANTS = {
-  variant: {
-    default: {
-      classes: "[&:focus-within>span]:ring-tomui-focus [&:hover>span]:ring-tomui-hairline",
-      description: "Default checkbox appearance",
-    },
-    error: {
-      classes: "[&>span]:ring-tomui-danger",
-      description: "Error state for validation failures",
-    },
-  },
-} as const;
+const hairline = colors["--color-tomui-hairline"];
+const focus = colors["--color-tomui-focus"];
+const brand = colors["--color-tomui-brand"];
+const contrast = colors["--color-tomui-contrast"];
+const base = colors["--color-tomui-base"];
+const inverse = textColors["--text-color-tomui-inverse"];
+const danger = textColors["--text-color-tomui-danger"];
+const subtle = textColors["--text-color-tomui-subtle"];
+const defaultText = textColors["--text-color-tomui-default"];
 
 export const TOMUI_CHECKBOX_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-export type TomuiCheckboxVariant = keyof typeof TOMUI_CHECKBOX_VARIANTS.variant;
-
-export interface TomuiCheckboxVariantsProps {
-  variant?: TomuiCheckboxVariant | undefined;
-}
-
-export function checkboxVariants(props: TomuiCheckboxVariantsProps = {}): string {
-  const merged = merge({ variant: TOMUI_CHECKBOX_DEFAULT_VARIANTS.variant }, props);
-  return cn(
-    resolveVariant(
-      TOMUI_CHECKBOX_VARIANTS.variant,
-      merged.variant,
-      TOMUI_CHECKBOX_DEFAULT_VARIANTS.variant,
-    ).classes,
-  );
-}
-
+export type TomuiCheckboxVariant = "default" | "error";
 export type CheckboxVariant = TomuiCheckboxVariant;
+
+const styles = stylex.create({
+  wrap: { position: "relative", display: "inline-flex" },
+  controlBase: {
+    position: "relative",
+    height: "1rem",
+    width: "1rem",
+    flexShrink: 0,
+    appearance: "none",
+    cursor: "pointer",
+    borderWidth: 0,
+    borderRadius: "0.125rem",
+    backgroundColor: base,
+    outlineWidth: 0,
+  },
+  controlDefault: { boxShadow: "0 0 0 1px " + hairline },
+  controlError: { boxShadow: "0 0 0 1px " + danger },
+  /** Unconditional: a disabled, checked box still shows contrast, just dimmed. */
+  controlChecked: {
+    ":checked": { backgroundColor: contrast, boxShadow: "0 0 0 1px " + contrast },
+  },
+  controlInteractive: {
+    ":hover": { boxShadow: "0 0 0 1px " + hairline },
+    ":focus": { boxShadow: "0 0 0 2px " + focus },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
+  },
+  controlDisabled: { cursor: "not-allowed", opacity: 0.5 },
+  /** Display is toggled from tomui-binding.css, because StyleX has no sibling selector. */
+  indicator: {
+    position: "absolute",
+    inset: 0,
+    display: "none",
+    pointerEvents: "none",
+    alignItems: "center",
+    justifyContent: "center",
+    color: inverse,
+  },
+  labelBase: {
+    margin: 0,
+    display: "inline-flex",
+    minHeight: 0,
+    alignItems: "flex-start",
+    gap: "0.5rem",
+    fontSize: "0.875rem",
+  },
+  labelRow: { flexDirection: "row" },
+  labelRowReversed: { flexDirection: "row-reverse", justifyContent: "flex-end" },
+  labelDisabled: { cursor: "not-allowed" },
+  labelEnabled: { cursor: "pointer" },
+  itemLabel: {
+    position: "relative",
+    margin: 0,
+    display: "inline-flex",
+    alignItems: "flex-start",
+    gap: "0.5rem",
+  },
+  itemLabelDisabled: { cursor: "not-allowed", opacity: 0.5 },
+  itemLabelEnabled: { cursor: "pointer" },
+  itemText: { fontSize: "0.875rem", color: defaultText },
+  legend: { fontSize: "0.875rem", fontWeight: 500, color: defaultText },
+  group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
+  groupList: { display: "flex", flexDirection: "column", gap: "0.5rem" },
+  message: { fontSize: "0.8125rem" },
+  messageDanger: { color: danger },
+  messageSubtle: { color: subtle },
+});
 
 export type CheckboxProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
-  "type" | "onChange" | "ref" | "checked" | "defaultChecked"
+  "type" | "onChange" | "ref" | "checked" | "defaultChecked" | "class" | "style"
 > & {
   variant?: CheckboxVariant | undefined;
   label?: JSX.Element | undefined;
@@ -58,9 +106,10 @@ export type CheckboxProps = Omit<
   name?: string | undefined;
   value?: string | undefined;
   required?: boolean | undefined;
-  class?: string | undefined;
   icon?: JSX.Element | undefined;
   ref?: ((element: HTMLInputElement) => void) | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function CheckboxControl(props: CheckboxProps): JSX.Element {
@@ -84,7 +133,7 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
     "disabled",
     "readOnly",
     "onCheckedChange",
-    "class",
+    "style",
     "icon",
     "ref",
     "name",
@@ -127,7 +176,9 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
 
   return (
     <span
-      class={cn("relative inline-flex", checkboxVariants({ variant: merged.variant }))}
+      data-tomui-part="control"
+      data-variant={merged.variant}
+      {...stylex.attrs(styles.wrap)}
       onPointerDown={(e) => {
         if (isFocused) e.preventDefault();
       }}
@@ -163,21 +214,16 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
           const el = event.currentTarget;
           el.checked = state.isSelected();
         }}
-        class={cn(
-          "peer h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-sm border-0 bg-tomui-base ring outline-none",
-          merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-hairline",
-          !merged.disabled &&
-            "hover:ring-tomui-hairline focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand",
-          "checked:bg-tomui-contrast checked:ring-tomui-contrast",
-          merged.disabled ? "cursor-not-allowed opacity-50" : "",
-          merged.class,
+        {...stylex.attrs(
+          styles.controlBase,
+          merged.variant === "error" ? styles.controlError : styles.controlDefault,
+          styles.controlChecked,
+          merged.disabled ? styles.controlDisabled : styles.controlInteractive,
+          merged.style,
         )}
         {...rest}
       />
-      <span
-        aria-hidden="true"
-        class="pointer-events-none absolute inset-0 hidden items-center justify-center text-tomui-inverse peer-checked:flex peer-indeterminate:flex"
-      >
+      <span aria-hidden="true" data-tomui-part="indicator" {...stylex.attrs(styles.indicator)}>
         <Show
           when={merged.icon}
           fallback={
@@ -218,10 +264,10 @@ function CheckboxBase(props: CheckboxProps): JSX.Element {
     <Show when={merged.label} fallback={<CheckboxControl {...rest} disabled={merged.disabled} />}>
       <label
         data-tomui-component="Checkbox"
-        class={cn(
-          "!m-0 inline-flex !min-h-0 items-start gap-2 !text-base",
-          merged.controlFirst ? "flex-row" : "flex-row-reverse justify-end",
-          merged.disabled ? "cursor-not-allowed" : "cursor-pointer",
+        {...stylex.attrs(
+          styles.labelBase,
+          merged.controlFirst ? styles.labelRow : styles.labelRowReversed,
+          merged.disabled ? styles.labelDisabled : styles.labelEnabled,
         )}
       >
         <CheckboxControl {...rest} disabled={merged.disabled} />
@@ -235,15 +281,13 @@ function CheckboxBase(props: CheckboxProps): JSX.Element {
 
 export interface CheckboxLegendProps {
   children?: JSX.Element | undefined;
-  class?: string | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 export function CheckboxLegend(props: CheckboxLegendProps): JSX.Element {
   return (
-    <legend
-      data-tomui-component="Checkbox"
-      class={cn("text-base font-medium text-tomui-default", props.class)}
-    >
+    <legend data-tomui-component="Checkbox" {...stylex.attrs(styles.legend, props.style)}>
       {props.children}
     </legend>
   );
@@ -256,7 +300,8 @@ export interface CheckboxGroupProps {
   description?: JSX.Element | undefined;
   disabled?: boolean | undefined;
   controlFirst?: boolean | undefined;
-  class?: string | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
@@ -265,17 +310,17 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
     <fieldset
       data-tomui-component="Checkbox"
       disabled={merged.disabled}
-      class={cn("flex flex-col gap-4 p-0", merged.class)}
+      {...stylex.attrs(styles.group, merged.style)}
     >
       <Show when={merged.legend}>
         <CheckboxLegend>{merged.legend}</CheckboxLegend>
       </Show>
-      <div class="flex flex-col gap-2">{merged.children}</div>
+      <div {...stylex.attrs(styles.groupList)}>{merged.children}</div>
       <Show when={merged.error}>
-        <p class="text-sm text-tomui-danger">{merged.error}</p>
+        <p {...stylex.attrs(styles.message, styles.messageDanger)}>{merged.error}</p>
       </Show>
       <Show when={merged.description}>
-        <p class="text-sm text-tomui-subtle">{merged.description}</p>
+        <p {...stylex.attrs(styles.message, styles.messageSubtle)}>{merged.description}</p>
       </Show>
     </fieldset>
   );
@@ -289,20 +334,20 @@ export type CheckboxItemProps = Omit<CheckboxProps, "label" | "onCheckedChange">
 
 export function CheckboxItem(props: CheckboxItemProps): JSX.Element {
   const merged = merge({ controlFirst: true }, props);
-  const rest = omit(merged, "label", "controlFirst", "disabled", "class");
+  const rest = omit(merged, "label", "controlFirst", "disabled", "style");
   return (
     <label
       data-tomui-component="Checkbox"
       data-tomui-part="item-label"
-      class={cn(
-        "relative m-0 inline-flex items-start gap-2",
-        !merged.controlFirst ? "flex-row-reverse justify-end" : "",
-        merged.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-        merged.class,
+      {...stylex.attrs(
+        styles.itemLabel,
+        !merged.controlFirst ? styles.labelRowReversed : undefined,
+        merged.disabled ? styles.itemLabelDisabled : styles.itemLabelEnabled,
+        merged.style,
       )}
     >
       <CheckboxControl {...rest} disabled={merged.disabled} />
-      <span class="text-base text-tomui-default">{merged.label}</span>
+      <span {...stylex.attrs(styles.itemText)}>{merged.label}</span>
     </label>
   );
 }

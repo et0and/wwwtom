@@ -173,3 +173,51 @@ a:hover [data-tomui-component="Badge"] {
   [data-tomui-part="item"] {
   box-shadow: 0 0 0 1px var(--color-tomui-hairline);
 }
+
+/* Toolbar rounds only its outer corners and dividers its children. StyleX 0.19
+   supports no child or sibling combinator, so these stay here. */
+[data-tomui-component="Toolbar"] > *:first-child {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+/* The last visible child gets the right corners, skipping trailing
+   aria-hidden and hidden inputs. */
+[data-tomui-component="Toolbar"]
+  > *:not([aria-hidden="true"]):not([type="hidden"]):not(
+    :has(~ :not([aria-hidden="true"]):not([type="hidden"]))
+  ) {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+[data-tomui-component="Toolbar"] > *:not([aria-hidden="true"]):not(:first-child) {
+  border-left: 1px solid var(--color-tomui-line);
+}
+
+/* A compact Banner inlines its action's Link so it flows with the title text
+   instead of breaking onto its own line. */
+[data-slot="banner-action-inline"] [data-tomui-component="Link"] {
+  display: inline;
+}
+
+/* Checkbox indicator show/hide, plus the ring the old [&:hover>span] and
+   [&:focus-within>span] rules painted onto the indicator overlay. StyleX 0.19
+   supports no sibling or descendant selector, so these stay here. The overlay
+   only paints when checked, so the ring usually matches the input's own. */
+[data-tomui-component="Checkbox"]:checked + [data-tomui-part="indicator"],
+[data-tomui-component="Checkbox"]:indeterminate + [data-tomui-part="indicator"] {
+  display: flex;
+}
+
+[data-tomui-part="control"][data-variant="default"]:hover [data-tomui-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+}
+
+[data-tomui-part="control"][data-variant="default"]:focus-within [data-tomui-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-focus);
+}
+
+[data-tomui-part="control"][data-variant="error"] [data-tomui-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-danger);
+}

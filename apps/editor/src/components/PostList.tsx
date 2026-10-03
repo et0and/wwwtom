@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsError } from "@tom/types/errors";
@@ -11,6 +12,8 @@ import { Pagination } from "@tom/ui/pagination";
 import { deletePost, deleteWork, listPosts, listWorks } from "../lib/content";
 import type { ContentKind } from "../lib/content";
 import { runClient } from "@tom/utils/services/http";
+
+const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
 
 export type ContentRow = {
   readonly slug: string;
@@ -222,7 +225,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
           </ul>
           <Show when={pageCount() > 1}>
             <Pagination
-              class="mt-4"
+              style={styles.paginationSpacing}
               page={page()}
               pageCount={pageCount()}
               onChange={(next) => load(kind(), next, pagesOnly())}

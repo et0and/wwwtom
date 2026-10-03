@@ -81,7 +81,7 @@ function DropdownMenuRoot(props: DropdownMenuRootProps): JSX.Element {
 
 export type DropdownMenuTriggerProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
-  "onClick"
+  "onClick" | "style"
 > & {
   children?: JSX.Element;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;

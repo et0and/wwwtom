@@ -1,12 +1,20 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show, createMemo } from "solid-js";
 import { Option, Schema } from "effect";
 import type { Editor } from "@tiptap/core";
 import { Toolbar } from "@tom/ui/toolbar";
 import { Select } from "@tom/ui/select";
+import { colors } from "@tom/ui/colors.stylex";
 import { CmsBannerStyleSchema } from "@tom/schemas/cms";
 import type { CmsBannerStyle } from "@tom/schemas/cms";
 
 const BANNER_STYLES = CmsBannerStyleSchema.literals;
+
+const styles = stylex.create({
+  toolbar: { minWidth: 0, maxWidth: "100%", overflowX: "auto" },
+  button: { minHeight: "2.5rem", flexShrink: 0 },
+  buttonActive: { backgroundColor: colors["--color-tomui-fill"], fontWeight: 500 },
+});
 
 const BannerAttrsSchema = Schema.Struct({ style: Schema.optional(CmsBannerStyleSchema) });
 
@@ -84,57 +92,60 @@ const EditorToolbar = (props: {
     return decoded.value.language;
   });
 
-  const activeClass = (active: boolean): string =>
-    `min-h-10 shrink-0${active ? " bg-tomui-fill font-medium" : ""}`;
+  /** Passed as a style list, because Toolbar.Button takes StyleXStyles. */
+  const buttonStyle = (active: boolean): stylex.StyleXStyles[] => [
+    styles.button,
+    active ? styles.buttonActive : undefined,
+  ];
 
   return (
     <div class="editor-toolbar flex flex-wrap items-center gap-2">
-      <Toolbar aria-label="Formatting" class="min-w-0 max-w-full overflow-x-auto">
+      <Toolbar aria-label="Formatting" style={styles.toolbar}>
         <Toolbar.Button
           aria-pressed={boldActive() ? "true" : "false"}
-          class={activeClass(boldActive())}
+          style={buttonStyle(boldActive())}
           onClick={() => props.editor()?.chain().focus().toggleBold().run()}
         >
           <span class="font-bold">B</span>
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={italicActive() ? "true" : "false"}
-          class={activeClass(italicActive())}
+          style={buttonStyle(italicActive())}
           onClick={() => props.editor()?.chain().focus().toggleItalic().run()}
         >
           <span class="italic">I</span>
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={h1Active() ? "true" : "false"}
-          class={activeClass(h1Active())}
+          style={buttonStyle(h1Active())}
           onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 1 }).run()}
         >
           H1
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={h2Active() ? "true" : "false"}
-          class={activeClass(h2Active())}
+          style={buttonStyle(h2Active())}
           onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 2 }).run()}
         >
           H2
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={h3Active() ? "true" : "false"}
-          class={activeClass(h3Active())}
+          style={buttonStyle(h3Active())}
           onClick={() => props.editor()?.chain().focus().toggleHeading({ level: 3 }).run()}
         >
           H3
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={paragraphActive() ? "true" : "false"}
-          class={activeClass(paragraphActive())}
+          style={buttonStyle(paragraphActive())}
           onClick={() => props.editor()?.chain().focus().setParagraph().run()}
         >
           ¶
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={codeActive() ? "true" : "false"}
-          class={activeClass(codeActive())}
+          style={buttonStyle(codeActive())}
           onClick={() =>
             props.editor()?.chain().focus().toggleCodeBlock({ language: "text" }).run()
           }
@@ -146,7 +157,7 @@ const EditorToolbar = (props: {
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={bannerActive() ? "true" : "false"}
-          class={activeClass(bannerActive())}
+          style={buttonStyle(bannerActive())}
           onClick={() =>
             props.editor()?.chain().focus().toggleWrap("banner", { style: bannerStyle() }).run()
           }
@@ -155,7 +166,7 @@ const EditorToolbar = (props: {
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={quoteActive() ? "true" : "false"}
-          class={activeClass(quoteActive())}
+          style={buttonStyle(quoteActive())}
           onClick={() => props.editor()?.chain().focus().toggleWrap("blockquote").run()}
         >
           Quote
@@ -164,7 +175,7 @@ const EditorToolbar = (props: {
           {(item) => (
             <Toolbar.Button
               aria-pressed={props.activePanel === item.panel ? "true" : "false"}
-              class={activeClass(props.activePanel === item.panel)}
+              style={buttonStyle(props.activePanel === item.panel)}
               onClick={() => props.onTogglePanel(item.panel)}
             >
               {item.label}

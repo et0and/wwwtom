@@ -1,105 +1,120 @@
+import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
-import { createContext, merge, omit, useContext } from "solid-js";
-import { cn } from "../../utils/cn";
+import { merge, omit } from "solid-js";
+import { colors } from "../../styles/colors.stylex";
+import { layout, radius, spacing } from "../../styles/primitives.stylex";
+import { fontSizeBase } from "../../styles/typography.stylex";
 
-/** @deprecated Toolbar size customization is deprecated. Omit `size` to use the default base size. */
-export const TOMUI_TOOLBAR_VARIANTS = {
-  size: {
-    xs: {
-      classes: "text-xs",
-      description: "Extra small toolbar for compact UIs",
-    },
-    sm: {
-      classes: "text-xs",
-      description: "Small toolbar for secondary controls",
-    },
-    base: {
-      classes: "text-base",
-      description: "Default toolbar size",
-    },
-    lg: {
-      classes: "text-base",
-      description: "Large toolbar for prominent controls",
-    },
+const styles = stylex.create({
+  root: {
+    display: "inline-flex",
+    width: "fit-content",
+    alignItems: "stretch",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-control"],
+    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
+    fontSize: fontSizeBase.fontSize,
   },
-} as const;
+  /** Shared chrome for every control hosted in the toolbar. */
+  control: {
+    position: "relative",
+    minWidth: 0,
+    borderRadius: 0,
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    boxShadow: "none",
+    ":focus-within": { zIndex: 2 },
+    ":focus": { zIndex: 2 },
+    ":focus-visible": { zIndex: 2 },
+    ":has(:focus-visible)": { zIndex: 2 },
+  },
+  button: {
+    display: "inline-flex",
+    cursor: "pointer",
+    alignItems: "center",
+    gap: layout.gap1.gap,
+    paddingInline: spacing.px2.paddingInline,
+    paddingBlock: spacing.py1.paddingBlock,
+    color: "inherit",
+  },
+  link: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: layout.gap1.gap,
+    paddingInline: spacing.px2.paddingInline,
+    paddingBlock: spacing.py1.paddingBlock,
+    color: "inherit",
+    textDecorationLine: "none",
+  },
+  input: {
+    paddingInline: spacing.px2.paddingInline,
+    paddingBlock: spacing.py1.paddingBlock,
+    color: "inherit",
+    ":focus": { borderRadius: "inherit" },
+  },
+  inputGroup: { display: "inline-flex", alignItems: "center" },
+});
 
-/** @deprecated Toolbar size customization is deprecated. Omit `size` to use the default base size. */
-export const TOMUI_TOOLBAR_DEFAULT_VARIANTS = {
-  size: "base",
-} as const;
-
-/** @deprecated Toolbar size customization is deprecated. Omit `size` to use the default base size. */
-export type ToolbarSize = keyof typeof TOMUI_TOOLBAR_VARIANTS.size;
-
-export type ToolbarProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type ToolbarProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "class" | "style"> & {
   children?: JSX.Element;
-  class?: string;
-  size?: ToolbarSize;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type ToolbarButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
+export type ToolbarButtonProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "class" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   icon?: JSX.Element;
   loading?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type ToolbarLinkProps = JSX.AnchorHTMLAttributes<HTMLAnchorElement> & {
+export type ToolbarLinkProps = Omit<
+  JSX.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "class" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   icon?: JSX.Element;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type ToolbarInputProps = JSX.InputHTMLAttributes<HTMLInputElement> & {
-  class?: string;
+export type ToolbarInputProps = Omit<
+  JSX.InputHTMLAttributes<HTMLInputElement>,
+  "class" | "style"
+> & {
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
-
-const ToolbarSizeContext = createContext<{ size: ToolbarSize }>({ size: "base" });
-
-const TOOLBAR_CONTROL_STYLES = cn(
-  "relative min-w-0 rounded-none border-0 bg-transparent shadow-none ring-0",
-  "focus-within:z-2 focus:z-2 focus-visible:z-2 has-[:focus-visible]:z-2",
-);
 
 function Root(props: ToolbarProps): JSX.Element {
-  const merged = merge({ size: TOMUI_TOOLBAR_DEFAULT_VARIANTS.size }, props);
-  const rest = omit(merged, "children", "class", "size");
+  const merged = merge({}, props);
+  const rest = omit(merged, "children", "style");
   return (
-    <ToolbarSizeContext value={{ size: merged.size }}>
-      <div
-        {...rest}
-        data-tomui-component="Toolbar"
-        role="toolbar"
-        class={cn(
-          "inline-flex w-fit items-stretch rounded-lg bg-tomui-control shadow-xs ring ring-tomui-line",
-          "[&>*:first-child]:rounded-l-lg [&>*:not([aria-hidden='true']):not([type='hidden']):not(:has(~_:not([aria-hidden='true']):not([type='hidden'])))]:rounded-r-lg",
-          "[&>*_[data-tomui-toolbar-input]:focus]:rounded-[inherit]",
-          "[&>*:not([aria-hidden='true']):not(:first-child)]:border-l [&>*:not([aria-hidden='true']):not(:first-child)]:border-tomui-line",
-          TOMUI_TOOLBAR_VARIANTS.size[merged.size].classes,
-          merged.class,
-        )}
-      >
-        {merged.children}
-      </div>
-    </ToolbarSizeContext>
+    <div
+      data-tomui-component="Toolbar"
+      role="toolbar"
+      {...stylex.attrs(styles.root, merged.style)}
+      {...rest}
+    >
+      {merged.children}
+    </div>
   );
 }
 
 function ToolbarButton(props: ToolbarButtonProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "disabled", "loading", "icon");
+  const rest = omit(merged, "children", "disabled", "loading", "icon", "style");
   return (
     <button
       data-tomui-component="Toolbar.Button"
       type="button"
       disabled={merged.loading || merged.disabled}
       aria-busy={merged.loading === true ? "true" : "false"}
-      class={cn(
-        TOOLBAR_CONTROL_STYLES,
-        "inline-flex cursor-pointer items-center gap-1 px-2 py-1 text-inherit",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.control, styles.button, merged.style)}
       {...rest}
     >
       {merged.icon}
@@ -110,15 +125,11 @@ function ToolbarButton(props: ToolbarButtonProps): JSX.Element {
 
 function ToolbarLink(props: ToolbarLinkProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "icon");
+  const rest = omit(merged, "children", "icon", "style");
   return (
     <a
       data-tomui-component="Toolbar.Link"
-      class={cn(
-        TOOLBAR_CONTROL_STYLES,
-        "inline-flex items-center gap-1 px-2 py-1 text-inherit no-underline",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.control, styles.link, merged.style)}
       {...rest}
     >
       {merged.icon}
@@ -128,32 +139,31 @@ function ToolbarLink(props: ToolbarLinkProps): JSX.Element {
 }
 
 function ToolbarInput(props: ToolbarInputProps): JSX.Element {
-  const toolbar = useContext(ToolbarSizeContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "class");
-  void toolbar;
+  const rest = omit(merged, "style");
   return (
     <input
       data-tomui-component="Toolbar.Input"
       data-tomui-toolbar-input=""
-      class={cn(TOOLBAR_CONTROL_STYLES, "px-2 py-1 text-inherit", merged.class)}
+      {...stylex.attrs(styles.control, styles.input, merged.style)}
       {...rest}
     />
   );
 }
 
-export type ToolbarInputGroupProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type ToolbarInputGroupProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "class" | "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function ToolbarInputGroup(props: ToolbarInputGroupProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
     <div
       data-tomui-component="Toolbar.InputGroup"
-      class={cn(TOOLBAR_CONTROL_STYLES, "inline-flex items-center", merged.class)}
+      {...stylex.attrs(styles.control, styles.inputGroup, merged.style)}
       {...rest}
     >
       {merged.children}

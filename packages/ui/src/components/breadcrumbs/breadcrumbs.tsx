@@ -1,31 +1,63 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { overflow } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 
-export const TOMUI_BREADCRUMBS_VARIANTS = {
-  size: {
-    sm: { classes: "text-sm h-10 gap-0.5", description: "Compact breadcrumbs for dense UIs" },
-    base: { classes: "text-base h-12 gap-1", description: "Default breadcrumbs size" },
+const styles = stylex.create({
+  nav: {
+    display: "flex",
+    minWidth: 0,
+    flexGrow: 1,
+    alignItems: "center",
+    overflow: "hidden",
+    whiteSpace: "nowrap",
+    marginInlineEnd: "1rem",
   },
-} as const;
+  sizeSm: { ...fontSizeSm, height: "2.5rem", gap: "0.125rem" },
+  sizeBase: { ...fontSizeBase, height: "3rem", gap: "0.25rem" },
+  separator: {
+    display: "flex",
+    flexShrink: 0,
+    alignItems: "center",
+    color: textColors["--text-color-tomui-inactive"],
+  },
+  current: {
+    display: "flex",
+    maxWidth: "100%",
+    minWidth: 0,
+    alignItems: "center",
+    gap: "0.25rem",
+    fontWeight: 500,
+  },
+  link: {
+    display: "flex",
+    flexShrink: 0,
+    alignItems: "center",
+    gap: "0.25rem",
+    whiteSpace: "nowrap",
+    color: textColors["--text-color-tomui-subtle"],
+    textDecorationLine: "none",
+  },
+});
+
+export type TomuiBreadcrumbsSize = "sm" | "base";
 
 export const TOMUI_BREADCRUMBS_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiBreadcrumbsSize = keyof typeof TOMUI_BREADCRUMBS_VARIANTS.size;
+const sizeStyles = {
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+} as const satisfies Record<TomuiBreadcrumbsSize, stylex.StyleXStyles>;
 
-export function breadcrumbsVariants(props: { size?: TomuiBreadcrumbsSize } = {}): string {
+export function breadcrumbsVariants(
+  props: { size?: TomuiBreadcrumbsSize } = {},
+): stylex.StyleXStyles[] {
   const merged = merge(TOMUI_BREADCRUMBS_DEFAULT_VARIANTS, props);
-  return cn(
-    "group mr-4 flex min-w-0 grow items-center overflow-hidden whitespace-nowrap",
-    resolveVariant(
-      TOMUI_BREADCRUMBS_VARIANTS.size,
-      merged.size,
-      TOMUI_BREADCRUMBS_DEFAULT_VARIANTS.size,
-    ).classes,
-  );
+  return [styles.nav, sizeStyles[merged.size]];
 }
 
 export type BreadcrumbItem = {
@@ -33,11 +65,12 @@ export type BreadcrumbItem = {
   href?: string;
 };
 
-export type BreadcrumbsProps = JSX.HTMLAttributes<HTMLElement> & {
-  class?: string;
+export type BreadcrumbsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "class" | "style"> & {
   size?: TomuiBreadcrumbsSize;
   items?: ReadonlyArray<BreadcrumbItem>;
   children?: JSX.Element;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Breadcrumbs(props: BreadcrumbsProps) {
@@ -45,13 +78,13 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
     { size: TOMUI_BREADCRUMBS_DEFAULT_VARIANTS.size, items: [] as ReadonlyArray<BreadcrumbItem> },
     props,
   );
-  const rest = omit(merged, "children", "class", "size", "items");
+  const rest = omit(merged, "children", "size", "items", "style");
   const lastIndex = () => merged.items.length - 1;
   return (
     <nav
       data-tomui-component="Breadcrumbs"
       aria-label="breadcrumb"
-      class={cn(breadcrumbsVariants({ size: merged.size }), merged.class)}
+      {...stylex.attrs(...breadcrumbsVariants({ size: merged.size }), merged.style)}
       {...rest}
     >
       <Show when={merged.items.length > 0} fallback={merged.children}>
@@ -59,7 +92,7 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
           {(item, index) => (
             <>
               <Show when={index() > 0}>
-                <span class="flex shrink-0 items-center text-tomui-inactive" aria-hidden="true">
+                <span aria-hidden="true" {...stylex.attrs(styles.separator)}>
                   <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
                     <path
                       stroke="currentColor"
@@ -76,16 +109,13 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
                 fallback={
                   <span
                     aria-current={index() === lastIndex() ? "page" : undefined}
-                    class="flex max-w-full min-w-0 items-center gap-1 font-medium"
+                    {...stylex.attrs(styles.current)}
                   >
-                    <span class="truncate">{item.label}</span>
+                    <span {...stylex.attrs(overflow.truncate, overflow.noWrap)}>{item.label}</span>
                   </span>
                 }
               >
-                <a
-                  href={item.href}
-                  class="flex shrink-0 items-center gap-1 whitespace-nowrap text-tomui-subtle no-underline"
-                >
+                <a href={item.href} {...stylex.attrs(styles.link)}>
                   <span>{item.label}</span>
                 </a>
               </Show>
@@ -97,51 +127,52 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
   );
 }
 
-export type BreadcrumbLinkProps = JSX.AnchorHTMLAttributes<HTMLAnchorElement> & {
+export type BreadcrumbLinkProps = Omit<
+  JSX.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "class" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function BreadcrumbLink(props: BreadcrumbLinkProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <a
-      data-tomui-component="BreadcrumbLink"
-      class={cn(
-        "flex shrink-0 items-center gap-1 whitespace-nowrap text-tomui-subtle no-underline",
-        merged.class,
-      )}
-      {...rest}
-    >
+    <a data-tomui-component="BreadcrumbLink" {...stylex.attrs(styles.link, merged.style)} {...rest}>
       {merged.children}
     </a>
   );
 }
 
-export type BreadcrumbCurrentProps = JSX.HTMLAttributes<HTMLSpanElement> & {
+export type BreadcrumbCurrentProps = Omit<
+  JSX.HTMLAttributes<HTMLSpanElement>,
+  "class" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function BreadcrumbCurrent(props: BreadcrumbCurrentProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
     <span
       data-tomui-component="BreadcrumbCurrent"
       aria-current="page"
-      class={cn("flex max-w-full min-w-0 items-center gap-1 font-medium", merged.class)}
+      {...stylex.attrs(styles.current, merged.style)}
       {...rest}
     >
-      <span class="truncate">{merged.children}</span>
+      <span {...stylex.attrs(overflow.truncate, overflow.noWrap)}>{merged.children}</span>
     </span>
   );
 }
 
 export function BreadcrumbSeparator() {
   return (
-    <span class="flex shrink-0 items-center text-tomui-inactive" aria-hidden="true">
+    <span aria-hidden="true" {...stylex.attrs(styles.separator)}>
       <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
         <path
           stroke="currentColor"

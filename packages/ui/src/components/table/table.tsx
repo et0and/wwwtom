@@ -1,67 +1,72 @@
+import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-export const TOMUI_TABLE_VARIANTS = {
-  layout: {
-    auto: { classes: "", description: "Auto table layout - columns resize based on content" },
-    fixed: { classes: "table-fixed", description: "Fixed table layout - equal-width columns" },
-  },
-  variant: {
-    default: {
-      classes:
-        "even:bg-tomui-elevated [--tomui-table-row-bg:var(--color-tomui-base)] even:[--tomui-table-row-bg:var(--color-tomui-elevated)]",
-      description: "Default row variant",
-    },
-    selected: {
-      classes: "bg-tomui-tint [--tomui-table-row-bg:var(--color-tomui-tint)]",
-      description: "Selected row variant",
-    },
-  },
-  sticky: {
-    left: {
-      classes: "sticky left-0",
-      description: "Pin column to the left edge of the scroll container",
-    },
-    right: {
-      classes: "sticky right-0",
-      description: "Pin column to the right edge of the scroll container",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { weight } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase } from "../../styles/typography.stylex";
 
 export const TOMUI_TABLE_DEFAULT_VARIANTS = {
   layout: "auto",
   variant: "default",
 } as const;
 
-export type TomuiTableLayout = keyof typeof TOMUI_TABLE_VARIANTS.layout;
-export type TomuiTableRowVariant = keyof typeof TOMUI_TABLE_VARIANTS.variant;
+export type TomuiTableLayout = "auto" | "fixed";
+export type TomuiTableRowVariant = "default" | "selected";
 
-export type TableProps = JSX.HTMLAttributes<HTMLTableElement> & {
+const styles = stylex.create({
+  table: {
+    isolation: "isolate",
+    width: "100%",
+    textAlign: "left",
+    fontSize: fontSizeBase.fontSize,
+    color: textColors["--text-color-tomui-default"],
+  },
+  layoutFixed: { tableLayout: "fixed" },
+  head: {
+    position: "relative",
+    borderBottomWidth: 1,
+    borderBottomColor: colors["--color-tomui-fill"],
+    padding: "0.75rem",
+    fontWeight: weight.semibold.fontWeight,
+    backgroundColor: colors["--color-tomui-base"],
+  },
+  cell: { padding: "0.75rem" },
+  /** Zebra striping. Selected rows override this with a flat tint instead. */
+  rowDefault: {
+    backgroundColor: colors["--color-tomui-base"],
+    ":nth-child(even)": { backgroundColor: colors["--color-tomui-elevated"] },
+  },
+  rowSelected: { backgroundColor: colors["--color-tomui-tint"] },
+});
+
+const rowVariantStyles = {
+  default: styles.rowDefault,
+  selected: styles.rowSelected,
+} as const satisfies Record<TomuiTableRowVariant, stylex.StyleXStyles>;
+
+export function tableRowVariants(props: { variant?: TomuiTableRowVariant } = {}) {
+  const merged = merge({ variant: TOMUI_TABLE_DEFAULT_VARIANTS.variant }, props);
+  return [rowVariantStyles[merged.variant]];
+}
+
+export type TableProps = Omit<JSX.HTMLAttributes<HTMLTableElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   layout?: TomuiTableLayout;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Table(props: TableProps) {
   const merged = merge({ layout: TOMUI_TABLE_DEFAULT_VARIANTS.layout }, props);
-  const rest = omit(merged, "children", "class", "layout");
+  const rest = omit(merged, "children", "layout", "style");
   return (
     <table
       data-tomui-component="Table"
-      class={cn(
-        "isolate w-full text-left text-base text-tomui-default",
-        resolveVariant(
-          TOMUI_TABLE_VARIANTS.layout,
-          merged.layout,
-          TOMUI_TABLE_DEFAULT_VARIANTS.layout,
-        ).classes,
-        "[&_td]:p-3",
-        "[&_th]:border-b [&_th]:border-tomui-fill [&_th]:p-3 [&_th]:text-base [&_th]:font-semibold",
-        "[&_th]:bg-tomui-base",
-        merged.class,
+      {...stylex.attrs(
+        styles.table,
+        merged.layout === "fixed" ? styles.layoutFixed : undefined,
+        merged.style,
       )}
       {...rest}
     >
@@ -70,56 +75,52 @@ export function Table(props: TableProps) {
   );
 }
 
-export type TableHeaderProps = JSX.HTMLAttributes<HTMLTableSectionElement> & {
+export type TableHeaderProps = Omit<JSX.HTMLAttributes<HTMLTableSectionElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function TableHeader(props: TableHeaderProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <thead data-tomui-component="TableHeader" class={cn("group/header", merged.class)} {...rest}>
+    <thead data-tomui-component="TableHeader" {...stylex.attrs(merged.style)} {...rest}>
       {merged.children}
     </thead>
   );
 }
 
-export type TableBodyProps = JSX.HTMLAttributes<HTMLTableSectionElement> & {
+export type TableBodyProps = Omit<JSX.HTMLAttributes<HTMLTableSectionElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function TableBody(props: TableBodyProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <tbody data-tomui-component="TableBody" class={merged.class} {...rest}>
+    <tbody data-tomui-component="TableBody" {...stylex.attrs(merged.style)} {...rest}>
       {merged.children}
     </tbody>
   );
 }
 
-export type TableRowProps = JSX.HTMLAttributes<HTMLTableRowElement> & {
+export type TableRowProps = Omit<JSX.HTMLAttributes<HTMLTableRowElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   variant?: TomuiTableRowVariant;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function TableRow(props: TableRowProps) {
   const merged = merge({ variant: TOMUI_TABLE_DEFAULT_VARIANTS.variant }, props);
-  const rest = omit(merged, "children", "class", "variant");
+  const rest = omit(merged, "children", "variant", "style");
   return (
     <tr
       data-tomui-component="TableRow"
-      class={cn(
-        resolveVariant(
-          TOMUI_TABLE_VARIANTS.variant,
-          merged.variant,
-          TOMUI_TABLE_DEFAULT_VARIANTS.variant,
-        ).classes,
-        merged.class,
-      )}
+      {...stylex.attrs(...tableRowVariants({ variant: merged.variant }), merged.style)}
       {...rest}
     >
       {merged.children}
@@ -127,31 +128,33 @@ export function TableRow(props: TableRowProps) {
   );
 }
 
-export type TableHeadProps = JSX.ThHTMLAttributes<HTMLTableCellElement> & {
+export type TableHeadProps = Omit<JSX.ThHTMLAttributes<HTMLTableCellElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function TableHead(props: TableHeadProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <th data-tomui-component="TableHead" class={cn("group relative", merged.class)} {...rest}>
+    <th data-tomui-component="TableHead" {...stylex.attrs(styles.head, merged.style)} {...rest}>
       {merged.children}
     </th>
   );
 }
 
-export type TableCellProps = JSX.TdHTMLAttributes<HTMLTableCellElement> & {
+export type TableCellProps = Omit<JSX.TdHTMLAttributes<HTMLTableCellElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function TableCell(props: TableCellProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <td data-tomui-component="TableCell" class={merged.class} {...rest}>
+    <td data-tomui-component="TableCell" {...stylex.attrs(styles.cell, merged.style)} {...rest}>
       {merged.children}
     </td>
   );

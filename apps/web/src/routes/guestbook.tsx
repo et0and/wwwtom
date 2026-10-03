@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
 import { isServer } from "@solidjs/web";
@@ -13,6 +14,8 @@ import { callAdapter, runAdapterCall } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 import { formatDateTime } from "@tom/utils/date";
 import { bannerTitleStyles, layoutStyles } from "../components/layout.stylex";
+
+const styles = stylex.create({ sectionSpacing: { marginBottom: "1rem" } });
 
 export const fetchEntries = () => runAdapterCall(() => callAdapter().guestbook.entries.get());
 
@@ -89,7 +92,7 @@ export default function Guestbook() {
                     <Banner
                       variant="error"
                       description={authMutation.error?.message}
-                      class="mb-4"
+                      style={styles.sectionSpacing}
                     />
                   </Show>
                   <form
@@ -169,14 +172,14 @@ export default function Guestbook() {
                       <Banner
                         variant="default"
                         description="Thank you for signing the guestbook!"
-                        class="mb-4"
+                        style={styles.sectionSpacing}
                       />
                     </Show>
                     <Show when={signMutation.isError}>
                       <Banner
                         variant="error"
                         description={signMutation.error?.message}
-                        class="mb-4"
+                        style={styles.sectionSpacing}
                       />
                     </Show>
                     <form
