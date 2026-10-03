@@ -1,32 +1,76 @@
+import * as stylex from "@stylexjs/stylex";
 import { createSignal, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Button } from "../button/button";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-/** Empty state size variant definitions mapping sizes to their Tailwind classes. */
-export const TOMUI_EMPTY_VARIANTS = {
-  size: {
-    sm: {
-      classes: "px-6 py-8 gap-4",
-      description: "Compact empty state for smaller containers",
-    },
-    base: {
-      classes: "px-10 py-16 gap-6",
-      description: "Default empty state size",
-    },
-    lg: {
-      classes: "px-12 py-20 gap-8",
-      description: "Large empty state for prominent placement",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { monoFont, radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_EMPTY_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiEmptySize = keyof typeof TOMUI_EMPTY_VARIANTS.size;
+export type TomuiEmptySize = "sm" | "base" | "lg";
+
+const styles = stylex.create({
+  root: {
+    display: "flex",
+    width: "100%",
+    flexDirection: "column",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors["--color-tomui-fill"],
+    borderRadius: radius.xl.borderRadius,
+    backgroundColor: colors["--color-tomui-control"],
+    color: textColors["--text-color-tomui-default"],
+  },
+  sizeSm: { padding: "2rem 1.5rem", gap: "1rem" },
+  sizeBase: { padding: "4rem 2.5rem", gap: "1.5rem" },
+  sizeLg: { padding: "5rem 3rem", gap: "2rem" },
+  body: { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.625rem" },
+  title: { fontSize: "1.5rem", fontWeight: 600 },
+  description: {
+    maxWidth: "35rem",
+    textAlign: "center",
+    textWrap: "balance",
+    lineHeight: "1.5",
+    color: textColors["--text-color-tomui-subtle"],
+  },
+  command: {
+    position: "relative",
+    display: "inline-flex",
+    height: "2.5rem",
+    maxWidth: "80%",
+    alignItems: "center",
+    gap: "0.5rem",
+    paddingInlineStart: "0.75rem",
+    paddingInlineEnd: "0.5rem",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-overlay"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"] + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    willChange: "transform",
+    ...monoFont,
+  },
+  commandRow: { display: "inline-flex", minWidth: 0, alignItems: "baseline", gap: "0.5rem" },
+  commandPrompt: { color: textColors["--text-color-tomui-subtle"], userSelect: "none" },
+  /** The command scrolls rather than wraps, so its scrollbar is hidden. */
+  commandText: {
+    overflowX: "scroll",
+    fontSize: "0.875rem",
+    whiteSpace: "nowrap",
+    scrollbarWidth: "none",
+    msOverflowStyle: "none",
+    "::-webkit-scrollbar": { display: "none" },
+  },
+  checkMark: {
+    // StyleX only accepts from/to frames, so the three-step bounce is defined
+    // in tomui-binding.css and referenced by name.
+    animationName: "bounce-in",
+    animationDuration: "0.4s",
+    animationTimingFunction: "ease-out",
+    color: textColors["--text-color-tomui-success"],
+  },
+});
 
 export interface TomuiEmptyVariantsProps {
   /**
@@ -39,13 +83,15 @@ export interface TomuiEmptyVariantsProps {
   size?: TomuiEmptySize;
 }
 
-export function emptyVariants(props: TomuiEmptyVariantsProps = {}): string {
+const sizeStyles = {
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+} as const satisfies Record<TomuiEmptySize, stylex.StyleXStyles>;
+
+export function emptyVariants(props: TomuiEmptyVariantsProps = {}) {
   const merged = merge(TOMUI_EMPTY_DEFAULT_VARIANTS, props);
-  return cn(
-    "flex w-full flex-col items-center rounded-xl border border-tomui-fill bg-tomui-control text-tomui-default",
-    resolveVariant(TOMUI_EMPTY_VARIANTS.size, merged.size, TOMUI_EMPTY_DEFAULT_VARIANTS.size)
-      .classes,
-  );
+  return [styles.root, sizeStyles[merged.size]];
 }
 
 /**
@@ -72,8 +118,8 @@ export interface EmptyProps extends TomuiEmptyVariantsProps {
   commandLine?: string;
   /** Additional content (buttons, links) rendered below the description. */
   contents?: JSX.Element;
-  /** Additional CSS classes merged via `cn()`. */
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   ref?: HTMLDivElement | ((element: HTMLDivElement) => void) | undefined;
 }
 
@@ -88,7 +134,7 @@ function CheckMarkIcon(): JSX.Element {
       height="16"
       viewBox="0 0 256 256"
       fill="currentColor"
-      class="animate-bounce-in text-tomui-success"
+      {...stylex.attrs(styles.checkMark)}
       aria-hidden="true"
     >
       <path d="M229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69l122.34-122.35a8 8 0 0 1 11.32 11.32Z" />
@@ -127,7 +173,7 @@ export function Empty(props: EmptyProps): JSX.Element {
   const merged = merge({ size: TOMUI_EMPTY_DEFAULT_VARIANTS.size }, props);
   const rest = omit(
     merged,
-    "class",
+    "style",
     "commandLine",
     "contents",
     "description",
@@ -157,31 +203,27 @@ export function Empty(props: EmptyProps): JSX.Element {
   return (
     <div
       data-tomui-component="Empty"
-      class={cn(emptyVariants({ size: merged.size }), merged.class)}
+      {...stylex.attrs(...emptyVariants({ size: merged.size }), merged.style)}
       ref={merged.ref}
       {...rest}
     >
       <Show when={merged.icon}>{merged.icon}</Show>
-      <div class="flex flex-col items-center gap-2.5">
-        <h2 class="text-2xl font-semibold">{merged.title}</h2>
+      <div {...stylex.attrs(styles.body)}>
+        <h2 {...stylex.attrs(styles.title)}>{merged.title}</h2>
 
         <Show when={merged.description}>
-          <p class="max-w-140 text-center text-balance leading-normal text-tomui-subtle">
-            {merged.description}
-          </p>
+          <p {...stylex.attrs(styles.description)}>{merged.description}</p>
         </Show>
       </div>
 
       <Show when={merged.commandLine}>
-        <div class="relative inline-flex h-10 max-w-8/10 transform-gpu items-center gap-2 rounded-lg bg-tomui-overlay pr-2 pl-3 font-mono shadow-xs ring ring-tomui-line">
-          <span class="inline-flex min-w-0 items-baseline gap-2">
-            <span class="text-tomui-subtle select-none">$</span>
-            <span class="no-scrollbar overflow-scroll text-base whitespace-nowrap">
-              {merged.commandLine}
-            </span>
+        <div {...stylex.attrs(styles.command)}>
+          <span {...stylex.attrs(styles.commandRow)}>
+            <span {...stylex.attrs(styles.commandPrompt)}>$</span>
+            <span {...stylex.attrs(styles.commandText)}>{merged.commandLine}</span>
           </span>
           <Button
-            class="text-tomui-subtle"
+            style={styles.commandPrompt}
             size="sm"
             variant="ghost"
             form="square"
