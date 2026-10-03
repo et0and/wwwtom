@@ -1,7 +1,18 @@
+import * as stylex from "@stylexjs/stylex";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
+
+const DARK = "@media (prefers-color-scheme: dark)";
+
+const styles = stylex.create({
+  signature: {
+    height: "4rem",
+    paddingTop: "1rem",
+    filter: { default: "none", [DARK]: "invert(1)" },
+  },
+});
 
 export default function Home() {
   return (
@@ -49,7 +60,7 @@ export default function Home() {
           <Text lang="ja">
             アオテアロア（ニュージーランド）の先住民族（タンガタ・フェヌア）であり、ワイタンギ条約のパートナーであるマオリの人々に敬意を表します。また、この土地の本来の、そして今も変わらぬ正当な守り手であるマナ・フェヌアに深く敬意を払います。
           </Text>
-          <img src="/image.svg" alt="Tom Hackshaw signature" class="h-16 pt-4 dark:invert" />
+          <img src="/image.svg" alt="Tom Hackshaw signature" {...stylex.attrs(styles.signature)} />
         </BlurInSection>
       </PageLayout>
     </>

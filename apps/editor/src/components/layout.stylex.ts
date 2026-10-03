@@ -12,4 +12,5 @@ export const layoutStyles = stylex.create({
   flexWrap: { flexWrap: "wrap" },
   itemsCenter: { alignItems: "center" },
   justifyBetween: { justifyContent: "space-between" },
+  grid: { display: "grid" },
 });

@@ -1,11 +1,23 @@
 import { createSignal, Show, onSettled, createEffect } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import { Effect } from "effect";
 import { Loader } from "@tom/ui/loader";
+import { layout } from "@tom/ui/primitives.stylex";
 import { Button } from "@tom/ui/button";
 import { Text } from "@tom/ui/text";
 import { layoutStyles } from "../../../components/layout.stylex";
+
+const styles = stylex.create({
+  centeredScreen: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+  },
+  holdContainer: { maxHeight: "100vh" },
+});
 
 export default function Hold() {
   const [timer, setTimer] = createSignal(0);
@@ -83,7 +95,7 @@ export default function Hold() {
       <Show
         when={isClient()}
         fallback={
-          <div class="flex justify-center items-center h-screen">
+          <div {...stylex.attrs(styles.centeredScreen)}>
             <Loader />
           </div>
         }
@@ -111,8 +123,8 @@ export default function Hold() {
 						box-sizing: border-box;
 					}
 				`}</style>
-        <div class="hold-container max-h-screen">
-          <main class="flex flex-col">
+        <div class={`hold-container ${stylex.attrs(styles.holdContainer).class ?? ""}`}>
+          <main {...stylex.attrs(layout.flexCol)}>
             <Text style={layoutStyles.text2xl}>You have been waiting for {formatTime()}</Text>
             <div>
               <Show when={!isPlaybackInitiated()}>

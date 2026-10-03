@@ -9,6 +9,7 @@ import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
 import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
+import { layout } from "@tom/ui/primitives.stylex";
 import { formatDate } from "@tom/utils/date";
 import { getAdapterBaseUrl } from "./lib/api";
 import { getQueryClient } from "./lib/query-client";
@@ -50,7 +51,7 @@ const About = () => {
       <h1 class="sophie-title">About</h1>
       <Loading
         fallback={
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         }
@@ -101,7 +102,7 @@ const Posts = () => {
       />
       <Loading
         fallback={
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         }
@@ -166,7 +167,7 @@ const PostDetail = () => {
         }
       >
         <Match when={postQuery.isPending}>
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         </Match>

@@ -41,6 +41,22 @@ describe("Input", () => {
     expect(container.querySelector("input")).not.toBeNull();
   });
 
+  it("associates the label with the input via a matching for/id pair", () => {
+    const { container } = render(() => <Input label="Email" />);
+    const label = container.querySelector("label")!;
+    const input = container.querySelector("input")!;
+    expect(input.id).toBeTruthy();
+    expect(label.getAttribute("for")).toBe(input.id);
+  });
+
+  it("keeps a caller-supplied id as the control id the label points to", () => {
+    const { container } = render(() => <Input label="Email" id="email-field" />);
+    const label = container.querySelector("label")!;
+    const input = container.querySelector("input")!;
+    expect(input.id).toBe("email-field");
+    expect(label.getAttribute("for")).toBe("email-field");
+  });
+
   it("marks the input invalid when an error is given", () => {
     const { container } = render(() => <Input error="Required" />);
     expect(container.querySelector("input")?.getAttribute("aria-invalid")).toBe("true");

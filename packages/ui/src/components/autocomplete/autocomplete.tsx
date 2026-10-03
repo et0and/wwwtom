@@ -73,6 +73,7 @@ const styles = stylex.create({
     fontSize: "0.875rem",
     cursor: "pointer",
     ":is([data-selected])": { fontWeight: 500 },
+    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-overlay"] },
   },
   itemLabel: { gridColumnStart: "1" },
   itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
@@ -91,6 +92,9 @@ interface AutocompleteContextValue {
   setOpen: (open: boolean) => void;
   activeIndex: () => number;
   setActiveIndex: (index: number) => void;
+  activeValue: () => string | undefined;
+  setActiveValue: (value: string) => void;
+  itemsLength: () => number;
   hasError: () => boolean;
   inputId: string;
   listId: string;
@@ -103,6 +107,9 @@ const AutocompleteContext = createContext<AutocompleteContextValue>({
   setOpen: () => undefined,
   activeIndex: () => -1,
   setActiveIndex: () => undefined,
+  activeValue: () => undefined,
+  setActiveValue: () => undefined,
+  itemsLength: () => 0,
   hasError: () => false,
   inputId: "autocomplete-input",
   listId: "autocomplete-list",
@@ -146,6 +153,12 @@ function Root(props: AutocompleteProps): JSX.Element {
     setOpen,
     activeIndex,
     setActiveIndex,
+    activeValue: () => merged.items[activeIndex()],
+    setActiveValue: (next) => {
+      const index = merged.items.indexOf(next);
+      if (index !== -1) setActiveIndex(index);
+    },
+    itemsLength: () => merged.items.length,
     hasError: () => merged.error !== undefined,
     inputId: "tomui-autocomplete-input",
     listId: "tomui-autocomplete-list",
@@ -231,7 +244,26 @@ function InputGroup(props: AutocompleteInputGroupProps): JSX.Element {
         merged.onFocus?.(event);
       }}
       onKeyDown={(event) => {
-        if (event.key === "Escape") ctx.setOpen(false);
+        const length = ctx.itemsLength();
+        if (event.key === "Escape") {
+          ctx.setOpen(false);
+        } else if (event.key === "ArrowDown") {
+          event.preventDefault();
+          ctx.setOpen(true);
+          if (length > 0) {
+            ctx.setActiveIndex(ctx.activeIndex() + 1 >= length ? 0 : ctx.activeIndex() + 1);
+          }
+        } else if (event.key === "ArrowUp") {
+          event.preventDefault();
+          ctx.setOpen(true);
+          if (length > 0) {
+            ctx.setActiveIndex(ctx.activeIndex() <= 0 ? length - 1 : ctx.activeIndex() - 1);
+          }
+        } else if (event.key === "Home") {
+          if (length > 0) ctx.setActiveIndex(0);
+        } else if (event.key === "End") {
+          if (length > 0) ctx.setActiveIndex(length - 1);
+        }
         merged.onKeyDown?.(event);
       }}
       {...rest}
@@ -304,6 +336,7 @@ export type AutocompleteItemProps = {
 function Item(props: AutocompleteItemProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({}, props);
+  const isHighlighted = (): boolean => ctx.activeValue() === merged.value;
   return (
     <button
       data-tomui-component="Autocomplete"
@@ -312,12 +345,14 @@ function Item(props: AutocompleteItemProps): JSX.Element {
       role="option"
       aria-selected={ctx.query() === String(merged.value) ? "true" : "false"}
       data-selected={ctx.query() === String(merged.value) ? "" : undefined}
+      data-highlighted={isHighlighted() ? "" : undefined}
       disabled={merged.disabled}
       {...stylex.attrs(styles.item, merged.style)}
       onClick={() => {
         ctx.setQuery(String(merged.value));
         ctx.setOpen(false);
       }}
+      onMouseEnter={() => ctx.setActiveValue(merged.value)}
     >
       <div {...stylex.attrs(styles.itemLabel)}>{merged.children ?? String(merged.value)}</div>
       {/* The old group-data-selected rule only had room to switch display, so

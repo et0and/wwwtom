@@ -1,9 +1,37 @@
 import { createSignal } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { Portal } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
+import { colors } from "@tom/ui/colors.stylex";
 import { Dialog } from "@tom/ui/dialog";
+import { layout, overflow, spacing } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
+import { layoutStyles } from "~/components/layout.stylex";
 import { pdfDialogStyles } from "./pdf-dialog.stylex";
+
+const SM = "@media (min-width: 640px)";
+
+const styles = stylex.create({
+  header: {
+    display: "flex",
+    flexDirection: { default: "column", [SM]: "row" },
+    alignItems: { default: "normal", [SM]: "center" },
+    justifyContent: { default: "normal", [SM]: "space-between" },
+    gap: { default: "0.5rem", [SM]: "1.5rem" },
+    borderBottomWidth: "1px",
+    borderBottomStyle: "solid",
+    borderBottomColor: colors["--color-tomui-line"],
+    paddingInline: { default: "1rem", [SM]: "1.25rem" },
+  },
+  actions: {
+    display: "flex",
+    gap: { default: "1rem", [SM]: "1.5rem" },
+  },
+  embed: {
+    height: "100%",
+    minHeight: 0,
+  },
+});
 
 interface PdfDialogProps {
   url: string;
@@ -40,7 +68,7 @@ export function PdfDialog(props: PdfDialogProps) {
         href={props.url}
         target="_blank"
         rel="noopener noreferrer"
-        class="block no-underline hover:underline"
+        {...stylex.attrs(layout.block, layoutStyles.noUnderlineHover)}
         onClick={(event) => {
           if (!isDialogViewport() || !isPlainClick(event)) return;
           event.preventDefault();
@@ -51,13 +79,13 @@ export function PdfDialog(props: PdfDialogProps) {
       </a>
       <Portal>
         <Dialog surface="full" style={pdfDialogStyles.panel}>
-          <div class="flex min-w-0 flex-col gap-2 border-b border-tomui-line px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6 sm:px-5">
+          <div {...stylex.attrs(styles.header, layout.minWidth0, spacing.py3)}>
             <Dialog.Title style={pdfDialogStyles.title}>
               <Text variant="heading" as="span">
                 {props.title}
               </Text>
             </Dialog.Title>
-            <div class="flex shrink-0 items-center gap-4 sm:gap-6">
+            <div {...stylex.attrs(styles.actions, overflow.noShrink, layout.itemsCenter)}>
               <a href={props.url} target="_blank" rel="noopener noreferrer">
                 <Text variant="secondary" size="sm" as="span">
                   Open in a new tab
@@ -74,7 +102,7 @@ export function PdfDialog(props: PdfDialogProps) {
             src={props.url}
             type="application/pdf"
             title={props.title}
-            class="h-full min-h-0 w-full flex-1"
+            {...stylex.attrs(styles.embed, layout.fullWidth, layoutStyles.flexOne)}
           />
         </Dialog>
       </Portal>

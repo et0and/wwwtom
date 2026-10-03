@@ -125,6 +125,82 @@ describe("Autocomplete", () => {
     await vi.waitFor(() => expect(container.textContent).toContain("No results found."));
   });
 
+  it("highlights the active option when the keyboard moves it down", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["alpha", "beta"]}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List items={["alpha", "beta"]}>
+            {(item) => <Autocomplete.Item value={item} />}
+          </Autocomplete.List>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const input = container.querySelector("[data-tomui-part=input]")!;
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-tomui-part=item]");
+      expect(items[0]?.getAttribute("data-highlighted")).toBe("");
+      expect(items[1]?.hasAttribute("data-highlighted")).toBe(false);
+    });
+
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-tomui-part=item]");
+      expect(items[0]?.hasAttribute("data-highlighted")).toBe(false);
+      expect(items[1]?.getAttribute("data-highlighted")).toBe("");
+    });
+  });
+
+  it("wraps to the last option when ArrowUp is pressed with nothing active", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["alpha", "beta"]}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List items={["alpha", "beta"]}>
+            {(item) => <Autocomplete.Item value={item} />}
+          </Autocomplete.List>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const input = container.querySelector("[data-tomui-part=input]")!;
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowUp" });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-tomui-part=item]");
+      expect(items[1]?.getAttribute("data-highlighted")).toBe("");
+    });
+  });
+
+  it("highlights an option on hover", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["alpha", "beta"]}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List items={["alpha", "beta"]}>
+            {(item) => <Autocomplete.Item value={item} />}
+          </Autocomplete.List>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    fireEvent.focus(container.querySelector("[data-tomui-part=input]")!);
+    await vi.waitFor(() =>
+      expect(container.querySelectorAll("[data-tomui-part=item]")).toHaveLength(2),
+    );
+    const items = container.querySelectorAll("[data-tomui-part=item]");
+    fireEvent.mouseEnter(items[1]!);
+
+    await vi.waitFor(() => {
+      expect(items[1]?.getAttribute("data-highlighted")).toBe("");
+    });
+  });
+
   it("links the input to the list it controls", async () => {
     const { container } = render(() => (
       <Autocomplete items={["alpha"]}>

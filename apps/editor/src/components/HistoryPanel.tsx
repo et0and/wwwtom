@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsPost, CmsRevisionMeta, CmsRevisionSnapshot, CmsWork } from "@tom/schemas/cms";
@@ -7,6 +8,7 @@ import { Button } from "@tom/ui/button";
 import { Badge } from "@tom/ui/badge";
 import { Banner } from "@tom/ui/banner";
 import { Loader } from "@tom/ui/loader";
+import { layout } from "@tom/ui/primitives.stylex";
 import { adapterUrl } from "../lib/api";
 import { runClient } from "@tom/utils/services/http";
 import { getRevision, listRevisions, mediaFileUrl, restoreRevision } from "../lib/content";
@@ -128,7 +130,7 @@ export const HistoryPanel = (props: {
       <Show when={selected()}>
         {(current) => (
           <div class="history-preview">
-            <p class="flex items-center gap-2">
+            <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
               <Badge variant="secondary">{current().snapshot.status}</Badge>
               <span class="history-meta">{formatDateTime(current().meta.createdAt)}</span>
             </p>
@@ -147,7 +149,7 @@ export const HistoryPanel = (props: {
         )}
       </Show>
       <Show when={restoring()}>
-        <p class="flex items-center gap-2">
+        <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
           <Loader size="sm" /> Restoring…
         </p>
       </Show>

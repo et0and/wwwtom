@@ -1,10 +1,12 @@
 import { Match, Switch, createMemo } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { useParams } from "@solidjs/router";
 import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPostBySlug } from "~/server/adapter";
 import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { layout } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
@@ -74,7 +76,7 @@ export default function PostPage() {
                 </Text>
               </BlurInSection>
               <BlurInSection delay={0.5}>
-                <div class="flex flex-col gap-1.5">
+                <div {...stylex.attrs(layout.flexCol, layout.gap1_5)}>
                   <Text variant="secondary" size="sm" as="time">
                     {formatDate(post.publishedAt)}
                   </Text>

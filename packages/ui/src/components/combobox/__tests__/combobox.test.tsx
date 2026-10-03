@@ -147,6 +147,77 @@ describe("Combobox", () => {
     expect(input).not.toBeNull();
   });
 
+  it("highlights the active option when the keyboard moves through the list", async () => {
+    const { container } = render(() => (
+      <Combobox>
+        <Combobox.TriggerValue />
+        <Combobox.Content>
+          <Combobox.List items={["alpha", "beta"]}>
+            {(item) => <Combobox.Item value={item} />}
+          </Combobox.List>
+        </Combobox.Content>
+      </Combobox>
+    ));
+
+    await openPanel(container);
+    fireEvent.keyDown(document, { key: "ArrowDown" });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-tomui-part=item]");
+      expect(items[0]?.getAttribute("data-highlighted")).toBe("");
+      expect(items[1]?.hasAttribute("data-highlighted")).toBe(false);
+    });
+
+    fireEvent.keyDown(document, { key: "ArrowDown" });
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-tomui-part=item]");
+      expect(items[0]?.hasAttribute("data-highlighted")).toBe(false);
+      expect(items[1]?.getAttribute("data-highlighted")).toBe("");
+    });
+  });
+
+  it("wraps to the last option when ArrowUp is pressed with nothing active", async () => {
+    const { container } = render(() => (
+      <Combobox>
+        <Combobox.TriggerValue />
+        <Combobox.Content>
+          <Combobox.List items={["alpha", "beta"]}>
+            {(item) => <Combobox.Item value={item} />}
+          </Combobox.List>
+        </Combobox.Content>
+      </Combobox>
+    ));
+
+    await openPanel(container);
+    fireEvent.keyDown(document, { key: "ArrowUp" });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-tomui-part=item]");
+      expect(items[1]?.getAttribute("data-highlighted")).toBe("");
+    });
+  });
+
+  it("highlights an option on hover", async () => {
+    const { container } = render(() => (
+      <Combobox>
+        <Combobox.TriggerValue />
+        <Combobox.Content>
+          <Combobox.List items={["alpha", "beta"]}>
+            {(item) => <Combobox.Item value={item} />}
+          </Combobox.List>
+        </Combobox.Content>
+      </Combobox>
+    ));
+
+    await openPanel(container);
+    const items = container.querySelectorAll("[data-tomui-part=item]");
+    fireEvent.mouseEnter(items[1]!);
+
+    await vi.waitFor(() => {
+      expect(items[1]?.getAttribute("data-highlighted")).toBe("");
+    });
+  });
+
   it("applies a compiled style to each item", async () => {
     const { container } = render(() => (
       <Combobox>

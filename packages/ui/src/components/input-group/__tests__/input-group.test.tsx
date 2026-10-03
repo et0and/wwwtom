@@ -89,6 +89,18 @@ describe("InputGroup", () => {
     expect(container.querySelector("label")?.textContent).toBe("Weight");
   });
 
+  it("associates the Field label with the generated input id", () => {
+    const { container } = render(() => (
+      <InputGroup label="Weight">
+        <InputGroup.Input />
+      </InputGroup>
+    ));
+    const label = container.querySelector("label")!;
+    const input = container.querySelector("input")!;
+    expect(input.id).toBeTruthy();
+    expect(label.getAttribute("for")).toBe(input.id);
+  });
+
   it("applies a different compiled style per size", () => {
     const { container: xs } = render(() => (
       <InputGroup size="xs">

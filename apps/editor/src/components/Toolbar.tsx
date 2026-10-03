@@ -5,6 +5,8 @@ import type { Editor } from "@tiptap/core";
 import { Toolbar } from "@tom/ui/toolbar";
 import { Select } from "@tom/ui/select";
 import { colors } from "@tom/ui/colors.stylex";
+import { layout } from "@tom/ui/primitives.stylex";
+import { fontSizeXs } from "@tom/ui/typography.stylex";
 import { CmsBannerStyleSchema } from "@tom/schemas/cms";
 import type { CmsBannerStyle } from "@tom/schemas/cms";
 
@@ -14,6 +16,9 @@ const styles = stylex.create({
   toolbar: { minWidth: 0, maxWidth: "100%", overflowX: "auto" },
   button: { minHeight: "2.5rem", flexShrink: 0 },
   buttonActive: { backgroundColor: colors["--color-tomui-fill"], fontWeight: 500 },
+  glyphBold: { fontWeight: 700 },
+  glyphItalic: { fontStyle: "italic" },
+  selectLabelText: { ...fontSizeXs },
 });
 
 const BannerAttrsSchema = Schema.Struct({ style: Schema.optional(CmsBannerStyleSchema) });
@@ -99,21 +104,23 @@ const EditorToolbar = (props: {
   ];
 
   return (
-    <div class="editor-toolbar flex flex-wrap items-center gap-2">
+    <div
+      class={`editor-toolbar ${stylex.attrs(layout.flexWrapRow, layout.itemsCenter, layout.gap2).class ?? ""}`}
+    >
       <Toolbar aria-label="Formatting" style={styles.toolbar}>
         <Toolbar.Button
           aria-pressed={boldActive() ? "true" : "false"}
           style={buttonStyle(boldActive())}
           onClick={() => props.editor()?.chain().focus().toggleBold().run()}
         >
-          <span class="font-bold">B</span>
+          <span {...stylex.attrs(styles.glyphBold)}>B</span>
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={italicActive() ? "true" : "false"}
           style={buttonStyle(italicActive())}
           onClick={() => props.editor()?.chain().focus().toggleItalic().run()}
         >
-          <span class="italic">I</span>
+          <span {...stylex.attrs(styles.glyphItalic)}>I</span>
         </Toolbar.Button>
         <Toolbar.Button
           aria-pressed={h1Active() ? "true" : "false"}
@@ -184,7 +191,14 @@ const EditorToolbar = (props: {
         </For>
       </Toolbar>
       <Show when={bannerActive()}>
-        <label class="ml-auto flex items-center gap-1 text-xs">
+        <label
+          {...stylex.attrs(
+            layout.marginLeftAuto,
+            layout.flexRowCentered,
+            layout.gap1,
+            styles.selectLabelText,
+          )}
+        >
           Style
           <Select
             size="sm"
@@ -199,7 +213,14 @@ const EditorToolbar = (props: {
         </label>
       </Show>
       <Show when={codeActive()}>
-        <label class="ml-auto flex items-center gap-1 text-xs">
+        <label
+          {...stylex.attrs(
+            layout.marginLeftAuto,
+            layout.flexRowCentered,
+            layout.gap1,
+            styles.selectLabelText,
+          )}
+        >
           Language
           <Select
             size="sm"

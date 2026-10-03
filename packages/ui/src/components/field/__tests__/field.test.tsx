@@ -87,6 +87,27 @@ describe("Field", () => {
     expect(container.querySelector("input")).not.toBeNull();
   });
 
+  it("gives the label a generated for id when none is supplied", () => {
+    const { container } = render(() => (
+      <Field label="Email">
+        <input type="text" />
+      </Field>
+    ));
+
+    expect(container.querySelector("label")?.getAttribute("for")).toBeTruthy();
+  });
+
+  it("lets a caller-supplied controlId win over the generated one", () => {
+    const { container } = render(() => (
+      <Field label="Email" controlId="custom-email-id">
+        <input type="text" id="custom-email-id" />
+      </Field>
+    ));
+
+    const label = container.querySelector("label")!;
+    expect(label.getAttribute("for")).toBe("custom-email-id");
+  });
+
   it("applies distinct styling when controlFirst is set", () => {
     const normal = classList(
       render(() => <Field label="a">x</Field>).container.querySelector(

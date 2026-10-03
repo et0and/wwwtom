@@ -73,12 +73,24 @@ describe("Switch", () => {
     expect(inputOf(container).getAttribute("aria-busy")).toBe("true");
   });
 
-  it("names the control Switch, because Field does not associate its label", () => {
-    // Field renders a <label> with no `for`, and no aria-labelledby, so the
-    // aria-label below is the only accessible name. It does not pick up the
-    // visible label text. See the a11y note in the migration write-up.
+  it("associates the visible label with the control instead of a hardcoded aria-label", () => {
     const { container } = render(() => <Switch label="Wi-Fi" />);
+    const input = inputOf(container);
+    const label = container.querySelector("label")!;
+
+    expect(label.getAttribute("for")).toBe(input.id);
+    expect(input.id).toBeTruthy();
+    expect(input.getAttribute("aria-label")).toBeNull();
+  });
+
+  it("falls back to a generic aria-label when the switch has no visible label", () => {
+    const { container } = render(() => <Switch />);
     expect(inputOf(container).getAttribute("aria-label")).toBe("Switch");
+  });
+
+  it("lets an explicit aria-label win over the visible label", () => {
+    const { container } = render(() => <Switch label="Wi-Fi" aria-label="Wireless networking" />);
+    expect(inputOf(container).getAttribute("aria-label")).toBe("Wireless networking");
   });
 
   it("renders the thumb next to the track", () => {

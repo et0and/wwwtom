@@ -429,6 +429,7 @@ export function SensitiveInput(props: SensitiveInputProps): JSX.Element {
         labelTooltip={merged.labelTooltip}
         description={merged.description}
         error={normalizeFieldError(merged.error)}
+        controlId={inputId()}
       >
         {input()}
       </Field>

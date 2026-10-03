@@ -357,6 +357,7 @@ function InputGroupRoot(props: InputGroupRootProps): JSX.Element {
         error={normalizeFieldError(merged.error)}
         required={merged.required}
         labelTooltip={merged.labelTooltip}
+        controlId={generatedId}
       >
         {container()}
       </Field>

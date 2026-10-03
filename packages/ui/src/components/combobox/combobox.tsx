@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import {
   createContext,
+  createEffect,
   createSignal,
   For,
   merge,
@@ -151,6 +152,7 @@ const styles = stylex.create({
     padding: "0.375rem 0.5rem",
     fontSize: "0.875rem",
     cursor: "pointer",
+    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-tint"] },
   },
   itemLabel: { gridColumnStart: "1" },
   itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
@@ -204,6 +206,10 @@ interface ComboboxContextValue {
   remove: (value: string) => void;
   clear: () => void;
   listId: string;
+  activeValue: () => string | undefined;
+  setActiveValue: (value: string | undefined) => void;
+  registeredItems: () => Array<string>;
+  registerItems: (items: Array<string>) => void;
 }
 
 const ComboboxContext = createContext<ComboboxContextValue>({
@@ -216,6 +222,10 @@ const ComboboxContext = createContext<ComboboxContextValue>({
   remove: () => undefined,
   clear: () => undefined,
   listId: "tomui-combobox-list",
+  activeValue: () => undefined,
+  setActiveValue: () => undefined,
+  registeredItems: () => [],
+  registerItems: () => undefined,
 });
 
 export type ComboboxRootProps = {
@@ -251,6 +261,8 @@ function Root(props: ComboboxRootProps): JSX.Element {
   );
   const [query, setQuery] = createSignal("");
   const [uncontrolledOpen, setUncontrolledOpen] = createSignal(false);
+  const [activeValue, setActiveValue] = createSignal<string | undefined>(undefined);
+  const [registeredItems, setRegisteredItems] = createSignal<Array<string>>([]);
   const selected = (): Array<string> => toArray(merged.value ?? uncontrolledValue());
   const setSelected = (next: string | Array<string> | undefined): void => {
     if (merged.value === undefined) setUncontrolledValue(next);
@@ -284,6 +296,10 @@ function Root(props: ComboboxRootProps): JSX.Element {
     remove,
     clear,
     listId: "tomui-combobox-list",
+    activeValue,
+    setActiveValue,
+    registeredItems,
+    registerItems: setRegisteredItems,
   };
   return (
     <div data-tomui-component="Combobox" {...stylex.attrs(styles.root, merged.style)}>
@@ -321,8 +337,29 @@ function Content(props: ComboboxContentProps): JSX.Element {
     const onOutside = (event: MouseEvent): void => {
       if (!element.contains(event.target as Node)) ctx.setOpen(false);
     };
+    const moveActive = (delta: number): void => {
+      const items = ctx.registeredItems();
+      if (items.length === 0) return;
+      const current = items.indexOf(ctx.activeValue() ?? "");
+      const base = current === -1 ? (delta > 0 ? -1 : 0) : current;
+      const next = (base + delta + items.length) % items.length;
+      ctx.setActiveValue(items[next]);
+    };
     const onKey = (event: KeyboardEvent): void => {
-      if (event.key === "Escape") ctx.setOpen(false);
+      const items = ctx.registeredItems();
+      if (event.key === "Escape") {
+        ctx.setOpen(false);
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
+        moveActive(1);
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        moveActive(-1);
+      } else if (event.key === "Home") {
+        if (items.length > 0) ctx.setActiveValue(items[0]);
+      } else if (event.key === "End") {
+        if (items.length > 0) ctx.setActiveValue(items[items.length - 1]);
+      }
     };
     document.addEventListener("mousedown", onOutside);
     document.addEventListener("keydown", onKey);
@@ -388,6 +425,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         onInput={(event) => {
           ctx.setQuery(event.currentTarget.value);
           ctx.setOpen(true);
+          ctx.setActiveValue(undefined);
           merged.onInput?.(event);
         }}
         onFocus={(event) => {
@@ -538,6 +576,7 @@ function Item(props: ComboboxItemProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
   const isSelected = (): boolean => ctx.selected().includes(merged.value);
+  const isHighlighted = (): boolean => ctx.activeValue() === merged.value;
   return (
     <button
       data-tomui-component="Combobox"
@@ -545,9 +584,11 @@ function Item(props: ComboboxItemProps): JSX.Element {
       type="button"
       role="option"
       aria-selected={isSelected() ? "true" : "false"}
+      data-highlighted={isHighlighted() ? "" : undefined}
       disabled={merged.disabled}
       {...stylex.attrs(styles.item, merged.style)}
       onClick={() => ctx.select(merged.value)}
+      onMouseEnter={() => ctx.setActiveValue(merged.value)}
     >
       <div {...stylex.attrs(styles.itemLabel)}>{merged.children ?? String(merged.value)}</div>
       <Show when={isSelected()}>
@@ -582,6 +623,12 @@ export type ComboboxListProps = {
 function List(props: ComboboxListProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
+  createEffect(
+    () => merged.items ?? [],
+    (items) => {
+      ctx.registerItems(items);
+    },
+  );
   return (
     <div
       data-tomui-component="Combobox"

@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PageLayout > matches the snapshot 1`] = `
+<div>
+  <div>
+    <!---->
+    <main
+      class="xvueqy4 xr6jg0x xcq0f20"
+      id="main"
+    >
+      <h1>
+        Test content
+      </h1>
+    </main>
+  </div>
+</div>
+`;

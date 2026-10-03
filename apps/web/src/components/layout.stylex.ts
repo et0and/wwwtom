@@ -17,6 +17,27 @@ export const layoutStyles = stylex.create({
   text2xl: { fontSize: "1.5rem", lineHeight: "2rem" },
   /** Fixed row height for the virtualised number list. */
   itemHeight: (height: string) => ({ height }),
+  /** Screen-reader-only text, visually hidden but still announced. */
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: 0,
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    borderWidth: 0,
+  },
+  /** Plain link: no underline at rest, underline on hover. */
+  noUnderlineHover: {
+    textDecorationLine: "none",
+    ":hover": { textDecorationLine: "underline" },
+  },
+  /** `flex: 1 1 0%` — grow to fill remaining space in a flex layout. */
+  flexOne: { flex: "1 1 0%" },
+  minHeightScreen: { minHeight: "100vh" },
+  heightScreen: { height: "100vh" },
 });
 
 /**

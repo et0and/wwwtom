@@ -121,6 +121,25 @@ describe("Radio", () => {
     expect(classList(itemOf(ok))).not.toEqual(classList(itemOf(bad)));
   });
 
+  it("marks the card label selected via data-checked on its input", async () => {
+    const { container } = render(() => (
+      <Radio appearance="card">
+        <Radio.Item value="a" label="A" />
+        <Radio.Item value="b" label="B" />
+      </Radio>
+    ));
+
+    const items = container.querySelectorAll<HTMLInputElement>("[data-tomui-part=item]");
+    expect(items[0]?.getAttribute("data-checked")).toBeNull();
+    expect(items[1]?.getAttribute("data-checked")).toBeNull();
+
+    fireEvent.click(items[1]!);
+    await vi.waitFor(() => {
+      expect(items[0]?.getAttribute("data-checked")).toBeNull();
+      expect(items[1]?.getAttribute("data-checked")).toBe("");
+    });
+  });
+
   it("renders a legend and messages on the group", () => {
     const { container } = render(() => (
       <Radio legend="Pick one" error="Required" description="Choose carefully">

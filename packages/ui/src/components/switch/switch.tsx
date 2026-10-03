@@ -245,12 +245,13 @@ function SwitchControl(props: SwitchProps): JSX.Element {
     },
   );
 
+  // A visible label is associated through Field's `for`/id pairing, so the
+  // accessible name comes from there. Only a genuinely unlabelled switch
+  // needs this fallback.
   const ariaLabel = (): string | undefined => {
     const direct = merged["aria-label"];
-    if (direct === undefined || direct === false) {
-      return isStringValue(merged.label) ? merged.label : "Switch";
-    }
-    return direct;
+    if (direct !== undefined && direct !== false) return direct;
+    return merged.label === undefined ? "Switch" : undefined;
   };
 
   return (
@@ -322,13 +323,12 @@ function SwitchControl(props: SwitchProps): JSX.Element {
   );
 }
 
-function isStringValue(value: JSX.Element | undefined): value is string {
-  return value === String(value);
-}
-
 function SwitchBase(props: SwitchProps): JSX.Element {
   const merged = merge({ controlFirst: true }, props);
   const rest = omit(merged, "label", "labelTooltip", "required", "controlFirst");
+  const generatedId = createUniqueId();
+  const controlId = (): string =>
+    merged.id === undefined || merged.id === false ? generatedId : merged.id;
   return (
     <Show when={merged.label} fallback={<SwitchControl {...rest} />}>
       <Field
@@ -336,8 +336,9 @@ function SwitchBase(props: SwitchProps): JSX.Element {
         required={merged.required}
         labelTooltip={merged.labelTooltip}
         controlFirst={merged.controlFirst}
+        controlId={controlId()}
       >
-        <SwitchControl {...rest} />
+        <SwitchControl {...rest} id={controlId()} label={merged.label} />
       </Field>
     </Show>
   );

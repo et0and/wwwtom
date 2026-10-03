@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect, Option, Schema } from "effect";
 import type { CmsError } from "@tom/types/errors";
@@ -11,6 +12,9 @@ import { Dialog } from "@tom/ui/dialog";
 import { Loader } from "@tom/ui/loader";
 import { Select } from "@tom/ui/select";
 import { Collapsible } from "@tom/ui/collapsible";
+import { layout } from "@tom/ui/primitives.stylex";
+import { textColors } from "@tom/ui/tokens.stylex";
+import { fontSizeSm } from "@tom/ui/typography.stylex";
 import { adapterUrl } from "../lib/api";
 import { runClient } from "@tom/utils/services/http";
 import { toSlug } from "@tom/utils/slug";
@@ -51,6 +55,11 @@ type SaveState =
   | { readonly status: "error"; readonly message: string };
 
 type Panel = "none" | InsertPanel | "code";
+
+const styles = stylex.create({
+  textSm: { ...fontSizeSm },
+  subtleSm: { ...fontSizeSm, color: textColors["--text-color-tomui-subtle"] },
+});
 
 const blankFields: ContentFields = {
   slug: "",
@@ -106,7 +115,7 @@ export const EditorView = (props: {
     <div class="editor-view">
       <Show when={error()}>
         {(message) => (
-          <div class="grid gap-2">
+          <div {...stylex.attrs(layoutStyles.grid, layout.gap2)}>
             <Banner variant="error" description={message()} />
             <Button
               type="button"
@@ -342,12 +351,19 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         <Button type="button" size="sm" variant="ghost" onClick={onBack}>
           ← Back
         </Button>
-        <div class="ml-auto flex flex-wrap items-center gap-2">
+        <div
+          {...stylex.attrs(
+            layoutStyles.marginLeftAuto,
+            layout.flexWrapRow,
+            layoutStyles.itemsCenter,
+            layout.gap2,
+          )}
+        >
           <Show when={handle.dirty()}>
             <Badge variant="warning">Unsaved changes</Badge>
           </Show>
           <Show when={saveState().status === "saving"}>
-            <span class="flex items-center gap-1 text-sm">
+            <span {...stylex.attrs(layout.flexRowCentered, layout.gap1, styles.textSm)}>
               <Loader size="sm" /> Saving…
             </span>
           </Show>
@@ -462,7 +478,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
                 <Collapsible.DefaultPanel>
                   <Show
                     when={allCategories().length > 0}
-                    fallback={<p class="text-sm text-tomui-subtle">No categories yet.</p>}
+                    fallback={<p {...stylex.attrs(styles.subtleSm)}>No categories yet.</p>}
                   >
                     <For each={allCategories()}>
                       {(category) => (
@@ -541,7 +557,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex flex-wrap justify-end gap-2">
+              <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
@@ -574,7 +590,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex flex-wrap justify-end gap-2">
+              <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
@@ -607,7 +623,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex flex-wrap justify-end gap-2">
+              <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>

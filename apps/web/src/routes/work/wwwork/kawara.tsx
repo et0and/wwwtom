@@ -1,10 +1,43 @@
 import { createSignal, Show, For, onSettled, createEffect } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
+import { colors } from "@tom/ui/colors.stylex";
+import { textAlign } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
 import { layoutStyles } from "../../../components/layout.stylex";
+
+const BP_SM = "@media (width >= 40rem)";
+const BP_MD = "@media (width >= 48rem)";
+const BP_LG = "@media (width >= 64rem)";
+const BP_XL = "@media (width >= 80rem)";
+const BP_2XL = "@media (width >= 96rem)";
+
+const styles = stylex.create({
+  centeredScreen: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    height: "100vh",
+  },
+  kawaraContainer: { backgroundColor: colors["--color-white"] },
+  // Tailwind's `container` utility: full width, capped at each breakpoint.
+  kawaraMain: {
+    width: "100%",
+    marginInline: "auto",
+    maxWidth: {
+      default: "none",
+      [BP_SM]: "40rem",
+      [BP_MD]: "48rem",
+      [BP_LG]: "64rem",
+      [BP_XL]: "80rem",
+      [BP_2XL]: "96rem",
+    },
+    lineHeight: "2.5rem",
+  },
+});
 
 const TOTAL_COUNT = 1000000;
 const ITEM_HEIGHT = 40;
@@ -70,7 +103,7 @@ export default function Kawara() {
       <Show
         when={isClient()}
         fallback={
-          <div class="flex justify-center items-center h-screen">
+          <div {...stylex.attrs(styles.centeredScreen)}>
             <Loader />
           </div>
         }
@@ -96,8 +129,10 @@ export default function Kawara() {
 						display: none !important;
 					}
 				`}</style>
-        <div class="kawara-container bg-white">
-          <main class="kawara-main container mx-auto leading-10 text-center">
+        <div class={`kawara-container ${stylex.attrs(styles.kawaraContainer).class ?? ""}`}>
+          <main
+            class={`kawara-main ${stylex.attrs(styles.kawaraMain, textAlign.center).class ?? ""}`}
+          >
             {windowHeight() === 0 ? (
               <div>
                 <Loader />

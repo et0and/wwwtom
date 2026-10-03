@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
@@ -5,9 +6,17 @@ import { BlurInSection } from "~/components/BlurInSection";
 import { BlurInText } from "~/components/BlurInText";
 import { bannerTitleStyles } from "./layout.stylex";
 
+const styles = stylex.create({
+  detailLoading: {
+    marginInline: "auto",
+    padding: "2rem",
+    maxWidth: "750px",
+  },
+});
+
 /** Loading shell for post/work detail pages while the query is pending. */
 export const DetailLoading = () => (
-  <main id="main" class="mx-auto p-8 max-w-[750px]">
+  <main id="main" {...stylex.attrs(styles.detailLoading)}>
     <Loader />
   </main>
 );

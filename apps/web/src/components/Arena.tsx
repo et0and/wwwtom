@@ -1,13 +1,34 @@
+import * as stylex from "@stylexjs/stylex";
 import { useQuery } from "@tanstack/solid-query";
 import { Effect, Option, Schema } from "effect";
 import { For, Show, createEffect, createMemo } from "solid-js";
 import { ArenaContentBlockSchema, type ArenaContentBlock } from "@tom/schemas/arena-content";
 import type { ArenaChannelContents } from "@tom/schemas/arena";
+import { colors } from "@tom/ui/colors.stylex";
 import { Loader } from "@tom/ui/loader";
+import { overflow } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { ContentBlocks } from "~/components/ContentBlocks";
 import { fetchChannelContents } from "~/server/adapter";
 import { layoutStyles } from "./layout.stylex";
+
+const styles = stylex.create({
+  carouselContainer: {
+    overflowX: "auto",
+    whiteSpace: "nowrap",
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: colors["--color-black"],
+  },
+  carouselInner: {
+    display: "inline-flex",
+    gap: "1rem",
+    padding: "1rem",
+  },
+  carouselItem: {
+    width: "20rem",
+  },
+});
 
 interface ArenaCarouselProps {
   slug: string;
@@ -47,11 +68,13 @@ export function ArenaCarousel(props: ArenaCarouselProps) {
   return (
     <Show when={!contentsQuery.isLoading} fallback={<Loader />}>
       <Show when={hasContent()} fallback={<Text variant="secondary">Sorry, no content found</Text>}>
-        <div class="overflow-x-auto whitespace-nowrap border border-black">
-          <div class="carousel-container inline-flex gap-4 p-4">
+        <div {...stylex.attrs(styles.carouselContainer)}>
+          <div class={`carousel-container ${stylex.attrs(styles.carouselInner).class ?? ""}`}>
             <For each={activeContents()?.data || []} keyed={false}>
               {(item) => (
-                <div class="carousel-item flex-shrink-0 w-80">
+                <div
+                  class={`carousel-item ${stylex.attrs(styles.carouselItem, overflow.noShrink).class ?? ""}`}
+                >
                   <ArenaItem item={item()} />
                 </div>
               )}

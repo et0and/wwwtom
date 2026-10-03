@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
-import { merge, omit, Show } from "solid-js";
+import { createUniqueId, merge, omit, Show } from "solid-js";
 import { colors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
@@ -133,6 +133,9 @@ export function Input(props: InputProps): JSX.Element {
     if (rest.required === undefined || rest.required === false) return rest.required;
     return true;
   };
+  const generatedId = createUniqueId();
+  const controlId = (): string =>
+    merged.id === undefined || merged.id === false ? generatedId : merged.id;
   const input = (): JSX.Element => (
     <input
       data-tomui-component="Input"
@@ -150,6 +153,7 @@ export function Input(props: InputProps): JSX.Element {
       data-lpignore={merged.passwordManagerIgnore ? "true" : undefined}
       aria-invalid={merged.error ? "true" : rest["aria-invalid"]}
       {...rest}
+      id={controlId()}
     />
   );
   return (
@@ -160,6 +164,7 @@ export function Input(props: InputProps): JSX.Element {
         labelTooltip={merged.labelTooltip}
         description={merged.description}
         error={normalizeFieldError(merged.error)}
+        controlId={controlId()}
       >
         {input()}
       </Field>

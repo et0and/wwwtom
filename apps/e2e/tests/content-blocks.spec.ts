@@ -53,7 +53,7 @@ test.describe("content blocks", () => {
   });
 
   test("channel block renders the are.na channel embed", async ({ page }) => {
-    const embed = page.locator(".content-blocks div[class*=ring]");
+    const embed = page.locator(".content-blocks [data-slot=channel-embed]");
     await expect(embed).toHaveCount(1);
     await expect(embed.getByRole("link", { name: nestedChannel.title })).toBeVisible();
     await expect(embed.getByText("by Tom Hackshaw")).toBeVisible();

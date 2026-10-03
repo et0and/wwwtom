@@ -1,5 +1,5 @@
 import type { JSX } from "@solidjs/web";
-import { merge, Show } from "solid-js";
+import { createUniqueId, merge, Show } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { weight } from "../../styles/primitives.stylex";
@@ -86,12 +86,16 @@ export type FieldProps = {
   description?: JSX.Element | undefined;
   controlFirst?: boolean | undefined;
   hideLabel?: boolean | undefined;
+  /** Associates the label with its control. Caller-supplied ids win; auto-generated otherwise. */
+  controlId?: string | undefined;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function Field(props: FieldProps): JSX.Element {
   const merged = merge({ controlFirst: false, hideLabel: false }, props);
+  const generatedId = createUniqueId();
+  const controlId = (): string => merged.controlId ?? generatedId;
   const normalized = (): { message: JSX.Element; match: FieldErrorMatch } | undefined =>
     normalizeFieldError(merged.error);
   return (
@@ -104,7 +108,7 @@ export function Field(props: FieldProps): JSX.Element {
       )}
     >
       <Show when={!merged.hideLabel}>
-        <label {...stylex.attrs(styles.label)}>
+        <label for={controlId()} {...stylex.attrs(styles.label)}>
           <Label showOptional={merged.required === false} tooltip={merged.labelTooltip} asContent>
             {merged.label}
           </Label>
