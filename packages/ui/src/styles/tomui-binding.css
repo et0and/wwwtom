@@ -124,3 +124,60 @@
 .tomui-input-placeholder::placeholder {
   color: var(--text-color-tomui-placeholder);
 }
+
+/* InputGroup styles its inner input from which child parts are present.
+   StyleX 0.19 supports no descendant selectors, so these rules stay here.
+   See the addon padding table in input-group.tsx for the per-size values. */
+[data-slot="input-group"]:has([data-slot="input-group-suffix"]) [data-slot="input-group-input"] {
+  field-sizing: content;
+  max-width: 100%;
+  flex-grow: 0;
+  padding-inline-end: 0;
+}
+
+[data-slot="input-group"][data-size="xs"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.25rem;
+}
+
+[data-slot="input-group"][data-size="sm"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.375rem;
+}
+
+[data-slot="input-group"][data-size="base"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.5rem;
+}
+
+[data-slot="input-group"][data-size="lg"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.625rem;
+}
+
+[data-slot="input-group"][data-size="xs"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.25rem;
+}
+
+[data-slot="input-group"][data-size="sm"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.375rem;
+}
+
+[data-slot="input-group"][data-size="base"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.5rem;
+}
+
+[data-slot="input-group"][data-size="lg"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.625rem;
+}
+
+/* The addon ignores pointer events so clicks fall through to the input; the
+   icons and buttons it hosts must take them back. */
+[data-slot="input-group-addon-start"] > *,
+[data-slot="input-group-addon-end"] > * {
+  pointer-events: auto;
+}
