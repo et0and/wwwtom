@@ -1,60 +1,63 @@
+import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { ArrowRightIcon } from "@tom/icons/ArrowRight";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 import { datePickerVariants, type TomuiDatePickerSize } from "../date-picker/date-picker";
-
-export const TOMUI_DATE_RANGE_PICKER_VARIANTS = {
-  size: {
-    sm: { classes: "p-3 gap-2", description: "Compact range picker for tight spaces" },
-    base: { classes: "p-4 gap-2.5", description: "Default range picker size" },
-    lg: {
-      classes: "p-5 gap-3",
-      description: "Large range picker for prominent date selection",
-    },
-  },
-  variant: {
-    default: { classes: "bg-tomui-overlay", description: "Default range picker appearance" },
-    subtle: {
-      classes: "bg-tomui-base",
-      description: "Subtle range picker with minimal background",
-    },
-  },
-} as const;
 
 export const TOMUI_DATE_RANGE_PICKER_DEFAULT_VARIANTS = {
   size: "base",
   variant: "default",
 } as const;
 
-export type TomuiDateRangePickerSize = keyof typeof TOMUI_DATE_RANGE_PICKER_VARIANTS.size;
-export type TomuiDateRangePickerVariant = keyof typeof TOMUI_DATE_RANGE_PICKER_VARIANTS.variant;
+export type TomuiDateRangePickerSize = "sm" | "base" | "lg";
+export type TomuiDateRangePickerVariant = "default" | "subtle";
+
+const styles = stylex.create({
+  root: {
+    display: "flex",
+    width: "fit-content",
+    flexDirection: "column",
+    borderRadius: radius.xl.borderRadius,
+    userSelect: "none",
+  },
+  variantDefault: { backgroundColor: colors["--color-tomui-overlay"] },
+  variantSubtle: { backgroundColor: colors["--color-tomui-base"] },
+  sizeSm: { padding: "0.75rem", gap: "0.5rem" },
+  sizeBase: { padding: "1rem", gap: "0.625rem" },
+  sizeLg: { padding: "1.25rem", gap: "0.75rem" },
+  row: { display: "flex", alignItems: "center", gap: "0.5rem" },
+  alert: { fontSize: "0.75rem", color: textColors["--text-color-tomui-danger"] },
+});
+
+const sizeStyles = {
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+} as const satisfies Record<TomuiDateRangePickerSize, stylex.StyleXStyles>;
+
+const variantStyles = {
+  default: styles.variantDefault,
+  subtle: styles.variantSubtle,
+} as const satisfies Record<TomuiDateRangePickerVariant, stylex.StyleXStyles>;
 
 export function dateRangePickerVariants(
   props: { size?: TomuiDateRangePickerSize; variant?: TomuiDateRangePickerVariant } = {},
-): string {
+) {
   const merged = merge(TOMUI_DATE_RANGE_PICKER_DEFAULT_VARIANTS, props);
-  return cn(
-    "flex w-fit flex-col rounded-xl select-none",
-    resolveVariant(
-      TOMUI_DATE_RANGE_PICKER_VARIANTS.variant,
-      merged.variant,
-      TOMUI_DATE_RANGE_PICKER_DEFAULT_VARIANTS.variant,
-    ).classes,
-    resolveVariant(
-      TOMUI_DATE_RANGE_PICKER_VARIANTS.size,
-      merged.size,
-      TOMUI_DATE_RANGE_PICKER_DEFAULT_VARIANTS.size,
-    ).classes,
-  );
+  return [styles.root, variantStyles[merged.variant], sizeStyles[merged.size]];
 }
 
 export type DateRange = { start?: string | undefined; end?: string | undefined };
 
-export type DateRangePickerProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "onChange"> & {
-  class?: string;
-  inputClass?: string;
+export type DateRangePickerProps = Omit<
+  JSX.HTMLAttributes<HTMLDivElement>,
+  "onChange" | "style"
+> & {
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   size?: TomuiDatePickerSize;
   variant?: TomuiDateRangePickerVariant;
   start?: string;
@@ -73,8 +76,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
   );
   const rest = omit(
     merged,
-    "class",
-    "inputClass",
+    "style",
     "size",
     "variant",
     "start",
@@ -100,17 +102,17 @@ export function DateRangePicker(props: DateRangePickerProps) {
   return (
     <div
       data-tomui-component="DateRangePicker"
-      class={cn(
-        dateRangePickerVariants({ size: rangeSize(), variant: merged.variant }),
-        merged.class,
+      {...stylex.attrs(
+        ...dateRangePickerVariants({ size: rangeSize(), variant: merged.variant }),
+        merged.style,
       )}
       {...rest}
     >
-      <div class="flex items-center gap-2">
+      <div {...stylex.attrs(styles.row)}>
         <input
           type="date"
           aria-label="Start date"
-          class={cn(datePickerVariants({ size: merged.size }), merged.inputClass)}
+          {...stylex.attrs(...datePickerVariants({ size: merged.size }))}
           value={merged.start ?? ""}
           min={merged.min}
           max={merged.end || merged.max}
@@ -120,7 +122,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
         <input
           type="date"
           aria-label="End date"
-          class={cn(datePickerVariants({ size: merged.size }), merged.inputClass)}
+          {...stylex.attrs(...datePickerVariants({ size: merged.size }))}
           value={merged.end ?? ""}
           min={merged.start || merged.min}
           max={merged.max}
@@ -128,7 +130,7 @@ export function DateRangePicker(props: DateRangePickerProps) {
         />
       </div>
       <Show when={isInvalid()}>
-        <p role="alert" class="text-xs text-tomui-danger">
+        <p role="alert" {...stylex.attrs(styles.alert)}>
           Start date must be before end date.
         </p>
       </Show>
