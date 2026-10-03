@@ -51,28 +51,6 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
-  /* Link current variant decoration - different opacities for light/dark */
-  .link-current {
-    text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-  }
-
-  [data-mode="dark"] .link-current {
-    text-decoration-color: color-mix(in oklch, currentColor 65%, transparent);
-  }
-
-  .link-current:hover {
-    text-decoration-color: currentColor;
-  }
-
-  /* External link icon stroke width - thicker in dark mode for visibility */
-  .link-external-icon {
-    stroke-width: 1.75;
-  }
-
-  [data-mode="dark"] .link-external-icon {
-    stroke-width: 2;
-  }
 }
 
 @keyframes bounce-in {
