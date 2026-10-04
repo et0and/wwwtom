@@ -10,94 +10,253 @@
 
 @layer base {
   body {
-    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+    background-color: var(--color-white);
+    color: var(--color-neutral-900);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: var(--color-neutral-950);
+      color: var(--color-neutral-100);
+    }
   }
 }
 
 @layer components {
   .editor-shell {
-    @apply mx-auto max-w-3xl px-4 pb-8 font-sans;
+    margin-left: auto;
+    margin-right: auto;
+    max-width: 48rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-bottom: 2rem;
+    font-family: var(--font-sans);
   }
 
   .signin-view {
-    @apply grid justify-items-center gap-6 py-16 text-center;
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+    text-align: center;
   }
 
   .camus-logo {
-    @apply text-neutral-900 dark:text-neutral-100;
+    color: var(--color-neutral-900);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .camus-logo {
+      color: var(--color-neutral-100);
+    }
   }
 
   .camus-logo > svg {
-    @apply h-20 w-20;
+    height: 5rem;
+    width: 5rem;
   }
 
   .signin-title {
-    @apply text-3xl font-semibold tracking-tight;
+    font-size: 1.875rem;
+    line-height: calc(2.25 / 1.875);
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
   .editor-nav {
-    @apply sticky top-0 z-30 -mx-4 mb-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-neutral-300 bg-white px-4 pt-4 pb-4 dark:border-neutral-700 dark:bg-neutral-950;
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: 0.5rem;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: var(--color-neutral-300);
+    background-color: var(--color-white);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .editor-nav {
+      border-color: var(--color-neutral-700);
+      background-color: var(--color-neutral-950);
+    }
   }
 
   .editor-title {
-    @apply text-xl font-semibold tracking-tight;
+    font-size: 1.25rem;
+    line-height: calc(1.75 / 1.25);
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
   .editor-user {
-    @apply relative ml-auto flex flex-wrap items-center gap-2 text-sm;
+    position: relative;
+    margin-left: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
   }
 
   .avatar {
-    @apply flex h-7 w-7 items-center justify-center rounded-full bg-neutral-900 text-xs font-semibold text-white dark:bg-neutral-100 dark:text-neutral-900;
+    display: flex;
+    height: 1.75rem;
+    width: 1.75rem;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background-color: var(--color-neutral-900);
+    font-size: 12px;
+    line-height: calc(1 / 0.75);
+    font-weight: 600;
+    color: var(--color-white);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .avatar {
+      background-color: var(--color-neutral-100);
+      color: var(--color-neutral-900);
+    }
   }
 
   .content-list-header {
     top: var(--editor-nav-h, 0px);
-    @apply sticky z-20 -mx-4 mb-4 flex items-center justify-between bg-white px-4 py-2 dark:bg-neutral-950;
+    position: sticky;
+    z-index: 20;
+    margin-left: -1rem;
+    margin-right: -1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: var(--color-white);
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .content-list-header {
+      background-color: var(--color-neutral-950);
+    }
   }
 
   .content-rows {
-    @apply divide-y divide-neutral-200 rounded-lg border border-neutral-200 dark:divide-neutral-800 dark:border-neutral-800;
+    border-radius: 0.5rem;
+    border-width: 1px;
+    border-color: var(--color-neutral-200);
+  }
+
+  /* Divider between rows. `:where()` keeps this selector at zero
+     specificity, matching Tailwind's own `divide-y` output. */
+  :where(.content-rows > :not(:last-child)) {
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+    border-color: var(--color-neutral-200);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .content-rows,
+    :where(.content-rows > :not(:last-child)) {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .content-row {
-    @apply flex items-center gap-2 p-2;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
   }
 
   .row-button {
-    @apply flex flex-1 flex-col items-start gap-0.5 text-left hover:bg-neutral-50 dark:hover:bg-neutral-900;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.125rem;
+    text-align: left;
+  }
+
+  @media (hover: hover) {
+    .row-button:hover {
+      background-color: var(--color-neutral-50);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    @media (hover: hover) {
+      .row-button:hover {
+        background-color: var(--color-neutral-900);
+      }
+    }
   }
 
   .row-title {
-    @apply font-medium;
+    font-weight: 500;
   }
 
   .row-meta {
-    @apply text-xs text-neutral-500 dark:text-neutral-400;
+    font-size: 12px;
+    line-height: calc(1 / 0.75);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .row-meta {
+      color: var(--color-neutral-400);
+    }
   }
 
   .editor-topbar {
-    @apply mb-4 flex flex-wrap items-center gap-2;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .editor-layout {
-    @apply grid gap-4;
+    display: grid;
+    gap: 1rem;
   }
 
   .editor-sidebar {
-    @apply grid content-start gap-4;
+    display: grid;
+    align-content: flex-start;
+    gap: 1rem;
   }
 
   .editor-actions {
-    @apply flex flex-wrap items-center gap-2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .editor-categories {
-    @apply grid gap-2;
+    display: grid;
+    gap: 0.5rem;
   }
 
   .editor-main {
-    @apply grid min-w-0 content-start;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
   }
 
   /* Mobile: the toolbar sticks under the nav and wraps instead of scrolling
@@ -107,11 +266,29 @@
       position: sticky;
       top: var(--editor-nav-h, 0px);
       z-index: 10;
-      @apply -mx-4 border-b border-neutral-300 bg-white px-4 py-2 dark:border-neutral-700 dark:bg-neutral-950;
+      margin-left: -1rem;
+      margin-right: -1rem;
+      border-bottom-style: solid;
+      border-bottom-width: 1px;
+      border-color: var(--color-neutral-300);
+      background-color: var(--color-white);
+      padding-left: 1rem;
+      padding-right: 1rem;
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .editor-toolbar {
+        border-color: var(--color-neutral-700);
+        background-color: var(--color-neutral-950);
+      }
     }
 
     .editor-toolbar [data-tomui-component="Toolbar"] {
-      @apply flex w-full flex-wrap;
+      display: flex;
+      width: 100%;
+      flex-wrap: wrap;
     }
 
     .editor-toolbar [data-tomui-component="Toolbar"] > * {
@@ -169,73 +346,164 @@
   }
 
   .editor-fields {
-    @apply grid gap-3;
+    display: grid;
+    gap: 0.75rem;
   }
 
   .field {
-    @apply grid gap-1 text-sm font-medium;
+    display: grid;
+    gap: 0.25rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    font-weight: 500;
   }
 
   .field input[type="text"],
   .field input[type="datetime-local"],
   .field textarea {
-    @apply rounded-md border border-neutral-300 bg-white px-2 py-1.5 text-sm font-normal dark:border-neutral-700 dark:bg-neutral-900;
+    border-radius: 0.375rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-300);
+    background-color: var(--color-white);
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    padding-top: 0.375rem;
+    padding-bottom: 0.375rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    font-weight: 400;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .field input[type="text"],
+    .field input[type="datetime-local"],
+    .field textarea {
+      border-color: var(--color-neutral-700);
+      background-color: var(--color-neutral-900);
+    }
   }
 
   /* File inputs keep a wide intrinsic width ("Choose File No file chosen"),
      which would push the media dialog past narrow viewports. */
   .field input[type="file"] {
-    @apply w-full min-w-0 text-sm font-normal;
+    width: 100%;
+    min-width: 0;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    font-weight: 400;
   }
 
   .check {
-    @apply flex items-center gap-2 text-sm font-normal;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    font-weight: 400;
   }
 
   .tiptap-editor {
-    @apply min-h-64 rounded-b-lg border border-neutral-300 p-3 focus:outline-2 focus:outline-neutral-800 dark:border-neutral-700 dark:focus:outline-neutral-200;
+    min-height: 16rem;
+    border-bottom-right-radius: 0.5rem;
+    border-bottom-left-radius: 0.5rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-300);
+    padding: 0.75rem;
+  }
+
+  .tiptap-editor:focus {
+    outline-style: solid;
+    outline-width: 2px;
+    outline-color: var(--color-neutral-800);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor {
+      border-color: var(--color-neutral-700);
+    }
+
+    .tiptap-editor:focus {
+      outline-color: var(--color-neutral-200);
+    }
   }
 
   /* Canvas typography matches the site scale so the editor reads as the page. */
   .tiptap-editor p {
-    @apply pb-4 tracking-tight;
+    padding-bottom: 1rem;
+    letter-spacing: -0.025em;
   }
 
   .tiptap-editor h1 {
-    @apply pb-2 text-4xl font-medium tracking-tight;
+    padding-bottom: 0.5rem;
+    font-size: 2.25rem;
+    line-height: calc(2.5 / 2.25);
+    font-weight: 500;
+    letter-spacing: -0.025em;
   }
 
   .tiptap-editor h2 {
-    @apply pb-2 tracking-tight;
+    padding-bottom: 0.5rem;
+    letter-spacing: -0.025em;
     font-size: 1.75rem;
     font-weight: 400;
   }
 
   .tiptap-editor h3 {
-    @apply pb-1 text-xl tracking-tight;
+    padding-bottom: 0.25rem;
+    font-size: 1.25rem;
+    line-height: calc(1.75 / 1.25);
+    letter-spacing: -0.025em;
   }
 
   .tiptap-editor h4 {
-    @apply pb-1 text-lg tracking-tight;
+    padding-bottom: 0.25rem;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
   }
 
   .tiptap-editor hr {
-    @apply my-6 border-neutral-300 dark:border-neutral-700;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-color: var(--color-neutral-300);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor hr {
+      border-color: var(--color-neutral-700);
+    }
   }
 
   .tiptap-editor a {
-    @apply underline;
+    text-decoration-line: underline;
   }
 
   /* Pull quotes mirror the site scale so they read as quotes while editing. */
   .tiptap-editor blockquote,
   .preview blockquote {
-    @apply my-8 border-l-2 border-neutral-300 pl-5 text-base leading-normal tracking-tight dark:border-neutral-700;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+    border-left-style: solid;
+    border-left-width: 2px;
+    border-color: var(--color-neutral-300);
+    padding-left: 1.25rem;
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor blockquote,
+    .preview blockquote {
+      border-color: var(--color-neutral-700);
+    }
   }
 
   .tiptap-editor blockquote > p:last-child,
   .preview blockquote > p:last-child {
-    @apply pb-0;
+    padding-bottom: 0;
   }
 
   /* CMS banners mirror the site's banner idiom (hairline + badge).
@@ -318,15 +586,26 @@
 
   /* Media figures match the site: rounded image, centered caption. */
   .tiptap-editor figure {
-    @apply my-4;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
   .tiptap-editor img {
-    @apply rounded-md;
+    border-radius: 0.375rem;
   }
 
   .tiptap-editor figcaption {
-    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor figcaption {
+      color: var(--color-neutral-400);
+    }
   }
 
   /* Arena embeds render as carousels on the site; the canvas shows a
@@ -341,7 +620,19 @@
 
   .tiptap-editor [data-arena],
   .tiptap-editor figure[data-media-id] {
-    @apply my-2 border border-dashed border-neutral-400 p-2 dark:border-neutral-600;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    border-style: dashed;
+    border-width: 1px;
+    border-color: var(--color-neutral-400);
+    padding: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .tiptap-editor [data-arena],
+    .tiptap-editor figure[data-media-id] {
+      border-color: var(--color-neutral-600);
+    }
   }
 
   /* Code in the canvas matches the site code-block treatment. Shiki
@@ -392,7 +683,21 @@
   }
 
   .preview pre {
-    @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    overflow-x: auto;
+    border-radius: 0.375rem;
+    background-color: var(--color-neutral-900);
+    padding: 0.75rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: var(--color-neutral-100);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview pre {
+      background-color: var(--color-black);
+    }
   }
 
   /* Shiki output in previews mirrors the site's code treatment. */
@@ -471,27 +776,49 @@
   }
 
   .editor-panels {
-    @apply mt-3 grid gap-2;
+    margin-top: 0.75rem;
+    display: grid;
+    gap: 0.5rem;
   }
 
   .panel {
-    @apply grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+    display: grid;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-200);
+    padding: 0.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .panel {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .categories-view {
-    @apply grid gap-4;
+    display: grid;
+    gap: 1rem;
   }
 
   .categories-layout {
-    @apply grid min-w-0 content-start gap-4;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
+    gap: 1rem;
   }
 
   .categories-list {
-    @apply grid min-w-0 content-start;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
   }
 
   .categories-form {
-    @apply grid min-w-0 content-start;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
   }
 
   @media (min-width: 1024px) {
@@ -515,19 +842,28 @@
   }
 
   .media-view {
-    @apply grid gap-4;
+    display: grid;
+    gap: 1rem;
   }
 
   .media-layout {
-    @apply grid min-w-0 content-start gap-4;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
+    gap: 1rem;
   }
 
   .media-sidebar {
-    @apply grid min-w-0 content-start gap-4;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
+    gap: 1rem;
   }
 
   .media-results {
-    @apply grid min-w-0 content-start;
+    display: grid;
+    min-width: 0;
+    align-content: flex-start;
   }
 
   @media (min-width: 1024px) {
@@ -550,112 +886,285 @@
   }
 
   .media-grid {
-    @apply grid grid-cols-2 gap-3 sm:grid-cols-3;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 40rem) {
+    .media-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
   }
 
   .media-card {
-    @apply grid content-start gap-1 rounded-lg border border-neutral-200 p-2 dark:border-neutral-800;
+    display: grid;
+    align-content: flex-start;
+    gap: 0.25rem;
+    border-radius: 0.5rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-200);
+    padding: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .media-card {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .media-thumb {
-    @apply aspect-square w-full rounded-md object-cover;
+    aspect-ratio: 1 / 1;
+    width: 100%;
+    border-radius: 0.375rem;
+    object-fit: cover;
   }
 
   .media-name {
-    @apply truncate text-xs text-neutral-500 dark:text-neutral-400;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 12px;
+    line-height: calc(1 / 0.75);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .media-name {
+      color: var(--color-neutral-400);
+    }
   }
 
   .media-actions {
-    @apply flex gap-2;
+    display: flex;
+    gap: 0.5rem;
   }
 
   .media-picker {
-    @apply grid gap-2 border-t border-neutral-200 pt-2 dark:border-neutral-800;
+    display: grid;
+    gap: 0.5rem;
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-color: var(--color-neutral-200);
+    padding-top: 0.5rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .media-picker {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .media-pick {
-    @apply grid cursor-pointer content-start gap-1 rounded-lg border border-neutral-200 bg-transparent p-2 text-left hover:bg-neutral-100 dark:border-neutral-800 dark:hover:bg-neutral-900;
+    display: grid;
+    cursor: pointer;
+    align-content: flex-start;
+    gap: 0.25rem;
+    border-radius: 0.5rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-200);
+    background-color: transparent;
+    padding: 0.5rem;
+    text-align: left;
+  }
+
+  @media (hover: hover) {
+    .media-pick:hover {
+      background-color: var(--color-neutral-100);
+    }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .media-pick {
+      border-color: var(--color-neutral-800);
+    }
+
+    @media (hover: hover) {
+      .media-pick:hover {
+        background-color: var(--color-neutral-900);
+      }
+    }
   }
 
   .media-usage {
-    @apply grid gap-1 text-left text-sm;
+    display: grid;
+    gap: 0.25rem;
+    text-align: left;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
   }
 
   .history-panel {
-    @apply grid gap-2 rounded-lg border border-neutral-200 p-3 dark:border-neutral-800;
+    display: grid;
+    gap: 0.5rem;
+    border-radius: 0.5rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-200);
+    padding: 0.75rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .history-panel {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .history-rows {
-    @apply grid max-h-64 gap-1 overflow-y-auto;
+    display: grid;
+    max-height: 16rem;
+    gap: 0.25rem;
+    overflow-y: auto;
   }
 
   .history-title {
-    @apply text-sm font-medium;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    font-weight: 500;
   }
 
   .history-meta {
-    @apply text-xs text-neutral-500 dark:text-neutral-400;
+    font-size: 12px;
+    line-height: calc(1 / 0.75);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .history-meta {
+      color: var(--color-neutral-400);
+    }
   }
 
   .history-empty {
-    @apply text-sm text-neutral-500 dark:text-neutral-400;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .history-empty {
+      color: var(--color-neutral-400);
+    }
   }
 
   .history-preview {
-    @apply grid gap-2;
+    display: grid;
+    gap: 0.5rem;
   }
 
   .history-preview .preview {
-    @apply mt-0;
+    margin-top: 0;
   }
 
   /* Post preview renders the exact HTML the site serves. */
   .preview {
-    @apply mt-3 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800;
+    margin-top: 0.75rem;
+    border-radius: 0.5rem;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--color-neutral-200);
+    padding: 1rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview {
+      border-color: var(--color-neutral-800);
+    }
   }
 
   .preview p {
-    @apply pb-4 tracking-tight;
+    padding-bottom: 1rem;
+    letter-spacing: -0.025em;
   }
 
   .preview h1 {
-    @apply pb-2 text-3xl font-medium tracking-tight;
+    padding-bottom: 0.5rem;
+    font-size: 1.875rem;
+    line-height: calc(2.25 / 1.875);
+    font-weight: 500;
+    letter-spacing: -0.025em;
   }
 
   .preview h2 {
-    @apply pb-2 text-2xl tracking-tight;
+    padding-bottom: 0.5rem;
+    font-size: 1.5rem;
+    line-height: calc(2 / 1.5);
+    letter-spacing: -0.025em;
   }
 
   .preview h3 {
-    @apply pb-1 text-xl tracking-tight;
+    padding-bottom: 0.25rem;
+    font-size: 1.25rem;
+    line-height: calc(1.75 / 1.25);
+    letter-spacing: -0.025em;
   }
 
   .preview h4 {
-    @apply pb-1 text-lg tracking-tight;
+    padding-bottom: 0.25rem;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
   }
 
   .preview hr {
-    @apply my-6 border-neutral-300 dark:border-neutral-700;
+    margin-top: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-color: var(--color-neutral-300);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview hr {
+      border-color: var(--color-neutral-700);
+    }
   }
 
   .preview a {
-    @apply underline;
+    text-decoration-line: underline;
   }
 
   .preview figure {
-    @apply my-4;
+    margin-top: 1rem;
+    margin-bottom: 1rem;
   }
 
   .preview img {
-    @apply rounded-md;
+    border-radius: 0.375rem;
   }
 
   .preview figcaption {
-    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview figcaption {
+      color: var(--color-neutral-400);
+    }
   }
 
   .preview [data-arena] {
-    @apply my-3 rounded-md border border-dashed border-neutral-400 p-3 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400;
+    margin-top: 0.75rem;
+    margin-bottom: 0.75rem;
+    border-radius: 0.375rem;
+    border-style: dashed;
+    border-width: 1px;
+    border-color: var(--color-neutral-400);
+    padding: 0.75rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .preview [data-arena] {
+      border-color: var(--color-neutral-600);
+      color: var(--color-neutral-400);
+    }
   }
 }
 

@@ -28,119 +28,248 @@
 
 @layer base {
   body {
-    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+    background-color: var(--color-white);
+    color: var(--color-neutral-900);
     font-family: "Quattrocento", Georgia, "Times New Roman", serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: var(--color-neutral-950);
+      color: var(--color-neutral-100);
+    }
   }
 }
 
 @layer components {
   .sophie-shell {
-    @apply mx-auto flex min-h-screen max-w-2xl flex-col px-4;
+    margin-inline: auto;
+    display: flex;
+    min-height: 100vh;
+    max-width: var(--container-2xl);
+    flex-direction: column;
+    padding-inline: calc(var(--spacing) * 4);
   }
 
   .sophie-main {
-    @apply flex-1 pb-16;
+    flex: 1;
+    padding-bottom: calc(var(--spacing) * 16);
   }
 
   .sophie-footer {
-    @apply py-6 text-sm text-neutral-500 dark:text-neutral-400;
+    padding-block: calc(var(--spacing) * 6);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-footer {
+      color: var(--color-neutral-400);
+    }
   }
 
   .sophie-nav {
-    @apply flex items-baseline gap-4 py-6 text-sm;
+    display: flex;
+    align-items: baseline;
+    gap: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 6);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
   }
 
   .sophie-nav a {
-    @apply cursor-pointer hover:underline;
+    cursor: pointer;
+  }
+
+  .sophie-nav a:hover {
+    text-decoration-line: underline;
   }
 
   .sophie-wordmark {
-    @apply text-xl font-semibold tracking-tight;
+    font-size: var(--text-xl);
+    line-height: var(--text-xl--line-height);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-about {
-    @apply ml-auto;
+    margin-left: auto;
   }
 
   .sophie-title {
-    @apply pb-2 text-3xl font-semibold tracking-tight;
+    padding-bottom: calc(var(--spacing) * 2);
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl--line-height);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-crumbs {
-    @apply pb-4;
+    padding-bottom: calc(var(--spacing) * 4);
   }
 
   .sophie-post {
-    @apply block cursor-pointer py-6 no-underline hover:underline;
+    display: block;
+    cursor: pointer;
+    padding-block: calc(var(--spacing) * 6);
+    text-decoration-line: none;
+  }
+
+  .sophie-post:hover {
+    text-decoration-line: underline;
   }
 
   .sophie-post h2 {
-    @apply text-xl font-bold tracking-tight;
+    font-size: var(--text-xl);
+    line-height: var(--text-xl--line-height);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-meta {
-    @apply text-sm text-neutral-500 dark:text-neutral-400;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-meta {
+      color: var(--color-neutral-400);
+    }
   }
 
   .sophie-filter {
-    @apply cursor-pointer text-sm hover:underline;
+    cursor: pointer;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+  }
+
+  .sophie-filter:hover {
+    text-decoration-line: underline;
   }
 
   /* Post HTML mirrors the editor preview scale, so posts read as authored. */
   .sophie-body {
-    @apply grid gap-4 leading-relaxed;
+    display: grid;
+    gap: calc(var(--spacing) * 4);
+    line-height: var(--leading-relaxed);
   }
 
   .sophie-body p {
-    @apply tracking-tight;
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-body h1 {
-    @apply pb-2 text-3xl font-medium tracking-tight;
+    padding-bottom: calc(var(--spacing) * 2);
+    font-size: var(--text-3xl);
+    line-height: var(--text-3xl--line-height);
+    font-weight: var(--font-weight-medium);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-body h2 {
-    @apply pt-4 pb-2 text-2xl tracking-tight;
+    padding-top: calc(var(--spacing) * 4);
+    padding-bottom: calc(var(--spacing) * 2);
+    font-size: var(--text-2xl);
+    line-height: var(--text-2xl--line-height);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-body h3 {
-    @apply pt-2 pb-1 text-xl tracking-tight;
+    padding-top: calc(var(--spacing) * 2);
+    padding-bottom: var(--spacing);
+    font-size: var(--text-xl);
+    line-height: var(--text-xl--line-height);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-body h4 {
-    @apply pt-2 pb-1 text-lg tracking-tight;
+    padding-top: calc(var(--spacing) * 2);
+    padding-bottom: var(--spacing);
+    font-size: var(--text-lg);
+    line-height: var(--text-lg--line-height);
+    letter-spacing: var(--tracking-tight);
   }
 
   .sophie-body a {
-    @apply underline;
+    text-decoration-line: underline;
   }
 
   .sophie-body hr {
-    @apply my-6 border-neutral-300 dark:border-neutral-700;
+    margin-block: calc(var(--spacing) * 6);
+    border-color: var(--color-neutral-300);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body hr {
+      border-color: var(--color-neutral-700);
+    }
   }
 
   .sophie-body blockquote {
-    @apply my-8 border-l-2 border-neutral-300 pl-5 text-base leading-normal tracking-tight dark:border-neutral-700;
+    margin-block: calc(var(--spacing) * 8);
+    border-left-width: 2px;
+    border-color: var(--color-neutral-300);
+    padding-left: calc(var(--spacing) * 5);
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    letter-spacing: var(--tracking-tight);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body blockquote {
+      border-color: var(--color-neutral-700);
+    }
   }
 
   .sophie-body figure {
-    @apply my-4;
+    margin-block: calc(var(--spacing) * 4);
   }
 
   .sophie-body img {
-    @apply rounded-md;
+    border-radius: var(--radius-md);
   }
 
   .sophie-body figcaption {
-    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+    margin-top: calc(var(--spacing) * 2);
+    text-align: center;
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body figcaption {
+      color: var(--color-neutral-400);
+    }
   }
 
   .sophie-body .banner {
-    @apply my-2 flex w-full items-baseline gap-2 border-b border-neutral-300 pb-2 dark:border-neutral-700;
+    margin-block: calc(var(--spacing) * 2);
+    display: flex;
+    width: 100%;
+    align-items: baseline;
+    gap: calc(var(--spacing) * 2);
+    border-bottom-width: 1px;
+    border-color: var(--color-neutral-300);
+    padding-bottom: calc(var(--spacing) * 2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body .banner {
+      border-color: var(--color-neutral-700);
+    }
   }
 
   .sophie-body .banner-title {
-    @apply shrink-0 px-2 py-1 text-sm font-semibold tracking-tight;
+    flex-shrink: 0;
+    padding-inline: calc(var(--spacing) * 2);
+    padding-block: var(--spacing);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: var(--tracking-tight);
     background-color: rgb(230, 216, 226);
   }
 
@@ -151,11 +280,39 @@
   }
 
   .sophie-body [data-arena] {
-    @apply my-3 rounded-md border border-dashed border-neutral-400 p-3 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400;
+    margin-block: calc(var(--spacing) * 3);
+    border-radius: var(--radius-md);
+    border-width: 1px;
+    border-style: dashed;
+    border-color: var(--color-neutral-400);
+    padding: calc(var(--spacing) * 3);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body [data-arena] {
+      border-color: var(--color-neutral-600);
+      color: var(--color-neutral-400);
+    }
   }
 
   .sophie-body pre {
-    @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
+    margin-block: calc(var(--spacing) * 3);
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    background-color: var(--color-neutral-900);
+    padding: calc(var(--spacing) * 3);
+    font-size: var(--text-sm);
+    line-height: var(--text-sm--line-height);
+    color: var(--color-neutral-100);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body pre {
+      background-color: var(--color-black);
+    }
   }
 
   .sophie-body pre code {
@@ -163,11 +320,31 @@
   }
 
   .sophie-body .code-block {
-    @apply relative my-6;
+    position: relative;
+    margin-block: calc(var(--spacing) * 6);
   }
 
   .sophie-body .code-filename {
-    @apply rounded-t-lg border border-b-0 border-neutral-200 bg-neutral-100 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400;
+    border-top-left-radius: var(--radius-lg);
+    border-top-right-radius: var(--radius-lg);
+    border-width: 1px;
+    border-bottom-width: 0;
+    border-color: var(--color-neutral-200);
+    background-color: var(--color-neutral-100);
+    padding-inline: calc(var(--spacing) * 4);
+    padding-block: calc(var(--spacing) * 2);
+    font-size: var(--text-xs);
+    line-height: var(--text-xs--line-height);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-neutral-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body .code-filename {
+      border-color: var(--color-neutral-700);
+      background-color: var(--color-neutral-800);
+      color: var(--color-neutral-400);
+    }
   }
 }
 
