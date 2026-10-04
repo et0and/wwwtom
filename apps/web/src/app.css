@@ -1,6 +1,13 @@
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
 
+/* Prose defaults for markdown-rendered HTML, declared first so they sit
+   below every StyleX layer. Under Tailwind these lost to `!text-*`
+   utilities on components; StyleX has no `!important`, so the layer order
+   has to do that work instead. Without it a bare `h1` rule outranks the
+   nav brand's generated class and the heading jumps to 36px. */
+@layer prose;
+
 @stylex;
 
 :root {
@@ -14,43 +21,45 @@
   }
 }
 
-p {
-  letter-spacing: -0.05em;
-  padding-bottom: 1rem;
-}
+@layer prose {
+  p {
+    letter-spacing: -0.05em;
+    padding-bottom: 1rem;
+  }
 
-h1 {
-  font-size: 2.25rem;
-  font-weight: 500;
-  letter-spacing: -0.05em;
-}
+  h1 {
+    font-size: 2.25rem;
+    font-weight: 500;
+    letter-spacing: -0.05em;
+  }
 
-h2 {
-  font-size: 1.75rem;
-  font-weight: 400;
-  letter-spacing: -0.05em;
-}
+  h2 {
+    font-size: 1.75rem;
+    font-weight: 400;
+    letter-spacing: -0.05em;
+  }
 
-ul {
-  list-style-type: disc;
-  list-style-position: inside;
-}
+  ul {
+    list-style-type: disc;
+    list-style-position: inside;
+  }
 
-li {
-  letter-spacing: -0.05em;
-}
+  li {
+    letter-spacing: -0.05em;
+  }
 
-figcaption {
-  font-size: 0.875rem;
-  letter-spacing: -0.05em;
-  color: #6b7280;
-  margin-top: 0.5rem;
-  text-align: center;
-}
-
-@media (prefers-color-scheme: dark) {
   figcaption {
-    color: #9ca3af;
+    font-size: 0.875rem;
+    letter-spacing: -0.05em;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    figcaption {
+      color: #9ca3af;
+    }
   }
 }
 
