@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { expectNoPageErrors, fetchWithBackoff, gotoWithBackoff } from "../src/helpers";
+import { expectNoPageErrors } from "../src/helpers";
 
 /**
  * Content-agnostic smoke tests against the deployed staging site. These
@@ -7,10 +7,9 @@ import { expectNoPageErrors, fetchWithBackoff, gotoWithBackoff } from "../src/he
  * pass against whatever real data the staging stage holds.
  *
  * CI runs the suite from GitHub-hosted runner IPs, which Cloudflare bot
- * protection intermittently fast-blocks (403) or answers with its Managed
- * Challenge interstitial. The fetch/goto helpers below back off and retry
- * on those transient responses; config-level retries (staging config) cover
- * the remaining tests.
+ * protection intermittently challenges or fast-blocks. Retries come from the
+ * staging Playwright config (`retries: 2` on CI); nothing in a spec re-issues
+ * a request to work around it.
  */
 
 const expectNoErrors = async (page: Page): Promise<void> => {
@@ -34,15 +33,12 @@ test.describe("staging site chrome", () => {
   });
 
   test("static routes render their headings", async ({ page }) => {
-    // Backoff retries against the challenge interstitial can add ~14s per
-    // challenged route, so this loop gets a budget beyond the 30s default.
-    test.setTimeout(60_000);
     for (const [path, heading] of [
       ["/about", "About"],
       ["/accessibility", "Accessibility"],
       ["/worktable", "Worktable"],
     ] as const) {
-      await gotoWithBackoff(page, path);
+      await page.goto(path);
       await expect(page.getByRole("heading", { name: heading, level: 1 })).toBeVisible();
       await expectNoErrors(page);
     }
@@ -56,6 +52,25 @@ test.describe("staging site chrome", () => {
   });
 });
 
+test.describe("staging writing index", () => {
+  test("every post card shows a published date", async ({ page }) => {
+    // A post card with a missing date still looks fine — the title and
+    // summary are there, only the <time> is empty. This asserts one
+    // formatted date per card so a client that revives wire timestamps into
+    // Date objects fails here instead of shipping silently.
+    await page.goto("/posts");
+
+    const cards = page.locator("main a.page");
+    const cardCount = await cards.count();
+    expect(cardCount, "the stage must hold at least one post").toBeGreaterThan(0);
+
+    const dates = await page.locator("main a.page time").allTextContents();
+    expect(dates, "every post card renders one date").toHaveLength(cardCount);
+    for (const date of dates) expect(date.trim()).toMatch(/^\d{1,2} \p{L}+ \d{4}$/u);
+    await expectNoErrors(page);
+  });
+});
+
 test.describe("staging public endpoints", () => {
   test("robots.txt is served", async ({ request }) => {
     const response = await request.get("/robots.txt");
@@ -65,7 +80,7 @@ test.describe("staging public endpoints", () => {
   });
 
   test("the RSS feed is valid XML with posts from the stage's CMS", async ({ request }) => {
-    const response = await fetchWithBackoff(request, "/feed.xml");
+    const response = await request.get("/feed.xml");
     expect(response.status()).toBe(200);
     expect(response.headers()["content-type"]).toContain("application/rss+xml");
     const body = await response.text();
@@ -75,7 +90,7 @@ test.describe("staging public endpoints", () => {
   });
 
   test("the sitemap lists live URLs", async ({ request }) => {
-    const response = await fetchWithBackoff(request, "/sitemap.xml");
+    const response = await request.get("/sitemap.xml");
     expect(response.status()).toBe(200);
     const body = await response.text();
     expect(body).toContain('<?xml version="1.0"');
@@ -97,8 +112,7 @@ test.describe("staging public endpoints", () => {
     // asserting the stage's direct endpoint keeps this check independent
     // of the production deploy state.
     const adapter = process.env.E2E_STAGING_ADAPTER_URL ?? "https://staging-adapter.tom.so";
-    const response = await fetchWithBackoff(
-      request,
+    const response = await request.get(
       `${adapter}/og?title=Home&summary=Tom%20Hackshaw%20is%20a%20design%20engineer%20from%20Aotearoa%2C%20New%20Zealand`,
     );
     expect(response.status(), "stage og image must generate").toBe(200);

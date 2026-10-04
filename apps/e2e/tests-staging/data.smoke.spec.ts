@@ -1,5 +1,5 @@
 import { test, expect, type Page } from "@playwright/test";
-import { expectNoPageErrors, fetchWithBackoff } from "../src/helpers";
+import { expectNoPageErrors } from "../src/helpers";
 
 /**
  * Real-data flows against the staging stage: list pages hydrate live CMS /
@@ -70,7 +70,7 @@ test.describe("staging real data", () => {
     await expect
       .poll(
         async () => {
-          const response = await fetchWithBackoff(request, `${adapter}/guestbook/entries`);
+          const response = await request.get(`${adapter}/guestbook/entries`);
           const body = await response.json().catch(() => null);
           return { status: response.status(), isList: Array.isArray(body) };
         },
