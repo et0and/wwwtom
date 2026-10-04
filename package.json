@@ -26,6 +26,7 @@
     "deploy:api": "pnpm --filter @tom/infra run deploy:api",
     "deploy:adapter": "pnpm --filter @tom/infra run deploy:adapter",
     "deploy:runner": "pnpm --filter @tom/infra run deploy:runner",
+    "deploy:preview": "pnpm --filter @tom/infra run deploy:preview",
     "deploy:storybook": "pnpm --filter @tom/infra run deploy:storybook",
     "deploy:turbo": "pnpm --filter @tom/infra run deploy:turbo",
     "destroy": "pnpm run destroy:web && pnpm run destroy:adapter && pnpm run destroy:api && pnpm run destroy:turbo && pnpm run destroy:shared",
