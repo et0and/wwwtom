@@ -43,7 +43,39 @@ jobs:
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
-          pnpm deploy:sophie --yes
+          pnpm deploy:sophie --yes &&
+          pnpm deploy:preview --yes
+  smoke:
+    name: Smoke test the preview
+    runs-on: ubuntu-latest
+    needs: deploy
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+        with:
+          install-playwright: "true"
+      - name: Run staging smoke suite against the preview
+        run: pnpm --filter @tom/e2e test:e2e:staging
+        env:
+          CI: "true"
+          E2E_STAGING_URL: https://pr-${{ github.event.pull_request.number }}-web.tom.so
+          E2E_STAGING_ADAPTER_URL: https://pr-${{ github.event.pull_request.number }}-adapter.tom.so
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preview-smoke-report
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: preview-smoke-test-results
+          path: apps/e2e/test-results/
+          retention-days: 7
   destroy:
     name: Destroy PR preview
     runs-on: ubuntu-latest

@@ -1,7 +1,6 @@
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as GitHub from "alchemy/GitHub";
 import { ALCHEMY_DEV } from "alchemy";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
@@ -9,7 +8,6 @@ import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
 import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
-import { previewComment } from "../utils/github/preview-comment.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
 
@@ -52,12 +50,11 @@ export const web = Effect.gen(function* () {
 export default Stack(
   "wwwtom-web",
   {
-    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()) as never,
+    providers: Cloudflare.providers() as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
     const app = yield* web;
-    yield* previewComment({ name: "Web", url: app.url });
 
     return {
       url: app.url,

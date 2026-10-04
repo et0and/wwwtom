@@ -28,18 +28,21 @@ const appStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
 export const deployStacks = [...appStacks, "storybook"] as const;
 
 /**
- * Alchemy stacks a PR preview provisions. Storybook has its own preview
- * workflow, so it is left out here to keep two runs off one stage.
+ * Alchemy stacks a PR preview provisions. The `preview` stack owns the
+ * consolidated PR comment and runs last, so its links are live when it posts.
+ * Storybook has its own preview workflow, so it is left out here to keep two
+ * runs off one stage.
  */
-export const previewStacks = appStacks;
+export const previewStacks = [...appStacks, "preview"] as const;
 
 export type DeployStack = (typeof deployStacks)[number];
+export type PreviewStack = (typeof previewStacks)[number];
 
 /**
  * Chain the per-stack Alchemy deploy scripts. Later stacks depend on earlier
  * ones, so each command runs only when its predecessor succeeds.
  */
-export const deployChain = (stacks: ReadonlyArray<DeployStack>): string =>
+export const deployChain = (stacks: ReadonlyArray<DeployStack | PreviewStack>): string =>
   stacks.map((stack) => `pnpm deploy:${stack} --yes`).join(" &&\n");
 
 /**

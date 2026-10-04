@@ -6,6 +6,16 @@ const prNumberExpression = ex("github.event.pull_request.number");
 
 export const prStage = `pr-${prNumberExpression}`;
 
+/**
+ * Preview hosts, matching `stageWebHost` / `stageHost` in
+ * `infra/shared.run.ts`. The smoke suite points at the deployed stack rather
+ * than the local fixture store, so a broken preview fails the PR instead of
+ * only failing for whoever opens the link.
+ */
+export const previewWebUrl = `https://pr-${prNumberExpression}-web.tom.so`;
+
+export const previewAdapterUrl = `https://pr-${prNumberExpression}-adapter.tom.so`;
+
 export const previewConcurrencyGroup = `preview-${prNumberExpression}`;
 
 export const storybookPreviewConcurrencyGroup = `storybook-preview-${prNumberExpression}`;

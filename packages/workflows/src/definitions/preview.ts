@@ -1,18 +1,22 @@
-import { run, workflow } from "../builders";
-import { checkout, setupStep } from "../catalog/actions";
+import { run, step, workflow } from "../builders";
+import { actionPins, checkout, setupStep } from "../catalog/actions";
 import { deployChain, previewStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
 import {
   closedAction,
   notClosedAction,
+  previewAdapterUrl,
   previewConcurrencyGroup,
   previewEnv,
+  previewWebUrl,
   prStage,
 } from "../catalog/preview";
 
 /**
  * PR preview: deploy the full stack on every push to a PR, tear it down when
- * the PR closes. Preview stacks post their own comment links through the
- * preview-comment resource.
+ * the PR closes, then smoke-test what was actually deployed.
+ *
+ * The comment is posted by the `preview` stack, which runs last in the chain
+ * and owns a single consolidated comment for the whole stage.
  */
 export const preview = workflow("preview", {
   name: "PR preview",
@@ -36,6 +40,51 @@ export const preview = workflow("preview", {
         checkout("Checkout", { "fetch-depth": 0 }),
         setupStep(),
         run("Deploy preview stage", deployChain(previewStacks)),
+      ],
+    },
+    smoke: {
+      // The fixture e2e suite proves the code works; only this proves the
+      // deployed preview works. Without it a green PR can still point at a
+      // broken stage.
+      needs: "deploy",
+      name: "Smoke test the preview",
+      "runs-on": "ubuntu-latest",
+      "timeout-minutes": 15,
+      steps: [
+        checkout(),
+        setupStep({ "install-playwright": "true" }),
+        step({
+          name: "Run staging smoke suite against the preview",
+          // Same content-agnostic suite as the nightly staging run, aimed at
+          // this PR's hosts. `CI` turns on the config retries that absorb
+          // Cloudflare bot protection from a runner IP.
+          run: "pnpm --filter @tom/e2e test:e2e:staging",
+          env: {
+            CI: "true",
+            E2E_STAGING_URL: previewWebUrl,
+            E2E_STAGING_ADAPTER_URL: previewAdapterUrl,
+          },
+        }),
+        step({
+          name: "Upload Playwright report",
+          if: "failure()",
+          uses: actionPins.uploadArtifact,
+          with: {
+            name: "preview-smoke-report",
+            path: "apps/e2e/playwright-report/",
+            "retention-days": 7,
+          },
+        }),
+        step({
+          name: "Upload test traces",
+          if: "failure()",
+          uses: actionPins.uploadArtifact,
+          with: {
+            name: "preview-smoke-test-results",
+            path: "apps/e2e/test-results/",
+            "retention-days": 7,
+          },
+        }),
       ],
     },
     destroy: {
