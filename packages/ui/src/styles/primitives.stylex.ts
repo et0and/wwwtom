@@ -112,11 +112,18 @@ export const radius = stylex.create({
 });
 
 /** Font weights. Headings are semibold; inline emphasis is medium. */
-export const weight = stylex.create({
-  normal: { fontWeight: 400 },
-  medium: { fontWeight: 500 },
-  semibold: { fontWeight: 600 },
-});
+/**
+ * Font weights as plain numbers. Call sites read `weight.medium` directly and
+ * assign it to `fontWeight`. This was a `stylex.create` namespace read as
+ * `weight.medium`, and a `defineConsts` namespace read the same way;
+ * both compiled to `font-weight: var(--token)` for a token nothing defines, so
+ * the weight silently vanished and the text fell back to 400.
+ */
+export const weight = {
+  normal: 400,
+  medium: 500,
+  semibold: 600,
+} as const;
 
 /** Overflow, truncation, and scroll helpers. */
 export const overflow = stylex.create({

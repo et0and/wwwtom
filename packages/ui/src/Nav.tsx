@@ -21,7 +21,7 @@ const styles = stylex.create({
     justifyContent: "space-between",
     height: "4rem",
   },
-  brand: { fontWeight: weight.medium.fontWeight },
+  brand: { fontWeight: weight.medium },
   brandHeading: {
     fontSize: fontSizeLg.fontSize,
     lineHeight: fontSizeLg.lineHeight,

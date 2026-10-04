@@ -46,7 +46,7 @@ const styles = stylex.create({
   label: {
     margin: 0,
     fontSize: fontSizeBase.fontSize,
-    fontWeight: weight.medium.fontWeight,
+    fontWeight: weight.medium,
     color: textColors["--text-color-tomui-default"],
     userSelect: "none",
   },

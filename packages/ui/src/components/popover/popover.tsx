@@ -63,7 +63,7 @@ const styles = stylex.create({
     margin: 0,
     fontSize: fontSizeBase.fontSize,
     lineHeight: "1.5rem",
-    fontWeight: weight.medium.fontWeight,
+    fontWeight: weight.medium,
   },
   description: {
     margin: 0,

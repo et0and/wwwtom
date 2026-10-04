@@ -9,7 +9,7 @@ const styles = stylex.create({
   label: {
     margin: 0,
     fontSize: fontSizeBase.fontSize,
-    fontWeight: weight.medium.fontWeight,
+    fontWeight: weight.medium,
     color: textColors["--text-color-tomui-default"],
     display: "inline-flex",
     flexDirection: "row",
@@ -23,7 +23,7 @@ const styles = stylex.create({
     gap: layout.gap1.gap,
   },
   optional: {
-    fontWeight: weight.normal.fontWeight,
+    fontWeight: weight.normal,
     color: textColors["--text-color-tomui-subtle"],
   },
   /** Visually hidden, still announced by screen readers. */

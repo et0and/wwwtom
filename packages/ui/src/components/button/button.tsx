@@ -46,7 +46,7 @@ const styles = stylex.create({
     borderWidth: 0,
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
     fontFamily: "inherit",
-    fontWeight: weight.medium.fontWeight,
+    fontWeight: weight.medium,
     userSelect: select.none.userSelect,
     cursor: cursor.pointer.cursor,
     outlineWidth: 0,

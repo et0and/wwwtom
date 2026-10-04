@@ -23,7 +23,7 @@ const styles = stylex.create({
     userSelect: select.none.userSelect,
     borderWidth: 0,
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
-    fontWeight: weight.normal.fontWeight,
+    fontWeight: weight.normal,
     cursor: cursor.pointer.cursor,
     backgroundColor: colors["--color-tomui-control"],
     outlineWidth: 0,

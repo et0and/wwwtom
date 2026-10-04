@@ -28,7 +28,7 @@ const styles = stylex.create({
     borderBottomWidth: 1,
     borderBottomColor: colors["--color-tomui-fill"],
     padding: "0.75rem",
-    fontWeight: weight.semibold.fontWeight,
+    fontWeight: weight.semibold,
     backgroundColor: colors["--color-tomui-base"],
   },
   cell: { padding: "0.75rem" },

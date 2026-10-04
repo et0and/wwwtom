@@ -31,7 +31,7 @@ const styles = stylex.create({
   title: {
     marginBottom: "0.75rem",
     fontSize: fontSizeXs.fontSize,
-    fontWeight: weight.semibold.fontWeight,
+    fontWeight: weight.semibold,
     letterSpacing: "0.025em",
     color: textColors["--text-color-tomui-subtle"],
     textTransform: "uppercase",
