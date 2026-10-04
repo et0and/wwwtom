@@ -13,7 +13,7 @@ import { createDismissableLayer } from "../../utils/dismissable";
 import { createFocusScope, focusWithoutScrolling } from "../../utils/focus";
 import { createDisclosureState } from "../../utils/state";
 import { colors } from "../../styles/colors.stylex";
-import { radius, weight } from "../../styles/primitives.stylex";
+import { radius } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 
@@ -63,7 +63,7 @@ const styles = stylex.create({
     margin: 0,
     fontSize: fontSizeBase.fontSize,
     lineHeight: "1.5rem",
-    fontWeight: weight.medium,
+    fontWeight: 500,
   },
   description: {
     margin: 0,

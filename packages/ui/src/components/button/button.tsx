@@ -2,7 +2,7 @@ import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
 import { colors } from "../../styles/colors.stylex";
-import { cursor, layout, radius, select, weight } from "../../styles/primitives.stylex";
+import { cursor, layout, radius, select } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
 import { customProperties } from "../../utils/stylex-vars";
@@ -46,7 +46,7 @@ const styles = stylex.create({
     borderWidth: 0,
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
     fontFamily: "inherit",
-    fontWeight: weight.medium,
+    fontWeight: 500,
     userSelect: select.none.userSelect,
     cursor: cursor.pointer.cursor,
     outlineWidth: 0,

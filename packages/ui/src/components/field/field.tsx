@@ -2,7 +2,6 @@ import type { JSX } from "@solidjs/web";
 import { createUniqueId, merge, Show } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { textColors } from "../../styles/tokens.stylex";
-import { weight } from "../../styles/primitives.stylex";
 import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 import { Label } from "../label/label";
 
@@ -46,7 +45,7 @@ const styles = stylex.create({
   label: {
     margin: 0,
     fontSize: fontSizeBase.fontSize,
-    fontWeight: weight.medium,
+    fontWeight: 500,
     color: textColors["--text-color-tomui-default"],
     userSelect: "none",
   },

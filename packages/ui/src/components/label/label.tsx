@@ -1,7 +1,7 @@
 import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
-import { layout, weight } from "../../styles/primitives.stylex";
+import { layout } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 
@@ -9,7 +9,7 @@ const styles = stylex.create({
   label: {
     margin: 0,
     fontSize: fontSizeBase.fontSize,
-    fontWeight: weight.medium,
+    fontWeight: 500,
     color: textColors["--text-color-tomui-default"],
     display: "inline-flex",
     flexDirection: "row",
@@ -23,7 +23,7 @@ const styles = stylex.create({
     gap: layout.gap1.gap,
   },
   optional: {
-    fontWeight: weight.normal,
+    fontWeight: 400,
     color: textColors["--text-color-tomui-subtle"],
   },
   /** Visually hidden, still announced by screen readers. */

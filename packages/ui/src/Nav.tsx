@@ -1,6 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
 import { createEffect, createSignal, For, Show } from "solid-js";
-import { weight } from "./styles/primitives.stylex";
 import { fontSizeLg } from "./styles/typography.stylex";
 
 const MD = "@media (min-width: 768px)";
@@ -21,7 +20,7 @@ const styles = stylex.create({
     justifyContent: "space-between",
     height: "4rem",
   },
-  brand: { fontWeight: weight.medium },
+  brand: { fontWeight: 500 },
   brandHeading: {
     fontSize: fontSizeLg.fontSize,
     lineHeight: fontSizeLg.lineHeight,

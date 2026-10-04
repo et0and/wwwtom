@@ -3,7 +3,7 @@ import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
 import { createControllableSignal } from "../../utils/state";
 import { colors } from "../../styles/colors.stylex";
-import { cursor, radius, select, weight } from "../../styles/primitives.stylex";
+import { cursor, radius, select } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
 
@@ -23,7 +23,7 @@ const styles = stylex.create({
     userSelect: select.none.userSelect,
     borderWidth: 0,
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
-    fontWeight: weight.normal,
+    fontWeight: 400,
     cursor: cursor.pointer.cursor,
     backgroundColor: colors["--color-tomui-control"],
     outlineWidth: 0,

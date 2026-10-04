@@ -2,7 +2,6 @@ import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { colors } from "../../styles/colors.stylex";
-import { weight } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 
@@ -28,7 +27,7 @@ const styles = stylex.create({
     borderBottomWidth: 1,
     borderBottomColor: colors["--color-tomui-fill"],
     padding: "0.75rem",
-    fontWeight: weight.semibold,
+    fontWeight: 600,
     backgroundColor: colors["--color-tomui-base"],
   },
   cell: { padding: "0.75rem" },

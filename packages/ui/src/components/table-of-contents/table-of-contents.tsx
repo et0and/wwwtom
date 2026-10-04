@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { createSignal, For, merge, omit, onCleanup, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { colors } from "../../styles/colors.stylex";
-import { overflow, textAlign, weight } from "../../styles/primitives.stylex";
+import { overflow, textAlign } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
@@ -31,7 +31,7 @@ const styles = stylex.create({
   title: {
     marginBottom: "0.75rem",
     fontSize: fontSizeXs.fontSize,
-    fontWeight: weight.semibold,
+    fontWeight: 600,
     letterSpacing: "0.025em",
     color: textColors["--text-color-tomui-subtle"],
     textTransform: "uppercase",
