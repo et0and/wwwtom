@@ -178,9 +178,12 @@ pnpm --filter @tom/e2e test:e2e:staging
 ```
 
 The staging suite has no scheduled workflow (removed — Cloudflare
-bot-blocks GitHub runner IPs). It runs in two places: the PR preview
-workflow smoke-tests each preview stage, and you can run it manually
-against any deployed stage with `pnpm test:e2e:staging`.
+bot-blocks GitHub runner IPs), and CI never runs it: Cloudflare answers
+403 to a GitHub runner IP, and a deployed stage serves real are.na and
+CMS data rather than the fixtures a branch should be judged on. Run it
+manually against any deployed stage with `pnpm test:e2e:staging`. CI runs
+the fixture suite instead, which is why PRs are verifiable without a
+deployed stage at all.
 Every push to `dev` deploys the staging stage
 via the Deploy workflow (production deploys are manual), so a manual run
 validates the latest staged stack.
