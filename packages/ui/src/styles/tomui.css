@@ -1,13 +1,12 @@
+@import "./preflight.css";
 @import "./tomui-binding.css";
 
 /*
- * TomUI Component Library Styles - Tailwind Version
+ * TomUI Component Library Styles.
  * Ported from Cloudflare Tomui (MIT) to Solid.
  *
- * Note: This file does NOT import Tailwind CSS.
- * Consumer applications must import Tailwind separately in their own CSS:
- *
- * @import "@tom/ui/tomui.css";
+ * preflight.css provides the baseline reset, then tomui-binding.css carries
+ * the TomUI design tokens. Consumers import only this file.
  */
 
 /*
