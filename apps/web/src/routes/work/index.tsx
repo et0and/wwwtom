@@ -7,8 +7,6 @@ import { Text } from "@tom/ui/text";
 import { Loading, For, Show } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import { bannerTitleStyles } from "../../components/layout.stylex";
 
 export default function WorkHome() {
@@ -36,11 +34,13 @@ export default function WorkHome() {
         url: "https://tom.so/work",
       }}
     >
-      <BlurInText text="Work" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Work
+      </Text>
+      <div>
         <Text>Some work that I have made.</Text>
-      </BlurInSection>
-      <BlurInSection delay={0.5}>
+      </div>
+      <div>
         <Loading fallback={<Loader />}>
           <Show when={worksQuery.isError}>
             <div class="banner" role="alert">
@@ -68,7 +68,7 @@ export default function WorkHome() {
             )}
           </Show>
         </Loading>
-      </BlurInSection>
+      </div>
     </PageLayout>
   );
 }

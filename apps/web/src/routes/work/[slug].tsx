@@ -6,8 +6,6 @@ import { fetchWorkBySlug } from "~/server/adapter";
 import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import {
   ArenaSourceLink,
   DetailError,
@@ -64,16 +62,18 @@ export default function WorkPage() {
             }}
           >
             <article>
-              <BlurInText text={work.title} tag="h1" baseDelay={0.1} step={0.025} />
-              <BlurInSection delay={0.3}>
+              <Text variant="heading" size="lg" as="h1">
+                {work.title}
+              </Text>
+              <div>
                 <Text>{work.summary ?? ""}</Text>
-              </BlurInSection>
-              <BlurInSection delay={0.5}>
+              </div>
+              <div>
                 <ArenaSourceLink arenaSlug={work.arenaSlug} />
-              </BlurInSection>
-              <BlurInSection delay={0.7}>
+              </div>
+              <div>
                 <ContentBlocks blocks={work.blocks} />
-              </BlurInSection>
+              </div>
             </article>
           </PageLayout>
         )}

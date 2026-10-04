@@ -8,8 +8,6 @@ import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/c
 import { PageLayout } from "@tom/ui/PageLayout";
 import { layout } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import { formatDate } from "@tom/utils/date";
 import {
   ArenaSourceLink,
@@ -69,23 +67,25 @@ export default function PostPage() {
             }}
           >
             <article>
-              <BlurInText text={post.title} tag="h1" baseDelay={0.1} step={0.025} />
-              <BlurInSection delay={0.3}>
+              <Text variant="heading" size="lg" as="h1">
+                {post.title}
+              </Text>
+              <div>
                 <Text variant="heading" as="h2">
                   {post.summary ?? ""}
                 </Text>
-              </BlurInSection>
-              <BlurInSection delay={0.5}>
+              </div>
+              <div>
                 <div {...stylex.attrs(layout.flexCol, layout.gap1_5)}>
                   <Text variant="secondary" size="sm" as="time">
                     {formatDate(post.publishedAt)}
                   </Text>
                   <ArenaSourceLink arenaSlug={post.arenaSlug} />
                 </div>
-              </BlurInSection>
-              <BlurInSection delay={0.7}>
+              </div>
+              <div>
                 <ContentBlocks blocks={post.blocks} />
-              </BlurInSection>
+              </div>
             </article>
           </PageLayout>
         )}

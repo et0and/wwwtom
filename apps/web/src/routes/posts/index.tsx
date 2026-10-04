@@ -10,8 +10,6 @@ import { Text } from "@tom/ui/text";
 import { Loading, Show, For } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import { formatDate } from "@tom/utils/date";
 import { parsePageNumber } from "@tom/utils/page";
 import { bannerTitleStyles } from "../../components/layout.stylex";
@@ -54,11 +52,13 @@ export default function PostsHome() {
         url: "https://tom.so/posts",
       }}
     >
-      <BlurInText text="Writing" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Writing
+      </Text>
+      <div>
         <Text>Some of my writing.</Text>
-      </BlurInSection>
-      <BlurInSection delay={0.5}>
+      </div>
+      <div>
         <Loading fallback={<Loader />}>
           <Show when={postsQuery.isError}>
             <div class="banner" role="alert">
@@ -117,7 +117,7 @@ export default function PostsHome() {
             )}
           </Show>
         </Loading>
-      </BlurInSection>
+      </div>
     </PageLayout>
   );
 }

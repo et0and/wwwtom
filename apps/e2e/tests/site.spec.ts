@@ -10,8 +10,6 @@ test.describe("site chrome", () => {
   test("home page renders intro and nav", async ({ page }) => {
     const assertNoErrors = expectNoPageErrors(page);
     await page.goto("/");
-    // The intro is a BlurInText: its sr-only accessible text is duplicated
-    // by hydration, so assert the visible paragraph copy instead.
     await expect(
       page.getByText("I'm a software engineer with a background in the arts and education."),
     ).toBeVisible();

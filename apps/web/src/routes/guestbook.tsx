@@ -11,8 +11,6 @@ import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
 import { Text } from "@tom/ui/text";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import { callAdapter, runAdapterCall } from "~/libs/adapter";
 import { queryClient } from "~/libs/query-client";
 import { formatDateTime } from "@tom/utils/date";
@@ -113,8 +111,10 @@ export default function Guestbook() {
 
   return (
     <PageLayout title="Guestbook" description="Sign my guestbook">
-      <BlurInText text="Guestbook" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Guestbook
+      </Text>
+      <div>
         <div {...stylex.attrs(styles.mxAuto)}>
           <Loading fallback={<Loader />}>
             <Show
@@ -263,8 +263,8 @@ export default function Guestbook() {
             </Show>
           </Loading>
         </div>
-      </BlurInSection>
-      <BlurInSection delay={0.5}>
+      </div>
+      <div>
         <div {...stylex.attrs(styles.signaturesSection)}>
           <Text variant="heading" as="h2">
             Signatures
@@ -318,7 +318,7 @@ export default function Guestbook() {
             </Show>
           </Loading>
         </div>
-      </BlurInSection>
+      </div>
     </PageLayout>
   );
 }
