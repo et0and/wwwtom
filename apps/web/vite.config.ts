@@ -1,7 +1,6 @@
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
 import solid from "@solidjs/vite-plugin";
-import tailwindcss from "@tailwindcss/vite";
 import stylex from "@stylexjs/unplugin";
 import { stylexOptions } from "@tom/ui/stylex.config";
 import { defineConfig } from "vite";
@@ -49,7 +48,6 @@ export default defineConfig(({ command }) => {
       // `.stylex.ts` token files, which vite-plugin-solid skips (no JSX).
       stylex.vite(stylexOptions),
       solid({ start: { middleware: "./src/middleware.ts" }, ssr: true }),
-      tailwindcss(),
     ],
     resolve: {
       // tsconfig `paths` resolve in the client build, but the dev SSR

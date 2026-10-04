@@ -1,6 +1,3 @@
-@import "tailwindcss";
 @stylex;
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
-
-@source "../../**/*.tsx";

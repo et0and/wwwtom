@@ -1,5 +1,4 @@
 import solid from "@solidjs/vite-plugin";
-import tailwindcss from "@tailwindcss/vite";
 import stylex from "@stylexjs/unplugin";
 import { stylexOptions } from "@tom/ui/stylex.config";
 import { defineConfig } from "vite";
@@ -16,6 +15,5 @@ export default defineConfig({
     // StyleX before solid() so its Babel transform reaches `.stylex.ts` tokens.
     stylex.vite(stylexOptions),
     solid({ start: { middleware: "./src/middleware.ts" }, ssr: true }),
-    tailwindcss(),
   ],
 });

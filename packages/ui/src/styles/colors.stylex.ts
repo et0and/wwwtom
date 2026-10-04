@@ -8,6 +8,30 @@ import * as stylex from "@stylexjs/stylex";
 const DARK = "@media (prefers-color-scheme: dark)";
 
 /**
+ * TomUI's neutral-scale literals. tomui-binding.css's `@theme` block used to
+ * be the source of truth for these; now that it's gone, these fallbacks are
+ * the effective values, so every reference to a step must share one literal.
+ * Steps 25, 150, and 800 have no prior `@theme` entry; 25 and 150 keep the
+ * single value their call sites already agreed on, and 25's dark-mode call
+ * site is corrected to match (see colors.stylex.ts task-1 notes in the PR).
+ */
+const NEUTRAL = {
+  25: "oklch(98.75% 0 0)",
+  50: "oklch(98.75% 0 0)",
+  75: "oklch(98% 0 0)",
+  125: "oklch(96.5% 0 0)",
+  150: "oklch(93.5% 0 0)",
+  450: "oklch(89% 0 0)",
+  750: "oklch(32% 0 0)",
+  800: "oklch(26.9% 0 0)",
+  850: "oklch(24% 0 0)",
+  925: "oklch(17% 0 0)",
+  950: "oklch(15% 0 0)",
+  975: "oklch(12% 0 0)",
+  1000: "oklch(10% 0 0)",
+} as const;
+
+/**
  * Surface, line, state, and badge colour tokens. Names keep the `--` prefix so
  * existing consumers that read `var(--color-tomui-*)` directly still resolve.
  */
@@ -20,37 +44,37 @@ export const colors = stylex.defineVars({
    * tomui-binding.css; they are TomUI values, not Tailwind's default palette.
    * Only the steps the design system actually uses are carried over.
    */
-  "--color-tomui-neutral-450": "oklch(89% 0 0)",
-  "--color-tomui-neutral-750": "oklch(32% 0 0)",
-  "--color-tomui-neutral-850": "oklch(24% 0 0)",
+  "--color-tomui-neutral-450": NEUTRAL[450],
+  "--color-tomui-neutral-750": NEUTRAL[750],
+  "--color-tomui-neutral-850": NEUTRAL[850],
   "--color-blue-400": "oklch(70.7% 0.165 254.624)",
   "--color-blue-800": "oklch(42.4% 0.199 265.638)",
   "--color-tomui-canvas": {
-    default: "var(--color-tomui-neutral-25, oklch(98.75% 0 0))",
-    [DARK]: "var(--color-tomui-neutral-1000, oklch(10% 0 0))",
+    default: `var(--color-tomui-neutral-25, ${NEUTRAL[25]})`,
+    [DARK]: `var(--color-tomui-neutral-1000, ${NEUTRAL[1000]})`,
   },
   "--color-tomui-elevated": {
-    default: "var(--color-tomui-neutral-75, oklch(98% 0 0))",
-    [DARK]: "var(--color-tomui-neutral-975, oklch(12% 0 0))",
+    default: `var(--color-tomui-neutral-75, ${NEUTRAL[75]})`,
+    [DARK]: `var(--color-tomui-neutral-975, ${NEUTRAL[975]})`,
   },
   "--color-tomui-recessed": {
-    default: "var(--color-tomui-neutral-125, oklch(96% 0 0))",
-    [DARK]: "var(--color-tomui-neutral-950, oklch(15% 0 0))",
+    default: `var(--color-tomui-neutral-125, ${NEUTRAL[125]})`,
+    [DARK]: `var(--color-tomui-neutral-950, ${NEUTRAL[950]})`,
   },
   "--color-tomui-base": {
     default: "var(--color-white, #fff)",
-    [DARK]: "var(--color-tomui-neutral-925, oklch(17% 0 0))",
+    [DARK]: `var(--color-tomui-neutral-925, ${NEUTRAL[925]})`,
   },
   "--color-tomui-tint": {
     default: "var(--color-neutral-100, oklch(97% 0 0))",
-    [DARK]: "var(--color-tomui-neutral-800, oklch(26.9% 0 0))",
+    [DARK]: `var(--color-tomui-neutral-800, ${NEUTRAL[800]})`,
   },
   "--color-tomui-contrast": {
-    default: "var(--color-tomui-neutral-975, oklch(8.5% 0 0))",
-    [DARK]: "var(--color-tomui-neutral-25, oklch(98.5% 0 0))",
+    default: `var(--color-tomui-neutral-975, ${NEUTRAL[975]})`,
+    [DARK]: `var(--color-tomui-neutral-25, ${NEUTRAL[25]})`,
   },
   "--color-tomui-overlay": {
-    default: "var(--color-tomui-neutral-50, oklch(97.5% 0 0))",
+    default: `var(--color-tomui-neutral-50, ${NEUTRAL[50]})`,
     [DARK]: "var(--color-neutral-800, oklch(26.9% 0 0))",
   },
   "--color-tomui-control": {
@@ -66,7 +90,7 @@ export const colors = stylex.defineVars({
     [DARK]: "var(--color-neutral-800, oklch(26.9% 0 0))",
   },
   "--color-tomui-fill-hover": {
-    default: "var(--color-tomui-neutral-125, oklch(96.5% 0 0))",
+    default: `var(--color-tomui-neutral-125, ${NEUTRAL[125]})`,
     [DARK]: "var(--color-neutral-800, oklch(37.1% 0 0))",
   },
   "--color-tomui-brand": {
@@ -79,15 +103,15 @@ export const colors = stylex.defineVars({
   },
   "--color-tomui-line": {
     default: "oklch(14.5% 0 0 / 0.1)",
-    [DARK]: "var(--color-tomui-neutral-750, oklch(32% 0 0))",
+    [DARK]: `var(--color-tomui-neutral-750, ${NEUTRAL[750]})`,
   },
   "--color-tomui-hairline": {
-    default: "var(--color-tomui-neutral-150, oklch(93.5% 0 0))",
+    default: `var(--color-tomui-neutral-150, ${NEUTRAL[150]})`,
     [DARK]: "var(--color-neutral-800, oklch(26.9% 0 0))",
   },
   "--color-tomui-focus": {
-    default: "var(--color-tomui-neutral-950, oklch(15% 0 0))",
-    [DARK]: "var(--color-tomui-neutral-150, oklch(93.5% 0 0))",
+    default: `var(--color-tomui-neutral-950, ${NEUTRAL[950]})`,
+    [DARK]: `var(--color-tomui-neutral-150, ${NEUTRAL[150]})`,
   },
   "--color-tomui-shadow-edge": {
     default: "oklch(0% 0 0 / 0.12)",
@@ -103,7 +127,7 @@ export const colors = stylex.defineVars({
   },
   "--color-tomui-arrow-stroke": {
     default: "transparent",
-    [DARK]: "var(--color-tomui-neutral-750, oklch(32% 0 0))",
+    [DARK]: `var(--color-tomui-neutral-750, ${NEUTRAL[750]})`,
   },
   "--color-tomui-info-tint": {
     default: "oklch(93.2% 0.032 255.6 / 0.45)",

@@ -31,12 +31,10 @@
     "@solidjs/testing-library": "1.0.0-beta.3",
     "@solidjs/vite-plugin": "catalog:",
     "@stylexjs/unplugin": "catalog:",
-    "@tailwindcss/vite": "4.3.3",
     "@testing-library/jest-dom": "6.8.0",
     "@testing-library/user-event": "14.6.1",
     "@types/node": "24.9.1",
     "jsdom": "27.0.0",
-    "tailwindcss": "4.3.3",
     "vite": "^8.1.5",
     "vitest": "4.1.10"
   }

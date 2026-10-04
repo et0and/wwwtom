@@ -1,7 +1,7 @@
 @import "./theme-tomui.css";
 @import "./theme-fedramp.css";
 
-@theme {
+:root {
   /* Primitive color definitions for Tomui theme */
   --color-red-650: oklch(55% 0.238 27.4);
   --color-red-750: oklch(46% 0.195 27.2);
@@ -26,20 +26,18 @@
 
 /* Typography is now generated in theme-tomui.css via codegen:themes */
 
-@theme {
+:root {
   /* Easings & transitions */
   --ease-bounce: cubic-bezier(0.2, 0, 0, 1.5);
   --default-transition-duration: 100ms;
 }
 
-@layer base {
-  :root {
-    color-scheme: light;
-  }
+:root {
+  color-scheme: light;
+}
 
-  [data-mode="dark"] {
-    color-scheme: dark;
-  }
+[data-mode="dark"] {
+  color-scheme: dark;
 }
 
 /* Three-step bounce used by the Empty state check mark. StyleX generates only

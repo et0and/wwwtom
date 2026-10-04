@@ -7,7 +7,6 @@
  * Note: This file does NOT import Tailwind CSS.
  * Consumer applications must import Tailwind separately in their own CSS:
  *
- * @import "tailwindcss";
  * @import "@tom/ui/tomui.css";
  */
 

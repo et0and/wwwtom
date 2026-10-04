@@ -1,13 +1,5 @@
-@import "tailwindcss";
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
-
-@source "../../../packages/ui/src/**/*.tsx";
-
-@theme {
-  --animate-blur-in: blurIn 0.3s ease-in;
-  --animate-blur-in-char: blurInChar 0.3s ease-in;
-}
 
 :root {
   color-scheme: light dark;

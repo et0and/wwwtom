@@ -2,7 +2,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import solid from "@solidjs/vite-plugin";
-import tailwindcss from "@tailwindcss/vite";
 import stylex from "@stylexjs/unplugin";
 import { stylexOptions } from "../../stylex.config";
 import { defineConfig } from "vite";
@@ -20,7 +19,6 @@ export default defineConfig({
     // whose output imports the v1-only `solid-js/web` subpath.
     stylex.vite(stylexOptions),
     solid(),
-    tailwindcss(),
   ],
   define: {
     "process.env": {},

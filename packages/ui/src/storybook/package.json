@@ -29,7 +29,6 @@
     "@storybook/builder-vite": "^10.2.13",
     "@stylexjs/stylex": "catalog:",
     "@stylexjs/unplugin": "catalog:",
-    "@tailwindcss/vite": "4.3.3",
     "@tom/icons": "workspace:*",
     "@tom/ui": "workspace:*",
     "@vitest/browser": "^4.0.18",
@@ -39,7 +38,6 @@
     "solid-js": "catalog:",
     "storybook": "^10.2.13",
     "storybook-solidjs-vite": "^10.7.1",
-    "tailwindcss": "4.3.3",
     "tsx": "4.20.3",
     "vite": "^8.1.5",
     "vitest": "^4.0.18"
