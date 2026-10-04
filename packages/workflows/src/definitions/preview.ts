@@ -50,6 +50,13 @@ export const preview = workflow("preview", {
       name: "Smoke test the preview",
       "runs-on": "ubuntu-latest",
       "timeout-minutes": 15,
+      // Report-only for now. Cloudflare bot protection answers 403 to the
+      // raw APIRequestContext calls from a GitHub runner IP, and holds
+      // navigations at the interstitial, so this job is red for reasons that
+      // have nothing to do with the branch. `continue-on-error` keeps it
+      // visible without making every PR fail. Drop it once a WAF rule skips
+      // bot management for CI, and this becomes a real gate.
+      "continue-on-error": true,
       steps: [
         checkout(),
         setupStep({ "install-playwright": "true" }),

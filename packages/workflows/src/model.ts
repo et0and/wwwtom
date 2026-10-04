@@ -125,6 +125,7 @@ const Job = Schema.Struct({
   "timeout-minutes": Schema.optional(Schema.Finite),
   permissions: Schema.optional(Permissions),
   concurrency: Schema.optional(Concurrency),
+  "continue-on-error": Schema.optional(Schema.Boolean),
   env: Schema.optional(Env),
   steps: Schema.Array(Step),
 });
