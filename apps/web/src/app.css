@@ -1,12 +1,16 @@
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
 
-/* Prose defaults for markdown-rendered HTML, declared first so they sit
-   below every StyleX layer. Under Tailwind these lost to `!text-*`
-   utilities on components; StyleX has no `!important`, so the layer order
-   has to do that work instead. Without it a bare `h1` rule outranks the
-   nav brand's generated class and the heading jumps to 36px. */
-@layer prose;
+/* Layer order, pinned in one place because the preflight lives in another
+   file and the imports have to stay above this statement.
+
+   base < prose < priority1..N
+
+   base carries the reset, prose the markdown defaults, and StyleX its
+   generated rules last. Prose must outrank base or the reset's
+   `* { padding: 0 }` eats the paragraph spacing, but it must still lose to
+   StyleX, which has no `!important` for a bare `h1` rule to be beaten by. */
+@layer base, prose;
 
 @stylex;
 
