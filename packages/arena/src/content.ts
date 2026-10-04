@@ -8,6 +8,7 @@ import {
   ArenaContentBlockSchema,
   ArenaContentsResponseSchema,
   ArenaSlug,
+  type ArenaChannelResource,
   type ArenaContentBlock,
   type ArenaContentsResponse,
   type ArenaEntry,
@@ -86,6 +87,18 @@ const decodeEach = <A>(
   });
 
 /**
+ * The date a post went out. Our own `published_at` metadata wins, because the
+ * connection timestamp only records when the channel joined the master
+ * channel. `created_at` is required on every channel, so this never returns
+ * nothing.
+ *
+ * Exported because the publish date is part of the site's contract, not an
+ * internal detail: the e2e suite asserts the rendered date against it.
+ */
+export const entryPublishedAt = (channel: ArenaChannelResource): string =>
+  channel.metadata?.published_at ?? channel.connection?.connected_at ?? channel.created_at;
+
+/**
  * The index listing is the source of truth for titles and summaries: the
  * channel title becomes the entry title, the channel description the summary.
  */
@@ -104,8 +117,7 @@ const readIndexEntries = (
       arenaSlug: channel.slug,
       title: channel.title,
       summary: channel.description?.plain ?? null,
-      publishedAt:
-        channel.metadata?.published_at ?? channel.connection?.connected_at ?? channel.created_at,
+      publishedAt: entryPublishedAt(channel),
       updatedAt: channel.updated_at,
     }));
   });
