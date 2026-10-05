@@ -178,7 +178,12 @@ pnpm --filter @tom/e2e test:e2e:staging
 ```
 
 The staging suite has no scheduled workflow (removed — Cloudflare
-bot-blocks GitHub runner IPs). Run it manually against any deployed stage.
+bot-blocks GitHub runner IPs), and CI never runs it: Cloudflare answers
+403 to a GitHub runner IP, and a deployed stage serves real are.na and
+CMS data rather than the fixtures a branch should be judged on. Run it
+manually against any deployed stage with `pnpm test:e2e:staging`. CI runs
+the fixture suite instead, which is why PRs are verifiable without a
+deployed stage at all.
 Every push to `dev` deploys the staging stage
 via the Deploy workflow (production deploys are manual), so a manual run
 validates the latest staged stack.
@@ -188,13 +193,12 @@ validates the latest staged stack.
 The suite is served through the Cloudflare edge (same `tom.so` zone), and
 GitHub-hosted runners come from datacenter IPs that Cloudflare bot
 protection intermittently fast-blocks (403 on API fetches) or answers with
-its Managed Challenge interstitial. Two layers make the suite resilient:
-config-level `retries` (`playwright.staging.config.ts`) re-run a failed
-test fresh, and the specific helpers in `src/helpers.ts`
-(`fetchWithBackoff` / `gotoWithBackoff`) retry transient
-transfer statuses with exponential backoff mirroring Effect's
-`Schedule.exponential`. Other statuses (404s, 422s, real app errors)
-pass through untouched so regressions surface immediately.
+its Managed Challenge interstitial. The suite relies on the runner's own
+retries: config-level `retries` (`playwright.staging.config.ts`) re-run a
+failed test fresh, and `expect.poll` covers a genuinely transient value.
+Do not wrap `page.goto` or `request.get` in a hand-rolled retry loop — it
+hides real failures, doubles the wait, and is rejected by the lint rule
+`anti-slop/no-hand-rolled-retry-loop`.
 
 ## Conventions for tests in this suite
 

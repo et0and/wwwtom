@@ -17,6 +17,7 @@
     "complexity": "error",
     "anti-slop/no-chained-type-assertions": "error",
     "anti-slop/no-conditional-empty-object-spread": "error",
+    "anti-slop/no-hand-rolled-retry-loop": "error",
     "anti-slop/no-known-value-widening": "error",
     "anti-slop/no-object-parameters": "error",
     "anti-slop/no-runtime-typeof": "error",

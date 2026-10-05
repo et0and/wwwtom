@@ -18,6 +18,14 @@ describe("formatDate", () => {
     // stored timestamp renders as a different day depending on where it runs.
     expect(formatDate("2026-09-21T10:30")).toBe(formatDate("2026-09-21T10:30:00.000Z"));
   });
+
+  it("renders a Date object empty", () => {
+    // Every Eden treaty client passes parseDate: false, so a timestamp
+    // arrives as the wire string. If one arrives as a Date instead, the
+    // decode rejects it and the date silently disappears — so this pins
+    // that the Date shape is not silently accepted.
+    expect(formatDate(new Date("2026-09-21T10:30:00.000Z"))).toBe("");
+  });
 });
 
 describe("formatDateTime", () => {

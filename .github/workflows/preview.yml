@@ -43,7 +43,8 @@ jobs:
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
-          pnpm deploy:sophie --yes
+          pnpm deploy:sophie --yes &&
+          pnpm deploy:preview --yes
   destroy:
     name: Destroy PR preview
     runs-on: ubuntu-latest

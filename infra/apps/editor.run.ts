@@ -1,11 +1,9 @@
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as GitHub from "alchemy/GitHub";
 import { ALCHEMY_DEV } from "alchemy";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost } from "../shared.run.ts";
-import { previewComment } from "../utils/github/preview-comment.ts";
 
 /**
  * Retired: Tom's content now lives in are.na and the site reads it directly,
@@ -47,12 +45,11 @@ export const editor = Effect.gen(function* () {
 export default Stack(
   "wwwtom-editor",
   {
-    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()) as never,
+    providers: Cloudflare.providers() as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
     const app = yield* editor;
-    yield* previewComment({ name: "Tom CMS", url: app.url });
 
     return {
       url: app.url,

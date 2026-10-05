@@ -259,6 +259,9 @@ importers:
       '@tom/adapter':
         specifier: workspace:*
         version: link:../adapter
+      '@tom/arena':
+        specifier: workspace:*
+        version: link:../../packages/arena
       '@tom/schemas':
         specifier: workspace:*
         version: link:../../packages/schemas

@@ -11,8 +11,14 @@ import {
 
 /**
  * PR preview: deploy the full stack on every push to a PR, tear it down when
- * the PR closes. Preview stacks post their own comment links through the
- * preview-comment resource.
+ * the PR closes.
+ *
+ * The comment is posted by the `preview` stack, which runs last in the chain
+ * and owns a single consolidated comment for the whole stage.
+ *
+ * No e2e run here. Playwright drives the fixture simulator through
+ * `pnpm test:e2e` against a local stack, which is why CI can prove the branch
+ * works without a deployed stage. The preview exists for a human to click.
  */
 export const preview = workflow("preview", {
   name: "PR preview",

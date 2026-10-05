@@ -7,6 +7,7 @@ export default defineConfig({
       "apps/__tests__/**/*.test.ts",
       "hyperdrive/__tests__/**/*.test.ts",
       "turbo/src/__tests__/**/*.test.ts",
+      "utils/github/__tests__/**/*.test.ts",
     ],
   },
 });

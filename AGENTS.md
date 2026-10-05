@@ -13,7 +13,7 @@ Improve existing code; avoid new abstractions.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
-- `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
+- `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. `preview` owns the consolidated PR comment and deploys last, after every host it links is live. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
@@ -136,7 +136,7 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web → sophie; `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → api → adapter → web → sophie (then preview on a PR); `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed

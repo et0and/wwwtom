@@ -25,8 +25,11 @@ export const getAdapterBaseUrl = (): string => {
  * Typed treaty client to the Sophie adapter (the same Elysia app Tom uses,
  * pointed at Sophie URLs). All backend reads flow through callSophie, so
  * routes stay typed end to end with no hand-written fetch wrapper.
+ *
+ * `parseDate: false`: Eden revives any ISO timestamp into a `Date`, which the
+ * wire schemas declare as a string and `@tom/utils/date` then renders empty.
  */
-export const callSophie = () => treaty<AdapterApp>(getAdapterBaseUrl());
+export const callSophie = () => treaty<AdapterApp>(getAdapterBaseUrl(), { parseDate: false });
 
 const SOPHIE_REQUEST_MESSAGES = {
   failed: "Sophie request failed",

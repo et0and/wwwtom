@@ -17,6 +17,7 @@
     "@axe-core/playwright": "^4.10.1",
     "@playwright/test": "catalog:",
     "@tom/adapter": "workspace:*",
+    "@tom/arena": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",

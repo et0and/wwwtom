@@ -1,4 +1,6 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+import { entryPublishedAt } from "@tom/arena/content";
+import { formatDate } from "@tom/utils/date";
 import {
   fixturePosts,
   fixtureWorks,
@@ -11,8 +13,18 @@ import {
  * /posts — the Writing index and post pages, driven by the are.na fixture
  * store (fixtures/arena-content.json). Six fixture posts with a page size of
  * five means page 2 exists and holds exactly the oldest post; the index shows
- * titles and summaries, and a detail page renders the channel's blocks.
+ * titles, dates and summaries, and a detail page renders the channel's blocks.
  */
+
+type FixtureChannel = (typeof fixturePosts)[number];
+
+/** Post card dates, in fixture order — the same list the index renders. */
+const cardDates = (posts: ReadonlyArray<FixtureChannel>): string[] =>
+  posts.map((post) => formatDate(entryPublishedAt(post)));
+
+/** Every date on the index, in DOM order. One `<time>` per post card. */
+const indexDates = (page: Page) => page.locator("main a.page time");
+
 test.describe("writing", () => {
   test("posts index lists the newest page of fixture posts", async ({ page }) => {
     await page.goto("/posts");
@@ -24,6 +36,14 @@ test.describe("writing", () => {
       const summary = post.description?.plain;
       if (summary) await expect(page.getByText(summary)).toBeVisible();
     }
+  });
+
+  test("posts index shows every post's published date", async ({ page }) => {
+    // The date travels adapter → web as a wire timestamp string, so this
+    // fails if anything in the client revives it into a Date first: a Date
+    // renders as an empty <time>, silently dropping the date from the card.
+    await page.goto("/posts");
+    await expect(indexDates(page)).toHaveText(cardDates(fixturePosts.slice(0, POSTS_PAGE_SIZE)));
   });
 
   test("posts paginates to the oldest post on page 2", async ({ page }) => {
@@ -41,6 +61,7 @@ test.describe("writing", () => {
 
     await expect(page.getByRole("heading", { name: oldestPost.title, level: 2 })).toBeVisible();
     await expect(page.getByRole("heading", { name: newestPost.title, level: 2 })).toHaveCount(0);
+    await expect(indexDates(page)).toHaveText(cardDates([oldestPost]));
   });
 
   test("a post detail page renders title, summary and blocks", async ({ page }) => {
@@ -54,6 +75,7 @@ test.describe("writing", () => {
       "href",
       `https://are.na/tom/${newestPost.slug}`,
     );
+    await expect(page.locator("main time")).toHaveText(cardDates([newestPost]));
   });
 
   test("an unknown post slug renders the not-found state", async ({ page }) => {

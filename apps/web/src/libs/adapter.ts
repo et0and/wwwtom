@@ -37,6 +37,11 @@ export const getAdapterBaseUrl = (): string => {
  * sent on browser calls. On the server, an incoming `x-use-simulator` header
  * (set by the e2e suite) is forwarded so the adapter routes its upstreams to
  * the fixture simulator.
+ *
+ * `parseDate: false` is required, not a preference: Eden revives any ISO
+ * timestamp in a JSON response into a `Date`. `ArenaEntrySummarySchema` and
+ * the CMS schemas declare those fields as strings, and `@tom/utils/date`
+ * renders a `Date` as an empty string, so a post card loses its date.
  */
 export const callAdapter = () => {
   const headers: Record<string, string> = {};
@@ -48,7 +53,7 @@ export const callAdapter = () => {
     credentials: "include",
   };
   if (Object.keys(headers).length > 0) fetchOptions.headers = headers;
-  return treaty<AdapterApp>(getAdapterBaseUrl(), { fetch: fetchOptions });
+  return treaty<AdapterApp>(getAdapterBaseUrl(), { fetch: fetchOptions, parseDate: false });
 };
 
 const ADAPTER_REQUEST_MESSAGES = {
