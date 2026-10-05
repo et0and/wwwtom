@@ -1,64 +1,65 @@
-import { resolveVariant } from "../../utils/resolve-variant";
+import * as stylex from "@stylexjs/stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import {
+  fontSizeBase,
+  fontSizeLg,
+  fontSizeSm,
+  fontSizeXl,
+  fontSizeXs,
+} from "../../styles/typography.stylex";
 
-/** Text variant and size definitions mapping names to their Tailwind classes. */
-export const TOMUI_TEXT_VARIANTS = {
-  variant: {
-    heading: {
-      classes: "text-lg font-semibold",
-      description: "Heading text (16px by default, 20px at large size)",
-    },
-    body: {
-      classes: "text-tomui-default",
-      description: "Default body text",
-    },
-    secondary: {
-      classes: "text-tomui-subtle",
-      description: "Muted text for secondary information",
-    },
-    success: {
-      classes: "text-tomui-link",
-      description: "Success state text in link color",
-    },
-    error: {
-      classes: "text-tomui-danger",
-      description: "Error state text",
-    },
-    mono: {
-      classes: "font-mono",
-      description: "Monospace text for code",
-    },
-    "mono-secondary": {
-      classes: "font-mono text-tomui-subtle",
-      description: "Muted monospace text",
-    },
+/**
+ * Text styles, flat rather than nested under `variant`/`size` keys. StyleX
+ * types a namespace as one opaque object, so a nested namespace cannot be
+ * indexed dynamically and passed to `stylex.attrs`.
+ */
+export const textStyles = stylex.create({
+  // Variants
+  heading: {
+    fontSize: fontSizeLg.fontSize,
+    lineHeight: "inherit",
+    fontWeight: 600,
   },
-  size: {
-    xs: {
-      classes: "text-xs/[inherit]",
-      description: "Extra small text",
-    },
-    sm: {
-      classes: "text-sm/[inherit]",
-      description: "Small text",
-    },
-    base: {
-      classes: "text-base/[inherit]",
-      description: "Default text size",
-    },
-    lg: {
-      classes: "text-lg/[inherit]",
-      description: "Large text",
-    },
+  body: { color: textColors["--text-color-tomui-default"] },
+  secondary: { color: textColors["--text-color-tomui-subtle"] },
+  success: { color: textColors["--text-color-tomui-link"] },
+  error: { color: textColors["--text-color-tomui-danger"] },
+  mono: { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" },
+  "mono-secondary": {
+    fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+    color: textColors["--text-color-tomui-subtle"],
   },
-} as const;
+
+  // Sizes. `lineHeight: "inherit"` replaces the old `text-*/[inherit]`
+  // Tailwind modifiers.
+  sizeXs: { fontSize: fontSizeXs.fontSize, lineHeight: "inherit" },
+  sizeSm: { fontSize: fontSizeSm.fontSize, lineHeight: "inherit" },
+  sizeBase: { fontSize: fontSizeBase.fontSize, lineHeight: "inherit" },
+  sizeLg: { fontSize: fontSizeLg.fontSize, lineHeight: "inherit" },
+  /** Heading-only step up from `lg`. Never a body size. */
+  sizeXl: { fontSize: fontSizeXl.fontSize, lineHeight: "inherit" },
+
+  // States
+  bold: { fontWeight: 500 },
+  truncate: { minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" },
+  /** No-op, so a heading at a non-lg size adds nothing. */
+  none: {},
+});
 
 export const TOMUI_TEXT_DEFAULT_VARIANTS = {
   variant: "body",
   size: "base",
 } as const;
 
-export type TomuiTextVariant = keyof typeof TOMUI_TEXT_VARIANTS.variant;
-export type TomuiTextSize = keyof typeof TOMUI_TEXT_VARIANTS.size;
+export type TomuiTextVariant =
+  | "heading"
+  | "body"
+  | "secondary"
+  | "success"
+  | "error"
+  | "mono"
+  | "mono-secondary";
+export type TomuiTextSize = "xs" | "sm" | "base" | "lg";
 
 /** Valid HTML elements for the Text component's `as` prop. */
 export type TextElement =
@@ -111,17 +112,27 @@ export const BOLDABLE_VARIANTS: ReadonlySet<TomuiTextVariant> = new Set([
 
 const MONO_VARIANTS: ReadonlySet<TomuiTextVariant> = new Set(["mono", "mono-secondary"]);
 
-const sizeClass = (size: TomuiTextSize): string => TOMUI_TEXT_VARIANTS.size[size].classes;
-
-export function resolveTextSizeClasses(variant: TomuiTextVariant, size: TomuiTextSize): string {
+/**
+ * Resolve the size style for a variant/size pair.
+ *
+ * Headings step up to `xl` only at `lg` and otherwise keep the size baked into
+ * the heading variant itself, so they return nothing. Monospace sits one step
+ * below body so the glyphs optically match.
+ */
+export function resolveTextSizeStyle(
+  variant: TomuiTextVariant,
+  size: TomuiTextSize,
+): stylex.StyleXStyles {
   if (variant === "heading") {
-    return size === "lg" ? "text-xl" : "";
+    return size === "lg" ? textStyles.sizeXl : textStyles.none;
   }
 
   if (MONO_VARIANTS.has(variant)) {
-    // Monospace fonts need to be 1pt smaller than body text to optically match.
-    return sizeClass(size === "lg" ? "base" : "sm");
+    return size === "lg" ? textStyles.sizeBase : textStyles.sizeSm;
   }
 
-  return resolveVariant(TOMUI_TEXT_VARIANTS.size, size, TOMUI_TEXT_DEFAULT_VARIANTS.size).classes;
+  if (size === "xs") return textStyles.sizeXs;
+  if (size === "sm") return textStyles.sizeSm;
+  if (size === "lg") return textStyles.sizeLg;
+  return textStyles.sizeBase;
 }

@@ -1,25 +1,110 @@
+import * as stylex from "@stylexjs/stylex";
 import { createSignal, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { CaretDownIcon } from "@tom/icons/CaretDown";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
-export const TOMUI_SIDEBAR_VARIANTS = {
-  variant: {
-    sidebar: { classes: "", description: "Standard sidebar with border separator" },
-    floating: { classes: "", description: "Floating sidebar with shadow and rounded corners" },
-    inset: { classes: "", description: "Inset sidebar within the content area" },
+const lineColor = colors["--color-tomui-line"];
+const baseColor = colors["--color-tomui-base"];
+const tintColor = colors["--color-tomui-tint"];
+const defaultText = textColors["--text-color-tomui-default"];
+const subtleText = textColors["--text-color-tomui-subtle"];
+const strongText = textColors["--text-color-tomui-strong"];
+
+const styles = stylex.create({
+  root: {
+    position: "relative",
+    display: "flex",
+    height: "100%",
+    width: "16rem",
+    flexShrink: 0,
+    flexDirection: "column",
+    overflow: "hidden",
+    backgroundColor: baseColor,
+    color: defaultText,
   },
-  collapsible: {
-    icon: { classes: "", description: "Collapses to show icons only" },
-    offcanvas: { classes: "", description: "Slides off screen when collapsed" },
-    none: { classes: "", description: "Cannot be collapsed" },
+  borderRight: { borderInlineEndWidth: 1, borderColor: lineColor },
+  borderLeft: { borderInlineStartWidth: 1, borderColor: lineColor },
+  floating: {
+    margin: "0.5rem",
+    borderRadius: radius.lg.borderRadius,
+    borderWidth: 1,
+    borderColor: lineColor,
+    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
   },
-  side: {
-    left: { classes: "", description: "Left-aligned sidebar" },
-    right: { classes: "", description: "Right-aligned sidebar" },
+  collapsed: { width: "3.5rem", overflow: "hidden" },
+  trigger: {
+    margin: "0.5rem",
+    display: "flex",
+    height: "2rem",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.lg.borderRadius,
+    color: subtleText,
+    ":hover": { backgroundColor: tintColor },
   },
-} as const;
+  content: {
+    display: "flex",
+    minWidth: 0,
+    flexGrow: 1,
+    flexDirection: "column",
+    overflowY: "auto",
+    paddingInline: "0.5rem",
+    paddingBlock: "0.25rem",
+  },
+  group: { display: "flex", minWidth: 0, flexDirection: "column" },
+  groupLabel: {
+    display: "flex",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingInline: "0.75rem",
+    paddingBlockStart: "1rem",
+    paddingBlockEnd: "0.5rem",
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: subtleText,
+  },
+  groupLabelText: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  chevron: { display: "inline-flex", transitionProperty: "transform" },
+  chevronCollapsed: { transform: "rotate(-90deg)" },
+  menu: {
+    margin: 0,
+    display: "flex",
+    minWidth: 0,
+    flexDirection: "column",
+    alignItems: "stretch",
+    rowGap: "1px",
+    padding: 0,
+    listStyle: "none",
+  },
+  itemRoot: { position: "relative" },
+  itemLink: {
+    position: "relative",
+    display: "flex",
+    width: "100%",
+    minWidth: 0,
+    cursor: "pointer",
+    alignItems: "center",
+    gap: "0.625rem",
+    borderRadius: radius.lg.borderRadius,
+    outlineWidth: 0,
+    paddingInline: "0.75rem",
+    paddingBlock: 0,
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    textDecoration: "none",
+    minHeight: "2.125rem",
+    color: defaultText,
+    transitionProperty: "color, box-shadow, outline",
+    ":hover": { backgroundColor: tintColor },
+    ":focus": { outlineWidth: 0 },
+    ":focus-visible": { backgroundColor: tintColor, color: strongText },
+  },
+  itemLinkActive: { backgroundColor: tintColor },
+});
 
 export const TOMUI_SIDEBAR_DEFAULT_VARIANTS = {
   collapsible: "icon",
@@ -27,78 +112,75 @@ export const TOMUI_SIDEBAR_DEFAULT_VARIANTS = {
   variant: "sidebar",
 } as const;
 
-export type TomuiSidebarVariant = keyof typeof TOMUI_SIDEBAR_VARIANTS.variant;
-export type TomuiSidebarCollapsible = keyof typeof TOMUI_SIDEBAR_VARIANTS.collapsible;
-export type TomuiSidebarSide = keyof typeof TOMUI_SIDEBAR_VARIANTS.side;
+export type TomuiSidebarVariant = "sidebar" | "floating" | "inset";
+export type TomuiSidebarCollapsible = "icon" | "offcanvas" | "none";
+export type TomuiSidebarSide = "left" | "right";
 
-export type SidebarProps = JSX.HTMLAttributes<HTMLElement> & {
+export type SidebarProps = Omit<JSX.HTMLAttributes<HTMLElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   collapsible?: TomuiSidebarCollapsible;
   defaultOpen?: boolean;
   side?: TomuiSidebarSide;
   variant?: TomuiSidebarVariant;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type SidebarSectionProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type SidebarSectionProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   defaultOpen?: boolean;
   label: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type SidebarItemProps = JSX.AnchorHTMLAttributes<HTMLAnchorElement> & {
+export type SidebarItemProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, "style"> & {
   active?: boolean;
   children?: JSX.Element;
-  class?: string;
   href?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function sidebarVariants(
   props: { variant?: TomuiSidebarVariant; side?: TomuiSidebarSide } = {},
-): string {
+): Array<stylex.StyleXStyles> {
   const merged = merge(TOMUI_SIDEBAR_DEFAULT_VARIANTS, props);
-  return cn(
-    "tomui-sidebar flex h-full w-64 shrink-0 flex-col overflow-hidden bg-tomui-base text-tomui-default",
-    merged.variant === "sidebar" &&
-      (merged.side === "left" ? "border-r border-tomui-line" : "border-l border-tomui-line"),
-    merged.variant === "floating" && "m-2 rounded-lg border border-tomui-line shadow-lg",
-    resolveVariant(
-      TOMUI_SIDEBAR_VARIANTS.variant,
-      merged.variant,
-      TOMUI_SIDEBAR_DEFAULT_VARIANTS.variant,
-    ).classes,
-    resolveVariant(TOMUI_SIDEBAR_VARIANTS.side, merged.side, TOMUI_SIDEBAR_DEFAULT_VARIANTS.side)
-      .classes,
-  );
+  return [
+    styles.root,
+    merged.variant === "sidebar"
+      ? merged.side === "left"
+        ? styles.borderRight
+        : styles.borderLeft
+      : undefined,
+    merged.variant === "floating" ? styles.floating : undefined,
+  ];
 }
 
 export function SidebarSection(props: SidebarSectionProps) {
   const merged = merge({ defaultOpen: true }, props);
-  const rest = omit(merged, "children", "class", "defaultOpen", "label");
+  const rest = omit(merged, "children", "style", "defaultOpen", "label");
   const [isOpen, setIsOpen] = createSignal(merged.defaultOpen);
   return (
     <div
       data-tomui-component="SidebarSection"
       data-state={isOpen() ? "expanded" : "collapsed"}
-      class={cn("tomui-sidebar-group flex min-w-0 flex-col", merged.class)}
+      {...stylex.attrs(styles.group, merged.style)}
       {...rest}
     >
       <button
         type="button"
         aria-expanded={isOpen() ? "true" : "false"}
         onClick={() => setIsOpen(!isOpen())}
-        class="tomui-sidebar-group-label flex items-center justify-between px-3 pt-4 pb-2 text-sm font-medium text-tomui-subtle"
+        {...stylex.attrs(styles.groupLabel)}
       >
-        <span class="truncate">{merged.label}</span>
-        <span class={cn("inline-flex transition-transform", !isOpen() && "-rotate-90")}>
+        <span {...stylex.attrs(styles.groupLabelText)}>{merged.label}</span>
+        <span {...stylex.attrs(styles.chevron, !isOpen() ? styles.chevronCollapsed : undefined)}>
           <CaretDownIcon size="sm" />
         </span>
       </button>
       <Show when={isOpen()}>
-        <ul class="tomui-sidebar-menu m-0 flex min-w-0 list-none flex-col items-stretch gap-y-px p-0">
-          {merged.children}
-        </ul>
+        <ul {...stylex.attrs(styles.menu)}>{merged.children}</ul>
       </Show>
     </div>
   );
@@ -106,21 +188,16 @@ export function SidebarSection(props: SidebarSectionProps) {
 
 export function SidebarItem(props: SidebarItemProps) {
   const merged = merge({ active: false }, props);
-  const rest = omit(merged, "active", "children", "class");
+  const rest = omit(merged, "active", "children", "style");
   return (
-    <li data-tomui-component="SidebarItem" class="relative">
+    <li data-tomui-component="SidebarItem" {...stylex.attrs(styles.itemRoot)}>
       <a
         data-active={merged.active || undefined}
         aria-current={merged.active ? "page" : undefined}
-        class={cn(
-          "tomui-sidebar-menu-button group/menu-button relative flex w-full min-w-0 cursor-pointer items-center gap-2.5 rounded-lg outline-none",
-          "px-3 py-0 text-sm font-medium no-underline!",
-          "min-h-8.5 text-tomui-default",
-          "transition-[color,box-shadow,outline]",
-          !merged.active && "hover:bg-tomui-tint",
-          merged.active && "bg-tomui-tint",
-          "focus:outline-none focus-visible:bg-tomui-tint focus-visible:text-tomui-strong",
-          merged.class,
+        {...stylex.attrs(
+          styles.itemLink,
+          merged.active ? styles.itemLinkActive : undefined,
+          merged.style,
         )}
         {...rest}
       >
@@ -140,7 +217,7 @@ export function Sidebar(props: SidebarProps) {
     },
     props,
   );
-  const rest = omit(merged, "children", "class", "collapsible", "defaultOpen", "side", "variant");
+  const rest = omit(merged, "children", "style", "collapsible", "defaultOpen", "side", "variant");
   const [isOpen, setIsOpen] = createSignal(merged.defaultOpen);
   return (
     <nav
@@ -150,10 +227,10 @@ export function Sidebar(props: SidebarProps) {
       data-side={merged.side}
       data-variant={merged.variant}
       data-collapsible={merged.collapsible}
-      class={cn(
-        sidebarVariants({ side: merged.side, variant: merged.variant }),
-        !isOpen() && "w-14 overflow-hidden",
-        merged.class,
+      {...stylex.attrs(
+        ...sidebarVariants({ side: merged.side, variant: merged.variant }),
+        !isOpen() ? styles.collapsed : undefined,
+        merged.style,
       )}
       {...rest}
     >
@@ -163,14 +240,12 @@ export function Sidebar(props: SidebarProps) {
           aria-expanded={isOpen() ? "true" : "false"}
           aria-label={isOpen() ? "Collapse sidebar" : "Expand sidebar"}
           onClick={() => setIsOpen(!isOpen())}
-          class="tomui-sidebar-trigger m-2 flex h-8 items-center justify-center rounded-lg text-tomui-subtle hover:bg-tomui-tint"
+          {...stylex.attrs(styles.trigger)}
         >
           <span aria-hidden="true">{isOpen() ? "«" : "»"}</span>
         </button>
       </Show>
-      <div class="tomui-sidebar-content flex min-w-0 flex-1 flex-col overflow-y-auto px-2 py-1">
-        {merged.children}
-      </div>
+      <div {...stylex.attrs(styles.content)}>{merged.children}</div>
     </nav>
   );
 }

@@ -1,27 +1,16 @@
+import * as stylex from "@stylexjs/stylex";
 import { createSignal, For, merge, omit, onCleanup, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-export const TOMUI_TABLE_OF_CONTENTS_VARIANTS = {
-  state: {
-    default: {
-      classes:
-        "text-tomui-subtle hover:border-tomui-line hover:text-tomui-default hover:font-medium",
-      description: "Inactive section link",
-    },
-    active: {
-      classes: "border-tomui-brand font-medium text-tomui-default",
-      description: "Currently visible / active section",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { overflow, textAlign } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
 export const TOMUI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS = {
   state: "default",
 } as const;
 
-export type TomuiTableOfContentsState = keyof typeof TOMUI_TABLE_OF_CONTENTS_VARIANTS.state;
+export type TomuiTableOfContentsState = "default" | "active";
 
 export interface TocHeading {
   id: string;
@@ -29,27 +18,72 @@ export interface TocHeading {
   level?: number;
 }
 
-export type TableOfContentsProps = JSX.HTMLAttributes<HTMLElement> & {
+export type TableOfContentsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "style"> & {
   activeId?: string;
-  class?: string;
   headings?: Array<TocHeading>;
   offset?: number;
   title?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-const ITEM_BASE =
-  "tomui-toc-item block w-full truncate border-l-2 border-transparent py-0.5 pl-4 text-sm text-left no-underline";
+const styles = stylex.create({
+  title: {
+    marginBottom: "0.75rem",
+    fontSize: fontSizeXs.fontSize,
+    fontWeight: 600,
+    letterSpacing: "0.025em",
+    color: textColors["--text-color-tomui-subtle"],
+    textTransform: "uppercase",
+  },
+  list: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+    borderLeftWidth: 2,
+    borderLeftColor: colors["--color-tomui-hairline"],
+  },
+  listItem: { marginLeft: "-0.125rem" },
+  itemBase: {
+    display: "block",
+    width: "100%",
+    paddingBlock: "0.125rem",
+    paddingLeft: "1rem",
+    borderLeftWidth: 2,
+    borderLeftColor: "transparent",
+    fontSize: fontSizeSm.fontSize,
+    textDecorationLine: "none",
+  },
+  itemDefault: {
+    color: textColors["--text-color-tomui-subtle"],
+    ":hover": {
+      borderLeftColor: colors["--color-tomui-line"],
+      color: textColors["--text-color-tomui-default"],
+      fontWeight: 500,
+    },
+  },
+  itemActive: {
+    borderLeftColor: colors["--color-tomui-brand"],
+    fontWeight: 500,
+    color: textColors["--text-color-tomui-default"],
+  },
+  itemLabel: { display: "block", minWidth: 0, lineHeight: "1.25rem" },
+});
 
-export function tocItemVariants(props: { state?: TomuiTableOfContentsState } = {}): string {
+const stateStyles = {
+  default: styles.itemDefault,
+  active: styles.itemActive,
+} as const satisfies Record<TomuiTableOfContentsState, stylex.StyleXStyles>;
+
+export function tocItemVariants(props: { state?: TomuiTableOfContentsState } = {}) {
   const merged = merge(TOMUI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS, props);
-  return cn(
-    ITEM_BASE,
-    resolveVariant(
-      TOMUI_TABLE_OF_CONTENTS_VARIANTS.state,
-      merged.state,
-      TOMUI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS.state,
-    ).classes,
-  );
+  return [
+    styles.itemBase,
+    overflow.truncate,
+    overflow.noWrap,
+    textAlign.left,
+    stateStyles[merged.state],
+  ];
 }
 
 export function TableOfContents(props: TableOfContentsProps) {
@@ -57,7 +91,7 @@ export function TableOfContents(props: TableOfContentsProps) {
     { headings: [] as Array<TocHeading>, offset: 0, title: "On this page" },
     props,
   );
-  const rest = omit(merged, "activeId", "children", "class", "headings", "offset", "title");
+  const rest = omit(merged, "activeId", "children", "headings", "offset", "title", "style");
   const [activeId, setActiveId] = createSignal<string | null>(merged.activeId ?? null);
   const setActive = (id: string) => setActiveId(id);
   const observed = (): Array<string> => merged.headings.map((heading: TocHeading) => heading.id);
@@ -96,32 +130,32 @@ export function TableOfContents(props: TableOfContentsProps) {
     <nav
       data-tomui-component="TableOfContents"
       aria-label="Table of contents"
-      class={cn("tomui-toc", merged.class)}
+      {...stylex.attrs(merged.style)}
       {...rest}
     >
-      <p class="mb-3 text-xs font-semibold tracking-wide text-tomui-subtle uppercase">
-        {merged.title}
-      </p>
-      <ul class="flex flex-col gap-2 border-l-2 border-tomui-hairline">
+      <p {...stylex.attrs(styles.title)}>{merged.title}</p>
+      <ul {...stylex.attrs(styles.list)}>
         <For each={merged.headings}>
           {(heading: TocHeading) => {
             const isActive = () => (merged.activeId ?? activeId()) === heading.id;
             return (
-              <li class="-ml-0.5">
+              <li {...stylex.attrs(styles.listItem)}>
                 <a
                   href={`#${heading.id}`}
                   aria-current={isActive() ? ("true" as const) : undefined}
                   data-tomui-component="TableOfContentsItem"
                   data-active={isActive() || undefined}
                   onClick={() => setActive(heading.id)}
-                  class={cn(tocItemVariants({ state: isActive() ? "active" : "default" }))}
+                  {...stylex.attrs(
+                    ...tocItemVariants({ state: isActive() ? "active" : "default" }),
+                  )}
                   style={
                     heading.level !== undefined && heading.level > 2
                       ? { "padding-left": `${1 + (heading.level - 2) * 0.75}rem` }
                       : undefined
                   }
                 >
-                  <span class="block min-w-0 leading-5">{heading.label}</span>
+                  <span {...stylex.attrs(styles.itemLabel)}>{heading.label}</span>
                 </a>
               </li>
             );

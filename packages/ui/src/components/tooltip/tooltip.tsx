@@ -1,62 +1,69 @@
 import type { JSX } from "@solidjs/web";
 import { createUniqueId, merge, omit, onCleanup, Show } from "solid-js";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import * as stylex from "@stylexjs/stylex";
 import { createDisclosureState } from "../../utils/state";
-
-export const TOMUI_TOOLTIP_VARIANTS = {
-  side: {
-    top: {
-      classes: "",
-      description: "Tooltip appears above the trigger",
-    },
-    bottom: {
-      classes: "",
-      description: "Tooltip appears below the trigger",
-    },
-    left: {
-      classes: "",
-      description: "Tooltip appears to the left of the trigger",
-    },
-    right: {
-      classes: "",
-      description: "Tooltip appears to the right of the trigger",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm } from "../../styles/typography.stylex";
 
 export const TOMUI_TOOLTIP_DEFAULT_VARIANTS = {
   side: "top",
 } as const;
 
-export type TomuiTooltipSide = keyof typeof TOMUI_TOOLTIP_VARIANTS.side;
-
-export interface TomuiTooltipVariantsProps {
-  side?: TomuiTooltipSide;
-}
-
-export function tooltipVariants(props: TomuiTooltipVariantsProps = {}): string {
-  const merged = merge(TOMUI_TOOLTIP_DEFAULT_VARIANTS, props);
-  return cn(
-    "flex origin-[var(--transform-origin)] flex-col rounded-md bg-tomui-base px-2.5 py-1.5 text-sm text-tomui-default",
-    "shadow-md outline-1 outline-tomui-line",
-    "transition-[transform,scale,opacity] duration-150",
-    "data-[starting-style]:scale-90 data-[starting-style]:opacity-0",
-    "data-[ending-style]:scale-90 data-[ending-style]:opacity-0",
-    "data-[instant]:duration-0",
-    resolveVariant(TOMUI_TOOLTIP_VARIANTS.side, merged.side, TOMUI_TOOLTIP_DEFAULT_VARIANTS.side)
-      .classes,
-  );
-}
-
+export type TomuiTooltipSide = "top" | "bottom" | "left" | "right";
 export type TooltipAlign = "start" | "center" | "end";
 
-const TOMUI_TOOLTIP_POSITIONS = {
-  top: "bottom-full left-1/2 mb-2.5 -translate-x-1/2",
-  bottom: "top-full left-1/2 mt-2.5 -translate-x-1/2",
-  left: "top-1/2 right-full mr-2.5 -translate-y-1/2",
-  right: "top-1/2 left-full ml-2.5 -translate-y-1/2",
-} satisfies Record<TomuiTooltipSide, string>;
+/** Open/close transition states, driven by the disclosure state utilities. */
+const STARTING = ":is([data-starting-style])";
+const ENDING = ":is([data-ending-style])";
+const INSTANT = ":is([data-instant])";
+
+const styles = stylex.create({
+  wrapper: {
+    position: "relative",
+    display: "inline-flex",
+    cursor: "default",
+  },
+  popup: {
+    position: "absolute",
+    zIndex: 50,
+    pointerEvents: "none",
+    visibility: "visible",
+    opacity: 1,
+    display: "flex",
+    flexDirection: "column",
+    transformOrigin: "var(--transform-origin)",
+    borderRadius: radius.md.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    paddingInline: "0.625rem",
+    paddingBlock: "0.375rem",
+    fontSize: fontSizeSm.fontSize,
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    outlineWidth: 1,
+    outlineStyle: "solid",
+    outlineColor: colors["--color-tomui-line"],
+    transitionProperty: "transform, scale, opacity",
+    transitionDuration: "150ms",
+    [STARTING]: { scale: 0.9, opacity: 0 },
+    [ENDING]: { scale: 0.9, opacity: 0 },
+    [INSTANT]: { transitionDuration: "0s" },
+  },
+
+  // Placement, one entry per side.
+  sideTop: { bottom: "100%", left: "50%", marginBottom: "0.625rem", translate: "-50% 0" },
+  sideBottom: { top: "100%", left: "50%", marginTop: "0.625rem", translate: "-50% 0" },
+  sideLeft: { top: "50%", right: "100%", marginRight: "0.625rem", translate: "0 -50%" },
+  sideRight: { top: "50%", left: "100%", marginLeft: "0.625rem", translate: "0 -50%" },
+});
+
+const sideStyles = {
+  top: styles.sideTop,
+  bottom: styles.sideBottom,
+  left: styles.sideLeft,
+  right: styles.sideRight,
+} as const satisfies Record<TomuiTooltipSide, stylex.StyleXStyles>;
 
 let globalWarmedUp = false;
 let globalCoolDownTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -66,7 +73,6 @@ const openTooltips = new Map<string, () => void>();
 export type TooltipProps = {
   align?: TooltipAlign;
   children?: JSX.Element;
-  class?: string;
   content: JSX.Element;
   ref?: HTMLSpanElement | ((element: HTMLSpanElement) => void) | undefined;
   side?: TomuiTooltipSide;
@@ -74,6 +80,8 @@ export type TooltipProps = {
   closeDelay?: number;
   skipDelayDuration?: number;
   disabled?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Tooltip(props: TooltipProps): JSX.Element {
@@ -92,7 +100,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     merged,
     "align",
     "children",
-    "class",
+    "style",
     "content",
     "ref",
     "side",
@@ -211,7 +219,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
     <span
       data-tomui-component="Tooltip"
       data-side={merged.side}
-      class={cn("group/tooltip relative inline-flex cursor-default", merged.class)}
+      {...stylex.attrs(styles.wrapper, merged.style)}
       tabindex={0}
       aria-describedby={state.isOpen() ? popupId : undefined}
       ref={merged.ref}
@@ -261,13 +269,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
           role="tooltip"
           data-side={merged.side}
           data-align={merged.align}
-          class={cn(
-            "pointer-events-none absolute z-50",
-            "visible opacity-100",
-            TOMUI_TOOLTIP_POSITIONS[merged.side],
-            tooltipVariants({ side: merged.side }),
-            "tomui-tooltip-popup",
-          )}
+          {...stylex.attrs(styles.popup, sideStyles[merged.side])}
         >
           {merged.content}
         </span>

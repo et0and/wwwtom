@@ -1,15 +1,54 @@
 import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
-import { cn } from "../../utils/cn";
+import * as stylex from "@stylexjs/stylex";
+import { layout } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase } from "../../styles/typography.stylex";
 
-export type LabelProps = JSX.LabelHTMLAttributes<HTMLLabelElement> & {
+const styles = stylex.create({
+  label: {
+    margin: 0,
+    fontSize: fontSizeBase.fontSize,
+    fontWeight: 500,
+    color: textColors["--text-color-tomui-default"],
+    display: "inline-flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: layout.gap1.gap,
+  },
+  span: {
+    display: "inline-flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: layout.gap1.gap,
+  },
+  optional: {
+    fontWeight: 400,
+    color: textColors["--text-color-tomui-subtle"],
+  },
+  /** Visually hidden, still announced by screen readers. */
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: 0,
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    borderWidth: 0,
+  },
+});
+
+export type LabelProps = Omit<JSX.LabelHTMLAttributes<HTMLLabelElement>, "style"> & {
   children?: JSX.Element | undefined;
   showOptional?: boolean | undefined;
   tooltip?: JSX.Element | undefined;
-  class?: string | undefined;
   htmlFor?: string | undefined;
   asContent?: boolean | undefined;
   icon?: JSX.Element | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Label(props: LabelProps): JSX.Element {
@@ -19,7 +58,7 @@ export function Label(props: LabelProps): JSX.Element {
     "children",
     "showOptional",
     "tooltip",
-    "class",
+    "style",
     "htmlFor",
     "asContent",
     "icon",
@@ -28,10 +67,10 @@ export function Label(props: LabelProps): JSX.Element {
     <>
       {merged.children}
       <Show when={merged.showOptional}>
-        <span class="font-normal text-tomui-subtle">(optional)</span>
+        <span {...stylex.attrs(styles.optional)}>(optional)</span>
       </Show>
       <Show when={merged.tooltip}>
-        <span class="inline-flex items-center gap-1 text-tomui-subtle">
+        <span {...stylex.attrs(styles.span)}>
           <Show when={merged.icon} fallback={<span aria-hidden="true">{"ⓘ"}</span>}>
             {merged.icon}
           </Show>
@@ -43,17 +82,13 @@ export function Label(props: LabelProps): JSX.Element {
   return (
     <Show
       when={!merged.asContent}
-      fallback={<span class={cn("inline-flex items-center gap-1", merged.class)}>{content()}</span>}
+      fallback={<span {...stylex.attrs(styles.label, merged.style)}>{content()}</span>}
     >
       <label
         data-tomui-component="Label"
         {...rest}
         for={merged.htmlFor ?? rest.for}
-        class={cn(
-          "m-0 text-base font-medium text-tomui-default",
-          "inline-flex items-center gap-1",
-          merged.class,
-        )}
+        {...stylex.attrs(styles.label, merged.style)}
       >
         {content()}
       </label>

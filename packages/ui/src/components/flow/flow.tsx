@@ -1,47 +1,80 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
 // Simplified port: Tomui's descendants-tracking + measured layout replaced by DOM-order vertical stack with SVG lines via ResizeObserver.
 
-export const TOMUI_FLOW_VARIANTS = {
-  orientation: {
-    horizontal: { classes: "flex-row", description: "Nodes progress left-to-right" },
-    vertical: { classes: "flex-col", description: "Nodes progress top-to-bottom" },
+const lineColor = colors["--color-tomui-line"];
+const placeholder = textColors["--text-color-tomui-placeholder"];
+
+const styles = stylex.create({
+  root: { position: "relative", display: "flex", gap: "1.5rem" },
+  orientationHorizontal: { flexDirection: "row" },
+  orientationVertical: { flexDirection: "column" },
+  alignStart: { alignItems: "flex-start" },
+  alignCenter: { alignItems: "center" },
+  node: {
+    position: "relative",
+    borderRadius: radius.md.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    paddingInline: "0.75rem",
+    paddingBlock: "0.5rem",
+    boxShadow:
+      "0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1), 0 0 0 1px " + lineColor,
   },
-  align: {
-    start: { classes: "items-start", description: "Nodes align to the start edge" },
-    center: { classes: "items-center", description: "Nodes centered across the inactive axis" },
+  parallel: { display: "flex", gap: "1rem" },
+  list: {
+    margin: 0,
+    display: "flex",
+    listStyle: "none",
+    flexDirection: "column",
+    gap: "1.5rem",
+    padding: 0,
   },
-} as const;
+  listHorizontal: { flexDirection: "row" },
+  connectors: {
+    position: "absolute",
+    inset: 0,
+    pointerEvents: "none",
+    height: "100%",
+    width: "100%",
+    overflow: "visible",
+    color: placeholder,
+  },
+});
 
 export const TOMUI_FLOW_DEFAULT_VARIANTS = {
   align: "start",
   orientation: "vertical",
 } as const;
 
-export type TomuiFlowOrientation = keyof typeof TOMUI_FLOW_VARIANTS.orientation;
-export type TomuiFlowAlign = keyof typeof TOMUI_FLOW_VARIANTS.align;
+export type TomuiFlowOrientation = "horizontal" | "vertical";
+export type TomuiFlowAlign = "start" | "center";
 
-export type FlowProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type FlowProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   align?: TomuiFlowAlign;
   children?: JSX.Element;
-  class?: string;
   orientation?: TomuiFlowOrientation;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type FlowNodeProps = JSX.HTMLAttributes<HTMLLIElement> & {
+export type FlowNodeProps = Omit<JSX.HTMLAttributes<HTMLLIElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   disabled?: boolean;
   nodeId?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-export type FlowParallelProps = JSX.HTMLAttributes<HTMLLIElement> & {
+export type FlowParallelProps = Omit<JSX.HTMLAttributes<HTMLLIElement>, "style"> & {
   align?: "end";
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 interface ConnectorLine {
@@ -66,32 +99,24 @@ function connectorPath(line: ConnectorLine): string {
 
 export function flowVariants(
   props: { orientation?: TomuiFlowOrientation; align?: TomuiFlowAlign } = {},
-): string {
+): Array<stylex.StyleXStyles> {
   const merged = merge(TOMUI_FLOW_DEFAULT_VARIANTS, props);
-  return cn(
-    "tomui-flow relative flex gap-6",
-    resolveVariant(
-      TOMUI_FLOW_VARIANTS.orientation,
-      merged.orientation,
-      TOMUI_FLOW_DEFAULT_VARIANTS.orientation,
-    ).classes,
-    resolveVariant(TOMUI_FLOW_VARIANTS.align, merged.align, TOMUI_FLOW_DEFAULT_VARIANTS.align)
-      .classes,
-  );
+  return [
+    styles.root,
+    merged.orientation === "horizontal" ? styles.orientationHorizontal : styles.orientationVertical,
+    merged.align === "center" ? styles.alignCenter : styles.alignStart,
+  ];
 }
 
 export function FlowNode(props: FlowNodeProps) {
   const merged = merge({ disabled: false }, props);
-  const rest = omit(merged, "children", "class", "disabled", "nodeId");
+  const rest = omit(merged, "children", "style", "disabled", "nodeId");
   return (
     <li
       data-tomui-component="FlowNode"
       data-flow-node={merged.nodeId ?? ""}
       data-disabled={merged.disabled || undefined}
-      class={cn(
-        "tomui-flow-node relative rounded-md bg-tomui-base px-3 py-2 shadow ring ring-tomui-line",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.node, merged.style)}
       {...rest}
     >
       {merged.children}
@@ -100,12 +125,12 @@ export function FlowNode(props: FlowNodeProps) {
 }
 
 export function FlowParallel(props: FlowParallelProps) {
-  const rest = omit(props, "align", "children", "class");
+  const rest = omit(props, "align", "children", "style");
   return (
     <li
       data-tomui-component="FlowParallel"
       data-flow-parallel={props.align ?? ""}
-      class={cn("tomui-flow-parallel flex gap-4", props.class)}
+      {...stylex.attrs(styles.parallel, props.style)}
       {...rest}
     >
       {props.children}
@@ -121,7 +146,7 @@ export function Flow(props: FlowProps) {
     },
     props,
   );
-  const rest = omit(merged, "align", "children", "class", "orientation");
+  const rest = omit(merged, "align", "children", "style", "orientation");
   const rootRef: FlowElementRef = { current: undefined };
   const listRef: FlowListRef = { current: undefined };
   const itemEls: Array<HTMLElement> = [];
@@ -179,9 +204,9 @@ export function Flow(props: FlowProps) {
       ref={setRoot}
       data-tomui-component="Flow"
       data-orientation={merged.orientation}
-      class={cn(
-        flowVariants({ align: merged.align, orientation: merged.orientation }),
-        merged.class,
+      {...stylex.attrs(
+        ...flowVariants({ align: merged.align, orientation: merged.orientation }),
+        merged.style,
       )}
       {...rest}
     >
@@ -189,17 +214,14 @@ export function Flow(props: FlowProps) {
         ref={(el: HTMLUListElement) => {
           listRef.current = el;
         }}
-        class={cn(
-          "tomui-flow-list m-0 flex list-none flex-col gap-6 p-0",
-          merged.orientation === "horizontal" && "flex-row",
+        {...stylex.attrs(
+          styles.list,
+          merged.orientation === "horizontal" ? styles.listHorizontal : undefined,
         )}
       >
         {merged.children}
       </ul>
-      <svg
-        class="tomui-flow-connectors pointer-events-none absolute inset-0 h-full w-full overflow-visible text-tomui-placeholder"
-        aria-hidden="true"
-      >
+      <svg {...stylex.attrs(styles.connectors)} aria-hidden="true">
         <For each={lines()}>
           {(line: ConnectorLine) => (
             <path d={connectorPath(line)} fill="none" stroke="currentColor" stroke-width="2" />

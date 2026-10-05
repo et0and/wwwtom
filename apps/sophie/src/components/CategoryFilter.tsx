@@ -1,4 +1,6 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show } from "solid-js";
+import { layout, spacing } from "@tom/ui/primitives.stylex";
 import type { CmsCategory } from "@tom/schemas/cms";
 
 export const CategoryFilter = (props: {
@@ -6,7 +8,7 @@ export const CategoryFilter = (props: {
   active: string | null;
   onSelect: (slug: string | null) => void;
 }) => (
-  <div class="flex flex-wrap gap-2 py-4">
+  <div {...stylex.attrs(layout.flexWrapRow, layout.gap2, spacing.py4)}>
     <button
       type="button"
       class="sophie-filter"

@@ -1,7 +1,10 @@
 import { For, Match, Show, Switch, createSignal, onSettled } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { isServer } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import type { ArenaContentBlock, ArenaImage } from "@tom/schemas/arena-content";
+import { colors } from "@tom/ui/colors.stylex";
+import { layout, cursor, textAlign, spacing, radius } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/libs/utils/sanitize";
 import { ChannelEmbed } from "~/components/ChannelEmbed";
@@ -13,8 +16,54 @@ import {
   hasArenaImageSource,
 } from "~/libs/utils/arena-image";
 import { PdfDialog } from "~/components/PdfDialog";
+import { layoutStyles } from "~/components/layout.stylex";
 
 const DEFAULT_EMBED_ASPECT_RATIO = "16 / 9";
+
+const styles = stylex.create({
+  textBlock: { maxWidth: "none", overflowWrap: "break-word", whiteSpace: "normal" },
+  figureReset: { margin: 0 },
+  playOverlay: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  playButton: {
+    display: "flex",
+    height: "3.5rem",
+    width: "3.5rem",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.full.borderRadius,
+    backgroundColor: `color-mix(in srgb, ${colors["--color-black"]} 60%, transparent)`,
+    color: colors["--color-white"],
+  },
+  playIcon: {
+    height: "1.5rem",
+    width: "1.5rem",
+    fill: "currentColor",
+  },
+  videoTrigger: {
+    display: "block",
+    borderWidth: 0,
+    backgroundColor: "transparent",
+  },
+  videoCoverFallback: {
+    position: "relative",
+    display: "flex",
+    height: "11rem",
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors["--color-tomui-tint"],
+  },
+  embedContainer: {
+    position: "relative",
+    width: "100%",
+    overflow: "hidden",
+    backgroundColor: colors["--color-black"],
+  },
+});
 
 /**
  * Sanitized third-party HTML. Sanitizing needs DOMParser, which only exists
@@ -52,7 +101,7 @@ const asBlock = <T extends ArenaContentBlock["type"]>(
 
 function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> }) {
   return (
-    <div class="prose prose-sm max-w-none break-words whitespace-normal">
+    <div {...stylex.attrs(styles.textBlock)}>
       <ClientHtml
         html={props.block.content.html}
         sanitize={sanitizeRichHtml}
@@ -65,14 +114,14 @@ function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> 
 function ImageBlock(props: { block: Extract<ArenaContentBlock, { type: "Image" }> }) {
   const src = () => arenaImageSource(props.block.image);
   return (
-    <figure class="m-0">
+    <figure {...stylex.attrs(styles.figureReset)}>
       <Show when={src()}>
         {(value) => (
           <img
             src={value()}
             srcset={arenaImageSourceSet(props.block.image)}
             alt={arenaImageAlt(props.block.image, props.block.title)}
-            class="w-full"
+            {...stylex.attrs(layout.fullWidth)}
             loading="lazy"
             {...arenaImageDimensions(props.block.image)}
           />
@@ -98,7 +147,7 @@ function LinkBlockImage(props: { block: Extract<ArenaContentBlock, { type: "Link
         src={arenaImageSource(props.block.image)}
         srcset={arenaImageSourceSet(props.block.image)}
         alt={arenaImageAlt(props.block.image, props.block.title)}
-        class="w-full"
+        {...stylex.attrs(layout.fullWidth)}
         loading="lazy"
         {...arenaImageDimensions(props.block.image)}
       />
@@ -124,7 +173,7 @@ function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> 
           href={href()}
           target="_blank"
           rel="noopener noreferrer"
-          class="block no-underline hover:underline"
+          {...stylex.attrs(layout.block, layoutStyles.noUnderlineHover)}
         >
           <LinkBlockImage block={props.block} />
           <Text>{label()}</Text>
@@ -136,9 +185,9 @@ function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> 
 
 function PlayOverlay() {
   return (
-    <span class="absolute inset-0 flex items-center justify-center">
-      <span class="flex h-14 w-14 items-center justify-center rounded-full bg-black/60 text-white">
-        <svg viewBox="0 0 24 24" class="h-6 w-6 fill-current" aria-hidden="true">
+    <span {...stylex.attrs(layout.absoluteInset0, styles.playOverlay)}>
+      <span {...stylex.attrs(styles.playButton)}>
+        <svg viewBox="0 0 24 24" {...stylex.attrs(styles.playIcon)} aria-hidden="true">
           <path d="M8 5v14l11-7z" />
         </svg>
       </span>
@@ -158,23 +207,29 @@ function VideoAttachment(props: { url: string; name: string; cover: ArenaImage |
           type="button"
           onClick={() => setIsPlaying(true)}
           aria-label={`Play ${props.name}`}
-          class="block w-full cursor-pointer border-0 bg-transparent p-0 text-left"
+          {...stylex.attrs(
+            styles.videoTrigger,
+            layout.fullWidth,
+            cursor.pointer,
+            spacing.p0,
+            textAlign.left,
+          )}
         >
           <Show
             when={cover()}
             fallback={
-              <span class="relative flex h-44 w-full items-center justify-center bg-gray-100">
+              <span {...stylex.attrs(styles.videoCoverFallback)}>
                 <PlayOverlay />
               </span>
             }
           >
             {(cover) => (
-              <span class="relative block">
+              <span {...stylex.attrs(layout.relative, layout.block)}>
                 <img
                   src={arenaImageSource(cover())}
                   srcset={arenaImageSourceSet(cover())}
                   alt={props.name}
-                  class="w-full"
+                  {...stylex.attrs(layout.fullWidth)}
                   loading="lazy"
                   {...arenaImageDimensions(cover())}
                 />
@@ -186,7 +241,7 @@ function VideoAttachment(props: { url: string; name: string; cover: ArenaImage |
         </button>
       }
     >
-      <video src={props.url} controls preload="metadata" class="w-full">
+      <video src={props.url} controls preload="metadata" {...stylex.attrs(layout.fullWidth)}>
         Your browser does not support the video element.
       </video>
     </Show>
@@ -208,7 +263,7 @@ function AttachmentBlock(props: { block: Extract<ArenaContentBlock, { type: "Att
           src={arenaImageSource(props.block.image)}
           srcset={arenaImageSourceSet(props.block.image)}
           alt={displayName()}
-          class="w-full"
+          {...stylex.attrs(layout.fullWidth)}
           loading="lazy"
           {...arenaImageDimensions(props.block.image)}
         />
@@ -227,7 +282,7 @@ function AttachmentBlock(props: { block: Extract<ArenaContentBlock, { type: "Att
               href={props.block.attachment.url}
               target="_blank"
               rel="noopener noreferrer"
-              class="block no-underline hover:underline"
+              {...stylex.attrs(layout.block, layoutStyles.noUnderlineHover)}
             >
               {body}
             </a>
@@ -278,14 +333,20 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
               type="button"
               onClick={() => setIsPlaying(true)}
               aria-label={`Play ${props.block.title ?? "video"}`}
-              class="relative block w-full cursor-pointer border-0 bg-transparent p-0"
+              {...stylex.attrs(
+                layout.relative,
+                styles.videoTrigger,
+                layout.fullWidth,
+                cursor.pointer,
+                spacing.p0,
+              )}
             >
-              <span class="relative block">
+              <span {...stylex.attrs(layout.relative, layout.block)}>
                 <img
                   src={arenaImageSource(cover())}
                   srcset={arenaImageSourceSet(cover())}
                   alt={props.block.title ?? ""}
-                  class="w-full"
+                  {...stylex.attrs(layout.fullWidth)}
                   loading="lazy"
                   {...arenaImageDimensions(cover())}
                 />
@@ -295,7 +356,7 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
           }
         >
           <div
-            class="embed-container relative w-full overflow-hidden bg-black"
+            class={`embed-container ${stylex.attrs(styles.embedContainer).class ?? ""}`}
             style={{ "aspect-ratio": embedAspectRatio(embed().width, embed().height) }}
           >
             <ClientHtml html={html()} sanitize={sanitizeEmbedHtml} fallback={null} />
@@ -323,7 +384,7 @@ export function ContentBlocks(props: { blocks: ReadonlyArray<ArenaContentBlock> 
     <div class="content-blocks">
       <For each={props.blocks}>
         {(block) => (
-          <div class="py-4">
+          <div {...stylex.attrs(spacing.py4)}>
             <Switch>
               <Match when={asBlock(block, "Text")}>{(text) => <TextBlock block={text()} />}</Match>
               <Match when={asBlock(block, "Image")}>

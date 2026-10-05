@@ -12,6 +12,8 @@ Design rules. Follow always when building or reviewing TomUI.
 ## Text
 
 - content text 14px. 16px+ headings only.
+- sizes come from `styles/typography.stylex.ts`. body Text inherits line height
+  from its block, so set spacing on the parent rather than on the Text itself
 - headings sentence case. product names title case.
 - never `tracking-*`.
 - never `font-bold`. headings `font-semibold`. inline bold `font-medium`.
@@ -40,3 +42,29 @@ Design rules. Follow always when building or reviewing TomUI.
 
 - collapse keeps content size while closing. fixed inner width, not `w-full`.
 - never conditionally render dialogs. always mount, control with `open`.
+
+## StyleX
+
+Styling is StyleX, not Tailwind. Use `stylex.attrs()` (not `stylex.props()`):
+Solid reads `class`, React reads `className`. Apply with a spread:
+`<div {...stylex.attrs(styles.root, props.style)} />`.
+
+- `class?: string` is gone. Components take `style?: StyleXStyles`. A caller
+  passes a compiled style from `stylex.create`; an inline object literal is
+  silently ignored.
+- never nest a namespace you index at runtime. StyleX types a namespace as one
+  opaque object, so use flat keys (`sizeXs`, `bold`) or a plain `Record` map.
+- attribute states: `:is([data-state=open])`. StyleX rejects a bare
+  `[data-state=open]` as an invalid pseudo-class. It compiles the `:is()`
+  wrapper down to a plain attribute selector, and compound selectors such as
+  `:is([data-state=open][data-pending])` work.
+- ancestor states: `stylex.when.ancestor(":hover")`, not `group-*`.
+- `:has()` is supported and preferred over `has-[...]`.
+- extra custom properties go through the `cssVars` prop, not `style`.
+  A `defineVars` key resolves to the value `var(--x123)`, not a property
+  name, so it cannot be used as an object key. Use `customPropertyName()`.
+- `defineVars` must be a named export in a `.stylex.ts` file.
+
+Tests cannot assert computed style: jsdom loads no stylesheet, so
+`getComputedStyle` returns empty. Assert the class list, the `style`
+attribute, and behaviour instead.

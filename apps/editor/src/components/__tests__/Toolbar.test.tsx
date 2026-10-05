@@ -54,7 +54,11 @@ describe("Toolbar", { timeout: 30_000 }, () => {
     await vi.waitFor(() =>
       expect(getByRole("button", { name: "B" }).getAttribute("aria-pressed")).toBe("true"),
     );
-    expect(getByRole("button", { name: "B" }).getAttribute("class")).toContain("bg-tomui-fill");
+    // The active style is a compiled StyleX class, so compare the class lists
+    // of the active and inactive states instead of a Tailwind class name.
+    const activeClass = getByRole("button", { name: "B" }).getAttribute("class");
+    const inactiveClass = getByRole("button", { name: "I" }).getAttribute("class");
+    expect(activeClass).not.toEqual(inactiveClass);
   });
 
   it("switches block type to heading", async () => {

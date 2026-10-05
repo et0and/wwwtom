@@ -1,74 +1,13 @@
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import * as stylex from "@stylexjs/stylex";
+import { colors } from "../../styles/colors.stylex";
+import { cursor, layout, radius, select } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
+import { customProperties } from "../../utils/stylex-vars";
+import { buttonEmphasisVars } from "./button-vars.stylex";
 import { Loader } from "../loader/loader";
-
-export const TOMUI_BUTTON_VARIANTS = {
-  form: {
-    base: { classes: "", description: "Default rectangular button form" },
-    square: {
-      classes: "items-center justify-center p-0",
-      description: "Square button for icon-only actions",
-    },
-    circle: {
-      classes: "items-center justify-center p-0 rounded-full",
-      description: "Circular button for icon-only actions",
-    },
-  },
-  size: {
-    xs: {
-      classes: "h-5 gap-1 rounded-sm px-1.5 text-xs",
-      description: "Extra small button for compact UIs",
-    },
-    sm: {
-      classes: "h-6.5 gap-1 rounded-md px-2 text-xs",
-      description: "Small button for secondary actions",
-    },
-    base: { classes: "h-9 gap-1.5 rounded-lg px-3 text-base", description: "Default button size" },
-    lg: {
-      classes: "h-10 gap-2 rounded-lg px-4 text-base",
-      description: "Large button for primary CTAs",
-    },
-  },
-  compactSize: {
-    xs: { classes: "size-3.5" },
-    sm: { classes: "size-6.5" },
-    base: { classes: "size-9" },
-    lg: { classes: "size-10" },
-  },
-  variant: {
-    primary: {
-      classes:
-        "relative overflow-hidden bg-(--tomui-button-emphasis-bg) !text-white ring ring-(--tomui-button-emphasis-ring) focus:ring-(--tomui-button-emphasis-ring) focus-visible:ring-(--tomui-button-emphasis-ring) active:ring-(--tomui-button-emphasis-ring) disabled:opacity-50",
-      description: "High-emphasis button for primary actions",
-    },
-    secondary: {
-      classes:
-        "bg-tomui-base !text-tomui-default ring not-disabled:hover:bg-tomui-tint disabled:bg-tomui-base/50 disabled:!text-tomui-default/70 ring-tomui-line data-[state=open]:bg-tomui-base",
-      description: "Default button style for most actions",
-    },
-    ghost: {
-      classes: "text-tomui-default hover:bg-tomui-tint shadow-none bg-inherit",
-      description: "Minimal button with no background",
-    },
-    destructive: {
-      classes:
-        "relative overflow-hidden bg-(--tomui-button-emphasis-bg) !text-white ring ring-(--tomui-button-emphasis-ring) focus:ring-(--tomui-button-emphasis-ring) focus-visible:ring-(--tomui-button-emphasis-ring) active:ring-(--tomui-button-emphasis-ring) disabled:opacity-50",
-      description: "Danger button for destructive actions like delete",
-    },
-    "secondary-destructive": {
-      classes:
-        "bg-tomui-base !text-tomui-danger ring not-disabled:hover:!text-tomui-danger not-disabled:hover:ring-tomui-danger/30 disabled:bg-tomui-base/50 disabled:!text-tomui-danger/70 ring-tomui-line data-[state=open]:bg-tomui-base",
-      description: "Secondary button with destructive text",
-    },
-    outline: {
-      classes:
-        "bg-transparent text-tomui-default ring ring-tomui-line transition-colors not-disabled:hover:text-tomui-strong not-disabled:hover:ring-tomui-focus/25",
-      description: "Bordered button with transparent background",
-    },
-  },
-} as const;
 
 export const TOMUI_BUTTON_DEFAULT_VARIANTS = {
   form: "base",
@@ -76,107 +15,289 @@ export const TOMUI_BUTTON_DEFAULT_VARIANTS = {
   variant: "secondary",
 } as const;
 
-export type TomuiButtonForm = keyof typeof TOMUI_BUTTON_VARIANTS.form;
-export type TomuiButtonSize = keyof typeof TOMUI_BUTTON_VARIANTS.size;
-export type TomuiButtonVariant = keyof typeof TOMUI_BUTTON_VARIANTS.variant;
+export type TomuiButtonForm = "base" | "square" | "circle";
+export type TomuiButtonSize = "xs" | "sm" | "base" | "lg";
+export type TomuiButtonVariant =
+  | "primary"
+  | "secondary"
+  | "ghost"
+  | "destructive"
+  | "secondary-destructive"
+  | "outline";
+
+const disabledBase = {
+  backgroundColor: "color-mix(in srgb, " + colors["--color-tomui-base"] + " 50%, transparent)",
+  color: "color-mix(in srgb, " + textColors["--text-color-tomui-default"] + " 70%, transparent)",
+};
+
+const disabledDanger = {
+  backgroundColor: "color-mix(in srgb, " + colors["--color-tomui-base"] + " 50%, transparent)",
+  color: "color-mix(in srgb, " + textColors["--text-color-tomui-danger"] + " 70%, transparent)",
+};
+
+const styles = stylex.create({
+  base: {
+    position: "relative",
+    display: "flex",
+    width: "max-content",
+    flexShrink: 0,
+    flexDirection: "row",
+    alignItems: "center",
+    borderWidth: 0,
+    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    fontFamily: "inherit",
+    fontWeight: 500,
+    userSelect: select.none.userSelect,
+    cursor: cursor.pointer.cursor,
+    outlineWidth: 0,
+    // Colour changes are immediate, never transitioned.
+    transitionProperty: "none",
+  },
+
+  // Forms
+  formBase: {},
+  formSquare: { alignItems: "center", justifyContent: "center", padding: 0 },
+  formCircle: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 0,
+    borderRadius: radius.full.borderRadius,
+  },
+
+  // Sizes
+  sizeXs: {
+    height: "1.25rem",
+    gap: layout.gap1.gap,
+    borderRadius: radius.sm.borderRadius,
+    paddingInline: "0.375rem",
+    fontSize: fontSizeXs.fontSize,
+  },
+  sizeSm: {
+    height: "1.625rem",
+    gap: layout.gap1.gap,
+    borderRadius: radius.md.borderRadius,
+    paddingInline: "0.5rem",
+    fontSize: fontSizeXs.fontSize,
+  },
+  sizeBase: {
+    height: "2.25rem",
+    gap: layout.gap1_5.gap,
+    borderRadius: radius.lg.borderRadius,
+    paddingInline: "0.75rem",
+    fontSize: fontSizeBase.fontSize,
+  },
+  sizeLg: {
+    height: "2.5rem",
+    gap: layout.gap2.gap,
+    borderRadius: radius.lg.borderRadius,
+    paddingInline: "1rem",
+    fontSize: fontSizeBase.fontSize,
+  },
+
+  // Square extents used when the form is square or circle.
+  compactXs: { width: "0.875rem", height: "0.875rem" },
+  compactSm: { width: "1.625rem", height: "1.625rem" },
+  compactBase: { width: "2.25rem", height: "2.25rem" },
+  compactLg: { width: "2.5rem", height: "2.5rem" },
+
+  // Emphasis variants. primary and destructive differ only in the inline accent
+  // vars, so they deliberately share one rule.
+  emphasis: {
+    position: "relative",
+    overflow: "hidden",
+    backgroundColor: buttonEmphasisVars.bg,
+    color: "#fff",
+    boxShadow: "0 0 0 1px " + buttonEmphasisVars.ring,
+    opacity: { default: 1, ":disabled": 0.5 },
+  },
+  secondary: {
+    backgroundColor: colors["--color-tomui-base"],
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    ":disabled": disabledBase,
+  },
+  "secondary-destructive": {
+    backgroundColor: colors["--color-tomui-base"],
+    color: textColors["--text-color-tomui-danger"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    ":hover": { color: textColors["--text-color-tomui-danger"] },
+    ":disabled": disabledDanger,
+  },
+  ghost: {
+    color: textColors["--text-color-tomui-default"],
+    backgroundColor: "inherit",
+    boxShadow: "none",
+    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+  },
+  outline: {
+    backgroundColor: "transparent",
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    ":hover": {
+      color: textColors["--text-color-tomui-strong"],
+      boxShadow:
+        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 25%, transparent)",
+    },
+  },
+
+  // Focus ring. Overrides the variant box shadow, so it is applied last.
+  focusRing: {
+    boxShadow: {
+      default: "0 0 0 1px " + colors["--color-tomui-line"],
+      ":focus":
+        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 50%, transparent)",
+      ":focus-visible": "0 0 0 2px " + colors["--color-tomui-brand"],
+    },
+  },
+
+  // Gradient overlay for emphasis variants.
+  overlay: {
+    position: "absolute",
+    inset: 0,
+    borderRadius: "inherit",
+    backgroundImage:
+      "linear-gradient(to bottom, " +
+      buttonEmphasisVars.gradientStart +
+      ", " +
+      buttonEmphasisVars.gradientEnd +
+      ")",
+    boxShadow: "inset 0 1px 0 0 " + buttonEmphasisVars.bg,
+  },
+  content: { position: "relative", display: "flex", alignItems: "center", gap: layout.gap1.gap },
+  dimmed: { opacity: 0.5 },
+  noUnderline: { textDecorationLine: "none" },
+});
+
+/**
+ * Form, size, and variant maps. StyleX cannot index a nested namespace, so
+ * each axis gets its own flat map keyed by variant name.
+ */
+const formStyles = {
+  base: styles.formBase,
+  square: styles.formSquare,
+  circle: styles.formCircle,
+} as const satisfies Record<TomuiButtonForm, stylex.StyleXStyles>;
+
+const sizeStyles = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+} as const satisfies Record<TomuiButtonSize, stylex.StyleXStyles>;
+
+const compactStyles = {
+  xs: styles.compactXs,
+  sm: styles.compactSm,
+  base: styles.compactBase,
+  lg: styles.compactLg,
+} as const satisfies Record<TomuiButtonSize, stylex.StyleXStyles>;
+
+const variantStyles = {
+  // primary and destructive share one rule; the accent vars set inline are what
+  // actually differ between them.
+  primary: styles.emphasis,
+  secondary: styles.secondary,
+  ghost: styles.ghost,
+  destructive: styles.emphasis,
+  "secondary-destructive": styles["secondary-destructive"],
+  outline: styles.outline,
+} as const satisfies Record<TomuiButtonVariant, stylex.StyleXStyles>;
+
+const isCompactForm = (form: TomuiButtonForm): boolean => form === "square" || form === "circle";
+
+const hasEmphasis = (variant: TomuiButtonVariant): boolean =>
+  variant === "primary" || variant === "destructive";
+
+/** Colour-mix vars for emphasis variants. Undefined for the others. */
+function emphasisStyle(variant: TomuiButtonVariant): Record<string, string> | undefined {
+  const token =
+    variant === "primary"
+      ? colors["--color-tomui-brand"]
+      : variant === "destructive"
+        ? colors["--color-tomui-danger"]
+        : undefined;
+  if (token === undefined) return undefined;
+  return customProperties({
+    [buttonEmphasisVars.ring]: "color-mix(in oklch, " + token + ", black 10%)",
+    [buttonEmphasisVars.bg]: "color-mix(in oklch, " + token + ", white 30%)",
+    [buttonEmphasisVars.gradientStart]: "color-mix(in oklch, " + token + ", white 15%)",
+    [buttonEmphasisVars.gradientEnd]: token,
+  });
+}
+
+/**
+ * Shared button styling, so primitives such as Dialog.Close and Popover.Trigger
+ * can adopt button appearance without rendering a Button.
+ */
+export function buttonVariants(props: {
+  variant?: TomuiButtonVariant;
+  size?: TomuiButtonSize;
+  form?: TomuiButtonForm;
+}): stylex.StyleXStyles[] {
+  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
+  return [
+    styles.base,
+    // Size before form: the form rules set border-radius for `circle`, and
+    // applying them after size would let the size radius win.
+    sizeStyles[merged.size],
+    formStyles[merged.form],
+    variantStyles[merged.variant],
+    styles.focusRing,
+  ];
+}
 
 export type ButtonProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
   "style" | "title" | "type"
 > & {
   children?: JSX.Element;
-  class?: string;
-  icon?: JSX.Element;
-  loading?: boolean;
   form?: TomuiButtonForm;
   size?: TomuiButtonSize;
   variant?: TomuiButtonVariant;
+  icon?: JSX.Element;
+  loading?: boolean;
   title?: string | undefined;
-  style?: JSX.CSSProperties | undefined;
   type?: "button" | "submit" | "reset" | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
+  /**
+   * Extra custom properties set on the element. Callers that compose Button
+   * (such as Banner.Action) pass their own accent here rather than through
+   * `style`, which only carries compiled StyleX styles.
+   */
+  cssVars?: Record<string, string>;
 };
 
-export function buttonVariants(
-  props: {
-    variant?: TomuiButtonVariant;
-    size?: TomuiButtonSize;
-    form?: TomuiButtonForm;
-  } = {},
-): string {
-  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
-  const isCompactForm = () => merged.form === "square" || merged.form === "circle";
-  return cn(
-    "group flex w-max shrink-0 items-center font-medium select-none",
-    "border-0 shadow-xs",
-    "focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand",
-    "cursor-pointer",
-    "disabled:cursor-not-allowed disabled:text-tomui-subtle",
-    resolveVariant(TOMUI_BUTTON_VARIANTS.size, merged.size, TOMUI_BUTTON_DEFAULT_VARIANTS.size)
-      .classes,
-    resolveVariant(TOMUI_BUTTON_VARIANTS.form, merged.form, TOMUI_BUTTON_DEFAULT_VARIANTS.form)
-      .classes,
-    isCompactForm() &&
-      resolveVariant(
-        TOMUI_BUTTON_VARIANTS.compactSize,
-        merged.size,
-        TOMUI_BUTTON_DEFAULT_VARIANTS.size,
-      ).classes,
-    resolveVariant(
-      TOMUI_BUTTON_VARIANTS.variant,
-      merged.variant,
-      TOMUI_BUTTON_DEFAULT_VARIANTS.variant,
-    ).classes,
-  );
-}
-
-function emphasisStyle(variant: TomuiButtonVariant): JSX.CSSProperties | undefined {
-  const token = () => {
-    if (variant === "primary") return "var(--color-tomui-brand)";
-    if (variant === "destructive") return "var(--color-tomui-danger)";
-    return undefined;
-  };
-  const active = token();
-  if (!active) return undefined;
-  return {
-    "--tomui-button-emphasis-ring": `color-mix(in oklch, ${active}, black 10%)`,
-    "--tomui-button-emphasis-bg": `color-mix(in oklch, ${active}, white 30%)`,
-    "--tomui-button-emphasis-gradient-start": `color-mix(in oklch, ${active}, white 15%)`,
-    "--tomui-button-emphasis-gradient-end": active,
-  } as JSX.CSSProperties;
-}
-
-function hasEmphasis(variant: TomuiButtonVariant): boolean {
-  return variant === "primary" || variant === "destructive";
-}
-
 export function Button(props: ButtonProps) {
-  const merged = merge(
-    {
-      form: TOMUI_BUTTON_DEFAULT_VARIANTS.form,
-      size: TOMUI_BUTTON_DEFAULT_VARIANTS.size,
-      variant: TOMUI_BUTTON_DEFAULT_VARIANTS.variant,
-    },
-    props,
-  );
+  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
   const rest = omit(
     merged,
     "children",
-    "class",
     "disabled",
     "loading",
     "form",
     "size",
     "variant",
+    "cssVars",
     "icon",
     "style",
     "title",
     "type",
   );
-  const style = (): JSX.CSSProperties | undefined => {
-    const emphasis = emphasisStyle(merged.variant);
-    if (!emphasis) return merged.style;
-    return { ...emphasis, ...merged.style };
-  };
+  const isDisabled = (): boolean => Boolean(merged.disabled) || Boolean(merged.loading);
+  /** Emphasis vars for this variant, plus any the caller supplied. */
+  const inlineVars = () => ({
+    ...emphasisStyle(merged.variant),
+    ...merged.cssVars,
+  });
+  const attrs = () =>
+    stylex.attrs(
+      ...buttonVariants(merged),
+      isCompactForm(merged.form) ? compactStyles[merged.size] : undefined,
+      isDisabled() ? styles.dimmed : undefined,
+      merged.style,
+    );
   const iconNode = (): JSX.Element => {
     if (merged.loading) return <Loader size={merged.size === "lg" ? 16 : 14} />;
     return merged.icon;
@@ -184,13 +305,9 @@ export function Button(props: ButtonProps) {
   return (
     <button
       data-tomui-component="Button"
-      class={cn(
-        buttonVariants({ variant: merged.variant, size: merged.size, form: merged.form }),
-        merged.disabled && "cursor-not-allowed opacity-50",
-        merged.class,
-      )}
-      disabled={merged.loading || merged.disabled}
-      style={style()}
+      {...attrs()}
+      style={inlineVars()}
+      disabled={isDisabled()}
       type={merged.type ?? "button"}
       title={merged.title}
       {...rest}
@@ -200,17 +317,18 @@ export function Button(props: ButtonProps) {
         fallback={
           <>
             {iconNode()}
-            <Show when={merged.children}>{(kids) => <span class="contents">{kids()}</span>}</Show>
+            <Show when={merged.children}>
+              {(kids) => <span {...stylex.attrs(styles.content)}>{kids()}</span>}
+            </Show>
           </>
         }
       >
-        <span
-          aria-hidden="true"
-          class="absolute inset-0 rounded-[inherit] bg-linear-to-b from-(--tomui-button-emphasis-gradient-start) to-(--tomui-button-emphasis-gradient-end) shadow-[inset_0_1px_0_0_var(--tomui-button-emphasis-bg)] group-hover:from-(--tomui-button-emphasis-bg)"
-        />
-        <span class="relative flex items-center gap-1.5">
+        <span {...stylex.attrs(styles.overlay)} />
+        <span {...stylex.attrs(styles.content)}>
           {iconNode()}
-          <Show when={merged.children}>{(kids) => <span class="contents">{kids()}</span>}</Show>
+          <Show when={merged.children}>
+            {(kids) => <span {...stylex.attrs(layout.contents)}>{kids()}</span>}
+          </Show>
         </span>
       </Show>
     </button>
@@ -219,14 +337,16 @@ export function Button(props: ButtonProps) {
 
 export type LinkButtonProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   disabled?: boolean;
   icon?: JSX.Element;
   external?: boolean;
   form?: TomuiButtonForm;
   size?: TomuiButtonSize;
   variant?: TomuiButtonVariant;
-  style?: JSX.CSSProperties | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
+  /** Extra custom properties set on the element. */
+  cssVars?: Record<string, string>;
 };
 
 export function LinkButton(props: LinkButtonProps) {
@@ -241,7 +361,6 @@ export function LinkButton(props: LinkButtonProps) {
   const rest = omit(
     merged,
     "children",
-    "class",
     "disabled",
     "external",
     "form",
@@ -249,24 +368,25 @@ export function LinkButton(props: LinkButtonProps) {
     "variant",
     "icon",
     "style",
+    "cssVars",
   );
-  const style = (): JSX.CSSProperties | undefined => {
-    const emphasis = emphasisStyle(merged.variant);
-    if (!emphasis) return merged.style;
-    return { ...emphasis, ...merged.style };
-  };
+  const inlineVars = () => ({
+    ...emphasisStyle(merged.variant),
+    ...merged.cssVars,
+  });
   return (
     <Show
       when={merged.disabled}
       fallback={
         <a
           data-tomui-component="LinkButton"
-          class={cn(
-            buttonVariants({ variant: merged.variant, size: merged.size, form: merged.form }),
-            "flex items-center no-underline! select-text",
-            merged.class,
+          {...stylex.attrs(
+            ...buttonVariants(merged),
+            styles.noUnderline,
+            select.text,
+            merged.style,
           )}
-          style={style()}
+          style={inlineVars()}
           target={merged.external ? "_blank" : undefined}
           rel={merged.external ? "noopener noreferrer" : undefined}
           {...rest}
@@ -278,11 +398,7 @@ export function LinkButton(props: LinkButtonProps) {
     >
       <button
         data-tomui-component="LinkButton"
-        class={cn(
-          buttonVariants({ variant: merged.variant, size: merged.size, form: "base" }),
-          "select-text",
-          merged.class,
-        )}
+        {...stylex.attrs(...buttonVariants(merged), styles.dimmed, select.text, merged.style)}
         disabled
       >
         {merged.icon}

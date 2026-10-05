@@ -1,7 +1,7 @@
 @import "./theme-tomui.css";
 @import "./theme-fedramp.css";
 
-@theme {
+:root {
   /* Primitive color definitions for Tomui theme */
   --color-red-650: oklch(55% 0.238 27.4);
   --color-red-750: oklch(46% 0.195 27.2);
@@ -26,55 +26,22 @@
 
 /* Typography is now generated in theme-tomui.css via codegen:themes */
 
-@theme {
+:root {
   /* Easings & transitions */
   --ease-bounce: cubic-bezier(0.2, 0, 0, 1.5);
   --default-transition-duration: 100ms;
 }
 
-@layer base {
-  :root {
-    color-scheme: light;
-  }
-
-  [data-mode="dark"] {
-    color-scheme: dark;
-  }
+:root {
+  color-scheme: light;
 }
 
-@layer utilities {
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  /* Link current variant decoration - different opacities for light/dark */
-  .link-current {
-    text-decoration-color: color-mix(in oklch, currentColor 35%, transparent);
-  }
-
-  [data-mode="dark"] .link-current {
-    text-decoration-color: color-mix(in oklch, currentColor 65%, transparent);
-  }
-
-  .link-current:hover {
-    text-decoration-color: currentColor;
-  }
-
-  /* External link icon stroke width - thicker in dark mode for visibility */
-  .link-external-icon {
-    stroke-width: 1.75;
-  }
-
-  [data-mode="dark"] .link-external-icon {
-    stroke-width: 2;
-  }
+[data-mode="dark"] {
+  color-scheme: dark;
 }
 
+/* Three-step bounce used by the Empty state check mark. StyleX generates only
+   from/to frames, so the midpoint frame has to live here. */
 @keyframes bounce-in {
   0% {
     transform: scale(0.6);
@@ -83,16 +50,13 @@
 
   50% {
     transform: scale(1.2);
-    opacity: 1;
+    opacity: 0;
   }
 
   100% {
     transform: scale(1);
+    opacity: 1;
   }
-}
-
-.animate-bounce-in {
-  animation: bounce-in 0.4s ease-out;
 }
 
 /* Tab list scroll behavior. The scrollbar is hidden when scroll-driven
@@ -112,15 +76,146 @@
   }
 }
 
-/* Popup outline offset - in dark mode, offset inward to align with inner stroke.
-   This compensates for the different geometry of inner vs outer stroke paths.
-   Used by: Popover
-   See: https://base-ui.com/react/components/tooltip */
-[data-mode="dark"] .tomui-popover-popup {
-  outline-offset: -1px;
+/* InputGroup styles its inner input from which child parts are present.
+   StyleX 0.19 supports no descendant selectors, so these rules stay here.
+   See the addon padding table in input-group.tsx for the per-size values. */
+[data-slot="input-group"]:has([data-slot="input-group-suffix"]) [data-slot="input-group-input"] {
+  field-sizing: content;
+  max-width: 100%;
+  flex-grow: 0;
+  padding-inline-end: 0;
 }
 
-/* Input placeholder color - vanilla CSS to avoid Tailwind parsing issues */
-.tomui-input-placeholder::placeholder {
-  color: var(--text-color-tomui-placeholder);
+[data-slot="input-group"][data-size="xs"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.25rem;
+}
+
+[data-slot="input-group"][data-size="sm"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.375rem;
+}
+
+[data-slot="input-group"][data-size="base"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.5rem;
+}
+
+[data-slot="input-group"][data-size="lg"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.625rem;
+}
+
+[data-slot="input-group"][data-size="xs"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.25rem;
+}
+
+[data-slot="input-group"][data-size="sm"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.375rem;
+}
+
+[data-slot="input-group"][data-size="base"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.5rem;
+}
+
+[data-slot="input-group"][data-size="lg"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.625rem;
+}
+
+/* The addon ignores pointer events so clicks fall through to the input; the
+   icons and buttons it hosts must take them back. */
+[data-slot="input-group-addon-start"] > *,
+[data-slot="input-group-addon-end"] > * {
+  pointer-events: auto;
+}
+
+/* A badge inside a link picks up a ring on hover, and its icon is pinned to
+   12px. StyleX 0.19 supports no ancestor or descendant selectors, so these two
+   rules stay here. See badge.tsx for the variant values. */
+a:hover [data-tomui-component="Badge"] {
+  box-shadow: 0 0 0 1px currentColor;
+}
+
+[data-tomui-component="Badge"] [data-slot="badge-icon"] > svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* The switch thumb slides to the far edge when checked. StyleX 0.19 supports no
+   sibling selector, so the three sizes stay here. The offset equals the thumb
+   width, so the thumb sits flush against the right edge. */
+[data-tomui-component="Switch"][data-size="sm"]:checked + [data-slot="switch-thumb"] {
+  left: 1rem;
+}
+
+[data-tomui-component="Switch"][data-size="base"]:checked + [data-slot="switch-thumb"] {
+  left: 1.125rem;
+}
+
+[data-tomui-component="Switch"][data-size="lg"]:checked + [data-slot="switch-thumb"] {
+  left: 1.25rem;
+}
+
+/* Radio indicator and hover ring. StyleX 0.19 supports no sibling selector, so
+   the checked indicator is toggled here. The hover ring only applies to a
+   non-error, enabled radio, which is what the old group-hover rule did. */
+[data-tomui-part="item"]:checked + [data-tomui-part="indicator"] {
+  display: flex;
+}
+
+[data-tomui-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
+  [data-tomui-part="item"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+}
+
+/* Toolbar rounds only its outer corners and dividers its children. StyleX 0.19
+   supports no child or sibling combinator, so these stay here. */
+[data-tomui-component="Toolbar"] > *:first-child {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+/* The last visible child gets the right corners, skipping trailing
+   aria-hidden and hidden inputs. */
+[data-tomui-component="Toolbar"]
+  > *:not([aria-hidden="true"]):not([type="hidden"]):not(
+    :has(~ :not([aria-hidden="true"]):not([type="hidden"]))
+  ) {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+[data-tomui-component="Toolbar"] > *:not([aria-hidden="true"]):not(:first-child) {
+  border-left: 1px solid var(--color-tomui-line);
+}
+
+/* A compact Banner inlines its action's Link so it flows with the title text
+   instead of breaking onto its own line. */
+[data-slot="banner-action-inline"] [data-tomui-component="Link"] {
+  display: inline;
+}
+
+/* Checkbox indicator show/hide, plus the ring the old [&:hover>span] and
+   [&:focus-within>span] rules painted onto the indicator overlay. StyleX 0.19
+   supports no sibling or descendant selector, so these stay here. The overlay
+   only paints when checked, so the ring usually matches the input's own. */
+[data-tomui-component="Checkbox"]:checked + [data-tomui-part="indicator"],
+[data-tomui-component="Checkbox"]:indeterminate + [data-tomui-part="indicator"] {
+  display: flex;
+}
+
+[data-tomui-part="control"][data-variant="default"]:hover [data-tomui-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+}
+
+[data-tomui-part="control"][data-variant="default"]:focus-within [data-tomui-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-focus);
+}
+
+[data-tomui-part="control"][data-variant="error"] [data-tomui-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-tomui-danger);
 }

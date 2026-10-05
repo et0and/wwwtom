@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import {
   createContext,
@@ -8,32 +9,140 @@ import {
   untrack,
   useContext,
 } from "solid-js";
-import { cn } from "../../utils/cn";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 import { createControllableSignal } from "../../utils/state";
 
-export const TOMUI_RADIO_VARIANTS = {
-  variant: {
-    default: {
-      classes: "ring-tomui-hairline",
-      description: "Default radio appearance",
-    },
-    error: {
-      classes: "ring-tomui-danger",
-      description: "Error state for validation failures",
-    },
-  },
-  appearance: {
-    default: { classes: "", description: "Standard inline radio item" },
-    card: {
-      classes:
-        "rounded-lg border border-tomui-hairline bg-tomui-base p-3 transition-colors hover:bg-tomui-tint has-[[data-checked]]:border-tomui-interact has-[[data-checked]]:bg-tomui-tint",
-      description: "Choice card appearance with border, padding, and highlighted selection state",
-    },
-  },
-} as const;
+const hairline = colors["--color-tomui-hairline"];
+const line = colors["--color-tomui-line"];
+const focus = colors["--color-tomui-focus"];
+const brand = colors["--color-tomui-brand"];
+const danger = textColors["--text-color-tomui-danger"];
 
-export type TomuiRadioVariant = keyof typeof TOMUI_RADIO_VARIANTS.variant;
-export type TomuiRadioAppearance = keyof typeof TOMUI_RADIO_VARIANTS.appearance;
+const styles = stylex.create({
+  legend: {
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: textColors["--text-color-tomui-default"],
+  },
+  group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
+  groupListDefault: { display: "flex", flexDirection: "column", gap: "0.5rem" },
+  groupListCard: { display: "flex", flexDirection: "column", gap: "0.75rem" },
+  listHorizontalDefault: {
+    display: "flex",
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: "0.5rem",
+  },
+  listHorizontalCard: {
+    display: "grid",
+    gridTemplateColumns: "repeat(2, 1fr)",
+    gap: "0.75rem",
+  },
+  message: { fontSize: "0.8125rem" },
+  messageDanger: { color: danger },
+  messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
+  itemLabelDefault: {
+    position: "relative",
+    display: "inline-flex",
+    margin: 0,
+    alignItems: "flex-start",
+    gap: "0.5rem",
+  },
+  itemLabelReversed: { flexDirection: "row-reverse", justifyContent: "flex-end" },
+  itemLabelCard: {
+    position: "relative",
+    display: "flex",
+    margin: 0,
+    alignItems: "flex-start",
+    gap: "0.75rem",
+    padding: "0.75rem",
+    borderWidth: 1,
+    borderColor: hairline,
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    transitionProperty: "background-color",
+    ":has([data-checked])": {
+      borderColor: colors["--color-tomui-interact"],
+      backgroundColor: colors["--color-tomui-tint"],
+    },
+  },
+  itemLabelCardError: {
+    borderColor: danger,
+    ":has([data-checked])": {
+      borderColor: danger,
+      backgroundColor: colors["--color-tomui-base"],
+    },
+  },
+  itemLabelCardStart: { flexDirection: "row-reverse" },
+  disabled: { cursor: "not-allowed", opacity: 0.5 },
+  enabled: { cursor: "pointer" },
+  cardHover: { ":hover": { backgroundColor: colors["--color-tomui-tint"] } },
+  controlWrap: { position: "relative", display: "inline-flex", marginTop: "0.125rem" },
+  control: {
+    height: "1rem",
+    width: "1rem",
+    marginTop: "0.125rem",
+    flexShrink: 0,
+    appearance: "none",
+    cursor: "pointer",
+    borderWidth: 0,
+    borderRadius: radius.full.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    outlineWidth: 0,
+    ":checked": { backgroundColor: colors["--color-tomui-contrast"] },
+  },
+  controlRingDefault: {
+    boxShadow: "0 0 0 1px " + line,
+    ":focus": { boxShadow: "0 0 0 2px " + focus },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + brand, outlineOffset: "0.75rem" },
+  },
+  controlRingCard: {
+    boxShadow: "0 0 0 2px " + line,
+    ":focus": { boxShadow: "0 0 0 2px " + focus },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + brand, outlineOffset: "0.75rem" },
+  },
+  /** The 1px ring a non-error radio picks up while its label is hovered. */
+  controlRingHover: { boxShadow: "0 0 0 1px " + hairline },
+  controlRingError: {
+    boxShadow: "0 0 0 1px " + danger,
+    ":focus": { boxShadow: "0 0 0 2px " + focus },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + brand, outlineOffset: "0.75rem" },
+  },
+  /** Display is toggled from tomui-binding.css, because StyleX has no sibling selector. */
+  indicator: {
+    position: "absolute",
+    inset: 0,
+    display: "none",
+    pointerEvents: "none",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  indicatorDot: {
+    height: "0.5rem",
+    width: "0.5rem",
+    borderRadius: radius.full.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+  },
+  labelText: { fontSize: "0.875rem", color: textColors["--text-color-tomui-default"] },
+  cardTextWrap: {
+    display: "flex",
+    minWidth: 0,
+    flexGrow: 1,
+    flexDirection: "column",
+    gap: "0.125rem",
+  },
+  cardLabel: {
+    fontSize: "0.875rem",
+    fontWeight: 500,
+    color: textColors["--text-color-tomui-default"],
+  },
+  cardDescription: { fontSize: "0.8125rem", color: textColors["--text-color-tomui-subtle"] },
+});
+
+export type TomuiRadioVariant = "default" | "error";
+export type TomuiRadioAppearance = "default" | "card";
 
 export type RadioVariant = TomuiRadioVariant;
 export type RadioControlPosition = "start" | "end";
@@ -60,15 +169,13 @@ const RadioGroupContext = createContext<RadioGroupContextValue>({
 
 export interface RadioLegendProps {
   children?: JSX.Element | undefined;
-  class?: string | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 export function RadioLegend(props: RadioLegendProps): JSX.Element {
   return (
-    <legend
-      data-tomui-component="Radio"
-      class={cn("text-base font-medium text-tomui-default", props.class)}
-    >
+    <legend data-tomui-component="Radio" {...stylex.attrs(styles.legend, props.style)}>
       {props.children}
     </legend>
   );
@@ -88,7 +195,8 @@ export interface RadioGroupProps {
   readOnly?: boolean | undefined;
   controlPosition?: RadioControlPosition | undefined;
   name?: string | undefined;
-  class?: string | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 export function RadioGroup(props: RadioGroupProps): JSX.Element {
@@ -146,7 +254,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
       <fieldset
         data-tomui-component="Radio"
         disabled={merged.disabled}
-        class={cn("flex flex-col gap-4 p-0", merged.class)}
+        {...stylex.attrs(styles.group, merged.style)}
       >
         <Show when={merged.legend}>
           <RadioLegend>{merged.legend}</RadioLegend>
@@ -156,21 +264,23 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
           aria-orientation={merged.orientation}
           aria-disabled={merged.disabled ? "true" : undefined}
           aria-readonly={merged.readOnly ? "true" : undefined}
-          class={cn(
+          {...stylex.attrs(
             merged.orientation === "vertical"
-              ? cn("flex flex-col", merged.appearance === "card" ? "gap-3" : "gap-2")
+              ? merged.appearance === "card"
+                ? styles.groupListCard
+                : styles.groupListDefault
               : merged.appearance === "card"
-                ? "grid grid-cols-2 gap-3"
-                : "flex flex-row flex-wrap gap-2",
+                ? styles.listHorizontalCard
+                : styles.listHorizontalDefault,
           )}
         >
           {merged.children}
         </div>
         <Show when={merged.error}>
-          <p class="text-sm text-tomui-danger">{merged.error}</p>
+          <p {...stylex.attrs(styles.message, styles.messageDanger)}>{merged.error}</p>
         </Show>
         <Show when={merged.description}>
-          <p class="text-sm text-tomui-subtle">{merged.description}</p>
+          <p {...stylex.attrs(styles.message, styles.messageSubtle)}>{merged.description}</p>
         </Show>
       </fieldset>
     </RadioGroupContext>
@@ -183,7 +293,8 @@ export type RadioItemProps = {
   label: JSX.Element;
   description?: JSX.Element | undefined;
   value: string;
-  class?: string | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   disabled?: boolean | undefined;
   name?: string | undefined;
 };
@@ -208,17 +319,18 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
         <label
           data-tomui-component="Radio"
           data-tomui-part="item-label"
-          class={cn(
-            "group relative m-0 inline-flex items-start gap-2",
-            position() === "end" ? "flex-row-reverse justify-end" : "",
-            disabled() ? "cursor-not-allowed opacity-50" : "cursor-pointer",
-            merged.class,
+          data-variant="default"
+          {...stylex.attrs(
+            styles.itemLabelDefault,
+            position() === "end" ? styles.itemLabelReversed : undefined,
+            disabled() ? styles.disabled : styles.enabled,
+            merged.style,
           )}
           onPointerDown={(e) => {
             if (isFocused) e.preventDefault();
           }}
         >
-          <span class="relative mt-0.5 inline-flex">
+          <span {...stylex.attrs(styles.controlWrap)}>
             <input
               data-tomui-component="Radio"
               data-tomui-part="item"
@@ -238,57 +350,47 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
                 isFocused = false;
               }}
               onChange={() => context.select(merged.value)}
-              class={cn(
-                "peer mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring outline-none",
-                merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-line",
-                "checked:bg-tomui-contrast",
-                !disabled() &&
-                  merged.variant !== "error" &&
-                  "group-hover:ring-tomui-hairline focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:outline-offset-3",
-                !disabled() &&
-                  merged.variant === "error" &&
-                  "focus:ring-2 focus:ring-tomui-focus focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:outline-offset-3",
+              {...stylex.attrs(
+                styles.control,
+                isCard() ? styles.controlRingCard : styles.controlRingDefault,
+                merged.variant === "error" ? styles.controlRingError : undefined,
               )}
             />
             <span
               aria-hidden="true"
-              class="pointer-events-none absolute inset-0 hidden items-center justify-center peer-checked:flex"
+              data-tomui-part="indicator"
+              {...stylex.attrs(styles.indicator)}
             >
-              <span class="h-2 w-2 rounded-full bg-tomui-base" />
+              <span {...stylex.attrs(styles.indicatorDot)} />
             </span>
           </span>
-          <span class="text-base text-tomui-default">{merged.label}</span>
+          <span {...stylex.attrs(styles.labelText)}>{merged.label}</span>
         </label>
       }
     >
       <label
         data-tomui-component="Radio"
         data-tomui-part="item-label"
-        class={cn(
-          "group relative m-0 flex items-start gap-3 rounded-lg border border-tomui-hairline bg-tomui-base p-3 transition-colors has-[[data-checked]]:border-tomui-interact has-[[data-checked]]:bg-tomui-tint",
-          position() === "start" ? "flex-row-reverse" : "",
-          merged.variant === "error"
-            ? "border-tomui-danger has-[[data-checked]]:border-tomui-danger has-[[data-checked]]:bg-tomui-base"
-            : "",
-          disabled()
-            ? "cursor-not-allowed opacity-50"
-            : cn(
-                "cursor-pointer has-[[data-disabled]]:cursor-not-allowed has-[[data-disabled]]:opacity-50",
-                merged.variant !== "error" && "hover:not-has-[[data-disabled]]:bg-tomui-tint",
-              ),
-          merged.class,
+        data-variant={merged.variant}
+        {...stylex.attrs(
+          styles.itemLabelCard,
+          merged.variant === "error" ? styles.itemLabelCardError : undefined,
+          position() === "start" ? styles.itemLabelCardStart : undefined,
+          !disabled() && merged.variant !== "error" ? styles.cardHover : undefined,
+          disabled() ? styles.disabled : styles.enabled,
+          merged.style,
         )}
         onPointerDown={(e) => {
           if (isFocused) e.preventDefault();
         }}
       >
-        <div class="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span class="text-base font-medium text-tomui-default">{merged.label}</span>
+        <div {...stylex.attrs(styles.cardTextWrap)}>
+          <span {...stylex.attrs(styles.cardLabel)}>{merged.label}</span>
           <Show when={merged.description}>
-            <span class="text-sm text-tomui-subtle">{merged.description}</span>
+            <span {...stylex.attrs(styles.cardDescription)}>{merged.description}</span>
           </Show>
         </div>
-        <span class="relative mt-0.5 inline-flex">
+        <span {...stylex.attrs(styles.controlWrap)}>
           <input
             data-tomui-component="Radio"
             data-tomui-part="item"
@@ -309,21 +411,14 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
               isFocused = false;
             }}
             onChange={() => context.select(merged.value)}
-            class={cn(
-              "peer mt-0.5 h-4 w-4 shrink-0 cursor-pointer appearance-none rounded-full border-0 bg-tomui-base ring-2 outline-none",
-              merged.variant === "error" ? "ring-tomui-danger" : "ring-tomui-line",
-              "checked:bg-tomui-contrast",
-              !disabled() &&
-                merged.variant !== "error" &&
-                "group-hover:ring-tomui-hairline focus-visible:outline-offset-3",
-              !disabled() && merged.variant === "error" && "focus-visible:outline-offset-3",
+            {...stylex.attrs(
+              styles.control,
+              styles.controlRingCard,
+              merged.variant === "error" ? styles.controlRingError : undefined,
             )}
           />
-          <span
-            aria-hidden="true"
-            class="pointer-events-none absolute inset-0 hidden items-center justify-center peer-checked:flex"
-          >
-            <span class="h-2 w-2 rounded-full bg-tomui-base" />
+          <span aria-hidden="true" data-tomui-part="indicator" {...stylex.attrs(styles.indicator)}>
+            <span {...stylex.attrs(styles.indicatorDot)} />
           </span>
         </span>
       </label>

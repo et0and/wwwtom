@@ -1,33 +1,60 @@
+import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
-import { cn } from "../../utils/cn";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
-export type MeterProps = JSX.HTMLAttributes<HTMLDivElement> & {
+const styles = stylex.create({
+  root: { display: "flex", width: "100%", flexDirection: "column", gap: "0.5rem" },
+  header: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: "1rem",
+  },
+  label: { fontSize: "0.75rem", color: textColors["--text-color-tomui-subtle"] },
+  value: {
+    fontSize: "0.8125rem",
+    fontWeight: 500,
+    color: textColors["--text-color-tomui-default"],
+    fontVariantNumeric: "tabular-nums",
+  },
+  track: {
+    position: "relative",
+    height: "0.5rem",
+    width: "100%",
+    overflow: "hidden",
+    borderRadius: radius.full.borderRadius,
+    backgroundColor: colors["--color-tomui-fill"],
+  },
+  indicator: {
+    position: "absolute",
+    insetBlock: 0,
+    left: 0,
+    borderRadius: radius.full.borderRadius,
+    backgroundImage:
+      "linear-gradient(to right, var(--color-tomui-brand), var(--color-tomui-brand))",
+    transitionProperty: "width",
+    transitionDuration: "300ms",
+    transitionTimingFunction: "ease-out",
+  },
+});
+
+export type MeterProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   value: number;
   min?: number | undefined;
   max?: number | undefined;
   label: string;
   customValue?: string | undefined;
   showValue?: boolean | undefined;
-  class?: string | undefined;
-  trackClassName?: string | undefined;
-  indicatorClassName?: string | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Meter(props: MeterProps): JSX.Element {
   const merged = merge({ showValue: true, min: 0, max: 100 }, props);
-  const rest = omit(
-    merged,
-    "value",
-    "min",
-    "max",
-    "label",
-    "customValue",
-    "showValue",
-    "class",
-    "trackClassName",
-    "indicatorClassName",
-  );
+  const rest = omit(merged, "value", "min", "max", "label", "customValue", "showValue", "style");
   const percent = (): number => {
     const span = merged.max - merged.min;
     if (span <= 0) return 0;
@@ -45,28 +72,18 @@ export function Meter(props: MeterProps): JSX.Element {
       aria-valuemin={merged.min}
       aria-valuemax={merged.max}
       aria-label={merged.label}
-      class={cn("flex w-full flex-col gap-2", merged.class)}
+      {...stylex.attrs(styles.root, merged.style)}
       {...rest}
     >
-      <div class="flex items-center justify-between gap-4">
-        <span class="text-xs text-tomui-subtle">{merged.label}</span>
+      <div {...stylex.attrs(styles.header)}>
+        <span {...stylex.attrs(styles.label)}>{merged.label}</span>
         <Show when={merged.customValue ?? merged.showValue}>
-          <span class="text-sm font-medium text-tomui-default tabular-nums">{displayValue()}</span>
+          <span {...stylex.attrs(styles.value)}>{displayValue()}</span>
         </Show>
       </div>
-      <div
-        class={cn(
-          "relative h-2 w-full overflow-hidden rounded-full bg-tomui-fill",
-          merged.trackClassName,
-        )}
-      >
-        <div
-          class={cn(
-            "absolute inset-y-0 left-0 rounded-full bg-linear-to-r from-tomui-brand via-tomui-brand to-tomui-brand transition-[width] duration-300 ease-out",
-            merged.indicatorClassName,
-          )}
-          style={{ width: `${percent()}%` }}
-        />
+      <div {...stylex.attrs(styles.track)}>
+        {/* The width is a runtime value, so it stays an inline style. */}
+        <div {...stylex.attrs(styles.indicator)} style={{ width: `${percent()}%` }} />
       </div>
     </div>
   );

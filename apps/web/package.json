@@ -17,6 +17,7 @@
     "@solidjs/meta": "catalog:",
     "@solidjs/router": "catalog:",
     "@solidjs/web": "catalog:",
+    "@stylexjs/stylex": "catalog:",
     "@tanstack/solid-query": "catalog:",
     "@tom/adapter": "workspace:*",
     "@tom/constants": "workspace:*",
@@ -32,14 +33,13 @@
   "devDependencies": {
     "@solidjs/testing-library": "1.0.0-beta.3",
     "@solidjs/vite-plugin": "catalog:",
-    "@tailwindcss/vite": "4.3.3",
+    "@stylexjs/unplugin": "catalog:",
     "@testing-library/jest-dom": "6.8.0",
     "@testing-library/user-event": "14.6.1",
     "@types/node": "24.9.1",
     "@types/number-to-words": "1.2.3",
     "@types/rss": "0.0.32",
     "jsdom": "27.0.0",
-    "tailwindcss": "4.3.3",
     "vite": "^8.1.5",
     "vitest": "4.1.10"
   }

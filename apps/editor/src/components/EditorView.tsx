@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect, Option, Schema } from "effect";
 import type { CmsError } from "@tom/types/errors";
@@ -11,6 +12,9 @@ import { Dialog } from "@tom/ui/dialog";
 import { Loader } from "@tom/ui/loader";
 import { Select } from "@tom/ui/select";
 import { Collapsible } from "@tom/ui/collapsible";
+import { layout } from "@tom/ui/primitives.stylex";
+import { textColors } from "@tom/ui/tokens.stylex";
+import { fontSizeSm } from "@tom/ui/typography.stylex";
 import { adapterUrl } from "../lib/api";
 import { runClient } from "@tom/utils/services/http";
 import { toSlug } from "@tom/utils/slug";
@@ -34,6 +38,8 @@ import { HistoryPanel } from "./HistoryPanel";
 import { MediaPicker } from "./MediaPicker";
 import { Toolbar } from "./Toolbar";
 import type { InsertPanel } from "./Toolbar";
+import { layoutStyles } from "./layout.stylex";
+import { dialogStyles } from "./dialog.stylex";
 
 type InitialData = {
   readonly fields: ContentFields;
@@ -49,6 +55,11 @@ type SaveState =
   | { readonly status: "error"; readonly message: string };
 
 type Panel = "none" | InsertPanel | "code";
+
+const styles = stylex.create({
+  textSm: { ...fontSizeSm },
+  subtleSm: { ...fontSizeSm, color: textColors["--text-color-tomui-subtle"] },
+});
 
 const blankFields: ContentFields = {
   slug: "",
@@ -104,13 +115,13 @@ export const EditorView = (props: {
     <div class="editor-view">
       <Show when={error()}>
         {(message) => (
-          <div class="grid gap-2">
+          <div {...stylex.attrs(layoutStyles.grid, layout.gap2)}>
             <Banner variant="error" description={message()} />
             <Button
               type="button"
               size="sm"
               variant="ghost"
-              class="justify-self-start"
+              style={layoutStyles.justifySelfStart}
               onClick={props.onExit}
             >
               Back
@@ -340,12 +351,19 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         <Button type="button" size="sm" variant="ghost" onClick={onBack}>
           ← Back
         </Button>
-        <div class="ml-auto flex flex-wrap items-center gap-2">
+        <div
+          {...stylex.attrs(
+            layoutStyles.marginLeftAuto,
+            layout.flexWrapRow,
+            layoutStyles.itemsCenter,
+            layout.gap2,
+          )}
+        >
           <Show when={handle.dirty()}>
             <Badge variant="warning">Unsaved changes</Badge>
           </Show>
           <Show when={saveState().status === "saving"}>
-            <span class="flex items-center gap-1 text-sm">
+            <span {...stylex.attrs(layout.flexRowCentered, layout.gap1, styles.textSm)}>
               <Loader size="sm" /> Saving…
             </span>
           </Show>
@@ -460,7 +478,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
                 <Collapsible.DefaultPanel>
                   <Show
                     when={allCategories().length > 0}
-                    fallback={<p class="text-sm text-tomui-subtle">No categories yet.</p>}
+                    fallback={<p {...stylex.attrs(styles.subtleSm)}>No categories yet.</p>}
                   >
                     <For each={allCategories()}>
                       {(category) => (
@@ -526,8 +544,8 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
           </div>
 
           <Dialog.Root open={panel() === "link"} onOpenChange={onPanelOpenChange}>
-            <Dialog size="sm" class="grid gap-3 px-4 py-3">
-              <Dialog.Title class="text-base font-semibold">Insert link</Dialog.Title>
+            <Dialog size="sm" style={dialogStyles.body}>
+              <Dialog.Title style={dialogStyles.title}>Insert link</Dialog.Title>
               <label class="field">
                 URL
                 <Input
@@ -539,7 +557,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex flex-wrap justify-end gap-2">
+              <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
@@ -551,8 +569,8 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
           </Dialog.Root>
 
           <Dialog.Root open={panel() === "arena"} onOpenChange={onPanelOpenChange}>
-            <Dialog size="base" class="grid gap-3 px-4 py-3">
-              <Dialog.Title class="text-base font-semibold">Insert Arena channel</Dialog.Title>
+            <Dialog size="base" style={dialogStyles.body}>
+              <Dialog.Title style={dialogStyles.title}>Insert Arena channel</Dialog.Title>
               <label class="field">
                 Channel slug
                 <Input
@@ -572,7 +590,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex flex-wrap justify-end gap-2">
+              <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
@@ -584,8 +602,8 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
           </Dialog.Root>
 
           <Dialog.Root open={panel() === "media"} onOpenChange={onPanelOpenChange}>
-            <Dialog size="base" class="grid max-h-[80dvh] gap-3 overflow-y-auto px-4 py-3">
-              <Dialog.Title class="text-base font-semibold">Insert media</Dialog.Title>
+            <Dialog size="base" style={dialogStyles.scrollableBody}>
+              <Dialog.Title style={dialogStyles.title}>Insert media</Dialog.Title>
               <label class="field">
                 File
                 <input
@@ -605,7 +623,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               <Show when={panelError()}>
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
-              <div class="flex flex-wrap justify-end gap-2">
+              <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
                 <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>

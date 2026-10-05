@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, Show, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import type { CmsError } from "@tom/types/errors";
@@ -8,9 +9,12 @@ import { Badge } from "@tom/ui/badge";
 import { Banner } from "@tom/ui/banner";
 import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
+import { layout } from "@tom/ui/primitives.stylex";
 import { deletePost, deleteWork, listPosts, listWorks } from "../lib/content";
 import type { ContentKind } from "../lib/content";
 import { runClient } from "@tom/utils/services/http";
+
+const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
 
 export type ContentRow = {
   readonly slug: string;
@@ -138,7 +142,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
   return (
     <div class="content-list">
       <div class="content-list-header">
-        <div role="group" aria-label="Content kind" class="flex gap-1">
+        <div role="group" aria-label="Content kind" {...stylex.attrs(layout.flexRow, layout.gap1)}>
           <Button
             type="button"
             size="sm"
@@ -184,7 +188,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
       </div>
       <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Show when={loading()}>
-        <p class="flex items-center gap-2">
+        <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
           <Loader size="sm" /> Loading…
         </p>
       </Show>
@@ -200,7 +204,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
                     onClick={() => props.onEdit(kind(), row.slug)}
                   >
                     <span class="row-title">{row.title}</span>
-                    <span class="flex items-center gap-2">
+                    <span {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
                       <Badge variant={row.status === "published" ? "success" : "secondary"}>
                         {row.status}
                       </Badge>
@@ -222,7 +226,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
           </ul>
           <Show when={pageCount() > 1}>
             <Pagination
-              class="mt-4"
+              style={styles.paginationSpacing}
               page={page()}
               pageCount={pageCount()}
               onChange={(next) => load(kind(), next, pagesOnly())}

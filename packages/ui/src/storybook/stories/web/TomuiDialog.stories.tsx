@@ -1,6 +1,8 @@
 import preview from "#.storybook/preview";
+import * as stylex from "@stylexjs/stylex";
 import { buttonVariants } from "@tom/ui/button";
 import { Dialog } from "@tom/ui/dialog";
+import { storyStyles } from "../story.stylex";
 
 const meta = preview.meta({
   title: "web/Dialog",
@@ -14,14 +16,14 @@ const meta = preview.meta({
 export const Open = meta.story({
   render: () => (
     <Dialog.Root defaultOpen>
-      <Dialog class="w-sm p-6">
-        <Dialog.Title class="text-lg font-semibold">Edit profile</Dialog.Title>
-        <Dialog.Description class="mt-1 text-sm">
+      <Dialog style={storyStyles.panel}>
+        <Dialog.Title style={storyStyles.title}>Edit profile</Dialog.Title>
+        <Dialog.Description style={storyStyles.description}>
           Make changes to your profile here. Click save when you are done.
         </Dialog.Description>
-        <div class="mt-4 flex justify-end gap-2">
-          <Dialog.Close class={buttonVariants({ variant: "secondary" })}>Cancel</Dialog.Close>
-          <Dialog.Close class={buttonVariants({ variant: "primary" })}>Save</Dialog.Close>
+        <div {...stylex.attrs(storyStyles.actions)}>
+          <Dialog.Close style={buttonVariants({ variant: "secondary" })}>Cancel</Dialog.Close>
+          <Dialog.Close style={buttonVariants({ variant: "primary" })}>Save</Dialog.Close>
         </div>
       </Dialog>
     </Dialog.Root>
@@ -31,12 +33,14 @@ export const Open = meta.story({
 export const WithTrigger = meta.story({
   render: () => (
     <Dialog.Root>
-      <Dialog.Trigger class={buttonVariants({ variant: "secondary" })}>Open dialog</Dialog.Trigger>
-      <Dialog class="w-sm p-6">
-        <Dialog.Title class="text-lg font-semibold">Notifications</Dialog.Title>
-        <Dialog.Description class="mt-1 text-sm">You have 3 unread messages.</Dialog.Description>
-        <div class="mt-4 flex justify-end">
-          <Dialog.Close class={buttonVariants({ variant: "primary" })}>Got it</Dialog.Close>
+      <Dialog.Trigger style={buttonVariants({ variant: "secondary" })}>Open dialog</Dialog.Trigger>
+      <Dialog style={storyStyles.panel}>
+        <Dialog.Title style={storyStyles.title}>Notifications</Dialog.Title>
+        <Dialog.Description style={storyStyles.description}>
+          You have 3 unread messages.
+        </Dialog.Description>
+        <div {...stylex.attrs(storyStyles.actions)}>
+          <Dialog.Close style={buttonVariants({ variant: "primary" })}>Got it</Dialog.Close>
         </div>
       </Dialog>
     </Dialog.Root>
@@ -46,9 +50,11 @@ export const WithTrigger = meta.story({
 export const Large = meta.story({
   render: () => (
     <Dialog.Root defaultOpen>
-      <Dialog size="lg" class="p-6">
-        <Dialog.Title class="text-lg font-semibold">Large dialog</Dialog.Title>
-        <Dialog.Description class="mt-1 text-sm">Complex content goes here.</Dialog.Description>
+      <Dialog size="lg" style={storyStyles.panel}>
+        <Dialog.Title style={storyStyles.title}>Large dialog</Dialog.Title>
+        <Dialog.Description style={storyStyles.description}>
+          Complex content goes here.
+        </Dialog.Description>
       </Dialog>
     </Dialog.Root>
   ),

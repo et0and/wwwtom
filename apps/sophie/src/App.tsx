@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { Loading, Match, Show, Switch, createSignal } from "solid-js";
 import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
@@ -8,6 +9,7 @@ import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
 import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
+import { layout } from "@tom/ui/primitives.stylex";
 import { formatDate } from "@tom/utils/date";
 import { getAdapterBaseUrl } from "./lib/api";
 import { getQueryClient } from "./lib/query-client";
@@ -16,6 +18,8 @@ import { Nav } from "./components/Nav";
 import { CategoryFilter } from "./components/CategoryFilter";
 import { PostList } from "./components/PostList";
 import "./app.css";
+
+const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
 
 const SOPHIE_DESCRIPTION = "Sophie — writing";
 
@@ -47,7 +51,7 @@ const About = () => {
       <h1 class="sophie-title">About</h1>
       <Loading
         fallback={
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         }
@@ -98,7 +102,7 @@ const Posts = () => {
       />
       <Loading
         fallback={
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         }
@@ -117,7 +121,7 @@ const Posts = () => {
         <PostList posts={visible()} />
         <Show when={totalPages() > 1}>
           <Pagination
-            class="mt-4"
+            style={styles.paginationSpacing}
             page={page()}
             pageCount={totalPages()}
             onChange={(next) => setPage(next)}
@@ -163,7 +167,7 @@ const PostDetail = () => {
         }
       >
         <Match when={postQuery.isPending}>
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         </Match>

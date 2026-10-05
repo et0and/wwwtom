@@ -1,10 +1,11 @@
+import * as stylex from "@stylexjs/stylex";
 import { createSignal, merge, omit, onCleanup } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Button } from "../button/button";
 import { inputVariants } from "../input/input";
 import { Tooltip } from "../tooltip/tooltip";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { monoFont } from "../../styles/primitives.stylex";
 
 const COPIED_FEEDBACK_MS = 1500;
 
@@ -12,42 +13,100 @@ interface CopyResetTimer {
   current: ReturnType<typeof setTimeout> | undefined;
 }
 
-/** ClipboardText size variant definitions mapping sizes to their Tailwind classes. */
-export const TOMUI_CLIPBOARD_TEXT_VARIANTS = {
-  size: {
-    sm: {
-      classes: "text-xs",
-      buttonSize: "sm" as const,
-      description: "Small clipboard text for compact UIs",
-    },
-    base: {
-      classes: "text-sm",
-      buttonSize: "base" as const,
-      description: "Default clipboard text size",
-    },
-    lg: {
-      classes: "text-sm",
-      buttonSize: "lg" as const,
-      description: "Large clipboard text for prominent display",
-    },
-  },
-} as const;
-
 export const TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS = {
   size: "lg",
 } as const;
 
-const clipboardTextAnimations = {
-  slide: {
-    initial:
-      "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 translate-y-full",
-    animate: "translate-y-0 opacity-100",
-    end: "pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 -translate-y-full",
-  },
-} as const;
+export type TomuiClipboardTextSize = "sm" | "base" | "lg";
 
-// Derived types from TOMUI_CLIPBOARD_TEXT_VARIANTS
-export type TomuiClipboardTextSize = keyof typeof TOMUI_CLIPBOARD_TEXT_VARIANTS.size;
+const styles = stylex.create({
+  root: {
+    display: "flex",
+    alignItems: "center",
+    overflow: "hidden",
+    // Overrides the horizontal padding that inputVariants sets, so the text
+    // label controls its own inset.
+    paddingInline: 0,
+    backgroundColor: colors["--color-tomui-base"],
+    ...monoFont,
+  },
+  sizeSm: { fontSize: "0.75rem" },
+  sizeBase: { fontSize: "0.8125rem" },
+  sizeLg: { fontSize: "0.8125rem" },
+  copyButton: {
+    position: "relative",
+    isolation: "isolate",
+    overflow: "hidden",
+    borderTopLeftRadius: 0,
+    borderBottomLeftRadius: 0,
+    borderTopRightRadius: "inherit",
+    borderBottomRightRadius: "inherit",
+    borderLeftWidth: "1px",
+    borderLeftColor: colors["--color-tomui-line"],
+    paddingInline: "0.75rem",
+    transitionProperty: "all",
+    transitionDuration: "200ms",
+    ":focus": {
+      boxShadow:
+        "inset 0 0 0 1.5px color-mix(in srgb, " +
+        colors["--color-tomui-focus"] +
+        " 50%, transparent)",
+    },
+    ":focus-visible": {
+      boxShadow: "inset 0 0 0 2px " + colors["--color-tomui-brand"],
+    },
+  },
+  /** The two marks cross-fade by sliding vertically past each other. */
+  markStack: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.25rem",
+    transitionProperty: "all",
+    transitionDuration: "200ms",
+  },
+  slideInitial: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    pointerEvents: "none",
+    opacity: 0,
+    transform: "translateY(100%)",
+  },
+  slideAnimate: { opacity: 1, transform: "translateY(0)" },
+  slideEnd: {
+    position: "absolute",
+    inset: 0,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    pointerEvents: "none",
+    opacity: 0,
+    transform: "translateY(-100%)",
+  },
+  label: {
+    flexGrow: 1,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+    paddingInlineStart: "1rem",
+    paddingInlineEnd: "0.5rem",
+  },
+});
+
+const sizeStyles = {
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+} satisfies Record<TomuiClipboardTextSize, stylex.StyleXStyles>;
+
+/** ClipboardText sizes map one to one onto Button sizes. */
+const buttonSize = {
+  sm: "sm",
+  base: "base",
+  lg: "lg",
+} as const satisfies Record<TomuiClipboardTextSize, "sm" | "base" | "lg">;
 
 export interface TomuiClipboardTextVariantsProps {
   /**
@@ -60,18 +119,11 @@ export interface TomuiClipboardTextVariantsProps {
   size?: TomuiClipboardTextSize;
 }
 
-export function clipboardTextVariants(props: TomuiClipboardTextVariantsProps = {}): string {
+export function clipboardTextVariants(
+  props: TomuiClipboardTextVariantsProps = {},
+): stylex.StyleXStyles[] {
   const merged = merge(TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS, props);
-  return cn(
-    // Base styles
-    "flex items-center overflow-hidden bg-tomui-base px-0 font-mono",
-    // Apply size styles from TOMUI_CLIPBOARD_TEXT_VARIANTS
-    resolveVariant(
-      TOMUI_CLIPBOARD_TEXT_VARIANTS.size,
-      merged.size,
-      TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS.size,
-    ).classes,
-  );
+  return [styles.root, sizeStyles[merged.size]];
 }
 
 /** Tooltip config for the copy button. Shows tooltip on hover; the popup text swaps to `copiedText` after copying. */
@@ -98,8 +150,8 @@ export interface ClipboardTextProps extends TomuiClipboardTextVariantsProps {
   text: string;
   /** If provided, this text will be copied to clipboard instead of the `text` prop. */
   textToCopy?: string;
-  /** Additional CSS classes merged via `cn()`. */
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   /** Callback fired after text is copied to clipboard. */
   onCopy?: () => void;
   /**
@@ -160,7 +212,7 @@ export function ClipboardText(props: ClipboardTextProps): JSX.Element {
   const merged = merge({ size: TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS.size }, props);
   const rest = omit(
     merged,
-    "class",
+    "style",
     "labels",
     "onCopy",
     "ref",
@@ -177,12 +229,7 @@ export function ClipboardText(props: ClipboardTextProps): JSX.Element {
   const tooltipText = (): string => merged.tooltip?.text ?? "Copy";
   const copiedText = (): string => merged.tooltip?.copiedText ?? "Copied";
   const copyActionLabel = (): string => merged.labels?.copyAction ?? "Copy to clipboard";
-  const sizeConfig = () =>
-    resolveVariant(
-      TOMUI_CLIPBOARD_TEXT_VARIANTS.size,
-      merged.size,
-      TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS.size,
-    );
+  const sizeConfig = (): "sm" | "base" | "lg" => buttonSize[merged.size];
 
   const finishCopy = (): void => {
     setCopied(true);
@@ -217,30 +264,18 @@ export function ClipboardText(props: ClipboardTextProps): JSX.Element {
 
   const copyButton = (): JSX.Element => (
     <Button
-      size={sizeConfig().buttonSize}
+      size={sizeConfig()}
       variant="ghost"
-      class={cn(
-        "relative isolate overflow-hidden rounded-l-none rounded-r-[inherit] border-l! border-tomui-line! px-3 transition-all duration-200",
-        "focus:ring-tomui-focus/50 focus:ring-inset",
-        "focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:ring-inset",
-      )}
+      style={styles.copyButton}
       onClick={copyToClipboard}
       aria-label={copyActionLabel()}
     >
       <span
-        class={cn(
-          "flex items-center gap-1 transition-all duration-200",
-          copied() ? clipboardTextAnimations.slide.animate : clipboardTextAnimations.slide.initial,
-        )}
+        {...stylex.attrs(styles.markStack, copied() ? styles.slideAnimate : styles.slideInitial)}
       >
         <CheckMarkIcon />
       </span>
-      <span
-        class={cn(
-          "flex items-center justify-center transition-all duration-200",
-          copied() ? clipboardTextAnimations.slide.end : clipboardTextAnimations.slide.animate,
-        )}
-      >
+      <span {...stylex.attrs(styles.markStack, copied() ? styles.slideEnd : styles.slideAnimate)}>
         <CopyMarkIcon />
       </span>
     </Button>
@@ -249,15 +284,15 @@ export function ClipboardText(props: ClipboardTextProps): JSX.Element {
   return (
     <div
       data-tomui-component="ClipboardText"
-      class={cn(
-        inputVariants({ size: sizeConfig().buttonSize }),
-        clipboardTextVariants({ size: merged.size }),
-        merged.class,
+      {...stylex.attrs(
+        ...inputVariants({ size: sizeConfig() }),
+        ...clipboardTextVariants({ size: merged.size }),
+        merged.style,
       )}
       ref={merged.ref}
       {...rest}
     >
-      <span class="grow truncate ps-4 pe-2">{merged.text}</span>
+      <span {...stylex.attrs(styles.label)}>{merged.text}</span>
       {merged.tooltip ? (
         <Tooltip
           content={copied() ? copiedText() : tooltipText()}

@@ -19,15 +19,14 @@ import { Input } from "@tom/ui/input";
 import { Dialog } from "@tom/ui/dialog";
 ```
 
-Load the styles once, after Tailwind, and let Tailwind scan the component
-sources so their classes are generated.
+Load the styles once. StyleX needs no source scanning: its plugin extracts
+every compiled style at build time. `@stylex` must come first so the injected
+StyleX sheet is ordered before the token layers.
 
 ```css
-@import "tailwindcss";
+@stylex;
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
-
-@source "../../../packages/ui/src/**/*.tsx";
 ```
 
 ## Examples

@@ -1,11 +1,20 @@
 import type { Component, Accessor } from "solid-js";
 import type { JSX } from "@solidjs/web";
+import * as stylex from "@stylexjs/stylex";
 import { createMemo, untrack } from "solid-js";
 import type { JsonLd } from "@tom/schemas/jsonld";
 import { Metadata } from "./Meta";
 
 const resolveProp = (value: string | Accessor<string> | undefined): string | undefined =>
   value instanceof Function ? value() : value;
+
+const styles = stylex.create({
+  main: {
+    marginInline: "auto",
+    padding: "2rem",
+    maxWidth: "750px",
+  },
+});
 
 interface PageLayoutProps {
   children: JSX.Element;
@@ -18,7 +27,8 @@ interface PageLayoutProps {
     publishedAt: string;
   };
   jsonLd?: JsonLd;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 }
 
 export const PageLayout: Component<PageLayoutProps> = (props) => {
@@ -31,7 +41,7 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
   const canonicalUrl = untrack(() => canonical());
 
   return (
-    <div class={props.class}>
+    <div {...stylex.attrs(props.style)}>
       <Metadata
         title={title()}
         metaType="description"
@@ -41,7 +51,7 @@ export const PageLayout: Component<PageLayoutProps> = (props) => {
       {props.jsonLd && (
         <script type="application/ld+json" innerHTML={JSON.stringify(props.jsonLd)} />
       )}
-      <main id="main" class="mx-auto p-8 max-w-[750px]">
+      <main id="main" {...stylex.attrs(styles.main)}>
         {props.children}
       </main>
     </div>

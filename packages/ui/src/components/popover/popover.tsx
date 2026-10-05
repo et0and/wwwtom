@@ -8,29 +8,84 @@ import {
   Show,
   useContext,
 } from "solid-js";
-import { cn } from "../../utils/cn";
+import * as stylex from "@stylexjs/stylex";
 import { createDismissableLayer } from "../../utils/dismissable";
 import { createFocusScope, focusWithoutScrolling } from "../../utils/focus";
 import { createDisclosureState } from "../../utils/state";
-
-export const TOMUI_POPOVER_VARIANTS = {
-  side: {
-    top: { classes: "", description: "Popover appears above the trigger" },
-    bottom: { classes: "", description: "Popover appears below the trigger" },
-    left: { classes: "", description: "Popover appears to the left of the trigger" },
-    right: { classes: "", description: "Popover appears to the right of the trigger" },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 
 export const TOMUI_POPOVER_DEFAULT_VARIANTS = {
   side: "bottom",
 } as const;
 
-export type TomuiPopoverSide = keyof typeof TOMUI_POPOVER_VARIANTS.side;
+export type TomuiPopoverSide = "top" | "bottom" | "left" | "right";
+export type TomuiPopoverAlign = "start" | "center" | "end";
 
-export interface TomuiPopoverVariantsProps {
-  side?: TomuiPopoverSide;
-}
+/** Open/close transition states, driven by the dismissable layer utilities. */
+const STARTING = ":is([data-starting-style])";
+const ENDING = ":is([data-ending-style])";
+const INSTANT = ":is([data-instant])";
+
+const styles = stylex.create({
+  wrapper: { position: "relative" },
+  content: {
+    position: "absolute",
+    zIndex: 50,
+    display: "flex",
+    flexDirection: "column",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    paddingInline: "1rem",
+    paddingBlock: "0.75rem",
+    fontSize: fontSizeSm.fontSize,
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    outlineWidth: 1,
+    outlineStyle: "solid",
+    outlineColor: colors["--color-tomui-line"],
+    transitionProperty: "opacity",
+    transitionDuration: "150ms",
+    [STARTING]: { opacity: 0 },
+    [ENDING]: { opacity: 0 },
+    [INSTANT]: { transitionDuration: "0s" },
+  },
+
+  // Placement. The side prop drives which edge the panel sits against.
+  sideTop: { bottom: "100%", marginBottom: "0.5rem" },
+  sideBottom: { top: "100%", marginTop: "0.5rem" },
+  sideLeft: { right: "100%", marginRight: "0.5rem" },
+  sideRight: { left: "100%", marginLeft: "0.5rem" },
+
+  title: {
+    margin: 0,
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: "1.5rem",
+    fontWeight: 500,
+  },
+  description: {
+    margin: 0,
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: "1.5rem",
+    color: textColors["--text-color-tomui-subtle"],
+  },
+
+  // In dark mode the offset goes inward, to line up with the inner arrow stroke.
+  darkOutline: { "@media (prefers-color-scheme: dark)": { outlineOffset: "-1px" } },
+
+  arrowFill: { fill: colors["--color-tomui-base"] },
+  arrowEdge: { fill: colors["--color-tomui-arrow-edge"] },
+  arrowStroke: { fill: colors["--color-tomui-arrow-stroke"] },
+});
+
+const sideStyles = {
+  top: styles.sideTop,
+  bottom: styles.sideBottom,
+  left: styles.sideLeft,
+  right: styles.sideRight,
+} as const satisfies Record<TomuiPopoverSide, stylex.StyleXStyles>;
 
 interface PopoverContextValue {
   isOpen: () => boolean;
@@ -87,23 +142,26 @@ export function PopoverRoot(props: PopoverRootProps): JSX.Element {
   return <PopoverContext value={value}>{props.children}</PopoverContext>;
 }
 
-export type PopoverTriggerProps = Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
+export type PopoverTriggerProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function PopoverTrigger(props: PopoverTriggerProps): JSX.Element {
   const ctx = useContext(PopoverContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "onClick");
+  const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
       data-tomui-component="Popover"
       data-tomui-part="trigger"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       aria-controls={ctx.isOpen() ? ctx.contentId : undefined}
-      class={merged.class}
       ref={(el: HTMLButtonElement) => ctx.setTriggerRef(el)}
       onClick={(event) => {
         ctx.toggle();
@@ -116,12 +174,14 @@ export function PopoverTrigger(props: PopoverTriggerProps): JSX.Element {
   );
 }
 
-export type PopoverContentProps = TomuiPopoverVariantsProps & {
+export type PopoverContentProps = {
   children?: JSX.Element;
-  class?: string;
-  align?: "start" | "center" | "end";
+  side?: TomuiPopoverSide;
+  align?: TomuiPopoverAlign;
   sideOffset?: number;
   alignOffset?: number;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function PopoverContent(props: PopoverContentProps): JSX.Element {
@@ -133,7 +193,7 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
     },
     props,
   );
-  const rest = omit(merged, "children", "class", "side", "align", "sideOffset", "alignOffset");
+  const rest = omit(merged, "children", "style", "side", "align", "sideOffset", "alignOffset");
 
   createDismissableLayer(ctx.contentRef, {
     enabled: ctx.isOpen,
@@ -158,31 +218,23 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
 
   return (
     <Show when={ctx.isOpen()}>
-      <div class="relative">
+      <div {...stylex.attrs(styles.wrapper)}>
         <div
-          {...rest}
-          id={ctx.contentId}
           data-tomui-component="Popover"
           data-tomui-part="content"
           data-side={merged.side}
           data-align={merged.align}
+          id={ctx.contentId}
           role="dialog"
           tabindex={-1}
-          class={cn(
-            "absolute z-50 flex flex-col rounded-lg bg-tomui-base px-4 py-3 text-sm text-tomui-default",
-            "shadow-md outline outline-tomui-line",
-            "transition-opacity duration-150",
-            "data-starting-style:opacity-0",
-            "data-ending-style:opacity-0",
-            "data-instant:duration-0",
-            "tomui-popover-popup",
-            merged.side === "top" && "bottom-full mb-2",
-            merged.side === "bottom" && "top-full mt-2",
-            merged.side === "left" && "right-full mr-2",
-            merged.side === "right" && "left-full ml-2",
-            merged.class,
-          )}
           ref={(el: HTMLDivElement) => ctx.setContentRef(el)}
+          {...stylex.attrs(
+            styles.content,
+            styles.darkOutline,
+            sideStyles[merged.side],
+            merged.style,
+          )}
+          {...rest}
         >
           {merged.children}
         </div>
@@ -191,19 +243,20 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
   );
 }
 
-export type PopoverTitleProps = JSX.HTMLAttributes<HTMLHeadingElement> & {
+export type PopoverTitleProps = Omit<JSX.HTMLAttributes<HTMLHeadingElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function PopoverTitle(props: PopoverTitleProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
     <h3
       data-tomui-component="Popover"
       data-tomui-part="title"
-      class={cn("m-0 text-base leading-6 font-medium", merged.class)}
+      {...stylex.attrs(styles.title, merged.style)}
       {...rest}
     >
       {merged.children}
@@ -211,19 +264,20 @@ export function PopoverTitle(props: PopoverTitleProps): JSX.Element {
   );
 }
 
-export type PopoverDescriptionProps = JSX.HTMLAttributes<HTMLParagraphElement> & {
+export type PopoverDescriptionProps = Omit<JSX.HTMLAttributes<HTMLParagraphElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function PopoverDescription(props: PopoverDescriptionProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
     <p
       data-tomui-component="Popover"
       data-tomui-part="description"
-      class={cn("m-0 text-base leading-6 text-tomui-subtle", merged.class)}
+      {...stylex.attrs(styles.description, merged.style)}
       {...rest}
     >
       {merged.children}
@@ -231,22 +285,25 @@ export function PopoverDescription(props: PopoverDescriptionProps): JSX.Element 
   );
 }
 
-export type PopoverCloseProps = Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
+export type PopoverCloseProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function PopoverClose(props: PopoverCloseProps): JSX.Element {
   const ctx = useContext(PopoverContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "onClick");
+  const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
       data-tomui-component="Popover"
       data-tomui-part="close"
       aria-label="Close"
-      class={merged.class}
       onClick={(event) => {
         ctx.close();
         merged.onClick?.(event);
@@ -259,19 +316,20 @@ export function PopoverClose(props: PopoverCloseProps): JSX.Element {
 }
 
 function ArrowSvg(props: JSX.SvgSVGAttributes<SVGSVGElement>): JSX.Element {
+  const { style: _ignored, ...rest } = props;
   return (
-    <svg width="20" height="10" viewBox="0 0 20 10" fill="none" {...props}>
+    <svg width="20" height="10" viewBox="0 0 20 10" fill="none" {...rest}>
       <path
         d="M9.66437 2.60207L4.80758 6.97318C4.07308 7.63423 3.11989 8 2.13172 8H0V10H20V8H18.5349C17.5468 8 16.5936 7.63423 15.8591 6.97318L11.0023 2.60207C10.622 2.2598 10.0447 2.25979 9.66437 2.60207Z"
-        class="fill-tomui-base"
+        {...stylex.attrs(styles.arrowFill)}
       />
       <path
         d="M8.99542 1.85876C9.75604 1.17425 10.9106 1.17422 11.6713 1.85878L16.5281 6.22989C17.0789 6.72568 17.7938 7.00001 18.5349 7.00001L15.89 7L11.0023 2.60207C10.622 2.2598 10.0447 2.2598 9.66436 2.60207L4.77734 7L2.13171 7.00001C2.87284 7.00001 3.58774 6.72568 4.13861 6.22989L8.99542 1.85876Z"
-        class="fill-tomui-arrow-edge"
+        {...stylex.attrs(styles.arrowEdge)}
       />
       <path
         d="M10.3333 3.34539L5.47654 7.71648C4.55842 8.54279 3.36693 9 2.13172 9H0V8H2.13172C3.11989 8 4.07308 7.63423 4.80758 6.97318L9.66437 2.60207C10.0447 2.25979 10.622 2.2598 11.0023 2.60207L15.8591 6.97318C16.5936 7.63423 17.5468 8 18.5349 8H20V9H18.5349C17.2998 9 16.1083 8.54278 15.1901 7.71648L10.3333 3.34539Z"
-        class="fill-tomui-arrow-stroke"
+        {...stylex.attrs(styles.arrowStroke)}
       />
     </svg>
   );

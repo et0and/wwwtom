@@ -1,41 +1,43 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-export const TOMUI_PAGINATION_VARIANTS = {
-  controls: {
-    full: {
-      classes: "",
-      description: "Full pagination controls with first, previous, pages, next, and last buttons",
-    },
-    simple: {
-      classes: "",
-      description: "Simple pagination controls with only previous and next buttons",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_PAGINATION_DEFAULT_VARIANTS = {
   controls: "full",
 } as const;
 
-export type TomuiPaginationControls = keyof typeof TOMUI_PAGINATION_VARIANTS.controls;
+export type TomuiPaginationControls = "full" | "simple";
 
-export function paginationVariants(props: { controls?: TomuiPaginationControls } = {}): string {
-  const merged = merge(TOMUI_PAGINATION_DEFAULT_VARIANTS, props);
-  return cn(
-    "flex items-center justify-between gap-2",
-    resolveVariant(
-      TOMUI_PAGINATION_VARIANTS.controls,
-      merged.controls,
-      TOMUI_PAGINATION_DEFAULT_VARIANTS.controls,
-    ).classes,
-  );
-}
+const line = colors["--color-tomui-line"];
+const base = colors["--color-tomui-base"];
+const tint = colors["--color-tomui-tint"];
+const defaultText = textColors["--text-color-tomui-default"];
 
-const buttonClasses =
-  "flex h-9 min-w-9 items-center justify-center rounded-lg px-2 text-base ring ring-tomui-line bg-tomui-base text-tomui-default cursor-pointer not-disabled:hover:bg-tomui-tint disabled:cursor-not-allowed disabled:opacity-50";
+const styles = stylex.create({
+  root: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" },
+  pagesWrap: { display: "flex", alignItems: "center", gap: "0.25rem" },
+  button: {
+    position: "relative",
+    display: "flex",
+    height: "2.25rem",
+    minWidth: "2.25rem",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "0.5rem",
+    borderWidth: 0,
+    paddingInline: "0.5rem",
+    fontSize: "0.875rem",
+    boxShadow: "0 0 0 1px " + line,
+    backgroundColor: base,
+    color: defaultText,
+    cursor: "pointer",
+    ":not(:disabled):hover": { backgroundColor: tint },
+    ":disabled": { cursor: "not-allowed", opacity: 0.5 },
+  },
+  buttonActive: { backgroundColor: tint, fontWeight: 500 },
+});
 
 function pageWindow(page: number, pageCount: number): Array<number> {
   const clamped = Math.min(Math.max(page, 1), Math.max(pageCount, 1));
@@ -44,12 +46,13 @@ function pageWindow(page: number, pageCount: number): Array<number> {
   return Array.from({ length: Math.max(0, end - start + 1) }, (_, offset) => start + offset);
 }
 
-export type PaginationProps = Omit<JSX.HTMLAttributes<HTMLElement>, "onChange"> & {
-  class?: string;
+export type PaginationProps = Omit<JSX.HTMLAttributes<HTMLElement>, "onChange" | "style"> & {
   controls?: TomuiPaginationControls;
   page?: number;
   pageCount?: number;
   onChange?: (page: number) => void;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 export function Pagination(props: PaginationProps) {
@@ -57,7 +60,16 @@ export function Pagination(props: PaginationProps) {
     { controls: TOMUI_PAGINATION_DEFAULT_VARIANTS.controls, page: 1, pageCount: 1 },
     props,
   );
-  const rest = omit(merged, "children", "class", "controls", "page", "pageCount", "onChange");
+  const rest = omit(
+    merged,
+    "children",
+    "class",
+    "style",
+    "controls",
+    "page",
+    "pageCount",
+    "onChange",
+  );
   const safeCount = () => Math.max(1, merged.pageCount);
   const current = () => Math.min(Math.max(merged.page, 1), safeCount());
   const go = (page: number) => {
@@ -69,16 +81,16 @@ export function Pagination(props: PaginationProps) {
     <nav
       data-tomui-component="Pagination"
       aria-label="Pagination"
-      class={cn(paginationVariants({ controls: merged.controls }), merged.class)}
+      {...stylex.attrs(styles.root, merged.style)}
       {...rest}
     >
       <Show when={merged.controls === "full"}>
         <button
           type="button"
           aria-label="First page"
-          class={buttonClasses}
           disabled={current() <= 1}
           onClick={() => go(1)}
+          {...stylex.attrs(styles.button)}
         >
           «
         </button>
@@ -86,21 +98,21 @@ export function Pagination(props: PaginationProps) {
       <button
         type="button"
         aria-label="Previous page"
-        class={buttonClasses}
         disabled={current() <= 1}
         onClick={() => go(current() - 1)}
+        {...stylex.attrs(styles.button)}
       >
         ‹
       </button>
-      <div class="flex items-center gap-1">
+      <div {...stylex.attrs(styles.pagesWrap)}>
         <For each={pages()}>
           {(page) => (
             <button
               type="button"
               aria-label={`Page ${page}`}
               aria-current={page === current() ? "page" : undefined}
-              class={cn(buttonClasses, page === current() && "bg-tomui-tint font-medium")}
               onClick={() => go(page)}
+              {...stylex.attrs(styles.button, page === current() ? styles.buttonActive : undefined)}
             >
               {page}
             </button>
@@ -110,9 +122,9 @@ export function Pagination(props: PaginationProps) {
       <button
         type="button"
         aria-label="Next page"
-        class={buttonClasses}
         disabled={current() >= safeCount()}
         onClick={() => go(current() + 1)}
+        {...stylex.attrs(styles.button)}
       >
         ›
       </button>
@@ -120,9 +132,9 @@ export function Pagination(props: PaginationProps) {
         <button
           type="button"
           aria-label="Last page"
-          class={buttonClasses}
           disabled={current() >= safeCount()}
           onClick={() => go(safeCount())}
+          {...stylex.attrs(styles.button)}
         >
           »
         </button>

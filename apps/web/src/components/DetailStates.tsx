@@ -1,12 +1,20 @@
+import * as stylex from "@stylexjs/stylex";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
+import { bannerTitleStyles } from "./layout.stylex";
+
+const styles = stylex.create({
+  detailLoading: {
+    marginInline: "auto",
+    padding: "2rem",
+    maxWidth: "750px",
+  },
+});
 
 /** Loading shell for post/work detail pages while the query is pending. */
 export const DetailLoading = () => (
-  <main id="main" class="mx-auto p-8 max-w-[750px]">
+  <main id="main" {...stylex.attrs(styles.detailLoading)}>
     <Loader />
   </main>
 );
@@ -15,12 +23,14 @@ export const DetailLoading = () => (
 export const DetailNotFound = (props: { kind: "post" | "work"; slug: string | undefined }) => (
   <PageLayout title="Not found" description="The page you are looking for does not exist.">
     <article>
-      <BlurInText text="Not found" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Not found
+      </Text>
+      <div>
         <Text>
           The {props.kind} "{props.slug}" does not exist.
         </Text>
-      </BlurInSection>
+      </div>
     </article>
   </PageLayout>
 );
@@ -29,13 +39,15 @@ export const DetailNotFound = (props: { kind: "post" | "work"; slug: string | un
 export const DetailError = (props: { kind: "post" | "work"; message: string }) => (
   <PageLayout title="Error" description={`Something went wrong loading this ${props.kind}.`}>
     <article>
-      <BlurInText text="Error" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Error
+      </Text>
+      <div>
         <div class="banner" role="alert">
-          <Text class="banner-title">Error loading {props.kind}</Text>
+          <Text style={bannerTitleStyles.bannerTitle}>Error loading {props.kind}</Text>
           <Text>{props.message}</Text>
         </div>
-      </BlurInSection>
+      </div>
     </article>
   </PageLayout>
 );

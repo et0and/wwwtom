@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { Match, Show, Switch, createEffect, createSignal, onCleanup, onSettled } from "solid-js";
 import { Effect } from "effect";
 import { Banner } from "@tom/ui/banner";
@@ -5,6 +6,7 @@ import { Loader } from "@tom/ui/loader";
 import { DropdownMenu } from "@tom/ui/dropdown";
 import { Tabs } from "@tom/ui/tabs";
 import { useColorMode } from "@tom/ui/color-mode";
+import { cursor, layout, radius, spacing } from "@tom/ui/primitives.stylex";
 import { runClient } from "@tom/utils/services/http";
 import { createSession, documentTitle, signOut } from "./lib/session";
 import type { ContentKind } from "./lib/content";
@@ -43,6 +45,11 @@ const viewForTab = (tab: Tab): View => {
 };
 
 const assignUrl = (url: string): void => window.location.assign(url);
+
+const styles = stylex.create({
+  headerGroup: { columnGap: "1rem", rowGap: "0.5rem" },
+  accountTrigger: { borderWidth: 0, backgroundColor: "transparent" },
+});
 
 export const App = (props: { navigate?: (url: string) => void }) => {
   useColorMode();
@@ -91,7 +98,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
       <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Switch>
         <Match when={session() === undefined}>
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         </Match>
@@ -106,7 +113,9 @@ export const App = (props: { navigate?: (url: string) => void }) => {
           {(current) => (
             <div>
               <nav class="editor-nav">
-                <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                <div
+                  {...stylex.attrs(layout.flexWrapRow, layout.itemsBaseline, styles.headerGroup)}
+                >
                   <h1 class="editor-title">Camus</h1>
                   <Tabs
                     variant="underline"
@@ -120,7 +129,10 @@ export const App = (props: { navigate?: (url: string) => void }) => {
                 <div class="editor-user">
                   <DropdownMenu>
                     <DropdownMenu.Trigger
-                      class="cursor-pointer rounded-full border-0 bg-transparent p-0"
+                      class={
+                        stylex.attrs(cursor.pointer, radius.full, spacing.p0, styles.accountTrigger)
+                          .class ?? ""
+                      }
                       aria-label="Account"
                     >
                       <Avatar name={current().user.name} email={current().user.email} />

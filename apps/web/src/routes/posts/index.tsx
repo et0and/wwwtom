@@ -1,17 +1,25 @@
+import * as stylex from "@stylexjs/stylex";
 import { httpHeader } from "@solidjs/web";
 import { useLocation } from "@solidjs/router";
 import { useQuery } from "@tanstack/solid-query";
 import { POSTS_PAGE_SIZE, fetchPosts } from "~/server/adapter";
 import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { layout } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { Loading, Show, For } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import { formatDate } from "@tom/utils/date";
 import { parsePageNumber } from "@tom/utils/page";
+import { bannerTitleStyles } from "../../components/layout.stylex";
+
+const styles = stylex.create({
+  // `item-center` in the original class list is a typo for `items-center` and
+  // never matched a real Tailwind utility, so no alignItems here preserves
+  // the existing (unaligned) rendering. See migration report.
+  pagination: { display: "flex", justifyContent: "space-between" },
+});
 
 export default function PostsHome() {
   httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
@@ -44,15 +52,17 @@ export default function PostsHome() {
         url: "https://tom.so/posts",
       }}
     >
-      <BlurInText text="Writing" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Writing
+      </Text>
+      <div>
         <Text>Some of my writing.</Text>
-      </BlurInSection>
-      <BlurInSection delay={0.5}>
+      </div>
+      <div>
         <Loading fallback={<Loader />}>
           <Show when={postsQuery.isError}>
             <div class="banner" role="alert">
-              <Text class="banner-title">Error loading posts</Text>
+              <Text style={bannerTitleStyles.bannerTitle}>Error loading posts</Text>
               <Text>{postsQuery.error?.message}</Text>
             </div>
           </Show>
@@ -69,7 +79,8 @@ export default function PostsHome() {
                     {(post) => (
                       <Link
                         variant="current"
-                        class="page block!"
+                        class="page"
+                        style={layout.block}
                         preload={true}
                         href={`/posts/${post.slug}`}
                       >
@@ -86,7 +97,7 @@ export default function PostsHome() {
                     )}
                   </For>
                 </Show>
-                <div class="justify-between flex item-center">
+                <div {...stylex.attrs(styles.pagination)}>
                   <Show when={postsPage.page > 1}>
                     <Link
                       variant="current"
@@ -106,7 +117,7 @@ export default function PostsHome() {
             )}
           </Show>
         </Loading>
-      </BlurInSection>
+      </div>
     </PageLayout>
   );
 }

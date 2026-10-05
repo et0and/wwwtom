@@ -1,43 +1,45 @@
 import type { JSX } from "@solidjs/web";
 import { createContext, createSignal, merge, onSettled, Show, omit, useContext } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { CheckIcon } from "@tom/icons/Check";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-export const TOMUI_DROPDOWN_VARIANTS = {
-  variant: {
-    default: {
-      classes: "",
-      description: "Default dropdown item appearance",
-    },
-    danger: {
-      classes:
-        "text-tomui-danger data-highlighted:bg-tomui-danger/5 data-highlighted:text-tomui-danger",
-      description: "Destructive action item",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { menuItem, radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_DROPDOWN_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-export type TomuiDropdownVariant = keyof typeof TOMUI_DROPDOWN_VARIANTS.variant;
+export type TomuiDropdownVariant = "default" | "danger";
 
-export interface TomuiDropdownVariantsProps {
-  variant?: TomuiDropdownVariant;
-}
+const styles = stylex.create({
+  root: { position: "relative", display: "inline-block" },
+  content: {
+    position: "absolute",
+    zIndex: 50,
+    maxWidth: "calc(100vw - 2rem)",
+    minWidth: "9rem",
+    maxHeight: "var(--available-height)",
+    overflowY: "auto",
+    overflowX: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-control"],
+    padding: "0.375rem",
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"] + ", 0 10px 15px -3px rgb(0 0 0 / 0.1)",
+    top: "100%",
+    marginTop: "0.5rem",
+  },
+  alignStart: { right: "auto", left: 0 },
+  alignEnd: { right: 0, left: "auto" },
+  /** Link items must not inherit link styling from the document. */
+  link: { width: "100%", color: "inherit", textDecorationLine: "none" },
+});
 
-export function dropdownVariants(props: TomuiDropdownVariantsProps = {}): string {
-  const merged = merge({ variant: TOMUI_DROPDOWN_DEFAULT_VARIANTS.variant }, props);
-  return cn(
-    resolveVariant(
-      TOMUI_DROPDOWN_VARIANTS.variant,
-      merged.variant,
-      TOMUI_DROPDOWN_DEFAULT_VARIANTS.variant,
-    ).classes,
-  );
-}
+const variantStyles = {
+  default: menuItem.plain,
+  danger: menuItem.danger,
+} as const satisfies Record<TomuiDropdownVariant, stylex.StyleXStyles>;
 
 interface DropdownContextValue {
   isOpen: () => boolean;
@@ -71,7 +73,7 @@ function DropdownMenuRoot(props: DropdownMenuRootProps): JSX.Element {
     toggle: () => setOpen(!isOpen()),
   };
   return (
-    <div data-tomui-component="DropdownMenu" class="relative inline-block">
+    <div data-tomui-component="DropdownMenu" {...stylex.attrs(styles.root)}>
       <DropdownContext value={value}>{props.children}</DropdownContext>
     </div>
   );
@@ -79,24 +81,24 @@ function DropdownMenuRoot(props: DropdownMenuRootProps): JSX.Element {
 
 export type DropdownMenuTriggerProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
-  "onClick"
+  "onClick" | "style"
 > & {
   children?: JSX.Element;
-  class?: string;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuTrigger(props: DropdownMenuTriggerProps): JSX.Element {
   const ctx = useContext(DropdownContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "onClick");
+  const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
       data-tomui-component="DropdownMenu"
       data-tomui-part="trigger"
       aria-haspopup="menu"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
-      class={merged.class}
       onClick={(event) => {
         ctx.toggle();
         merged.onClick?.(event);
@@ -108,17 +110,18 @@ function DropdownMenuTrigger(props: DropdownMenuTriggerProps): JSX.Element {
   );
 }
 
-export type DropdownMenuContentProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type DropdownMenuContentProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   /** Horizontal edge the menu aligns to. Use end for right-edge triggers. */
   align?: "start" | "end" | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
   const ctx = useContext(DropdownContext);
   const merged = merge({ align: "start" as const }, props);
-  const rest = omit(merged, "children", "class", "align");
+  const rest = omit(merged, "children", "style", "align");
   let element: HTMLDivElement | undefined;
   onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
@@ -144,12 +147,10 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
         data-tomui-component="DropdownMenu"
         data-tomui-part="content"
         role="menu"
-        class={cn(
-          "absolute z-50 max-w-[calc(100vw-2rem)] min-w-36 overflow-hidden rounded-lg bg-tomui-control p-1.5 text-tomui-default shadow-lg ring ring-tomui-line",
-          "max-h-[var(--available-height)] overflow-y-auto",
-          "top-full mt-2",
-          merged.align === "end" ? "right-0" : "left-0",
-          merged.class,
+        {...stylex.attrs(
+          styles.content,
+          merged.align === "end" ? styles.alignEnd : styles.alignStart,
+          merged.style,
         )}
       >
         {merged.children}
@@ -158,15 +159,19 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
   );
 }
 
-export type DropdownMenuItemProps = Omit<JSX.ButtonHTMLAttributes<HTMLButtonElement>, "onClick"> & {
+export type DropdownMenuItemProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "onClick" | "style"
+> & {
   children?: JSX.Element;
-  class?: string;
   icon?: JSX.Element;
   inset?: boolean;
   selected?: boolean;
   href?: string;
   variant?: TomuiDropdownVariant;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
@@ -175,7 +180,6 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
   const rest = omit(
     merged,
     "children",
-    "class",
     "icon",
     "inset",
     "selected",
@@ -183,14 +187,16 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
     "variant",
     "onClick",
     "disabled",
+    "style",
   );
-  const itemClass = (): string =>
-    cn(
-      "relative flex w-full cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none focus:text-tomui-default focus:ring-tomui-focus/50 focus-visible:ring-2 focus-visible:ring-tomui-brand data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-tomui-overlay",
-      merged.inset && "pl-8",
-      dropdownVariants({ variant: merged.variant }),
-      merged.class,
-    );
+  const itemStyles = () => [
+    menuItem.base,
+    menuItem.rounded,
+    menuItem.vertical,
+    merged.inset ? menuItem.checkable : menuItem.plain,
+    variantStyles[merged.variant],
+    merged.style,
+  ];
   const handleClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
     ctx.close();
     merged.onClick?.(event);
@@ -204,7 +210,7 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
           data-tomui-part="item"
           role="menuitem"
           href={merged.href}
-          class={cn(itemClass(), "w-full text-inherit! no-underline!")}
+          {...stylex.attrs(...itemStyles(), styles.link)}
         >
           {merged.icon}
           {merged.children}
@@ -216,14 +222,14 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
         data-tomui-part="item"
         role="menuitem"
         disabled={merged.disabled}
-        class={itemClass()}
+        {...stylex.attrs(...itemStyles())}
         onClick={handleClick}
         {...rest}
       >
         {merged.icon}
         {merged.children}
         <Show when={merged.selected}>
-          <span class="ml-auto inline-flex">
+          <span {...stylex.attrs(menuItem.trailing)}>
             <CheckIcon size="sm" color="current" />
           </span>
         </Show>
@@ -234,11 +240,12 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
 
 export type DropdownMenuCheckboxItemProps = {
   children?: JSX.Element;
-  class?: string;
   checked?: boolean;
   defaultChecked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
   disabled?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Element {
@@ -248,7 +255,7 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
   const rest = omit(
     merged,
     "children",
-    "class",
+    "style",
     "checked",
     "defaultChecked",
     "onCheckedChange",
@@ -261,9 +268,12 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
       role="menuitemcheckbox"
       aria-checked={isChecked() ? "true" : "false"}
       disabled={merged.disabled}
-      class={cn(
-        "relative flex w-full cursor-default items-center rounded-sm py-1.5 pr-2 pl-8 text-base outline-hidden transition-colors select-none focus:bg-tomui-tint focus:text-tomui-default focus:ring-tomui-focus/50 focus-visible:ring-2 focus-visible:ring-tomui-brand data-disabled:pointer-events-none data-disabled:opacity-50",
-        merged.class,
+      {...stylex.attrs(
+        menuItem.base,
+        menuItem.rounded,
+        menuItem.vertical,
+        menuItem.checkable,
+        merged.style,
       )}
       onClick={() => {
         const next = !isChecked();
@@ -273,7 +283,7 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
       {...rest}
     >
       <Show when={isChecked()}>
-        <span class="absolute left-2 flex h-3.5 w-3.5 items-center justify-center text-inherit">
+        <span {...stylex.attrs(menuItem.checkColumn)}>
           <CheckIcon size="xs" color="current" />
         </span>
       </Show>
@@ -311,16 +321,20 @@ function DropdownMenuRadioGroup(props: DropdownMenuRadioGroupProps): JSX.Element
   );
 }
 
-export type DropdownMenuRadioItemProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
+export type DropdownMenuRadioItemProps = Omit<
+  JSX.ButtonHTMLAttributes<HTMLButtonElement>,
+  "style"
+> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
   value: string;
 };
 
 function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
   const group = useContext(RadioGroupContext);
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "value");
+  const rest = omit(merged, "children", "style", "value");
   const isChecked = (): boolean => group.value() === merged.value;
   return (
     <button
@@ -328,16 +342,19 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
       data-tomui-part="radio-item"
       role="menuitemradio"
       aria-checked={isChecked() ? "true" : "false"}
-      class={cn(
-        "relative flex w-full cursor-default items-center rounded-md px-2 py-1.5 text-base outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 data-highlighted:bg-tomui-tint",
-        merged.class,
+      {...stylex.attrs(
+        menuItem.base,
+        menuItem.rounded,
+        menuItem.vertical,
+        menuItem.plain,
+        merged.style,
       )}
       onClick={() => group.select(merged.value)}
       {...rest}
     >
       {merged.children}
       <Show when={isChecked()}>
-        <span class="ml-auto inline-flex">
+        <span {...stylex.attrs(menuItem.trailing)}>
           <CheckIcon size="sm" color="current" />
         </span>
       </Show>
@@ -345,18 +362,23 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
   );
 }
 
-export type DropdownMenuLabelProps = JSX.HTMLAttributes<HTMLDivElement> & {
+export type DropdownMenuLabelProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   inset?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuLabel(props: DropdownMenuLabelProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "inset");
+  const rest = omit(merged, "children", "style", "inset");
   return (
     <div
-      class={cn("px-2 py-1.5 text-base font-semibold", merged.inset && "pl-8", merged.class)}
+      {...stylex.attrs(
+        menuItem.label,
+        merged.inset ? menuItem.labelInset : undefined,
+        merged.style,
+      )}
       {...rest}
     >
       {merged.children}
@@ -364,26 +386,28 @@ function DropdownMenuLabel(props: DropdownMenuLabelProps): JSX.Element {
   );
 }
 
-export type DropdownMenuSeparatorProps = JSX.HTMLAttributes<HTMLHRElement> & {
-  class?: string;
+export type DropdownMenuSeparatorProps = Omit<JSX.HTMLAttributes<HTMLHRElement>, "style"> & {
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuSeparator(props: DropdownMenuSeparatorProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "class");
-  return <hr class={cn("-mx-1 my-1 h-px bg-tomui-hairline border-0", merged.class)} {...rest} />;
+  const rest = omit(merged, "style");
+  return <hr {...stylex.attrs(menuItem.separator, merged.style)} {...rest} />;
 }
 
-export type DropdownMenuShortcutProps = JSX.HTMLAttributes<HTMLSpanElement> & {
+export type DropdownMenuShortcutProps = Omit<JSX.HTMLAttributes<HTMLSpanElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function DropdownMenuShortcut(props: DropdownMenuShortcutProps): JSX.Element {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class");
+  const rest = omit(merged, "children", "style");
   return (
-    <span class={cn("ml-auto text-xs tracking-widest opacity-60", merged.class)} {...rest}>
+    <span {...stylex.attrs(menuItem.shortcut, merged.style)} {...rest}>
       {merged.children}
     </span>
   );

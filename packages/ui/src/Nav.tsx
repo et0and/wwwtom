@@ -1,4 +1,69 @@
+import * as stylex from "@stylexjs/stylex";
 import { createEffect, createSignal, For, Show } from "solid-js";
+import { fontSizeLg } from "./styles/typography.stylex";
+
+const MD = "@media (min-width: 768px)";
+
+const styles = stylex.create({
+  nav: {
+    position: "relative",
+    letterSpacing: "-0.025em",
+    paddingInline: "1.5rem",
+    paddingBlock: "1rem",
+    flexShrink: 0,
+    zIndex: 50,
+    [MD]: { position: "sticky", top: 0 },
+  },
+  bar: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    height: "4rem",
+  },
+  brand: { fontWeight: 500 },
+  brandHeading: {
+    fontSize: fontSizeLg.fontSize,
+    lineHeight: fontSizeLg.lineHeight,
+  },
+  links: {
+    display: "none",
+    gap: "1rem",
+    fontSize: fontSizeLg.fontSize,
+    lineHeight: fontSizeLg.lineHeight,
+    [MD]: { display: "flex", alignItems: "center" },
+  },
+  menuButton: {
+    fontSize: fontSizeLg.fontSize,
+    lineHeight: fontSizeLg.lineHeight,
+    [MD]: { display: "none" },
+  },
+  dropdown: {
+    display: "block",
+    [MD]: { display: "none" },
+  },
+  dropdownInner: {
+    display: "flex",
+    flexDirection: "column",
+    paddingBlock: "1rem",
+    paddingInline: "1.5rem",
+    fontSize: "2.25rem",
+    lineHeight: "2.5rem",
+  },
+});
+
+/** `view-transition-name` has no StyleX equivalent; the hook class lives in apps/web/src/app.css. */
+const generatedNavAttrs = stylex.attrs(styles.nav);
+const navAttrs = {
+  ...generatedNavAttrs,
+  class: ["view-transition-header", generatedNavAttrs.class].filter(Boolean).join(" "),
+};
+
+/** Positioning for the open mobile menu lives in apps/web/src/app.css (`.nav-dropdown`). */
+const generatedDropdownAttrs = stylex.attrs(styles.dropdown);
+const dropdownAttrs = {
+  ...generatedDropdownAttrs,
+  class: ["nav-dropdown", generatedDropdownAttrs.class].filter(Boolean).join(" "),
+};
 
 export function Nav() {
   const [isOpen, setIsOpen] = createSignal(false);
@@ -23,21 +88,21 @@ export function Nav() {
   );
 
   return (
-    <nav class="relative md:sticky md:top-0 tracking-tighter px-6 py-4 flex-shrink-0 view-transition-header z-50">
-      <div class="flex items-center justify-between h-16">
-        <a class="font-medium" href="/">
-          <h1 class="!text-lg">Tom Hackshaw</h1>
+    <nav {...navAttrs}>
+      <div {...stylex.attrs(styles.bar)}>
+        <a {...stylex.attrs(styles.brand)} href="/">
+          <h1 {...stylex.attrs(styles.brandHeading)}>Tom Hackshaw</h1>
         </a>
-        <div class="hidden md:flex md:items-center space-x-4 text-lg">
+        <div {...stylex.attrs(styles.links)}>
           <For each={navItems}>{(item) => <a href={item.href}>{item.label}</a>}</For>
         </div>
-        <button class="md:hidden text-lg" onClick={() => setIsOpen(!isOpen())}>
+        <button {...stylex.attrs(styles.menuButton)} onClick={() => setIsOpen(!isOpen())}>
           Menu
         </button>
       </div>
       <Show when={isOpen()}>
-        <div class="nav-dropdown md:hidden">
-          <div class="flex flex-col py-4 px-6 text-4xl">
+        <div {...dropdownAttrs}>
+          <div {...stylex.attrs(styles.dropdownInner)}>
             <For each={navItems}>
               {(item) => (
                 <a href={item.href} onClick={() => setIsOpen(false)}>

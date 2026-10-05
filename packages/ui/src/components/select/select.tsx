@@ -1,49 +1,82 @@
 import { createEffect, createUniqueId, For, merge, omit, Show, untrack } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import * as stylex from "@stylexjs/stylex";
 import { createControllableSignal } from "../../utils/state";
-
-export const TOMUI_SELECT_VARIANTS = {
-  size: {
-    xs: {
-      classes: "h-5 gap-1 rounded-sm px-1.5 text-xs",
-      description: "Extra small select for compact UIs",
-    },
-    sm: {
-      classes: "h-6.5 gap-1 rounded-md px-2 text-xs",
-      description: "Small select for secondary fields",
-    },
-    base: {
-      classes: "h-9 gap-1.5 rounded-lg px-3 text-base",
-      description: "Default select size",
-    },
-    lg: {
-      classes: "h-10 gap-2 rounded-lg px-4 text-base",
-      description: "Large select for prominent fields",
-    },
-  },
-} as const;
+import { colors } from "../../styles/colors.stylex";
+import { cursor, radius, select } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
 
 export const TOMUI_SELECT_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiSelectSize = keyof typeof TOMUI_SELECT_VARIANTS.size;
+export type TomuiSelectSize = "xs" | "sm" | "base" | "lg";
 
-export function selectVariants(props: { size?: TomuiSelectSize } = {}): string {
-  const merged = merge(TOMUI_SELECT_DEFAULT_VARIANTS, props);
-  return cn(
-    "flex w-full shrink-0 items-center select-none border-0 shadow-xs",
-    "bg-tomui-control disabled:bg-tomui-control/50",
-    "justify-between font-normal",
-    "cursor-pointer disabled:cursor-not-allowed disabled:text-tomui-subtle",
-    "ring ring-tomui-line outline-none",
-    "focus:ring-tomui-focus/50 focus:outline-none focus-visible:ring-2 focus-visible:ring-tomui-brand focus-visible:ring-inset",
-    resolveVariant(TOMUI_SELECT_VARIANTS.size, merged.size, TOMUI_SELECT_DEFAULT_VARIANTS.size)
-      .classes,
-  );
-}
+const styles = stylex.create({
+  select: {
+    display: "flex",
+    width: "100%",
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "space-between",
+    userSelect: select.none.userSelect,
+    borderWidth: 0,
+    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
+    fontWeight: 400,
+    cursor: cursor.pointer.cursor,
+    backgroundColor: colors["--color-tomui-control"],
+    outlineWidth: 0,
+    ":focus": {
+      outlineWidth: 0,
+      boxShadow:
+        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 50%, transparent)",
+    },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + colors["--color-tomui-brand"] },
+    ":disabled": {
+      cursor: cursor.notAllowed.cursor,
+      color: textColors["--text-color-tomui-subtle"],
+      backgroundColor:
+        "color-mix(in srgb, " + colors["--color-tomui-control"] + " 50%, transparent)",
+    },
+  },
+
+  sizeXs: {
+    height: "1.25rem",
+    gap: "0.25rem",
+    borderRadius: radius.sm.borderRadius,
+    paddingInline: "0.375rem",
+    fontSize: fontSizeXs.fontSize,
+  },
+  sizeSm: {
+    height: "1.625rem",
+    gap: "0.25rem",
+    borderRadius: radius.md.borderRadius,
+    paddingInline: "0.5rem",
+    fontSize: fontSizeXs.fontSize,
+  },
+  sizeBase: {
+    height: "2.25rem",
+    gap: "0.375rem",
+    borderRadius: radius.lg.borderRadius,
+    paddingInline: "0.75rem",
+    fontSize: fontSizeBase.fontSize,
+  },
+  sizeLg: {
+    height: "2.5rem",
+    gap: "0.5rem",
+    borderRadius: radius.lg.borderRadius,
+    paddingInline: "1rem",
+    fontSize: fontSizeBase.fontSize,
+  },
+});
+
+const sizeStyles = {
+  xs: styles.sizeXs,
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+} as const satisfies Record<TomuiSelectSize, stylex.StyleXStyles>;
 
 export type SelectOption = {
   label: string;
@@ -53,15 +86,16 @@ export type SelectOption = {
 
 export type SelectProps = Omit<
   JSX.SelectHTMLAttributes<HTMLSelectElement>,
-  "onChange" | "value" | "defaultValue"
+  "onChange" | "value" | "defaultValue" | "style"
 > & {
-  class?: string;
   size?: TomuiSelectSize;
   placeholder?: string;
   options?: ReadonlyArray<SelectOption> | Record<string, string>;
   value?: string;
   defaultValue?: string;
   onChange?: (value: string) => void;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 function normalizeOptions(options: SelectProps["options"]): Array<SelectOption> {
@@ -78,7 +112,7 @@ export function Select(props: SelectProps) {
   const rest = omit(
     merged,
     "children",
-    "class",
+    "style",
     "size",
     "placeholder",
     "options",
@@ -113,7 +147,7 @@ export function Select(props: SelectProps) {
     <select
       data-tomui-component="Select"
       id={inputId}
-      class={cn(selectVariants({ size: merged.size }), merged.class)}
+      {...stylex.attrs(styles.select, sizeStyles[merged.size], merged.style)}
       value={signal.value() ?? ""}
       ref={(el: HTMLSelectElement) => {
         selectRef = el;

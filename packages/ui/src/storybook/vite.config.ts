@@ -2,7 +2,8 @@
 import path from "path";
 import { fileURLToPath } from "url";
 import solid from "@solidjs/vite-plugin";
-import tailwindcss from "@tailwindcss/vite";
+import stylex from "@stylexjs/unplugin";
+import { stylexOptions } from "../../stylex.config";
 import { defineConfig } from "vite";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
@@ -16,8 +17,8 @@ export default defineConfig({
     // Providing a plugin named "solid" also stops the storybook-solidjs-vite
     // preset from adding its Solid v1 compiler (vite-plugin-solid v2),
     // whose output imports the v1-only `solid-js/web` subpath.
+    stylex.vite(stylexOptions),
     solid(),
-    tailwindcss(),
   ],
   define: {
     "process.env": {},

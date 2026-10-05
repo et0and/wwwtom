@@ -1,78 +1,144 @@
+import * as stylex from "@stylexjs/stylex";
 import { createSignal, For, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { XIcon } from "@tom/icons/X";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
+import { colors } from "../../styles/colors.stylex";
+import { textColors } from "../../styles/tokens.stylex";
 
-export const TOMUI_TOAST_VARIANTS = {
-  root: {
-    classes:
-      "rounded-lg border border-tomui-fill bg-tomui-control p-4 shadow-lg text-tomui-default",
-    description: "Toast container with background, border, and shadow",
+/** Tailwind's `sm:` breakpoint, used by the toaster's responsive placement. */
+const SM = "@media (min-width: 640px)";
+
+/** Matches Tailwind's default `shadow-lg` utility. */
+const SHADOW_LG = "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)";
+
+const lineColor = colors["--color-tomui-line"];
+const fillColor = colors["--color-tomui-fill"];
+const baseColor = colors["--color-tomui-base"];
+const controlColor = colors["--color-tomui-control"];
+const successColor = colors["--color-tomui-success"];
+const dangerColor = colors["--color-tomui-danger"];
+const warningColor = colors["--color-tomui-warning"];
+const infoColor = colors["--color-tomui-info"];
+
+const defaultText = textColors["--text-color-tomui-default"];
+const subtleText = textColors["--text-color-tomui-subtle"];
+const successText = textColors["--text-color-tomui-success"];
+const dangerText = textColors["--text-color-tomui-danger"];
+const warningText = textColors["--text-color-tomui-warning"];
+const infoText = textColors["--text-color-tomui-info"];
+
+const styles = stylex.create({
+  toasterRoot: {
+    position: "fixed",
+    insetBlockEnd: "1rem",
+    insetInlineEnd: "1rem",
+    zIndex: 1,
+    display: "flex",
+    width: "calc(100% - 2rem)",
+    flexDirection: "column",
+    gap: "0.5rem",
+    [SM]: { insetBlockEnd: "2rem", insetInlineEnd: "2rem", width: "340px" },
   },
-  title: {
-    classes: "text-[0.975rem] leading-5 font-medium text-tomui-default",
-    description: "Toast title with primary text color",
+  toastShell: {
+    position: "relative",
+    borderRadius: "0.75rem",
+    backgroundClip: "padding-box",
+    padding: "1rem",
   },
+  toastDefault: {
+    borderWidth: 1,
+    borderColor: fillColor,
+    backgroundColor: baseColor,
+    boxShadow: "0 0 0 1px " + lineColor + ", " + SHADOW_LG,
+  },
+  toastSuccess: {
+    backgroundColor: baseColor,
+    boxShadow: "0 0 0 0.3px " + successColor + ", " + SHADOW_LG,
+  },
+  toastError: {
+    backgroundColor: baseColor,
+    boxShadow: "0 0 0 0.3px " + dangerColor + ", " + SHADOW_LG,
+  },
+  toastWarning: {
+    backgroundColor: baseColor,
+    boxShadow: "0 0 0 0.3px " + warningColor + ", " + SHADOW_LG,
+  },
+  toastInfo: {
+    backgroundColor: controlColor,
+    boxShadow: "0 0 0 0.3px " + infoColor + ", " + SHADOW_LG,
+  },
+  body: { display: "flex", alignItems: "flex-start", gap: "0.5rem" },
+  textColumn: {
+    display: "flex",
+    minWidth: 0,
+    flexDirection: "column",
+    gap: "0.25rem",
+    overflow: "hidden",
+  },
+  title: { fontSize: "0.975rem", lineHeight: "1.25rem", fontWeight: 500, color: defaultText },
+  titleSuccess: { color: successText },
+  titleError: { color: dangerText },
+  titleWarning: { color: warningText },
+  titleInfo: { color: infoText },
   description: {
-    classes: "text-[0.925rem] leading-5 text-tomui-subtle",
-    description: "Toast description with muted text color",
+    fontSize: "0.925rem",
+    lineHeight: "1.25rem",
+    color: "color-mix(in oklch, " + defaultText + " 70%, transparent)",
   },
   close: {
-    classes: "absolute top-2 right-2 size-5 rounded text-tomui-subtle hover:bg-current/15",
-    description: "Button-based close control with variant-aware hover tint",
+    position: "absolute",
+    top: "0.5rem",
+    right: "0.5rem",
+    display: "flex",
+    height: "1.25rem",
+    width: "1.25rem",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: "0.25rem",
+    color: subtleText,
+    ":hover": { backgroundColor: "color-mix(in srgb, currentColor 15%, transparent)" },
   },
-  variant: {
-    default: {
-      classes: "border-tomui-fill bg-tomui-base",
-      description: "Default toast style",
-    },
-    success: {
-      classes:
-        "ring-[0.3px] ring-tomui-success bg-tomui-base [&_[data-toast-icon]]:text-tomui-success [&_[data-toast-title]]:text-tomui-success",
-      description: "Success toast for confirmations and positive outcomes",
-    },
-    error: {
-      classes:
-        "ring-[0.3px] ring-tomui-danger bg-tomui-base [&_[data-toast-icon]]:text-tomui-danger [&_[data-toast-title]]:text-tomui-danger",
-      description: "Error toast for critical issues",
-    },
-    warning: {
-      classes:
-        "ring-[0.3px] ring-tomui-warning bg-tomui-base [&_[data-toast-icon]]:text-tomui-warning [&_[data-toast-title]]:text-tomui-warning",
-      description: "Warning toast for cautionary messages",
-    },
-    info: {
-      classes:
-        "ring-[0.3px] ring-tomui-info bg-tomui-control [&_[data-toast-icon]]:text-tomui-info [&_[data-toast-title]]:text-tomui-info",
-      description: "Info toast for neutral informational messages",
-    },
-  },
-} as const;
+  closeSuccess: { color: successText },
+  closeError: { color: dangerText },
+  closeWarning: { color: warningText },
+  closeInfo: { color: infoText },
+});
 
 export const TOMUI_TOAST_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-const TOAST_CLOSE_CLASSES = {
-  success: "text-tomui-success",
-  error: "text-tomui-danger",
-  warning: "text-tomui-warning",
-  info: "text-tomui-info",
-} as const satisfies Record<string, string>;
+export type TomuiToastVariant = "default" | "success" | "error" | "warning" | "info";
 
-export type TomuiToastVariant = keyof typeof TOMUI_TOAST_VARIANTS.variant;
+const toastVariantStyles = {
+  default: styles.toastDefault,
+  success: styles.toastSuccess,
+  error: styles.toastError,
+  warning: styles.toastWarning,
+  info: styles.toastInfo,
+} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles>;
 
-export function toastVariants(props: { variant?: TomuiToastVariant } = {}): string {
+const titleVariantStyles = {
+  default: undefined,
+  success: styles.titleSuccess,
+  error: styles.titleError,
+  warning: styles.titleWarning,
+  info: styles.titleInfo,
+} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles | undefined>;
+
+const closeVariantStyles = {
+  default: undefined,
+  success: styles.closeSuccess,
+  error: styles.closeError,
+  warning: styles.closeWarning,
+  info: styles.closeInfo,
+} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles | undefined>;
+
+export function toastVariants(
+  props: { variant?: TomuiToastVariant } = {},
+): Array<stylex.StyleXStyles> {
   const merged = merge(TOMUI_TOAST_DEFAULT_VARIANTS, props);
-  return cn(
-    "rounded-xl ring ring-tomui-line bg-clip-padding p-4 shadow-lg",
-    resolveVariant(
-      TOMUI_TOAST_VARIANTS.variant,
-      merged.variant,
-      TOMUI_TOAST_DEFAULT_VARIANTS.variant,
-    ).classes,
-  );
+  return [styles.toastShell, toastVariantStyles[merged.variant]];
 }
 
 export type ToastItem = {
@@ -127,66 +193,51 @@ export function createToastStore(): ToastStore {
   return { toasts, notify, dismiss };
 }
 
-export type ToasterProps = JSX.HTMLAttributes<HTMLDivElement> & {
-  class?: string | undefined;
+export type ToasterProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   toasts?: ReadonlyArray<ToastItem> | undefined;
   onDismiss?: ((id: string) => void) | undefined;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles | undefined;
 };
 
 export function Toaster(props: ToasterProps) {
   const merged = merge({}, props);
-  const rest = omit(merged, "children", "class", "toasts", "onDismiss");
+  const rest = omit(merged, "children", "style", "toasts", "onDismiss");
   const items = () => merged.toasts ?? [];
   return (
     <div
       data-tomui-component="Toaster"
       data-tomui-top-layer
       aria-live="polite"
-      class={cn(
-        "fixed right-4 bottom-4 z-1 flex w-[calc(100%-2rem)] sm:right-8 sm:bottom-8 sm:w-[340px] flex-col gap-2",
-        merged.class,
-      )}
+      {...stylex.attrs(styles.toasterRoot, merged.style)}
       {...rest}
     >
       <For each={items()}>
-        {(toast) => (
-          <div
-            role="status"
-            class={cn(
-              "relative",
-              toastVariants({
-                variant: toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant,
-              }),
-            )}
-          >
-            <div class="flex items-start gap-2">
-              <div class="flex min-w-0 flex-col gap-1 overflow-hidden">
-                <p
-                  data-toast-title
-                  class="text-[0.975rem] leading-5 font-medium text-tomui-default"
+        {(toast) => {
+          const variant = toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant;
+          return (
+            <div role="status" {...stylex.attrs(...toastVariants({ variant }))}>
+              <div {...stylex.attrs(styles.body)}>
+                <div {...stylex.attrs(styles.textColumn)}>
+                  <p data-toast-title {...stylex.attrs(styles.title, titleVariantStyles[variant])}>
+                    {toast.title}
+                  </p>
+                  <Show when={toast.description}>
+                    <p {...stylex.attrs(styles.description)}>{toast.description}</p>
+                  </Show>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Dismiss"
+                  {...stylex.attrs(styles.close, closeVariantStyles[variant])}
+                  onClick={() => merged.onDismiss?.(toast.id)}
                 >
-                  {toast.title}
-                </p>
-                <Show when={toast.description}>
-                  <p class="text-[0.925rem] leading-5 text-tomui-default/70">{toast.description}</p>
-                </Show>
+                  <XIcon size="sm" />
+                </button>
               </div>
-              <button
-                type="button"
-                aria-label="Dismiss"
-                class={cn(
-                  "absolute top-2 right-2 flex size-5 items-center justify-center rounded text-tomui-subtle hover:bg-current/15",
-                  toast.variant &&
-                    toast.variant !== "default" &&
-                    TOAST_CLOSE_CLASSES[toast.variant],
-                )}
-                onClick={() => merged.onDismiss?.(toast.id)}
-              >
-                <XIcon size="sm" />
-              </button>
             </div>
-          </div>
-        )}
+          );
+        }}
       </For>
       {merged.children}
     </div>
