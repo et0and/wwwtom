@@ -1,3 +1,39 @@
+# [4.0.0](https://github.com/et0and/wwwtom/compare/v3.11.4...v4.0.0) (2026-10-05)
+
+
+### Bug Fixes
+
+* **apps:** emit the StyleX stylesheet in all three apps ([158bfbc](https://github.com/et0and/wwwtom/commit/158bfbc1e2e33d4d1903762f722bf5ea99faa442))
+* **apps:** load token and preflight layers by declaring [@import](https://github.com/import) before [@stylex](https://github.com/stylex) ([2ffd5d6](https://github.com/et0and/wwwtom/commit/2ffd5d682ac9faab9f96a9a34eb007af4e0d0711))
+* **ci:** report the preview smoke instead of failing every PR ([b1c1673](https://github.com/et0and/wwwtom/commit/b1c16732f472f9b1d54af096c440a4b43bd0b6c7))
+* **infra:** decode the PR number so preview comments post ([2ca93c5](https://github.com/et0and/wwwtom/commit/2ca93c5df9a20c76cf818cbfa697ac291c198ea0))
+* **infra:** expose deploy:preview at the repo root ([42d56ac](https://github.com/et0and/wwwtom/commit/42d56ac3d04fd12593fef66494cd4dfe54a85d7c))
+* **ui:** make Combobox chips removable, and migrate Combobox to StyleX ([e58a097](https://github.com/et0and/wwwtom/commit/e58a0978ef1a58ac726ed75cfae87c93d66832c2))
+* **ui:** put the reset in a base layer and inline font weights ([23e8053](https://github.com/et0and/wwwtom/commit/23e805381275848dc9fedce03dea222d8f43232c))
+* **ui:** resolve font weights to real values ([debd533](https://github.com/et0and/wwwtom/commit/debd5335ee7163fa37c914e7ed99db32bb8783f3))
+* **ui:** restore the baseline reset that Tailwind's preflight provided ([a0e00ec](https://github.com/et0and/wwwtom/commit/a0e00ec5db7a768bf92eaa4a2f489987b1b3cb72))
+* **ui:** wire Field labels to their controls, and add missing option highlighting ([5fd60c0](https://github.com/et0and/wwwtom/commit/5fd60c0281ac32f890f011e79ca52fbf3a603fb2))
+* **web:** keep Eden treaty wire timestamps as strings ([728b064](https://github.com/et0and/wwwtom/commit/728b064683912c68bb9799ccb10cc3a6b6ca6f0e))
+* **web:** keep prose element defaults below the StyleX layers ([b81e507](https://github.com/et0and/wwwtom/commit/b81e507f99aed22bfd47bc10a2f58a4eefb7cbfd))
+* **web:** order the reset below the prose defaults ([74d0cd8](https://github.com/et0and/wwwtom/commit/74d0cd85dd7619e0ac630a060fedcda1477b79d4))
+* **web:** restore the page heading scale ([fcf26f0](https://github.com/et0and/wwwtom/commit/fcf26f04fb3f76bd889273874c2547f76db79c56))
+
+
+### Features
+
+* **infra:** one consolidated preview comment, smoke-tested ([12b32eb](https://github.com/et0and/wwwtom/commit/12b32ebc60766aafd40f731ad29c7925ecfb1574))
+
+
+### Reverts
+
+* **ci:** drop the preview smoke job, keep e2e on the simulator ([fddbe88](https://github.com/et0and/wwwtom/commit/fddbe88be5aa82220d19fcbad41cc4bee43d5937))
+
+
+### BREAKING CHANGES
+
+* **web:** sophie.st post dates and the editor history panel read
+the same revived Dates and render empty until this deploys.
+
 ## [3.11.4](https://github.com/et0and/wwwtom/compare/v3.11.3...v3.11.4) (2026-10-02)
 
 
