@@ -20,7 +20,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy PR preview
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.action != 'closed'
     env:
       ALCHEMY_STAGE: pr-${{ github.event.pull_request.number }}
@@ -47,7 +47,7 @@ jobs:
           pnpm deploy:preview --yes
   destroy:
     name: Destroy PR preview
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.action == 'closed'
     env:
       ALCHEMY_STAGE: pr-${{ github.event.pull_request.number }}

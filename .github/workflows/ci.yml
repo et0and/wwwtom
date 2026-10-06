@@ -11,7 +11,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     env:
       TURBO_API: https://turbo.infra.tom.so
       TURBO_TOKEN: ${{ secrets.TURBO_CACHE_TOKEN }}

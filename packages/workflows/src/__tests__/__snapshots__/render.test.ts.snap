@@ -125,7 +125,7 @@ on:
 jobs:
   test:
     name: Test
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     env:
       TURBO_API: https://turbo.infra.tom.so
       TURBO_TOKEN: \${{ secrets.TURBO_CACHE_TOKEN }}
@@ -180,7 +180,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   respond:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -268,7 +268,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     environment: \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
     env:
       ALCHEMY_STAGE: \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
@@ -314,7 +314,7 @@ concurrency:
 jobs:
   playwright:
     name: Playwright (tom.so fixture store)
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     timeout-minutes: 30
     steps:
       - name: Checkout
@@ -357,7 +357,7 @@ on:
       - created
 jobs:
   opencode:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     permissions:
       id-token: write
       contents: read
@@ -396,7 +396,7 @@ on:
       - created
 jobs:
   respond:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     permissions:
       id-token: write
       contents: write
@@ -479,7 +479,7 @@ concurrency:
 jobs:
   triage:
     name: Triage changed files
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false
     steps:
       - name: Checkout base branch
@@ -505,7 +505,7 @@ jobs:
           GH_TOKEN: \${{ github.token }}
   address:
     name: Address the triage
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     needs: triage
     if: (github.event.action == 'opened' || github.event.action == 'ready_for_review') && github.actor == 'et0and'
     permissions:
@@ -576,7 +576,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy PR preview
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.action != 'closed'
     env:
       ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
@@ -603,7 +603,7 @@ jobs:
           pnpm deploy:preview --yes
   destroy:
     name: Destroy PR preview
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.action == 'closed'
     env:
       ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
@@ -663,7 +663,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy Storybook preview
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.action != 'closed'
     env:
       ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
@@ -680,7 +680,7 @@ jobs:
         run: pnpm deploy:storybook --yes
   destroy:
     name: Destroy Storybook preview
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     if: github.event.action == 'closed'
     env:
       ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
@@ -717,7 +717,7 @@ concurrency:
 jobs:
   sweep:
     name: Destroy previews of closed PRs
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     env:
       CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -769,7 +769,7 @@ permissions:
 jobs:
   release:
     name: Release
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1

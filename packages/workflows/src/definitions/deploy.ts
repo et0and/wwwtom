@@ -34,7 +34,7 @@ export const deploy = workflow("deploy", {
   jobs: {
     deploy: {
       name: stageLabel,
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       environment: stageExpression,
       env: alchemyEnv(stageExpression),
       steps: [

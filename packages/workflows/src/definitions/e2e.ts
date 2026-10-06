@@ -23,7 +23,7 @@ export const e2e = workflow("e2e", {
   jobs: {
     playwright: {
       name: "Playwright (tom.so fixture store)",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       "timeout-minutes": 30,
       steps: [
         checkout(),
