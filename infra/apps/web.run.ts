@@ -7,7 +7,7 @@ import { retain } from "alchemy/RemovalPolicy";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
+import { stageHost, stageWebHost, tomSecrets, workerObservability } from "../shared.run.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
 
@@ -28,6 +28,7 @@ export const web = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
     compatibility: { flags: ["nodejs_compat"] },
+    observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so the
     // adapter can redirect back to it (production adopts the existing worker).
     ...(stage === "production"
