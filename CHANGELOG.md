@@ -1,3 +1,10 @@
+## [4.0.1](https://github.com/et0and/wwwtom/compare/v4.0.0...v4.0.1) (2026-10-06)
+
+
+### Bug Fixes
+
+* **workflows:** raise Node heap for Storybook build on Namespace runners ([a78df52](https://github.com/et0and/wwwtom/commit/a78df52792a7fbaa8b17114b4a49fd51a768298f))
+
 # [4.0.0](https://github.com/et0and/wwwtom/compare/v3.11.4...v4.0.0) (2026-10-05)
 
 
