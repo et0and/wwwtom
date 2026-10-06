@@ -7,9 +7,9 @@ import {
   MAX_STACK_LENGTH,
   telegramSendResponseSchema,
 } from "@tom/schemas/telegram";
-import { AppConfig } from "./services/config";
-import { liveHttpClient } from "./services/http";
-import { toErrorMessage } from "./services/worker";
+import { AppConfig } from "./config";
+import { liveHttpClient } from "./http";
+import { toErrorMessage } from "./worker";
 
 export interface TelegramServiceContract {
   readonly sendAlert: (message: string) => Effect.Effect<void, TelegramError>;

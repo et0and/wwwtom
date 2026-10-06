@@ -1,30 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { Effect, Redacted } from "effect";
-import type { CloudflareEnv, PartialCloudflareEnv } from "../src/services/config";
-import {
-  AppConfig,
-  makeAppConfigLayer,
-  parseAdminEmails,
-  readCloudflareEnv,
-} from "../src/services/config";
+import type { CloudflareEnv, PartialCloudflareEnv } from "../src/config";
+import { AppConfig, makeAppConfigLayer, readCloudflareEnv } from "../src/config";
 import { SecretsError } from "@tom/types/errors";
-
-describe("parseAdminEmails", () => {
-  it("splits comma-separated emails into a string[]", () => {
-    expect(parseAdminEmails("a@example.com,b@example.com")).toEqual([
-      "a@example.com",
-      "b@example.com",
-    ]);
-  });
-
-  it("trims whitespace and drops empty entries", () => {
-    expect(parseAdminEmails(" a@example.com , , ")).toEqual(["a@example.com"]);
-  });
-
-  it("returns an empty list when unset", () => {
-    expect(parseAdminEmails(undefined)).toEqual([]);
-  });
-});
 
 const bundleEnv = (bundle: Record<string, string>, overrides: Partial<CloudflareEnv> = {}) => ({
   TOM_SECRETS: { get: () => Promise.resolve(JSON.stringify(bundle)) },

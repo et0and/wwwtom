@@ -1,6 +1,6 @@
 import { Context, Effect, Layer, Redacted } from "effect";
 import { retryPolicy } from "@tom/utils/retry";
-import { AppConfig } from "@tom/utils/services/config";
+import { AppConfig } from "@tom/utils/config";
 import {
   DatabaseConnectionError,
   GuestbookValidationError,

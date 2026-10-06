@@ -3,7 +3,7 @@ import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Effect } from "effect";
 import { HttpStatus } from "@tom/constants/http";
-import { bannerTitleStyles } from "../components/layout.stylex";
+import { bannerTitleStyles } from "../chrome/layout.stylex";
 
 export default function NotFound() {
   if (isServer) void Effect.runFork(Effect.logInfo("Page not found", HttpStatus.NotFound));

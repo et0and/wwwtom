@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { Readable } from "node:stream";
 import adapterWorker from "@tom/adapter";
-import type { CloudflareEnv } from "@tom/utils/services/config";
+import type { CloudflareEnv } from "@tom/utils/config";
 
 /**
  * Plain-Node harness for the real adapter worker entry (apps/adapter).

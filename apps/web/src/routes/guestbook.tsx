@@ -11,10 +11,10 @@ import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
 import { Text } from "@tom/ui/text";
-import { callAdapter, runAdapterCall } from "~/libs/adapter";
-import { queryClient } from "~/libs/query-client";
+import { callAdapter, runAdapterCall } from "~/data/adapter";
+import { queryClient } from "~/data/query-client";
 import { formatDateTime } from "@tom/utils/date";
-import { bannerTitleStyles, layoutStyles } from "../components/layout.stylex";
+import { bannerTitleStyles, layoutStyles } from "../chrome/layout.stylex";
 
 const styles = stylex.create({
   sectionSpacing: { marginBottom: "1rem" },

@@ -6,9 +6,9 @@ import { SkipLink } from "@tom/ui/SkipLink";
 import { ViewTransitions } from "@tom/ui/ViewTransitions";
 import { useColorMode } from "@tom/ui/color-mode";
 import { layout } from "@tom/ui/primitives.stylex";
-import { getQueryClient } from "~/libs/query-client";
+import { getQueryClient } from "~/data/query-client";
 import { Router } from "~/router";
-import { layoutStyles } from "~/components/layout.stylex";
+import { layoutStyles } from "~/chrome/layout.stylex";
 import "./app.css";
 
 function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {

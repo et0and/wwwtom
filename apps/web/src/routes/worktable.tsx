@@ -1,6 +1,6 @@
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
-import { ArenaCarousel } from "~/components/Arena";
+import { ArenaCarousel } from "~/content/Arena";
 
 export default function Worktable() {
   return (

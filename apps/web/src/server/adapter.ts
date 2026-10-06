@@ -1,4 +1,4 @@
-import { callAdapter, runAdapterRequest, runAdapterRequestOrNull } from "~/libs/adapter";
+import { callAdapter, runAdapterRequest, runAdapterRequestOrNull } from "~/data/adapter";
 import type { ArenaEntry, ArenaEntryList } from "@tom/schemas/arena-content";
 
 /** Posts index page size, shared by the route and its router preload. */

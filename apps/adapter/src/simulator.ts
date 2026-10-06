@@ -1,4 +1,4 @@
-import type { CloudflareEnv } from "@tom/utils/services/config";
+import type { CloudflareEnv } from "@tom/utils/config";
 
 /**
  * Simulator routing. When a request carries the `x-use-simulator` header and

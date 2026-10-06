@@ -19,7 +19,7 @@ export const editor = Effect.gen(function* () {
   // PR preview editors authenticate through the dev adapter: OAuth
   // redirect URIs are exact-match at GitHub, so per-PR hosts can never be
   // registered. The dev API trusts each PR's editor origin (see
-  // previewEditorOrigins in apps/api/src/services/auth.ts).
+  // previewEditorOrigins in apps/api/src/auth/operations.ts).
   const adapterHost = stage.startsWith("pr-")
     ? stageHost("dev", "adapter")
     : stageHost(stage, "adapter");

@@ -1,4 +1,4 @@
-import type { createAuth } from "../services/auth";
+import type { createAuth } from "../auth/operations";
 import { memoryDatabase, type MemorySeedRow } from "./helpers";
 
 type CreateAuth = typeof createAuth;

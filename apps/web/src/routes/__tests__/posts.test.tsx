@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { queryClient } from "~/libs/query-client";
+import { queryClient } from "~/data/query-client";
 import PostsHome from "~/routes/posts/index";
 import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 

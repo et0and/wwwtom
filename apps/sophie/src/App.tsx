@@ -11,12 +11,12 @@ import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
 import { layout } from "@tom/ui/primitives.stylex";
 import { formatDate } from "@tom/utils/date";
-import { getAdapterBaseUrl } from "./lib/api";
-import { getQueryClient } from "./lib/query-client";
-import { PAGES_CATEGORY, fetchAbout, fetchCategories, fetchPost, fetchPosts } from "./lib/posts";
-import { Nav } from "./components/Nav";
-import { CategoryFilter } from "./components/CategoryFilter";
-import { PostList } from "./components/PostList";
+import { getAdapterBaseUrl } from "./posts/api";
+import { getQueryClient } from "./data/query-client";
+import { PAGES_CATEGORY, fetchAbout, fetchCategories, fetchPost, fetchPosts } from "./posts/posts";
+import { Nav } from "./chrome/Nav";
+import { CategoryFilter } from "./posts/CategoryFilter";
+import { PostList } from "./posts/PostList";
 import "./app.css";
 
 const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });

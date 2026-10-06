@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
-import { otelConfigFromResolvedEnv, withLogging } from "../src/services/logging";
-import { attachRequestContext, getRequestContext } from "../src/services/worker";
-import { readCloudflareEnv } from "../src/services/config";
+import { otelConfigFromResolvedEnv, withLogging } from "../src/logging";
+import { attachRequestContext, getRequestContext } from "../src/worker";
+import { readCloudflareEnv } from "../src/config";
 
 type ConsoleLogRecord = {
   level: string;

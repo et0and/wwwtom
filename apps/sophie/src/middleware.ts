@@ -1,5 +1,5 @@
 import { getRequestEvent } from "@solidjs/web";
-import { createRequestQueryClient } from "./lib/query-client";
+import { createRequestQueryClient } from "./data/query-client";
 
 /**
  * Per-request server middleware (start mode). Runs inside the request-event

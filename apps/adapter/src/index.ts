@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { cors } from "@elysiajs/cors";
 import { Effect, Option, Schema } from "effect";
-import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging";
+import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/logging";
 import {
   attachRequestContext,
   attachRequestEnv,
@@ -12,19 +12,20 @@ import {
   sendErrorAlert,
   toProblemResponse,
   toValidationProblems,
-} from "@tom/utils/services/worker";
-import type { CloudflareEnv } from "@tom/utils/services/config";
+} from "@tom/utils/worker";
+import type { CloudflareEnv } from "@tom/utils/config";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
-import { AdapterError } from "./config/effect";
+import { AdapterError } from "./runtime";
 import { allowLocalOriginsForAdapter, isTrustedWebOrigin, tenantFromValue } from "./origins";
-import { arenaIntegration } from "./integrations/arena";
-import { authIntegration } from "./integrations/auth";
-import { cmsIntegration } from "./integrations/cms";
-import { guestbookIntegration, guestbookUserFromCookie } from "./integrations/guestbook";
-import { githubIntegration } from "./integrations/github";
-import { imageIntegration } from "./integrations/image";
-import { ogIntegration } from "./integrations/og";
+import { arenaIntegration } from "./arena";
+import { authIntegration } from "./auth";
+import { cmsIntegration } from "./cms";
+import { guestbookIntegration } from "./guestbook";
+import { guestbookUserFromCookie } from "./guestbook/shared";
+import { githubIntegration } from "./github";
+import { imageIntegration } from "./image";
+import { ogIntegration } from "./og";
 
 const VISITOR_SESSION_MAX_AGE = 60 * 60 * 24 * 90;
 

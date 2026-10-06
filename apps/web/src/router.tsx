@@ -1,5 +1,5 @@
 import { createRouter } from "@solidjs/router";
-import { getQueryClient } from "~/libs/query-client";
+import { getQueryClient } from "~/data/query-client";
 import { parsePageNumber } from "@tom/utils/page";
 import {
   POSTS_PAGE_SIZE,

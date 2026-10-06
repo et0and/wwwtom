@@ -2,8 +2,8 @@ import { Effect, Option, Schema, SchemaGetter } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { TurboCacheError } from "@tom/types/errors";
-import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/services/logging";
-import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
+import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/logging";
+import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/config";
 import {
   attachRequestContext,
   logContextFromRequest,
@@ -11,7 +11,7 @@ import {
   sendErrorAlert,
   toErrorMessage,
   toProblemResponse,
-} from "@tom/utils/services/worker";
+} from "@tom/utils/worker";
 
 /**
  * Turborepo remote cache server backed by Cloudflare KV.

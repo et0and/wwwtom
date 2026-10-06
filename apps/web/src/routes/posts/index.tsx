@@ -12,7 +12,7 @@ import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
 import { formatDate } from "@tom/utils/date";
 import { parsePageNumber } from "@tom/utils/page";
-import { bannerTitleStyles } from "../../components/layout.stylex";
+import { bannerTitleStyles } from "../../chrome/layout.stylex";
 
 const styles = stylex.create({
   // `item-center` in the original class list is a typo for `items-center` and

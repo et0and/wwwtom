@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { CmsD1Binding, CmsD1Statement, CloudflareEnv } from "@tom/utils/services/config";
+import type { CmsD1Binding, CmsD1Statement, CloudflareEnv } from "@tom/utils/config";
 import { HttpStatus } from "@tom/constants/http";
 import { app } from "../index";
 import { requestWithEnv, testEnv } from "../test/helpers";
@@ -7,8 +7,8 @@ import { signedSessionCookie } from "../test/session";
 
 // Only the env-to-auth construction is mocked: the real requireSession then
 // verifies the signed session cookie against the real Better Auth instance.
-vi.mock("../services/auth", async (importOriginal) => {
-  const original = await importOriginal<typeof import("../services/auth")>();
+vi.mock("../auth/operations", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../auth/operations")>();
   const { Effect } = await import("effect");
   const { cmsSessionAuth } = await import("../test/session");
   return {

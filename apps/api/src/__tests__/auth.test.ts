@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
-import type { CmsD1Binding, CloudflareEnv } from "@tom/utils/services/config";
+import type { CmsD1Binding, CloudflareEnv } from "@tom/utils/config";
 import {
   createAuth,
   createAuthFromEnv,
   isAdminEmail,
   parseAuthProviders,
   requireSession,
-} from "../services/auth";
+} from "../auth/operations";
 import { memoryDatabase, type MemorySeedRow } from "../test/helpers";
 import { signedSessionCookie } from "../test/session";
 

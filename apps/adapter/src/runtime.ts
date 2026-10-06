@@ -1,0 +1,74 @@
+import { Crypto, make as makeCrypto } from "effect/Crypto";
+import { Effect, Layer, PlatformError, Schema } from "effect";
+import { type AppConfig, type CloudflareEnv, makeAppConfigLayer } from "@tom/utils/config";
+import { type LogContext, withLogging } from "@tom/utils/logging";
+import { DatabaseService } from "@tom/db/service";
+import { ArenaService } from "@tom/arena/service";
+
+/**
+ * Build a layer for a single service, providing only the config it needs.
+ * Services are constructed lazily so an unconfigured integration never
+ * breaks the others.
+ */
+const createServiceLayer = <S, E, R>(
+  env: CloudflareEnv,
+  service: Layer.Layer<S, E, R>,
+): Layer.Layer<AppConfig | S, E, never> => {
+  const configLayer = makeAppConfigLayer(env);
+  // `Layer.provide` cannot reduce `Exclude<R, AppConfig>` while `R` is generic,
+  // but at every call site `R` is exactly `AppConfig`.
+  return Layer.merge(configLayer, Layer.provide(service, configLayer)) as Layer.Layer<
+    AppConfig | S,
+    E,
+    never
+  >;
+};
+
+export const createArenaLayer = (env: CloudflareEnv) =>
+  createServiceLayer(env, ArenaService.Default);
+
+export const createDbLayer = (env: CloudflareEnv) =>
+  createServiceLayer(env, DatabaseService.Default);
+
+/**
+ * Crypto bound to the Worker's Web Crypto. Only `randomBytes` is used here;
+ * `digest` satisfies the service's construction contract.
+ */
+const webCrypto = makeCrypto({
+  randomBytes: (size) => crypto.getRandomValues(new Uint8Array(size)),
+  digest: (algorithm, data) =>
+    Effect.tryPromise({
+      try: () => crypto.subtle.digest(algorithm, new Uint8Array(data)),
+      catch: (cause) =>
+        PlatformError.systemError({
+          _tag: "Unknown",
+          module: "Crypto",
+          method: "digest",
+          description: "crypto.subtle.digest failed",
+          cause,
+        }),
+    }).pipe(Effect.map((buffer) => new Uint8Array(buffer))),
+});
+
+export const cryptoLayer = Layer.succeed(Crypto, webCrypto);
+
+/**
+ * Error thrown by integration runners when the underlying Effect fails.
+ * The global onError hook maps it to a JSON response with the right status.
+ */
+export class AdapterError extends Schema.TaggedError<AdapterError>()("AdapterError", {
+  status: Schema.Finite,
+  message: Schema.String,
+}) {}
+
+/**
+ * Run an effect (already provided with its layer) and reject with an AdapterError
+ * on failure, so Elysia's onError can map it to a JSON response.
+ * Error mapping happens in the Effect error channel, so errors stay values.
+ */
+export const runAdapter = <A, E>(
+  effect: Effect.Effect<A, E>,
+  toAdapterError: (error: E) => AdapterError,
+  context: LogContext,
+): Promise<A> =>
+  Effect.runPromise(withLogging(effect.pipe(Effect.mapError(toAdapterError)), context));

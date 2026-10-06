@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClientProvider } from "@tanstack/solid-query";
-import { queryClient } from "~/libs/query-client";
+import { queryClient } from "~/data/query-client";
 import WorkHome from "~/routes/work/index";
 import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 

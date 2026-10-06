@@ -1,14 +1,14 @@
 import { render } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { queryClient } from "../lib/query-client";
+import { queryClient } from "../data/query-client";
 import { App } from "../App";
 
 // The App shell owns live-network useQuery calls through these fetchers;
 // stub them so the shell tests never touch the network and each test owns
 // a cleared cache (see beforeEach).
-vi.mock("../lib/posts", async (importOriginal) => {
-  const original = await importOriginal<typeof import("../lib/posts")>();
+vi.mock("../posts/posts", async (importOriginal) => {
+  const original = await importOriginal<typeof import("../posts/posts")>();
   return {
     ...original,
     fetchPosts: vi.fn(async () => ({

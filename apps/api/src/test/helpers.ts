@@ -1,6 +1,6 @@
 import { memoryAdapter } from "better-auth/adapters/memory";
-import type { CloudflareEnv } from "@tom/utils/services/config";
-import type { RequestWithEnv } from "@tom/utils/services/worker";
+import type { CloudflareEnv } from "@tom/utils/config";
+import type { RequestWithEnv } from "@tom/utils/worker";
 
 export type MemorySeedRow = Record<string, string | number | boolean | Date | null>;
 

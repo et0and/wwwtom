@@ -7,7 +7,7 @@ import { Loader } from "@tom/ui/loader";
 import { layout } from "@tom/ui/primitives.stylex";
 import { Button } from "@tom/ui/button";
 import { Text } from "@tom/ui/text";
-import { layoutStyles } from "../../../components/layout.stylex";
+import { layoutStyles } from "../../../chrome/layout.stylex";
 
 const styles = stylex.create({
   centeredScreen: {

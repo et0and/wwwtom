@@ -23,6 +23,19 @@ Improve existing code; avoid new abstractions.
 - no Node-only APIs — Workers runtime; prefer web-standard/Worker-safe
 - improve existing files, don't rewrite patterns
 
+## Code layout
+
+- one file, one `Context.Service`+`Layer`
+- one file, one entrypoint+`Effect.provide`
+- one file, one API route — a domain `index.ts` only composes route plugins
+- `src/{domain}` not `src/{mechanism}` — e.g. `src/cms/list-posts.ts`, not
+  `src/routes/cms.ts`. No `services/`, `routes/`, `integrations/` or `config/`
+  dirs; shared per-domain runtime lives in `<domain>/shared.ts`
+- domains by area: backend `apps/api|adapter|simulator/src/{cms,og,auth,arena,guestbook,health,queue,github,image}`;
+  web/sophie/editor `src/{content,chrome,data,posts,media,editor,brand,design}`
+- exceptions: framework-mandated dirs (`apps/web|sophie/src/routes`, `app.tsx`,
+  `middleware.ts`, entry files) and `packages/ui/src/components/*`
+
 ## Commands (root)
 
 - `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
@@ -48,7 +61,7 @@ Improve existing code; avoid new abstractions.
 ## Single tests
 
 - root filter: `pnpm test -- Nav.test.tsx`
-- web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/components/__tests__/Nav.test.tsx`)
+- web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/chrome/__tests__/Nav.test.tsx`)
 - utils: `cd packages/utils && pnpm vitest run __tests__/telegram.test.ts`
 
 ## Tests
@@ -94,7 +107,7 @@ Pinned to `4.0.0-rc.116` via the `effect` catalog entry. **Do not move this to 4
 
 ## Logging (Effect apps)
 
-Standard lives in `@tom/utils/services/logging` (`withLogging`/`LogContext`); worker entries attach context in `onRequest`.
+Standard lives in `@tom/utils/logging` (`withLogging`/`LogContext`); worker entries attach context in `onRequest`.
 
 - log via `Effect.log*`; never `console.*` in app code
 - every effect run goes through `runEffect`/`runAdapter` with a `LogContext` from `logContextFromRequest(request, "<service>")` — annotations `requestId`, `sessionId` (guestbook token, else visitor `tom_session` cookie), `userId` (signed-in guestbook handle)

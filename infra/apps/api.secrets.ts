@@ -1,7 +1,7 @@
 import { Effect, Option, Schema } from "effect";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { InfrastructureConfigError } from "@tom/types/errors";
-import { parseAdminEmails } from "@tom/utils/services/config";
+import { parseCommaSeparated } from "@tom/schemas/env";
 
 /**
  * Resolve deploy-time secrets for both tenants. Missing or blank values fail
@@ -30,7 +30,7 @@ const adminEmails = (label: string, value: string | undefined) =>
   required(
     label,
     value,
-    (emails) => parseAdminEmails(emails).length > 0,
+    (emails) => parseCommaSeparated(emails).length > 0,
     `${label} must list at least one admin email`,
   );
 
