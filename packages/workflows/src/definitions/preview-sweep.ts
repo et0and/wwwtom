@@ -21,7 +21,7 @@ export const previewSweep = workflow("preview-sweep", {
   jobs: {
     sweep: {
       name: "Destroy previews of closed PRs",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       env: {
         CLOUDFLARE_ACCOUNT_ID: secret("CLOUDFLARE_DEFAULT_ACCOUNT_ID"),
         CLOUDFLARE_API_TOKEN: secret("CLOUDFLARE_API_TOKEN"),

@@ -23,7 +23,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     environment: ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
     env:
       ALCHEMY_STAGE: ${{ github.event_name == 'push' && 'staging' || inputs.stage }}

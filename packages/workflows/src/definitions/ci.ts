@@ -17,7 +17,7 @@ export const ci = workflow("ci", {
   jobs: {
     test: {
       name: "Test",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       // Turbo remote cache credentials shared by every Turbo task below.
       env: turboEnv(),
       steps: [

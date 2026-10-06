@@ -34,7 +34,7 @@ export const preview = workflow("preview", {
     deploy: {
       if: notClosedAction,
       name: "Deploy PR preview",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       env: previewEnv(prStage),
       steps: [
         // Full history so `git describe --tags` can stamp the release version
@@ -47,7 +47,7 @@ export const preview = workflow("preview", {
     destroy: {
       if: closedAction,
       name: "Destroy PR preview",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       env: previewEnv(prStage),
       steps: [
         // Teardown needs the infra code and secrets, not the PR head (which

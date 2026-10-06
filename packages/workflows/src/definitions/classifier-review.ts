@@ -29,7 +29,7 @@ export const classifierReview = workflow("classifier-review", {
   },
   jobs: {
     respond: {
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       steps: [
         checkout("Checkout repository", { "persist-credentials": false }),
         step({

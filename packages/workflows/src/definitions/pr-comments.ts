@@ -15,7 +15,7 @@ export const prComments = workflow("pr-comments", {
   },
   jobs: {
     respond: {
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       permissions: {
         "id-token": "write",
         contents: "write",

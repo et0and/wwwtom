@@ -30,7 +30,7 @@ export const prReview = workflow("pr-review", {
   jobs: {
     triage: {
       name: "Triage changed files",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       if: "github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false",
       steps: [
         // The triage script is taken from the base branch, never the PR head.
@@ -63,7 +63,7 @@ export const prReview = workflow("pr-review", {
       // action asserts the triggering actor's write permission, so the
       // agent's own commits and bot PRs must not re-enter here.
       if: "(github.event.action == 'opened' || github.event.action == 'ready_for_review') && github.actor == 'et0and'",
-      "runs-on": "ubuntu-latest",
+      "runs-on": "namespace-profile-yufugumi",
       permissions: {
         "id-token": "write",
         contents: "write",

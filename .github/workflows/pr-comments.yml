@@ -10,7 +10,7 @@ on:
       - created
 jobs:
   respond:
-    runs-on: ubuntu-latest
+    runs-on: namespace-profile-yufugumi
     permissions:
       id-token: write
       contents: write
