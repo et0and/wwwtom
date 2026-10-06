@@ -1,6 +1,6 @@
 import RSS from "rss";
 import { Effect } from "effect";
-import { callAdapter, adapterRequest } from "~/libs/adapter";
+import { callAdapter, adapterRequest } from "~/data/adapter";
 import { HttpStatus } from "@tom/constants/http";
 
 /**

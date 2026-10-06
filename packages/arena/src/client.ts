@@ -31,7 +31,7 @@ import {
 import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
-import { workerCache } from "@tom/utils/services/http";
+import { workerCache } from "@tom/utils/http";
 
 export interface ArenaBlockApi {
   readonly get: Effect.Effect<GetBlockApiResponse, HttpError>;
@@ -207,7 +207,6 @@ function mapArenaError(cause: unknown): HttpError {
   });
 }
 
-type ContentsQuery = NonNullable<Parameters<Arena["channels"]["contents"]>[1]>;
 type ChannelConnections = Awaited<ReturnType<Arena["channels"]["connections"]>>;
 type ConnectionsQuery = NonNullable<Parameters<Arena["channels"]["connections"]>[1]>;
 type SearchQuery = NonNullable<Parameters<Arena["search"]["query"]>[0]>;
@@ -273,9 +272,6 @@ const withSort = <TSort extends string>(
   const picked = pickSort(sort, direction, schema);
   return { ...pageParams(options), ...(picked !== undefined && { sort: picked }) };
 };
-
-const toContentsQuery = (options: PaginationAttributes | undefined): ContentsQuery =>
-  withSort(options, ContentsSortSchema);
 
 const toConnectionsQuery = (options: PaginationAttributes | undefined): ConnectionsQuery =>
   withSort(options, ConnectionsSortSchema);
@@ -449,7 +445,7 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
         sdkEffect<GetChannelContentsApiResponse>(() =>
-          this.arena.channels.contents(slug, toContentsQuery(options)),
+          this.arena.channels.contents(slug, withSort(options, ContentsSortSchema)),
         ),
       connections: (options?: PaginationAttributes): Effect.Effect<ChannelConnections, HttpError> =>
         sdkEffect<ChannelConnections>(() =>

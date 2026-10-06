@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { CmsD1Binding, CmsD1Statement } from "@tom/utils/services/config";
+import type { CmsD1Binding, CmsD1Statement } from "@tom/utils/config";
 import { app } from "../index";
 import { requestWithEnv, testEnv } from "../test/helpers";
 

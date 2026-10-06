@@ -7,7 +7,7 @@ import { Text } from "@tom/ui/text";
 import { Loading, For, Show } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
-import { bannerTitleStyles } from "../../components/layout.stylex";
+import { bannerTitleStyles } from "../../chrome/layout.stylex";
 
 export default function WorkHome() {
   httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);

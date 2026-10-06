@@ -7,16 +7,16 @@ import { DropdownMenu } from "@tom/ui/dropdown";
 import { Tabs } from "@tom/ui/tabs";
 import { useColorMode } from "@tom/ui/color-mode";
 import { cursor, layout, radius, spacing } from "@tom/ui/primitives.stylex";
-import { runClient } from "@tom/utils/services/http";
-import { createSession, documentTitle, signOut } from "./lib/session";
-import type { ContentKind } from "./lib/content";
-import { SignInButton } from "./components/SignInButton";
-import { CamusLogo } from "./components/CamusLogo";
-import { Avatar } from "./components/Avatar";
-import { PostList } from "./components/PostList";
-import { EditorView } from "./components/EditorView";
-import { CategoriesView } from "./components/CategoriesView";
-import { MediaView } from "./components/MediaView";
+import { runClient } from "@tom/utils/http";
+import { createSession, documentTitle, signOut } from "./auth/session";
+import type { ContentKind } from "./posts/content";
+import { SignInButton } from "./auth/SignInButton";
+import { CamusLogo } from "./brand/CamusLogo";
+import { Avatar } from "./brand/Avatar";
+import { PostList } from "./posts/PostList";
+import { EditorView } from "./editor/EditorView";
+import { CategoriesView } from "./posts/CategoriesView";
+import { MediaView } from "./media/MediaView";
 
 type View =
   | { readonly name: "list" }

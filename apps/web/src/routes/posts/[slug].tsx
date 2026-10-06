@@ -14,8 +14,8 @@ import {
   DetailError,
   DetailLoading,
   DetailNotFound,
-} from "~/components/DetailStates";
-import { ContentBlocks } from "~/components/ContentBlocks";
+} from "~/content/DetailStates";
+import { ContentBlocks } from "~/content/ContentBlocks";
 
 export default function PostPage() {
   const params = useParams();

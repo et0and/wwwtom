@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dashboardLinks, toProblemResponse } from "../src/services/worker";
+import { dashboardLinks, toProblemResponse } from "../src/worker";
 
 describe("toProblemResponse", () => {
   it("keeps a valid error status and defaults the type to about:blank", async () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { app } from "../index";
 import { requestWithEnv, testEnv } from "../test/helpers";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
-import type { CmsD1Binding } from "@tom/utils/services/config";
+import type { CmsD1Binding } from "@tom/utils/config";
 
 const detectingDb: CmsD1Binding = {
   prepare: () => {

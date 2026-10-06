@@ -7,7 +7,7 @@ import { colors } from "@tom/ui/colors.stylex";
 import { textAlign } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
-import { layoutStyles } from "../../../components/layout.stylex";
+import { layoutStyles } from "../../../chrome/layout.stylex";
 
 const BP_SM = "@media (width >= 40rem)";
 const BP_MD = "@media (width >= 48rem)";

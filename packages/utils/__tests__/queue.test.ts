@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { Effect, Schema } from "effect";
 import { TomWorkMessage } from "@tom/schemas/queue";
-import { makeTomQueueLayer, TomQueueService } from "../src/services/queue";
-import type { CloudflareEnv } from "../src/services/config";
+import { makeTomQueueLayer, TomQueueService } from "../src/queue";
+import type { CloudflareEnv } from "../src/config";
 
 describe("TomWorkMessage", () => {
   it("decodes a publish-post message", () => {

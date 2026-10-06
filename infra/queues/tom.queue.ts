@@ -27,12 +27,12 @@ import { Stage } from "alchemy/Stage";
  * import {
  *   makeTomQueueLayer,
  *   TomQueueService,
- * } from "@tom/utils/services/queue";
+ * } from "@tom/utils/queue";
  * import {
  *   getRequestEnv,
  *   logContextFromRequest,
  *   runEffect,
- * } from "@tom/utils/services/worker";
+ * } from "@tom/utils/worker";
  *
  * const env = getRequestEnv(request);
  * await runEffect(
@@ -60,7 +60,7 @@ import { Stage } from "alchemy/Stage";
  * });
  * ```
  * ```ts
- * // apps/api/src/services/queue-consumer.ts — bodies arrive as unknown JSON;
+ * // apps/api/src/queue/consumer.ts — bodies arrive as unknown JSON;
  * // parse at the boundary with the TomWorkMessage schema, then switch on kind.
  * import { Schema } from "effect";
  * import { TomWorkMessage } from "@tom/schemas/queue";

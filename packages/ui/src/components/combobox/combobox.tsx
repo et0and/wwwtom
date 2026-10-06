@@ -245,11 +245,6 @@ export type ComboboxRootProps = {
 
 function Root(props: ComboboxRootProps): JSX.Element {
   const merged = merge({ multiple: false }, props);
-  const toArray = (value: string | Array<string> | undefined): Array<string> => {
-    if (value === undefined) return [];
-    if (Array.isArray(value)) return value;
-    return [String(value)];
-  };
   const [uncontrolledValue, setUncontrolledValue] = createSignal<
     string | Array<string> | undefined
   >(
@@ -263,7 +258,11 @@ function Root(props: ComboboxRootProps): JSX.Element {
   const [uncontrolledOpen, setUncontrolledOpen] = createSignal(false);
   const [activeValue, setActiveValue] = createSignal<string | undefined>(undefined);
   const [registeredItems, setRegisteredItems] = createSignal<Array<string>>([]);
-  const selected = (): Array<string> => toArray(merged.value ?? uncontrolledValue());
+  const selected = (): Array<string> => {
+    const value = merged.value ?? uncontrolledValue();
+    if (value === undefined) return [];
+    return Array.isArray(value) ? value : [String(value)];
+  };
   const setSelected = (next: string | Array<string> | undefined): void => {
     if (merged.value === undefined) setUncontrolledValue(next);
     merged.onValueChange?.(next);

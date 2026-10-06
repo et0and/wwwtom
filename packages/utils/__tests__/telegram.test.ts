@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { Effect, Layer } from "effect";
 import type { ErrorAlertDetails } from "@tom/schemas/telegram";
 import { TelegramService } from "../src/telegram";
-import { makeAppConfigLayer } from "../src/services/config";
+import { makeAppConfigLayer } from "../src/config";
 
 type TestConfig = {
   telegramBotToken?: string;

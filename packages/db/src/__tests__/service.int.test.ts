@@ -15,7 +15,7 @@ import {
   type GuestbookEntryParams,
   type OAuthSessionParams,
 } from "../service";
-import { makeAppConfigLayer } from "@tom/utils/services/config";
+import { makeAppConfigLayer } from "@tom/utils/config";
 import type { Database } from "@tom/types/db";
 
 /**

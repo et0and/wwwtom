@@ -11,8 +11,8 @@ import {
   DetailError,
   DetailLoading,
   DetailNotFound,
-} from "~/components/DetailStates";
-import { ContentBlocks } from "~/components/ContentBlocks";
+} from "~/content/DetailStates";
+import { ContentBlocks } from "~/content/ContentBlocks";
 
 export default function WorkPage() {
   const params = useParams();

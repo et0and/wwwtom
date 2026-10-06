@@ -3,7 +3,7 @@ import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { openapi } from "@elysiajs/openapi";
 import { Effect, Schema } from "effect";
 import { CmsError } from "@tom/types/errors";
-import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/services/logging";
+import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/logging";
 import {
   attachRequestContext,
   attachRequestEnv,
@@ -13,18 +13,17 @@ import {
   sendErrorAlert,
   toProblemResponse,
   toValidationProblems,
-} from "@tom/utils/services/worker";
-import type { CloudflareEnv } from "@tom/utils/services/config";
+} from "@tom/utils/worker";
+import type { CloudflareEnv } from "@tom/utils/config";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
-import { healthRoutes } from "./routes/health";
+import { healthRoutes } from "./health";
 import { requireInternalTokenBeforeHandle } from "./internal";
-import { authRoutes } from "./routes/auth";
-import { cmsRoutes } from "./routes/cms";
-import { cmsWriteRoutes } from "./routes/cms-writes";
+import { authRoutes } from "./auth";
+import { cmsRoutes, cmsWriteRoutes } from "./cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
-import { ogRoutes } from "./routes/og";
-import { queueHandler, type MessageBatch } from "./services/queue-consumer";
+import { ogRoutes } from "./og";
+import { queueHandler, type MessageBatch } from "./queue/consumer";
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,

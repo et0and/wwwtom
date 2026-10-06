@@ -4,7 +4,7 @@ import { Arbitrary } from "effect/unstable/arbitrary";
 import { TomWorkMessage } from "@tom/schemas/queue";
 import type { TiptapDoc } from "@tom/schemas/cms";
 import { isSafeLinkHref, renderTiptapHtml } from "../src/tiptap-html";
-import { toProblemResponse } from "../src/services/worker";
+import { toProblemResponse } from "../src/worker";
 
 const mediaUrl = (mediaId: string): string => `https://cdn.tom.so/content/media/${mediaId}/file`;
 

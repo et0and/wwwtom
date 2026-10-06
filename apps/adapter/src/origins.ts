@@ -12,7 +12,7 @@
  */
 
 import { Option, Schema } from "effect";
-import { tenantFromValue } from "@tom/utils/services/config";
+import { tenantFromValue } from "@tom/utils/config";
 
 const LOCAL_ORIGINS: ReadonlySet<string> = new Set([
   "http://localhost:5173",

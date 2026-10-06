@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Effect } from "effect";
-import { ABOUT_SLUG, PAGES_CATEGORY, listPosts } from "../lib/posts";
+import { ABOUT_SLUG, PAGES_CATEGORY, listPosts } from "../posts/posts";
 
 describe("ABOUT_SLUG", () => {
   it("names the about slug", () => {
