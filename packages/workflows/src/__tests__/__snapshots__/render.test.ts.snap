@@ -85,6 +85,9 @@ runs:
       with:
         node-version: 24
     - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+    - name: Raise the Node heap for build-heavy steps
+      run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> "$GITHUB_ENV"
+      shell: bash
     - name: Resolve the pnpm store path
       run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
       shell: bash
@@ -672,7 +675,6 @@ jobs:
       CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
       GITHUB_TOKEN: \${{ github.token }}
-      NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -690,7 +692,6 @@ jobs:
       CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
       ALCHEMY_ENV_FILE: /dev/null
       GITHUB_TOKEN: \${{ github.token }}
-      NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
