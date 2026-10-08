@@ -75,6 +75,10 @@ export const prReview = workflow("pr-review", {
           ref: "${{ github.event.pull_request.base.sha }}",
           "persist-credentials": false,
         }),
+        // The runner's default Node is older than the pnpm this repo pins, so
+        // the agent's `git push` failed in the pre-push hook. Put Node 24 and
+        // the pinned pnpm on the job PATH; the agent installs deps itself.
+        setupStep({ install: "false" }),
         step({
           name: "Address the triage",
           uses: actionPins.opencode,
