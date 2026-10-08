@@ -66,7 +66,7 @@ export default function WorkPage() {
                 {work.title}
               </Text>
               <div>
-                <Text>{work.summary ?? ""}</Text>
+                <Text blurIn>{work.summary ?? ""}</Text>
               </div>
               <div>
                 <ArenaSourceLink arenaSlug={work.arenaSlug} />

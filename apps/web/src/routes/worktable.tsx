@@ -18,7 +18,7 @@ export default function Worktable() {
           <ArenaCarousel slug="tom-s-worktable" title="Tom's worktable" />
         </div>
         <div>
-          <Text>
+          <Text blurIn>
             At the moment I am focusing a lot on learning about data driven applications, as well as
             learning more about functional programming paradigms through libraries such as{" "}
             <a href="https://effect.website/">Effect</a>.

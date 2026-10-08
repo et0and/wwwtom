@@ -59,6 +59,12 @@ const blurInChar = stylex.keyframes({
   to: { filter: "blur(0)", opacity: 1 },
 });
 
+/** Whole-block variant, for a paragraph or a run of text too long to split. */
+const blurInBlock = stylex.keyframes({
+  from: { filter: "blur(0.2em)", opacity: 0, transform: "translateY(0.4em)" },
+  to: { filter: "blur(0)", opacity: 1, transform: "translateY(0)" },
+});
+
 export const blurInStyles = stylex.create({
   char: {
     display: "inline-block",
@@ -71,6 +77,19 @@ export const blurInStyles = stylex.create({
   },
   /** A word never breaks across lines; the space between words may wrap. */
   word: { display: "inline-block", whiteSpace: "nowrap" },
+  /**
+   * Animates the element itself, so a paragraph with inline markup (links,
+   * emphasis) fades in as one block. Splitting it per character would not
+   * survive the mixed children.
+   */
+  block: {
+    "@media (prefers-reduced-motion: no-preference)": {
+      animationName: blurInBlock,
+      animationDuration: "0.5s",
+      animationTimingFunction: "var(--ease-out, ease-out)",
+      animationFillMode: "both",
+    },
+  },
   /** Visually hidden copy that carries the readable text for assistive tech. */
   srOnly: {
     position: "absolute",

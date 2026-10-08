@@ -38,7 +38,7 @@ export default function WorkHome() {
         Work
       </Text>
       <div>
-        <Text>Some work that I have made.</Text>
+        <Text blurIn>Some work that I have made.</Text>
       </div>
       <div>
         <Loading fallback={<Loader />}>

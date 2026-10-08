@@ -181,6 +181,26 @@ describe("blurIn", () => {
     expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
   });
 
+  it("blurs a long paragraph as one block, not per character", () => {
+    const long = "A paragraph this long is past the per-character limit, so it blurs whole.";
+    const { container } = render(() => <Text blurIn>{long}</Text>);
+    const root = container.firstElementChild!;
+    expect(root.querySelector('[aria-hidden="true"]')).toBeNull();
+    const animatedClass = classAttr(root);
+    cleanup();
+    const plainClass = classAttr(render(() => <Text>{long}</Text>).container.firstElementChild!);
+    expect(animatedClass).not.toBe(plainClass);
+  });
+
+  it("blurs text with inline markup as one block", () => {
+    const { container } = render(() => (
+      <Text blurIn>
+        See <a href="/work">work</a>.
+      </Text>
+    ));
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+  });
+
   it("keeps the requested element", () => {
     const { container } = render(() => (
       <Text as="h1" blurIn>

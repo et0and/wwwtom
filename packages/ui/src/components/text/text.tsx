@@ -17,6 +17,11 @@ import {
 /** Seconds between one character's blur-in and the next. */
 const BLUR_IN_STEP = 0.025;
 
+/** Plain strings up to this length split per character; longer text blurs as a block. */
+const BLUR_IN_CHAR_LIMIT = 40;
+
+const HEADING_ELEMENTS: ReadonlySet<TextElement> = new Set(["h1", "h2", "h3", "h4", "h5", "h6"]);
+
 /**
  * Split a string into words and characters, each carrying its global character
  * index so the blur-in delay reads left to right across the whole line. Spaces
@@ -118,9 +123,13 @@ export interface TextProps {
   /** Whether to truncate overflowing text with an ellipsis. */
   truncate?: boolean;
   /**
-   * Animate the text in with a per-character blur. The child must be a plain
-   * string; any other child renders normally. Motion is skipped when the reader
-   * asks for reduced motion.
+   * Animate the text in with a blur.
+   *
+   * Headings, and short plain strings, blur in per character. Everything else —
+   * a long paragraph, or text with inline markup such as links — fades in as a
+   * whole block, because a per-character split cannot survive mixed children.
+   *
+   * Motion is skipped when the reader asks for reduced motion.
    */
   blurIn?: boolean;
   /**
@@ -183,24 +192,35 @@ export function Text(props: TextProps): JSX.Element {
     "truncate",
     "variant",
   );
+  const element = (): TextElement => merged.as ?? DEFAULT_ELEMENT_BY_VARIANT[merged.variant];
+  const blurMode = (): { kind: "none" } | { kind: "char"; text: string } | { kind: "block" } => {
+    if (!merged.blurIn) return { kind: "none" };
+    const children = merged.children;
+    if (
+      // oxlint-disable-next-line anti-slop/no-runtime-typeof -- JSX children narrow to a string for blurIn
+      typeof children === "string" &&
+      (HEADING_ELEMENTS.has(element()) || children.length <= BLUR_IN_CHAR_LIMIT)
+    ) {
+      return { kind: "char", text: children };
+    }
+    return { kind: "block" };
+  };
   const attrs = () =>
     stylex.attrs(
       textStyles[merged.variant],
       resolveTextSizeStyle(merged.variant, merged.size),
       BOLDABLE_VARIANTS.has(merged.variant) && merged.bold ? textStyles.bold : undefined,
       merged.truncate ? textStyles.truncate : undefined,
+      blurMode().kind === "block" ? blurInStyles.block : undefined,
       merged.style,
     );
   const content = (): JSX.Element => {
-    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- JSX children narrow to a string for blurIn
-    if (merged.blurIn && typeof merged.children === "string") {
-      return <BlurInContent text={merged.children} />;
-    }
-    return merged.children;
+    const mode = blurMode();
+    return mode.kind === "char" ? <BlurInContent text={mode.text} /> : merged.children;
   };
   return (
     <Dynamic
-      component={merged.as ?? DEFAULT_ELEMENT_BY_VARIANT[merged.variant]}
+      component={element()}
       data-tomui-component="Text"
       {...attrs()}
       id={merged.id}
