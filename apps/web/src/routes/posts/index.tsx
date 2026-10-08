@@ -52,7 +52,7 @@ export default function PostsHome() {
         url: "https://tom.so/posts",
       }}
     >
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Writing
       </Text>
       <div>

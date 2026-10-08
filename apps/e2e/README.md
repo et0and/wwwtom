@@ -206,8 +206,10 @@ hides real failures, doubles the wait, and is rejected by the lint rule
   headers, or the adapter/simulator wire format.
 - Prefer role-based locators (`getByRole`, `getByText`, `getByAltText`);
   structural selectors only for fixture-specific containers (`guestbook-entry`).
-- No `waitForTimeout`; rely on `expect` auto-waiting. Headings render as
-  plain text, so `getByRole("heading")` resolves against the visible element.
+- No `waitForTimeout`; rely on `expect` auto-waiting. A `blurIn` heading
+  animates its visible copy per character and hides it from assistive tech, so
+  `getByRole("heading")` resolves against the visually hidden readable copy the
+  component also renders.
 - Single browser project; **fully parallel** (`fullyParallel: true`, default
   workers). Solid 2 scopes SSR requests with `node:async_hooks`, and the web
   app owns a query cache per request, so concurrent renders don't race.

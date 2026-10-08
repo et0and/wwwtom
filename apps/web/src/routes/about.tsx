@@ -5,7 +5,7 @@ export default function About() {
   return (
     <>
       <PageLayout title="About" description="About my background">
-        <Text variant="heading" size="lg" as="h1">
+        <Text variant="heading" size="lg" as="h1" blurIn>
           About
         </Text>
         <div>
@@ -53,7 +53,7 @@ export default function About() {
             See also: <a href="/worktable">what I am currently working on or interested in.</a>
           </Text>
         </div>
-        <Text variant="heading" as="h2">
+        <Text variant="heading" as="h2" blurIn>
           Acknowledgements
         </Text>
         <div>

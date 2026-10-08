@@ -67,7 +67,7 @@ export default function PostPage() {
             }}
           >
             <article>
-              <Text variant="heading" size="lg" as="h1">
+              <Text variant="heading" size="lg" as="h1" blurIn>
                 {post.title}
               </Text>
               <div>

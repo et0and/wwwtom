@@ -62,7 +62,7 @@ export default function WorkPage() {
             }}
           >
             <article>
-              <Text variant="heading" size="lg" as="h1">
+              <Text variant="heading" size="lg" as="h1" blurIn>
                 {work.title}
               </Text>
               <div>

@@ -111,7 +111,7 @@ export default function Guestbook() {
 
   return (
     <PageLayout title="Guestbook" description="Sign my guestbook">
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Guestbook
       </Text>
       <div>

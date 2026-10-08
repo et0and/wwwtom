@@ -6,11 +6,11 @@ export default function Worktable() {
   return (
     <>
       <PageLayout title="Worktable" description="What I am currently working on or interested in">
-        <Text variant="heading" size="lg" as="h1">
+        <Text variant="heading" size="lg" as="h1" blurIn>
           Worktable
         </Text>
         <div>
-          <Text variant="heading" as="h2">
+          <Text variant="heading" as="h2" blurIn>
             What I am currently working on or interested in
           </Text>
         </div>

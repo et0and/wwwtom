@@ -19,7 +19,7 @@ export default function Home() {
         title="Home"
         description="Tom Hackshaw is a design engineer from Aotearoa, New Zealand"
       >
-        <Text>Hi, I'm Tom,</Text>
+        <Text blurIn>Hi, I'm Tom,</Text>
         <div>
           <Text>
             I'm a software engineer with a background in the arts and education. Currently based in
