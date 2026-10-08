@@ -56,7 +56,7 @@ export default function PostsHome() {
         Writing
       </Text>
       <div>
-        <Text>Some of my writing.</Text>
+        <Text blurIn>Some of my writing.</Text>
       </div>
       <div>
         <Loading fallback={<Loader />}>

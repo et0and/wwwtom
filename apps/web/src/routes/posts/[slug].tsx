@@ -71,7 +71,7 @@ export default function PostPage() {
                 {post.title}
               </Text>
               <div>
-                <Text variant="heading" as="h2">
+                <Text variant="heading" as="h2" blurIn>
                   {post.summary ?? ""}
                 </Text>
               </div>

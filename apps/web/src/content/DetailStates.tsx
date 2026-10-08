@@ -27,7 +27,7 @@ export const DetailNotFound = (props: { kind: "post" | "work"; slug: string | un
         Not found
       </Text>
       <div>
-        <Text>
+        <Text blurIn>
           The {props.kind} "{props.slug}" does not exist.
         </Text>
       </div>
@@ -45,7 +45,7 @@ export const DetailError = (props: { kind: "post" | "work"; message: string }) =
       <div>
         <div class="banner" role="alert">
           <Text style={bannerTitleStyles.bannerTitle}>Error loading {props.kind}</Text>
-          <Text>{props.message}</Text>
+          <Text blurIn>{props.message}</Text>
         </div>
       </div>
     </article>
