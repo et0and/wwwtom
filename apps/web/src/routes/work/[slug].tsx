@@ -62,11 +62,11 @@ export default function WorkPage() {
             }}
           >
             <article>
-              <Text variant="heading" size="lg" as="h1">
+              <Text variant="heading" size="lg" as="h1" blurIn>
                 {work.title}
               </Text>
               <div>
-                <Text>{work.summary ?? ""}</Text>
+                <Text blurIn>{work.summary ?? ""}</Text>
               </div>
               <div>
                 <ArenaSourceLink arenaSlug={work.arenaSlug} />

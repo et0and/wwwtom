@@ -10,7 +10,7 @@ export default function NotFound() {
   httpStatus(HttpStatus.NotFound);
   return (
     <PageLayout title="404" description="The page you are looking for does not exist.">
-      <Text as="span" style={bannerTitleStyles.notFound}>
+      <Text as="span" blurIn style={bannerTitleStyles.notFound}>
         Not found
       </Text>
     </PageLayout>

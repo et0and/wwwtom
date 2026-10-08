@@ -103,7 +103,7 @@ heads.
 - `batch`/`on`/`createDeferred`/`createComputed` — not used or removed
 - `Dynamic` → static tag selection (Solid 2 `Dynamic` with a string element
   desynced hydration keys; static h1/h2/span branches hydrate cleanly).
-  Applied first in `BlurInText`, which has since been deleted along with the
-  blur-in effect; the headings it rendered are now plain `Text`.
+  Applied first in `BlurInText`; the blur-in effect now lives on `Text` as a
+  `blurIn` prop, and `Text` selects its element from `as`.
 - Shared `Document` shell hydrated on both sides (client must claim the
   exact server tree, not a `#app` subset)

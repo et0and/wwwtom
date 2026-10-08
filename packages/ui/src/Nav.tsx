@@ -12,7 +12,7 @@ const styles = stylex.create({
     paddingBlock: "1rem",
     flexShrink: 0,
     zIndex: 50,
-    [MD]: { position: "sticky", top: 0 },
+    [MD]: { position: "sticky", insetBlockStart: 0 },
   },
   bar: {
     display: "flex",

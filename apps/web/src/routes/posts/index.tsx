@@ -52,11 +52,11 @@ export default function PostsHome() {
         url: "https://tom.so/posts",
       }}
     >
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Writing
       </Text>
       <div>
-        <Text>Some of my writing.</Text>
+        <Text blurIn>Some of my writing.</Text>
       </div>
       <div>
         <Loading fallback={<Loader />}>

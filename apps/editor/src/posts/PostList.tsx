@@ -14,7 +14,7 @@ import { deletePost, deleteWork, listPosts, listWorks } from "./content";
 import type { ContentKind } from "./content";
 import { runClient } from "@tom/utils/http";
 
-const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
+const styles = stylex.create({ paginationSpacing: { marginBlockStart: "1rem" } });
 
 export type ContentRow = {
   readonly slug: string;

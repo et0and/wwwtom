@@ -62,10 +62,10 @@ const styles = stylex.create({
   gapLg: { gap: "2rem" },
   /** Stacks items with a divider on narrow screens; the 4up grid alone collapses to one column. */
   mobileDivider: {
-    borderBottomWidth: "1px",
-    borderBottomColor: colors["--color-tomui-hairline"],
-    paddingBottom: "2rem",
-    [MD]: { borderBottomWidth: 0, paddingBottom: 0 },
+    borderBlockEndWidth: "1px",
+    borderBlockEndColor: colors["--color-tomui-hairline"],
+    paddingBlockEnd: "2rem",
+    [MD]: { borderBlockEndWidth: 0, paddingBlockEnd: 0 },
   },
 });
 

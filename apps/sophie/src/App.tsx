@@ -19,7 +19,7 @@ import { CategoryFilter } from "./posts/CategoryFilter";
 import { PostList } from "./posts/PostList";
 import "./app.css";
 
-const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
+const styles = stylex.create({ paginationSpacing: { marginBlockStart: "1rem" } });
 
 const SOPHIE_DESCRIPTION = "Sophie — writing";
 

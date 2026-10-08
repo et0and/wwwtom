@@ -23,7 +23,7 @@ const styles = stylex.create({
   root: {
     display: "flex",
     alignItems: "center",
-    overflow: "hidden",
+    overflow: "clip",
     // Overrides the horizontal padding that inputVariants sets, so the text
     // label controls its own inset.
     paddingInline: 0,
@@ -36,15 +36,15 @@ const styles = stylex.create({
   copyButton: {
     position: "relative",
     isolation: "isolate",
-    overflow: "hidden",
-    borderTopLeftRadius: 0,
-    borderBottomLeftRadius: 0,
-    borderTopRightRadius: "inherit",
-    borderBottomRightRadius: "inherit",
-    borderLeftWidth: "1px",
-    borderLeftColor: colors["--color-tomui-line"],
+    overflow: "clip",
+    borderStartStartRadius: 0,
+    borderEndStartRadius: 0,
+    borderStartEndRadius: "inherit",
+    borderEndEndRadius: "inherit",
+    borderInlineStartWidth: "1px",
+    borderInlineStartColor: colors["--color-tomui-line"],
     paddingInline: "0.75rem",
-    transitionProperty: "all",
+    transitionProperty: "box-shadow, color, background-color",
     transitionDuration: "200ms",
     ":focus": {
       boxShadow:
@@ -61,7 +61,7 @@ const styles = stylex.create({
     display: "flex",
     alignItems: "center",
     gap: "0.25rem",
-    transitionProperty: "all",
+    transitionProperty: "opacity, transform",
     transitionDuration: "200ms",
   },
   slideInitial: {

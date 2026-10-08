@@ -60,7 +60,7 @@ const styles = stylex.create({
   },
   rowBase: { gap: "0.75rem" },
   rowSm: { gap: "0.5rem" },
-  noTitlePad: { paddingTop: "1px" },
+  noTitlePad: { paddingBlockStart: "1px" },
   stack: { display: "flex", flexDirection: "column", gap: "0.125rem" },
   title: { lineHeight: "1.375", fontWeight: 500 },
   description: { ...fontSizeSm, lineHeight: "1.375" },

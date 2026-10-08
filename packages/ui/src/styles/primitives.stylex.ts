@@ -42,8 +42,8 @@ export const layout = stylex.create({
   relative: { position: "relative" },
   absolute: { position: "absolute" },
   absoluteInset0: { position: "absolute", inset: 0 },
-  stickyTop: { position: "sticky", top: 0 },
-  stickyBottom: { position: "sticky", bottom: 0 },
+  stickyTop: { position: "sticky", insetBlockStart: 0 },
+  stickyBottom: { position: "sticky", insetBlockEnd: 0 },
 
   hidden: { display: "none" },
   block: { display: "block" },
@@ -164,7 +164,7 @@ export const menuItem = stylex.create({
     ":is([data-disabled])": { pointerEvents: "none", opacity: 0.5 },
   },
   /** Indented to clear the check column. */
-  checkable: { paddingLeft: "2rem" },
+  checkable: { paddingInlineStart: "2rem" },
   plain: { paddingInline: "0.5rem" },
   vertical: { paddingBlock: "0.375rem" },
   rounded: { borderRadius: "0.375rem" },
@@ -178,7 +178,7 @@ export const menuItem = stylex.create({
   /** Check mark column, pinned to the leading edge. */
   checkColumn: {
     position: "absolute",
-    left: "0.5rem",
+    insetInlineStart: "0.5rem",
     display: "inline-flex",
     width: "0.875rem",
     height: "0.875rem",

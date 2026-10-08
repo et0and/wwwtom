@@ -61,10 +61,10 @@ const styles = stylex.create({
    */
   defaultPanelWrapper: {
     height: "var(--collapsible-panel-height)",
-    overflow: "hidden",
+    overflow: "clip",
     transitionProperty: "height, opacity",
     transitionDuration: "100ms",
-    transitionTimingFunction: "ease-out",
+    transitionTimingFunction: "var(--ease-out, ease-out)",
     ":is([data-ending-style])": { height: 0, opacity: 0 },
     ":is([data-starting-style])": { height: 0, opacity: 0 },
     /**
@@ -81,8 +81,8 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: layout.gap4.gap,
-    borderLeftWidth: 2,
-    borderLeftColor: colors["--color-tomui-fill"],
+    borderInlineStartWidth: 2,
+    borderInlineStartColor: colors["--color-tomui-fill"],
     paddingBlock: "0.25rem",
     paddingInlineEnd: "0.25rem",
     paddingInlineStart: "1rem",
