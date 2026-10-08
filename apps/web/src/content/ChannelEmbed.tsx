@@ -21,7 +21,7 @@ const styles = stylex.create({
   placeholderCard: {
     height: "11rem",
     width: "14rem",
-    overflow: "hidden",
+    overflow: "clip",
     backgroundColor: colors["--color-tomui-base"],
     padding: "0.75rem",
     boxShadow: ringLine,
@@ -38,7 +38,7 @@ const styles = stylex.create({
     flexDirection: { default: "column", [SM]: "row" },
     alignItems: { default: "normal", [SM]: "stretch" },
     gap: { default: "1rem", [SM]: "1.5rem" },
-    overflow: "hidden",
+    overflow: "clip",
     paddingInline: "1.25rem",
     paddingBlock: "1rem",
     boxShadow: ringLine,

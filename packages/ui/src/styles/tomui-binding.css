@@ -27,7 +27,9 @@
 /* Typography is now generated in theme-tomui.css via codegen:themes */
 
 :root {
-  /* Easings & transitions */
+  /* Easings & transitions. Components and app CSS both read these tokens. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-bounce: cubic-bezier(0.2, 0, 0, 1.5);
   --default-transition-duration: 100ms;
 }
@@ -68,9 +70,9 @@
 @supports (animation-timeline: scroll()) {
   .tomui-tabs-list {
     scrollbar-width: none;
-    -ms-overflow-style: none;
   }
 
+  /* Safari below 18.2 has no `scrollbar-width`, so it keeps its own rule. */
   .tomui-tabs-list::-webkit-scrollbar {
     display: none;
   }
@@ -136,8 +138,10 @@
 /* A badge inside a link picks up a ring on hover, and its icon is pinned to
    12px. StyleX 0.19 supports no ancestor or descendant selectors, so these two
    rules stay here. See badge.tsx for the variant values. */
-a:hover [data-tomui-component="Badge"] {
-  box-shadow: 0 0 0 1px currentColor;
+@media (hover: hover) and (pointer: fine) {
+  a:hover [data-tomui-component="Badge"] {
+    box-shadow: 0 0 0 1px currentColor;
+  }
 }
 
 [data-tomui-component="Badge"] [data-slot="badge-icon"] > svg {
@@ -149,15 +153,15 @@ a:hover [data-tomui-component="Badge"] {
    sibling selector, so the three sizes stay here. The offset equals the thumb
    width, so the thumb sits flush against the right edge. */
 [data-tomui-component="Switch"][data-size="sm"]:checked + [data-slot="switch-thumb"] {
-  left: 1rem;
+  inset-inline-start: 1rem;
 }
 
 [data-tomui-component="Switch"][data-size="base"]:checked + [data-slot="switch-thumb"] {
-  left: 1.125rem;
+  inset-inline-start: 1.125rem;
 }
 
 [data-tomui-component="Switch"][data-size="lg"]:checked + [data-slot="switch-thumb"] {
-  left: 1.25rem;
+  inset-inline-start: 1.25rem;
 }
 
 /* Radio indicator and hover ring. StyleX 0.19 supports no sibling selector, so
@@ -167,16 +171,18 @@ a:hover [data-tomui-component="Badge"] {
   display: flex;
 }
 
-[data-tomui-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
-  [data-tomui-part="item"] {
-  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+@media (hover: hover) and (pointer: fine) {
+  [data-tomui-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
+    [data-tomui-part="item"] {
+    box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+  }
 }
 
 /* Toolbar rounds only its outer corners and dividers its children. StyleX 0.19
    supports no child or sibling combinator, so these stay here. */
 [data-tomui-component="Toolbar"] > *:first-child {
-  border-top-left-radius: 0.5rem;
-  border-bottom-left-radius: 0.5rem;
+  border-start-start-radius: 0.5rem;
+  border-end-start-radius: 0.5rem;
 }
 
 /* The last visible child gets the right corners, skipping trailing
@@ -185,12 +191,12 @@ a:hover [data-tomui-component="Badge"] {
   > *:not([aria-hidden="true"]):not([type="hidden"]):not(
     :has(~ :not([aria-hidden="true"]):not([type="hidden"]))
   ) {
-  border-top-right-radius: 0.5rem;
-  border-bottom-right-radius: 0.5rem;
+  border-start-end-radius: 0.5rem;
+  border-end-end-radius: 0.5rem;
 }
 
 [data-tomui-component="Toolbar"] > *:not([aria-hidden="true"]):not(:first-child) {
-  border-left: 1px solid var(--color-tomui-line);
+  border-inline-start: 1px solid var(--color-tomui-line);
 }
 
 /* A compact Banner inlines its action's Link so it flows with the title text
@@ -208,8 +214,10 @@ a:hover [data-tomui-component="Badge"] {
   display: flex;
 }
 
-[data-tomui-part="control"][data-variant="default"]:hover [data-tomui-part="indicator"] {
-  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+@media (hover: hover) and (pointer: fine) {
+  [data-tomui-part="control"][data-variant="default"]:hover [data-tomui-part="indicator"] {
+    box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+  }
 }
 
 [data-tomui-part="control"][data-variant="default"]:focus-within [data-tomui-part="indicator"] {

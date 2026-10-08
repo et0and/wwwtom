@@ -129,7 +129,7 @@
   hr {
     height: 0;
     color: inherit;
-    border-top-width: 1px;
+    border-block-start-width: 1px;
   }
 
   ::placeholder {

@@ -17,9 +17,9 @@ import { formatDateTime } from "@tom/utils/date";
 import { bannerTitleStyles, layoutStyles } from "../chrome/layout.stylex";
 
 const styles = stylex.create({
-  sectionSpacing: { marginBottom: "1rem" },
+  sectionSpacing: { marginBlockEnd: "1rem" },
   mxAuto: { marginInline: "auto" },
-  signInSection: { marginBottom: "2rem" },
+  signInSection: { marginBlockEnd: "2rem" },
   handleRow: { display: "flex", gap: "0.5rem" },
   handleInput: { flex: "1 1 0%" },
   userRow: { display: "flex", alignItems: "center", justifyContent: "space-between" },
@@ -39,7 +39,7 @@ const styles = stylex.create({
   entryBody: { flex: "1 1 0%" },
   entryHeader: { display: "flex", alignItems: "baseline", gap: "0.5rem" },
   messageTextarea: {
-    marginBottom: "0.5rem",
+    marginBlockEnd: "0.5rem",
     minHeight: "8rem",
     width: "100%",
     borderRadius: radius.lg.borderRadius,

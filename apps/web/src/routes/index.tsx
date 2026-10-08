@@ -7,7 +7,7 @@ const DARK = "@media (prefers-color-scheme: dark)";
 const styles = stylex.create({
   signature: {
     height: "4rem",
-    paddingTop: "1rem",
+    paddingBlockStart: "1rem",
     filter: { default: "none", [DARK]: "invert(1)" },
   },
 });

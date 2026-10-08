@@ -78,10 +78,10 @@ describe("TableOfContents", () => {
     expect(classList(items[1]!)).not.toEqual(classList(items[0]!));
   });
 
-  it("indents a heading past level 2 with an inline padding-left", () => {
+  it("indents a heading past level 2 with an inline padding-inline-start", () => {
     const { container } = render(() => <TableOfContents headings={headings} />);
     const items = container.querySelectorAll("[data-tomui-component=TableOfContentsItem]");
-    expect(items[2]!.getAttribute("style")).toContain("padding-left");
+    expect(items[2]!.getAttribute("style")).toContain("padding-inline-start");
     expect(items[0]!.getAttribute("style")).toBeFalsy();
   });
 

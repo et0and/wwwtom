@@ -87,8 +87,8 @@ const styles = stylex.create({
   },
   close: {
     position: "absolute",
-    top: "0.5rem",
-    right: "0.5rem",
+    insetBlockStart: "0.5rem",
+    insetInlineEnd: "0.5rem",
     display: "flex",
     height: "1.25rem",
     width: "1.25rem",
@@ -96,7 +96,9 @@ const styles = stylex.create({
     justifyContent: "center",
     borderRadius: "0.25rem",
     color: subtleText,
-    ":hover": { backgroundColor: "color-mix(in srgb, currentColor 15%, transparent)" },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: "color-mix(in srgb, currentColor 15%, transparent)" },
+    },
   },
   closeSuccess: { color: successText },
   closeError: { color: dangerText },

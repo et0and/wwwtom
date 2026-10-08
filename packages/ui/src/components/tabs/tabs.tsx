@@ -61,7 +61,7 @@ const styles = stylex.create({
   pill: {
     position: "absolute",
     insetInline: 0,
-    top: "50%",
+    insetBlockStart: "50%",
     zIndex: 0,
     transform: "translateY(-50%)",
     borderRadius: "0.5rem",
@@ -84,10 +84,10 @@ const styles = stylex.create({
   listSegmentedBase: { height: "2.25rem" },
   listUnderline: {
     gap: "1rem",
-    borderBottomWidth: "1px",
-    borderBottomStyle: "solid",
-    borderBottomColor: hairline,
-    paddingBottom: "0.5rem",
+    borderBlockEndWidth: "1px",
+    borderBlockEndStyle: "solid",
+    borderBlockEndColor: hairline,
+    paddingBlockEnd: "0.5rem",
   },
   listUnderlineSm: { height: "1.625rem" },
   listUnderlineBase: { height: "1.875rem" },
@@ -110,7 +110,9 @@ const styles = stylex.create({
   tabSegmented: {
     marginBlock: "0.125rem",
     color: subtleText,
-    ":hover": { color: defaultTextColor },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { color: defaultTextColor },
+    },
     ":focus-visible": { boxShadow: "inset 0 0 0 2px " + brand },
   },
   tabSegmentedSm: { borderRadius: "0.125rem", paddingInline: "0.5rem" },
@@ -121,7 +123,9 @@ const styles = stylex.create({
   },
   tabUnderline: {
     color: subtleText,
-    ":hover": { backgroundColor: tint, color: defaultTextColor },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: tint, color: defaultTextColor },
+    },
   },
   tabUnderlineSm: { paddingInline: "0.375rem", paddingBlock: "0.625rem" },
   tabUnderlineBase: { paddingInline: "0.5rem", paddingBlock: "0.75rem" },
