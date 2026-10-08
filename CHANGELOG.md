@@ -1,3 +1,10 @@
+## [4.0.2](https://github.com/et0and/wwwtom/compare/v4.0.1...v4.0.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **workflows:** set up Node in the PR review address job ([07d8b47](https://github.com/et0and/wwwtom/commit/07d8b475e2f7a21f9727ac181bdb97c07d0e2791))
+
 ## [4.0.1](https://github.com/et0and/wwwtom/compare/v4.0.0...v4.0.1) (2026-10-06)
 
 
