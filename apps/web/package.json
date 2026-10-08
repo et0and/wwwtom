@@ -28,7 +28,8 @@
     "effect": "catalog:",
     "number-to-words": "1.2.4",
     "rss": "1.2.2",
-    "solid-js": "catalog:"
+    "solid-js": "catalog:",
+    "tone": "15.1.22"
   },
   "devDependencies": {
     "@solidjs/testing-library": "1.0.0-beta.3",

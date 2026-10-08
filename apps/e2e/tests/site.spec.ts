@@ -35,6 +35,16 @@ test.describe("site chrome", () => {
     await expect(page.getByRole("link", { name: /access@tomhackshaw.com/ })).toBeVisible();
   });
 
+  test("seed page lists the generative pieces", async ({ page }) => {
+    const assertNoErrors = expectNoPageErrors(page);
+    await page.goto("/work/seed");
+    await expect(page.getByRole("heading", { name: "Seed", level: 1 })).toBeVisible();
+    for (const title of ["Drift", "Halo", "After Rain", "Canon"]) {
+      await expect(page.getByRole("heading", { name: title, level: 3 })).toBeVisible();
+    }
+    assertNoErrors();
+  });
+
   test("unknown route renders the 404 page", async ({ page }) => {
     await page.goto("/definitely-not-a-page");
     await expect(page.locator("main")).toContainText("Not found");
