@@ -46,6 +46,45 @@ export const textStyles = stylex.create({
   none: {},
 });
 
+/**
+ * Per-character blur-in, used by `<Text blurIn>`. Each character fades in as
+ * the blur clears, staggered by its index so the line resolves left to right.
+ *
+ * Motion is opt-in: the animation only applies under
+ * `prefers-reduced-motion: no-preference`, so a reader who asks for less motion
+ * gets the text already visible.
+ */
+const blurInChar = stylex.keyframes({
+  from: { filter: "blur(0.3em)", opacity: 0 },
+  to: { filter: "blur(0)", opacity: 1 },
+});
+
+export const blurInStyles = stylex.create({
+  char: {
+    display: "inline-block",
+    "@media (prefers-reduced-motion: no-preference)": {
+      animationName: blurInChar,
+      animationDuration: "0.5s",
+      animationTimingFunction: "var(--ease-out, ease-out)",
+      animationFillMode: "both",
+    },
+  },
+  /** A word never breaks across lines; the space between words may wrap. */
+  word: { display: "inline-block", whiteSpace: "nowrap" },
+  /** Visually hidden copy that carries the readable text for assistive tech. */
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: 0,
+    margin: "-1px",
+    overflow: "clip",
+    clipPath: "inset(50%)",
+    whiteSpace: "nowrap",
+    borderWidth: 0,
+  },
+});
+
 export const TOMUI_TEXT_DEFAULT_VARIANTS = {
   variant: "body",
   size: "base",

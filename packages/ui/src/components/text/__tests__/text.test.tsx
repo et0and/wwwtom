@@ -161,6 +161,36 @@ describe("size resolution", () => {
   });
 });
 
+describe("blurIn", () => {
+  it("keeps a readable copy and a per-character animated copy", () => {
+    const { container } = render(() => <Text blurIn>Hi</Text>);
+    const root = container.firstElementChild!;
+    expect(root.querySelector('[aria-hidden="true"]')).toBeTruthy();
+    // Two characters, each carrying its own staggered animation delay.
+    expect(root.querySelectorAll('[style*="animation-delay"]')).toHaveLength(2);
+    // The readable text survives for assistive tech and the accessible name.
+    expect(root.textContent).toContain("Hi");
+  });
+
+  it("does not split a non-string child", () => {
+    const { container } = render(() => (
+      <Text blurIn>
+        <em>Hi</em>
+      </Text>
+    ));
+    expect(container.querySelector('[aria-hidden="true"]')).toBeNull();
+  });
+
+  it("keeps the requested element", () => {
+    const { container } = render(() => (
+      <Text as="h1" blurIn>
+        Title
+      </Text>
+    ));
+    expect(container.firstElementChild!.tagName.toLowerCase()).toBe("h1");
+  });
+});
+
 describe("caller style override", () => {
   it("merges caller styles without dropping variant styling", () => {
     const plain = render(() => <Text>text</Text>);

@@ -4,7 +4,7 @@ import { Text } from "@tom/ui/text";
 export default function Accessibility() {
   return (
     <PageLayout title="Accessibility" description="Accessibility statement">
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Accessibility
       </Text>
       <div>
@@ -47,7 +47,7 @@ export default function Accessibility() {
           consultant sometime in the future to conduct a deeper audit.
         </Text>
       </div>
-      <Text variant="heading" as="h2">
+      <Text variant="heading" as="h2" blurIn>
         Known issues
       </Text>
       <div>

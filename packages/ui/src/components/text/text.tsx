@@ -1,4 +1,4 @@
-import { merge, omit } from "solid-js";
+import { For, merge, omit, Show } from "solid-js";
 import { Dynamic } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
@@ -6,12 +6,77 @@ import {
   BOLDABLE_VARIANTS,
   DEFAULT_ELEMENT_BY_VARIANT,
   TOMUI_TEXT_DEFAULT_VARIANTS,
+  blurInStyles,
   resolveTextSizeStyle,
   textStyles,
   type TextElement,
   type TomuiTextSize,
   type TomuiTextVariant,
 } from "./variants";
+
+/** Seconds between one character's blur-in and the next. */
+const BLUR_IN_STEP = 0.025;
+
+/**
+ * Split a string into words and characters, each carrying its global character
+ * index so the blur-in delay reads left to right across the whole line. Spaces
+ * animate too, so a wrapped line does not pop its gaps in at once.
+ */
+function splitForBlurIn(text: string) {
+  const rawWords = text.split(" ");
+  const charCounts = rawWords.map((word) => word.length);
+  return rawWords.map((word, wordIndex) => {
+    const precedingChars = charCounts
+      .slice(0, wordIndex)
+      .reduce((sum, count) => sum + count + 1, 0);
+    const chars = word
+      .split("")
+      .map((char, charIndex) => ({ char, globalIndex: precedingChars + charIndex }));
+    const hasSpace = wordIndex < rawWords.length - 1;
+    return { chars, hasSpace, spaceIndex: precedingChars + word.length };
+  });
+}
+
+/**
+ * The animated text body. The readable text lives in a visually hidden span;
+ * the per-character copy is `aria-hidden`, so assistive tech and the accessible
+ * name see one clean string.
+ */
+function BlurInContent(props: { text: string }): JSX.Element {
+  return (
+    <>
+      <span {...stylex.attrs(blurInStyles.srOnly)}>{props.text}</span>
+      <span aria-hidden="true">
+        <For each={splitForBlurIn(props.text)} keyed={false}>
+          {(word) => (
+            <>
+              <span {...stylex.attrs(blurInStyles.word)}>
+                <For each={word().chars} keyed={false}>
+                  {(char) => (
+                    <span
+                      {...stylex.attrs(blurInStyles.char)}
+                      style={{ "animation-delay": `${char().globalIndex * BLUR_IN_STEP}s` }}
+                    >
+                      {char().char}
+                    </span>
+                  )}
+                </For>
+              </span>
+              <Show when={word().hasSpace}>
+                <span
+                  {...stylex.attrs(blurInStyles.char)}
+                  style={{ "animation-delay": `${word().spaceIndex * BLUR_IN_STEP}s` }}
+                >
+                  {"\u00A0"}
+                </span>
+              </Show>
+            </>
+          )}
+        </For>
+      </span>
+    </>
+  );
+}
 
 /**
  * Text component props.
@@ -53,6 +118,12 @@ export interface TextProps {
   /** Whether to truncate overflowing text with an ellipsis. */
   truncate?: boolean;
   /**
+   * Animate the text in with a per-character blur. The child must be a plain
+   * string; any other child renders normally. Motion is skipped when the reader
+   * asks for reduced motion.
+   */
+  blurIn?: boolean;
+  /**
    * The HTML element to render. Accepts headings (`"h1"`–`"h6"`), block text
    * (`"p"`, `"pre"`), inline text (`"span"`, `"code"`, `"em"`, `"strong"`,
    * `"small"`, `"abbr"`, `"time"`), form-related (`"label"`, `"legend"`),
@@ -91,6 +162,7 @@ export function Text(props: TextProps): JSX.Element {
   const merged = merge(
     {
       variant: TOMUI_TEXT_DEFAULT_VARIANTS.variant,
+      blurIn: false,
       bold: false,
       size: TOMUI_TEXT_DEFAULT_VARIANTS.size,
       truncate: false,
@@ -100,6 +172,7 @@ export function Text(props: TextProps): JSX.Element {
   const rest = omit(
     merged,
     "as",
+    "blurIn",
     "bold",
     "children",
     "id",
@@ -118,6 +191,13 @@ export function Text(props: TextProps): JSX.Element {
       merged.truncate ? textStyles.truncate : undefined,
       merged.style,
     );
+  const content = (): JSX.Element => {
+    // oxlint-disable-next-line anti-slop/no-runtime-typeof -- JSX children narrow to a string for blurIn
+    if (merged.blurIn && typeof merged.children === "string") {
+      return <BlurInContent text={merged.children} />;
+    }
+    return merged.children;
+  };
   return (
     <Dynamic
       component={merged.as ?? DEFAULT_ELEMENT_BY_VARIANT[merged.variant]}
@@ -128,7 +208,7 @@ export function Text(props: TextProps): JSX.Element {
       ref={merged.ref}
       {...rest}
     >
-      {merged.children}
+      {content()}
     </Dynamic>
   );
 }
