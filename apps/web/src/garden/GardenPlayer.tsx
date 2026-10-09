@@ -13,6 +13,10 @@ import type { Generator } from "./types";
 /** Rendered on the server, replaced with a random seed once the client mounts. */
 const DEFAULT_SEED = "solstice";
 
+/** The link hover pink, matching apps/web/src/app.css. */
+const DARK = "@media (prefers-color-scheme: dark)";
+const LINK_PINK = { default: "#cc0081", [DARK]: "#ff4da6" };
+
 const styles = stylex.create({
   player: { marginTop: "1.5rem" },
   seedRow: {
@@ -52,8 +56,10 @@ const styles = stylex.create({
     backgroundColor: colors["--color-tomui-canvas"],
     overflow: "hidden",
     cursor: "pointer",
-    color: "inherit",
+    color: colors["--color-tomui-contrast"],
     textAlign: "left",
+    // The glyph inherits this colour, so the border and icon turn pink together.
+    ":hover": { borderColor: LINK_PINK, color: LINK_PINK },
   },
   fill: {
     position: "absolute",
@@ -68,11 +74,8 @@ const styles = stylex.create({
     top: "50%",
     left: "50%",
     transform: "translate(-50%, -50%)",
-    fontFamily: monoFont.fontFamily,
-    fontSize: "14px",
-    fontWeight: 600,
-    userSelect: "none",
-    color: colors["--color-tomui-contrast"],
+    display: "flex",
+    color: "inherit",
     pointerEvents: "none",
   },
   meta: { display: "flex", flexDirection: "column", gap: "0.25rem" },
@@ -186,7 +189,7 @@ export function GardenPlayer(props: GardenPlayerProps) {
           onInput={(event) => setSeed(event.currentTarget.value)}
           onChange={(event) => applySeed(event.currentTarget.value)}
         />
-        <Button variant="secondary" size="sm" onClick={nextSeed}>
+        <Button variant="primary" size="sm" onClick={nextSeed}>
           New seed
         </Button>
       </div>
@@ -211,7 +214,19 @@ export function GardenPlayer(props: GardenPlayerProps) {
                     aria-hidden="true"
                   />
                   <span {...stylex.attrs(styles.glyph)} aria-hidden="true">
-                    {isPlaying() ? "||" : ">"}
+                    <Show
+                      when={isPlaying()}
+                      fallback={
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5.14v13.72a1 1 0 0 0 1.53.85l10.75-6.86a1 1 0 0 0 0-1.7L9.53 4.29A1 1 0 0 0 8 5.14Z" />
+                        </svg>
+                      }
+                    >
+                      <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="5" width="4" height="14" rx="1" />
+                        <rect x="14" y="5" width="4" height="14" rx="1" />
+                      </svg>
+                    </Show>
                   </span>
                 </button>
                 <div {...stylex.attrs(styles.meta)}>
