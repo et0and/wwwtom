@@ -65,7 +65,26 @@ export const createEngine = async (): Promise<GardenEngine> => {
   audioElement.setAttribute("playsinline", "");
   audioElement.style.display = "none";
   document.body.append(audioElement);
-  await audioElement.play();
+
+  const releaseGraph = (): void => {
+    audioElement.pause();
+    audioElement.srcObject = null;
+    audioElement.remove();
+    streamDestination.disconnect();
+    waveform.dispose();
+    spectrum.dispose();
+    limiter.dispose();
+    master.dispose();
+  };
+
+  try {
+    await audioElement.play();
+  } catch (cause) {
+    // Do not leak the bridge or the graph when the browser blocks playback.
+    // The caller surfaces the error; a retry builds a fresh engine.
+    releaseGraph();
+    throw cause;
+  }
 
   const transport = tone.getTransport();
   let disposeCurrent: (() => void) | undefined;
@@ -86,14 +105,7 @@ export const createEngine = async (): Promise<GardenEngine> => {
 
   const dispose = (): void => {
     stop();
-    audioElement.pause();
-    audioElement.srcObject = null;
-    audioElement.remove();
-    streamDestination.disconnect();
-    waveform.dispose();
-    spectrum.dispose();
-    limiter.dispose();
-    master.dispose();
+    releaseGraph();
   };
 
   return {

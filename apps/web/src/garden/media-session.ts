@@ -32,3 +32,11 @@ export const setMediaSessionControls = (controls: MediaSessionControls): void =>
   navigator.mediaSession.setActionHandler("play", () => controls.onPlay());
   navigator.mediaSession.setActionHandler("pause", () => controls.onPause());
 };
+
+/** Drop the handlers and metadata so they cannot call into a disposed engine. */
+export const clearMediaSessionControls = (): void => {
+  if (!("mediaSession" in navigator)) return;
+  navigator.mediaSession.setActionHandler("play", null);
+  navigator.mediaSession.setActionHandler("pause", null);
+  navigator.mediaSession.metadata = null;
+};

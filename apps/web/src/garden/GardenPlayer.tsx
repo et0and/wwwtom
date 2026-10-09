@@ -9,7 +9,7 @@ import { Text } from "@tom/ui/text";
 import { createEngine, type GardenEngine } from "./engine";
 import { gardenVars } from "./garden.stylex";
 import { GENERATORS } from "./generators";
-import { setMediaSessionControls, setNowPlaying } from "./media-session";
+import { clearMediaSessionControls, setMediaSessionControls, setNowPlaying } from "./media-session";
 import { GardenMatrix } from "./Matrix";
 import { randomSeed } from "./rng";
 import type { Generator } from "./types";
@@ -157,7 +157,7 @@ export function GardenPlayer(props: GardenPlayerProps) {
     frame = requestAnimationFrame(readFrame);
     return () => {
       if (frame !== undefined) cancelAnimationFrame(frame);
-      setNowPlaying(undefined);
+      clearMediaSessionControls();
       engine?.dispose();
     };
   });
