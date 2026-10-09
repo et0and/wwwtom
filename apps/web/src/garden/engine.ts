@@ -53,7 +53,19 @@ export const createEngine = async (): Promise<GardenEngine> => {
   master.connect(limiter);
   limiter.connect(waveform);
   limiter.connect(spectrum);
-  waveform.toDestination();
+
+  // iOS Safari suspends a bare AudioContext when the tab backgrounds or the
+  // screen locks. Routing the graph through a MediaStream keeps it alive: iOS
+  // treats a live stream (as in WebRTC) as background-capable, and the hidden
+  // <audio> element is what actually reaches the speakers.
+  const streamDestination = tone.getContext().createMediaStreamDestination();
+  limiter.connect(streamDestination);
+  const audioElement = document.createElement("audio");
+  audioElement.srcObject = streamDestination.stream;
+  audioElement.setAttribute("playsinline", "");
+  audioElement.style.display = "none";
+  document.body.append(audioElement);
+  await audioElement.play();
 
   const transport = tone.getTransport();
   let disposeCurrent: (() => void) | undefined;
@@ -74,6 +86,10 @@ export const createEngine = async (): Promise<GardenEngine> => {
 
   const dispose = (): void => {
     stop();
+    audioElement.pause();
+    audioElement.srcObject = null;
+    audioElement.remove();
+    streamDestination.disconnect();
     waveform.dispose();
     spectrum.dispose();
     limiter.dispose();
