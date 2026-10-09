@@ -1,3 +1,18 @@
+# [4.1.0](https://github.com/et0and/wwwtom/compare/v4.0.2...v4.1.0) (2026-10-09)
+
+
+### Bug Fixes
+
+* **web:** retry the Garden engine after a failed load ([c44d457](https://github.com/et0and/wwwtom/commit/c44d4572d3a09ea4d9161112b5a320267e0d03bc))
+* **workflows:** rebase before the PR review agent pushes ([3d33ffe](https://github.com/et0and/wwwtom/commit/3d33ffec52b12d068a984d21c637c2dca13eaf26))
+
+
+### Features
+
+* **web:** add a dot-matrix meter and CDN covers to Garden ([b4d5f6d](https://github.com/et0and/wwwtom/commit/b4d5f6d66f82037a015902d77911056a646cf115))
+* **web:** add Seed, a seeded generative music page ([a602c56](https://github.com/et0and/wwwtom/commit/a602c569d57f14cdd389136499bf076a4ea2888d))
+* **web:** polish the Garden player controls and tiles ([fef83f9](https://github.com/et0and/wwwtom/commit/fef83f9f6180cf0300620ebf98417f460899cf20))
+
 ## [4.0.2](https://github.com/et0and/wwwtom/compare/v4.0.1...v4.0.2) (2026-10-08)
 
 
