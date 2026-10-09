@@ -82,12 +82,15 @@ export const prReview = workflow("pr-review", {
         step({
           name: "Address the triage",
           uses: actionPins.opencode,
+          // The action checks out the PR head from the triggering event, then
+          // pushes with a plain `git push` and no retry. Its fetch leaves no
+          // upstream, so the push is rejected as non-fast-forward. The agent
+          // still posts its review; a rejected push must not fail the check.
+          "continue-on-error": true,
           env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY") },
           with: {
             model: "opencode-go/muse-spark-1.3-contributor",
-            // The action checks out the PR head from the triggering event and
-            // pushes back with no retry, so a commit landed mid-run rejects the
-            // push as non-fast-forward. The prompt makes the agent rebase first.
+            // Tell the agent to rebase first, so a good run can still land.
             prompt: [
               "Respond to the classifier.dev review triage on this pull request.",
               "",
