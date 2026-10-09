@@ -3,9 +3,11 @@ import { isServer } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
 import { Button } from "@tom/ui/button";
 import { colors } from "@tom/ui/colors.stylex";
+import { Input } from "@tom/ui/input";
 import { monoFont } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { createEngine, type GardenEngine } from "./engine";
+import { gardenVars } from "./garden.stylex";
 import { GENERATORS } from "./generators";
 import { GardenMatrix } from "./Matrix";
 import { randomSeed } from "./rng";
@@ -13,10 +15,6 @@ import type { Generator } from "./types";
 
 /** Rendered on the server, replaced with a random seed once the client mounts. */
 const DEFAULT_SEED = "solstice";
-
-/** The link hover pink, matching apps/web/src/app.css. */
-const DARK = "@media (prefers-color-scheme: dark)";
-const LINK_PINK = { default: "#cc0081", [DARK]: "#ff4da6" };
 
 const MATRIX_ROWS = 7;
 const MATRIX_COLUMNS = 7;
@@ -37,16 +35,7 @@ const styles = stylex.create({
   },
   seedInput: {
     fontFamily: monoFont.fontFamily,
-    fontSize: "14px",
-    paddingInline: "0.5rem",
-    paddingBlock: "0.375rem",
     width: "10rem",
-    borderWidth: "1px",
-    borderStyle: "solid",
-    borderColor: colors["--color-tomui-line"],
-    borderRadius: "0.375rem",
-    backgroundColor: colors["--color-tomui-base"],
-    color: "inherit",
   },
   tiles: { display: "flex", flexWrap: "wrap", gap: "1.5rem" },
   tile: { display: "flex", flexDirection: "column", gap: "0.5rem", width: "9rem" },
@@ -64,7 +53,7 @@ const styles = stylex.create({
     color: colors["--color-tomui-contrast"],
     textAlign: "left",
     // The glyph inherits this colour, so the border and icon turn pink together.
-    ":hover": { borderColor: LINK_PINK, color: LINK_PINK },
+    ":hover": { borderColor: gardenVars.accent, color: gardenVars.accent },
   },
   cover: {
     position: "absolute",
@@ -79,7 +68,7 @@ const styles = stylex.create({
     inset: 0,
     padding: "12%",
     boxSizing: "border-box",
-    color: LINK_PINK,
+    color: gardenVars.accent,
     pointerEvents: "none",
   },
   glyph: {
@@ -210,9 +199,10 @@ export function GardenPlayer(props: GardenPlayerProps) {
             Seed
           </Text>
         </label>
-        <input
+        <Input
           id="generative-seed"
-          {...stylex.attrs(styles.seedInput)}
+          size="sm"
+          style={styles.seedInput}
           value={seed()}
           spellcheck="false"
           autocomplete="off"

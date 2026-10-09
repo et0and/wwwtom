@@ -37,21 +37,18 @@ export function GardenMatrix(props: GardenMatrixProps) {
   const height = (): number => props.rows * size() + (props.rows - 1) * gap();
   const radius = (): number => size() * 0.4;
 
-  const cells = (): Cell[] => {
-    const result: Cell[] = [];
-    for (let row = 0; row < props.rows; row++) {
-      for (let col = 0; col < props.cols; col++) {
-        result.push({
-          key: `${row}-${col}`,
-          cx: col * step() + size() / 2,
-          cy: row * step() + size() / 2,
-          column: col,
-          row,
-        });
-      }
-    }
-    return result;
-  };
+  const cells = (): Cell[] =>
+    Array.from({ length: props.rows * props.cols }, (_, index) => {
+      const row = Math.floor(index / props.cols);
+      const col = index % props.cols;
+      return {
+        key: `${row}-${col}`,
+        cx: col * step() + size() / 2,
+        cy: row * step() + size() / 2,
+        column: col,
+        row,
+      };
+    });
 
   const brightness = (column: number, row: number): number => {
     const level = props.levels()[column] ?? 0;
