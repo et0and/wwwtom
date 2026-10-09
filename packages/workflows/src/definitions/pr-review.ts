@@ -85,6 +85,9 @@ export const prReview = workflow("pr-review", {
           env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY") },
           with: {
             model: "opencode-go/muse-spark-1.3-contributor",
+            // The action checks out the PR head from the triggering event and
+            // pushes back with no retry, so a commit landed mid-run rejects the
+            // push as non-fast-forward. The prompt makes the agent rebase first.
             prompt: [
               "Respond to the classifier.dev review triage on this pull request.",
               "",
@@ -107,8 +110,13 @@ export const prReview = workflow("pr-review", {
               "Verify before pushing: `pnpm turbo run typecheck`,",
               "`pnpm turbo run test`, `pnpm turbo run lint`, `pnpm format`.",
               "",
-              "Then commit (conventional commits), push to this PR's branch, and",
-              "keep the response short: what you fixed, what you checked and",
+              "Then commit with a conventional commit message. The PR branch",
+              "may move while you work, so sync before pushing or GitHub will",
+              "reject the push as non-fast-forward: `git fetch origin` then",
+              "`git rebase origin/$(git branch --show-current)`. If a push is",
+              "rejected, rebase and retry once.",
+              "",
+              "Keep the response short: what you fixed, what you checked and",
               "left alone, and the verification results. If the sticky triage",
               "comment is missing, say so in one line and stop.",
             ],
