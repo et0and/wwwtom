@@ -7,6 +7,7 @@ const SCALE_NAMES = Object.keys(SCALES) as ScaleName[];
 export const drift: Generator = {
   id: "drift",
   title: "Drift",
+  cover: "https://cdn.tom.so/garden/drift.jpg",
 
   create({ tone, output, rng }) {
     const root = 43 + rng.int(0, 6);

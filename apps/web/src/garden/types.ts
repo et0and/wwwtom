@@ -13,6 +13,8 @@ export interface GeneratorContext {
 export interface Generator {
   readonly id: string;
   readonly title: string;
+  /** Cover art shown in the tile while the piece is stopped. */
+  readonly cover?: string;
   /**
    * Build the audio graph, connect it to `output`, and schedule events on the
    * Transport. Returns a disposer that stops sound and frees every node. The

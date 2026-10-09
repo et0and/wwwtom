@@ -7,6 +7,7 @@ import { monoFont } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { createEngine, type GardenEngine } from "./engine";
 import { GENERATORS } from "./generators";
+import { GardenMatrix } from "./Matrix";
 import { randomSeed } from "./rng";
 import type { Generator } from "./types";
 
@@ -16,6 +17,10 @@ const DEFAULT_SEED = "solstice";
 /** The link hover pink, matching apps/web/src/app.css. */
 const DARK = "@media (prefers-color-scheme: dark)";
 const LINK_PINK = { default: "#cc0081", [DARK]: "#ff4da6" };
+
+const MATRIX_ROWS = 7;
+const MATRIX_COLUMNS = 7;
+const zeroLevels = (): number[] => Array.from({ length: MATRIX_COLUMNS }, () => 0);
 
 const styles = stylex.create({
   player: { marginTop: "1.5rem" },
@@ -61,12 +66,20 @@ const styles = stylex.create({
     // The glyph inherits this colour, so the border and icon turn pink together.
     ":hover": { borderColor: LINK_PINK, color: LINK_PINK },
   },
-  fill: {
+  cover: {
     position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    backgroundColor: colors["--color-tomui-tint"],
+    inset: 0,
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    pointerEvents: "none",
+  },
+  matrix: {
+    position: "absolute",
+    inset: 0,
+    padding: "12%",
+    boxSizing: "border-box",
+    color: LINK_PINK,
     pointerEvents: "none",
   },
   glyph: {
@@ -91,7 +104,7 @@ export function GardenPlayer(props: GardenPlayerProps) {
   const generators = (): readonly Generator[] => props.generators ?? GENERATORS;
   const [seed, setSeed] = createSignal(DEFAULT_SEED);
   const [playingId, setPlayingId] = createSignal<string | null>(null);
-  const [level, setLevel] = createSignal(0);
+  const [levels, setLevels] = createSignal<number[]>(zeroLevels());
   const [isPreparing, setIsPreparing] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   /** False until the client has read the seed from the URL, so the sync
@@ -101,7 +114,8 @@ export function GardenPlayer(props: GardenPlayerProps) {
   let engine: GardenEngine | undefined;
   let enginePromise: Promise<GardenEngine> | undefined;
   let frame: number | undefined;
-  let smoothed = 0;
+  let smoothed: number[] = zeroLevels();
+  let lastMatrixAt = 0;
 
   const ensureEngine = async (): Promise<GardenEngine> => {
     if (engine) return engine;
@@ -110,11 +124,21 @@ export function GardenPlayer(props: GardenPlayerProps) {
     return engine;
   };
 
-  const readFrame = (): void => {
-    const target = engine !== undefined && playingId() !== null ? engine.getLevel() * 3.2 : 0;
-    smoothed = smoothed * 0.86 + Math.min(1, target) * 0.14;
-    if (smoothed < 0.002 && target === 0) smoothed = 0;
-    setLevel(smoothed);
+  const readFrame = (timestamp: number): void => {
+    const active = engine;
+    if (active !== undefined && playingId() !== null) {
+      const next = active.getLevels(MATRIX_COLUMNS);
+      for (let index = 0; index < MATRIX_COLUMNS; index++) {
+        smoothed[index] = (smoothed[index] ?? 0) * 0.75 + (next[index] ?? 0) * 0.25;
+      }
+      if (timestamp - lastMatrixAt >= 45) {
+        lastMatrixAt = timestamp;
+        setLevels([...smoothed]);
+      }
+    } else if (smoothed.some((value) => value > 0)) {
+      smoothed = smoothed.map((value) => (value < 0.01 ? 0 : value * 0.6));
+      setLevels([...smoothed]);
+    }
     frame = requestAnimationFrame(readFrame);
   };
 
@@ -198,7 +222,6 @@ export function GardenPlayer(props: GardenPlayerProps) {
         <For each={generators()}>
           {(generator) => {
             const isPlaying = (): boolean => playingId() === generator.id;
-            const fillWidth = (): number => (isPlaying() ? Math.round(level() * 100) : 0);
             return (
               <div {...stylex.attrs(styles.tile)}>
                 <button
@@ -208,11 +231,19 @@ export function GardenPlayer(props: GardenPlayerProps) {
                   aria-label={`${isPlaying() ? "Stop" : "Play"} ${generator.title}`}
                   onClick={() => void toggle(generator)}
                 >
-                  <span
-                    {...stylex.attrs(styles.fill)}
-                    style={{ width: `${fillWidth()}%` }}
-                    aria-hidden="true"
-                  />
+                  <Show when={!isPlaying() && generator.cover}>
+                    {(cover) => <TileCover src={cover()} />}
+                  </Show>
+                  <Show when={isPlaying()}>
+                    <span {...stylex.attrs(styles.matrix)} aria-hidden="true">
+                      <GardenMatrix
+                        rows={MATRIX_ROWS}
+                        cols={MATRIX_COLUMNS}
+                        levels={levels}
+                        ariaLabel={`${generator.title} levels`}
+                      />
+                    </span>
+                  </Show>
                   <span {...stylex.attrs(styles.glyph)} aria-hidden="true">
                     <Show
                       when={isPlaying()}
@@ -253,5 +284,22 @@ export function GardenPlayer(props: GardenPlayerProps) {
         )}
       </Show>
     </div>
+  );
+}
+
+/** Cover art with a fallback: a missing CDN image just leaves the plain tile. */
+function TileCover(props: { src: string }) {
+  const [hasFailed, setHasFailed] = createSignal(false);
+  return (
+    <Show when={!hasFailed()}>
+      <img
+        {...stylex.attrs(styles.cover)}
+        src={props.src}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        onError={() => setHasFailed(true)}
+      />
+    </Show>
   );
 }

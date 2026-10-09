@@ -16,7 +16,7 @@ const createFakeEngine = (): FakeEngine => {
   const engine: GardenEngine = {
     play,
     stop,
-    getLevel: () => 0,
+    getLevels: () => [0, 0, 0, 0, 0, 0, 0],
     dispose: vi.fn(),
   };
   return { engine, play, stop };

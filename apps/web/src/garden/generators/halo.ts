@@ -8,6 +8,7 @@ const SCALE_NAMES: readonly ScaleName[] = ["lydian", "ionian", "mixolydian"];
 export const halo: Generator = {
   id: "halo",
   title: "Halo",
+  cover: "https://cdn.tom.so/garden/halo.jpg",
 
   create({ tone, output, rng }) {
     const root = 45 + rng.int(0, 7);
