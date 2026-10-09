@@ -20,6 +20,16 @@ export interface GardenEngine {
 const FFT_FLOOR_DB = -100;
 const FFT_CEIL_DB = -20;
 
+/** Safari's AudioSession API is not in the DOM lib yet, so read it defensively. */
+interface PlaybackAudioSession {
+  type: string;
+}
+
+const requestPlaybackSession = (): void => {
+  if (!("audioSession" in navigator)) return;
+  (navigator.audioSession as PlaybackAudioSession).type = "playback";
+};
+
 const readLevels = (analyser: import("tone").Analyser, columns: number): number[] => {
   const values = analyser.getValue();
   if (!(values instanceof Float32Array)) return Array.from({ length: columns }, () => 0);
@@ -39,12 +49,20 @@ const readLevels = (analyser: import("tone").Analyser, columns: number): number[
 /**
  * Load Tone.js and build the shared graph: every piece connects to `master`,
  * which runs through a limiter (pieces stack long reverbs, so peaks need
- * taming), then to the destination. A parallel FFT analyser feeds the tile
- * matrix without affecting the output.
+ * taming), then straight to the destination. Two analysers tap the limiter for
+ * the tile matrix.
  */
 export const createEngine = async (): Promise<GardenEngine> => {
   const tone: ToneModule = await import("tone");
   await tone.start();
+
+  // iOS suspends a plain AudioContext when the tab backgrounds or the screen
+  // locks. Declaring the page a playback session lets Safari keep an activated
+  // AudioContext running in the background and expose it to the lock screen.
+  // WebKit only allows this while the default destination has no extra nodes,
+  // so the graph must go straight to `toDestination` — the media-element bridge
+  // played a second stream and stalled when the context paused.
+  requestPlaybackSession();
 
   const master = new tone.Gain(0.8);
   const limiter = new tone.Limiter(-1);
@@ -53,38 +71,14 @@ export const createEngine = async (): Promise<GardenEngine> => {
   master.connect(limiter);
   limiter.connect(waveform);
   limiter.connect(spectrum);
+  limiter.toDestination();
 
-  // iOS Safari suspends a bare AudioContext when the tab backgrounds or the
-  // screen locks. Routing the graph through a MediaStream keeps it alive: iOS
-  // treats a live stream (as in WebRTC) as background-capable, and the hidden
-  // <audio> element is what actually reaches the speakers.
-  const streamDestination = tone.getContext().createMediaStreamDestination();
-  limiter.connect(streamDestination);
-  const audioElement = document.createElement("audio");
-  audioElement.srcObject = streamDestination.stream;
-  audioElement.setAttribute("playsinline", "");
-  audioElement.style.display = "none";
-  document.body.append(audioElement);
-
-  const releaseGraph = (): void => {
-    audioElement.pause();
-    audioElement.srcObject = null;
-    audioElement.remove();
-    streamDestination.disconnect();
-    waveform.dispose();
-    spectrum.dispose();
-    limiter.dispose();
-    master.dispose();
+  // Older iOS still suspends the context on background; resume it on return.
+  const context = tone.getContext();
+  const resumeOnVisible = (): void => {
+    if (document.visibilityState === "visible") void context.resume();
   };
-
-  try {
-    await audioElement.play();
-  } catch (cause) {
-    // Do not leak the bridge or the graph when the browser blocks playback.
-    // The caller surfaces the error; a retry builds a fresh engine.
-    releaseGraph();
-    throw cause;
-  }
+  document.addEventListener("visibilitychange", resumeOnVisible);
 
   const transport = tone.getTransport();
   let disposeCurrent: (() => void) | undefined;
@@ -105,7 +99,11 @@ export const createEngine = async (): Promise<GardenEngine> => {
 
   const dispose = (): void => {
     stop();
-    releaseGraph();
+    document.removeEventListener("visibilitychange", resumeOnVisible);
+    waveform.dispose();
+    spectrum.dispose();
+    limiter.dispose();
+    master.dispose();
   };
 
   return {
