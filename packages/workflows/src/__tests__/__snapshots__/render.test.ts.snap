@@ -550,8 +550,13 @@ jobs:
             Verify before pushing: \`pnpm turbo run typecheck\`,
             \`pnpm turbo run test\`, \`pnpm turbo run lint\`, \`pnpm format\`.
 
-            Then commit (conventional commits), push to this PR's branch, and
-            keep the response short: what you fixed, what you checked and
+            Then commit with a conventional commit message. The PR branch
+            may move while you work, so sync before pushing or GitHub will
+            reject the push as non-fast-forward: \`git fetch origin\` then
+            \`git rebase origin/$(git branch --show-current)\`. If a push is
+            rejected, rebase and retry once.
+
+            Keep the response short: what you fixed, what you checked and
             left alone, and the verification results. If the sticky triage
             comment is missing, say so in one line and stop.
         env:
