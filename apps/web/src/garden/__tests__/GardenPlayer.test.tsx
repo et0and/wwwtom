@@ -82,4 +82,20 @@ describe("GardenPlayer", () => {
     const input = screen.getByLabelText("Seed") as HTMLInputElement;
     await waitFor(() => expect(input.value).toBe("planet"));
   });
+
+  it("retries the engine after a failed load", async () => {
+    const fake = createFakeEngine();
+    const createEngine = vi
+      .fn()
+      .mockRejectedValueOnce(new Error("tone failed"))
+      .mockResolvedValueOnce(fake.engine);
+    render(() => <GardenPlayer createEngine={createEngine} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "Play Drift" }));
+    await waitFor(() => expect(screen.getByRole("alert")).toBeTruthy());
+
+    await userEvent.click(screen.getByRole("button", { name: "Play Drift" }));
+    await waitFor(() => expect(fake.play).toHaveBeenCalledTimes(1));
+    expect(createEngine).toHaveBeenCalledTimes(2);
+  });
 });

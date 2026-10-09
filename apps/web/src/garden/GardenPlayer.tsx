@@ -120,7 +120,13 @@ export function GardenPlayer(props: GardenPlayerProps) {
   const ensureEngine = async (): Promise<GardenEngine> => {
     if (engine) return engine;
     enginePromise ??= (props.createEngine ?? createEngine)();
-    engine = await enginePromise;
+    try {
+      engine = await enginePromise;
+    } catch (cause) {
+      // Do not cache a failed load: a later click should be able to retry.
+      enginePromise = undefined;
+      throw cause;
+    }
     return engine;
   };
 
