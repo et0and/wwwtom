@@ -1,10 +1,9 @@
 import { createDrumKit } from "../drums";
-import { buildScale, midiToNote } from "../theory";
 import type { Generator } from "../types";
 
 const STEPS = 16;
 
-/** Sparse kick placements, in sixteenth notes. */
+/** Kick placements, in sixteenth notes. */
 const KICK_PATTERNS: readonly (readonly number[])[] = [
   [0, 7, 10],
   [0, 8],
@@ -12,71 +11,74 @@ const KICK_PATTERNS: readonly (readonly number[])[] = [
   [0, 3, 8, 11],
 ];
 
-/** Backbeat placements. */
+/** Snare placements. */
 const SNARE_PATTERNS: readonly (readonly number[])[] = [[4, 12], [8], [4, 12, 14]];
 
-/** 808 kick and sub bass under a slow pad. Downtempo, half-time. */
+/**
+ * A low, swept noise rumble under clipped, half-time beats. No pad and no
+ * bass line: the floor is brown noise pushed through a resonant lowpass, and
+ * the beats are distorted hits cutting through it.
+ */
 export const low: Generator = {
   id: "low",
   title: "Low",
   cover: "https://cdn.tom.so/garden/low.jpg",
 
   create({ tone, output, rng }) {
-    const reverb = new tone.Reverb({ decay: 6, preDelay: 0.02, wet: 0.35 }).connect(output);
-    const kit = createDrumKit(tone, reverb);
+    const grit = new tone.Distortion({ distortion: 0.5, oversample: "2x" }).connect(output);
+    const kit = createDrumKit(tone, output);
 
-    const padFilter = new tone.Filter({ frequency: 650, type: "lowpass", rolloff: -24 }).connect(
-      reverb,
-    );
-    const pad = new tone.PolySynth(tone.Synth, {
-      oscillator: { type: "custom", partials: [1, 0.3, 0.15, 0.08] },
-      envelope: { attack: 5, decay: 3, sustain: 0.6, release: 7 },
-    }).connect(padFilter);
-    pad.volume.value = -22;
-    pad.maxPolyphony = 6;
+    // The bed: brown noise through a resonant lowpass, swept by a slow LFO so
+    // it never settles into a stable tone.
+    const rumbleFilter = new tone.Filter({
+      frequency: 200,
+      type: "lowpass",
+      Q: 12,
+      rolloff: -24,
+    }).connect(grit);
+    const rumble = new tone.Noise("brown").connect(rumbleFilter);
+    rumble.volume.value = -16;
+    rumble.start();
+    const sweep = new tone.LFO({
+      frequency: rng.range(0.03, 0.1),
+      min: rng.range(60, 120),
+      max: rng.range(500, 900),
+    }).connect(rumbleFilter.frequency);
+    sweep.start();
 
-    const root = 33 + rng.int(0, 5);
-    const bassNotes = buildScale(root, "minor pentatonic", 2).slice(0, 6).map(midiToNote);
-    const padNotes = buildScale(root + 12, "minor pentatonic", 2).map(midiToNote);
+    // A thin white hiss on top, so the texture stays rough.
+    const hissFilter = new tone.Filter({ frequency: 4000, type: "highpass" }).connect(grit);
+    const hiss = new tone.Noise("white").connect(hissFilter);
+    hiss.volume.value = -34;
+    hiss.start();
 
     const kickPattern = rng.pick(KICK_PATTERNS);
     const snarePattern = rng.pick(SNARE_PATTERNS);
-    const bassSteps = new Map<number, string>();
-    for (const step of [0, 3, 6, 10, 14]) {
-      if (rng.chance(0.6)) bassSteps.set(step, rng.pick(bassNotes));
-    }
 
     const transport = tone.getTransport();
-    transport.bpm.value = rng.range(68, 78);
+    transport.bpm.value = rng.range(70, 84);
 
     let step = 0;
     const playStep = (time: number): void => {
-      if (kickPattern.includes(step)) kit.kick(time, rng.range(0.8, 1));
-      if (snarePattern.includes(step)) kit.snare(time, rng.range(0.35, 0.6));
-      if (step % 2 === 0) kit.hat(time, step % 4 === 0 ? 0.32 : 0.16);
-      const bass = bassSteps.get(step);
-      if (bass !== undefined) kit.sub(time, bass, "8n", rng.range(0.5, 0.75));
+      if (kickPattern.includes(step)) kit.kick(time, rng.range(0.85, 1));
+      if (snarePattern.includes(step)) kit.snare(time, rng.range(0.5, 0.8));
+      if (step % 2 === 0) kit.hat(time, step % 4 === 0 ? 0.34 : 0.16);
+      if (rng.chance(0.06)) kit.hit(time, rng.range(0.25, 0.6));
       step = (step + 1) % STEPS;
     };
     transport.scheduleRepeat(playStep, "16n");
 
-    const playChord = (time: number): void => {
-      pad.releaseAll(time);
-      const start = rng.int(0, Math.max(0, padNotes.length - 5));
-      const voicing = [start, start + 2, start + 4].flatMap((index) => {
-        const note = padNotes[index];
-        return note === undefined ? [] : [note];
-      });
-      pad.triggerAttack(voicing, time + 0.05, 0.4);
-    };
-    transport.scheduleRepeat(playChord, rng.range(12, 20), 0.2);
-
     return () => {
-      pad.releaseAll();
-      pad.dispose();
-      padFilter.dispose();
+      sweep.stop();
+      sweep.dispose();
+      rumble.stop();
+      rumble.dispose();
+      rumbleFilter.dispose();
+      hiss.stop();
+      hiss.dispose();
+      hissFilter.dispose();
       kit.dispose();
-      reverb.dispose();
+      grit.dispose();
     };
   },
 };

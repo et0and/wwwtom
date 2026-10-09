@@ -1,14 +1,17 @@
 import type { ToneModule } from "./types";
 
 /**
- * A minimal drum kit for the beat pieces: an 808-ish kick, a sub-bass voice,
- * a snare, and hats. Callers add the reverb and the ambient bed.
+ * A hard, noise-based kit for the beat pieces. Every hit runs through a
+ * distortion and bit-crush bus, so the drums read as clipped and broken
+ * instead of clean. There is almost no pitch: the kick is a short thump and
+ * the rest is shaped noise.
  */
 export interface DrumKit {
   kick(time: number, velocity?: number): void;
-  sub(time: number, note: string, duration: string | number, velocity?: number): void;
   snare(time: number, velocity?: number): void;
   hat(time: number, velocity?: number): void;
+  /** A short, resonant noise stab, for crackle and fills. */
+  hit(time: number, velocity?: number): void;
   dispose(): void;
 }
 
@@ -17,57 +20,53 @@ export const createDrumKit = (
   destination: import("tone").ToneAudioNode,
 ): DrumKit => {
   const output = new tone.Gain(0.9).connect(destination);
+  const crusher = new tone.BitCrusher({ bits: 5 }).connect(output);
+  const drive = new tone.Distortion({ distortion: 0.9, oversample: "2x" }).connect(crusher);
 
   const kick = new tone.MembraneSynth({
-    pitchDecay: 0.04,
-    octaves: 6,
-    oscillator: { type: "sine" },
-    envelope: { attack: 0.001, decay: 0.5, sustain: 0, release: 0.1 },
-  }).connect(output);
-  kick.volume.value = -3;
+    pitchDecay: 0.02,
+    octaves: 3,
+    oscillator: { type: "square" },
+    envelope: { attack: 0.001, decay: 0.26, sustain: 0, release: 0.04 },
+  }).connect(drive);
+  kick.volume.value = -2;
 
-  const sub = new tone.MonoSynth({
-    oscillator: { type: "sine" },
-    envelope: { attack: 0.006, decay: 0.3, sustain: 0.7, release: 0.5 },
-    filterEnvelope: {
-      attack: 0.001,
-      decay: 0.2,
-      sustain: 0.8,
-      release: 0.4,
-      baseFrequency: 250,
-      octaves: 0.6,
-    },
-    portamento: 0.05,
-  }).connect(output);
-  sub.volume.value = -7;
-
-  const snareFilter = new tone.Filter({ frequency: 1600, type: "highpass" }).connect(output);
+  const snareFilter = new tone.Filter({ frequency: 1800, type: "bandpass", Q: 1.2 }).connect(drive);
   const snare = new tone.NoiseSynth({
-    noise: { type: "brown" },
-    envelope: { attack: 0.001, decay: 0.17, sustain: 0 },
+    noise: { type: "white" },
+    envelope: { attack: 0.001, decay: 0.12, sustain: 0 },
   }).connect(snareFilter);
-  snare.volume.value = -12;
+  snare.volume.value = -6;
 
-  const hatFilter = new tone.Filter({ frequency: 7000, type: "highpass" }).connect(output);
+  const hatFilter = new tone.Filter({ frequency: 8000, type: "highpass" }).connect(drive);
   const hat = new tone.NoiseSynth({
     noise: { type: "white" },
-    envelope: { attack: 0.001, decay: 0.045, sustain: 0 },
+    envelope: { attack: 0.001, decay: 0.03, sustain: 0 },
   }).connect(hatFilter);
-  hat.volume.value = -20;
+  hat.volume.value = -14;
+
+  const hitFilter = new tone.Filter({ frequency: 2600, type: "bandpass", Q: 14 }).connect(drive);
+  const hit = new tone.NoiseSynth({
+    noise: { type: "white" },
+    envelope: { attack: 0.0005, decay: 0.06, sustain: 0 },
+  }).connect(hitFilter);
+  hit.volume.value = -10;
 
   return {
-    kick: (time, velocity = 0.9) => kick.triggerAttackRelease("C1", "8n", time, velocity),
-    sub: (time, note, duration, velocity = 0.6) =>
-      sub.triggerAttackRelease(note, duration, time, velocity),
-    snare: (time, velocity = 0.5) => snare.triggerAttackRelease("16n", time, velocity),
+    kick: (time, velocity = 0.9) => kick.triggerAttackRelease("C1", "16n", time, velocity),
+    snare: (time, velocity = 0.6) => snare.triggerAttackRelease("16n", time, velocity),
     hat: (time, velocity = 0.3) => hat.triggerAttackRelease("32n", time, velocity),
+    hit: (time, velocity = 0.4) => hit.triggerAttackRelease("32n", time, velocity),
     dispose: () => {
       kick.dispose();
-      sub.dispose();
       snare.dispose();
       snareFilter.dispose();
       hat.dispose();
       hatFilter.dispose();
+      hit.dispose();
+      hitFilter.dispose();
+      drive.dispose();
+      crusher.dispose();
       output.dispose();
     },
   };
