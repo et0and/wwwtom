@@ -13,7 +13,6 @@ export interface GeneratorContext {
 export interface Generator {
   readonly id: string;
   readonly title: string;
-  readonly description: string;
   /**
    * Build the audio graph, connect it to `output`, and schedule events on the
    * Transport. Returns a disposer that stops sound and frees every node. The

@@ -12,7 +12,6 @@ const CHORD_NAMES = Object.keys(CHORD_QUALITIES) as ChordQuality[];
 export const afterRain: Generator = {
   id: "after-rain",
   title: "After Rain",
-  description: "Piano notes that fall at their own pace.",
 
   create({ tone, output, rng }) {
     const root = 50 + rng.int(0, 12);

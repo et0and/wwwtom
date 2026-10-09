@@ -41,14 +41,6 @@ export default function WorkHome() {
         <Text>Some work that I have made.</Text>
       </div>
       <div>
-        <Link variant="current" class="page block!" preload={true} href="/work/seed">
-          <Text variant="heading" as="h2">
-            Seed
-          </Text>
-          <Text>A small selection of ambient and piano music that plays forever.</Text>
-        </Link>
-      </div>
-      <div>
         <Loading fallback={<Loader />}>
           <Show when={worksQuery.isError}>
             <div class="banner" role="alert">

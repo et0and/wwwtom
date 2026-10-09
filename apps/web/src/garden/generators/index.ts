@@ -4,5 +4,5 @@ import { canon } from "./canon";
 import { drift } from "./drift";
 import { halo } from "./halo";
 
-/** The pieces offered on /work/seed, in display order. */
+/** The pieces offered on /work/wwwork/garden, in display order. */
 export const GENERATORS: readonly Generator[] = [drift, halo, afterRain, canon];

@@ -27,7 +27,6 @@ const buildPhrase = (rng: Rng, notes: number[]): (number | null)[] => {
 export const canon: Generator = {
   id: "canon",
   title: "Canon",
-  description: "Two pianos drift in and out of phase over a low drone.",
 
   create({ tone, output, rng }) {
     const root = 57 + rng.int(0, 7);

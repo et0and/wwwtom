@@ -5,7 +5,7 @@ import type { Generator, ToneModule } from "./types";
  * Owns the Tone.js audio graph. Created lazily on the first user gesture,
  * because browsers block audio until then.
  */
-export interface SeedEngine {
+export interface GardenEngine {
   /** Stop whatever plays, then start `generator` from `seed`. */
   play(generator: Generator, seed: string): void;
   /** Stop playback and free the current piece. */
@@ -29,7 +29,7 @@ const readRms = (analyser: import("tone").Analyser): number => {
  * which runs through a limiter (pieces stack long reverbs, so peaks need
  * taming), then an analyser, then the destination.
  */
-export const createEngine = async (): Promise<SeedEngine> => {
+export const createEngine = async (): Promise<GardenEngine> => {
   const tone: ToneModule = await import("tone");
   await tone.start();
 

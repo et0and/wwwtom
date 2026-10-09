@@ -5,7 +5,7 @@ import { Button } from "@tom/ui/button";
 import { colors } from "@tom/ui/colors.stylex";
 import { monoFont } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
-import { createEngine, type SeedEngine } from "./engine";
+import { createEngine, type GardenEngine } from "./engine";
 import { GENERATORS } from "./generators";
 import { randomSeed } from "./rng";
 import type { Generator } from "./types";
@@ -78,13 +78,13 @@ const styles = stylex.create({
   meta: { display: "flex", flexDirection: "column", gap: "0.25rem" },
 });
 
-export interface SeedPlayerProps {
+export interface GardenPlayerProps {
   generators?: readonly Generator[];
   /** Injection seam for tests; defaults to the real Tone.js engine. */
-  createEngine?: () => Promise<SeedEngine>;
+  createEngine?: () => Promise<GardenEngine>;
 }
 
-export function SeedPlayer(props: SeedPlayerProps) {
+export function GardenPlayer(props: GardenPlayerProps) {
   const generators = (): readonly Generator[] => props.generators ?? GENERATORS;
   const [seed, setSeed] = createSignal(DEFAULT_SEED);
   const [playingId, setPlayingId] = createSignal<string | null>(null);
@@ -95,12 +95,12 @@ export function SeedPlayer(props: SeedPlayerProps) {
    * effect cannot overwrite an incoming `?seed=` before it is read. */
   const [isReady, setIsReady] = createSignal(false);
 
-  let engine: SeedEngine | undefined;
-  let enginePromise: Promise<SeedEngine> | undefined;
+  let engine: GardenEngine | undefined;
+  let enginePromise: Promise<GardenEngine> | undefined;
   let frame: number | undefined;
   let smoothed = 0;
 
-  const ensureEngine = async (): Promise<SeedEngine> => {
+  const ensureEngine = async (): Promise<GardenEngine> => {
     if (engine) return engine;
     enginePromise ??= (props.createEngine ?? createEngine)();
     engine = await enginePromise;
@@ -189,9 +189,6 @@ export function SeedPlayer(props: SeedPlayerProps) {
         <Button variant="secondary" size="sm" onClick={nextSeed}>
           New seed
         </Button>
-        <Text variant="secondary" size="sm">
-          The same seed always plays the same music.
-        </Text>
       </div>
 
       <div {...stylex.attrs(styles.tiles)}>
@@ -220,9 +217,6 @@ export function SeedPlayer(props: SeedPlayerProps) {
                 <div {...stylex.attrs(styles.meta)}>
                   <Text variant="heading" as="h3">
                     {generator.title}
-                  </Text>
-                  <Text variant="secondary" size="sm">
-                    {generator.description}
                   </Text>
                 </div>
               </div>

@@ -16,10 +16,10 @@ test.describe("work", () => {
     }
   });
 
-  test("work index lists Seed first, then the master channel order", async ({ page }) => {
+  test("work index follows the master channel order", async ({ page }) => {
     await page.goto("/work");
     const titles = await page.getByRole("heading", { level: 2 }).allTextContents();
-    expect(titles).toEqual(["Seed", ...fixtureWorks.map((work) => work.title)]);
+    expect(titles).toEqual(fixtureWorks.map((work) => work.title));
   });
 
   test("a project detail page renders title and body", async ({ page }) => {

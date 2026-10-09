@@ -1,11 +1,11 @@
 import { afterEach, describe, expect, it, vi, type Mock } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import userEvent from "@testing-library/user-event";
-import type { SeedEngine } from "../engine";
-import { SeedPlayer } from "../SeedPlayer";
+import type { GardenEngine } from "../engine";
+import { GardenPlayer } from "../GardenPlayer";
 
 interface FakeEngine {
-  engine: SeedEngine;
+  engine: GardenEngine;
   play: Mock;
   stop: Mock;
 }
@@ -13,7 +13,7 @@ interface FakeEngine {
 const createFakeEngine = (): FakeEngine => {
   const play = vi.fn();
   const stop = vi.fn();
-  const engine: SeedEngine = {
+  const engine: GardenEngine = {
     play,
     stop,
     getLevel: () => 0,
@@ -23,9 +23,9 @@ const createFakeEngine = (): FakeEngine => {
 };
 
 const renderPlayer = (fake: FakeEngine) =>
-  render(() => <SeedPlayer createEngine={() => Promise.resolve(fake.engine)} />);
+  render(() => <GardenPlayer createEngine={() => Promise.resolve(fake.engine)} />);
 
-describe("SeedPlayer", () => {
+describe("GardenPlayer", () => {
   afterEach(() => {
     window.history.replaceState(null, "", "/");
   });
@@ -33,6 +33,7 @@ describe("SeedPlayer", () => {
   it("lists every piece as a tile", () => {
     renderPlayer(createFakeEngine());
     expect(screen.getByText("Drift")).toBeTruthy();
+    expect(screen.getByText("Halo")).toBeTruthy();
     expect(screen.getByText("After Rain")).toBeTruthy();
     expect(screen.getByText("Canon")).toBeTruthy();
   });
@@ -76,7 +77,7 @@ describe("SeedPlayer", () => {
   });
 
   it("reads the seed from the URL", async () => {
-    window.history.replaceState(null, "", "/work/generative?seed=planet");
+    window.history.replaceState(null, "", "/work/wwwork/garden?seed=planet");
     renderPlayer(createFakeEngine());
     const input = screen.getByLabelText("Seed") as HTMLInputElement;
     await waitFor(() => expect(input.value).toBe("planet"));

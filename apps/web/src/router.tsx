@@ -17,7 +17,7 @@ import PostPage from "~/routes/posts/[slug]";
 import PostsHome from "~/routes/posts/index";
 import WorkPage from "~/routes/work/[slug]";
 import WorkHome from "~/routes/work/index";
-import Seed from "~/routes/work/seed";
+import Garden from "~/routes/work/wwwork/garden";
 import Kawara from "~/routes/work/wwwork/kawara";
 import Hold from "~/routes/work/wwwork/hold";
 import Worktable from "~/routes/worktable";
@@ -76,7 +76,6 @@ export const Router = createRouter({
           .prefetchQuery({ queryKey: ["works"], queryFn: () => fetchWorks() })
           .catch(ignoredPrefetchError),
     },
-    { path: "/work/seed", component: Seed },
     {
       path: "/work/:slug",
       component: WorkPage,
@@ -91,6 +90,7 @@ export const Router = createRouter({
           .catch(ignoredPrefetchError);
       },
     },
+    { path: "/work/wwwork/garden", component: Garden },
     { path: "/work/wwwork/hold", component: Hold },
     { path: "/work/wwwork/kawara", component: Kawara },
     { path: "/worktable", component: Worktable },
