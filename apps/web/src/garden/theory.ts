@@ -21,11 +21,20 @@ export const NOTE_NAMES = [
 export const SCALES = {
   aeolian: [0, 2, 3, 5, 7, 8, 10],
   dorian: [0, 2, 3, 5, 7, 9, 10],
+  phrygian: [0, 1, 3, 5, 7, 8, 10],
+  locrian: [0, 1, 3, 5, 6, 8, 10],
   ionian: [0, 2, 4, 5, 7, 9, 11],
   lydian: [0, 2, 4, 6, 7, 9, 11],
   mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  "harmonic minor": [0, 2, 3, 5, 7, 8, 11],
+  "melodic minor": [0, 2, 3, 5, 7, 9, 11],
+  "hungarian minor": [0, 2, 3, 6, 7, 8, 11],
   "major pentatonic": [0, 2, 4, 7, 9],
   "minor pentatonic": [0, 3, 5, 7, 10],
+  blues: [0, 3, 5, 6, 7, 10],
+  hirajoshi: [0, 2, 3, 7, 8],
+  insen: [0, 1, 5, 7, 10],
+  "whole tone": [0, 2, 4, 6, 8, 10],
 } as const;
 
 export type ScaleName = keyof typeof SCALES;
@@ -38,6 +47,11 @@ export const CHORD_QUALITIES = {
   "six nine": [0, 4, 7, 9, 14],
   "major seventh": [0, 4, 7, 11],
   "minor seventh": [0, 3, 7, 10],
+  "dominant seventh": [0, 4, 7, 10],
+  "minor major seventh": [0, 3, 7, 11],
+  "half diminished": [0, 3, 6, 10],
+  "diminished seventh": [0, 3, 6, 9],
+  quartal: [0, 5, 10, 15],
   sus2: [0, 2, 7, 12],
   sus4: [0, 5, 7, 12],
 } as const;
