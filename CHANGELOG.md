@@ -1,3 +1,10 @@
+## [4.1.2](https://github.com/et0and/wwwtom/compare/v4.1.1...v4.1.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* **workflows:** set up Node and enable husky for the agent jobs ([3026d5e](https://github.com/et0and/wwwtom/commit/3026d5eab091fb250d0fbb9d1cb675745e4826a8))
+
 ## [4.1.1](https://github.com/et0and/wwwtom/compare/v4.1.0...v4.1.1) (2026-10-10)
 
 
