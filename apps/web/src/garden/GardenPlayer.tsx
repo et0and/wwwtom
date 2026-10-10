@@ -106,6 +106,8 @@ export function GardenPlayer(props: GardenPlayerProps) {
   let frame: number | undefined;
   let smoothed: number[] = zeroLevels();
   let lastMatrixAt = 0;
+  /** Last started piece, so lock-screen Play resumes after Pause clears `playingId`. */
+  let lastPlayed: Generator | undefined;
 
   const ensureEngine = async (): Promise<GardenEngine> => {
     if (engine) return engine;
@@ -145,7 +147,9 @@ export function GardenPlayer(props: GardenPlayerProps) {
     setIsReady(true);
     setMediaSessionControls({
       onPlay: () => {
-        const current = generators().find((generator) => generator.id === playingId());
+        if (playingId() !== null) return;
+        const current =
+          generators().find((generator) => generator.id === lastPlayed?.id) ?? lastPlayed;
         if (current !== undefined) void toggle(current);
       },
       onPause: () => {
@@ -198,6 +202,7 @@ export function GardenPlayer(props: GardenPlayerProps) {
       const active = await ensureEngine();
       active.play(generator, seed());
       setPlayingId(generator.id);
+      lastPlayed = generator;
       setNowPlaying(generator);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Audio could not start");

@@ -48,7 +48,7 @@ export const prComments = workflow("pr-comments", {
           uses: actionPins.opencode,
           env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY") },
           with: {
-            model: "deepseek/deepseek-v4-flash-0731",
+            model: "opencode-go/muse-spark-1.3-contributor",
             prompt: [
               "Respond to this comment on PR #${{ steps.pr.outputs.pr_number }}.",
               "",
