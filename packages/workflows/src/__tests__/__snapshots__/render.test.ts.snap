@@ -567,6 +567,7 @@ jobs:
             comment is missing, say so in one line and stop.
         env:
           OPENCODE_API_KEY: \${{ secrets.OPENCODE_API_KEY }}
+          HUSKY: "0"
 "
 `;
 

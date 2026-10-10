@@ -36,6 +36,8 @@ describe("GardenPlayer", () => {
     expect(screen.getByText("Halo")).toBeTruthy();
     expect(screen.getByText("After Rain")).toBeTruthy();
     expect(screen.getByText("Canon")).toBeTruthy();
+    expect(screen.getByText("Low")).toBeTruthy();
+    expect(screen.getByText("Dust")).toBeTruthy();
   });
 
   it("starts a piece on click and stops it on a second click", async () => {

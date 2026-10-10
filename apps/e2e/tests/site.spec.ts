@@ -39,7 +39,7 @@ test.describe("site chrome", () => {
     const assertNoErrors = expectNoPageErrors(page);
     await page.goto("/work/wwwork/garden");
     await expect(page.getByRole("heading", { name: "Garden", level: 1 })).toBeVisible();
-    for (const title of ["Drift", "Halo", "After Rain", "Canon"]) {
+    for (const title of ["Drift", "Halo", "After Rain", "Canon", "Low", "Dust"]) {
       await expect(page.getByRole("heading", { name: title, level: 3 })).toBeVisible();
     }
     assertNoErrors();

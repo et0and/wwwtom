@@ -82,12 +82,15 @@ export const prReview = workflow("pr-review", {
         step({
           name: "Address the triage",
           uses: actionPins.opencode,
-          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY") },
+          // The agent's `git push` runs .husky/pre-push, which runs the whole
+          // Playwright fixture suite when apps/web changes. The runner has no
+          // browsers, so the hook fails and git aborts the push with "failed to
+          // push some refs". HUSKY=0 makes the shim skip the hook; CI runs the
+          // same tests anyway.
+          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY"), HUSKY: "0" },
           with: {
             model: "opencode-go/muse-spark-1.3-contributor",
-            // The action checks out the PR head from the triggering event and
-            // pushes back with no retry, so a commit landed mid-run rejects the
-            // push as non-fast-forward. The prompt makes the agent rebase first.
+            // Rebase first, so the push fast-forwards.
             prompt: [
               "Respond to the classifier.dev review triage on this pull request.",
               "",

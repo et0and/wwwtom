@@ -9,6 +9,7 @@ import { Text } from "@tom/ui/text";
 import { createEngine, type GardenEngine } from "./engine";
 import { gardenVars } from "./garden.stylex";
 import { GENERATORS } from "./generators";
+import { clearMediaSessionControls, setMediaSessionControls, setNowPlaying } from "./media-session";
 import { GardenMatrix } from "./Matrix";
 import { randomSeed } from "./rng";
 import type { Generator } from "./types";
@@ -105,6 +106,8 @@ export function GardenPlayer(props: GardenPlayerProps) {
   let frame: number | undefined;
   let smoothed: number[] = zeroLevels();
   let lastMatrixAt = 0;
+  /** Last started piece, so lock-screen Play resumes after Pause clears `playingId`. */
+  let lastPlayed: Generator | undefined;
 
   const ensureEngine = async (): Promise<GardenEngine> => {
     if (engine) return engine;
@@ -142,9 +145,23 @@ export function GardenPlayer(props: GardenPlayerProps) {
     const urlSeed = new URLSearchParams(window.location.search).get("seed");
     setSeed(urlSeed ?? randomSeed());
     setIsReady(true);
+    setMediaSessionControls({
+      onPlay: () => {
+        if (playingId() !== null) return;
+        const current =
+          generators().find((generator) => generator.id === lastPlayed?.id) ?? lastPlayed;
+        if (current !== undefined) void toggle(current);
+      },
+      onPause: () => {
+        engine?.stop();
+        setPlayingId(null);
+        setNowPlaying(undefined);
+      },
+    });
     frame = requestAnimationFrame(readFrame);
     return () => {
       if (frame !== undefined) cancelAnimationFrame(frame);
+      clearMediaSessionControls();
       engine?.dispose();
     };
   });
@@ -176,6 +193,7 @@ export function GardenPlayer(props: GardenPlayerProps) {
     if (playingId() === generator.id) {
       engine?.stop();
       setPlayingId(null);
+      setNowPlaying(undefined);
       return;
     }
     setError(null);
@@ -184,6 +202,8 @@ export function GardenPlayer(props: GardenPlayerProps) {
       const active = await ensureEngine();
       active.play(generator, seed());
       setPlayingId(generator.id);
+      lastPlayed = generator;
+      setNowPlaying(generator);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Audio could not start");
     } finally {
