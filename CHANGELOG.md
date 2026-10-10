@@ -1,3 +1,17 @@
+## [4.1.2](https://github.com/et0and/wwwtom/compare/v4.1.1...v4.1.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* **workflows:** set up Node and enable husky for the agent jobs ([3026d5e](https://github.com/et0and/wwwtom/commit/3026d5eab091fb250d0fbb9d1cb675745e4826a8))
+
+## [4.1.1](https://github.com/et0and/wwwtom/compare/v4.1.0...v4.1.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **workflows:** use a valid opencode model id ([df1e57a](https://github.com/et0and/wwwtom/commit/df1e57a484fa8ae7ad78ad2f7560eeb550ee20d5))
+
 # [4.1.0](https://github.com/et0and/wwwtom/compare/v4.0.2...v4.1.0) (2026-10-09)
 
 

@@ -27,6 +27,8 @@ jobs:
         with:
           allowed-users: ""
           require-label: "true"
+      - if: steps.oc.outputs.triggered == 'true'
+        uses: ./.github/actions/setup
       - name: Get PR info
         id: pr
         if: steps.oc.outputs.triggered == 'true'
@@ -58,6 +60,7 @@ jobs:
             - Only modify files relevant to the request
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          HUSKY: "true"
       - name: Reply with summary
         if: always() && steps.oc.outputs.triggered == 'true'
         run: |-
