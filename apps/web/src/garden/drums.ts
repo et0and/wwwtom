@@ -19,9 +19,13 @@ export interface DrumKit {
 export interface DrumKitOptions {
   bits?: number;
   distortion?: number;
+  kickType?: "sine" | "triangle" | "square" | "sawtooth";
+  kickNote?: string;
   kickDecay?: number;
+  snareNoise?: "white" | "pink" | "brown";
   snareFrequency?: number;
   hatFrequency?: number;
+  hatDecay?: number;
   hitFrequency?: number;
 }
 
@@ -50,7 +54,7 @@ export const createDrumKit = (
   const kick = new tone.MembraneSynth({
     pitchDecay: 0.02,
     octaves: 3,
-    oscillator: { type: "square" },
+    oscillator: { type: options.kickType ?? "square" },
     envelope: { attack: 0.001, decay: options.kickDecay ?? 0.26, sustain: 0, release: 0.04 },
   }).connect(drive);
   kick.volume.value = -2;
@@ -61,7 +65,7 @@ export const createDrumKit = (
     Q: 1.2,
   }).connect(drive);
   const snare = new tone.NoiseSynth({
-    noise: { type: "white" },
+    noise: { type: options.snareNoise ?? "white" },
     envelope: { attack: 0.001, decay: 0.12, sustain: 0 },
   }).connect(snareFilter);
   snare.volume.value = -6;
@@ -72,7 +76,7 @@ export const createDrumKit = (
   }).connect(drive);
   const hat = new tone.NoiseSynth({
     noise: { type: "white" },
-    envelope: { attack: 0.001, decay: 0.03, sustain: 0 },
+    envelope: { attack: 0.001, decay: options.hatDecay ?? 0.03, sustain: 0 },
   }).connect(hatFilter);
   hat.volume.value = -14;
 
@@ -87,8 +91,10 @@ export const createDrumKit = (
   }).connect(hitFilter);
   hit.volume.value = -10;
 
+  const kickNote = options.kickNote ?? "C1";
+
   return {
-    kick: (time, velocity = 0.9) => kick.triggerAttackRelease("C1", "16n", time, velocity),
+    kick: (time, velocity = 0.9) => kick.triggerAttackRelease(kickNote, "16n", time, velocity),
     snare: (time, velocity = 0.6) => snare.triggerAttackRelease("16n", time, velocity),
     hat: (time, velocity = 0.3) => hat.triggerAttackRelease("32n", time, velocity),
     hit: (time, velocity = 0.4) => hit.triggerAttackRelease("32n", time, velocity),
