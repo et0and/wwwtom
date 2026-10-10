@@ -24,6 +24,10 @@ export interface PianoVoiceOptions {
   pan?: number;
   detune?: number;
   volume?: number;
+  filterFrequency?: number;
+  bodyDecay?: number;
+  bodyRelease?: number;
+  shimmerVolume?: number;
 }
 
 export const createPianoVoice = (
@@ -35,13 +39,20 @@ export const createPianoVoice = (
   const output = new tone.PanVol({ pan: options.pan ?? 0, volume: options.volume ?? -12 }).connect(
     destination,
   );
-  const filter = new tone.Filter({ frequency: 4200, type: "lowpass", rolloff: -12 }).connect(
-    output,
-  );
+  const filter = new tone.Filter({
+    frequency: options.filterFrequency ?? 4200,
+    type: "lowpass",
+    rolloff: -12,
+  }).connect(output);
 
   const body = new tone.PolySynth(tone.Synth, {
     oscillator: { type: "custom", partials: PIANO_PARTIALS },
-    envelope: { attack: 0.003, decay: 2.6, sustain: 0.02, release: 2.4 },
+    envelope: {
+      attack: 0.003,
+      decay: options.bodyDecay ?? 2.6,
+      sustain: 0.02,
+      release: options.bodyRelease ?? 2.4,
+    },
     detune,
   }).connect(filter);
   body.maxPolyphony = 10;
@@ -52,7 +63,7 @@ export const createPianoVoice = (
     detune: detune + 6,
   }).connect(filter);
   shimmer.maxPolyphony = 10;
-  shimmer.volume.value = -14;
+  shimmer.volume.value = options.shimmerVolume ?? -14;
 
   const hammerFilter = new tone.Filter({ frequency: 3200, type: "bandpass", Q: 0.8 }).connect(
     output,
@@ -84,11 +95,18 @@ export const createPianoVoice = (
   };
 };
 
+export type BellOscillator = "sine" | "triangle" | "square" | "sawtooth";
+
 export interface BellVoiceOptions {
   pan?: number;
   volume?: number;
   harmonicity?: number;
   modulationIndex?: number;
+  carrierType?: BellOscillator;
+  modulationType?: BellOscillator;
+  filterFrequency?: number;
+  decay?: number;
+  release?: number;
 }
 
 export const createBellVoice = (
@@ -99,15 +117,22 @@ export const createBellVoice = (
   const output = new tone.PanVol({ pan: options.pan ?? 0, volume: options.volume ?? -16 }).connect(
     destination,
   );
-  const filter = new tone.Filter({ frequency: 6000, type: "lowpass", rolloff: -12 }).connect(
-    output,
-  );
+  const filter = new tone.Filter({
+    frequency: options.filterFrequency ?? 6000,
+    type: "lowpass",
+    rolloff: -12,
+  }).connect(output);
   const bell = new tone.PolySynth(tone.FMSynth, {
     harmonicity: options.harmonicity ?? 2.01,
     modulationIndex: options.modulationIndex ?? 9,
-    oscillator: { type: "sine" },
-    envelope: { attack: 0.002, decay: 3.5, sustain: 0, release: 3 },
-    modulation: { type: "sine" },
+    oscillator: { type: options.carrierType ?? "sine" },
+    envelope: {
+      attack: 0.002,
+      decay: options.decay ?? 3.5,
+      sustain: 0,
+      release: options.release ?? 3,
+    },
+    modulation: { type: options.modulationType ?? "sine" },
     modulationEnvelope: { attack: 0.002, decay: 0.6, sustain: 0, release: 0.6 },
   }).connect(filter);
   bell.maxPolyphony = 8;

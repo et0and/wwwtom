@@ -1,3 +1,4 @@
+import type { Rng } from "./rng";
 import type { ToneModule } from "./types";
 
 /**
@@ -15,37 +16,71 @@ export interface DrumKit {
   dispose(): void;
 }
 
+export interface DrumKitOptions {
+  bits?: number;
+  distortion?: number;
+  kickDecay?: number;
+  snareFrequency?: number;
+  hatFrequency?: number;
+  hitFrequency?: number;
+}
+
+/**
+ * A `steps`-long grid of hits. `density` is the chance a step fires; the first
+ * step always fires so the loop keeps a downbeat.
+ */
+export const createStepPattern = (rng: Rng, steps: number, density: number): boolean[] => {
+  const pattern = Array.from({ length: steps }, () => rng.chance(density));
+  pattern[0] = true;
+  return pattern;
+};
+
 export const createDrumKit = (
   tone: ToneModule,
   destination: import("tone").ToneAudioNode,
+  options: DrumKitOptions = {},
 ): DrumKit => {
   const output = new tone.Gain(0.9).connect(destination);
-  const crusher = new tone.BitCrusher({ bits: 5 }).connect(output);
-  const drive = new tone.Distortion({ distortion: 0.9, oversample: "2x" }).connect(crusher);
+  const crusher = new tone.BitCrusher({ bits: options.bits ?? 5 }).connect(output);
+  const drive = new tone.Distortion({
+    distortion: options.distortion ?? 0.9,
+    oversample: "2x",
+  }).connect(crusher);
 
   const kick = new tone.MembraneSynth({
     pitchDecay: 0.02,
     octaves: 3,
     oscillator: { type: "square" },
-    envelope: { attack: 0.001, decay: 0.26, sustain: 0, release: 0.04 },
+    envelope: { attack: 0.001, decay: options.kickDecay ?? 0.26, sustain: 0, release: 0.04 },
   }).connect(drive);
   kick.volume.value = -2;
 
-  const snareFilter = new tone.Filter({ frequency: 1800, type: "bandpass", Q: 1.2 }).connect(drive);
+  const snareFilter = new tone.Filter({
+    frequency: options.snareFrequency ?? 1800,
+    type: "bandpass",
+    Q: 1.2,
+  }).connect(drive);
   const snare = new tone.NoiseSynth({
     noise: { type: "white" },
     envelope: { attack: 0.001, decay: 0.12, sustain: 0 },
   }).connect(snareFilter);
   snare.volume.value = -6;
 
-  const hatFilter = new tone.Filter({ frequency: 8000, type: "highpass" }).connect(drive);
+  const hatFilter = new tone.Filter({
+    frequency: options.hatFrequency ?? 8000,
+    type: "highpass",
+  }).connect(drive);
   const hat = new tone.NoiseSynth({
     noise: { type: "white" },
     envelope: { attack: 0.001, decay: 0.03, sustain: 0 },
   }).connect(hatFilter);
   hat.volume.value = -14;
 
-  const hitFilter = new tone.Filter({ frequency: 2600, type: "bandpass", Q: 14 }).connect(drive);
+  const hitFilter = new tone.Filter({
+    frequency: options.hitFrequency ?? 2600,
+    type: "bandpass",
+    Q: 14,
+  }).connect(drive);
   const hit = new tone.NoiseSynth({
     noise: { type: "white" },
     envelope: { attack: 0.0005, decay: 0.06, sustain: 0 },
