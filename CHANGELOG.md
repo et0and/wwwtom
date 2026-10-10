@@ -1,3 +1,21 @@
+# [4.2.0](https://github.com/et0and/wwwtom/compare/v4.1.2...v4.2.0) (2026-10-10)
+
+
+### Bug Fixes
+
+* **web,workflows:** resume Garden from lock-screen Play, restore valid opencode model ([9de0f0e](https://github.com/et0and/wwwtom/commit/9de0f0ea3b46147098628c51889e069440a1bb05))
+* **web:** drop the Garden media bridge for background playback ([0adc025](https://github.com/et0and/wwwtom/commit/0adc025b4c9e817a5f5d64c12c5a0d08dad9eea0))
+* **web:** release the Garden audio bridge cleanly ([c013368](https://github.com/et0and/wwwtom/commit/c013368d5d6a526a1a405665469d75cb61862732))
+* **workflows:** do not fail the check when the review agent cannot push ([95f0346](https://github.com/et0and/wwwtom/commit/95f034699dd1bdb40709302ef67a047727e02d7a))
+* **workflows:** skip the pre-push hook when the review agent pushes ([cc5713e](https://github.com/et0and/wwwtom/commit/cc5713e02d86d615ed4c26e6ec732da6bacc2595))
+
+
+### Features
+
+* **web:** add Low and Dust beat pieces to Garden ([ca2721f](https://github.com/et0and/wwwtom/commit/ca2721f9e072a3985a2bc3c8f3cff648176f70d8))
+* **web:** keep Garden audio playing in the iOS background ([13a8ddc](https://github.com/et0and/wwwtom/commit/13a8ddcf42fccbc40c3c2b7bbbe0801f0427d290))
+* **web:** make Low and Dust raw noise with clipped beats ([f1d799f](https://github.com/et0and/wwwtom/commit/f1d799f08bac1a8d39f2bba7b958f5b7d20dfd3b))
+
 ## [4.1.2](https://github.com/et0and/wwwtom/compare/v4.1.1...v4.1.2) (2026-10-10)
 
 
