@@ -3,4 +3,7 @@
 
 interface CloudflareEnv {
   ADAPTER_URL?: string;
+  AXIOM_TOKEN?: string;
+  OTEL_ENDPOINT?: string;
+  LOG_LEVEL?: string;
 }
