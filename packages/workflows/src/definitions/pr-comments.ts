@@ -1,5 +1,5 @@
 import { step, workflow } from "../builders";
-import { actionPins, checkout } from "../catalog/actions";
+import { actionPins, checkout, setupStep } from "../catalog/actions";
 import { secret } from "../catalog/secrets";
 
 /**
@@ -31,6 +31,10 @@ export const prComments = workflow("pr-comments", {
           with: { "allowed-users": "", "require-label": "true" },
         }),
         step({
+          ...setupStep(),
+          if: "steps.oc.outputs.triggered == 'true'",
+        }),
+        step({
           name: "Get PR info",
           id: "pr",
           if: "steps.oc.outputs.triggered == 'true'",
@@ -46,7 +50,7 @@ export const prComments = workflow("pr-comments", {
           name: "Run opencode with thread context",
           if: "steps.oc.outputs.triggered == 'true'",
           uses: actionPins.opencode,
-          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY") },
+          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY"), HUSKY: "true" },
           with: {
             model: "opencode-go/muse-spark-1.3-contributor",
             prompt: [
