@@ -31,7 +31,7 @@ export interface DrumKitOptions {
  */
 export const createStepPattern = (rng: Rng, steps: number, density: number): boolean[] => {
   const pattern = Array.from({ length: steps }, () => rng.chance(density));
-  pattern[0] = true;
+  if (pattern.length > 0) pattern[0] = true;
   return pattern;
 };
 
