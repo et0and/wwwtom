@@ -1,3 +1,10 @@
+# [4.3.0](https://github.com/et0and/wwwtom/compare/v4.2.0...v4.3.0) (2026-10-11)
+
+
+### Features
+
+* **web:** widen Garden seed variety ([#186](https://github.com/et0and/wwwtom/issues/186)) ([484eb44](https://github.com/et0and/wwwtom/commit/484eb44a54572148e2814dd7ccdbb9903b5c65f0))
+
 # [4.2.0](https://github.com/et0and/wwwtom/compare/v4.1.2...v4.2.0) (2026-10-10)
 
 
