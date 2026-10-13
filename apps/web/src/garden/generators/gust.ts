@@ -9,6 +9,7 @@ const NOISES = ["pink", "white"] as const;
 export const gust: Generator = {
   id: "gust",
   title: "Gust",
+  cover: "https://cdn.tom.so/garden/gust.jpg",
 
   create({ tone, output, rng }) {
     const reverb = new tone.Reverb({

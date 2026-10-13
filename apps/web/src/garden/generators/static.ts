@@ -9,6 +9,7 @@ const NOISES = ["white", "pink"] as const;
 export const staticNoise: Generator = {
   id: "static",
   title: "Static",
+  cover: "https://cdn.tom.so/garden/static.jpg",
 
   create({ tone, output, rng }) {
     const crusher = new tone.BitCrusher({ bits: rng.int(2, 6) }).connect(output);
