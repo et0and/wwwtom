@@ -1,3 +1,10 @@
+# [4.4.0](https://github.com/et0and/wwwtom/compare/v4.3.0...v4.4.0) (2026-10-13)
+
+
+### Features
+
+* **web:** make Low and Dust ambient and add noise pieces ([#187](https://github.com/et0and/wwwtom/issues/187)) ([64ec67b](https://github.com/et0and/wwwtom/commit/64ec67bbfa220b56f7179ce5a853b884a53c81bb))
+
 # [4.3.0](https://github.com/et0and/wwwtom/compare/v4.2.0...v4.3.0) (2026-10-11)
 
 
