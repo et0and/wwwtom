@@ -1,3 +1,10 @@
+# [4.5.0](https://github.com/et0and/wwwtom/compare/v4.4.0...v4.5.0) (2026-10-13)
+
+
+### Features
+
+* **web:** add cover images for the new Garden pieces ([#188](https://github.com/et0and/wwwtom/issues/188)) ([f57ef67](https://github.com/et0and/wwwtom/commit/f57ef6776f9830e133f4ada87b415269856b4288))
+
 # [4.4.0](https://github.com/et0and/wwwtom/compare/v4.3.0...v4.4.0) (2026-10-13)
 
 
