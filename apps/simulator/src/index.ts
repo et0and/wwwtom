@@ -53,7 +53,7 @@ const server = createServer((req, res) => {
 
   const sendError = (cause: unknown) =>
     Effect.sync(() => {
-      console.error(`Simulator request failed: ${req.method} ${url.pathname}${url.search}`, cause);
+      console.error("Simulator request failed", req.method, `${url.pathname}${url.search}`, cause);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Simulator error" }));
     });

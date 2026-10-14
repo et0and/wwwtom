@@ -20,7 +20,11 @@ test.describe("garden", () => {
   // a tiny stand-in PNG serves it without network.
   test.beforeEach(async ({ page }) => {
     await page.route("https://cdn.tom.so/**", (route) =>
-      route.fulfill({ status: 200, contentType: "image/png", body: RED_PIXEL_PNG }),
+      route.fulfill({
+        status: 200,
+        contentType: "image/png",
+        body: Buffer.from(RED_PIXEL_PNG, "base64"),
+      }),
     );
   });
 
