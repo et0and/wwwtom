@@ -18,6 +18,10 @@ Improve existing code; avoid new abstractions.
 ## Working rules
 
 - one function unless composable/reusable
+- reach for core Effect APIs (`Crypto`, `Random`, `Option`, `Result`, `Schema.is`,
+  `Match`) before hand-rolling the same thing
+- single-use `toX` converters/wrappers are almost always slop — inline them; keep
+  one only when it enforces a contract (e.g. a wire-schema return type)
 - no unnecessary destructuring; no `else` unless needed; no `try`/`catch` — use Effect
 - no `any`; no `let` — prefer `const`; descriptive names
 - no Node-only APIs — Workers runtime; prefer web-standard/Worker-safe
@@ -28,6 +32,8 @@ Improve existing code; avoid new abstractions.
 - one file, one `Context.Service`+`Layer`
 - one file, one entrypoint+`Effect.provide`
 - one file, one API route — a domain `index.ts` only composes route plugins
+- route files are named `verb + full path`, params dropped: `get-content-feed.ts`,
+  `list-content-posts.ts`, `get-arena-channel.ts` — not `feed.ts` or `content-posts.ts`
 - `src/{domain}` not `src/{mechanism}` — e.g. `src/cms/list-posts.ts`, not
   `src/routes/cms.ts`. No `services/`, `routes/`, `integrations/` or `config/`
   dirs; shared per-domain runtime lives in `<domain>/shared.ts`
