@@ -17,7 +17,7 @@ const DEFAULT_PORT = 8789;
 const PORT = (() => {
   const raw = process.env.SIMULATOR_PORT;
   if (raw === undefined) return DEFAULT_PORT;
-  const decoded = Schema.decodeUnknownOption(PortNumber)(raw);
+  const decoded = Schema.decodeOption(PortNumber)(raw);
   if (decoded._tag === "None") {
     throw new Error(`SIMULATOR_PORT must be a port number between 1 and 65535, got "${raw}"`);
   }
@@ -53,7 +53,7 @@ const server = createServer((req, res) => {
 
   const sendError = (cause: unknown) =>
     Effect.sync(() => {
-      console.error("Simulator request failed", cause);
+      console.error(`Simulator request failed: ${req.method} ${url.pathname}${url.search}`, cause);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Simulator error" }));
     });

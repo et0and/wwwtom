@@ -82,8 +82,9 @@ Runtime-mutated in-memory stores live in the simulator plugins
 a future sign-in) behave like a real database within a run.
 
 To add a fixture store: drop the JSON in `apps/simulator/fixtures/`, add an
-Elysia plugin that serves the real service's wire shape (follow `arena.ts` /
-`arena.ts`), mount it in `apps/simulator/src/index.ts`, then type the new
+Elysia plugin that serves the real service's wire shape (follow a plugin in
+`apps/simulator/src/arena` or `apps/simulator/src/cms`), mount it in
+`apps/simulator/src/index.ts`, then type the new
 fixture in `apps/e2e/src/fixture-stores.ts` and write specs against it.
 
 ## Fixture stores vs Effect Layers (for testing)

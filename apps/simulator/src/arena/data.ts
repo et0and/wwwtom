@@ -1,16 +1,41 @@
+import { Schema } from "effect";
+import {
+  BlockSchema,
+  ChannelSchema,
+  CommentSchema,
+  ConnectionSchema,
+  UserSchema,
+} from "@tom/schemas/arena";
 import arenaFixtures from "../../fixtures/arena.json" with { type: "json" };
 import arenaContent from "../../fixtures/arena-content.json" with { type: "json" };
 
-type ArenaFixture = typeof arenaFixtures;
+/**
+ * Fixture data decodes through the SDK-backed arena schemas at boot: a
+ * malformed arena.json fails loudly here instead of silently serving wire
+ * shapes no client can parse. The schemas keep the SDK as the source of
+ * truth for each shape, so the decode is a guard, not a transform.
+ */
+const decodeChannel = Schema.decodeUnknownSync(ChannelSchema);
+const decodeUser = Schema.decodeUnknownSync(UserSchema);
+const decodeBlock = Schema.decodeUnknownSync(BlockSchema);
+const decodeComment = Schema.decodeUnknownSync(CommentSchema);
+const decodeConnection = Schema.decodeUnknownSync(ConnectionSchema);
 
-export const channel = arenaFixtures.channel as ArenaFixture["channel"];
-const worktable = arenaFixtures.worktable as ArenaFixture["worktable"];
-export const user = arenaFixtures.user as ArenaFixture["user"];
-export const textBlock = arenaFixtures.textBlock as ArenaFixture["textBlock"];
-export const imageBlock = arenaFixtures.imageBlock as ArenaFixture["imageBlock"];
-const textConnection = arenaFixtures.connections.text as ArenaFixture["connections"]["text"];
-const imageConnection = arenaFixtures.connections.image as ArenaFixture["connections"]["image"];
-export const comment = arenaFixtures.comment as ArenaFixture["comment"];
+type ArenaBlock = Schema.Schema.Type<typeof BlockSchema>;
+type ArenaConnection = Schema.Schema.Type<typeof ConnectionSchema>;
+
+export const channel = decodeChannel(arenaFixtures.channel);
+const worktableChannel = decodeChannel(arenaFixtures.worktable.channel);
+export const user = decodeUser(arenaFixtures.user);
+export const textBlock = decodeBlock(arenaFixtures.textBlock);
+export const imageBlock = decodeBlock(arenaFixtures.imageBlock);
+const worktableTextBlock = decodeBlock(arenaFixtures.worktable.textBlock);
+const worktableImageBlock = decodeBlock(arenaFixtures.worktable.imageBlock);
+const textConnection = decodeConnection(arenaFixtures.connections.text);
+const imageConnection = decodeConnection(arenaFixtures.connections.image);
+const worktableTextConnection = decodeConnection(arenaFixtures.worktable.connections.text);
+const worktableImageConnection = decodeConnection(arenaFixtures.worktable.connections.image);
+export const comment = decodeComment(arenaFixtures.comment);
 
 /** Master channels and their entries (fixtures/arena-content.json). */
 const postsChannel = arenaContent.postsChannel;
@@ -37,12 +62,12 @@ export const paginationMeta = (total: number, per: number, page: number) => {
   };
 };
 
-const blockWithConnection = (
-  block: ArenaFixture["textBlock"] | ArenaFixture["imageBlock"],
-  connection: ArenaFixture["connections"]["text"] | ArenaFixture["connections"]["image"],
-) => ({ ...block, connection });
+const blockWithConnection = (block: ArenaBlock, connection: ArenaConnection) => ({
+  ...block,
+  connection,
+});
 
-export const channels = [channel, worktable.channel, ...contentChannels];
+export const channels = [channel, worktableChannel, ...contentChannels];
 
 export const matchesChannelId = (id: string) =>
   channels.some((c) => id === c.slug || String(id) === String(c.id));
@@ -62,10 +87,10 @@ export const entryBlocks = (id: string): ReadonlyArray<unknown> | undefined =>
   contentEntries.find((entry) => isId(id, entry.channel))?.blocks;
 
 export const contentsFor = (id: string) => {
-  if (isId(id, worktable.channel)) {
+  if (isId(id, worktableChannel)) {
     return [
-      blockWithConnection(worktable.textBlock, worktable.connections.text),
-      blockWithConnection(worktable.imageBlock, worktable.connections.image),
+      blockWithConnection(worktableTextBlock, worktableTextConnection),
+      blockWithConnection(worktableImageBlock, worktableImageConnection),
     ];
   }
   if (matchesChannelId(id)) {
@@ -75,6 +100,14 @@ export const contentsFor = (id: string) => {
     ];
   }
   return undefined;
+};
+
+/** The legacy shape serves the connected-by user id; the fixture always has one. */
+const connectedById = (connection: ArenaConnection): number => {
+  if (connection.connected_by === null) {
+    throw new Error("Fixture connection has no connected_by user");
+  }
+  return connection.connected_by.id;
 };
 
 // Legacy Are.na wire shape (the @tom/arena client raw-fetches these endpoints).
@@ -89,13 +122,13 @@ export const legacyChannelDetails = {
       ...textBlock,
       connected_at: textConnection.connected_at,
       position: textConnection.position,
-      connected_by_user_id: textConnection.connected_by.id,
+      connected_by_user_id: connectedById(textConnection),
     },
     {
       ...imageBlock,
       connected_at: imageConnection.connected_at,
       position: imageConnection.position,
-      connected_by_user_id: imageConnection.connected_by.id,
+      connected_by_user_id: connectedById(imageConnection),
     },
   ],
 };
