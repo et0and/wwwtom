@@ -1,5 +1,6 @@
 import { Schema } from "effect";
 import { CmsPostSchema, CmsWorkSchema } from "@tom/schemas/cms";
+import { GuestbookEntrySchema } from "@tom/schemas/guestbook";
 import { ArenaChannelResourceSchema, ArenaContentBlockSchema } from "@tom/schemas/arena-content";
 import type { GuestbookEntryJson } from "@tom/types/db";
 import cmsPosts from "../../simulator/fixtures/cms-posts.json" with { type: "json" };
@@ -25,7 +26,10 @@ import arenaContent from "../../simulator/fixtures/arena-content.json" with { ty
 export const fixtureCmsPosts = Schema.decodeUnknownSync(Schema.Array(CmsPostSchema))(cmsPosts);
 export const fixtureCmsWorks = Schema.decodeUnknownSync(Schema.Array(CmsWorkSchema))(cmsWorks);
 
-export const fixtureGuestbookEntries: ReadonlyArray<GuestbookEntryJson> = guestbookEntries;
+/** Decoded through the shared schema, typed against the database row shape. */
+export const fixtureGuestbookEntries: ReadonlyArray<GuestbookEntryJson> = Schema.decodeSync(
+  Schema.Array(GuestbookEntrySchema),
+)(guestbookEntries);
 
 const decodeEntries = (
   entries: ReadonlyArray<{ channel: unknown; blocks: ReadonlyArray<unknown> }>,

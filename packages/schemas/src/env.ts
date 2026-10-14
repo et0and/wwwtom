@@ -28,7 +28,7 @@ export const parseCommaSeparated = (value: string | undefined): readonly string[
  */
 export const PortNumber = Schema.Trim.pipe(
   Schema.check(Schema.isMinLength(1)),
-  Schema.decodeTo(Schema.Number, {
+  Schema.decodeTo(Schema.Finite, {
     decode: SchemaGetter.transform(Number),
     encode: SchemaGetter.transform(String),
   }),
