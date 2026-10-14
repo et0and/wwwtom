@@ -32,7 +32,7 @@ Improve existing code; avoid new abstractions.
   `src/routes/cms.ts`. No `services/`, `routes/`, `integrations/` or `config/`
   dirs; shared per-domain runtime lives in `<domain>/shared.ts`
 - domains by area: backend `apps/api|adapter|simulator/src/{cms,og,auth,arena,guestbook,health,queue,github,image}`;
-  web/sophie/editor `src/{content,chrome,data,posts,media,editor,brand,design}`
+  web/sophie/editor `src/{content,chrome,data,posts,media,garden,editor,brand,design}`
 - exceptions: framework-mandated dirs (`apps/web|sophie/src/routes`, `app.tsx`,
   `middleware.ts`, entry files) and `packages/ui/src/components/*`
 
