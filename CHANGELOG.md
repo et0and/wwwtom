@@ -1,3 +1,11 @@
+## [4.5.1](https://github.com/et0and/wwwtom/compare/v4.5.0...v4.5.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **e2e:** decode fixture stores at boot and add garden e2e coverage ([94c2aaa](https://github.com/et0and/wwwtom/commit/94c2aaa9ff890d009588fcd5489ad7d3c57bd37e))
+* **e2e:** silence CodeQL format-string flag and serve real PNG bytes in garden spec ([24c1fe0](https://github.com/et0and/wwwtom/commit/24c1fe0ed83707ee6356289baada8739c309b893))
+
 # [4.5.0](https://github.com/et0and/wwwtom/compare/v4.4.0...v4.5.0) (2026-10-13)
 
 
