@@ -5,8 +5,10 @@ import type { JSX } from "@solidjs/web";
 import type { ArenaContentBlock, ArenaImage } from "@tom/schemas/arena-content";
 import { colors } from "@tom/ui/colors.stylex";
 import { layout, cursor, textAlign, spacing, radius } from "@tom/ui/primitives.stylex";
+import { textColors } from "@tom/ui/tokens.stylex";
 import { Text } from "@tom/ui/text";
 import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/content/sanitize";
+import { BlockCommentRail } from "~/content/BlockCommentRail";
 import { ChannelEmbed } from "~/content/ChannelEmbed";
 import {
   arenaImageAlt,
@@ -63,6 +65,25 @@ const styles = stylex.create({
     overflow: "hidden",
     backgroundColor: colors["--color-black"],
   },
+  blockWrapper: { position: "relative" },
+  commentTrigger: {
+    position: "absolute",
+    top: "0.25rem",
+    right: "0",
+    display: "inline-flex",
+    alignItems: "center",
+    borderRadius: radius.full.borderRadius,
+    borderWidth: "1px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-line"],
+    backgroundColor: colors["--color-tomui-canvas"],
+    color: textColors["--text-color-tomui-default"],
+    cursor: "pointer",
+    fontSize: "0.75rem",
+    lineHeight: "1.5",
+    paddingInline: "0.5rem",
+    paddingBlock: "0.125rem",
+  },
 });
 
 /**
@@ -98,6 +119,13 @@ const asBlock = <T extends ArenaContentBlock["type"]>(
   type: T,
 ): Extract<ArenaContentBlock, { type: T }> | null =>
   block.type === type ? (block as Extract<ArenaContentBlock, { type: T }>) : null;
+
+/**
+ * are.na does not allow comments on a channel or a pending block, so those
+ * carry no `comment_count` and get no affordance.
+ */
+const asCommentable = (block: ArenaContentBlock) =>
+  block.type === "Channel" || block.type === "PendingBlock" ? null : block;
 
 function TextBlock(props: { block: Extract<ArenaContentBlock, { type: "Text" }> }) {
   return (
@@ -380,11 +408,14 @@ function ChannelBlock(props: { block: Extract<ArenaContentBlock, { type: "Channe
 
 /** A post or work body: are.na blocks stacked in channel order. */
 export function ContentBlocks(props: { blocks: ReadonlyArray<ArenaContentBlock> }) {
+  const [activeBlockId, setActiveBlockId] = createSignal<number | null>(null);
   return (
     <div class="content-blocks">
       <For each={props.blocks}>
         {(block) => (
-          <div {...stylex.attrs(spacing.py4)}>
+          <div
+            class={`content-block ${stylex.attrs(spacing.py4, styles.blockWrapper).class ?? ""}`}
+          >
             <Switch>
               <Match when={asBlock(block, "Text")}>{(text) => <TextBlock block={text()} />}</Match>
               <Match when={asBlock(block, "Image")}>
@@ -401,9 +432,25 @@ export function ContentBlocks(props: { blocks: ReadonlyArray<ArenaContentBlock> 
                 {(channel) => <ChannelBlock block={channel()} />}
               </Match>
             </Switch>
+            <Show when={asCommentable(block)}>
+              {(commentable) => (
+                <button
+                  type="button"
+                  class={`block-comment-trigger ${stylex.attrs(styles.commentTrigger).class ?? ""}`}
+                  aria-label={`Comments (${commentable().comment_count})`}
+                  aria-expanded={activeBlockId() === commentable().id ? "true" : "false"}
+                  onClick={() => setActiveBlockId(commentable().id)}
+                >
+                  {commentable().comment_count}
+                </button>
+              )}
+            </Show>
           </div>
         )}
       </For>
+      <Show when={activeBlockId()}>
+        {(id) => <BlockCommentRail blockId={id()} onClose={() => setActiveBlockId(null)} />}
+      </Show>
     </div>
   );
 }
