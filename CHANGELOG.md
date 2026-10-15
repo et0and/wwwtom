@@ -1,3 +1,10 @@
+## [4.5.2](https://github.com/et0and/wwwtom/compare/v4.5.1...v4.5.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **infra:** only the adapter declares the Hyperdrive ([5bbb981](https://github.com/et0and/wwwtom/commit/5bbb981501622bc82e54a5151cd22af702b54fa1))
+
 ## [4.5.1](https://github.com/et0and/wwwtom/compare/v4.5.0...v4.5.1) (2026-10-14)
 
 
