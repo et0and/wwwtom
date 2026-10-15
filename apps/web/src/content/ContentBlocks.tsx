@@ -60,7 +60,7 @@ const styles = stylex.create({
   embedContainer: {
     position: "relative",
     width: "100%",
-    overflow: "hidden",
+    overflow: "clip",
     backgroundColor: colors["--color-black"],
   },
 });

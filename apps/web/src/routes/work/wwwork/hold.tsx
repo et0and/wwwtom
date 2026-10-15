@@ -14,9 +14,9 @@ const styles = stylex.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    height: "100vh",
+    height: "100dvh",
   },
-  holdContainer: { maxHeight: "100vh" },
+  holdContainer: { maxHeight: "100dvh" },
 });
 
 export default function Hold() {
@@ -113,13 +113,15 @@ export default function Hold() {
                     button {
                         cursor: pointer;
                     }
-                    button:hover {
-                        color: #cc0081;
+                    @media (hover: hover) and (pointer: fine) {
+                      button:hover {
+                          color: var(--web-brand);
+                      }
                     }
 					.hold-container {
 						padding: 4rem;
 						max-width: 100vw;
-                        max-height: 100vh;
+                        max-height: 100dvh;
 						box-sizing: border-box;
 					}
 				`}</style>

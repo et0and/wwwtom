@@ -23,11 +23,11 @@ export const DetailLoading = () => (
 export const DetailNotFound = (props: { kind: "post" | "work"; slug: string | undefined }) => (
   <PageLayout title="Not found" description="The page you are looking for does not exist.">
     <article>
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Not found
       </Text>
       <div>
-        <Text>
+        <Text blurIn>
           The {props.kind} "{props.slug}" does not exist.
         </Text>
       </div>
@@ -39,13 +39,13 @@ export const DetailNotFound = (props: { kind: "post" | "work"; slug: string | un
 export const DetailError = (props: { kind: "post" | "work"; message: string }) => (
   <PageLayout title="Error" description={`Something went wrong loading this ${props.kind}.`}>
     <article>
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Error
       </Text>
       <div>
         <div class="banner" role="alert">
           <Text style={bannerTitleStyles.bannerTitle}>Error loading {props.kind}</Text>
-          <Text>{props.message}</Text>
+          <Text blurIn>{props.message}</Text>
         </div>
       </div>
     </article>

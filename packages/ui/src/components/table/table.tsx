@@ -24,8 +24,8 @@ const styles = stylex.create({
   layoutFixed: { tableLayout: "fixed" },
   head: {
     position: "relative",
-    borderBottomWidth: 1,
-    borderBottomColor: colors["--color-tomui-fill"],
+    borderBlockEndWidth: 1,
+    borderBlockEndColor: colors["--color-tomui-fill"],
     padding: "0.75rem",
     fontWeight: 600,
     backgroundColor: colors["--color-tomui-base"],

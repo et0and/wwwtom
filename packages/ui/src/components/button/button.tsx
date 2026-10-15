@@ -104,7 +104,7 @@ const styles = stylex.create({
   // vars, so they deliberately share one rule.
   emphasis: {
     position: "relative",
-    overflow: "hidden",
+    overflow: "clip",
     backgroundColor: buttonEmphasisVars.bg,
     color: "#fff",
     boxShadow: "0 0 0 1px " + buttonEmphasisVars.ring,
@@ -114,30 +114,38 @@ const styles = stylex.create({
     backgroundColor: colors["--color-tomui-base"],
     color: textColors["--text-color-tomui-default"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    },
     ":disabled": disabledBase,
   },
   "secondary-destructive": {
     backgroundColor: colors["--color-tomui-base"],
     color: textColors["--text-color-tomui-danger"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":hover": { color: textColors["--text-color-tomui-danger"] },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { color: textColors["--text-color-tomui-danger"] },
+    },
     ":disabled": disabledDanger,
   },
   ghost: {
     color: textColors["--text-color-tomui-default"],
     backgroundColor: "inherit",
     boxShadow: "none",
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    },
   },
   outline: {
     backgroundColor: "transparent",
     color: textColors["--text-color-tomui-default"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":hover": {
-      color: textColors["--text-color-tomui-strong"],
-      boxShadow:
-        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 25%, transparent)",
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": {
+        color: textColors["--text-color-tomui-strong"],
+        boxShadow:
+          "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 25%, transparent)",
+      },
     },
   },
 

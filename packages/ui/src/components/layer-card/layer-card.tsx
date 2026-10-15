@@ -10,7 +10,7 @@ const lineColor = colors["--color-tomui-line"];
 
 const styles = stylex.create({
   surface: {
-    overflow: "hidden",
+    overflow: "clip",
     borderRadius: radius.lg.borderRadius,
     backgroundColor: colors["--color-tomui-base"],
     boxShadow: "0 0 0 1px " + lineColor + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
@@ -19,7 +19,7 @@ const styles = stylex.create({
     display: "flex",
     width: "100%",
     flexDirection: "column",
-    overflow: "hidden",
+    overflow: "clip",
     borderRadius: radius.lg.borderRadius,
     backgroundColor: colors["--color-tomui-elevated"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-hairline"],
@@ -41,7 +41,7 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: "0.5rem",
-    overflow: "hidden",
+    overflow: "clip",
     borderRadius: radius.lg.borderRadius,
     backgroundColor: colors["--color-tomui-base"],
     padding: "1rem",

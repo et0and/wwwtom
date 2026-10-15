@@ -17,7 +17,7 @@ const styles = stylex.create({
     backgroundColor: colors["--color-tomui-recessed"],
     fontSize: "0.875rem",
   },
-  text: { marginTop: "0.5rem", fontSize: "0.875rem" },
+  text: { marginBlockStart: "0.5rem", fontSize: "0.875rem" },
   wide: { width: "24rem" },
 });
 

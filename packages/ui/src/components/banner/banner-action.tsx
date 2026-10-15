@@ -61,17 +61,21 @@ const styles = stylex.create({
     color: "inherit",
     boxShadow: "0 0 0 1px color-mix(in srgb, " + bannerAccentVars.accent + " 50%, transparent)",
     fill: bannerAccentVars.accent,
-    ":hover": {
-      color: "inherit",
-      boxShadow: "0 0 0 1px color-mix(in srgb, " + bannerAccentVars.accent + " 50%, transparent)",
-      backgroundColor: "color-mix(in srgb, " + bannerAccentVars.accent + " 10%, transparent)",
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": {
+        color: "inherit",
+        boxShadow: "0 0 0 1px color-mix(in srgb, " + bannerAccentVars.accent + " 50%, transparent)",
+        backgroundColor: "color-mix(in srgb, " + bannerAccentVars.accent + " 10%, transparent)",
+      },
     },
   },
   ghost: {
     color: "inherit",
     fill: bannerAccentVars.accent,
-    ":hover": {
-      backgroundColor: "color-mix(in srgb, " + bannerAccentVars.accent + " 10%, transparent)",
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": {
+        backgroundColor: "color-mix(in srgb, " + bannerAccentVars.accent + " 10%, transparent)",
+      },
     },
   },
   secondaryMuted: {
@@ -79,20 +83,24 @@ const styles = stylex.create({
     boxShadow:
       "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
     fill: textColors["--text-color-tomui-subtle"],
-    ":hover": {
-      color: "inherit",
-      boxShadow:
-        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
-      backgroundColor:
-        "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": {
+        color: "inherit",
+        boxShadow:
+          "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
+        backgroundColor:
+          "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+      },
     },
   },
   ghostMuted: {
     color: "inherit",
     fill: textColors["--text-color-tomui-subtle"],
-    ":hover": {
-      backgroundColor:
-        "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": {
+        backgroundColor:
+          "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+      },
     },
   },
 });

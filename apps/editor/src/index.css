@@ -12,25 +12,25 @@
 @layer base {
   body {
     background-color: #fff;
-    color: oklch(24% 0 0);
+    color: oklch(24% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     body {
-      background-color: oklch(15% 0 0);
-      color: oklch(96.5% 0 0);
+      background-color: oklch(15% 0 none);
+      color: oklch(96.5% 0 none);
     }
   }
 }
 
 @layer components {
   .editor-shell {
-    margin-left: auto;
-    margin-right: auto;
+    margin-inline-start: auto;
+    margin-inline-end: auto;
     max-width: 48rem;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-bottom: 2rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+    padding-block-end: 2rem;
     font-family: var(--font-sans);
   }
 
@@ -38,18 +38,18 @@
     display: grid;
     justify-items: center;
     gap: 1.5rem;
-    padding-top: 4rem;
-    padding-bottom: 4rem;
+    padding-block-start: 4rem;
+    padding-block-end: 4rem;
     text-align: center;
   }
 
   .camus-logo {
-    color: oklch(24% 0 0);
+    color: oklch(24% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .camus-logo {
-      color: oklch(96.5% 0 0);
+      color: oklch(96.5% 0 none);
     }
   }
 
@@ -67,30 +67,30 @@
 
   .editor-nav {
     position: sticky;
-    top: 0;
+    inset-block-start: 0;
     z-index: 30;
-    margin-left: -1rem;
-    margin-right: -1rem;
-    margin-bottom: 1.5rem;
+    margin-inline-start: -1rem;
+    margin-inline-end: -1rem;
+    margin-block-end: 1.5rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     column-gap: 1rem;
     row-gap: 0.5rem;
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-block-end-style: solid;
+    border-block-end-width: 1px;
+    border-color: oklch(89% 0 none);
     background-color: #fff;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 1rem;
-    padding-bottom: 1rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+    padding-block-start: 1rem;
+    padding-block-end: 1rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .editor-nav {
-      border-color: oklch(32% 0 0);
-      background-color: oklch(15% 0 0);
+      border-color: oklch(32% 0 none);
+      background-color: oklch(15% 0 none);
     }
   }
 
@@ -103,7 +103,7 @@
 
   .editor-user {
     position: relative;
-    margin-left: auto;
+    margin-inline-start: auto;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -119,7 +119,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    background-color: oklch(24% 0 0);
+    background-color: oklch(24% 0 none);
     font-size: 12px;
     line-height: calc(1 / 0.75);
     font-weight: 600;
@@ -128,52 +128,52 @@
 
   @media (prefers-color-scheme: dark) {
     .avatar {
-      background-color: oklch(96.5% 0 0);
-      color: oklch(24% 0 0);
+      background-color: oklch(96.5% 0 none);
+      color: oklch(24% 0 none);
     }
   }
 
   .content-list-header {
-    top: var(--editor-nav-h, 0px);
+    inset-block-start: var(--editor-nav-h, 0px);
     position: sticky;
     z-index: 20;
-    margin-left: -1rem;
-    margin-right: -1rem;
-    margin-bottom: 1rem;
+    margin-inline-start: -1rem;
+    margin-inline-end: -1rem;
+    margin-block-end: 1rem;
     display: flex;
     align-items: center;
     justify-content: space-between;
     background-color: #fff;
-    padding-left: 1rem;
-    padding-right: 1rem;
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
+    padding-inline-start: 1rem;
+    padding-inline-end: 1rem;
+    padding-block-start: 0.5rem;
+    padding-block-end: 0.5rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .content-list-header {
-      background-color: oklch(15% 0 0);
+      background-color: oklch(15% 0 none);
     }
   }
 
   .content-rows {
     border-radius: 0.5rem;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
   }
 
   /* Divider between rows. `:where()` keeps this selector at zero
      specificity, matching Tailwind's own `divide-y` output. */
   :where(.content-rows > :not(:last-child)) {
-    border-bottom-style: solid;
-    border-bottom-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-block-end-style: solid;
+    border-block-end-width: 1px;
+    border-color: oklch(89% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .content-rows,
     :where(.content-rows > :not(:last-child)) {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
   }
 
@@ -193,16 +193,16 @@
     text-align: left;
   }
 
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     .row-button:hover {
-      background-color: oklch(98.75% 0 0);
+      background-color: oklch(98.75% 0 none);
     }
   }
 
   @media (prefers-color-scheme: dark) {
-    @media (hover: hover) {
+    @media (hover: hover) and (pointer: fine) {
       .row-button:hover {
-        background-color: oklch(24% 0 0);
+        background-color: oklch(24% 0 none);
       }
     }
   }
@@ -214,17 +214,17 @@
   .row-meta {
     font-size: 12px;
     line-height: calc(1 / 0.75);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .row-meta {
-      color: oklch(89% 0 0);
+      color: oklch(89% 0 none);
     }
   }
 
   .editor-topbar {
-    margin-bottom: 1rem;
+    margin-block-end: 1rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -265,24 +265,24 @@
   @media (max-width: 1023px) {
     .editor-toolbar {
       position: sticky;
-      top: var(--editor-nav-h, 0px);
+      inset-block-start: var(--editor-nav-h, 0px);
       z-index: 10;
-      margin-left: -1rem;
-      margin-right: -1rem;
-      border-bottom-style: solid;
-      border-bottom-width: 1px;
-      border-color: oklch(89% 0 0);
+      margin-inline-start: -1rem;
+      margin-inline-end: -1rem;
+      border-block-end-style: solid;
+      border-block-end-width: 1px;
+      border-color: oklch(89% 0 none);
       background-color: #fff;
-      padding-left: 1rem;
-      padding-right: 1rem;
-      padding-top: 0.5rem;
-      padding-bottom: 0.5rem;
+      padding-inline-start: 1rem;
+      padding-inline-end: 1rem;
+      padding-block-start: 0.5rem;
+      padding-block-end: 0.5rem;
     }
 
     @media (prefers-color-scheme: dark) {
       .editor-toolbar {
-        border-color: oklch(32% 0 0);
-        background-color: oklch(15% 0 0);
+        border-color: oklch(32% 0 none);
+        background-color: oklch(15% 0 none);
       }
     }
 
@@ -300,23 +300,23 @@
     .editor-toolbar
       [data-tomui-component="Toolbar"]
       > *:not([aria-hidden="true"]):not(:first-child) {
-      border-left-width: 0;
+      border-inline-start-width: 0;
     }
   }
 
   @media (min-width: 1024px) {
     .editor-shell-wide {
       max-width: none;
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
+      padding-inline-start: 1.5rem;
+      padding-inline-end: 1.5rem;
     }
 
     .editor-shell-wide .editor-nav,
     .editor-shell-wide .content-list-header {
-      margin-left: -1.5rem;
-      margin-right: -1.5rem;
-      padding-left: 1.5rem;
-      padding-right: 1.5rem;
+      margin-inline-start: -1.5rem;
+      margin-inline-end: -1.5rem;
+      padding-inline-start: 1.5rem;
+      padding-inline-end: 1.5rem;
     }
 
     .editor-layout {
@@ -327,7 +327,7 @@
 
     .editor-sidebar {
       position: sticky;
-      top: calc(var(--editor-nav-h, 0px) + 16px);
+      inset-block-start: calc(var(--editor-nav-h, 0px) + 16px);
     }
 
     .editor-main .tiptap-editor {
@@ -365,12 +365,12 @@
     border-radius: 0.375rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     background-color: #fff;
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-    padding-top: 0.375rem;
-    padding-bottom: 0.375rem;
+    padding-inline-start: 0.5rem;
+    padding-inline-end: 0.5rem;
+    padding-block-start: 0.375rem;
+    padding-block-end: 0.375rem;
     font-size: 13px;
     line-height: calc(1 / 0.85);
     font-weight: 400;
@@ -380,8 +380,8 @@
     .field input[type="text"],
     .field input[type="datetime-local"],
     .field textarea {
-      border-color: oklch(32% 0 0);
-      background-color: oklch(24% 0 0);
+      border-color: oklch(32% 0 none);
+      background-color: oklch(24% 0 none);
     }
   }
 
@@ -406,38 +406,38 @@
 
   .tiptap-editor {
     min-height: 16rem;
-    border-bottom-right-radius: 0.5rem;
-    border-bottom-left-radius: 0.5rem;
+    border-end-end-radius: 0.5rem;
+    border-end-start-radius: 0.5rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 0.75rem;
   }
 
   .tiptap-editor:focus {
     outline-style: solid;
     outline-width: 2px;
-    outline-color: oklch(24% 0 0);
+    outline-color: oklch(24% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .tiptap-editor {
-      border-color: oklch(32% 0 0);
+      border-color: oklch(32% 0 none);
     }
 
     .tiptap-editor:focus {
-      outline-color: oklch(89% 0 0);
+      outline-color: oklch(89% 0 none);
     }
   }
 
   /* Canvas typography matches the site scale so the editor reads as the page. */
   .tiptap-editor p {
-    padding-bottom: 1rem;
+    padding-block-end: 1rem;
     letter-spacing: -0.025em;
   }
 
   .tiptap-editor h1 {
-    padding-bottom: 0.5rem;
+    padding-block-end: 0.5rem;
     font-size: 2.25rem;
     line-height: calc(2.5 / 2.25);
     font-weight: 500;
@@ -445,35 +445,35 @@
   }
 
   .tiptap-editor h2 {
-    padding-bottom: 0.5rem;
+    padding-block-end: 0.5rem;
     letter-spacing: -0.025em;
     font-size: 1.75rem;
     font-weight: 400;
   }
 
   .tiptap-editor h3 {
-    padding-bottom: 0.25rem;
+    padding-block-end: 0.25rem;
     font-size: 1.25rem;
     line-height: calc(1.75 / 1.25);
     letter-spacing: -0.025em;
   }
 
   .tiptap-editor h4 {
-    padding-bottom: 0.25rem;
+    padding-block-end: 0.25rem;
     font-size: 16px;
     line-height: 1.5;
     letter-spacing: -0.025em;
   }
 
   .tiptap-editor hr {
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-color: oklch(89% 0 0);
+    margin-block-start: 1.5rem;
+    margin-block-end: 1.5rem;
+    border-color: oklch(89% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .tiptap-editor hr {
-      border-color: oklch(32% 0 0);
+      border-color: oklch(32% 0 none);
     }
   }
 
@@ -484,12 +484,12 @@
   /* Pull quotes mirror the site scale so they read as quotes while editing. */
   .tiptap-editor blockquote,
   .preview blockquote {
-    margin-top: 2rem;
-    margin-bottom: 2rem;
-    border-left-style: solid;
-    border-left-width: 2px;
-    border-color: oklch(89% 0 0);
-    padding-left: 1.25rem;
+    margin-block-start: 2rem;
+    margin-block-end: 2rem;
+    border-inline-start-style: solid;
+    border-inline-start-width: 2px;
+    border-color: oklch(89% 0 none);
+    padding-inline-start: 1.25rem;
     font-size: 14px;
     line-height: 1.5;
     letter-spacing: -0.025em;
@@ -498,13 +498,13 @@
   @media (prefers-color-scheme: dark) {
     .tiptap-editor blockquote,
     .preview blockquote {
-      border-color: oklch(32% 0 0);
+      border-color: oklch(32% 0 none);
     }
   }
 
   .tiptap-editor blockquote > p:last-child,
   .preview blockquote > p:last-child {
-    padding-bottom: 0;
+    padding-block-end: 0;
   }
 
   /* CMS banners mirror the site's banner idiom (hairline + badge).
@@ -513,16 +513,16 @@
   .tiptap-editor .banner {
     position: relative;
     line-height: 1.5;
-    margin-top: 1rem;
-    margin-bottom: 0;
+    margin-block-start: 1rem;
+    margin-block-end: 0;
     width: 100%;
     border-width: 0 0 1px 0;
     border-style: solid;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 1rem;
-    color: rgb(0 0 0);
-    border-color: rgb(209 213 219);
+    padding-inline-start: 0;
+    padding-inline-end: 0;
+    padding-block-start: 1rem;
+    color: oklch(0% 0 none);
+    border-color: oklch(87.2% 0.009 258.3);
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
@@ -531,16 +531,16 @@
   .preview .banner {
     position: relative;
     line-height: 1.5;
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-block-start: 0.5rem;
+    margin-block-end: 0.5rem;
     width: 100%;
     border-width: 0 0 1px 0;
     border-style: solid;
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 1rem;
-    color: rgb(0 0 0);
-    border-color: rgb(209 213 219);
+    padding-inline-start: 0;
+    padding-inline-end: 0;
+    padding-block-start: 1rem;
+    color: oklch(0% 0 none);
+    border-color: oklch(87.2% 0.009 258.3);
     display: flex;
     align-items: baseline;
     gap: 0.5rem;
@@ -551,7 +551,7 @@
     font-size: 0.875rem;
     font-weight: 600;
     letter-spacing: -0.05em;
-    background-color: rgb(230, 216, 226);
+    background-color: oklch(89.6% 0.02 335.7);
     padding: 0.25rem 0.5rem;
     flex-shrink: 0;
   }
@@ -575,20 +575,20 @@
   @media (prefers-color-scheme: dark) {
     .tiptap-editor .banner,
     .preview .banner {
-      color: rgb(255 255 255);
-      border-color: rgb(75 85 99);
+      color: oklch(100% 0 none);
+      border-color: oklch(44.6% 0.026 256.8);
     }
 
     .preview .banner-title,
     .tiptap-editor .banner::before {
-      background-color: rgb(75, 60, 70);
+      background-color: oklch(37.6% 0.026 338.6);
     }
   }
 
   /* Media figures match the site: rounded image, centered caption. */
   .tiptap-editor figure {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin-block-start: 1rem;
+    margin-block-end: 1rem;
   }
 
   .tiptap-editor img {
@@ -596,16 +596,16 @@
   }
 
   .tiptap-editor figcaption {
-    margin-top: 0.5rem;
+    margin-block-start: 0.5rem;
     text-align: center;
     font-size: 13px;
     line-height: calc(1 / 0.85);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .tiptap-editor figcaption {
-      color: oklch(89% 0 0);
+      color: oklch(89% 0 none);
     }
   }
 
@@ -614,25 +614,25 @@
   .tiptap-editor [data-arena]::after {
     content: "Arena / " attr(data-arena);
     display: block;
-    margin-top: 0.5rem;
+    margin-block-start: 0.5rem;
     font-size: 0.875rem;
-    color: rgb(107 114 128);
+    color: oklch(55.3% 0.031 269.4);
   }
 
   .tiptap-editor [data-arena],
   .tiptap-editor figure[data-media-id] {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    margin-block-start: 0.5rem;
+    margin-block-end: 0.5rem;
     border-style: dashed;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 0.5rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .tiptap-editor [data-arena],
     .tiptap-editor figure[data-media-id] {
-      border-color: oklch(32% 0 0);
+      border-color: oklch(32% 0 none);
     }
   }
 
@@ -647,8 +647,8 @@
     font-size: 0.875rem;
     line-height: 1.5;
     tab-size: 2;
-    background-color: rgb(24 24 27);
-    color: rgb(244 244 245);
+    background-color: oklch(21% 0.006 285.9);
+    color: oklch(96.7% 0.001 286.4);
   }
 
   .tiptap-editor pre code {
@@ -665,34 +665,34 @@
     letter-spacing: -0.02em;
     padding: 0.5rem 1rem;
     margin: -1rem -1rem 1rem;
-    background-color: rgb(243 244 246);
-    border-bottom: 1px solid rgb(229 231 235);
+    background-color: oklch(96.7% 0.003 264.5);
+    border-block-end: 1px solid oklch(92.8% 0.006 264.5);
     border-radius: 0.5rem 0.5rem 0 0;
-    color: rgb(75 85 99);
+    color: oklch(44.6% 0.026 256.8);
   }
 
   @media (prefers-color-scheme: dark) {
     .tiptap-editor pre {
-      background-color: rgb(0 0 0);
+      background-color: oklch(0% 0 none);
     }
 
     .tiptap-editor pre[data-filename]::before {
-      background-color: rgb(31 41 55);
-      border-color: rgb(75 85 99);
-      color: rgb(156 163 175);
+      background-color: oklch(27.8% 0.03 256.8);
+      border-color: oklch(44.6% 0.026 256.8);
+      color: oklch(71.4% 0.019 261.3);
     }
   }
 
   .preview pre {
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-block-start: 0.75rem;
+    margin-block-end: 0.75rem;
     overflow-x: auto;
     border-radius: 0.375rem;
-    background-color: oklch(24% 0 0);
+    background-color: oklch(24% 0 none);
     padding: 0.75rem;
     font-size: 13px;
     line-height: calc(1 / 0.85);
-    color: oklch(96.5% 0 0);
+    color: oklch(96.5% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -726,18 +726,18 @@
     font-weight: 500;
     letter-spacing: -0.02em;
     padding: 0.5rem 1rem;
-    background-color: rgb(243 244 246);
-    border: 1px solid rgb(229 231 235);
-    border-bottom: none;
+    background-color: oklch(96.7% 0.003 264.5);
+    border: 1px solid oklch(92.8% 0.006 264.5);
+    border-block-end: none;
     border-radius: 0.5rem 0.5rem 0 0;
-    color: rgb(75 85 99);
+    color: oklch(44.6% 0.026 256.8);
   }
 
   @media (prefers-color-scheme: dark) {
     .preview .code-filename {
-      background-color: rgb(31 41 55);
-      border-color: rgb(75 85 99);
-      color: rgb(156 163 175);
+      background-color: oklch(27.8% 0.03 256.8);
+      border-color: oklch(44.6% 0.026 256.8);
+      color: oklch(71.4% 0.019 261.3);
     }
   }
 
@@ -764,20 +764,20 @@
     content: counter(step);
     display: inline-block;
     width: 2em;
-    margin-right: 1em;
+    margin-inline-end: 1em;
     text-align: right;
-    color: rgb(156 163 175);
+    color: oklch(71.4% 0.019 261.3);
     font-variant-numeric: tabular-nums;
   }
 
   @media (prefers-color-scheme: dark) {
     .preview .code-block[data-line-numbers="true"] pre .line::before {
-      color: rgb(107 114 133);
+      color: oklch(55.3% 0.031 269.4);
     }
   }
 
   .editor-panels {
-    margin-top: 0.75rem;
+    margin-block-start: 0.75rem;
     display: grid;
     gap: 0.5rem;
   }
@@ -788,13 +788,13 @@
     border-radius: 0.5rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 0.75rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .panel {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
   }
 
@@ -833,7 +833,7 @@
       grid-column: 1;
       grid-row: 1;
       position: sticky;
-      top: calc(var(--editor-nav-h, 0px) + 16px);
+      inset-block-start: calc(var(--editor-nav-h, 0px) + 16px);
     }
 
     .categories-list {
@@ -876,26 +876,17 @@
 
     .media-sidebar {
       position: sticky;
-      top: calc(var(--editor-nav-h, 0px) + 16px);
+      inset-block-start: calc(var(--editor-nav-h, 0px) + 16px);
     }
   }
 
-  @media (min-width: 1280px) {
-    .media-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-
+  /* Intrinsic grid: the column count follows the width the sidebar leaves,
+     so no breakpoint ladder is needed. `auto-fill` keeps a fixed card size
+     when a filter shortens the list. */
   .media-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 10rem), 1fr));
     gap: 0.75rem;
-  }
-
-  @media (min-width: 40rem) {
-    .media-grid {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
   }
 
   .media-card {
@@ -905,13 +896,13 @@
     border-radius: 0.5rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 0.5rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .media-card {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
   }
 
@@ -928,12 +919,12 @@
     white-space: nowrap;
     font-size: 12px;
     line-height: calc(1 / 0.75);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .media-name {
-      color: oklch(89% 0 0);
+      color: oklch(89% 0 none);
     }
   }
 
@@ -945,15 +936,15 @@
   .media-picker {
     display: grid;
     gap: 0.5rem;
-    border-top-style: solid;
-    border-top-width: 1px;
-    border-color: oklch(89% 0 0);
-    padding-top: 0.5rem;
+    border-block-start-style: solid;
+    border-block-start-width: 1px;
+    border-color: oklch(89% 0 none);
+    padding-block-start: 0.5rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .media-picker {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
   }
 
@@ -965,26 +956,26 @@
     border-radius: 0.5rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     background-color: transparent;
     padding: 0.5rem;
     text-align: left;
   }
 
-  @media (hover: hover) {
+  @media (hover: hover) and (pointer: fine) {
     .media-pick:hover {
-      background-color: oklch(96.5% 0 0);
+      background-color: oklch(96.5% 0 none);
     }
   }
 
   @media (prefers-color-scheme: dark) {
     .media-pick {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
 
-    @media (hover: hover) {
+    @media (hover: hover) and (pointer: fine) {
       .media-pick:hover {
-        background-color: oklch(24% 0 0);
+        background-color: oklch(24% 0 none);
       }
     }
   }
@@ -1003,13 +994,13 @@
     border-radius: 0.5rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 0.75rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .history-panel {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
   }
 
@@ -1029,24 +1020,24 @@
   .history-meta {
     font-size: 12px;
     line-height: calc(1 / 0.75);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .history-meta {
-      color: oklch(89% 0 0);
+      color: oklch(89% 0 none);
     }
   }
 
   .history-empty {
     font-size: 13px;
     line-height: calc(1 / 0.85);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .history-empty {
-      color: oklch(89% 0 0);
+      color: oklch(89% 0 none);
     }
   }
 
@@ -1056,32 +1047,32 @@
   }
 
   .history-preview .preview {
-    margin-top: 0;
+    margin-block-start: 0;
   }
 
   /* Post preview renders the exact HTML the site serves. */
   .preview {
-    margin-top: 0.75rem;
+    margin-block-start: 0.75rem;
     border-radius: 0.5rem;
     border-style: solid;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 1rem;
   }
 
   @media (prefers-color-scheme: dark) {
     .preview {
-      border-color: oklch(24% 0 0);
+      border-color: oklch(24% 0 none);
     }
   }
 
   .preview p {
-    padding-bottom: 1rem;
+    padding-block-end: 1rem;
     letter-spacing: -0.025em;
   }
 
   .preview h1 {
-    padding-bottom: 0.5rem;
+    padding-block-end: 0.5rem;
     font-size: 1.875rem;
     line-height: calc(2.25 / 1.875);
     font-weight: 500;
@@ -1089,35 +1080,35 @@
   }
 
   .preview h2 {
-    padding-bottom: 0.5rem;
+    padding-block-end: 0.5rem;
     font-size: 1.5rem;
     line-height: calc(2 / 1.5);
     letter-spacing: -0.025em;
   }
 
   .preview h3 {
-    padding-bottom: 0.25rem;
+    padding-block-end: 0.25rem;
     font-size: 1.25rem;
     line-height: calc(1.75 / 1.25);
     letter-spacing: -0.025em;
   }
 
   .preview h4 {
-    padding-bottom: 0.25rem;
+    padding-block-end: 0.25rem;
     font-size: 16px;
     line-height: 1.5;
     letter-spacing: -0.025em;
   }
 
   .preview hr {
-    margin-top: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-color: oklch(89% 0 0);
+    margin-block-start: 1.5rem;
+    margin-block-end: 1.5rem;
+    border-color: oklch(89% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .preview hr {
-      border-color: oklch(32% 0 0);
+      border-color: oklch(32% 0 none);
     }
   }
 
@@ -1126,8 +1117,8 @@
   }
 
   .preview figure {
-    margin-top: 1rem;
-    margin-bottom: 1rem;
+    margin-block-start: 1rem;
+    margin-block-end: 1rem;
   }
 
   .preview img {
@@ -1135,36 +1126,36 @@
   }
 
   .preview figcaption {
-    margin-top: 0.5rem;
+    margin-block-start: 0.5rem;
     text-align: center;
     font-size: 13px;
     line-height: calc(1 / 0.85);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .preview figcaption {
-      color: oklch(89% 0 0);
+      color: oklch(89% 0 none);
     }
   }
 
   .preview [data-arena] {
-    margin-top: 0.75rem;
-    margin-bottom: 0.75rem;
+    margin-block-start: 0.75rem;
+    margin-block-end: 0.75rem;
     border-radius: 0.375rem;
     border-style: dashed;
     border-width: 1px;
-    border-color: oklch(89% 0 0);
+    border-color: oklch(89% 0 none);
     padding: 0.75rem;
     font-size: 13px;
     line-height: calc(1 / 0.85);
-    color: oklch(32% 0 0);
+    color: oklch(32% 0 none);
   }
 
   @media (prefers-color-scheme: dark) {
     .preview [data-arena] {
-      border-color: oklch(32% 0 0);
-      color: oklch(89% 0 0);
+      border-color: oklch(32% 0 none);
+      color: oklch(89% 0 none);
     }
   }
 }

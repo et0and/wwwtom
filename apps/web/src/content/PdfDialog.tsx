@@ -18,9 +18,9 @@ const styles = stylex.create({
     alignItems: { default: "normal", [SM]: "center" },
     justifyContent: { default: "normal", [SM]: "space-between" },
     gap: { default: "0.5rem", [SM]: "1.5rem" },
-    borderBottomWidth: "1px",
-    borderBottomStyle: "solid",
-    borderBottomColor: colors["--color-tomui-line"],
+    borderBlockEndWidth: "1px",
+    borderBlockEndStyle: "solid",
+    borderBlockEndColor: colors["--color-tomui-line"],
     paddingInline: { default: "1rem", [SM]: "1.25rem" },
   },
   actions: {

@@ -21,7 +21,7 @@ const styles = stylex.create({
     width: "16rem",
     flexShrink: 0,
     flexDirection: "column",
-    overflow: "hidden",
+    overflow: "clip",
     backgroundColor: baseColor,
     color: defaultText,
   },
@@ -34,7 +34,7 @@ const styles = stylex.create({
     borderColor: lineColor,
     boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
   },
-  collapsed: { width: "3.5rem", overflow: "hidden" },
+  collapsed: { width: "3.5rem", overflow: "clip" },
   trigger: {
     margin: "0.5rem",
     display: "flex",
@@ -43,7 +43,9 @@ const styles = stylex.create({
     justifyContent: "center",
     borderRadius: radius.lg.borderRadius,
     color: subtleText,
-    ":hover": { backgroundColor: tintColor },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: tintColor },
+    },
   },
   content: {
     display: "flex",
@@ -99,7 +101,9 @@ const styles = stylex.create({
     minHeight: "2.125rem",
     color: defaultText,
     transitionProperty: "color, box-shadow, outline",
-    ":hover": { backgroundColor: tintColor },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: tintColor },
+    },
     ":focus": { outlineWidth: 0 },
     ":focus-visible": { backgroundColor: tintColor, color: strongText },
   },
