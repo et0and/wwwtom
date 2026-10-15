@@ -163,6 +163,14 @@ export const arenaAccountForSession = Effect.fn("arenaAccountForSession")(functi
   return yield* db.getArenaAccountProfile(sessionId);
 });
 
+/** The stored are.na token for a session id, or null when it is unknown. */
+export const arenaTokenForSession = Effect.fn("arenaTokenForSession")(function* (
+  sessionId: string,
+) {
+  const db = yield* DatabaseService;
+  return yield* db.getArenaAccessToken(sessionId);
+});
+
 /** Forget a session: the stored are.na token is dropped with its row. */
 export const signOutArena = Effect.fn("signOutArena")(function* (sessionId: string) {
   const db = yield* DatabaseService;
