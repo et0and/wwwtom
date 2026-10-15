@@ -29,7 +29,7 @@
     "deploy:preview": "pnpm --filter @tom/infra run deploy:preview",
     "deploy:storybook": "pnpm --filter @tom/infra run deploy:storybook",
     "deploy:turbo": "pnpm --filter @tom/infra run deploy:turbo",
-    "destroy": "pnpm run destroy:web && pnpm run destroy:adapter && pnpm run destroy:api && pnpm run destroy:turbo && pnpm run destroy:shared",
+    "destroy": "pnpm run destroy:web && pnpm run destroy:editor && pnpm run destroy:sophie && pnpm run destroy:adapter && pnpm run destroy:api && pnpm run destroy:turbo && pnpm run destroy:shared",
     "destroy:shared": "pnpm --filter @tom/infra run destroy",
     "destroy:turbo": "pnpm --filter @tom/infra run destroy:turbo",
     "destroy:api": "pnpm --filter @tom/infra run destroy:api",
