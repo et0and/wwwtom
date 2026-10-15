@@ -12,6 +12,9 @@ import { SecretsError } from "@tom/types/errors";
 export interface AppConfigContract {
   readonly arenaToken: Redacted.Redacted<string> | undefined;
   readonly arenaBaseUrl: string | undefined;
+  readonly arenaClientId: string | undefined;
+  readonly arenaClientSecret: Redacted.Redacted<string> | undefined;
+  readonly arenaReturnUrl: string | undefined;
   readonly databaseUrl: Redacted.Redacted<string>;
   readonly telegramBotToken: Redacted.Redacted<string> | undefined;
   readonly telegramChatId: string | undefined;
@@ -90,6 +93,12 @@ export const resolveSecretValue = (
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
   ARENA_API_URL?: string;
+  // are.na OAuth app for per-block comments. The client secret is a
+  // TOM_SECRETS bundle key; the id and return URL are plain worker env.
+  ARENA_CLIENT_ID?: string;
+  ARENA_CLIENT_SECRET?: string;
+  // Where the OAuth callback sends the browser back (apps/web).
+  ARENA_RETURN_URL?: string;
   DATABASE_URL?: string;
   HYPERDRIVE?: { connectionString: string };
   // Raw Cloudflare queue binding — app code should go through
@@ -165,6 +174,8 @@ export type CloudflareEnv = {
 // dataset names default in otelConfigFromResolvedEnv.
 const secretKeys = [
   "ARENA_TOKEN",
+  "ARENA_CLIENT_ID",
+  "ARENA_CLIENT_SECRET",
   "DATABASE_URL",
   "BETTER_AUTH_SECRET",
   "GITHUB_CLIENT_ID",
@@ -287,9 +298,15 @@ export type PartialCloudflareEnv = {
 export const makeAppConfigLayer = (config: PartialCloudflareEnv): Layer.Layer<AppConfig> => {
   const arenaToken = normalizeOptionalSecret(config.ARENA_TOKEN);
   const arenaBaseUrl = normalizeOptionalSecret(config.ARENA_API_URL);
+  const arenaClientId = normalizeOptionalSecret(config.ARENA_CLIENT_ID);
+  const arenaClientSecret = normalizeOptionalSecret(config.ARENA_CLIENT_SECRET);
+  const arenaReturnUrl = normalizeOptionalSecret(config.ARENA_RETURN_URL);
   return Layer.succeed(AppConfig, {
     arenaToken: arenaToken ? Redacted.make(arenaToken) : undefined,
     arenaBaseUrl,
+    arenaClientId,
+    arenaClientSecret: arenaClientSecret ? Redacted.make(arenaClientSecret) : undefined,
+    arenaReturnUrl,
     databaseUrl: Redacted.make(config.HYPERDRIVE?.connectionString ?? config.DATABASE_URL ?? ""),
     telegramBotToken: config.TELEGRAM_BOT_TOKEN
       ? Redacted.make(config.TELEGRAM_BOT_TOKEN)

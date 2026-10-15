@@ -134,11 +134,16 @@ export const adapter = Effect.gen(function* () {
         ? {
             ADAPTER_URL: "http://localhost:8788",
             API_URL: "http://localhost:8787",
+            ARENA_RETURN_URL: "http://localhost:3000",
             GUESTBOOK_RETURN_URL: "http://localhost:3000/guestbook",
           }
         : {
             ADAPTER_URL: `https://${stageHost(stage, "adapter")}`,
             API_URL: `https://${stageHost(stage, "api")}`,
+            // The are.na callback lands back on the site root: the comment
+            // rail lives on a post or work page, and the handshake does not
+            // carry which one the reader came from.
+            ARENA_RETURN_URL: `https://${stageWebHost(stage)}`,
             GUESTBOOK_RETURN_URL: `https://${stageWebHost(stage)}/guestbook`,
           }),
     },
