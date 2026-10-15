@@ -1,9 +1,28 @@
 import { describe, expect, it } from "vitest";
 import { Effect, Exit, Redacted } from "effect";
-import { parseDatabaseUrl } from "../web.hyperdrive.ts";
+import { hyperdriveName, parseDatabaseUrl } from "../web.hyperdrive.ts";
 
 const origin = (url: string) => Effect.runSync(parseDatabaseUrl(url));
 const failure = (url: string) => Effect.runSyncExit(parseDatabaseUrl(url));
+
+describe("hyperdriveName", () => {
+  it("adopts the existing production config", () => {
+    expect(hyperdriveName("production")).toBe("guestbook-hyperdrive");
+  });
+
+  it("gives every other stage its own deterministic name", () => {
+    expect(hyperdriveName("pr-192")).toBe("wwwtom-web-hyperdrive-pr-192");
+    expect(hyperdriveName("staging")).toBe("wwwtom-web-hyperdrive-staging");
+  });
+
+  it("never falls back to a stack-prefixed auto-name", () => {
+    // Only the adapter declares this connection. An auto-named one would be
+    // prefixed with that stack's name, and every extra declarer mints
+    // another connection per stage against one account-wide quota.
+    expect(hyperdriveName("pr-192")).not.toContain("wwwtom-adapter");
+    expect(hyperdriveName("pr-192")).not.toContain("wwwtom-web-wwwtom");
+  });
+});
 
 describe("parseDatabaseUrl", () => {
   it("reads host, database, user and password", () => {

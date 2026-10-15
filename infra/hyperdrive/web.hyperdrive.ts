@@ -46,6 +46,24 @@ export const parseDatabaseUrl = (
       }),
   });
 
+/**
+ * The connection's physical name. Production adopts the existing config;
+ * every other stage gets a deterministic per-stage name so one stage's
+ * connection never collides with another's.
+ */
+export const hyperdriveName = (stage: string): string =>
+  stage === "production" ? "guestbook-hyperdrive" : `wwwtom-web-hyperdrive-${stage}`;
+
+/**
+ * The Postgres connection behind the adapter's DatabaseService: the guestbook
+ * tables today, with the are.na account tables on top of them.
+ *
+ * Only the adapter declares it. It is the only worker that reads
+ * `databaseUrl` — the web worker binds no database at all — and a second
+ * declarer mints a second connection per stage, because Alchemy's auto-naming
+ * is prefixed with the stack name (see tom.queue.ts). That is what filled the
+ * account's Hyperdrive quota.
+ */
 export const webHyperdrive = Effect.gen(function* () {
   const stage = yield* Stage;
   const bundle = yield* readSecretBundle("TOM_SECRETS");
@@ -58,8 +76,7 @@ export const webHyperdrive = Effect.gen(function* () {
   }
 
   return yield* Cloudflare.Hyperdrive.Connection("wwwtom-web-hyperdrive", {
-    // Adopt the existing production config; other stages get their own.
-    ...(stage === "production" ? { name: "guestbook-hyperdrive" } : undefined),
+    name: hyperdriveName(stage),
     origin: yield* parseDatabaseUrl(databaseUrl),
   });
 });
