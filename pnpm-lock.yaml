@@ -607,8 +607,8 @@ importers:
   packages/arena:
     dependencies:
       '@aredotna/sdk':
-        specifier: 0.0.4
-        version: 0.0.4
+        specifier: 0.1.1
+        version: 0.1.1
       '@tom/constants':
         specifier: workspace:*
         version: link:../constants
@@ -724,8 +724,8 @@ importers:
   packages/schemas:
     dependencies:
       '@aredotna/sdk':
-        specifier: 0.0.4
-        version: 0.0.4
+        specifier: 0.1.1
+        version: 0.1.1
       effect:
         specifier: 'catalog:'
         version: 4.0.0-rc.116
@@ -987,8 +987,8 @@ packages:
     resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
     engines: {node: '>=6.0.0'}
 
-  '@aredotna/sdk@0.0.4':
-    resolution: {integrity: sha512-OktVIpgpDkkcvqXEbkE6utBl8OUbcIZEHtsGN235ylHw4R4q9I8rhTI1WAVvtt/XBl9ua4FfymmQkCOZg+OJbg==}
+  '@aredotna/sdk@0.1.1':
+    resolution: {integrity: sha512-muMiX4Wvw1oW9zvnGaP/V6J1tDLpnEvcsClmRB1yq+E9JqqynyahrS7cBPsuq44lG1tlPLeUwp6u4Z+8JiKhew==}
     engines: {node: '>=20'}
 
   '@asamuzakjp/css-color@4.1.2':
@@ -7839,7 +7839,7 @@ snapshots:
       '@jridgewell/gen-mapping': 0.3.13
       '@jridgewell/trace-mapping': 0.3.31
 
-  '@aredotna/sdk@0.0.4':
+  '@aredotna/sdk@0.1.1':
     dependencies:
       pkce-challenge: 6.0.0
 
