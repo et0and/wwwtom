@@ -18,6 +18,27 @@ export type Generated<T> =
 
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
+export interface ArenaAccounts {
+  access_token: string;
+  arena_user_avatar_url: string | null;
+  arena_user_id: number;
+  arena_user_name: string;
+  arena_user_slug: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  session_id: string;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface ArenaOauthSessions {
+  code_verifier: string;
+  created_at: Generated<Timestamp>;
+  expires_at: Timestamp;
+  id: Generated<number>;
+  session_token: string;
+  state: string;
+}
+
 export interface GuestbookEntries {
   avatar_url: string | null;
   created_at: Generated<Timestamp>;
@@ -42,6 +63,8 @@ export interface OauthSessions {
 }
 
 export interface DB {
+  arena_accounts: ArenaAccounts;
+  arena_oauth_sessions: ArenaOauthSessions;
   guestbook_entries: GuestbookEntries;
   oauth_sessions: OauthSessions;
 }

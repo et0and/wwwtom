@@ -5,6 +5,7 @@ import {
   ArenaNetworkError,
   type Arena,
   type Channel,
+  type Comment,
 } from "@aredotna/sdk";
 import {
   GetChannelsApiResponseSchema,
@@ -42,6 +43,11 @@ export interface ArenaBlockApi {
     content?: string;
   }): Effect.Effect<void, HttpError>;
   comments(options?: PaginationAttributes): Effect.Effect<GetBlockCommentApiResponse, HttpError>;
+  comment(body: string): Effect.Effect<Comment, HttpError>;
+}
+
+export interface ArenaCommentApi {
+  delete(id: number): Effect.Effect<void, HttpError>;
 }
 
 export interface ArenaUserApi {
@@ -93,6 +99,7 @@ export interface ArenaApi {
   group(slug: string): ArenaGroupApi;
   channel(slug: string): ArenaChannelApi;
   block(id: number): ArenaBlockApi;
+  readonly comments: ArenaCommentApi;
   readonly search: ArenaSearchApi;
 }
 
@@ -491,6 +498,15 @@ export class ArenaClient implements ArenaApi {
         sdkEffect<GetBlockCommentApiResponse>(() =>
           this.arena.blocks.comments(id, toConnectionsQuery(options)),
         ),
+      comment: (body: string): Effect.Effect<Comment, HttpError> =>
+        sdkEffect<Comment>(() => this.arena.blocks.comment(id, { body })),
+    };
+  }
+
+  get comments(): ArenaCommentApi {
+    return {
+      delete: (id: number): Effect.Effect<void, HttpError> =>
+        sdkEffect<void>(() => this.arena.comments.delete(id)),
     };
   }
 

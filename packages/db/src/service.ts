@@ -28,8 +28,26 @@ export type OAuthSessionParams = {
   expires_at: Date;
 };
 
+export type ArenaOAuthSessionParams = {
+  session_token: string;
+  state: string;
+  code_verifier: string;
+  expires_at: Date;
+};
+
+export type ArenaAccountParams = {
+  session_id: string;
+  arena_user_id: number;
+  arena_user_slug: string;
+  arena_user_name: string;
+  arena_user_avatar_url: string | null;
+  access_token: string;
+};
+
 export type GuestbookEntry = Selectable<Database["guestbook_entries"]>;
 export type OAuthSession = Selectable<Database["oauth_sessions"]>;
+export type ArenaOAuthSession = Selectable<Database["arena_oauth_sessions"]>;
+export type ArenaAccount = Selectable<Database["arena_accounts"]>;
 
 export interface DatabaseServiceContract {
   readonly createGuestbookEntry: (
@@ -61,6 +79,28 @@ export interface DatabaseServiceContract {
   readonly deleteOAuthSession: (session_token: string) => Effect.Effect<number, OAuthSessionError>;
 
   readonly cleanupExpiredSessions: Effect.Effect<number, OAuthSessionError>;
+
+  readonly createArenaOAuthSession: (
+    params: ArenaOAuthSessionParams,
+  ) => Effect.Effect<ArenaOAuthSession, OAuthSessionError>;
+
+  readonly getArenaOAuthSession: (
+    session_token: string,
+  ) => Effect.Effect<ArenaOAuthSession | null, OAuthSessionError>;
+
+  readonly deleteArenaOAuthSession: (
+    session_token: string,
+  ) => Effect.Effect<number, OAuthSessionError>;
+
+  readonly upsertArenaAccount: (
+    params: ArenaAccountParams,
+  ) => Effect.Effect<ArenaAccount, OAuthSessionError>;
+
+  readonly getArenaAccount: (
+    session_id: string,
+  ) => Effect.Effect<ArenaAccount | null, OAuthSessionError>;
+
+  readonly deleteArenaAccount: (session_id: string) => Effect.Effect<number, OAuthSessionError>;
 }
 
 type DbFailure = GuestbookValidationError | OAuthSessionError;
@@ -332,6 +372,125 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           );
           return Number(result.numDeletedRows);
         }).pipe(Effect.withSpan("DatabaseService.cleanupExpiredSessions")),
+
+        createArenaOAuthSession: Effect.fn("DatabaseService.createArenaOAuthSession")(function* (
+          params: ArenaOAuthSessionParams,
+        ) {
+          return yield* run(
+            "createArenaOAuthSession",
+            (db) =>
+              db
+                .insertInto("arena_oauth_sessions")
+                .values({
+                  session_token: params.session_token,
+                  state: params.state,
+                  code_verifier: params.code_verifier,
+                  expires_at: params.expires_at.toISOString(),
+                })
+                .returningAll()
+                .executeTakeFirstOrThrow(),
+            oauthFailure("create arena OAuth session", params.session_token),
+          );
+        }),
+
+        getArenaOAuthSession: Effect.fn("DatabaseService.getArenaOAuthSession")(function* (
+          session_token: string,
+        ) {
+          const session = yield* run(
+            "getArenaOAuthSession",
+            (db) =>
+              db
+                .selectFrom("arena_oauth_sessions")
+                .selectAll()
+                .where("session_token", "=", session_token)
+                .where("expires_at", ">", new Date())
+                .limit(1)
+                .executeTakeFirst(),
+            oauthFailure("get arena OAuth session", session_token),
+          );
+          return session ?? null;
+        }),
+
+        deleteArenaOAuthSession: Effect.fn("DatabaseService.deleteArenaOAuthSession")(function* (
+          session_token: string,
+        ) {
+          const result = yield* run(
+            "deleteArenaOAuthSession",
+            (db) =>
+              db
+                .deleteFrom("arena_oauth_sessions")
+                .where("session_token", "=", session_token)
+                .executeTakeFirst(),
+            oauthFailure("delete arena OAuth session", session_token),
+          );
+          return Number(result.numDeletedRows);
+        }),
+
+        upsertArenaAccount: Effect.fn("DatabaseService.upsertArenaAccount")(function* (
+          params: ArenaAccountParams,
+        ) {
+          return yield* run(
+            "upsertArenaAccount",
+            (db) =>
+              db
+                .insertInto("arena_accounts")
+                .values({
+                  session_id: params.session_id,
+                  arena_user_id: params.arena_user_id,
+                  arena_user_slug: params.arena_user_slug,
+                  arena_user_name: params.arena_user_name,
+                  arena_user_avatar_url: params.arena_user_avatar_url,
+                  access_token: params.access_token,
+                })
+                // A repeat login for the same browser reuses its session id, so
+                // the newer token replaces the older one rather than duplicating.
+                .onConflict((oc) =>
+                  oc.column("session_id").doUpdateSet({
+                    arena_user_id: params.arena_user_id,
+                    arena_user_slug: params.arena_user_slug,
+                    arena_user_name: params.arena_user_name,
+                    arena_user_avatar_url: params.arena_user_avatar_url,
+                    access_token: params.access_token,
+                    updated_at: new Date().toISOString(),
+                  }),
+                )
+                .returningAll()
+                .executeTakeFirstOrThrow(),
+            oauthFailure("upsert arena account", params.session_id),
+          );
+        }),
+
+        getArenaAccount: Effect.fn("DatabaseService.getArenaAccount")(function* (
+          session_id: string,
+        ) {
+          const account = yield* run(
+            "getArenaAccount",
+            (db) =>
+              db
+                .selectFrom("arena_accounts")
+                .selectAll()
+                .where("session_id", "=", session_id)
+                .limit(1)
+                .executeTakeFirst(),
+            oauthFailure("get arena account", session_id),
+          );
+          return account ?? null;
+        }),
+
+        deleteArenaAccount: Effect.fn("DatabaseService.deleteArenaAccount")(function* (
+          session_id: string,
+        ) {
+          const result = yield* run(
+            "deleteArenaAccount",
+            (db) =>
+              db
+                .deleteFrom("arena_accounts")
+                .where("session_id", "=", session_id)
+                .executeTakeFirst(),
+            oauthFailure("delete arena account", session_id),
+          );
+          return Number(result.numDeletedRows);
+        }),
       };
     }),
   );
