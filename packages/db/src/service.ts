@@ -49,6 +49,18 @@ export type OAuthSession = Selectable<Database["oauth_sessions"]>;
 export type ArenaOAuthSession = Selectable<Database["arena_oauth_sessions"]>;
 export type ArenaAccount = Selectable<Database["arena_accounts"]>;
 
+/**
+ * What a read of an account returns: the profile the API exposes, and never
+ * the access token. The columns are aliased in SQL, so nothing has to map one
+ * shape onto another afterwards.
+ */
+export type ArenaAccountProfile = {
+  readonly id: number;
+  readonly name: string;
+  readonly slug: string;
+  readonly avatarUrl: string | null;
+};
+
 export interface DatabaseServiceContract {
   readonly createGuestbookEntry: (
     params: GuestbookEntryParams,
@@ -96,9 +108,13 @@ export interface DatabaseServiceContract {
     params: ArenaAccountParams,
   ) => Effect.Effect<ArenaAccount, OAuthSessionError>;
 
-  readonly getArenaAccount: (
+  readonly getArenaAccountProfile: (
     session_id: string,
-  ) => Effect.Effect<ArenaAccount | null, OAuthSessionError>;
+  ) => Effect.Effect<ArenaAccountProfile | null, OAuthSessionError>;
+
+  readonly getArenaAccessToken: (
+    session_id: string,
+  ) => Effect.Effect<string | null, OAuthSessionError>;
 
   readonly deleteArenaAccount: (session_id: string) => Effect.Effect<number, OAuthSessionError>;
 }
@@ -460,21 +476,45 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           );
         }),
 
-        getArenaAccount: Effect.fn("DatabaseService.getArenaAccount")(function* (
+        getArenaAccountProfile: Effect.fn("DatabaseService.getArenaAccountProfile")(function* (
           session_id: string,
         ) {
-          const account = yield* run(
-            "getArenaAccount",
+          const profile = yield* run(
+            "getArenaAccountProfile",
             (db) =>
               db
                 .selectFrom("arena_accounts")
-                .selectAll()
+                .select([
+                  "arena_user_id as id",
+                  "arena_user_name as name",
+                  "arena_user_slug as slug",
+                  "arena_user_avatar_url as avatarUrl",
+                ])
                 .where("session_id", "=", session_id)
                 .limit(1)
                 .executeTakeFirst(),
-            oauthFailure("get arena account", session_id),
+            oauthFailure("get arena account profile", session_id),
           );
-          return account ?? null;
+          return profile ?? null;
+        }),
+
+        // The write path is the only caller that needs the token, so it is the
+        // only query that selects it.
+        getArenaAccessToken: Effect.fn("DatabaseService.getArenaAccessToken")(function* (
+          session_id: string,
+        ) {
+          const row = yield* run(
+            "getArenaAccessToken",
+            (db) =>
+              db
+                .selectFrom("arena_accounts")
+                .select("access_token")
+                .where("session_id", "=", session_id)
+                .limit(1)
+                .executeTakeFirst(),
+            oauthFailure("get arena access token", session_id),
+          );
+          return row?.access_token ?? null;
         }),
 
         deleteArenaAccount: Effect.fn("DatabaseService.deleteArenaAccount")(function* (

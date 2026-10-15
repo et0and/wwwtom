@@ -154,8 +154,10 @@ describe("DatabaseService", () => {
     db.deleteArenaOAuthSession(token);
   const saveArenaAccount = (params: ArenaAccountParams) => (db: DatabaseServiceContract) =>
     db.upsertArenaAccount(params);
-  const getArenaAccount = (sessionId: string) => (db: DatabaseServiceContract) =>
-    db.getArenaAccount(sessionId);
+  const getArenaProfile = (sessionId: string) => (db: DatabaseServiceContract) =>
+    db.getArenaAccountProfile(sessionId);
+  const getArenaToken = (sessionId: string) => (db: DatabaseServiceContract) =>
+    db.getArenaAccessToken(sessionId);
   const deleteArenaAccount = (sessionId: string) => (db: DatabaseServiceContract) =>
     db.deleteArenaAccount(sessionId);
 
@@ -253,12 +255,14 @@ describe("DatabaseService", () => {
       expect(await run(getArenaSession("sess-1"))).toBeNull();
     });
 
-    it("saves an are.na account and returns the token for its session", async () => {
+    it("saves an are.na account, then reads back its profile and its token", async () => {
       await run(saveArenaAccount(arenaAccountParams("sid-1")));
 
-      const account = await run(getArenaAccount("sid-1"));
-      expect(account?.access_token).toBe("arena-token");
-      expect(account?.arena_user_name).toBe("Tom Hackshaw");
+      const profile = await run(getArenaProfile("sid-1"));
+      expect(profile?.name).toBe("Tom Hackshaw");
+      // The profile is the API's shape: the token is not part of it.
+      expect(profile).not.toHaveProperty("access_token");
+      expect(await run(getArenaToken("sid-1"))).toBe("arena-token");
     });
 
     it("upserts an account so a repeat login replaces the token", async () => {
@@ -267,19 +271,19 @@ describe("DatabaseService", () => {
         saveArenaAccount({ ...arenaAccountParams("sid-1"), access_token: "arena-token-2" }),
       );
 
-      const account = await run(getArenaAccount("sid-1"));
-      expect(account?.access_token).toBe("arena-token-2");
+      expect(await run(getArenaToken("sid-1"))).toBe("arena-token-2");
     });
 
     it("returns null for an unknown session id", async () => {
-      expect(await run(getArenaAccount("missing"))).toBeNull();
+      expect(await run(getArenaProfile("missing"))).toBeNull();
+      expect(await run(getArenaToken("missing"))).toBeNull();
     });
 
     it("deletes an account", async () => {
       await run(saveArenaAccount(arenaAccountParams("sid-1")));
 
       expect(await run(deleteArenaAccount("sid-1"))).toBe(1);
-      expect(await run(getArenaAccount("sid-1"))).toBeNull();
+      expect(await run(getArenaProfile("sid-1"))).toBeNull();
     });
   });
 });
