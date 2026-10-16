@@ -189,16 +189,19 @@ export const simulatorEntries = (
   });
 };
 
-const toWireEntry = (entry: GuestbookEntry): typeof GuestbookEntrySchema.Type => ({
-  id: entry.id,
-  fediverse_username: entry.fediverse_username,
-  fediverse_instance: entry.fediverse_instance,
-  display_name: entry.display_name,
-  avatar_url: entry.avatar_url,
-  message: entry.message,
-  created_at: entry.created_at.toISOString(),
-  updated_at: entry.updated_at.toISOString(),
-});
+/**
+ * The stored row encoded into the wire shape. Postgres hands back `Date`s
+ * where the wire carries ISO strings, so the codec owns that single
+ * difference instead of a hand-written mapper repeating the field list:
+ * `Schema.encodeSync` is where the two shapes meet.
+ */
+export const GuestbookEntryRowSchema = GuestbookEntrySchema.mapFields((fields) => ({
+  ...fields,
+  created_at: Schema.DateFromString,
+  updated_at: Schema.DateFromString,
+}));
+
+const encodeEntry = Schema.encodeSync(GuestbookEntryRowSchema);
 
 export const dbEntries: Effect.Effect<
   ReadonlyArray<typeof GuestbookEntrySchema.Type>,
@@ -209,7 +212,7 @@ export const dbEntries: Effect.Effect<
   const db = yield* DatabaseService;
   const data = yield* db.getGuestbookEntries({ page: 1, page_size: 100 });
   yield* Effect.logInfo("guestbook:entries:success");
-  return data.results.map(toWireEntry);
+  return data.results.map((entry) => encodeEntry(entry));
 });
 
 const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
