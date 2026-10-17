@@ -406,6 +406,25 @@ pre code {
   border: 0;
 }
 
+/* Per-block comment affordance: hidden until its block is hovered or holds
+   focus, and always visible on touch, where there is no hover. */
+.block-comment-trigger {
+  opacity: 0;
+  transition: opacity 120ms ease-in-out;
+}
+
+.content-block:hover .block-comment-trigger,
+.content-block:focus-within .block-comment-trigger,
+.block-comment-trigger:focus-visible {
+  opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .block-comment-trigger {
+    opacity: 1;
+  }
+}
+
 /* iOS Safari auto-zooms focused controls under 16px. Hold 16px on touch. */
 @media (pointer: coarse) {
   input,
