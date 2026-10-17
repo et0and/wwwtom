@@ -59,6 +59,21 @@ export const handleBodySchema = Schema.toStandardSchemaV1(
   Schema.Struct({ handle: Schema.NonEmptyString }),
 );
 
+/**
+ * The two are.na cookies: the transient PKCE session set when the handshake
+ * starts, and the durable opaque session id that maps to the stored token.
+ */
+export const arenaCookieSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({
+    arena_oauth_session: Schema.optional(Schema.String),
+    arena_session: Schema.optional(Schema.String),
+  }),
+);
+
+export const arenaCallbackQuerySchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ code: Schema.String, state: Schema.optional(Schema.String) }),
+);
+
 export const messageBodySchema = Schema.toStandardSchemaV1(
   Schema.Struct({ message: Schema.NonEmptyString }),
 );
