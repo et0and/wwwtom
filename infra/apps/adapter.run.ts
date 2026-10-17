@@ -42,6 +42,13 @@ const stripKeys = (
 const devSecretOverride = (name: string, value: string | undefined): Record<string, string> =>
   value === undefined ? {} : { [name]: value };
 
+// The are.na OAuth client id is public — the browser sends it in the
+// authorize URL — so every deployed stage carries it as a plain var
+// rather than waiting on a bundle secret: a preview gets it with its own
+// deploy. A per-stage are.na app drops its id here. Local dev keeps
+// reading the bundle, so a localhost app's id can differ.
+const arenaClientId = "dt6mCEX9proZMezWTYtrMHe36c7gCxk9fJUO5xJG7R0";
+
 export const adapter = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
@@ -140,6 +147,7 @@ export const adapter = Effect.gen(function* () {
         : {
             ADAPTER_URL: `https://${stageHost(stage, "adapter")}`,
             API_URL: `https://${stageHost(stage, "api")}`,
+            ARENA_CLIENT_ID: arenaClientId,
             // The are.na callback lands back on the site root: the comment
             // rail lives on a post or work page, and the handshake does not
             // carry which one the reader came from.

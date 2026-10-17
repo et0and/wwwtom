@@ -92,6 +92,23 @@ describe("readCloudflareEnv tenant secrets", () => {
     expect(resolved.GOOGLE_CLIENT_SECRET).toBe("bundle-secret");
   });
 
+  it("lets explicit worker env win for the are.na client id", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv(
+        { ...sharedBundle, ARENA_CLIENT_ID: "stale-arena-id" },
+        { ARENA_CLIENT_ID: "stage-arena-id" },
+      ),
+    );
+    expect(resolved.ARENA_CLIENT_ID).toBe("stage-arena-id");
+  });
+
+  it("falls back to the bundle are.na client id without explicit worker env", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv({ ...sharedBundle, ARENA_CLIENT_ID: "bundle-arena-id" }),
+    );
+    expect(resolved.ARENA_CLIENT_ID).toBe("bundle-arena-id");
+  });
+
   it("throws SecretsError when TOM_SECRETS is not valid JSON", async () => {
     await expect(
       readCloudflareEnv({ TOM_SECRETS: { get: async () => "not-json" } }),

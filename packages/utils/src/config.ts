@@ -263,11 +263,16 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
   // Explicit worker env wins over the opaque bundle for provider keys:
   // stage config is the only deploy-time guarantee when the store value
   // is unreadable, so a stale bundle can never silently break a worker.
-  // Keyed off the provider pair so adding one needs no change here.
+  // Keyed off the provider pair so adding one needs no change here. The
+  // are.na client id rides here too: it is public (the browser sends it
+  // in the authorize URL), so stages carry it directly and previews never
+  // wait on a bundle update.
   const explicitProviderSecrets = Object.fromEntries(
     Object.entries({
       GOOGLE_CLIENT_ID: rest.GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: rest.GOOGLE_CLIENT_SECRET,
+      ARENA_CLIENT_ID: rest.ARENA_CLIENT_ID,
+      ARENA_CLIENT_SECRET: rest.ARENA_CLIENT_SECRET,
     }).filter(([, value]) => value !== undefined),
   );
 
