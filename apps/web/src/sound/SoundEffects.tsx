@@ -10,9 +10,6 @@ const PRESSABLE =
 const STATEFUL =
   'summary, input[type="checkbox"], input[type="radio"], [aria-pressed], [role="tab"], [role="switch"]';
 
-/** Level for the transient click pair, which should sit under the page's content. */
-const CLICK_VOLUME = 0.7;
-
 const isDisabled = (element: Element): boolean => {
   if (
     element instanceof HTMLButtonElement ||
@@ -55,14 +52,14 @@ export function SoundEffects(props: {
       if (event.button !== 0) return;
       engine.unlock();
       pressed = pressableFrom(event.target);
-      if (pressed !== undefined) engine.play("press", CLICK_VOLUME);
+      if (pressed !== undefined) engine.play("press");
     };
 
     const onPointerUp = (): void => {
       if (pressed === undefined) return;
       const wasStateful = pressed.matches(STATEFUL);
       pressed = undefined;
-      engine.play(wasStateful ? "toggle" : "release", CLICK_VOLUME);
+      engine.play(wasStateful ? "toggle" : "release");
     };
 
     const onKeyDown = (event: KeyboardEvent): void => {
@@ -70,20 +67,20 @@ export function SoundEffects(props: {
       const element = pressableFrom(event.target);
       if (element === undefined) return;
       engine.unlock();
-      engine.play("press", CLICK_VOLUME);
+      engine.play("press");
     };
 
     const onKeyUp = (event: KeyboardEvent): void => {
       if (event.key !== "Enter" && event.key !== " ") return;
       const element = pressableFrom(event.target);
       if (element === undefined) return;
-      engine.play(element.matches(STATEFUL) ? "toggle" : "release", CLICK_VOLUME);
+      engine.play(element.matches(STATEFUL) ? "toggle" : "release");
     };
 
     /** Back, forward, and the mobile swipe-back gesture, which is `popstate` too. */
     const onPopState = (): void => {
       engine.unlock();
-      engine.play("tick", CLICK_VOLUME);
+      engine.play("tick");
     };
 
     document.addEventListener("pointerdown", onPointerDown, true);

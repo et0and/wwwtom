@@ -14,8 +14,12 @@ const SILENCE = 0.0001;
 const TAIL = 0.05;
 /** Grace period before a finished sound's nodes are disconnected. */
 const RELEASE_MARGIN = 0.05;
-/** Headroom for the shared master gain. */
-const MASTER_GAIN = 0.6;
+/**
+ * Master gain. Clicks are short transients, so they need real gain to be
+ * audible at all; the compressor is what stops several overlapping decays from
+ * clipping on the way out.
+ */
+const MASTER_GAIN = 2.4;
 /** Long enough for the slowest noise burst (`whisper`) to finish. */
 const NOISE_SECONDS = 0.5;
 
