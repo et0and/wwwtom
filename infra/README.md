@@ -12,6 +12,7 @@ Effect V4.
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; same tenant split)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
+- `edge`: zone-level WAF and rate limiting rules for `tom.so` and `sophie.st` (`edge.run.ts`)
 
 The `production` stage adopts the existing resources instead of replacing
 them:
@@ -37,6 +38,7 @@ ALCHEMY_STAGE=staging pnpm deploy
 
 # Deploy one component
 pnpm deploy:shared
+pnpm deploy:edge
 pnpm deploy:api
 pnpm deploy:adapter
 pnpm deploy:web
@@ -46,6 +48,8 @@ pnpm deploy:turbo
 ```
 
 Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`.
+The zone-level `edge` stack deploys separately, from a production dispatch
+only (see Edge protection).
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
@@ -121,6 +125,36 @@ The cache worker runs on `http://localhost:8790` by default. Deploy with
 
 `ALCHEMY_STAGE` is required. This prevents a command intended for production
 from silently creating a new stage-specific Worker.
+
+## Edge protection
+
+`edge.run.ts` owns the zone-level rules that keep reconnaissance off the
+origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
+third of all requests to this account, and none of it should reach a Worker.
+
+- `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
+  `/.svn`, `/.ssh`, `/.aws`) answer 403; the wider probe surface (`/wp-*`,
+  `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`, `.bak`, `.old`, `/tfstate`,
+  `docker-compose`) answers 404.
+- `http_ratelimit`: one per-IP rule per zone (120 requests/60s on non-asset
+  paths, 60s mitigation). One rule only — the Free plan allows a single rate
+  limiting rule per zone, so a second would fail to deploy.
+
+The zones are referenced by id, never declared as resources here, so this
+stack cannot adopt, rename or delete a zone. It does own both phase
+entrypoints: rules added to those phases in the dashboard are overwritten on
+the next deploy.
+
+Rules live on the zone itself, so they are shared by every stage: exactly one
+stage may own them. The deploy workflow runs this stack only on a production
+dispatch (`if: github.event_name == 'workflow_dispatch' && inputs.stage ==
+'production'`), and PR previews never run it — concurrent preview runs would
+otherwise fight over the same ruleset.
+
+Deploying this stack needs a token with **Zone WAF: Edit** and **Zone: Read**
+(in addition to the account-level permissions the other stacks use). The
+existing `CLOUDFLARE_API_TOKEN` must be granted those zone permissions, or the
+production deploy fails at the "Deploy zone edge rules" step.
 
 ## Environment
 

@@ -1,9 +1,10 @@
-import { run, workflow } from "../builders";
+import { run, step, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
 import {
   alchemyEnv,
   deployChain,
   deployStacks,
+  edgeStacks,
   stageConcurrencyGroup,
   stageExpression,
   stageLabel,
@@ -43,6 +44,14 @@ export const deploy = workflow("deploy", {
         checkout("Checkout", { "fetch-depth": 0 }),
         setupStep(),
         run("Deploy infrastructure", deployChain(deployStacks)),
+        // Zone-level rules are shared by every stage, so exactly one stage may
+        // own them. Production only: a staging run would rewrite the same
+        // rulesets from a second Alchemy state and the two would drift.
+        step({
+          name: "Deploy zone edge rules",
+          if: "github.event_name == 'workflow_dispatch' && inputs.stage == 'production'",
+          run: deployChain(edgeStacks),
+        }),
       ],
     },
   },
