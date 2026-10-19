@@ -1,3 +1,16 @@
+# [4.6.0](https://github.com/et0and/wwwtom/compare/v4.5.2...v4.6.0) (2026-10-19)
+
+
+### Bug Fixes
+
+* **sophie:** answer unknown paths with 404, not 200 ([ce521c2](https://github.com/et0and/wwwtom/commit/ce521c2cf7d59a42930a575a32f3012d9709b821))
+* **workflows:** deploy the edge stack from production only ([eabd116](https://github.com/et0and/wwwtom/commit/eabd11625d760253a0f9d98447d64452c465d8fc))
+
+
+### Features
+
+* **security:** answer reconnaissance probes at the edge ([dd10080](https://github.com/et0and/wwwtom/commit/dd10080b802f6117da922baa38596f2f8b27b85b))
+
 ## [4.5.2](https://github.com/et0and/wwwtom/compare/v4.5.1...v4.5.2) (2026-10-15)
 
 
