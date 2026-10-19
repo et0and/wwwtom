@@ -2,7 +2,10 @@ import * as stylex from "@stylexjs/stylex";
 import { Loading, Match, Show, Switch, createSignal } from "solid-js";
 import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
+import { httpStatus, isServer } from "@solidjs/web";
+import { Effect } from "effect";
 import type { CmsPostSummary } from "@tom/schemas/cms";
+import { HttpStatus } from "@tom/constants/http";
 import { Metadata } from "@tom/ui/Meta";
 import { ViewTransitions } from "@tom/ui/ViewTransitions";
 import { Banner } from "@tom/ui/banner";
@@ -204,21 +207,32 @@ const PostDetail = () => {
   );
 };
 
-const NotFound = () => (
-  <main>
-    <Metadata
-      title="Missing"
-      metaType="description"
-      metaContent={SOPHIE_DESCRIPTION}
-      brand={SOPHIE_BRAND}
-    />
-    <h1 class="sophie-title">Missing</h1>
-    <p>No page lives here.</p>
-    <p>
-      <a href="/about">About</a>
-    </p>
-  </main>
-);
+/**
+ * Unknown paths must answer 404, not 200. The router reaches this component
+ * for every unmatched path, and without an explicit status the SSR response
+ * is a 200 with the Missing page — which tells a scanner probing
+ * `/.env`, `/.git/config` or `/.ssh/id_rsa` that it found something. This is
+ * the same contract as apps/web's `[...404].tsx`.
+ */
+const NotFound = () => {
+  if (isServer) void Effect.runFork(Effect.logInfo("Page not found", HttpStatus.NotFound));
+  httpStatus(HttpStatus.NotFound);
+  return (
+    <main>
+      <Metadata
+        title="Missing"
+        metaType="description"
+        metaContent={SOPHIE_DESCRIPTION}
+        brand={SOPHIE_BRAND}
+      />
+      <h1 class="sophie-title">Missing</h1>
+      <p>No page lives here.</p>
+      <p>
+        <a href="/about">About</a>
+      </p>
+    </main>
+  );
+};
 
 const ignoredPrefetchError = (): void => {
   // A failed prefetch surfaces through the query's error state — don't let
