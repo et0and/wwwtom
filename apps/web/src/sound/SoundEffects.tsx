@@ -1,16 +1,6 @@
-import { createContext, createSignal, onSettled, useContext } from "solid-js";
+import { onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { createSoundEngine, type SoundEngine } from "./engine";
-import type { SoundName } from "./presets";
-
-interface SoundControls {
-  isEnabled: () => boolean;
-  setEnabled: (enabled: boolean) => void;
-  play: (name: SoundName, volume?: number) => void;
-}
-
-const STORAGE_KEY = "tom.sound";
-const OFF = "off";
 
 /** Anything a pointer press should click against. */
 const PRESSABLE =
@@ -22,12 +12,6 @@ const STATEFUL =
 
 /** Level for the transient click pair, which should sit under the page's content. */
 const CLICK_VOLUME = 0.7;
-
-const SoundContext = createContext<SoundControls>({
-  isEnabled: () => false,
-  setEnabled: () => undefined,
-  play: () => undefined,
-});
 
 const isDisabled = (element: Element): boolean => {
   if (
@@ -41,32 +25,20 @@ const isDisabled = (element: Element): boolean => {
 };
 
 /**
- * One delegated listener pair drives every control on the page, so a component
- * never has to know the sound layer exists. `press` fires on the way down and
- * either `release` or `toggle` on the way up, which is what gives a click its
- * weight: state-changing controls get the two-part sound, navigation a single one.
+ * One delegated listener pair drives every control on the page, so no component
+ * has to know this layer exists. `press` fires on the way down and either
+ * `release` or `toggle` on the way up, which is what gives a click its weight:
+ * state-changing controls get the two-part sound, navigation a single one.
  */
-export function SoundProvider(props: {
+export function SoundEffects(props: {
   children: JSX.Element;
   /** Swappable so tests can observe the calls without a real audio graph. */
   createEngine?: () => SoundEngine;
 }) {
   const engine = (props.createEngine ?? createSoundEngine)();
-  const [isEnabled, setIsEnabled] = createSignal(true);
   let pressed: Element | undefined;
 
-  const setEnabled = (enabled: boolean): void => {
-    setIsEnabled(enabled);
-    engine.setEnabled(enabled);
-    localStorage.setItem(STORAGE_KEY, enabled ? "on" : OFF);
-  };
-
   onSettled(() => {
-    // Restore the last choice before anything can play.
-    const enabled = localStorage.getItem(STORAGE_KEY) !== OFF;
-    setIsEnabled(enabled);
-    engine.setEnabled(enabled);
-
     const pressableFrom = (target: EventTarget | null): Element | undefined => {
       if (!(target instanceof Element)) return undefined;
       const element = target.closest(PRESSABLE);
@@ -116,15 +88,5 @@ export function SoundProvider(props: {
     };
   });
 
-  const controls: SoundControls = {
-    isEnabled,
-    setEnabled,
-    play: (name, volume) => engine.play(name, volume),
-  };
-
-  return <SoundContext value={controls}>{props.children}</SoundContext>;
-}
-
-export function useSound(): SoundControls {
-  return useContext(SoundContext);
+  return <>{props.children}</>;
 }

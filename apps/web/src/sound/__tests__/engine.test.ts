@@ -110,7 +110,6 @@ describe("createSoundEngine", () => {
   it("sends a click through a bandpass filter at the preset's frequency", () => {
     const fake = installFakeAudio();
     const engine = createSoundEngine();
-    engine.setEnabled(true);
     engine.unlock();
 
     engine.play("press");
@@ -121,7 +120,6 @@ describe("createSoundEngine", () => {
   it("builds both halves of the toggle pair", () => {
     const fake = installFakeAudio();
     const engine = createSoundEngine();
-    engine.setEnabled(true);
     engine.unlock();
 
     engine.play("toggle");
@@ -129,20 +127,8 @@ describe("createSoundEngine", () => {
     expect(filterFrequencies(fake)).toEqual([2200, 3800]);
   });
 
-  it("plays nothing while muted", () => {
-    const fake = installFakeAudio();
-    const engine = createSoundEngine();
-    engine.setEnabled(false);
-    engine.unlock();
-
-    engine.play("press");
-
-    expect(fake.filters).toHaveLength(0);
-  });
-
   it("degrades to silence when the browser has no audio context", () => {
     const engine = createSoundEngine();
-    engine.setEnabled(true);
 
     expect(() => {
       engine.unlock();

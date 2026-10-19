@@ -22,8 +22,6 @@ const NOISE_SECONDS = 0.5;
 export interface SoundEngine {
   /** Build and resume the audio context. Must run inside a user gesture. */
   unlock(): void;
-  /** Mute is a gain ramp, so the graph stays warm across toggles. */
-  setEnabled(enabled: boolean): void;
   play(name: SoundName, volume?: number): void;
 }
 
@@ -163,7 +161,6 @@ export const createSoundEngine = (): SoundEngine => {
   let context: AudioContext | undefined;
   let master: GainNode | undefined;
   let noise: AudioBuffer | undefined;
-  let isEnabled = false;
   let hasUnlocked = false;
 
   const ensureGraph = (): SoundGraph | undefined => {
@@ -187,7 +184,7 @@ export const createSoundEngine = (): SoundEngine => {
     compressor.attack.value = 0.002;
     compressor.release.value = 0.08;
     master = context.createGain();
-    master.gain.value = isEnabled ? MASTER_GAIN : 0;
+    master.gain.value = MASTER_GAIN;
     master.connect(compressor).connect(context.destination);
     noise = createNoiseBuffer(context);
     return { context, master, noise };
@@ -207,15 +204,7 @@ export const createSoundEngine = (): SoundEngine => {
     silent.start();
   };
 
-  const setEnabled = (enabled: boolean): void => {
-    isEnabled = enabled;
-    if (master === undefined || context === undefined) return;
-    master.gain.cancelScheduledValues(context.currentTime);
-    master.gain.setValueAtTime(enabled ? MASTER_GAIN : 0, context.currentTime);
-  };
-
   const play = (name: SoundName, volume = 1): void => {
-    if (!isEnabled) return;
     const graph = ensureGraph();
     if (graph === undefined || graph.context.state === "closed") return;
     if (graph.context.state === "suspended") void graph.context.resume();
@@ -244,5 +233,5 @@ export const createSoundEngine = (): SoundEngine => {
     }, lifetime * 1000);
   };
 
-  return { unlock, setEnabled, play };
+  return { unlock, play };
 };
