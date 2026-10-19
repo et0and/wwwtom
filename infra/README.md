@@ -47,7 +47,9 @@ pnpm deploy:runner
 pnpm deploy:turbo
 ```
 
-Deployment order is `shared -> edge -> turbo -> api -> adapter -> web -> sophie`.
+Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`.
+The zone-level `edge` stack deploys separately, from a production dispatch
+only (see Edge protection).
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
@@ -143,10 +145,16 @@ stack cannot adopt, rename or delete a zone. It does own both phase
 entrypoints: rules added to those phases in the dashboard are overwritten on
 the next deploy.
 
+Rules live on the zone itself, so they are shared by every stage: exactly one
+stage may own them. The deploy workflow runs this stack only on a production
+dispatch (`if: github.event_name == 'workflow_dispatch' && inputs.stage ==
+'production'`), and PR previews never run it — concurrent preview runs would
+otherwise fight over the same ruleset.
+
 Deploying this stack needs a token with **Zone WAF: Edit** and **Zone: Read**
 (in addition to the account-level permissions the other stacks use). The
-existing `CLOUDFLARE_API_TOKEN` must be granted those zone permissions, or
-`pnpm deploy` fails at the ruleset step.
+existing `CLOUDFLARE_API_TOKEN` must be granted those zone permissions, or the
+production deploy fails at the "Deploy zone edge rules" step.
 
 ## Environment
 

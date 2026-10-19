@@ -294,6 +294,9 @@ jobs:
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
           pnpm deploy:storybook --yes
+      - name: Deploy zone edge rules
+        if: github.event_name == 'workflow_dispatch' && inputs.stage == 'production'
+        run: pnpm deploy:edge --yes
 "
 `;
 
