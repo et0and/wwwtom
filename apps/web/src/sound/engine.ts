@@ -47,6 +47,35 @@ const audioContextFactory = (): AudioContextFactory | undefined => {
   return scope.AudioContext;
 };
 
+/**
+ * Resuming a context that has been closed rejects, and a rejected promise here
+ * would surface as an unhandled rejection for a sound nobody asked to hear.
+ * Silence is this engine's contract, so the rejection goes nowhere.
+ */
+const resumeQuietly = (context: AudioContext): void => {
+  void context.resume().catch(() => undefined);
+};
+
+/**
+ * WebKit suspends the context when the page is backgrounded or the screen
+ * locks, and does not start it again on its own: every later sound would play
+ * into a context that is not running. `visibilitychange` is coming back to the
+ * tab; `pageshow` is a page restored from the back/forward cache, which is what
+ * an app switch on iOS often is.
+ *
+ * Garden asks for a `playback` session instead, because it has to keep playing
+ * while the page is in the background. Clicks are the other case: they should
+ * stop when the page does, and resume when the visitor comes back.
+ */
+const resumeWhenVisible = (context: AudioContext): void => {
+  const resume = (): void => {
+    if (document.visibilityState !== "visible") return;
+    if (context.state !== "running") resumeQuietly(context);
+  };
+  document.addEventListener("visibilitychange", resume);
+  window.addEventListener("pageshow", resume);
+};
+
 const createNoiseBuffer = (context: AudioContext): AudioBuffer => {
   const frames = Math.ceil(context.sampleRate * NOISE_SECONDS);
   const buffer = context.createBuffer(1, frames, context.sampleRate);
@@ -191,13 +220,14 @@ export const createSoundEngine = (): SoundEngine => {
     master.gain.value = MASTER_GAIN;
     master.connect(compressor).connect(context.destination);
     noise = createNoiseBuffer(context);
+    resumeWhenVisible(context);
     return { context, master, noise };
   };
 
   const unlock = (): void => {
     const graph = ensureGraph();
     if (graph === undefined) return;
-    if (graph.context.state !== "running") void graph.context.resume();
+    if (graph.context.state !== "running") resumeQuietly(graph.context);
     // iOS only treats the context as unlocked once a source has started, so
     // play one silent sample rather than waiting for the first real sound.
     if (hasUnlocked) return;
@@ -211,7 +241,10 @@ export const createSoundEngine = (): SoundEngine => {
   const play = (name: SoundName, volume = 1): void => {
     const graph = ensureGraph();
     if (graph === undefined || graph.context.state === "closed") return;
-    if (graph.context.state === "suspended") void graph.context.resume();
+    // Not just `suspended`: Safari parks a context that another app has taken —
+    // a call, Siri — in `interrupted`, a state the DOM lib does not name, and a
+    // context left there plays nothing until something resumes it.
+    if (graph.context.state !== "running") resumeQuietly(graph.context);
 
     const preset: SoundPreset = SOUND_PRESETS[name];
     const start = graph.context.currentTime;

@@ -22,6 +22,10 @@ interface FakeFilter extends FakeNode {
 interface FakeAudio {
   context: AudioContext;
   filters: FakeFilter[];
+  /** Recorded so the resume paths can be observed. */
+  resume: ReturnType<typeof vi.fn>;
+  /** Safari's `interrupted` is not in the DOM lib, so the fake poses as it. */
+  setState: (state: string) => void;
 }
 
 /**
@@ -54,12 +58,13 @@ const createFakeAudio = (): FakeAudio => {
     disconnect: () => undefined,
   });
 
+  const resume = vi.fn(() => Promise.resolve());
+
   const context = {
     sampleRate: 44100,
     currentTime: 0,
-    state: "running",
     destination: connectable(),
-    resume: () => Promise.resolve(),
+    resume,
     createGain: () => ({ ...connectable(), gain: param() }),
     createBuffer: (_channels: number, frames: number) => ({
       getChannelData: () => new Float32Array(frames),
@@ -88,7 +93,23 @@ const createFakeAudio = (): FakeAudio => {
     }),
   };
 
-  return { context: Object.assign({} as AudioContext, context), filters };
+  const audio = Object.assign({} as AudioContext, context);
+
+  // The engine resumes any context that is not running, and Safari's
+  // `interrupted` is one of those states while the DOM lib does not name it.
+  // The fake therefore keeps its state behind a live property, which
+  // `Object.assign` above would otherwise copy once and freeze.
+  let state = "running";
+  Object.defineProperty(audio, "state", { get: () => state });
+
+  return {
+    context: audio,
+    filters,
+    resume,
+    setState: (next) => {
+      state = next;
+    },
+  };
 };
 
 const installFakeAudio = (): FakeAudio => {
@@ -102,9 +123,14 @@ const installFakeAudio = (): FakeAudio => {
 const filterFrequencies = (fake: FakeAudio): number[] =>
   fake.filters.map((filter) => filter.frequency.value);
 
+const setVisibility = (value: "visible" | "hidden"): void => {
+  vi.spyOn(document, "visibilityState", "get").mockReturnValue(value);
+};
+
 describe("createSoundEngine", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   it("sends a click through a bandpass filter at the preset's frequency", () => {
@@ -125,6 +151,54 @@ describe("createSoundEngine", () => {
     engine.play("toggle");
 
     expect(filterFrequencies(fake)).toEqual([2200, 3800]);
+  });
+
+  it("resumes a context Safari has interrupted", () => {
+    const fake = installFakeAudio();
+    const engine = createSoundEngine();
+    engine.unlock();
+    fake.setState("interrupted");
+
+    engine.play("press");
+
+    expect(fake.resume).toHaveBeenCalled();
+  });
+
+  it("resumes when the page comes back to the front", () => {
+    const fake = installFakeAudio();
+    const engine = createSoundEngine();
+    engine.unlock();
+    fake.setState("suspended");
+    setVisibility("visible");
+
+    document.dispatchEvent(new Event("visibilitychange"));
+
+    expect(fake.resume).toHaveBeenCalled();
+  });
+
+  it("resumes when the page is restored from the back/forward cache", () => {
+    const fake = installFakeAudio();
+    const engine = createSoundEngine();
+    engine.unlock();
+    fake.setState("suspended");
+    setVisibility("visible");
+
+    window.dispatchEvent(new Event("pageshow"));
+
+    expect(fake.resume).toHaveBeenCalled();
+  });
+
+  it("leaves a context that never stopped alone", () => {
+    const fake = installFakeAudio();
+    const engine = createSoundEngine();
+    engine.unlock();
+    setVisibility("visible");
+
+    engine.play("press");
+    document.dispatchEvent(new Event("visibilitychange"));
+    window.dispatchEvent(new Event("pageshow"));
+
+    expect(fake.resume).not.toHaveBeenCalled();
   });
 
   it("degrades to silence when the browser has no audio context", () => {
