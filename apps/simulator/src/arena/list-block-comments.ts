@@ -1,19 +1,20 @@
 import { Elysia } from "elysia";
 import { Schema } from "effect";
-import { comment, notFound, paginationMeta, textBlock } from "./data";
+import { blockComments, knownBlockIds, notFound, paginationMeta } from "./data";
 
 export const blockCommentsRoute = new Elysia().get(
   "/v3/blocks/:id/comments",
   ({ params, query }) => {
-    if (params.id !== textBlock.id) {
+    const thread = blockComments.get(params.id);
+    if (thread === undefined && !knownBlockIds.has(params.id)) {
       return notFound;
     }
+    const data = thread ?? [];
     const per = query.per ?? 20;
-    const data = [comment];
     return { data, meta: paginationMeta(data.length, per, query.page ?? 1) };
   },
   {
-    params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite })),
+    params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.FiniteFromString })),
     query: Schema.toStandardSchemaV1(
       Schema.Struct({
         page: Schema.optional(Schema.FiniteFromString),

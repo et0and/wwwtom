@@ -27,6 +27,78 @@
     "updated_at": "2026-01-01T00:00:00.000Z",
     "counts": { "blocks": 0, "channels": 3, "contents": 3, "collaborators": 0 }
   },
+  "comments": {
+    "1001": [
+      {
+        "id": 4001,
+        "type": "Comment",
+        "body": {
+          "markdown": "Seven systems and not one of them documented.",
+          "html": "<p>Seven systems and not one of them documented.</p>",
+          "plain": "Seven systems and not one of them documented."
+        },
+        "created_at": "2025-02-10T10:00:00.000Z",
+        "updated_at": "2025-02-10T10:00:00.000Z",
+        "user": {
+          "id": 2002,
+          "type": "User",
+          "name": "Dani",
+          "slug": "dani",
+          "avatar": "https://cdn.are.na/dani.jpg",
+          "initials": "D"
+        },
+        "_links": {
+          "self": { "href": "https://www.are.na/v3/blocks/1001/comments/4001" }
+        }
+      },
+      {
+        "id": 4002,
+        "type": "Comment",
+        "body": {
+          "markdown": "The grail was the friends we made along the way.",
+          "html": "<p>The grail was the friends we made along the way.</p>",
+          "plain": "The grail was the friends we made along the way."
+        },
+        "created_at": "2025-02-11T09:00:00.000Z",
+        "updated_at": "2025-02-11T09:00:00.000Z",
+        "user": {
+          "id": 2001,
+          "type": "User",
+          "name": "Tom Hackshaw",
+          "slug": "tom-hackshaw",
+          "avatar": "https://cdn.are.na/tom.jpg",
+          "initials": "TH"
+        },
+        "_links": {
+          "self": { "href": "https://www.are.na/v3/blocks/1001/comments/4002" }
+        }
+      }
+    ],
+    "1003": [
+      {
+        "id": 4003,
+        "type": "Comment",
+        "body": {
+          "markdown": "Still the best route through the whole thing.",
+          "html": "<p>Still the best route through the whole thing.</p>",
+          "plain": "Still the best route through the whole thing."
+        },
+        "created_at": "2025-02-12T09:00:00.000Z",
+        "updated_at": "2025-02-12T09:00:00.000Z",
+        "user": {
+          "id": 2002,
+          "type": "User",
+          "name": "Dani",
+          "slug": "dani",
+          "avatar": "https://cdn.are.na/dani.jpg",
+          "initials": "D"
+        },
+        "_links": {
+          "self": { "href": "https://www.are.na/v3/blocks/1003/comments/4003" }
+        }
+      }
+    ]
+  },
   "posts": [
     {
       "channel": {
@@ -52,6 +124,7 @@
           "description": null,
           "created_at": "2025-02-10T09:00:00.000Z",
           "updated_at": "2025-02-10T09:00:00.000Z",
+          "comment_count": 2,
           "content": {
             "markdown": "## Seven systems\n\nThe nightly e2e ritual begins here. Every route is a command seal.",
             "html": "<h2>Seven systems</h2><p>The nightly e2e ritual begins here. Every route is a command seal.</p>",
@@ -65,6 +138,7 @@
           "description": null,
           "created_at": "2025-02-10T09:00:00.000Z",
           "updated_at": "2025-02-10T09:00:00.000Z",
+          "comment_count": 0,
           "image": {
             "src": "https://cdn.are.na/grail.jpg",
             "alt_text": "A grail-shaped diagram",
@@ -107,6 +181,7 @@
           "description": null,
           "created_at": "2025-02-10T09:00:00.000Z",
           "updated_at": "2025-02-10T09:00:00.000Z",
+          "comment_count": 1,
           "source": {
             "url": "https://example.com/unlimited-blade-works",
             "title": "Unlimited Blade Works"

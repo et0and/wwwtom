@@ -23,6 +23,7 @@ const decodeConnection = Schema.decodeUnknownSync(ConnectionSchema);
 
 type ArenaBlock = Schema.Schema.Type<typeof BlockSchema>;
 type ArenaConnection = Schema.Schema.Type<typeof ConnectionSchema>;
+type ArenaComment = Schema.Schema.Type<typeof CommentSchema>;
 
 export const channel = decodeChannel(arenaFixtures.channel);
 const worktableChannel = decodeChannel(arenaFixtures.worktable.channel);
@@ -35,7 +36,13 @@ const textConnection = decodeConnection(arenaFixtures.connections.text);
 const imageConnection = decodeConnection(arenaFixtures.connections.image);
 const worktableTextConnection = decodeConnection(arenaFixtures.worktable.connections.text);
 const worktableImageConnection = decodeConnection(arenaFixtures.worktable.connections.image);
-export const comment = decodeComment(arenaFixtures.comment);
+/** Comment threads by block id (fixtures/arena-content.json). */
+export const blockComments = new Map<number, ReadonlyArray<ArenaComment>>(
+  Object.entries(arenaContent.comments).map(([blockId, thread]) => [
+    Number(blockId),
+    thread.map((entry) => decodeComment(entry)),
+  ]),
+);
 
 /** Master channels and their entries (fixtures/arena-content.json). */
 const postsChannel = arenaContent.postsChannel;
@@ -46,6 +53,15 @@ const contentChannels = [
   workChannel,
   ...contentEntries.map((entry) => entry.channel),
 ];
+
+/** Every block the fixtures render: a known block answers an empty thread. */
+export const knownBlockIds: ReadonlySet<number> = new Set([
+  ...contentEntries.flatMap((entry) => entry.blocks.map((block) => block.id)),
+  textBlock.id,
+  imageBlock.id,
+  worktableTextBlock.id,
+  worktableImageBlock.id,
+]);
 
 export const notFound = { error: "The resource you are looking for does not exist." };
 
