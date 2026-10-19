@@ -36,7 +36,6 @@ describe("renderDefinition", () => {
       ".github/workflows/preview-sweep.yml",
       ".github/workflows/pr-review.yml",
       ".github/workflows/pr-comments.yml",
-      ".github/workflows/classifier-review.yml",
       ".github/workflows/opencode.yml",
       ".github/actions/setup/action.yml",
       ".github/actions/oc-gate/action.yml",
