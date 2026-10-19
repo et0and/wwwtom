@@ -202,3 +202,18 @@ Preview editors authenticate through the dev adapters: OAuth redirect
 URIs are exact-match at Google/GitHub, so per-PR hosts can never be
 registered. The dev APIs trust each PR's editor origin
 (`pr-<n>-cms.tom.so`, `pr-<n>-cms.sophie.st`).
+
+## Retired hosts
+
+`preview.tom.so` is **not** a preview host, despite the name. It is served
+by `wwwtom-preview`, a Worker last deployed on 2025-09-07 that nothing in
+this repo declares any more — the `preview` stack only posts the PR
+comment, so no stack owns that Worker or its custom domain. Current
+previews live on `pr-<n>-web.tom.so` / `pr-<n>-web.sophie.st`.
+
+It answers 200 for every path, so `/.env`, `/.git/config` and
+`/.ssh/id_rsa` all read as hits to a scanner. Retiring it means detaching
+the custom domain (`preview.tom.so`, domain id
+`b1aff2f4298e7e9e19bac418c5c962d17781f5f1`) and deleting the Worker; that
+needs a token with Workers Scripts: Edit, which `wrangler login` does not
+grant.
