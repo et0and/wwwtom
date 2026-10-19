@@ -29,6 +29,11 @@ const isDisabled = (element: Element): boolean => {
  * has to know this layer exists. `press` fires on the way down and either
  * `release` or `toggle` on the way up, which is what gives a click its weight:
  * state-changing controls get the two-part sound, navigation a single one.
+ *
+ * A link click is covered by that pair, but the browser's own back and forward
+ * controls are not: they land as `popstate` with no pointer events at all. That
+ * gets the navigation tick too, so stepping through history sounds like
+ * stepping through pages.
  */
 export function SoundEffects(props: {
   children: JSX.Element;
@@ -75,16 +80,24 @@ export function SoundEffects(props: {
       engine.play(element.matches(STATEFUL) ? "toggle" : "release", CLICK_VOLUME);
     };
 
+    /** Back, forward, and the mobile swipe-back gesture, which is `popstate` too. */
+    const onPopState = (): void => {
+      engine.unlock();
+      engine.play("tick", CLICK_VOLUME);
+    };
+
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("pointerup", onPointerUp, true);
     document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("popstate", onPopState);
 
     return () => {
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("pointerup", onPointerUp, true);
       document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("popstate", onPopState);
     };
   });
 

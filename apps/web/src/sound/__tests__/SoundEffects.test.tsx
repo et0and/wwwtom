@@ -62,6 +62,18 @@ describe("SoundEffects", () => {
     expect(playedNames(fake)).toEqual(["press", "release"]);
   });
 
+  it("plays the navigation tick when the browser steps through history", async () => {
+    const fake = createFakeEngine();
+    renderWithSound(fake, () => <p>Page</p>);
+
+    // The listeners attach in an effect, so let that flush before dispatching.
+    await Promise.resolve();
+    window.dispatchEvent(new PopStateEvent("popstate"));
+
+    expect(fake.unlock).toHaveBeenCalledTimes(1);
+    expect(playedNames(fake)).toEqual(["tick"]);
+  });
+
   it("stays silent when the press lands outside an interactive target", async () => {
     const fake = createFakeEngine();
     renderWithSound(fake, () => <p>Just text</p>);
