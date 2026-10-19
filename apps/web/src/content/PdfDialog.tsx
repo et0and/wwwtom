@@ -22,6 +22,7 @@ const styles = stylex.create({
     borderBottomStyle: "solid",
     borderBottomColor: colors["--color-tomui-line"],
     paddingInline: { default: "1rem", [SM]: "1.25rem" },
+    paddingBlock: spacing.py3,
   },
   actions: {
     display: "flex",
@@ -79,7 +80,7 @@ export function PdfDialog(props: PdfDialogProps) {
       </a>
       <Portal>
         <Dialog surface="full" style={pdfDialogStyles.panel}>
-          <div {...stylex.attrs(styles.header, layout.minWidth0, spacing.py3)}>
+          <div {...stylex.attrs(styles.header, layout.minWidth0)}>
             <Dialog.Title style={pdfDialogStyles.title}>
               <Text variant="heading" as="span">
                 {props.title}

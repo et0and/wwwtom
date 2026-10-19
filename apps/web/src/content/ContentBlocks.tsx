@@ -23,6 +23,8 @@ const DEFAULT_EMBED_ASPECT_RATIO = "16 / 9";
 const styles = stylex.create({
   textBlock: { maxWidth: "none", overflowWrap: "break-word", whiteSpace: "normal" },
   figureReset: { margin: 0 },
+  /** One are.na block per row, with the rhythm the page has always had. */
+  blockRow: { paddingBlock: spacing.py4 },
   playOverlay: {
     display: "flex",
     alignItems: "center",
@@ -34,7 +36,7 @@ const styles = stylex.create({
     width: "3.5rem",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.full.borderRadius,
+    borderRadius: radius.full,
     backgroundColor: `color-mix(in srgb, ${colors["--color-black"]} 60%, transparent)`,
     color: colors["--color-white"],
   },
@@ -47,6 +49,8 @@ const styles = stylex.create({
     display: "block",
     borderWidth: 0,
     backgroundColor: "transparent",
+    cursor: cursor.pointer,
+    padding: spacing.p0,
   },
   videoCoverFallback: {
     position: "relative",
@@ -207,13 +211,7 @@ function VideoAttachment(props: { url: string; name: string; cover: ArenaImage |
           type="button"
           onClick={() => setIsPlaying(true)}
           aria-label={`Play ${props.name}`}
-          {...stylex.attrs(
-            styles.videoTrigger,
-            layout.fullWidth,
-            cursor.pointer,
-            spacing.p0,
-            textAlign.left,
-          )}
+          {...stylex.attrs(styles.videoTrigger, layout.fullWidth, textAlign.left)}
         >
           <Show
             when={cover()}
@@ -333,13 +331,7 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
               type="button"
               onClick={() => setIsPlaying(true)}
               aria-label={`Play ${props.block.title ?? "video"}`}
-              {...stylex.attrs(
-                layout.relative,
-                styles.videoTrigger,
-                layout.fullWidth,
-                cursor.pointer,
-                spacing.p0,
-              )}
+              {...stylex.attrs(layout.relative, styles.videoTrigger, layout.fullWidth)}
             >
               <span {...stylex.attrs(layout.relative, layout.block)}>
                 <img
@@ -384,7 +376,7 @@ export function ContentBlocks(props: { blocks: ReadonlyArray<ArenaContentBlock> 
     <div class="content-blocks">
       <For each={props.blocks}>
         {(block) => (
-          <div {...stylex.attrs(spacing.py4)}>
+          <div {...stylex.attrs(styles.blockRow)}>
             <Switch>
               <Match when={asBlock(block, "Text")}>{(text) => <TextBlock block={text()} />}</Match>
               <Match when={asBlock(block, "Image")}>

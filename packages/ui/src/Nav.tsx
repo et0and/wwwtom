@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import type { JSX } from "@solidjs/web";
 import { createEffect, createSignal, For, Show } from "solid-js";
 import { fontSizeLg } from "./styles/typography.stylex";
 
@@ -37,6 +38,12 @@ const styles = stylex.create({
     lineHeight: fontSizeLg.lineHeight,
     [MD]: { display: "none" },
   },
+  /** Trailing controls: the caller's `actions` slot, then the mobile menu. */
+  trailing: {
+    display: "flex",
+    alignItems: "center",
+    gap: "0.75rem",
+  },
   dropdown: {
     display: "block",
     [MD]: { display: "none" },
@@ -65,7 +72,7 @@ const dropdownAttrs = {
   class: ["nav-dropdown", generatedDropdownAttrs.class].filter(Boolean).join(" "),
 };
 
-export function Nav() {
+export function Nav(props: { actions?: JSX.Element }) {
   const [isOpen, setIsOpen] = createSignal(false);
 
   const navItems = [
@@ -96,9 +103,12 @@ export function Nav() {
         <div {...stylex.attrs(styles.links)}>
           <For each={navItems}>{(item) => <a href={item.href}>{item.label}</a>}</For>
         </div>
-        <button {...stylex.attrs(styles.menuButton)} onClick={() => setIsOpen(!isOpen())}>
-          Menu
-        </button>
+        <div {...stylex.attrs(styles.trailing)}>
+          {props.actions}
+          <button {...stylex.attrs(styles.menuButton)} onClick={() => setIsOpen(!isOpen())}>
+            Menu
+          </button>
+        </div>
       </div>
       <Show when={isOpen()}>
         <div {...dropdownAttrs}>

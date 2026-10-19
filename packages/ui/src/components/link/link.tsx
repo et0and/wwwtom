@@ -20,7 +20,7 @@ const styles = stylex.create({
     alignItems: "center",
     gap: "0.1875em",
     // A link wrapping a badge rounds to the badge's pill shape.
-    ":has(> [data-tomui-component=Badge])": { borderRadius: radius.full.borderRadius },
+    ":has(> [data-tomui-component=Badge])": { borderRadius: radius.full },
   },
   /** Defence against global `a` rules overriding the link colour. */
   inline: { color: linkColor },

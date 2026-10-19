@@ -9,6 +9,8 @@ import { layout } from "@tom/ui/primitives.stylex";
 import { getQueryClient } from "~/data/query-client";
 import { Router } from "~/router";
 import { layoutStyles } from "~/chrome/layout.stylex";
+import { SoundProvider } from "~/sound/SoundProvider";
+import { SoundToggle } from "~/sound/SoundToggle";
 import "./app.css";
 
 function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
@@ -17,7 +19,7 @@ function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
     <ViewTransitions>
       <div {...stylex.attrs(layoutStyles.minHeightScreen, layout.flexCol)}>
         <SkipLink />
-        <Nav />
+        <Nav actions={<SoundToggle />} />
         <div {...stylex.attrs(layoutStyles.flexOne)}>{props.children}</div>
         <Footer
           version={import.meta.env.VITE_APP_VERSION}
@@ -35,7 +37,9 @@ export default function App() {
 
   return (
     <QueryClientProvider client={client}>
-      <Router>{(props) => <RootLayout>{props.children}</RootLayout>}</Router>
+      <SoundProvider>
+        <Router>{(props) => <RootLayout>{props.children}</RootLayout>}</Router>
+      </SoundProvider>
     </QueryClientProvider>
   );
 }
