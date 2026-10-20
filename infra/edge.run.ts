@@ -38,26 +38,42 @@ const adoptZone = (zone: ZoneRef) =>
 /**
  * Credential and key material: paths whose only purpose is to be stolen.
  * Blocked with a 403 so they stand out in firewall analytics instead of
- * blending into the 404s.
+ * blending into the 404s. Matched anywhere in the path rather than at the
+ * root, because scanners try both `/.ssh/id_rsa` and a bare `/id_rsa`, and
+ * `/.aws/credentials` as well as `/aws/credentials`; `%2f.env` catches the
+ * encoded slash in `/admin%2F.env`.
  */
-const CREDENTIAL_PATHS = ["/.env", "/.git", "/.svn", "/.ssh", "/.aws"] as const;
+const CREDENTIAL_PATHS = [
+  "/.env",
+  "/.git",
+  "/.svn",
+  "/.ssh",
+  "/.aws",
+  "id_rsa",
+  "id_ed25519",
+  "aws/credentials",
+  "%2f.env",
+] as const;
 
 /**
  * Everything else no visitor or crawler requests. Matched case-insensitively
- * because scanners vary casing to dodge naive rules. This account serves no
- * WordPress, no PHP and no admin panel, so any hit is a probe.
+ * because scanners vary casing to dodge naive rules, and anywhere in the path
+ * because they nest probe names under an app directory (`/press/wp-json/`) or
+ * a filename suffix (`terraform.tfstate`). This account serves no WordPress,
+ * no PHP and no admin panel, so any hit is a probe.
  */
 const PROBE_PATHS = [
   "/.ds_store",
-  "/wp-",
+  "wp-",
   "/xmlrpc.php",
   "/phpmyadmin",
   "/adminer",
   "/phpinfo",
+  "config.php",
   ".sql",
   ".bak",
   ".old",
-  "/tfstate",
+  "tfstate",
   "docker-compose",
 ] as const;
 
