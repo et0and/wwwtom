@@ -3,125 +3,81 @@ import { actionPins, checkout, setupStep } from "../catalog/actions";
 import { secret } from "../catalog/secrets";
 
 /**
- * Sorts a PR's changed files by how much review attention each needs
- * (classifier.dev) and keeps one sticky comment updated. The first triage of
- * a PR is then addressed automatically by opencode; later pushes only refresh
- * the sticky comment, and re-runs come from the `/classifier` hook.
+ * PR triage, done by an agent instead of classifier.dev.
  *
- * Both jobs check out the base branch, not the PR merge commit, so a PR can
- * never swap the bot that runs with `pull-requests: write`. Fork PRs are
- * skipped: their token cannot comment.
+ * classifier.dev only sorted the changed files by how much attention they
+ * needed, and a sticky comment carried that verdict to a second job that ran
+ * opencode over the flagged files. That handshake is what this replaces: one
+ * agent reads the diff, decides what matters itself, and posts a single
+ * review comment. The model is a cheap flash lane at low reasoning effort —
+ * this is triage, not a substitute for a human review.
+ *
+ * Comment only. It does not edit, push, approve or merge, so a run can never
+ * change the branch it is reviewing.
+ *
+ * Both the gate and the checkout are the base branch, never the PR head, so a
+ * PR cannot swap the code that runs with `pull-requests: write`. Fork PRs and
+ * drafts are skipped.
  */
 export const prReview = workflow("pr-review", {
-  name: "PR review triage",
+  name: "PR triage",
   on: {
     pull_request: {
       types: ["opened", "synchronize", "reopened", "ready_for_review"],
       branches: ["dev"],
     },
   },
-  permissions: { contents: "read", "pull-requests": "write" },
-  // One run per PR. Not cancel-in-progress: a push would otherwise kill the
-  // agent mid-review, and the replacement run never re-enters the address job.
+  permissions: {
+    "id-token": "write",
+    contents: "read",
+    "pull-requests": "write",
+    issues: "write",
+  },
+  // One review per PR, and a new push supersedes the review of the old head:
+  // the job only comments, so there is no work to lose by cancelling.
   concurrency: {
-    group: "pr-review-${{ github.event.pull_request.number }}",
-    "cancel-in-progress": false,
+    group: "pr-triage-${{ github.event.pull_request.number }}",
+    "cancel-in-progress": true,
   },
   jobs: {
     triage: {
-      name: "Triage changed files",
+      name: "Triage the diff",
       "runs-on": "namespace-profile-yufugumi",
       if: "github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false",
       steps: [
-        // The triage script is taken from the base branch, never the PR head.
-        checkout("Checkout base branch", {
-          ref: "${{ github.event.pull_request.base.sha }}",
-          "persist-credentials": false,
-        }),
-        setupStep({ install: "false" }),
-        step({
-          name: "Classify changed files and upsert the sticky comment",
-          env: { GH_TOKEN: "${{ github.token }}" },
-          run: [
-            "# On the PR that introduces this workflow the base branch has no",
-            "# script yet; skip until it lands there.",
-            "if [ ! -f scripts/pr-review.ts ]; then",
-            '  echo "scripts/pr-review.ts not on the base branch yet; skipping."',
-            "  exit 0",
-            "fi",
-            "node scripts/pr-review.ts \\",
-            '  --repo="${{ github.repository }}" \\',
-            "  --pr=${{ github.event.pull_request.number }}",
-          ],
-        }),
-      ],
-    },
-    address: {
-      name: "Address the triage",
-      needs: "triage",
-      // Only the PR's first triage, and only when et0and pushed: the opencode
-      // action asserts the triggering actor's write permission, so the
-      // agent's own commits and bot PRs must not re-enter here.
-      if: "(github.event.action == 'opened' || github.event.action == 'ready_for_review') && github.actor == 'et0and'",
-      "runs-on": "namespace-profile-yufugumi",
-      permissions: {
-        "id-token": "write",
-        contents: "write",
-        "pull-requests": "write",
-      },
-      steps: [
-        // The opencode action fetches and checks out the PR branch itself.
         checkout("Checkout base branch", {
           ref: "${{ github.event.pull_request.base.sha }}",
           "persist-credentials": false,
         }),
         // The runner's default Node is older than the pnpm this repo pins, so
-        // the agent's `git push` failed in the pre-push hook. Put Node 24 and
-        // the pinned pnpm on the job PATH; the agent installs deps itself.
+        // the agent's own tooling needs Node 24 and pnpm on the job PATH. It
+        // installs dependencies itself; nothing here needs them.
         setupStep({ install: "false" }),
         step({
-          name: "Address the triage",
+          name: "Triage",
           uses: actionPins.opencode,
-          // The agent's `git push` runs .husky/pre-push, which runs the whole
-          // Playwright fixture suite when apps/web changes. The runner has no
-          // browsers, so the hook fails and git aborts the push with "failed to
-          // push some refs". HUSKY=0 makes the shim skip the hook; CI runs the
-          // same tests anyway.
           env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY"), HUSKY: "0" },
           with: {
-            model: "opencode-go/muse-spark-1.3-contributor",
-            // Rebase first, so the push fast-forwards.
+            model: "opencode-go/deepseek-v4.1-flash",
+            // Low reasoning effort: a cheap read of the diff, not a deep audit.
+            variant: "low",
             prompt: [
-              "Respond to the classifier.dev review triage on this pull request.",
+              "Triage pull request #${{ github.event.pull_request.number }}",
+              "against its base branch. `gh pr diff` has the change; read the",
+              "files it touches for the parts that matter.",
               "",
-              "The sticky comment whose first line is",
-              "`<!-- classifier-pr-review -->`, posted by this workflow, groups",
-              "the changed files by review attention. Work through the files it",
-              'lists under "needs careful review".',
+              "Report only what is genuinely wrong: real defects, and",
+              "violations of AGENTS.md or the nearest AGENTS.md in a",
+              "directory. Skip style nits, anything a formatter or linter",
+              "already catches, and anything already correct.",
               "",
-              "For each flagged file:",
-              "1. Read the file and the part of the diff that touches it.",
-              "2. Review it for real defects and repo-standard violations",
-              "   (AGENTS.md, plus the nearest AGENTS.md in its directory).",
-              "3. Fix genuine issues with the smallest correct change. When a",
-              "   flag is already handled, is not a real issue, or needs a",
-              "   human call, leave the code alone and say why.",
+              "Post exactly one comment on the PR: the findings that matter,",
+              "most important first, each with the file and the reason. Say",
+              "plainly when a change is fine. If you find nothing, post one",
+              "line saying so.",
               "",
-              "Do not touch unrelated code, do not merge, and do not edit",
-              ".github/workflows/ or .github/actions/.",
-              "",
-              "Verify before pushing: `pnpm turbo run typecheck`,",
-              "`pnpm turbo run test`, `pnpm turbo run lint`, `pnpm format`.",
-              "",
-              "Then commit with a conventional commit message. The PR branch",
-              "may move while you work, so sync before pushing or GitHub will",
-              "reject the push as non-fast-forward: `git fetch origin` then",
-              "`git rebase origin/$(git branch --show-current)`. If a push is",
-              "rejected, rebase and retry once.",
-              "",
-              "Keep the response short: what you fixed, what you checked and",
-              "left alone, and the verification results. If the sticky triage",
-              "comment is missing, say so in one line and stop.",
+              "Do not edit files, do not push, do not approve, and do not",
+              "merge — this run must not change the branch it reviews.",
             ],
           },
         }),

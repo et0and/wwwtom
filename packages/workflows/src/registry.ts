@@ -2,7 +2,6 @@ import type { Definition } from "./builders";
 import { ocGate } from "./definitions/actions/oc-gate";
 import { setup } from "./definitions/actions/setup";
 import { ci } from "./definitions/ci";
-import { classifierReview } from "./definitions/classifier-review";
 import { deploy } from "./definitions/deploy";
 import { e2e } from "./definitions/e2e";
 import { opencode } from "./definitions/opencode";
@@ -29,7 +28,6 @@ export const definitions: ReadonlyArray<Definition> = [
   previewSweep,
   prReview,
   prComments,
-  classifierReview,
   opencode,
   setup,
   ocGate,
