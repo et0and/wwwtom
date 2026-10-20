@@ -1,3 +1,10 @@
+# [4.7.0](https://github.com/et0and/wwwtom/compare/v4.6.0...v4.7.0) (2026-10-20)
+
+
+### Features
+
+* **ci:** triage PRs with an opencode agent on a flash model ([dcc3888](https://github.com/et0and/wwwtom/commit/dcc3888d3b320c221d9697014570d1cb7e03a185))
+
 # [4.6.0](https://github.com/et0and/wwwtom/compare/v4.5.2...v4.6.0) (2026-10-19)
 
 
