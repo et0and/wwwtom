@@ -136,6 +136,14 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
       "Answer reconnaissance probes at the edge: credential files, VCS metadata, WordPress paths, admin panels, backups.",
     rules: [
       {
+        // The Worker and custom domain were never removed (see README,
+        // "Retired hosts"), so the stale origin still answers 200 for every
+        // path. Block the host at the edge until the Worker is deleted.
+        description: "Retire preview.tom.so: the orphaned Worker answers 200 for every path",
+        expression: 'http.host eq "preview.tom.so"',
+        action: "block",
+      },
+      {
         description: "Block credential and key material paths",
         expression: pathContains(CREDENTIAL_PATHS),
         action: "block",
