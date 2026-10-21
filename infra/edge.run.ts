@@ -38,9 +38,32 @@ const adoptZone = (zone: ZoneRef) =>
 /**
  * Credential and key material: paths whose only purpose is to be stolen.
  * Blocked with a 403 so they stand out in firewall analytics instead of
- * blending into the 404s.
+ * blending into the 404s. `.env` matches anywhere in the path, so suffix
+ * variants such as `/application/.local.env` are covered too, not only a
+ * leading `/.env`. Covers the credential files scanners ask for by name —
+ * `.dev.vars`, shell and package config, key material, cloud credentials,
+ * and the container token path.
  */
-const CREDENTIAL_PATHS = ["/.env", "/.git", "/.svn", "/.ssh", "/.aws"] as const;
+const CREDENTIAL_PATHS = [
+  ".env",
+  "/.git",
+  "/.svn",
+  "/.ssh",
+  "/.aws",
+  "/.dev.vars",
+  "/.htpasswd",
+  "/.npmrc",
+  "/.s3cfg",
+  "/.zshrc",
+  "/.bashrc",
+  ".pem",
+  ".key",
+  "credentials.json",
+  "docker/config.json",
+  "proc/self/environ",
+  "service-account",
+  "serviceaccount",
+] as const;
 
 /**
  * Everything else no visitor or crawler requests. Matched case-insensitively
