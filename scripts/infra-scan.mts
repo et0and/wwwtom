@@ -215,11 +215,16 @@ const resolveAccountId = async (token: string): Promise<string> => {
 const buildQuery = (args: Args, sinceIso: string): string => {
   const hostFilter = args.host === null ? "" : `, clientRequestHTTPHost: "${args.host}"`;
   const window = `datetime_geq: "${sinceIso}"${hostFilter}`;
+  /**
+   * Soft hits are filtered in the query, not after it. Taking a family's top
+   * paths first let its high-volume 403s crowd a low-volume 200 out of the
+   * report, which is exactly the answer a scanner walks away believing.
+   */
   const patternFields = PROBE_PATTERNS.map(
     (pattern) => `
       ${pattern.id}_total: httpRequestsAdaptiveGroups(limit: 1, filter: { ${window}, clientRequestPath_like: "${pattern.like}" }) { count }
       ${pattern.id}_hosts: httpRequestsAdaptiveGroups(limit: 10, filter: { ${window}, clientRequestPath_like: "${pattern.like}" }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost } }
-      ${pattern.id}_paths: httpRequestsAdaptiveGroups(limit: 15, filter: { ${window}, clientRequestPath_like: "${pattern.like}" }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost clientRequestPath edgeResponseStatus } }`,
+      ${pattern.id}_paths: httpRequestsAdaptiveGroups(limit: 15, filter: { ${window}, clientRequestPath_like: "${pattern.like}", edgeResponseStatus_geq: 200, edgeResponseStatus_lt: 400 }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost clientRequestPath edgeResponseStatus } }`,
   ).join("\n");
 
   return `query ScanInfra {
@@ -235,8 +240,11 @@ ${patternFields}
   }`;
 };
 
-const isOwnHost = (host: string): boolean =>
-  OWN_HOST_SUFFIXES.some((suffix) => host === suffix || host.endsWith(`.${suffix}`));
+/** `clientRequestHTTPHost` keeps an explicit port, so strip it before matching. */
+const isOwnHost = (host: string): boolean => {
+  const hostname = host.replace(/:\d+$/, "");
+  return OWN_HOST_SUFFIXES.some((suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`));
+};
 
 const collect = (
   account: Readonly<Record<string, ReadonlyArray<Group>>>,
@@ -289,9 +297,13 @@ const count = (value: number): string => value.toLocaleString("en-US");
 
 const renderMarkdown = (report: Report): string => {
   const withTraffic = report.patterns.filter((pattern) => pattern.total > 0);
-  const softHits = withTraffic.flatMap((pattern) =>
-    pattern.softHits.map((hit) => ({ ...hit, label: pattern.label })),
-  );
+  // One hit per pattern before any repeats: a high-volume family (credential
+  // files) must not fill the table and hide a low-volume family's soft 200.
+  const softHits = withTraffic
+    .flatMap((pattern) =>
+      pattern.softHits.map((hit, rank) => ({ ...hit, label: pattern.label, rank })),
+    )
+    .sort((a, b) => a.rank - b.rank);
   const probed = withTraffic.reduce((sum, pattern) => sum + pattern.total, 0);
   const share = report.totalRequests === 0 ? 0 : Math.round((probed / report.totalRequests) * 100);
 
