@@ -71,6 +71,12 @@ const pathContains = (paths: ReadonlyArray<string>): string =>
  */
 const ASSET_PATH = String.raw`\.(?:js|mjs|css|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|map)$`;
 
+/**
+ * Both zones are on the Free plan, and its custom-rule response is the
+ * default 403 block page: custom response codes and bodies need Pro. The
+ * two rules stay separate anyway so credential probes still stand out by
+ * rule name in firewall analytics.
+ */
 const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
   Cloudflare.Ruleset.Ruleset(`EdgeProbeRules-${zoneId}`, {
     zone,
@@ -84,25 +90,20 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
         action: "block",
       },
       {
-        description: "404 the remaining probe surface",
+        description: "Block the remaining probe surface",
         expression: pathContains(PROBE_PATHS),
         action: "block",
-        actionParameters: {
-          response: {
-            statusCode: 404,
-            content: "Not found",
-            contentType: "text/plain",
-          },
-        },
       },
     ],
   });
 
 /**
  * One rate limiting rule per zone on purpose: the Free plan allows a single
- * rate limiting rule, so adding a second would fail to deploy. The window is
- * generous enough that a person reading the site never sees it — a scanner
- * sweeping thousands of paths hits it immediately.
+ * rate limiting rule, so adding a second would fail to deploy. It also caps
+ * the counting period and mitigation timeout at 10s, so 20 requests per 10s
+ * preserves the original 120-per-minute budget. That is generous enough that
+ * a person reading the site never sees it — a scanner sweeping thousands of
+ * paths hits it immediately.
  */
 const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
   Cloudflare.Ruleset.Ruleset(`EdgeRateLimit-${zoneId}`, {
@@ -114,18 +115,11 @@ const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
         description: "Rate limit non-asset requests per IP",
         expression: `not (http.request.uri.path matches "${ASSET_PATH}")`,
         action: "block",
-        actionParameters: {
-          response: {
-            statusCode: 429,
-            content: "Too many requests",
-            contentType: "text/plain",
-          },
-        },
         ratelimit: {
           characteristics: ["ip.src"],
-          period: 60,
-          requestsPerPeriod: 120,
-          mitigationTimeout: 60,
+          period: 10,
+          requestsPerPeriod: 20,
+          mitigationTimeout: 10,
         },
       },
     ],

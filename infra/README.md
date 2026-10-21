@@ -133,12 +133,17 @@ origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
 - `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`) answer 403; the wider probe surface (`/wp-*`,
+  `/.svn`, `/.ssh`, `/.aws`) and the wider probe surface (`/wp-*`,
   `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`, `.bak`, `.old`, `/tfstate`,
-  `docker-compose`) answers 404.
-- `http_ratelimit`: one per-IP rule per zone (120 requests/60s on non-asset
-  paths, 60s mitigation). One rule only — the Free plan allows a single rate
-  limiting rule per zone, so a second would fail to deploy.
+  `docker-compose`) answer the default 403 block page. Custom response codes
+  and bodies need a Pro plan, and both zones are Free, so the rules cannot set
+  a 404 — the separate rule names keep credential probes visible in firewall
+  analytics.
+- `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
+  paths, 10s mitigation — the Free plan caps the counting period and
+  mitigation timeout at 10s, so this preserves the original 120-per-minute
+  budget). One rule only — the Free plan allows a single rate limiting rule
+  per zone, so a second would fail to deploy.
 
 The zones are referenced by id, never declared as resources here, so this
 stack cannot adopt, rename or delete a zone. It does own both phase
