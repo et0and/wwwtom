@@ -1,3 +1,10 @@
+## [4.7.1](https://github.com/et0and/wwwtom/compare/v4.7.0...v4.7.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **security:** deploy edge rules within free-plan limits ([a84407b](https://github.com/et0and/wwwtom/commit/a84407bd2dac25b28c85556dcd677decb998c466))
+
 # [4.7.0](https://github.com/et0and/wwwtom/compare/v4.6.0...v4.7.0) (2026-10-20)
 
 
