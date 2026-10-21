@@ -59,6 +59,7 @@ const PROBE_PATHS = [
   ".old",
   "/tfstate",
   "docker-compose",
+  "backup",
 ] as const;
 
 const pathContains = (paths: ReadonlyArray<string>): string =>
