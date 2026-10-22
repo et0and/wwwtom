@@ -42,7 +42,7 @@ const adoptZone = (zone: ZoneRef) =>
  * variants such as `/application/.local.env` are covered too, not only a
  * leading `/.env`. Covers the credential files scanners ask for by name —
  * `.dev.vars`, shell and package config, key material, cloud credentials,
- * and the container token path.
+ * package registry tokens and the container token path.
  */
 const CREDENTIAL_PATHS = [
   ".env",
@@ -63,6 +63,8 @@ const CREDENTIAL_PATHS = [
   "proc/self/environ",
   "service-account",
   "serviceaccount",
+  "cargo/credentials",
+  "sa.json",
 ] as const;
 
 /**
