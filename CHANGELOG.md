@@ -1,3 +1,10 @@
+## [4.7.3](https://github.com/et0and/wwwtom/compare/v4.7.2...v4.7.3) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** block backup-file probes at the edge ([98d19b4](https://github.com/et0and/wwwtom/commit/98d19b4c5d69ed8342164d3ed2034da569da8902))
+
 ## [4.7.2](https://github.com/et0and/wwwtom/compare/v4.7.1...v4.7.2) (2026-10-22)
 
 
