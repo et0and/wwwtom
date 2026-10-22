@@ -133,12 +133,13 @@ origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
 - `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`) and the wider
-  probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`,
-  `.bak`, `.old`, `/tfstate`, `docker-compose`) answer the default 403 block
-  page. Custom response codes and bodies need a Pro plan, and both zones are
-  Free, so the rules cannot set a 404 — the separate rule names keep credential
-  probes visible in firewall analytics.
+  `/.svn`, `/.ssh`, `/.aws`, `/.netrc`, `/.pgpass`, `.p12`, `.pfx`,
+  `private-key`, `private_key`, `id_dsa`, `id_ecdsa`, `.cargo/credentials`,
+  `sa.json`) and the wider probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`,
+  `/phpinfo`, `.sql`, `.bak`, `.old`, `/tfstate`, `docker-compose`) answer the
+  default 403 block page. Custom response codes and bodies need a Pro plan, and
+  both zones are Free, so the rules cannot set a 404 — the separate rule names
+  keep credential probes visible in firewall analytics.
 - `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
   paths, 10s mitigation — the Free plan caps the counting period and
   mitigation timeout at 10s, so this preserves the original 120-per-minute
