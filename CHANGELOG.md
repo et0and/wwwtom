@@ -1,3 +1,12 @@
+## [4.7.2](https://github.com/et0and/wwwtom/compare/v4.7.1...v4.7.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **ci:** cap the PR triage agent at 30 minutes ([ec89f8f](https://github.com/et0and/wwwtom/commit/ec89f8f0cc3350effdfe951b6b60e706ac5239dd)), closes [#212](https://github.com/et0and/wwwtom/issues/212)
+* **security:** answer every PHP probe at the edge ([dbb197b](https://github.com/et0and/wwwtom/commit/dbb197b850ba1c4468cad7457b3dcdbbe86ba643)), closes [#207](https://github.com/et0and/wwwtom/issues/207)
+* **security:** finish destroying orphaned PR previews ([f9710f7](https://github.com/et0and/wwwtom/commit/f9710f7e12a1079391b2c0fa1c03f2521862c363))
+
 ## [4.7.1](https://github.com/et0and/wwwtom/compare/v4.7.0...v4.7.1) (2026-10-21)
 
 
