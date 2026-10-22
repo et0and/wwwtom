@@ -93,6 +93,21 @@ describe("SoundEffects", () => {
     expect(playedNames(fake)).toEqual(["press", "toggle", "press", "toggle", "press", "toggle"]);
   });
 
+  it("plays the toggle voice for an option role", async () => {
+    const fake = createFakeEngine();
+    renderWithSound(fake, () => (
+      <div role="listbox">
+        <button type="button" role="option" aria-selected="false">
+          One
+        </button>
+      </div>
+    ));
+
+    await userEvent.click(screen.getByRole("option", { name: "One" }));
+
+    expect(playedNames(fake)).toEqual(["press", "toggle"]);
+  });
+
   it("plays the toggle voice when the label is the click target", async () => {
     const fake = createFakeEngine();
     renderWithSound(fake, () => (
