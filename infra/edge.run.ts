@@ -139,8 +139,10 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
         // The Worker and custom domain were never removed (see README,
         // "Retired hosts"), so the stale origin still answers 200 for every
         // path. Block the host at the edge until the Worker is deleted.
+        // Hostnames are case-insensitive, but `http.host` keeps the client's
+        // casing, so compare the lowercased value like the path rules do.
         description: "Retire preview.tom.so: the orphaned Worker answers 200 for every path",
-        expression: 'http.host eq "preview.tom.so"',
+        expression: 'lower(http.host) eq "preview.tom.so"',
         action: "block",
       },
       {
