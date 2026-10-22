@@ -1,3 +1,12 @@
+## [4.7.6](https://github.com/et0and/wwwtom/compare/v4.7.5...v4.7.6) (2026-10-22)
+
+
+### Bug Fixes
+
+* **scripts:** keep soft hits on our own hosts ([547772b](https://github.com/et0and/wwwtom/commit/547772b5a8ec2a18c07aee0c417bee600b843eb0))
+* **security:** block cargo and service-account key probes at the edge ([a1c1b6c](https://github.com/et0and/wwwtom/commit/a1c1b6c93b084d9abdd6652b0cc7071c40e8f2c9))
+* **security:** surface every soft hit in the infra scan ([c6689b6](https://github.com/et0and/wwwtom/commit/c6689b655b2bdf07a6a7decf7eb6c34084b8883f)), closes [hi#volume](https://github.com/hi/issues/volume)
+
 ## [4.7.5](https://github.com/et0and/wwwtom/compare/v4.7.4...v4.7.5) (2026-10-22)
 
 
