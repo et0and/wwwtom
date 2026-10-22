@@ -50,7 +50,7 @@ const CREDENTIAL_PATHS = ["/.env", "/.git", "/.svn", "/.ssh", "/.aws"] as const;
 const PROBE_PATHS = [
   "/.ds_store",
   "/wp-",
-  "/xmlrpc.php",
+  ".php",
   "/phpmyadmin",
   "/adminer",
   "/phpinfo",
