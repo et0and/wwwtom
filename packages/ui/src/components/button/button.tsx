@@ -192,7 +192,10 @@ const styles = stylex.create({
     transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
     ":hover": { backgroundImage: glassFaceHover },
     ":active": { transform: "scale(0.97)" },
-    [REDUCED_MOTION]: { transitionDuration: "0s" },
+    [REDUCED_MOTION]: {
+      transitionDuration: "0s",
+      ":active": { transform: "none" },
+    },
   },
 
   // Focus ring. Overrides the variant box shadow, so it is applied last.

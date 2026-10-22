@@ -1,14 +1,14 @@
-import { onSettled } from "solid-js";
+import { createSignal, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { createSoundEngine, type SoundEngine } from "./engine";
 
 /** Anything a pointer press should click against. */
 const PRESSABLE =
-  'a[href], button, summary, [role="button"], [role="tab"], [role="switch"], [role="menuitem"]';
+  'a[href], button, summary, select, input[type="checkbox"], input[type="radio"], [role="button"], [role="tab"], [role="switch"], [role="menuitem"]';
 
 /** Pressables whose activation changes state rather than navigating. */
 const STATEFUL =
-  'summary, input[type="checkbox"], input[type="radio"], [aria-pressed], [role="tab"], [role="switch"]';
+  'summary, select, input[type="checkbox"], input[type="radio"], [aria-pressed], [role="tab"], [role="switch"]';
 
 const isDisabled = (element: Element): boolean => {
   if (
@@ -38,7 +38,7 @@ export function SoundEffects(props: {
   createEngine?: () => SoundEngine;
 }) {
   const engine = (props.createEngine ?? createSoundEngine)();
-  let pressed: Element | undefined;
+  const [pressed, setPressed] = createSignal<Element | undefined>();
 
   onSettled(() => {
     const pressableFrom = (target: EventTarget | null): Element | undefined => {
@@ -51,14 +51,16 @@ export function SoundEffects(props: {
     const onPointerDown = (event: PointerEvent): void => {
       if (event.button !== 0) return;
       engine.unlock();
-      pressed = pressableFrom(event.target);
-      if (pressed !== undefined) engine.play("press");
+      const element = pressableFrom(event.target);
+      setPressed(element);
+      if (element !== undefined) engine.play("press");
     };
 
     const onPointerUp = (): void => {
-      if (pressed === undefined) return;
-      const wasStateful = pressed.matches(STATEFUL);
-      pressed = undefined;
+      const element = pressed();
+      if (element === undefined) return;
+      const wasStateful = element.matches(STATEFUL);
+      setPressed(undefined);
       engine.play(wasStateful ? "toggle" : "release");
     };
 

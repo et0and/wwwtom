@@ -1,3 +1,5 @@
+import { Effect } from "effect";
+
 import {
   SOUND_PRESETS,
   type SoundLayer,
@@ -33,6 +35,13 @@ interface SoundGraph {
   context: AudioContext;
   master: GainNode;
   noise: AudioBuffer;
+}
+
+interface SoundEngineState {
+  context: AudioContext | undefined;
+  master: GainNode | undefined;
+  noise: AudioBuffer | undefined;
+  hasUnlocked: boolean;
 }
 
 type AudioContextFactory = new () => AudioContext;
@@ -191,22 +200,23 @@ const soundLifetime = (
  * than a missing click.
  */
 export const createSoundEngine = (): SoundEngine => {
-  let context: AudioContext | undefined;
-  let master: GainNode | undefined;
-  let noise: AudioBuffer | undefined;
-  let hasUnlocked = false;
+  const state: SoundEngineState = {
+    context: undefined,
+    master: undefined,
+    noise: undefined,
+    hasUnlocked: false,
+  };
 
   const ensureGraph = (): SoundGraph | undefined => {
-    if (context !== undefined && master !== undefined && noise !== undefined) {
-      return { context, master, noise };
+    if (state.context !== undefined && state.master !== undefined && state.noise !== undefined) {
+      return { context: state.context, master: state.master, noise: state.noise };
     }
     const Factory = audioContextFactory();
     if (Factory === undefined) return undefined;
-    try {
-      context = new Factory();
-    } catch {
-      return undefined;
-    }
+    const context = Effect.runSync(
+      Effect.try(() => new Factory()).pipe(Effect.orElseSucceed(() => undefined)),
+    );
+    if (context === undefined) return undefined;
     // The compressor tames the peaks that appear when a sound overlaps the
     // tail of the previous one; without it the master gain would have to be
     // set low enough to make single sounds inaudible.
@@ -216,11 +226,14 @@ export const createSoundEngine = (): SoundEngine => {
     compressor.ratio.value = 12;
     compressor.attack.value = 0.002;
     compressor.release.value = 0.08;
-    master = context.createGain();
+    const master = context.createGain();
     master.gain.value = MASTER_GAIN;
     master.connect(compressor).connect(context.destination);
-    noise = createNoiseBuffer(context);
+    const noise = createNoiseBuffer(context);
     resumeWhenVisible(context);
+    state.context = context;
+    state.master = master;
+    state.noise = noise;
     return { context, master, noise };
   };
 
@@ -230,8 +243,8 @@ export const createSoundEngine = (): SoundEngine => {
     if (graph.context.state !== "running") resumeQuietly(graph.context);
     // iOS only treats the context as unlocked once a source has started, so
     // play one silent sample rather than waiting for the first real sound.
-    if (hasUnlocked) return;
-    hasUnlocked = true;
+    if (state.hasUnlocked) return;
+    state.hasUnlocked = true;
     const silent = graph.context.createBufferSource();
     silent.buffer = graph.context.createBuffer(1, 1, graph.context.sampleRate);
     silent.connect(graph.context.destination);

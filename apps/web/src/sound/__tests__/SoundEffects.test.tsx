@@ -74,6 +74,25 @@ describe("SoundEffects", () => {
     expect(playedNames(fake)).toEqual(["tick"]);
   });
 
+  it("plays the toggle voice for checkbox, radio, and select controls", async () => {
+    const fake = createFakeEngine();
+    renderWithSound(fake, () => (
+      <form>
+        <input type="checkbox" aria-label="Checkbox" />
+        <input type="radio" aria-label="Radio" />
+        <select aria-label="Select">
+          <option>One</option>
+        </select>
+      </form>
+    ));
+
+    await userEvent.click(screen.getByLabelText("Checkbox"));
+    await userEvent.click(screen.getByLabelText("Radio"));
+    await userEvent.click(screen.getByLabelText("Select"));
+
+    expect(playedNames(fake)).toEqual(["press", "toggle", "press", "toggle", "press", "toggle"]);
+  });
+
   it("stays silent when the press lands outside an interactive target", async () => {
     const fake = createFakeEngine();
     renderWithSound(fake, () => <p>Just text</p>);
