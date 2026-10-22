@@ -134,8 +134,9 @@ third of all requests to this account, and none of it should reach a Worker.
 
 - `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
   `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`) and the wider
-  probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`,
-  `.bak`, `.old`, `/tfstate`, `docker-compose`) answer the default 403 block
+  probe surface (`/wp-*`, `/administrator`, `/phpmyadmin`, `/adminer`,
+  `/phpinfo`, `/server-status`, `/actuator`, `/config.json`, `.sql`, `.bak`,
+  `.old`, `/tfstate`, `docker-compose`) answer the default 403 block
   page. Custom response codes and bodies need a Pro plan, and both zones are
   Free, so the rules cannot set a 404 — the separate rule names keep credential
   probes visible in firewall analytics.
