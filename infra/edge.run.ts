@@ -92,8 +92,33 @@ const pathContains = (paths: ReadonlyArray<string>): string =>
  * Static assets are excluded from the rate limit: one page view pulls many,
  * and they are served from cache anyway. Everything else — pages, the
  * adapter proxy, the API — counts toward the per-IP budget.
+ *
+ * The `matches` operator needs a Business/Enterprise plan (or WAF Advanced),
+ * and both zones are on Free, so the exclusion uses the lowercased path
+ * extension instead of a regex. Workers Paid is account-level and does not
+ * change this zone entitlement.
  */
-const ASSET_PATH = String.raw`\.(?:js|mjs|css|png|jpe?g|gif|svg|webp|avif|ico|woff2?|ttf|map)$`;
+const ASSET_EXTENSIONS = [
+  "js",
+  "mjs",
+  "css",
+  "png",
+  "jpg",
+  "jpeg",
+  "gif",
+  "svg",
+  "webp",
+  "avif",
+  "ico",
+  "woff",
+  "woff2",
+  "ttf",
+  "map",
+] as const;
+
+const IS_ASSET_PATH = `http.request.uri.path.extension in {${ASSET_EXTENSIONS.map(
+  (extension) => `"${extension}"`,
+).join(" ")}}`;
 
 /**
  * Both zones are on the Free plan, and its custom-rule response is the
@@ -123,11 +148,12 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
 
 /**
  * One rate limiting rule per zone on purpose: the Free plan allows a single
- * rate limiting rule, so adding a second would fail to deploy. It also caps
- * the counting period and mitigation timeout at 10s, so 20 requests per 10s
- * preserves the original 120-per-minute budget. That is generous enough that
- * a person reading the site never sees it — a scanner sweeping thousands of
- * paths hits it immediately.
+ * rate limiting rule, so adding a second would fail to deploy. The same plan
+ * caps the counting period and mitigation timeout at 10s and rejects the
+ * `matches` operator; Workers Paid is account-level and does not change these
+ * zone entitlements. 20 requests per 10s preserves the original 120-per-minute
+ * budget. That is generous enough that a person reading the site never sees
+ * it — a scanner sweeping thousands of paths hits it immediately.
  */
 const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
   Cloudflare.Ruleset.Ruleset(`EdgeRateLimit-${zoneId}`, {
@@ -137,7 +163,7 @@ const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
     rules: [
       {
         description: "Rate limit non-asset requests per IP",
-        expression: `not (http.request.uri.path matches "${ASSET_PATH}")`,
+        expression: `not (${IS_ASSET_PATH})`,
         action: "block",
         ratelimit: {
           // Cloudflare counts rate limits at the colocation, so cf.colo.id
