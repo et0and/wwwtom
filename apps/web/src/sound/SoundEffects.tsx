@@ -4,11 +4,11 @@ import { createSoundEngine, type SoundEngine } from "./engine";
 
 /** Anything a pointer press should click against. */
 const PRESSABLE =
-  'label, a[href], button, summary, select, input[type="checkbox"], input[type="radio"], [role="button"], [role="tab"], [role="switch"], [role="menuitem"]';
+  'label, a[href], button, summary, select, option, input[type="checkbox"], input[type="radio"], [role="button"], [role="tab"], [role="switch"], [role="menuitem"], [role="menuitemcheckbox"], [role="menuitemradio"]';
 
 /** Pressables whose activation changes state rather than navigating. */
 const STATEFUL =
-  'summary, select, input[type="checkbox"], input[type="radio"], [aria-pressed], [role="tab"], [role="switch"]';
+  'summary, select, option, input[type="checkbox"], input[type="radio"], [aria-pressed], [role="tab"], [role="switch"], [role="menuitemcheckbox"], [role="menuitemradio"]';
 
 interface PressedPointer {
   element: Element;
