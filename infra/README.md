@@ -143,7 +143,11 @@ third of all requests to this account, and none of it should reach a Worker.
   paths, 10s mitigation — the Free plan caps the counting period and
   mitigation timeout at 10s, so this preserves the original 120-per-minute
   budget). One rule only — the Free plan allows a single rate limiting rule
-  per zone, so a second would fail to deploy.
+  per zone, so a second would fail to deploy. The Free plan also rejects the
+  `matches` operator, so the asset exclusion checks
+  `http.request.uri.path.extension` against a set of asset extensions. A
+  Workers Paid subscription is account-level and does not change these zone
+  entitlements.
 
 The zones are referenced by id, never declared as resources here, so this
 stack cannot adopt, rename or delete a zone. It does own both phase
