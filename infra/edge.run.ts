@@ -117,7 +117,9 @@ const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
         expression: `not (http.request.uri.path matches "${ASSET_PATH}")`,
         action: "block",
         ratelimit: {
-          characteristics: ["ip.src"],
+          // Cloudflare counts rate limits at the colocation, so cf.colo.id
+          // is mandatory in characteristics even though the budget is per IP.
+          characteristics: ["ip.src", "cf.colo.id"],
           period: 10,
           requestsPerPeriod: 20,
           mitigationTimeout: 10,
