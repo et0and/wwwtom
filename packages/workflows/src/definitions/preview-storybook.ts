@@ -1,5 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { loadSecrets } from "../catalog/onepassword";
 import {
   closedAction,
   notClosedAction,
@@ -33,6 +34,7 @@ export const previewStorybook = workflow("preview-storybook", {
       env: storybookPreviewEnv(prStage),
       steps: [
         checkout(),
+        loadSecrets("preview"),
         setupStep(),
         run("Deploy Storybook preview stage", "pnpm deploy:storybook --yes"),
       ],
@@ -46,6 +48,7 @@ export const previewStorybook = workflow("preview-storybook", {
         // Teardown needs the infra code and secrets, not the PR head (which
         // may already be deleted on close).
         checkout("Checkout", { ref: "dev" }),
+        loadSecrets("preview"),
         setupStep(),
         run("Destroy Storybook preview stage", "pnpm destroy:storybook --yes"),
       ],

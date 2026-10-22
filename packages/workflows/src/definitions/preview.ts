@@ -1,6 +1,7 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
 import { deployChain, previewStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
+import { loadSecrets } from "../catalog/onepassword";
 import {
   closedAction,
   notClosedAction,
@@ -40,6 +41,7 @@ export const preview = workflow("preview", {
         // Full history so `git describe --tags` can stamp the release version
         // into the web build.
         checkout("Checkout", { "fetch-depth": 0 }),
+        loadSecrets("preview"),
         setupStep(),
         run("Deploy preview stage", deployChain(previewStacks)),
       ],
@@ -53,6 +55,7 @@ export const preview = workflow("preview", {
         // Teardown needs the infra code and secrets, not the PR head (which
         // may already be deleted on close).
         checkout("Checkout", { ref: "dev" }),
+        loadSecrets("preview"),
         setupStep(),
         ...destroySteps(destroyStacks),
       ],

@@ -167,15 +167,21 @@ production deploy fails at the "Deploy zone edge rules" step.
 
 ## Environment
 
-Alchemy uses the Cloudflare credentials configured by `alchemy login`, or
-`CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` in CI. Set
-`ALCHEMY_PASSWORD` to encrypt deployment state.
+Alchemy uses the Cloudflare credentials configured by `alchemy login`, or the
+credentials loaded from 1Password in CI. The deploy workflow stores only
+`OP_SERVICE_ACCOUNT_TOKEN` as a GitHub secret. It loads `CLOUDFLARE_API_TOKEN`,
+`TOM_SECRETS`, and `AXIOM_TOKEN` from the `wwwtom` vault at run time, using one
+item per stage (`production`, `staging`, and the shared `preview` item).
 
-`infra/.dev.vars` is the default local deployment environment file. The
-scripts preload it into `process.env`, which the stack uses to seed secrets.
-Set `ALCHEMY_ENV_FILE` to use another dotenv file in CI or locally.
-`TOM_SECRETS` is required for deploys. It must be a JSON object. The shared
-Cloudflare Secrets Store exposes it to both Workers as `TOM_SECRETS`.
+`infra/.dev.vars.op` holds the same `op://` references for local work. Run
+`pnpm dev:op` for local development, or
+`op run --env-file=infra/.dev.vars.op -- pnpm deploy` with `ALCHEMY_STAGE` set.
+No plaintext value is written to disk. `infra/.dev.vars` remains a fallback and
+is git-ignored.
+
+`TOM_SECRETS` is required for deploys. It must be a JSON object. Store the
+bundle in the 1Password stage item; Alchemy writes it to the shared Cloudflare
+Secrets Store, which exposes it to both Workers as `TOM_SECRETS`.
 
 ```json
 {
