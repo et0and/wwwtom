@@ -29,7 +29,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Find the merge base
+        run: |-
+          merge_base=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          echo "PR_MERGE_BASE=$merge_base" >> "$GITHUB_ENV"
       - uses: ./.github/actions/setup
         with:
           install: "false"
@@ -41,9 +46,9 @@ jobs:
           prompt: |-
             Triage pull request #${{ github.event.pull_request.number }}
             against its base branch. The PR head is checked out; see the
-            change with `git diff ${{ github.event.pull_request.base.sha }} HEAD`,
-            and read the files it touches for the parts that matter. Do
-            not use `gh` or the network.
+            change with `git diff ${{ env.PR_MERGE_BASE }} HEAD`, and read
+            the files it touches for the parts that matter. Do not use `gh`
+            or the network.
 
             Report only what is genuinely wrong: real defects, and
             violations of AGENTS.md or the nearest AGENTS.md in a

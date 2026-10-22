@@ -12,12 +12,13 @@ import { secret } from "../catalog/secrets";
  * review comment. The model is a cheap flash lane at low reasoning effort —
  * this is triage, not a substitute for a human review.
  *
- * Comment only. It does not edit, push, approve or merge, so a run can never
- * change the branch it is reviewing.
+ * Comment only: the agent does not edit, push, approve or merge.
  *
- * Both the gate and the checkout are the base branch, never the PR head, so a
- * PR cannot swap the code that runs with `pull-requests: write`. Fork PRs and
- * drafts are skipped.
+ * The job checks out the base branch first, so the setup action always comes
+ * from the base. The triage action then checks out the PR head to read the
+ * change, so PR-controlled files are present while the agent runs, and it
+ * posts its review with a token that can write comments. Fork PRs and drafts
+ * are skipped.
  */
 export const prReview = workflow("pr-review", {
   name: "PR triage",
@@ -50,7 +51,22 @@ export const prReview = workflow("pr-review", {
       steps: [
         checkout("Checkout base branch", {
           ref: "${{ github.event.pull_request.base.sha }}",
+          // The merge base is compared against the PR head below; a shallow
+          // base leaves it unreachable.
+          "fetch-depth": 0,
           "persist-credentials": false,
+        }),
+        // The triage action fetches the PR head with a shallow boundary, so
+        // three-dot diffing inside the agent can fail on long branches. Resolve
+        // the merge base while the full history is still here and hand the
+        // agent that commit instead: `git diff <merge-base> HEAD` compares the
+        // same two trees without walking history again.
+        step({
+          name: "Find the merge base",
+          run: [
+            "merge_base=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})",
+            'echo "PR_MERGE_BASE=$merge_base" >> "$GITHUB_ENV"',
+          ],
         }),
         // The runner's default Node is older than the pnpm this repo pins, so
         // the agent's own tooling needs Node 24 and pnpm on the job PATH. It
@@ -67,9 +83,9 @@ export const prReview = workflow("pr-review", {
             prompt: [
               "Triage pull request #${{ github.event.pull_request.number }}",
               "against its base branch. The PR head is checked out; see the",
-              "change with `git diff ${{ github.event.pull_request.base.sha }} HEAD`,",
-              "and read the files it touches for the parts that matter. Do",
-              "not use `gh` or the network.",
+              "change with `git diff ${{ env.PR_MERGE_BASE }} HEAD`, and read",
+              "the files it touches for the parts that matter. Do not use `gh`",
+              "or the network.",
               "",
               "Report only what is genuinely wrong: real defects, and",
               "violations of AGENTS.md or the nearest AGENTS.md in a",
