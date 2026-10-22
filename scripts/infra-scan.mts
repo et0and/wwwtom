@@ -208,23 +208,47 @@ const resolveAccountId = async (token: string): Promise<string> => {
   return account.id;
 };
 
+/** `clientRequestHTTPHost` keeps an explicit port, so strip it before matching. */
+const hostnameOf = (host: string): string => host.replace(/:\d+$/, "");
+
+/**
+ * One hostname has two forms in the analytics dimension: bare and with an
+ * explicit port.
+ */
+const hostClauses = (hostname: string): ReadonlyArray<string> => [
+  `{ clientRequestHTTPHost: "${hostname}" }`,
+  `{ clientRequestHTTPHost_like: "${hostname}:%" }`,
+];
+
+/** Subdomains are separate hosts in the dimension but belong to our zones. */
+const OWN_HOST_CLAUSES = OWN_HOST_SUFFIXES.flatMap((suffix) => [
+  ...hostClauses(suffix),
+  `{ clientRequestHTTPHost_like: "%.${suffix}" }`,
+  `{ clientRequestHTTPHost_like: "%.${suffix}:%" }`,
+]);
+
 /**
  * One request holds every pattern's rollup via GraphQL aliases — the sweep
  * runs every 3 hours, so it should not fan out to dozens of round trips.
  */
 const buildQuery = (args: Args, sinceIso: string): string => {
-  const hostFilter = args.host === null ? "" : `, clientRequestHTTPHost: "${args.host}"`;
+  const scopedHost = args.host === null ? null : hostnameOf(args.host);
+  const hostFilter = scopedHost === null ? "" : `, OR: [${hostClauses(scopedHost).join(", ")}]`;
   const window = `datetime_geq: "${sinceIso}"${hostFilter}`;
   /**
    * Soft hits are filtered in the query, not after it. Taking a family's top
    * paths first let its high-volume 403s crowd a low-volume 200 out of the
-   * report, which is exactly the answer a scanner walks away believing.
+   * report, which is exactly the answer a scanner walks away believing. The
+   * own-host restriction is part of the same rule: `collect` drops foreign
+   * hosts afterwards, so without it those groups can fill all 15 slots.
    */
+  const softHitWindow =
+    scopedHost === null ? `${window}, OR: [${OWN_HOST_CLAUSES.join(", ")}]` : window;
   const patternFields = PROBE_PATTERNS.map(
     (pattern) => `
       ${pattern.id}_total: httpRequestsAdaptiveGroups(limit: 1, filter: { ${window}, clientRequestPath_like: "${pattern.like}" }) { count }
       ${pattern.id}_hosts: httpRequestsAdaptiveGroups(limit: 10, filter: { ${window}, clientRequestPath_like: "${pattern.like}" }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost } }
-      ${pattern.id}_paths: httpRequestsAdaptiveGroups(limit: 15, filter: { ${window}, clientRequestPath_like: "${pattern.like}", edgeResponseStatus_geq: 200, edgeResponseStatus_lt: 400 }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost clientRequestPath edgeResponseStatus } }`,
+      ${pattern.id}_paths: httpRequestsAdaptiveGroups(limit: 15, filter: { ${softHitWindow}, clientRequestPath_like: "${pattern.like}", edgeResponseStatus_geq: 200, edgeResponseStatus_lt: 400 }, orderBy: [count_DESC]) { count dimensions { clientRequestHTTPHost clientRequestPath edgeResponseStatus } }`,
   ).join("\n");
 
   return `query ScanInfra {
@@ -240,9 +264,8 @@ ${patternFields}
   }`;
 };
 
-/** `clientRequestHTTPHost` keeps an explicit port, so strip it before matching. */
 const isOwnHost = (host: string): boolean => {
-  const hostname = host.replace(/:\d+$/, "");
+  const hostname = hostnameOf(host);
   return OWN_HOST_SUFFIXES.some((suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`));
 };
 
