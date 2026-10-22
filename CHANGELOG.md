@@ -1,3 +1,11 @@
+## [4.7.4](https://github.com/et0and/wwwtom/compare/v4.7.3...v4.7.4) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** block credential files and .env variants at the edge ([cc23e46](https://github.com/et0and/wwwtom/commit/cc23e4665bfcae014471753658bcbba972a6da01)), closes [#216](https://github.com/et0and/wwwtom/issues/216) [#207](https://github.com/et0and/wwwtom/issues/207) [#211](https://github.com/et0and/wwwtom/issues/211) [#212](https://github.com/et0and/wwwtom/issues/212) [#214](https://github.com/et0and/wwwtom/issues/214)
+* **security:** include the colo in edge rate limit characteristics ([6430b02](https://github.com/et0and/wwwtom/commit/6430b02241c5ab6ddac6aeeb278b03933c1e78ac))
+
 ## [4.7.3](https://github.com/et0and/wwwtom/compare/v4.7.2...v4.7.3) (2026-10-22)
 
 
