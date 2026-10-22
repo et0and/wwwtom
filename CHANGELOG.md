@@ -1,3 +1,10 @@
+## [4.7.5](https://github.com/et0and/wwwtom/compare/v4.7.4...v4.7.5) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** use a Free-plan rate limit expression at the edge ([cd91e43](https://github.com/et0and/wwwtom/commit/cd91e43435245c6158948e6194dd76d1e9c98e97))
+
 ## [4.7.4](https://github.com/et0and/wwwtom/compare/v4.7.3...v4.7.4) (2026-10-22)
 
 
