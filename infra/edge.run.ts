@@ -65,6 +65,9 @@ const CREDENTIAL_PATHS = [
   "serviceaccount",
   "cargo/credentials",
   "sa.json",
+  "id_rsa",
+  "id_ed25519",
+  "aws/credentials",
 ] as const;
 
 /**
@@ -82,7 +85,7 @@ const PROBE_PATHS = [
   ".sql",
   ".bak",
   ".old",
-  "/tfstate",
+  "tfstate",
   "docker-compose",
   "backup",
 ] as const;

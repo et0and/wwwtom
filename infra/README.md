@@ -132,12 +132,16 @@ from silently creating a new stage-specific Worker.
 origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
-- `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`) and the wider
-  probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`,
-  `.bak`, `.old`, `/tfstate`, `docker-compose`) answer the default 403 block
-  page. Custom response codes and bodies need a Pro plan, and both zones are
-  Free, so the rules cannot set a 404 — the separate rule names keep credential
+- `http_request_firewall_custom`: credential and key paths (`.env`, `/.git`,
+  `/.svn`, `/.ssh`, `/.aws`, `/.dev.vars`, `/.htpasswd`, `/.npmrc`, `/.s3cfg`,
+  `/.zshrc`, `/.bashrc`, `.pem`, `.key`, `credentials.json`,
+  `docker/config.json`, `proc/self/environ`, `service-account`,
+  `serviceaccount`, `cargo/credentials`, `sa.json`, `id_rsa`, `id_ed25519`,
+  `aws/credentials`) and the wider probe surface (`/.ds_store`, `/wp-*`,
+  `/phpmyadmin`, `/adminer`, `/phpinfo`, `.php`, `.sql`, `.bak`, `.old`,
+  `tfstate`, `docker-compose`, `backup`) answer the default 403 block page.
+  Custom response codes and bodies need a Pro plan, and both zones are Free,
+  so the rules cannot set a 404 — the separate rule names keep credential
   probes visible in firewall analytics.
 - `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
   paths, 10s mitigation — the Free plan caps the counting period and
