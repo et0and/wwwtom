@@ -4,11 +4,21 @@ import { createSoundEngine, type SoundEngine } from "./engine";
 
 /** Anything a pointer press should click against. */
 const PRESSABLE =
-  'a[href], button, summary, select, input[type="checkbox"], input[type="radio"], [role="button"], [role="tab"], [role="switch"], [role="menuitem"]';
+  'label, a[href], button, summary, select, input[type="checkbox"], input[type="radio"], [role="button"], [role="tab"], [role="switch"], [role="menuitem"]';
 
 /** Pressables whose activation changes state rather than navigating. */
 const STATEFUL =
   'summary, select, input[type="checkbox"], input[type="radio"], [aria-pressed], [role="tab"], [role="switch"]';
+
+interface PressedPointer {
+  element: Element;
+  pointerId: number;
+}
+
+const controlFor = (element: Element): Element => {
+  const control = element instanceof HTMLLabelElement ? element.control : null;
+  return control ?? element;
+};
 
 const isDisabled = (element: Element): boolean => {
   if (
@@ -38,13 +48,13 @@ export function SoundEffects(props: {
   createEngine?: () => SoundEngine;
 }) {
   const engine = (props.createEngine ?? createSoundEngine)();
-  const [pressed, setPressed] = createSignal<Element | undefined>();
+  const [pressed, setPressed] = createSignal<PressedPointer | undefined>();
 
   onSettled(() => {
     const pressableFrom = (target: EventTarget | null): Element | undefined => {
       if (!(target instanceof Element)) return undefined;
       const element = target.closest(PRESSABLE);
-      if (element === null || isDisabled(element)) return undefined;
+      if (element === null || isDisabled(controlFor(element))) return undefined;
       return element;
     };
 
@@ -52,16 +62,22 @@ export function SoundEffects(props: {
       if (event.button !== 0) return;
       engine.unlock();
       const element = pressableFrom(event.target);
-      setPressed(element);
+      setPressed(element === undefined ? undefined : { element, pointerId: event.pointerId });
       if (element !== undefined) engine.play("press");
     };
 
-    const onPointerUp = (): void => {
-      const element = pressed();
-      if (element === undefined) return;
-      const wasStateful = element.matches(STATEFUL);
+    const onPointerUp = (event: PointerEvent): void => {
+      const state = pressed();
+      if (state === undefined || state.pointerId !== event.pointerId) return;
       setPressed(undefined);
-      engine.play(wasStateful ? "toggle" : "release");
+      if (!(event.target instanceof Node) || !state.element.contains(event.target)) return;
+      engine.play(controlFor(state.element).matches(STATEFUL) ? "toggle" : "release");
+    };
+
+    const onPointerCancel = (event: PointerEvent): void => {
+      const state = pressed();
+      if (state === undefined || state.pointerId !== event.pointerId) return;
+      setPressed(undefined);
     };
 
     const onKeyDown = (event: KeyboardEvent): void => {
@@ -76,7 +92,7 @@ export function SoundEffects(props: {
       if (event.key !== "Enter" && event.key !== " ") return;
       const element = pressableFrom(event.target);
       if (element === undefined) return;
-      engine.play(element.matches(STATEFUL) ? "toggle" : "release");
+      engine.play(controlFor(element).matches(STATEFUL) ? "toggle" : "release");
     };
 
     /** Back, forward, and the mobile swipe-back gesture, which is `popstate` too. */
@@ -87,6 +103,7 @@ export function SoundEffects(props: {
 
     document.addEventListener("pointerdown", onPointerDown, true);
     document.addEventListener("pointerup", onPointerUp, true);
+    document.addEventListener("pointercancel", onPointerCancel, true);
     document.addEventListener("keydown", onKeyDown, true);
     document.addEventListener("keyup", onKeyUp, true);
     window.addEventListener("popstate", onPopState);
@@ -94,6 +111,7 @@ export function SoundEffects(props: {
     return () => {
       document.removeEventListener("pointerdown", onPointerDown, true);
       document.removeEventListener("pointerup", onPointerUp, true);
+      document.removeEventListener("pointercancel", onPointerCancel, true);
       document.removeEventListener("keydown", onKeyDown, true);
       document.removeEventListener("keyup", onKeyUp, true);
       window.removeEventListener("popstate", onPopState);

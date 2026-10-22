@@ -89,9 +89,9 @@ const createNoiseBuffer = (context: AudioContext): AudioBuffer => {
   const frames = Math.ceil(context.sampleRate * NOISE_SECONDS);
   const buffer = context.createBuffer(1, frames, context.sampleRate);
   const samples = buffer.getChannelData(0);
-  for (let index = 0; index < samples.length; index += 1) {
+  samples.forEach((_, index) => {
     samples[index] = Math.random() * 2 - 1;
-  }
+  });
   return buffer;
 };
 

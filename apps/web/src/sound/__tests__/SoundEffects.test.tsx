@@ -93,6 +93,20 @@ describe("SoundEffects", () => {
     expect(playedNames(fake)).toEqual(["press", "toggle", "press", "toggle", "press", "toggle"]);
   });
 
+  it("plays the toggle voice when the label is the click target", async () => {
+    const fake = createFakeEngine();
+    renderWithSound(fake, () => (
+      <label>
+        <input type="checkbox" />
+        Subscribe
+      </label>
+    ));
+
+    await userEvent.click(screen.getByText("Subscribe"));
+
+    expect(playedNames(fake)).toEqual(["press", "toggle"]);
+  });
+
   it("stays silent when the press lands outside an interactive target", async () => {
     const fake = createFakeEngine();
     renderWithSound(fake, () => <p>Just text</p>);

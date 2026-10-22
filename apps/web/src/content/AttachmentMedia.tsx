@@ -38,13 +38,15 @@ export const attachmentKind = (
   if (contentType.startsWith("video/")) return "video";
   if (contentType.startsWith("audio/")) return "audio";
 
-  const matchesExtension = (pattern: RegExp): boolean =>
-    [attachment.filename, title].some((name) => (name ? pattern.test(name) : false));
+  const kindFromName = (name: string | null | undefined): AttachmentKind | undefined => {
+    if (!name) return undefined;
+    if (/\.pdf$/i.test(name)) return "pdf";
+    if (VIDEO_EXTENSIONS.test(name)) return "video";
+    if (AUDIO_EXTENSIONS.test(name)) return "audio";
+    return undefined;
+  };
 
-  if (matchesExtension(/\.pdf$/i)) return "pdf";
-  if (matchesExtension(VIDEO_EXTENSIONS)) return "video";
-  if (matchesExtension(AUDIO_EXTENSIONS)) return "audio";
-  return "file";
+  return kindFromName(attachment.filename) ?? kindFromName(title) ?? "file";
 };
 
 /** What to call an attachment on screen: its title, else its stored filename. */
