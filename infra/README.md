@@ -168,19 +168,28 @@ production deploy fails at the "Deploy zone edge rules" step.
 ## Environment
 
 Alchemy uses the Cloudflare credentials configured by `alchemy login`, or the
-credentials loaded from 1Password in CI. The deploy workflow stores only
-`OP_SERVICE_ACCOUNT_TOKEN` as a GitHub secret. It loads `CLOUDFLARE_API_TOKEN`,
-`TOM_SECRETS`, and `AXIOM_TOKEN` from the `wwwtom` vault at run time, using one
-item per stage (`production`, `staging`, and the shared `preview` item).
+credentials loaded from 1Password in CI. The deploy workflow stores
+`OP_SERVICE_ACCOUNT_TOKEN` as its only credential secret;
+`CLOUDFLARE_DEFAULT_ACCOUNT_ID` remains a non-sensitive GitHub secret. Each
+stage has a 1Password item (`production`, `staging`, or `preview`) with
+`CLOUDFLARE_API_TOKEN` and `AXIOM_TOKEN`. `TOM_SECRETS` comes from the shared
+`wwwtom/shared` item because Cloudflare Secrets Store holds one account-level
+bundle for every stage.
 
 `infra/.dev.vars.op` holds the same `op://` references for local work. Run
-`pnpm dev:op` for local development, or
-`op run --env-file=infra/.dev.vars.op -- pnpm deploy` with `ALCHEMY_STAGE` set.
-No plaintext value is written to disk. `infra/.dev.vars` remains a fallback and
-is git-ignored.
+`pnpm dev:op` for local development. For a local dev-material deploy, run:
+
+```bash
+ALCHEMY_ENV_FILE=/dev/null ALCHEMY_STAGE=dev \
+  op run --env-file=infra/.dev.vars.op -- pnpm deploy
+```
+
+That file points at the `dev` item. Production deploys run in CI. No plaintext
+value is written to disk. `infra/.dev.vars` remains a fallback and is
+git-ignored.
 
 `TOM_SECRETS` is required for deploys. It must be a JSON object. Store the
-bundle in the 1Password stage item; Alchemy writes it to the shared Cloudflare
+bundle in the shared 1Password item; Alchemy writes it to the shared Cloudflare
 Secrets Store, which exposes it to both Workers as `TOM_SECRETS`.
 
 ```json

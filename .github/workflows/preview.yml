@@ -40,8 +40,8 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CLOUDFLARE_API_TOKEN: op://wwwtom/preview/CLOUDFLARE_API_TOKEN
-          TOM_SECRETS: op://wwwtom/preview/TOM_SECRETS
           AXIOM_TOKEN: op://wwwtom/preview/AXIOM_TOKEN
+          TOM_SECRETS: op://wwwtom/shared/TOM_SECRETS
       - uses: ./.github/actions/setup
       - name: Deploy preview stage
         run: |-
@@ -73,8 +73,8 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CLOUDFLARE_API_TOKEN: op://wwwtom/preview/CLOUDFLARE_API_TOKEN
-          TOM_SECRETS: op://wwwtom/preview/TOM_SECRETS
           AXIOM_TOKEN: op://wwwtom/preview/AXIOM_TOKEN
+          TOM_SECRETS: op://wwwtom/shared/TOM_SECRETS
       - uses: ./.github/actions/setup
       - name: Destroy web preview stage
         run: pnpm destroy:web --yes

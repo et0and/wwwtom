@@ -31,15 +31,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Load secrets from 1Password
+      - name: Load Cloudflare token from 1Password
         uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
         with:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CLOUDFLARE_API_TOKEN: op://wwwtom/preview/CLOUDFLARE_API_TOKEN
-          TOM_SECRETS: op://wwwtom/preview/TOM_SECRETS
-          AXIOM_TOKEN: op://wwwtom/preview/AXIOM_TOKEN
       - uses: ./.github/actions/setup
       - name: Deploy Storybook preview stage
         run: pnpm deploy:storybook --yes
@@ -58,15 +56,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: dev
-      - name: Load secrets from 1Password
+      - name: Load Cloudflare token from 1Password
         uses: 1password/load-secrets-action@70062d7a876d3eb6334754fa26efd2fbd90c32f2
         with:
           export-env: true
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CLOUDFLARE_API_TOKEN: op://wwwtom/preview/CLOUDFLARE_API_TOKEN
-          TOM_SECRETS: op://wwwtom/preview/TOM_SECRETS
-          AXIOM_TOKEN: op://wwwtom/preview/AXIOM_TOKEN
       - uses: ./.github/actions/setup
       - name: Destroy Storybook preview stage
         run: pnpm destroy:storybook --yes

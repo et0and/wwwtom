@@ -41,8 +41,8 @@ jobs:
         env:
           OP_SERVICE_ACCOUNT_TOKEN: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
           CLOUDFLARE_API_TOKEN: op://wwwtom/${{ github.event_name == 'push' && 'staging' || inputs.stage }}/CLOUDFLARE_API_TOKEN
-          TOM_SECRETS: op://wwwtom/${{ github.event_name == 'push' && 'staging' || inputs.stage }}/TOM_SECRETS
           AXIOM_TOKEN: op://wwwtom/${{ github.event_name == 'push' && 'staging' || inputs.stage }}/AXIOM_TOKEN
+          TOM_SECRETS: op://wwwtom/shared/TOM_SECRETS
       - uses: ./.github/actions/setup
       - name: Deploy infrastructure
         run: |-
