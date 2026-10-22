@@ -145,6 +145,19 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
         expression: pathContains(PROBE_PATHS),
         action: "block",
       },
+      {
+        // Cloudflare normalizes `http.request.uri.path` before custom rules
+        // and always merges adjacent slashes, so only the raw path still sees
+        // the malformed sequence. The app's router soft-200s when `//` or two
+        // slash-like characters appear anywhere in the path:
+        // `/x//config.json`, `/x/\config.json`, `/x\/config.json` and
+        // `/x\\config.json` all return its 200 shell while `/x/config.json`
+        // 404s. Block `//` anywhere and any raw backslash, which covers the
+        // remaining combinations.
+        description: "Block malformed slash and backslash paths",
+        expression: String.raw`raw.http.request.uri.path contains "//" or raw.http.request.uri.path contains "\\"`,
+        action: "block",
+      },
     ],
   });
 
