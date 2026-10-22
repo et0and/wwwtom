@@ -628,7 +628,7 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Destroy preview stages of recently closed PRs
         run: |-
-          cutoff=$(date -u -d '14 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          cutoff=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
           prs=$(gh pr list --state closed --limit 100 --json number,closedAt \\
             | jq -r --arg cutoff "$cutoff" '.[] | select(.closedAt > $cutoff) | .number')
           if [ -z "$prs" ]; then
@@ -638,6 +638,10 @@ jobs:
           for pr in $prs; do
             echo "Sweeping preview stage pr-$pr"
             export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"
+            for row in "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do
+              pnpm --filter @tom/infra exec alchemy state list --backend cloudflare "$row" >/dev/null 2>&1 &&
+                pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
+            done
             pnpm destroy:storybook --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
