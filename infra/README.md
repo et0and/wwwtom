@@ -138,12 +138,13 @@ third of all requests to this account, and none of it should reach a Worker.
   `sa.json`, `secrets.*`, `.my.cnf`, `auth.json`, `.pypirc`, `gem/credentials`,
   `kube/config`, `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
   `database.yml`, `id_rsa`, `id_ed25519`, `aws/credentials`) and the wider
-  probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/admin`, `/phpinfo`,
-  `.sql`, `.bak`, `.old`, `tfstate`, `docker-compose`, `/CLAUDE.md`,
-  `/AGENTS.md`, `/README.md`, `/Jenkinsfile`, `mcp.json`, `/.claude`,
-  `claude.json`), and every path on retired hosts such as `preview.tom.so`,
-  and raw (pre-normalization) paths containing `//` or a backslash answer the
-  default 403 block page. Cloudflare's normalization merges adjacent slashes in
+  probe surface (`/wp-*`, `/administrator`, `/server-status`, `/actuator`,
+  `/config.json`, `/phpmyadmin`, `/adminer`, `/admin`, `/phpinfo`, `.sql`,
+  `.bak`, `.old`, `tfstate`, `docker-compose`, `/CLAUDE.md`, `/AGENTS.md`,
+  `/README.md`, `/Jenkinsfile`, `mcp.json`, `/.claude`, `claude.json`), and
+  every path on retired hosts such as `preview.tom.so`, and raw
+  (pre-normalization) paths containing `//` or a backslash answer the default
+  403 block page. Cloudflare's normalization merges adjacent slashes in
   `http.request.uri.path` before custom rules run, so the malformed-path rule
   matches `raw.http.request.uri.path`. The rule matters because the app's
   router answers `//…`, `/\…`, `\/…` and `\\…` with its 200 shell, so `//env`
