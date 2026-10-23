@@ -1,3 +1,10 @@
+## [4.7.9](https://github.com/et0and/wwwtom/compare/v4.7.8...v4.7.9) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block ssh key, admin and tfstate probes at the edge ([e2a575c](https://github.com/et0and/wwwtom/commit/e2a575c4093d636a71fb5807bc31dfe99fddacc3))
+
 ## [4.7.8](https://github.com/et0and/wwwtom/compare/v4.7.7...v4.7.8) (2026-10-23)
 
 
