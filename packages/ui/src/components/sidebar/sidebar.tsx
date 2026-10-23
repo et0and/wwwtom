@@ -29,7 +29,7 @@ const styles = stylex.create({
   borderLeft: { borderInlineStartWidth: 1, borderColor: lineColor },
   floating: {
     margin: "0.5rem",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: lineColor,
     boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
@@ -41,7 +41,7 @@ const styles = stylex.create({
     height: "2rem",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     color: subtleText,
     "@media (hover: hover) and (pointer: fine)": {
       ":hover": { backgroundColor: tintColor },
@@ -91,7 +91,7 @@ const styles = stylex.create({
     cursor: "pointer",
     alignItems: "center",
     gap: "0.625rem",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     outlineWidth: 0,
     paddingInline: "0.75rem",
     paddingBlock: 0,

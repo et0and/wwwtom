@@ -1,7 +1,7 @@
 import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
-import { layout } from "../../styles/primitives.stylex";
+import { spacing } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 
@@ -14,13 +14,13 @@ const styles = stylex.create({
     display: "inline-flex",
     flexDirection: "row",
     alignItems: "center",
-    gap: layout.gap1.gap,
+    gap: spacing.px1,
   },
   span: {
     display: "inline-flex",
     flexDirection: "row",
     alignItems: "center",
-    gap: layout.gap1.gap,
+    gap: spacing.px1,
   },
   optional: {
     fontWeight: 400,

@@ -42,25 +42,25 @@ const styles = stylex.create({
   sizeXs: {
     height: "1.25rem",
     paddingInline: "0.375rem",
-    borderRadius: radius.sm.borderRadius,
+    borderRadius: radius.sm,
     fontSize: fontSizeXs.fontSize,
   },
   sizeSm: {
     height: "1.625rem",
     paddingInline: "0.5rem",
-    borderRadius: radius.md.borderRadius,
+    borderRadius: radius.md,
     fontSize: fontSizeXs.fontSize,
   },
   sizeBase: {
     height: "2.25rem",
     paddingInline: "0.75rem",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     fontSize: fontSizeBase.fontSize,
   },
   sizeLg: {
     height: "2.5rem",
     paddingInline: "1rem",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     fontSize: fontSizeBase.fontSize,
   },
   /** At rest the error ring replaces the line ring, as the old !ring override did. */

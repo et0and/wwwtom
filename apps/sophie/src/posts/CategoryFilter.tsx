@@ -3,12 +3,14 @@ import { For, Show } from "solid-js";
 import { layout, spacing } from "@tom/ui/primitives.stylex";
 import type { CmsCategory } from "@tom/schemas/cms";
 
+const styles = stylex.create({ root: { paddingBlock: spacing.py4 } });
+
 export const CategoryFilter = (props: {
   categories: ReadonlyArray<CmsCategory>;
   active: string | null;
   onSelect: (slug: string | null) => void;
 }) => (
-  <div {...stylex.attrs(layout.flexWrapRow, layout.gap2, spacing.py4)}>
+  <div {...stylex.attrs(layout.flexWrapRow, layout.gap2, styles.root)}>
     <button
       type="button"
       class="sophie-filter"

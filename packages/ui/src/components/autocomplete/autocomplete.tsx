@@ -68,7 +68,7 @@ const styles = stylex.create({
     gridTemplateColumns: "1fr 16px",
     gap: "0.5rem",
     margin: "0.375rem",
-    borderRadius: radius.sm.borderRadius,
+    borderRadius: radius.sm,
     padding: "0.375rem 0.5rem",
     fontSize: "0.875rem",
     cursor: "pointer",

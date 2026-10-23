@@ -18,7 +18,7 @@ const styles = stylex.create({
   alignCenter: { alignItems: "center" },
   node: {
     position: "relative",
-    borderRadius: radius.md.borderRadius,
+    borderRadius: radius.md,
     backgroundColor: colors["--color-tomui-base"],
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",

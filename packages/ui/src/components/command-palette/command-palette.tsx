@@ -61,7 +61,7 @@ const styles = stylex.create({
     width: "100%",
     alignItems: "center",
     gap: "0.75rem",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     padding: "0.375rem 0.5rem",
     textAlign: "left",
     fontSize: "0.875rem",

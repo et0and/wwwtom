@@ -9,6 +9,7 @@ import { layout } from "@tom/ui/primitives.stylex";
 import { getQueryClient } from "~/data/query-client";
 import { Router } from "~/router";
 import { layoutStyles } from "~/chrome/layout.stylex";
+import { SoundEffects } from "~/sound/SoundEffects";
 import "./app.css";
 
 function RootLayout(props: { children: import("@solidjs/web").JSX.Element }) {
@@ -35,7 +36,9 @@ export default function App() {
 
   return (
     <QueryClientProvider client={client}>
-      <Router>{(props) => <RootLayout>{props.children}</RootLayout>}</Router>
+      <SoundEffects>
+        <Router>{(props) => <RootLayout>{props.children}</RootLayout>}</Router>
+      </SoundEffects>
     </QueryClientProvider>
   );
 }
