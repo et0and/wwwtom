@@ -79,6 +79,9 @@ const CREDENTIAL_PATHS = [
   "kubeconfig",
   "sftp-config",
   "vscode/sftp.json",
+  "id_rsa",
+  "id_ed25519",
+  "aws/credentials",
 ] as const;
 
 /**
