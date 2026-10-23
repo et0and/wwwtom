@@ -42,7 +42,8 @@ const adoptZone = (zone: ZoneRef) =>
  * variants such as `/application/.local.env` are covered too, not only a
  * leading `/.env`. Covers the credential files scanners ask for by name —
  * `.dev.vars`, shell and package config, key material, cloud credentials,
- * package registry tokens and the container token path.
+ * package registry tokens, database and cluster credentials, framework
+ * settings, secret files and the container token path.
  */
 const CREDENTIAL_PATHS = [
   ".env",
@@ -74,12 +75,24 @@ const CREDENTIAL_PATHS = [
   "serviceaccount",
   "cargo/credentials",
   "sa.json",
+  "secrets.",
+  "auth.json",
+  ".my.cnf",
+  "settings.py",
+  "database.yml",
+  ".pypirc",
+  "gem/credentials",
+  "kube/config",
+  "kubeconfig",
+  "sftp-config",
+  "vscode/sftp.json",
 ] as const;
 
 /**
  * Everything else no visitor or crawler requests. Matched case-insensitively
  * because scanners vary casing to dodge naive rules. This account serves no
- * WordPress, no PHP and no admin panel, so any hit is a probe.
+ * WordPress, no PHP, no admin panel and no repository or agent-tooling files,
+ * so any hit is a probe.
  */
 const PROBE_PATHS = [
   "/.ds_store",
@@ -94,6 +107,13 @@ const PROBE_PATHS = [
   "/tfstate",
   "docker-compose",
   "backup",
+  "/claude.md",
+  "/agents.md",
+  "/readme.md",
+  "/jenkinsfile",
+  "mcp.json",
+  "/.claude",
+  "claude.json",
 ] as const;
 
 const pathContains = (paths: ReadonlyArray<string>): string =>
@@ -152,6 +172,15 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
       {
         description: "Block the remaining probe surface",
         expression: pathContains(PROBE_PATHS),
+        action: "block",
+      },
+      {
+        // A retired app on a stale origin still answers, and its admin login
+        // reads as a find. Block the whole host until the hosting project and
+        // DNS record are removed (see README, "Retired hosts"). `http.host`
+        // keeps the client's casing, so compare the lowercased value.
+        description: "Retire payload.tom.so: the retired Payload CMS still answers /admin",
+        expression: 'lower(http.host) eq "payload.tom.so"',
         action: "block",
       },
     ],
