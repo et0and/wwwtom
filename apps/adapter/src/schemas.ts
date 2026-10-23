@@ -78,6 +78,11 @@ export const messageBodySchema = Schema.toStandardSchemaV1(
   Schema.Struct({ message: Schema.NonEmptyString }),
 );
 
+/** A new are.na comment: the body is the only field the caller owns. */
+export const commentBodySchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ body: Schema.NonEmptyString }),
+);
+
 export const callbackQuerySchema = Schema.toStandardSchemaV1(
   Schema.Struct({ code: Schema.String }),
 );

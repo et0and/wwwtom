@@ -55,6 +55,11 @@ export const BlockIdParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({ id: Schema.FiniteFromString }),
 );
 
+/** A comment id from the path — the same string-decoding rule as block ids. */
+export const CommentIdParamsSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ id: Schema.FiniteFromString }),
+);
+
 /**
  * The pagination fields the caller set, or `undefined` when none were. Keys
  * without a value are omitted rather than passed as `undefined`: the Arena
