@@ -11,7 +11,7 @@ const lineColor = colors["--color-tomui-line"];
 const styles = stylex.create({
   surface: {
     overflow: "clip",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-base"],
     boxShadow: "0 0 0 1px " + lineColor + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
   },
@@ -20,7 +20,7 @@ const styles = stylex.create({
     width: "100%",
     flexDirection: "column",
     overflow: "clip",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-elevated"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-hairline"],
     ...fontSizeBase,
@@ -42,7 +42,7 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: "0.5rem",
     overflow: "clip",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-base"],
     padding: "1rem",
     paddingInlineEnd: "0.75rem",

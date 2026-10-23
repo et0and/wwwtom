@@ -51,7 +51,7 @@ const styles = stylex.create({
     minWidth: "100%",
     marginBlockStart: "0.25rem",
     overflow: "clip",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-base"],
     paddingBlock: "0.375rem",
     color: textColors["--text-color-tomui-default"],

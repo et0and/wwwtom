@@ -80,7 +80,7 @@ const styles = stylex.create({
     marginBlock: "0.5rem",
     display: "flex",
     flexDirection: "column",
-    gap: layout.gap4.gap,
+    gap: spacing.px4,
     borderInlineStartWidth: 2,
     borderInlineStartColor: colors["--color-tomui-fill"],
     paddingBlock: "0.25rem",

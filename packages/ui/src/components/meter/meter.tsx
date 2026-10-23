@@ -25,14 +25,14 @@ const styles = stylex.create({
     height: "0.5rem",
     width: "100%",
     overflow: "clip",
-    borderRadius: radius.full.borderRadius,
+    borderRadius: radius.full,
     backgroundColor: colors["--color-tomui-fill"],
   },
   indicator: {
     position: "absolute",
     insetBlock: 0,
     insetInlineStart: 0,
-    borderRadius: radius.full.borderRadius,
+    borderRadius: radius.full,
     backgroundImage:
       "linear-gradient(to right, var(--color-tomui-brand), var(--color-tomui-brand))",
     transitionProperty: "width",

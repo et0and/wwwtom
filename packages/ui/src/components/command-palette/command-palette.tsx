@@ -30,7 +30,7 @@ const styles = stylex.create({
     width: "100%",
     maxWidth: "42rem",
     overflow: "clip",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-elevated"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
     transform: "translateX(-50%)",

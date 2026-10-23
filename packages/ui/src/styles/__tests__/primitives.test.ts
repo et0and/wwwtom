@@ -8,7 +8,7 @@ import { cursor, layout, radius, select, spacing } from "../primitives.stylex";
  * `borderRadius: radius.lg`. A **style** is `stylex.create`, so a component can
  * compose it whole: `stylex.attrs(styles.row, layout.itemsCenter)`.
  *
- * Reading a property off a style object — `radius.lg.borderRadius`, which is
+ * Reading a property off a style object — `radius.lg`, which is
  * what this module used to invite — compiles to a `var()` that nothing defines.
  * The browser drops the declaration and the property falls back to its initial
  * value, which is how every button lost its corners without anyone noticing.
