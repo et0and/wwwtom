@@ -84,7 +84,8 @@ const CREDENTIAL_PATHS = [
 /**
  * Everything else no visitor or crawler requests. Matched case-insensitively
  * because scanners vary casing to dodge naive rules. This account serves no
- * WordPress, no PHP and no admin panel, so any hit is a probe.
+ * WordPress, no PHP, no admin panel and no repository or agent-tooling files,
+ * so any hit is a probe.
  */
 const PROBE_PATHS = [
   "/.ds_store",
@@ -100,6 +101,13 @@ const PROBE_PATHS = [
   "tfstate",
   "docker-compose",
   "backup",
+  "/claude.md",
+  "/agents.md",
+  "/readme.md",
+  "/jenkinsfile",
+  "mcp.json",
+  "/.claude",
+  "claude.json",
 ] as const;
 
 const pathContains = (paths: ReadonlyArray<string>): string =>
@@ -158,6 +166,15 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
       {
         description: "Block the remaining probe surface",
         expression: pathContains(PROBE_PATHS),
+        action: "block",
+      },
+      {
+        // A retired app on a stale origin still answers, and its admin login
+        // reads as a find. Block the whole host until the hosting project and
+        // DNS record are removed (see README, "Retired hosts"). `http.host`
+        // keeps the client's casing, so compare the lowercased value.
+        description: "Retire payload.tom.so: the retired Payload CMS still answers /admin",
+        expression: 'lower(http.host) eq "payload.tom.so"',
         action: "block",
       },
     ],

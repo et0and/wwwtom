@@ -1,3 +1,11 @@
+## [4.7.8](https://github.com/et0and/wwwtom/compare/v4.7.7...v4.7.8) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block agent and repository metadata probes at the edge ([07480aa](https://github.com/et0and/wwwtom/commit/07480aa30f6e664664862c2ac42c3a6123434e87))
+* **security:** retire payload.tom.so at the edge ([28b3941](https://github.com/et0and/wwwtom/commit/28b3941bf7cb2cd430c2593481bec176e7008ed1))
+
 ## [4.7.7](https://github.com/et0and/wwwtom/compare/v4.7.6...v4.7.7) (2026-10-23)
 
 
