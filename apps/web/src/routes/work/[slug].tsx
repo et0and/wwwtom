@@ -3,23 +3,23 @@ import { useParams } from "@solidjs/router";
 import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchWorkBySlug } from "~/server/adapter";
+import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
 import {
-  DetailArenaBlocks,
+  ArenaSourceLink,
   DetailError,
   DetailLoading,
   DetailNotFound,
-} from "~/components/DetailStates";
+} from "~/content/DetailStates";
+import { ContentBlocks } from "~/content/ContentBlocks";
 
 export default function WorkPage() {
   const params = useParams();
   const slug = createMemo(() => params.slug);
 
-  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
-  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+  httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
+  httpHeader("CDN-Cache-Control", PUBLIC_PAGE_CDN_CACHE_CONTROL);
 
   const workQuery = useQuery(() => ({
     queryKey: ["work", slug()],
@@ -50,27 +50,30 @@ export default function WorkPage() {
         {(work) => (
           <PageLayout
             title={work.title}
-            // An empty summary falls back to the meta description.
-            description={work.summary || work.meta?.description || ""}
+            description={work.summary ?? ""}
             canonical={`https://tom.so/work/${slug()}`}
             jsonLd={{
               "@context": "https://schema.org",
               "@type": "CreativeWork",
               name: work.title,
-              description: work.summary || work.meta?.description || "",
+              description: work.summary ?? "",
               url: `https://tom.so/work/${slug()}`,
               author: { "@type": "Person", name: "Tom Hackshaw" },
             }}
           >
             <article>
-              <BlurInText text={work.title} tag="h1" baseDelay={0.1} step={0.025} />
-              <BlurInSection delay={0.3}>
+              <Text variant="heading" size="lg" as="h1">
+                {work.title}
+              </Text>
+              <div>
                 <Text>{work.summary ?? ""}</Text>
-              </BlurInSection>
-              <BlurInSection delay={0.5}>
-                <div innerHTML={work.html ?? ""} />
-              </BlurInSection>
-              <DetailArenaBlocks blocks={work.arenaBlocks ?? []} baseDelay={0.7} />
+              </div>
+              <div>
+                <ArenaSourceLink arenaSlug={work.arenaSlug} />
+              </div>
+              <div>
+                <ContentBlocks blocks={work.blocks} />
+              </div>
             </article>
           </PageLayout>
         )}

@@ -14,7 +14,7 @@ const meta = preview.meta({
 export const Bottom = meta.story({
   render: () => (
     <Popover defaultOpen>
-      <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>Details</Popover.Trigger>
+      <Popover.Trigger style={buttonVariants({ variant: "secondary" })}>Details</Popover.Trigger>
       <Popover.Content>
         <Popover.Title>About this item</Popover.Title>
         <Popover.Description>Extra context appears here.</Popover.Description>
@@ -26,7 +26,7 @@ export const Bottom = meta.story({
 export const Top = meta.story({
   render: () => (
     <Popover defaultOpen>
-      <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>Above</Popover.Trigger>
+      <Popover.Trigger style={buttonVariants({ variant: "secondary" })}>Above</Popover.Trigger>
       <Popover.Content side="top">
         <Popover.Title>Above the trigger</Popover.Title>
         <Popover.Description>Side variant top.</Popover.Description>
@@ -38,7 +38,7 @@ export const Top = meta.story({
 export const Left = meta.story({
   render: () => (
     <Popover defaultOpen>
-      <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>Left</Popover.Trigger>
+      <Popover.Trigger style={buttonVariants({ variant: "secondary" })}>Left</Popover.Trigger>
       <Popover.Content side="left">
         <Popover.Title>To the left</Popover.Title>
         <Popover.Description>Side variant left.</Popover.Description>
@@ -50,7 +50,7 @@ export const Left = meta.story({
 export const Right = meta.story({
   render: () => (
     <Popover defaultOpen>
-      <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>Right</Popover.Trigger>
+      <Popover.Trigger style={buttonVariants({ variant: "secondary" })}>Right</Popover.Trigger>
       <Popover.Content side="right">
         <Popover.Title>To the right</Popover.Title>
         <Popover.Description>Side variant right.</Popover.Description>
@@ -62,7 +62,7 @@ export const Right = meta.story({
 export const WithTrigger = meta.story({
   render: () => (
     <Popover>
-      <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <Popover.Trigger style={buttonVariants({ variant: "secondary" })}>
         Open popover
       </Popover.Trigger>
       <Popover.Content>
@@ -76,11 +76,11 @@ export const WithTrigger = meta.story({
 export const WithClose = meta.story({
   render: () => (
     <Popover defaultOpen>
-      <Popover.Trigger class={buttonVariants({ variant: "secondary" })}>Details</Popover.Trigger>
+      <Popover.Trigger style={buttonVariants({ variant: "secondary" })}>Details</Popover.Trigger>
       <Popover.Content>
         <Popover.Title>Dismissible</Popover.Title>
         <Popover.Description>Close returns focus to the trigger.</Popover.Description>
-        <Popover.Close class={buttonVariants({ variant: "primary" })}>Got it</Popover.Close>
+        <Popover.Close style={buttonVariants({ variant: "primary" })}>Got it</Popover.Close>
       </Popover.Content>
     </Popover>
   ),

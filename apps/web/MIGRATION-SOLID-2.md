@@ -84,7 +84,7 @@ heads.
 - [x] 7. `server/adapter.ts` (no `use server`), `libs/adapter.ts`
 - [x] 8. Route conversions: preload → router config, `httpHeader()`, Loading,
      Errored, async memos, plain links
-- [x] 9. Components: Nav/Link/ProgressBar, Arena/BlurIn\*,
+- [x] 9. Components: Nav/Link/ProgressBar, Arena,
      hold/kawara effects; `Dynamic` replaced by static tags
 - [x] 10. feed/sitemap/robots handlers (`src/server/static-routes.ts`)
 - [x] 11. Test conversions with `createRouter`+`memoryHistory`
@@ -101,8 +101,9 @@ heads.
 - `mergeProps` → `merge`; `splitProps` → `omit`
 - `onMount` → `onSettled`; `on`+effect → split `createEffect(compute, apply)`
 - `batch`/`on`/`createDeferred`/`createComputed` — not used or removed
-- `Dynamic` → static tag selection in `BlurInText` (Solid 2 `Dynamic` with a
-  string element desynced hydration keys; static h1/h2/span branches hydrate
-  cleanly)
+- `Dynamic` → static tag selection (Solid 2 `Dynamic` with a string element
+  desynced hydration keys; static h1/h2/span branches hydrate cleanly).
+  Applied first in `BlurInText`, which has since been deleted along with the
+  blur-in effect; the headings it rendered are now plain `Text`.
 - Shared `Document` shell hydrated on both sides (client must claim the
   exact server tree, not a `#app` subset)

@@ -1,28 +1,21 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render, screen, waitFor } from "@solidjs/testing-library";
 import { createRouter, memoryHistory } from "@solidjs/router";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
-import { HttpError } from "@tom/types/errors";
 import PostPage from "~/routes/posts/[slug]";
+import { jsonResponse, stubAdapterFetch } from "~/test/adapter-fetch";
 
-vi.mock("~/server/adapter", () => ({
-  fetchPostBySlug: vi.fn(),
-}));
-
-import { fetchPostBySlug } from "~/server/adapter";
-
-const mockedFetchPostBySlug = fetchPostBySlug as Mock;
+const fetchMock = stubAdapterFetch();
 
 const postData = {
-  id: "post-1",
+  id: 1,
   title: "A pattern language",
   summary: "On imagining a monorepo as a shared house",
   slug: "a-pattern-language",
+  arenaSlug: "a-pattern-language-abc123",
   publishedAt: "2026-06-30T00:00:00.000Z",
   updatedAt: "2026-06-30T00:00:00.000Z",
-  meta: { description: "A meta description" },
-  html: "<p>On imagining a monorepo as a shared house.</p>",
-  arenaBlocks: [],
+  blocks: [],
 };
 
 const TestRouter = createRouter({
@@ -45,12 +38,12 @@ const headMeta = (selector: string): string | null | undefined =>
   document.head.querySelector(selector)?.getAttribute("content");
 
 beforeEach(() => {
-  mockedFetchPostBySlug.mockReset();
+  fetchMock.mockReset();
 });
 
 describe("post page meta tags", () => {
   it("renders title, description and og/twitter meta into the document head", async () => {
-    mockedFetchPostBySlug.mockResolvedValue(postData);
+    fetchMock.mockResolvedValue(jsonResponse(postData));
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
 
@@ -67,10 +60,13 @@ describe("post page meta tags", () => {
       "On imagining a monorepo as a shared house",
     );
     expect(headMeta('meta[name="twitter:card"]')).toBe("summary_large_image");
+
+    const source = screen.getByRole("link", { name: "View on are.na" }) as HTMLAnchorElement;
+    expect(source.href).toBe("https://are.na/tom/a-pattern-language-abc123");
   });
 
   it("points og:image and twitter:image at the public adapter proxy, absolute", async () => {
-    mockedFetchPostBySlug.mockResolvedValue(postData);
+    fetchMock.mockResolvedValue(jsonResponse(postData));
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
 
@@ -87,8 +83,8 @@ describe("post page meta tags", () => {
     // The meta tags must be present once the query settles, regardless of the
     // innerHTML body content — this guards against the head flushing before
     // the async post fetch resolves.
-    const bare = { ...postData, html: "", arenaBlocks: [] };
-    mockedFetchPostBySlug.mockResolvedValue(bare);
+    const bare = { ...postData, blocks: [] };
+    fetchMock.mockResolvedValue(jsonResponse(bare));
     renderPostPage();
     await waitFor(() => expect(screen.getByText("A pattern language")).toBeTruthy());
 
@@ -96,14 +92,19 @@ describe("post page meta tags", () => {
   });
 
   it("shows a spinner — not Not found — while the post is loading", async () => {
-    mockedFetchPostBySlug.mockReturnValue(new Promise(() => {}));
+    fetchMock.mockReturnValue(new Promise(() => {}));
     renderPostPage();
     await waitFor(() => expect(screen.getByRole("status")).toBeTruthy());
     expect(screen.queryByText("Not found")).toBeNull();
   });
 
-  it("shows Not found once a missing slug settles to null", async () => {
-    mockedFetchPostBySlug.mockResolvedValue(null);
+  it("shows Not found once a missing slug settles to a 404", async () => {
+    fetchMock.mockResolvedValue(
+      jsonResponse(
+        { type: "https://errors.tom.so/not-found", status: 404, title: "Not found" },
+        404,
+      ),
+    );
     renderPostPage();
     await waitFor(() => expect(screen.getByText("Not found")).toBeTruthy());
     expect(screen.getByText('The post "a-pattern-language" does not exist.')).toBeTruthy();
@@ -111,8 +112,11 @@ describe("post page meta tags", () => {
   });
 
   it("shows an error banner — not Not found — on a server error", async () => {
-    mockedFetchPostBySlug.mockRejectedValue(
-      new HttpError({ message: "Adapter request failed", status: 500 }),
+    fetchMock.mockResolvedValue(
+      jsonResponse(
+        { type: "https://errors.tom.so/internal", status: 500, title: "Internal error" },
+        500,
+      ),
     );
     renderPostPage();
     await waitFor(() => expect(screen.getByText("Error loading post")).toBeTruthy());

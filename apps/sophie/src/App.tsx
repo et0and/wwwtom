@@ -1,27 +1,28 @@
+import * as stylex from "@stylexjs/stylex";
 import { Loading, Match, Show, Switch, createSignal } from "solid-js";
 import { createRouter, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
+import { httpStatus, isServer } from "@solidjs/web";
+import { Effect } from "effect";
 import type { CmsPostSummary } from "@tom/schemas/cms";
+import { HttpStatus } from "@tom/constants/http";
 import { Metadata } from "@tom/ui/Meta";
 import { ViewTransitions } from "@tom/ui/ViewTransitions";
 import { Banner } from "@tom/ui/banner";
 import { Breadcrumbs } from "@tom/ui/breadcrumbs";
 import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
-import { getAdapterBaseUrl } from "./lib/api";
-import { getQueryClient } from "./lib/query-client";
-import {
-  PAGES_CATEGORY,
-  fetchAbout,
-  fetchCategories,
-  fetchPost,
-  fetchPosts,
-  formatPublishedDate,
-} from "./lib/posts";
-import { Nav } from "./components/Nav";
-import { CategoryFilter } from "./components/CategoryFilter";
-import { PostList } from "./components/PostList";
+import { layout } from "@tom/ui/primitives.stylex";
+import { formatDate } from "@tom/utils/date";
+import { getAdapterBaseUrl } from "./posts/api";
+import { getQueryClient } from "./data/query-client";
+import { PAGES_CATEGORY, fetchAbout, fetchCategories, fetchPost, fetchPosts } from "./posts/posts";
+import { Nav } from "./chrome/Nav";
+import { CategoryFilter } from "./posts/CategoryFilter";
+import { PostList } from "./posts/PostList";
 import "./app.css";
+
+const styles = stylex.create({ paginationSpacing: { marginTop: "1rem" } });
 
 const SOPHIE_DESCRIPTION = "Sophie — writing";
 
@@ -53,7 +54,7 @@ const About = () => {
       <h1 class="sophie-title">About</h1>
       <Loading
         fallback={
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         }
@@ -104,7 +105,7 @@ const Posts = () => {
       />
       <Loading
         fallback={
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         }
@@ -123,7 +124,7 @@ const Posts = () => {
         <PostList posts={visible()} />
         <Show when={totalPages() > 1}>
           <Pagination
-            class="mt-4"
+            style={styles.paginationSpacing}
             page={page()}
             pageCount={totalPages()}
             onChange={(next) => setPage(next)}
@@ -169,7 +170,7 @@ const PostDetail = () => {
         }
       >
         <Match when={postQuery.isPending}>
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         </Match>
@@ -183,7 +184,7 @@ const PostDetail = () => {
                 metaType="description"
                 metaContent={found.summary ?? SOPHIE_DESCRIPTION}
                 brand={SOPHIE_BRAND}
-                date={formatPublishedDate(found.publishedAt)}
+                date={formatDate(found.publishedAt)}
               />
               <div class="sophie-crumbs">
                 <Breadcrumbs
@@ -206,21 +207,32 @@ const PostDetail = () => {
   );
 };
 
-const NotFound = () => (
-  <main>
-    <Metadata
-      title="Missing"
-      metaType="description"
-      metaContent={SOPHIE_DESCRIPTION}
-      brand={SOPHIE_BRAND}
-    />
-    <h1 class="sophie-title">Missing</h1>
-    <p>No page lives here.</p>
-    <p>
-      <a href="/about">About</a>
-    </p>
-  </main>
-);
+/**
+ * Unknown paths must answer 404, not 200. The router reaches this component
+ * for every unmatched path, and without an explicit status the SSR response
+ * is a 200 with the Missing page — which tells a scanner probing
+ * `/.env`, `/.git/config` or `/.ssh/id_rsa` that it found something. This is
+ * the same contract as apps/web's `[...404].tsx`.
+ */
+const NotFound = () => {
+  if (isServer) void Effect.runFork(Effect.logInfo("Page not found", HttpStatus.NotFound));
+  httpStatus(HttpStatus.NotFound);
+  return (
+    <main>
+      <Metadata
+        title="Missing"
+        metaType="description"
+        metaContent={SOPHIE_DESCRIPTION}
+        brand={SOPHIE_BRAND}
+      />
+      <h1 class="sophie-title">Missing</h1>
+      <p>No page lives here.</p>
+      <p>
+        <a href="/about">About</a>
+      </p>
+    </main>
+  );
+};
 
 const ignoredPrefetchError = (): void => {
   // A failed prefetch surfaces through the query's error state — don't let

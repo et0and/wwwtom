@@ -1,0 +1,106 @@
+import { Elysia } from "elysia";
+import { Effect, Schema } from "effect";
+import { HttpStatus } from "@tom/constants/http";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
+import { commaTolerantString, joinCommaList } from "@tom/schemas/og";
+import { ImageGenerationError } from "@tom/types/errors";
+import { readCloudflareEnv } from "@tom/utils/config";
+import {
+  getRequestEnv,
+  logContextFromRequest,
+  runEffect,
+  toProblemResponse,
+} from "@tom/utils/worker";
+import { ProblemType } from "@tom/constants/problem";
+
+const OgQuerySchema = Schema.Struct({
+  title: Schema.optional(commaTolerantString(100)),
+  summary: Schema.optional(commaTolerantString(200)),
+  template: Schema.optional(
+    Schema.Union([Schema.Literal("default"), Schema.Literal("minimal"), Schema.Literal("sophie")]),
+  ),
+  date: Schema.optional(commaTolerantString(30)),
+});
+
+const ogQuerySchema = Schema.toStandardSchemaV1(OgQuerySchema);
+
+export const proxyOgRoute = new Elysia().get(
+  "/og",
+  async ({ query, request }) => {
+    const env = await readCloudflareEnv(getRequestEnv(request));
+    const apiUrl = env.API_URL ?? LOCAL_SERVICE_URLS.api;
+    const title = joinCommaList(query.title);
+    const summary = joinCommaList(query.summary);
+    const template = query.template;
+    const date = joinCommaList(query.date);
+    // Forward the caller's Referer so the API's template auto-select
+    // (sophie.st → sophie) survives the hop.
+    const referer = request.headers.get("referer");
+
+    const program = Effect.gen(function* () {
+      const params = new URLSearchParams();
+      if (title) params.set("title", title);
+      if (summary) params.set("summary", summary);
+      // Only forward an explicit template: defaulting to "default" here
+      // would override the API's Referer-based auto-select.
+      if (template !== undefined) params.set("template", template);
+      if (date) params.set("date", date);
+
+      const headers = new Headers();
+      if (env.INTERNAL_API_TOKEN) headers.set(INTERNAL_TOKEN_HEADER, env.INTERNAL_API_TOKEN);
+      if (referer) headers.set("referer", referer);
+
+      const response = yield* Effect.tryPromise({
+        // A plain fetch, not the treaty client: the API answers with a PNG
+        // and treaty consumes the body while parsing, so the image bytes
+        // wouldn't be readable afterwards.
+        try: () =>
+          fetch(`${apiUrl}/og?${params}`, {
+            headers,
+            cf: {
+              cacheTtl: 31536000,
+              cacheEverything: true,
+            },
+          } as RequestInit),
+        catch: () => new ImageGenerationError({ message: "Failed to fetch OG image" }),
+      });
+
+      if (!response.ok) {
+        return yield* new ImageGenerationError({ message: "Failed to generate OG image" });
+      }
+
+      if (response.body === null) {
+        return yield* new ImageGenerationError({ message: "Failed to read image buffer" });
+      }
+
+      return new Response(response.body, {
+        status: response.status,
+        headers: {
+          "Content-Type": "image/png",
+          "Cache-Control": "public, max-age=31536000, immutable",
+          "CDN-Cache-Control": "public, max-age=31536000",
+          "Cloudflare-CDN-Cache-Control": "public, max-age=31536000",
+        },
+      });
+    }).pipe(
+      Effect.catch(
+        Effect.fn("ogErrorHandler")(function* (error: ImageGenerationError) {
+          yield* Effect.logError("OG image proxy error", error);
+          return toProblemResponse(HttpStatus.InternalServerError, error.message, {
+            type: ProblemType.Upstream,
+          });
+        }),
+      ),
+    );
+
+    return runEffect(program, logContextFromRequest(request, "tom-adapter"));
+  },
+  {
+    query: ogQuerySchema,
+    detail: {
+      description: "OG image proxy — forwards to the Tom API and caches at the edge",
+      tags: ["images"],
+    },
+  },
+);

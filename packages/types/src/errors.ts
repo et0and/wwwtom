@@ -8,19 +8,14 @@ const messageCauseFields = {
 };
 
 export class ImageError extends Schema.TaggedError<ImageError>()("ImageError", {
-  response: Schema.Unknown,
-  cause: Schema.optional(Schema.Unknown),
-}) {}
-
-export class PolarApiError extends Schema.TaggedError<PolarApiError>()("PolarApiError", {
+  status: Schema.Finite,
   message: Schema.String,
-  status: Schema.Number,
-  operation: Schema.String,
+  cause: Schema.optional(Schema.Unknown),
 }) {}
 
 export class CmsError extends Schema.TaggedError<CmsError>()("CmsError", {
   message: Schema.String,
-  status: Schema.Number,
+  status: Schema.Finite,
   operation: Schema.String,
   cause: Schema.optional(Schema.Unknown),
 }) {}
@@ -33,7 +28,7 @@ export class SearchError extends Schema.TaggedError<SearchError>()("SearchError"
 
 export class HttpError extends Schema.TaggedError<HttpError>()("HttpError", {
   message: Schema.String,
-  status: Schema.Number,
+  status: Schema.Finite,
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
@@ -108,7 +103,7 @@ export class ImageGenerationError extends Schema.TaggedError<ImageGenerationErro
 
 export class TelegramError extends Schema.TaggedError<TelegramError>()("TelegramError", {
   message: Schema.String,
-  status: Schema.optional(Schema.Number),
+  status: Schema.optional(Schema.Finite),
 }) {}
 
 export class InfrastructureConfigError extends Schema.TaggedError<InfrastructureConfigError>()(
@@ -147,11 +142,25 @@ export class RunnerError extends Schema.TaggedError<RunnerError>()(
 
 export class GitHubApiError extends Schema.TaggedError<GitHubApiError>()("GitHubApiError", {
   message: Schema.String,
-  status: Schema.optional(Schema.Number),
+  status: Schema.optional(Schema.Finite),
   cause: Schema.optional(Schema.Unknown),
 }) {}
 
 export class TurboCacheError extends Schema.TaggedError<TurboCacheError>()(
   "TurboCacheError",
+  messageCauseFields,
+) {}
+
+export class WorkflowInvalidError extends Schema.TaggedError<WorkflowInvalidError>()(
+  "WorkflowInvalidError",
+  {
+    path: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Unknown),
+  },
+) {}
+
+export class ShikiError extends Schema.TaggedError<ShikiError>()(
+  "ShikiError",
   messageCauseFields,
 ) {}

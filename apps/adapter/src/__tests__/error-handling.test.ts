@@ -18,17 +18,7 @@ describe("adapter error handling", () => {
     });
   });
 
-  it("surfaces the API validation failure for an unparseable page param", async () => {
-    fetchMock.mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          type: "https://errors.tom.so/validation",
-          status: 400,
-          title: "Invalid paging parameters",
-        }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      ),
-    );
+  it("rejects an unparseable page param before calling the API", async () => {
     const response = await app.fetch(
       requestWithEnv("http://localhost/content/posts?page=not-a-number", testEnv()),
     );
@@ -36,20 +26,47 @@ describe("adapter error handling", () => {
     expect(await response.json()).toEqual({
       type: "https://errors.tom.so/validation",
       status: 400,
-      title: "CMS posts request failed",
+      title: "Validation error",
       instance: "http://localhost/content/posts?page=not-a-number",
+      errors: [{ detail: "Expected a finite number", pointer: "#/page" }],
     });
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("returns 500 problem details when an integration has no access token configured", async () => {
-    const response = await app.fetch(requestWithEnv("http://localhost/polar/products", testEnv()));
-    expect(response.status).toBe(500);
-    const body = await response.json();
-    expect(body).toEqual({
-      type: "about:blank",
-      status: 500,
-      title: "Network error",
-      instance: "http://localhost/polar/products",
+  it("rejects an out-of-range page param before calling the API", async () => {
+    // The bounds live in the shared CmsPagingSchema, so the adapter rejects
+    // page=0 at its own boundary instead of forwarding a request the API would
+    // only reject anyway.
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/content/posts?page=0", testEnv()),
+    );
+    expect(response.status).toBe(400);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/validation",
+      status: 400,
+      title: "Validation error",
+      instance: "http://localhost/content/posts?page=0",
+      errors: [{ detail: "Expected a value greater than or equal to 1", pointer: "#/page" }],
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("forwards an upstream problem status from the API", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ status: 409, title: "Post slug taken" }), {
+        status: 409,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
+    const response = await app.fetch(
+      requestWithEnv("http://localhost/content/posts?page=1", testEnv()),
+    );
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      type: "https://errors.tom.so/conflict",
+      status: 409,
+      title: "CMS posts request failed",
+      instance: "http://localhost/content/posts?page=1",
     });
   });
 });

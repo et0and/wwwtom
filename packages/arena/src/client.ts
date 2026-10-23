@@ -1,4 +1,4 @@
-import { Effect } from "effect";
+import { Cause, Effect, Option, Schema } from "effect";
 import {
   createArena,
   ArenaApiError,
@@ -6,29 +6,35 @@ import {
   type Arena,
   type Channel,
 } from "@aredotna/sdk";
-import type {
-  GetChannelsApiResponse,
-  MeApiResponse,
-  PaginationAttributes,
-  GetGroupApiResponse,
-  GetGroupChannelsApiResponse,
-  SearchApiResponse,
-  GetBlockApiResponse,
-  GetBlockChannelsApiResponse,
-  CreateChannelApiResponse,
-  GetChannelThumbApiResponse,
-  GetChannelContentsApiResponse,
-  GetUserChannelsApiResponse,
-  GetUserApiResponse,
-  GetUserFollowersApiResponse,
-  GetUserFollowingApiResponse,
-  GetBlockCommentApiResponse,
+import {
+  GetChannelsApiResponseSchema,
+  GetChannelThumbApiResponseSchema,
+  GetGroupChannelsApiResponseSchema,
+  GetUserChannelsApiResponseSchema,
+  type GetChannelsApiResponse,
+  type MeApiResponse,
+  type PaginationAttributes,
+  type GetGroupApiResponse,
+  type GetGroupChannelsApiResponse,
+  type SearchApiResponse,
+  type GetBlockApiResponse,
+  type GetBlockChannelsApiResponse,
+  type CreateChannelApiResponse,
+  type GetChannelThumbApiResponse,
+  type GetChannelContentsApiResponse,
+  type GetUserChannelsApiResponse,
+  type GetUserApiResponse,
+  type GetUserFollowersApiResponse,
+  type GetUserFollowingApiResponse,
+  type GetBlockCommentApiResponse,
 } from "@tom/schemas/arena";
+import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
+import { workerCache } from "@tom/utils/http";
 
 export interface ArenaBlockApi {
-  get(): Effect.Effect<GetBlockApiResponse, HttpError>;
+  readonly get: Effect.Effect<GetBlockApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetBlockChannelsApiResponse, HttpError>;
   update(data: {
     title?: string;
@@ -39,10 +45,10 @@ export interface ArenaBlockApi {
 }
 
 export interface ArenaUserApi {
-  get(): Effect.Effect<GetUserApiResponse, HttpError>;
+  readonly get: Effect.Effect<GetUserApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetUserChannelsApiResponse, HttpError>;
-  following(): Effect.Effect<GetUserFollowingApiResponse, HttpError>;
-  followers(): Effect.Effect<GetUserFollowersApiResponse, HttpError>;
+  readonly following: Effect.Effect<GetUserFollowingApiResponse, HttpError>;
+  readonly followers: Effect.Effect<GetUserFollowersApiResponse, HttpError>;
 }
 
 export type ChannelStatus = "public" | "closed" | "private";
@@ -50,16 +56,16 @@ export type ChannelStatus = "public" | "closed" | "private";
 type ChannelUpdateBody = { title: string; visibility?: ChannelStatus };
 
 export interface ArenaGroupApi {
-  get(): Effect.Effect<GetGroupApiResponse, HttpError>;
+  readonly get: Effect.Effect<GetGroupApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetGroupChannelsApiResponse, HttpError>;
 }
 
 export interface ArenaChannelApi {
   create(status?: ChannelStatus): Effect.Effect<CreateChannelApiResponse, HttpError>;
-  get(): Effect.Effect<Channel, HttpError>;
-  delete(): Effect.Effect<void, HttpError>;
+  readonly get: Effect.Effect<Channel, HttpError>;
+  readonly delete: Effect.Effect<void, HttpError>;
   update(data: { title: string; status?: ChannelStatus }): Effect.Effect<void, HttpError>;
-  thumb(): Effect.Effect<GetChannelThumbApiResponse, HttpError>;
+  readonly thumb: Effect.Effect<GetChannelThumbApiResponse, HttpError>;
   contents(options?: PaginationAttributes): Effect.Effect<GetChannelContentsApiResponse, HttpError>;
   connections(options?: PaginationAttributes): Effect.Effect<ChannelConnections, HttpError>;
 }
@@ -81,7 +87,7 @@ export interface ArenaSearchApi {
 }
 
 export interface ArenaApi {
-  me(): Effect.Effect<MeApiResponse, HttpError>;
+  readonly me: Effect.Effect<MeApiResponse, HttpError>;
   channels(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError>;
   user(id: number | string): ArenaUserApi;
   group(slug: string): ArenaGroupApi;
@@ -113,6 +119,58 @@ const formatSort = (sort?: string, direction?: string): string | undefined => {
 
 export type DateProvider = { now(): number };
 
+type CfOptions = NonNullable<NonNullable<Parameters<Fetch>[1]>["cf"]>;
+
+const PUBLIC_CACHE_TTL_SECONDS = 86400;
+
+/**
+ * Public reads may sit in the Cloudflare edge cache. The key carries no
+ * credentials, so only unauthenticated requests may use it. Content is
+ * held for 24 hours; errors never cache.
+ */
+const publicCacheOptions = (url: string): CfOptions => ({
+  cacheTtl: PUBLIC_CACHE_TTL_SECONDS,
+  cacheKey: `arena:v3:public:${url}`,
+  cacheTtlByStatus: { "400-599": 0 },
+});
+
+const workerCacheKey = (url: string): Request =>
+  new Request(`https://arena-cache.internal/${encodeURIComponent(url)}`, { method: "GET" });
+
+/**
+ * Cloudflare's per-fetch cache is zone-scoped, so reads from a worker to
+ * api.are.na are not cached by `cf.cacheTtl` alone. The Workers Cache API
+ * holds them for the response's own max-age, which keeps anonymous browsing
+ * inside are.na's 30-requests-per-minute guest tier. Cache failures never
+ * fail the read.
+ */
+const readWorkerCache = async (url: string): Promise<Response | null> => {
+  const cache = workerCache();
+  if (!cache) return null;
+  return (await cache.match(workerCacheKey(url)).catch(() => undefined)) ?? null;
+};
+
+/**
+ * Store a public read for the full TTL. The Cache API honors the response's
+ * own `Cache-Control` — are.na sends `max-age=300` — so the header is
+ * rewritten before storing, otherwise the entry expires in five minutes.
+ * The write is awaited: unlike `ctx.waitUntil`, a bare `cache.put` can be
+ * terminated once the response is returned.
+ */
+const writeWorkerCache = async (url: string, response: Response): Promise<void> => {
+  const cache = workerCache();
+  if (!cache) return;
+  const cloned = response.clone();
+  const headers = new Headers(cloned.headers);
+  headers.set("cache-control", `public, max-age=${PUBLIC_CACHE_TTL_SECONDS}`);
+  const cacheable = new Response(cloned.body, {
+    status: cloned.status,
+    statusText: cloned.statusText,
+    headers,
+  });
+  await cache.put(workerCacheKey(url), cacheable).catch(() => undefined);
+};
+
 export const defaultPaginationOptions: PaginationAttributes = {
   sort: "position",
   direction: "desc",
@@ -123,10 +181,7 @@ export function paginationQueryString(
   options: PaginationAttributes | undefined,
   dateProvider: DateProvider,
 ): string {
-  const { page, per, sort, direction, forceRefresh } = {
-    ...defaultPaginationOptions,
-    ...options,
-  };
+  const { page, per, sort, direction, forceRefresh } = resolvePagination(options);
   const attrs: string[] = [];
   if (page) attrs.push(`page=${page}`);
   if (per) attrs.push(`per_page=${per}`);
@@ -152,7 +207,6 @@ function mapArenaError(cause: unknown): HttpError {
   });
 }
 
-type ContentsQuery = NonNullable<Parameters<Arena["channels"]["contents"]>[1]>;
 type ChannelConnections = Awaited<ReturnType<Arena["channels"]["connections"]>>;
 type ConnectionsQuery = NonNullable<Parameters<Arena["channels"]["connections"]>[1]>;
 type SearchQuery = NonNullable<Parameters<Arena["search"]["query"]>[0]>;
@@ -163,71 +217,73 @@ interface PageParams {
 }
 
 const pageParams = (options: PaginationAttributes | undefined): PageParams => {
-  const { page, per } = { ...defaultPaginationOptions, ...options };
+  const { page, per } = resolvePagination(options);
   return {
     ...(page !== undefined && { page }),
     ...(per !== undefined && { per }),
   };
 };
 
-const pickSort = <const T extends readonly string[]>(
-  combined: string | undefined,
-  allowed: T,
-): T[number] | undefined => {
-  if (combined === undefined) return undefined;
-  return allowed.find((value) => value === combined);
-};
+const ContentsSortSchema = Schema.Literals([
+  "position_asc",
+  "position_desc",
+  "created_at_asc",
+  "created_at_desc",
+  "updated_at_asc",
+  "updated_at_desc",
+]);
 
-const toContentsSort = (sort?: string, direction?: string): ContentsQuery["sort"] =>
-  pickSort(formatSort(sort, direction), [
-    "position_asc",
-    "position_desc",
-    "created_at_asc",
-    "created_at_desc",
-    "updated_at_asc",
-    "updated_at_desc",
-  ]);
+const ConnectionsSortSchema = Schema.Literals(["created_at_asc", "created_at_desc"]);
 
-const toConnectionsSort = (sort?: string, direction?: string): ConnectionsQuery["sort"] =>
-  pickSort(formatSort(sort, direction), ["created_at_asc", "created_at_desc"]);
+const SearchSortSchema = Schema.Literals([
+  "score_desc",
+  "created_at_asc",
+  "created_at_desc",
+  "updated_at_asc",
+  "updated_at_desc",
+  "name_asc",
+  "name_desc",
+  "connections_count_desc",
+]);
 
-const toSearchSort = (sort?: string, direction?: string): SearchQuery["sort"] =>
-  pickSort(formatSort(sort, direction), [
-    "score_desc",
-    "created_at_asc",
-    "created_at_desc",
-    "updated_at_asc",
-    "updated_at_desc",
-    "name_asc",
-    "name_desc",
-    "connections_count_desc",
-  ]);
+/**
+ * Decode a `<field>_<direction>` sort into one endpoint's allowlist. An unknown
+ * combination yields no sort rather than an error, so a caller can ask for a
+ * sort are.na does not support and still get results.
+ */
+const pickSort = <TSort extends string>(
+  sort: string | undefined,
+  direction: string | undefined,
+  schema: Schema.Codec<TSort>,
+): TSort | undefined =>
+  Option.getOrUndefined(Schema.decodeUnknownOption(schema)(formatSort(sort, direction)));
+
+/** Caller paging over the endpoint defaults, resolved once. */
+const resolvePagination = (options: PaginationAttributes | undefined): PaginationAttributes => ({
+  ...defaultPaginationOptions,
+  ...options,
+});
 
 const withSort = <TSort extends string>(
   options: PaginationAttributes | undefined,
-  pick: (sort?: string, direction?: string) => TSort | undefined,
+  schema: Schema.Codec<TSort>,
 ): PageParams & { sort?: TSort } => {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
-  const result: PageParams & { sort?: TSort } = { ...pageParams(options) };
-  const picked = pick(sort, direction);
-  if (picked !== undefined) result.sort = picked;
-  return result;
+  const { sort, direction } = resolvePagination(options);
+  const picked = pickSort(sort, direction, schema);
+  return { ...pageParams(options), ...(picked !== undefined && { sort: picked }) };
 };
 
-const toContentsQuery = (options: PaginationAttributes | undefined): ContentsQuery =>
-  withSort(options, toContentsSort);
-
 const toConnectionsQuery = (options: PaginationAttributes | undefined): ConnectionsQuery =>
-  withSort(options, toConnectionsSort);
+  withSort(options, ConnectionsSortSchema);
 
 function toSdkSearchQuery(
   query: string,
   type: "users" | "channels" | "blocks" | undefined,
   options: PaginationAttributes | undefined,
 ): SearchQuery {
-  const { sort, direction } = { ...defaultPaginationOptions, ...options };
+  const { sort, direction } = resolvePagination(options);
   const result: SearchQuery = { query, ...pageParams(options) };
-  const sortParam = toSearchSort(sort, direction);
+  const sortParam = pickSort(sort, direction, SearchSortSchema);
   if (sortParam !== undefined) result.sort = sortParam;
   if (type === "users") result.type = ["User"];
   if (type === "channels") result.type = ["Channel"];
@@ -243,68 +299,82 @@ export class ArenaClient implements ArenaApi {
   private readonly arena: Arena;
 
   private static normalizeToken(token?: string | null): string | null {
-    if (token === null || token === undefined) return null;
-    const normalized = token.trim();
-    if (!normalized) return null;
-    if (normalized === "undefined") return null;
-    if (normalized === "null") return null;
-    return normalized;
+    return normalizeOptionalSecret(token ?? undefined) ?? null;
   }
 
   private static hasAuthorizationHeader(headers: HeadersInit | undefined): boolean {
     if (!headers) return false;
-    if (headers instanceof Headers) return headers.has("Authorization");
-    if (Array.isArray(headers)) return headers.some(([key]) => key === "Authorization");
-    return "Authorization" in headers && Boolean(headers.Authorization);
+    return new Headers(headers).has("Authorization");
   }
 
   private static removeAuthorizationHeader(
     headers: HeadersInit | undefined,
   ): HeadersInit | undefined {
     if (!headers) return undefined;
-    if (headers instanceof Headers) {
-      const h = new Headers(headers);
-      h.delete("Authorization");
-      return h;
-    }
-    if (Array.isArray(headers)) return headers.filter(([key]) => key !== "Authorization");
-    const h = { ...headers };
-    delete h.Authorization;
-    return h;
+    const normalized = new Headers(headers);
+    normalized.delete("Authorization");
+    return normalized;
   }
 
   private createCachedFetch(fetchImpl: Fetch): Fetch {
     return async (input, init) => {
       const url = input instanceof URL ? input.href : input instanceof Request ? input.url : input;
-      const method = init?.method ?? "GET";
-      const hasAuth = ArenaClient.hasAuthorizationHeader(init?.headers);
+      const method = init?.method ?? (input instanceof Request ? input.method : "GET");
+      // The SDK calls fetch with a Request and no init, so a token lives on
+      // the Request headers; checking init alone would cache private reads.
+      const requestHeaders = input instanceof Request ? input.headers : init?.headers;
+      const hasAuth = ArenaClient.hasAuthorizationHeader(requestHeaders);
       const shouldUseEdgeCache = method === "GET" && !hasAuth;
 
       const requestInit: NonNullable<Parameters<Fetch>[1]> = shouldUseEdgeCache
-        ? {
-            ...init,
-            cf: {
-              cacheTtl: 86400,
-              cacheKey: `arena:v3:public:${url}`,
-              cacheTtlByStatus: { "400-599": 0 },
-            },
-          }
+        ? { ...init, cf: publicCacheOptions(url) }
         : { ...init, cf: { cacheTtl: 0 } };
 
+      if (shouldUseEdgeCache) {
+        const cached = await readWorkerCache(url);
+        if (cached) return cached;
+      }
+
       const response = await fetchImpl(input, requestInit);
+
+      if (shouldUseEdgeCache && response.ok) {
+        await writeWorkerCache(url, response);
+      }
 
       const shouldRetryWithoutAuth =
         method === "GET" && hasAuth && (response.status === 401 || response.status === 403);
 
-      if (shouldRetryWithoutAuth) {
-        const retryInit = { ...requestInit };
-        const retryHeaders = ArenaClient.removeAuthorizationHeader(requestInit.headers);
-        if (retryHeaders) retryInit.headers = retryHeaders;
-        return fetchImpl(input, retryInit);
-      }
-
-      return response;
+      if (!shouldRetryWithoutAuth) return response;
+      return retryWithoutAuth(input, init, url, requestHeaders);
     };
+
+    /**
+     * A private GET that the token cannot read (401/403) still has a public
+     * twin on the other side of the same wall, so retry once from cache with
+     * the Authorization header removed.
+     */
+    async function retryWithoutAuth(
+      input: RequestInfo,
+      init: Parameters<Fetch>[1],
+      url: string,
+      requestHeaders: HeadersInit | undefined,
+    ): Promise<Response> {
+      const cached = await readWorkerCache(url);
+      if (cached) return cached;
+      const retryHeaders = ArenaClient.removeAuthorizationHeader(requestHeaders);
+      const isRequest = input instanceof Request;
+      const retryInit: NonNullable<Parameters<Fetch>[1]> = {
+        ...init,
+        cf: publicCacheOptions(url),
+      };
+      if (retryHeaders && !isRequest) retryInit.headers = retryHeaders;
+      const response = await fetchImpl(
+        isRequest && retryHeaders ? new Request(input, { headers: retryHeaders }) : input,
+        retryInit,
+      );
+      if (response.ok) await writeWorkerCache(url, response);
+      return response;
+    }
   }
 
   constructor(config?: {
@@ -331,37 +401,41 @@ export class ArenaClient implements ArenaApi {
     });
   }
 
-  me(): Effect.Effect<MeApiResponse, HttpError> {
+  get me(): Effect.Effect<MeApiResponse, HttpError> {
     return sdkEffect<MeApiResponse>(() => this.arena.me());
   }
 
   channels(options?: PaginationAttributes): Effect.Effect<GetChannelsApiResponse, HttpError> {
-    return this.getJsonWithPaginationQuery("channels", options);
+    return this.getJsonWithPaginationQuery("channels", options, GetChannelsApiResponseSchema);
   }
 
   user(id: number | string): ArenaUserApi {
     return {
-      get: (): Effect.Effect<GetUserApiResponse, HttpError> =>
-        sdkEffect<GetUserApiResponse>(() => this.arena.users.get(id)),
+      get: sdkEffect<GetUserApiResponse>(() => this.arena.users.get(id)),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetUserChannelsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`users/${id}/channels`, options),
-      following: (): Effect.Effect<GetUserFollowingApiResponse, HttpError> =>
-        sdkEffect<GetUserFollowingApiResponse>(() => this.arena.users.following(id)),
-      followers: (): Effect.Effect<GetUserFollowersApiResponse, HttpError> =>
-        sdkEffect<GetUserFollowersApiResponse>(() => this.arena.users.followers(id)),
+        this.getJsonWithPaginationQuery(
+          `users/${id}/channels`,
+          options,
+          GetUserChannelsApiResponseSchema,
+        ),
+      following: sdkEffect<GetUserFollowingApiResponse>(() => this.arena.users.following(id)),
+      followers: sdkEffect<GetUserFollowersApiResponse>(() => this.arena.users.followers(id)),
     };
   }
 
   group(slug: string): ArenaGroupApi {
     return {
-      get: (): Effect.Effect<GetGroupApiResponse, HttpError> =>
-        sdkEffect<GetGroupApiResponse>(() => this.arena.groups.get(slug)),
+      get: sdkEffect<GetGroupApiResponse>(() => this.arena.groups.get(slug)),
       channels: (
         options?: PaginationAttributes,
       ): Effect.Effect<GetGroupChannelsApiResponse, HttpError> =>
-        this.getJsonWithPaginationQuery(`groups/${slug}/channels`, options),
+        this.getJsonWithPaginationQuery(
+          `groups/${slug}/channels`,
+          options,
+          GetGroupChannelsApiResponseSchema,
+        ),
     };
   }
 
@@ -371,7 +445,7 @@ export class ArenaClient implements ArenaApi {
         options?: PaginationAttributes,
       ): Effect.Effect<GetChannelContentsApiResponse, HttpError> =>
         sdkEffect<GetChannelContentsApiResponse>(() =>
-          this.arena.channels.contents(slug, toContentsQuery(options)),
+          this.arena.channels.contents(slug, withSort(options, ContentsSortSchema)),
         ),
       connections: (options?: PaginationAttributes): Effect.Effect<ChannelConnections, HttpError> =>
         sdkEffect<ChannelConnections>(() =>
@@ -390,12 +464,9 @@ export class ArenaClient implements ArenaApi {
           if (data.status) body.visibility = data.status;
           return this.arena.channels.update(slug, body).then(() => undefined);
         }),
-      get: (): Effect.Effect<Channel, HttpError> =>
-        sdkEffect<Channel>(() => this.arena.channels.get(slug)),
-      delete: (): Effect.Effect<void, HttpError> =>
-        sdkEffect<void>(() => this.arena.channels.delete(slug)),
-      thumb: (): Effect.Effect<GetChannelThumbApiResponse, HttpError> =>
-        this.makeRequest<GetChannelThumbApiResponse>(`channels/${slug}/thumb`),
+      get: sdkEffect<Channel>(() => this.arena.channels.get(slug)),
+      delete: sdkEffect<void>(() => this.arena.channels.delete(slug)),
+      thumb: this.makeRequest(`channels/${slug}/thumb`, GetChannelThumbApiResponseSchema),
     };
   }
 
@@ -407,8 +478,7 @@ export class ArenaClient implements ArenaApi {
         sdkEffect<GetBlockChannelsApiResponse>(() =>
           this.arena.blocks.connections(id, toConnectionsQuery(options)),
         ),
-      get: (): Effect.Effect<GetBlockApiResponse, HttpError> =>
-        sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
+      get: sdkEffect<GetBlockApiResponse>(() => this.arena.blocks.get(id)),
       update: (data: {
         title?: string;
         description?: string;
@@ -457,15 +527,19 @@ export class ArenaClient implements ArenaApi {
     };
   }
 
-  private getJsonWithPaginationQuery<T>(
+  private getJsonWithPaginationQuery<A, I>(
     url: string,
-    options?: PaginationAttributes,
-  ): Effect.Effect<T, HttpError> {
+    options: PaginationAttributes | undefined,
+    schema: Schema.Codec<A, I>,
+  ): Effect.Effect<A, HttpError> {
     const qs = paginationQueryString(options, this.date);
-    return this.makeRequest<T>(`${url}?${qs}`);
+    return this.makeRequest(`${url}?${qs}`, schema);
   }
 
-  private makeRequest<T>(endpoint: string): Effect.Effect<T, HttpError> {
+  private makeRequest<A, I>(
+    endpoint: string,
+    schema: Schema.Codec<A, I>,
+  ): Effect.Effect<A, HttpError> {
     const url = `${this.domain}${endpoint}`;
     const rawFetch = this.rawFetch;
     const headers = this.headers;
@@ -504,7 +578,7 @@ export class ArenaClient implements ArenaApi {
         });
       }
 
-      const json: T = yield* Effect.tryPromise({
+      const json: unknown = yield* Effect.tryPromise({
         try: () => response.json(),
         catch: () =>
           new HttpError({
@@ -513,7 +587,24 @@ export class ArenaClient implements ArenaApi {
           }),
       });
 
-      return json;
+      return yield* Schema.decodeUnknownEffect(schema)(json).pipe(
+        // A SchemaIssue has no useful `toString`, so `String(cause)` logged a
+        // literal "undefined". Render it through Cause.pretty instead, which
+        // is what makes this diagnostic worth having.
+        Effect.tapError((issue) =>
+          Effect.logWarning(
+            `[arena-diag] endpoint=${endpoint} decode failed cause=${Cause.pretty(Cause.fail(issue))}`,
+          ),
+        ),
+        Effect.mapError(
+          (cause) =>
+            new HttpError({
+              message: "Unexpected are.na response",
+              status: HttpStatus.BadGateway,
+              cause,
+            }),
+        ),
+      );
     });
   }
 }

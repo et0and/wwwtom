@@ -1,4 +1,6 @@
 import { Schema } from "effect";
+import { ListResponseSchema } from "./list";
+import { NullableTimestamp } from "./timestamp";
 
 export const CmsPostId = Schema.String.pipe(Schema.brand("CmsPostId"));
 export type CmsPostId = typeof CmsPostId.Type;
@@ -205,7 +207,7 @@ export type CmsCategory = typeof CmsCategorySchema.Type;
 
 export const CmsMediaVariantSchema = Schema.Struct({
   key: Schema.String,
-  width: Schema.Number,
+  width: Schema.Finite,
   format: Schema.String,
 });
 
@@ -213,8 +215,8 @@ export const CmsMediaSchema = Schema.Struct({
   id: CmsMediaId,
   key: Schema.String,
   mime: Schema.String,
-  width: Schema.NullOr(Schema.Number),
-  height: Schema.NullOr(Schema.Number),
+  width: Schema.NullOr(Schema.Finite),
+  height: Schema.NullOr(Schema.Finite),
   alt: Schema.NullOr(Schema.String),
   caption: Schema.NullOr(Schema.String),
   variants: Schema.Array(CmsMediaVariantSchema),
@@ -223,47 +225,14 @@ export const CmsMediaSchema = Schema.Struct({
 });
 export type CmsMedia = typeof CmsMediaSchema.Type;
 
-export const CmsPostSchema = Schema.Struct({
-  id: CmsPostId,
-  slug: CmsSlug,
-  title: Schema.String,
-  summary: Schema.NullOr(Schema.String),
-  content: TiptapDocSchema,
-  html: Schema.String,
-  status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
-  heroMediaId: Schema.NullOr(CmsMediaId),
-  categories: Schema.Array(CmsCategorySchema),
-  meta: CmsMetaSchema,
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-});
-export type CmsPost = typeof CmsPostSchema.Type;
-
-export const CmsWorkSchema = Schema.Struct({
-  id: CmsWorkId,
-  slug: CmsSlug,
-  title: Schema.String,
-  summary: Schema.NullOr(Schema.String),
-  content: TiptapDocSchema,
-  html: Schema.String,
-  status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
-  heroMediaId: Schema.NullOr(CmsMediaId),
-  meta: CmsMetaSchema,
-  createdAt: Schema.String,
-  updatedAt: Schema.String,
-});
-export type CmsWork = typeof CmsWorkSchema.Type;
-
 /**
  * Slim list item: every CmsPost field except the heavy body (content +
  * html). List views (indexes, sitemaps) never render the body; the summary
  * endpoints serve this shape so list payloads stay small over the
  * client → adapter → api hops. Single-item reads keep the full schema.
  *
- * Kept in sync with CmsPostSchema by hand (Effect 4 has no Schema.omit);
- * cms-summary.test.ts pins the key parity.
+ * The full schemas below spread these summary fields, so a new field cannot
+ * miss one side; cms-summary-shape.test.ts pins the key parity.
  */
 export const CmsPostSummarySchema = Schema.Struct({
   id: CmsPostId,
@@ -295,13 +264,37 @@ export const CmsWorkSummarySchema = Schema.Struct({
 });
 export type CmsWorkSummary = typeof CmsWorkSummarySchema.Type;
 
+/** Full post: the summary fields plus the heavy body. */
+export const CmsPostSchema = Schema.Struct({
+  ...CmsPostSummarySchema.fields,
+  content: TiptapDocSchema,
+  html: Schema.String,
+});
+export type CmsPost = typeof CmsPostSchema.Type;
+
+/** Full work: the summary fields plus the heavy body. */
+export const CmsWorkSchema = Schema.Struct({
+  ...CmsWorkSummarySchema.fields,
+  content: TiptapDocSchema,
+  html: Schema.String,
+});
+export type CmsWork = typeof CmsWorkSchema.Type;
+
+/**
+ * A write payload. `publishedAt` is a `NullableTimestamp` while the matching
+ * response field is a plain string, because this is the one boundary that
+ * receives an unvalidated timestamp: the editor's `datetime-local` input is a
+ * zone-less wall-clock reading, which `Schema.Date` would silently interpret in
+ * the host timezone. Decoding it here pins UTC and canonicalises it to a real
+ * instant before storage, so the stored value is never ambiguous.
+ */
 export const CmsPostInputSchema = Schema.Struct({
   slug: CmsSlug,
   title: Schema.String,
   summary: Schema.NullOr(Schema.String),
   content: TiptapDocSchema,
   status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
+  publishedAt: NullableTimestamp,
   heroMediaId: Schema.NullOr(CmsMediaId),
   categoryIds: Schema.Array(CmsCategoryId),
   meta: CmsMetaSchema,
@@ -314,7 +307,7 @@ export const CmsWorkInputSchema = Schema.Struct({
   summary: Schema.NullOr(Schema.String),
   content: TiptapDocSchema,
   status: CmsStatusSchema,
-  publishedAt: Schema.NullOr(Schema.String),
+  publishedAt: NullableTimestamp,
   heroMediaId: Schema.NullOr(CmsMediaId),
   meta: CmsMetaSchema,
 });
@@ -356,11 +349,41 @@ export const CmsMediaUsageSchema = Schema.Struct({
 });
 export type CmsMediaUsage = typeof CmsMediaUsageSchema.Type;
 
-const PagingNumber = Schema.Union([Schema.Number, Schema.NumberFromString]);
+const PagingNumberInput = Schema.Union([Schema.Finite, Schema.FiniteFromString]);
+
+/** Largest page a list endpoint will serve. */
+export const MAX_PAGE_SIZE = 100;
+
+/** Page size a list endpoint serves when the caller names none. */
+export const DEFAULT_PAGE_SIZE = 10;
+
+/**
+ * 1-based page. Accepts numbers and numeric strings; fractions, zero,
+ * negatives, NaN and Infinity fail at decode time. The bounds live here rather
+ * than in the service, so an out-of-range request is a 400 at the boundary
+ * instead of a silent clamp downstream.
+ */
+const Page = Schema.decodeTo(Schema.Int.check(Schema.isGreaterThanOrEqualTo(1)))(PagingNumberInput);
+
+/** Page size within [1, MAX_PAGE_SIZE], same reasoning as {@link Page}. */
+const PageSize = Schema.decodeTo(
+  Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: MAX_PAGE_SIZE })),
+)(PagingNumberInput);
+
+/**
+ * Positive integer page value for URL query parsing (web/editor/simulator).
+ * Accepts numbers and numeric strings; fractions, zero, negatives and
+ * Infinity fail at decode time.
+ */
+export const PageNumberSchema = Page;
 
 export const CmsPagingSchema = Schema.Struct({
-  page: Schema.optional(PagingNumber),
-  pageSize: Schema.optional(PagingNumber),
+  // The bounds live in Page/PageSize, so an out-of-range request is rejected at
+  // the boundary instead of being silently clamped in the service. The keys stay
+  // optional because a query string may simply omit them; `toPageWindow` in the
+  // CMS service applies the defaults once.
+  page: Schema.optional(Page),
+  pageSize: Schema.optional(PageSize),
   status: Schema.optional(CmsStatusFilterSchema),
   category: Schema.optional(CmsSlug),
   /**
@@ -373,16 +396,7 @@ export const CmsPagingSchema = Schema.Struct({
 });
 export type CmsPaging = typeof CmsPagingSchema.Type;
 
-export const CmsListResponseSchema = <A, I, R>(itemSchema: Schema.Codec<A, I, R>) =>
-  Schema.Struct({
-    docs: Schema.Array(itemSchema),
-    totalDocs: Schema.Number,
-    limit: Schema.Number,
-    page: Schema.Number,
-    totalPages: Schema.Number,
-    hasNextPage: Schema.Boolean,
-    hasPrevPage: Schema.Boolean,
-  });
+export const CmsListResponseSchema = ListResponseSchema;
 
 export type CmsListResponse<T> = {
   readonly docs: ReadonlyArray<T>;

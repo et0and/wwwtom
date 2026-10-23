@@ -1,21 +1,33 @@
 import { createServer } from "node:http";
 import { Readable } from "node:stream";
 import { Elysia } from "elysia";
-import { Effect } from "effect";
-import { polarSimulator } from "./polar";
+import { Effect, Schema } from "effect";
+import { PortNumber } from "@tom/schemas/env";
 import { arenaSimulator } from "./arena";
 import { cmsSimulator } from "./cms";
 import { guestbookSimulator } from "./guestbook";
-import { apiSimulator } from "./api";
 
-const PORT = Number(process.env.SIMULATOR_PORT ?? 8789);
+const DEFAULT_PORT = 8789;
+
+/**
+ * Dev server port. A malformed SIMULATOR_PORT must fail here, loudly and by
+ * name. Left to `Number()`, a typo like "8789x" reaches `server.listen` as
+ * NaN and surfaces as a bare ERR_SOCKET_BAD_PORT.
+ */
+const PORT = (() => {
+  const raw = process.env.SIMULATOR_PORT;
+  if (raw === undefined) return DEFAULT_PORT;
+  const decoded = Schema.decodeOption(PortNumber)(raw);
+  if (decoded._tag === "None") {
+    throw new Error(`SIMULATOR_PORT must be a port number between 1 and 65535, got "${raw}"`);
+  }
+  return decoded.value;
+})();
 
 const app = new Elysia({ name: "tom-simulator" })
-  .use(polarSimulator)
   .use(arenaSimulator)
   .use(cmsSimulator)
-  .use(guestbookSimulator)
-  .use(apiSimulator);
+  .use(guestbookSimulator);
 
 const server = createServer((req, res) => {
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
@@ -41,7 +53,7 @@ const server = createServer((req, res) => {
 
   const sendError = (cause: unknown) =>
     Effect.sync(() => {
-      console.error("Simulator request failed", cause);
+      console.error("Simulator request failed", req.method, `${url.pathname}${url.search}`, cause);
       res.writeHead(500, { "Content-Type": "application/json" });
       res.end(JSON.stringify({ error: "Simulator error" }));
     });
@@ -59,9 +71,7 @@ const server = createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(`Tom simulator listening on http://localhost:${PORT}`);
-  console.log("  Polar: /v1/*");
   console.log("  Are.na: /v3/*");
   console.log("  CMS: /posts, /works, /categories, /media/:id");
   console.log("  Guestbook: /guestbook/entries");
-  console.log("  API: /checkout, /portal");
 });

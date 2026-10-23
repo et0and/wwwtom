@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Effect, Layer, Option, Redacted, Schema } from "effect";
 import { TelegramService } from "../src/telegram";
-import { AppConfig } from "../src/services/config";
+import { AppConfig } from "../src/config";
 
 const token = process.env.TELEGRAM_BOT_TOKEN;
 const chatId = process.env.TELEGRAM_CHAT_ID;

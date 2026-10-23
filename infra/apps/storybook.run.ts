@@ -37,8 +37,12 @@ export default Stack(
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
+    const stage = yield* Stage;
     const app = yield* storybook;
-    yield* previewComment({ name: "Storybook", url: app.url });
+    yield* previewComment({
+      id: "wwwtom-storybook-preview",
+      apps: [{ name: "Storybook", url: `https://${stageHost(stage, "storybook")}` }],
+    });
 
     return {
       url: app.url,

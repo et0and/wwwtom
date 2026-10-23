@@ -1,0 +1,725 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderDefinition > renders '.github/actions/oc-gate/action.yml' > .github/actions/oc-gate/action.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: OpenCode gate
+description: Decide whether a comment should invoke an agent workflow. A composite step cannot appear in \`jobs.<id>.if:\`, so the job runs unconditionally and every step that needs the go/no-go reads \`steps.<id>.outputs.triggered\`. The gate itself is a tiny bash check — no checkout required.
+inputs:
+  allowed-users:
+    description: Comma-separated login(s) allowed to trigger. Empty means anyone who wrote a trigger comment may invoke the agent.
+    default: et0and
+  require-label:
+    description: Require the PR/issue to carry the \`opencode\` label.
+    default: "false"
+  triggers:
+    description: Comma-separated trigger prefixes. A comment triggers when it starts with one, or contains it after a space (the original /oc and /opencode expressions). Workflows for other agents pass their own phrase.
+    default: /oc,/opencode
+outputs:
+  triggered:
+    description: true when the comment is an authorized trigger.
+    value: \${{ steps.check.outputs.triggered }}
+runs:
+  using: composite
+  steps:
+    - name: Evaluate trigger
+      id: check
+      run: |-
+        # Trigger check mirrors the original expressions per phrase: an
+        # explicit leading phrase, or the phrase after a space anywhere.
+        triggered="false"
+        IFS=',' read -r -a triggers <<< "$TRIGGERS"
+        for trigger in "\${triggers[@]}"; do
+          [[ -z "$trigger" ]] && continue
+          case "$BODY" in
+            "$trigger"* | *" $trigger"*)
+              triggered="true"
+              break
+              ;;
+          esac
+        done
+
+        # Label gate: only PR-comments-style workflows opt in.
+        if [[ "$triggered" == "true" && "$REQUIRE_LABEL" == "true" ]]; then
+          if [[ ",$LABELS," != *",opencode,"* ]]; then
+            triggered="false"
+          fi
+        fi
+
+        # Author gate: empty means anyone; otherwise a comma-separated list.
+        if [[ "$triggered" == "true" && -n "$ALLOWED" ]]; then
+          case ",$ALLOWED," in
+            *",$AUTHOR,"*) ;;
+            *) triggered="false" ;;
+          esac
+        fi
+
+        echo "triggered=$triggered" >> "$GITHUB_OUTPUT"
+      shell: bash
+      env:
+        BODY: \${{ github.event.comment.body }}
+        AUTHOR: \${{ github.event.comment.user.login }}
+        ALLOWED: \${{ inputs.allowed-users }}
+        LABELS: \${{ join(github.event.pull_request.labels.*.name, ',') }}, \${{ join(github.event.issue.labels.*.name, ',') }}
+        REQUIRE_LABEL: \${{ inputs.require-label }}
+        TRIGGERS: \${{ inputs.triggers }}
+"
+`;
+
+exports[`renderDefinition > renders '.github/actions/setup/action.yml' > .github/actions/setup/action.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Setup repository
+description: Provision Node 24, pin pnpm, restore the pnpm store cache, and install dependencies with --frozen-lockfile. One definition for every workflow so the setup block never drifts. Call after an explicit \`actions/checkout\` (local composite actions require the workspace to exist first).
+inputs:
+  install:
+    description: Run \`pnpm install --frozen-lockfile\` after setup.
+    default: "true"
+  install-playwright:
+    description: Also cache (~/.cache/ms-playwright) and install the Playwright chromium browser (e2e-only workflows).
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+      with:
+        node-version: 24
+    - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+    - name: Raise the Node heap for build-heavy steps
+      run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Resolve the pnpm store path
+      run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
+      shell: bash
+    - name: Restore the pnpm store
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: \${{ env.PNPM_STORE_PATH }}
+        key: \${{ runner.os }}-pnpm-store-\${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: \${{ runner.os }}-pnpm-store-
+    - name: Install dependencies
+      if: \${{ inputs.install == 'true' }}
+      run: pnpm install --frozen-lockfile
+      shell: bash
+    - name: Cache Playwright browsers
+      if: \${{ inputs.install-playwright == 'true' }}
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      with:
+        path: ~/.cache/ms-playwright
+        key: \${{ runner.os }}-ms-playwright-\${{ hashFiles('pnpm-lock.yaml') }}
+    - name: Install Playwright browsers
+      if: \${{ inputs.install-playwright == 'true' }}
+      run: pnpm --filter @tom/e2e exec playwright install --with-deps chromium
+      shell: bash
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/ci.yml' > .github/workflows/ci.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: CI
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+jobs:
+  test:
+    name: Test
+    runs-on: namespace-profile-yufugumi
+    env:
+      TURBO_API: https://turbo.infra.tom.so
+      TURBO_TOKEN: \${{ secrets.TURBO_CACHE_TOKEN }}
+      TURBO_TEAM: wwwtom
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: \${{ secrets.TURBO_CACHE_SIGNATURE_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+      - name: Check generated DB types are current
+        run: |-
+          pnpm --filter @tom/db generate
+          pnpm exec oxfmt --write packages/types/src/db.ts
+          git diff --exit-code packages/types/src/db.ts
+      - name: Check generated workflows are current
+        run: |-
+          pnpm workflows
+          if [ -n "$(git status --porcelain -- .github/workflows .github/actions)" ]; then
+            git status --short -- .github/workflows .github/actions
+            git diff -- .github/workflows .github/actions
+            exit 1
+          fi
+      - name: Run typecheck
+        run: pnpm turbo run typecheck
+      - name: Run lint
+        run: pnpm turbo run lint
+      - name: Run unit tests
+        run: pnpm turbo run test
+        env:
+          ARENA_TOKEN: \${{ secrets.ARENA_TOKEN }}
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/deploy.yml' > .github/workflows/deploy.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Deploy
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Alchemy stage to deploy
+        required: true
+        type: choice
+        options:
+          - production
+          - staging
+          - dev
+permissions:
+  contents: read
+concurrency:
+  group: deploy-\${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    name: Deploy \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+    runs-on: namespace-profile-yufugumi
+    environment: \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+    env:
+      ALCHEMY_STAGE: \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TOM_SECRETS: \${{ secrets.TOM_SECRETS }}
+      AXIOM_TOKEN: \${{ secrets.AXIOM_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Deploy infrastructure
+        run: |-
+          pnpm deploy:shared --yes &&
+          pnpm deploy:api --yes &&
+          pnpm deploy:adapter --yes &&
+          pnpm deploy:web --yes &&
+          pnpm deploy:sophie --yes &&
+          pnpm deploy:storybook --yes
+      - name: Deploy zone edge rules
+        if: github.event_name == 'workflow_dispatch' && inputs.stage == 'production'
+        run: pnpm deploy:edge --yes
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/e2e.yml' > .github/workflows/e2e.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: E2E (fixture store)
+on:
+  pull_request:
+    branches:
+      - dev
+  schedule:
+    - cron: 17 2 * * *
+  workflow_dispatch: null
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: e2e-\${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  playwright:
+    name: Playwright (tom.so fixture store)
+    runs-on: namespace-profile-yufugumi
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+        with:
+          install-playwright: "true"
+      - name: Run e2e suite
+        run: pnpm --filter @tom/e2e test:e2e
+        env:
+          CI: "true"
+          SIMULATOR_URL: http://127.0.0.1:8789
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: playwright-report
+          path: apps/e2e/playwright-report/
+          retention-days: 7
+      - name: Upload test traces
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        with:
+          name: test-results
+          path: apps/e2e/test-results/
+          retention-days: 7
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/opencode.yml' > .github/workflows/opencode.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: opencode
+on:
+  issue_comment:
+    types:
+      - created
+  pull_request_review_comment:
+    types:
+      - created
+jobs:
+  opencode:
+    runs-on: namespace-profile-yufugumi
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: OpenCode gate
+        id: oc
+        uses: ./.github/actions/oc-gate
+        with:
+          allowed-users: et0and
+      - if: steps.oc.outputs.triggered == 'true'
+        uses: ./.github/actions/setup
+      - name: Run opencode
+        if: steps.oc.outputs.triggered == 'true'
+        uses: anomalyco/opencode/github@latest
+        with:
+          model: opencode-go/muse-spark-1.3-contributor
+        env:
+          OPENCODE_API_KEY: \${{ secrets.OPENCODE_API_KEY }}
+          HUSKY: "true"
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/pr-comments.yml' > .github/workflows/pr-comments.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Respond to PR Comments
+on:
+  issue_comment:
+    types:
+      - created
+  pull_request_review_comment:
+    types:
+      - created
+jobs:
+  respond:
+    runs-on: namespace-profile-yufugumi
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - name: OpenCode gate
+        id: oc
+        uses: ./.github/actions/oc-gate
+        with:
+          allowed-users: ""
+          require-label: "true"
+      - if: steps.oc.outputs.triggered == 'true'
+        uses: ./.github/actions/setup
+      - name: Get PR info
+        id: pr
+        if: steps.oc.outputs.triggered == 'true'
+        run: |-
+          if [[ "\${{ github.event_name }}" == "pull_request_review_comment" ]]; then
+            echo "pr_number=\${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          else
+            echo "pr_number=\${{ github.event.issue.number }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Run opencode with thread context
+        if: steps.oc.outputs.triggered == 'true'
+        uses: anomalyco/opencode/github@latest
+        with:
+          model: opencode-go/muse-spark-1.3-contributor
+          prompt: |-
+            Respond to this comment on PR #\${{ steps.pr.outputs.pr_number }}.
+
+            Comment from @\${{ github.event.comment.user.login }}:
+            > \${{ github.event.comment.body }}
+
+            The PR was created by the "Create PR from Prompt" workflow. Please:
+            1. Review the context of the discussion
+            2. Make any requested changes if appropriate
+            3. Respond clearly to the comment
+
+            When making changes:
+            - Commit with a clear message referencing the comment
+            - Push to the existing branch
+            - Only modify files relevant to the request
+        env:
+          OPENCODE_API_KEY: \${{ secrets.OPENCODE_API_KEY }}
+          HUSKY: "true"
+      - name: Reply with summary
+        if: always() && steps.oc.outputs.triggered == 'true'
+        run: |-
+          if [[ "\${{ job.status }}" == "success" ]]; then
+            gh pr comment \${{ steps.pr.outputs.pr_number }} --body "✅ I've processed your request. Check the latest commits for changes."
+          else
+            gh pr comment \${{ steps.pr.outputs.pr_number }} --body "❌ Something went wrong while processing your request. Please check the workflow logs."
+          fi
+        env:
+          GH_TOKEN: \${{ github.token }}
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/pr-review.yml' > .github/workflows/pr-review.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: PR triage
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+  issues: write
+concurrency:
+  group: pr-triage-\${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  triage:
+    name: Triage the diff
+    runs-on: namespace-profile-yufugumi
+    if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false
+    timeout-minutes: 30
+    steps:
+      - name: Checkout base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: \${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          install: "false"
+      - name: Triage
+        uses: anomalyco/opencode/github@latest
+        with:
+          model: opencode-go/deepseek-v4.1-flash
+          variant: low
+          prompt: |-
+            Triage pull request #\${{ github.event.pull_request.number }}
+            against its base branch. \`gh pr diff\` has the change; read the
+            files it touches for the parts that matter.
+
+            Report only what is genuinely wrong: real defects, and
+            violations of AGENTS.md or the nearest AGENTS.md in a
+            directory. Skip style nits, anything a formatter or linter
+            already catches, and anything already correct.
+
+            Post exactly one comment on the PR: the findings that matter,
+            most important first, each with the file and the reason. Say
+            plainly when a change is fine. If you find nothing, post one
+            line saying so.
+
+            Do not edit files, do not push, do not approve, and do not
+            merge — this run must not change the branch it reviews.
+        env:
+          OPENCODE_API_KEY: \${{ secrets.OPENCODE_API_KEY }}
+          HUSKY: "0"
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/preview.yml' > .github/workflows/preview.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: PR preview
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+concurrency:
+  group: preview-\${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    name: Deploy PR preview
+    runs-on: namespace-profile-yufugumi
+    if: github.event.action != 'closed'
+    env:
+      ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
+      PULL_REQUEST: \${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TOM_SECRETS: \${{ secrets.TOM_SECRETS }}
+      AXIOM_TOKEN: \${{ secrets.AXIOM_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      GITHUB_TOKEN: \${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/setup
+      - name: Deploy preview stage
+        run: |-
+          pnpm deploy:shared --yes &&
+          pnpm deploy:api --yes &&
+          pnpm deploy:adapter --yes &&
+          pnpm deploy:web --yes &&
+          pnpm deploy:sophie --yes &&
+          pnpm deploy:preview --yes
+  destroy:
+    name: Destroy PR preview
+    runs-on: namespace-profile-yufugumi
+    if: github.event.action == 'closed'
+    env:
+      ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
+      PULL_REQUEST: \${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TOM_SECRETS: \${{ secrets.TOM_SECRETS }}
+      AXIOM_TOKEN: \${{ secrets.AXIOM_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      GITHUB_TOKEN: \${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: dev
+      - uses: ./.github/actions/setup
+      - name: Destroy web preview stage
+        run: pnpm destroy:web --yes
+      - name: Destroy editor preview stage
+        if: always()
+        run: pnpm destroy:editor --yes
+      - name: Destroy sophie preview stage
+        if: always()
+        run: pnpm destroy:sophie --yes
+      - name: Destroy adapter preview stage
+        if: always()
+        run: pnpm destroy:adapter --yes
+      - name: Destroy api preview stage
+        if: always()
+        run: pnpm destroy:api --yes
+      - name: Destroy shared preview stage
+        if: always()
+        run: pnpm destroy:shared --yes
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/preview-storybook.y…' > .github/workflows/preview-storybook.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Storybook preview
+on:
+  pull_request:
+    branches:
+      - dev
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - closed
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+concurrency:
+  group: storybook-preview-\${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  deploy:
+    name: Deploy Storybook preview
+    runs-on: namespace-profile-yufugumi
+    if: github.event.action != 'closed'
+    env:
+      ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
+      PULL_REQUEST: \${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      GITHUB_TOKEN: \${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+      - name: Deploy Storybook preview stage
+        run: pnpm deploy:storybook --yes
+  destroy:
+    name: Destroy Storybook preview
+    runs-on: namespace-profile-yufugumi
+    if: github.event.action == 'closed'
+    env:
+      ALCHEMY_STAGE: pr-\${{ github.event.pull_request.number }}
+      PULL_REQUEST: \${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      GITHUB_TOKEN: \${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: dev
+      - uses: ./.github/actions/setup
+      - name: Destroy Storybook preview stage
+        run: pnpm destroy:storybook --yes
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/preview-sweep.yml' > .github/workflows/preview-sweep.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Sweep orphan PR previews
+on:
+  schedule:
+    - cron: 41 3 * * *
+  workflow_dispatch: null
+permissions:
+  contents: read
+  pull-requests: read
+concurrency:
+  group: preview-sweep
+  cancel-in-progress: false
+jobs:
+  sweep:
+    name: Destroy previews of closed PRs
+    runs-on: namespace-profile-yufugumi
+    env:
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+      TOM_SECRETS: \${{ secrets.TOM_SECRETS }}
+      AXIOM_TOKEN: \${{ secrets.AXIOM_TOKEN }}
+      ALCHEMY_ENV_FILE: /dev/null
+      GITHUB_TOKEN: \${{ github.token }}
+      GH_TOKEN: \${{ github.token }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+      - name: Destroy preview stages of recently closed PRs
+        run: |-
+          cutoff=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          prs=$(gh pr list --state closed --limit 100 --json number,closedAt \\
+            | jq -r --arg cutoff "$cutoff" '.[] | select(.closedAt > $cutoff) | .number')
+          if [ -z "$prs" ]; then
+            echo "No recently closed PRs; nothing to sweep."
+            exit 0
+          fi
+          for pr in $prs; do
+            echo "Sweeping preview stage pr-$pr"
+            export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"
+            for row in "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do
+              pnpm --filter @tom/infra exec alchemy state list --backend cloudflare "$row" >/dev/null 2>&1 &&
+                pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
+            done
+            pnpm destroy:storybook --yes || true
+            pnpm destroy:web --yes || true
+            pnpm destroy:editor --yes || true
+            pnpm destroy:sophie --yes || true
+            pnpm destroy:adapter --yes || true
+            pnpm destroy:api --yes || true
+            pnpm destroy:shared --yes || true
+          done
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/release.yml' > .github/workflows/release.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Release
+on:
+  push:
+    branches:
+      - dev
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+  id-token: write
+jobs:
+  release:
+    name: Release
+    runs-on: namespace-profile-yufugumi
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+      - uses: ./.github/actions/setup
+      - name: Fetch all tags and ensure branch is up to date
+        run: |-
+          git fetch --tags
+          git checkout dev
+          git pull origin dev
+      - name: Build
+        run: pnpm run build
+      - name: Release
+        run: pnpm run semantic-release
+        env:
+          GITHUB_TOKEN: \${{ secrets.GITHUB_TOKEN }}
+"
+`;
+
+exports[`renderDefinition > renders '.github/workflows/srht.yml' > .github/workflows/srht.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Mirror to SourceHut
+on:
+  push:
+    branches:
+      - dev
+jobs:
+  mirror:
+    runs-on: ubuntu-slim
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+      - name: Setup SSH
+        run: |-
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts || { sleep 5; ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts; }
+        env:
+          SSH_PRIVATE_KEY: \${{ secrets.SOURCEHUT_SSH_KEY }}
+      - name: Mirror to SourceHut
+        run: |-
+          git remote add sourcehut git@git.sr.ht:~tomupom/wwwtom
+          git push sourcehut dev --force
+          git push sourcehut --all --force
+          git push sourcehut --tags --force
+"
+`;

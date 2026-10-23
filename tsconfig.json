@@ -23,7 +23,6 @@
     "sourceMap": true,
     "incremental": true,
     "composite": true,
-    "baseUrl": ".",
     "paths": {
       "@tom/*": ["./packages/*/src"]
     },

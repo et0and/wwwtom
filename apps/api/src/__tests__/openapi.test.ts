@@ -21,9 +21,7 @@ describe("openapi docs", () => {
       url: "https://api.tom.so",
       description: "Production API service",
     });
-    expect(Object.keys(spec.paths)).toEqual(
-      expect.arrayContaining(["/health", "/checkout", "/portal", "/og"]),
-    );
+    expect(Object.keys(spec.paths)).toEqual(expect.arrayContaining(["/health", "/posts", "/og"]));
   });
 
   it("documents the og query parameters with descriptions and examples", async () => {
@@ -60,7 +58,7 @@ describe("openapi docs", () => {
     );
   });
 
-  it("documents the internal token security scheme on protected routes", async () => {
+  it("documents the internal token security scheme", async () => {
     const response = await app.fetch(requestWithEnv("http://localhost/openapi.json", testEnv()));
     const spec = await response.json();
     expect(spec.components.securitySchemes.InternalToken).toMatchObject({
@@ -68,8 +66,6 @@ describe("openapi docs", () => {
       in: "header",
       name: INTERNAL_TOKEN_HEADER,
     });
-    expect(spec.paths["/checkout"].get.security).toEqual([{ InternalToken: [] }]);
-    expect(spec.paths["/portal"].get.security).toEqual([{ InternalToken: [] }]);
     expect(spec.paths["/og"].get.security).toBeUndefined();
     expect(spec.paths["/health"].get.security).toBeUndefined();
   });
@@ -82,55 +78,8 @@ describe("openapi docs", () => {
       400: { description: "Invalid query parameters" },
       500: { description: "Image generation failed" },
     });
-    expect(paths["/checkout"].get.responses).toMatchObject({
-      302: { description: "Redirect to Polar checkout" },
-      400: { description: "Missing products and/or customerId parameter" },
-      404: { description: "Product not found" },
-    });
-    expect(paths["/portal"].get.responses).toMatchObject({
-      302: { description: "Redirect to Polar customer portal" },
-      400: { description: "Missing customerId parameter" },
-    });
     expect(paths["/health"].get.responses).toMatchObject({
       200: { description: "Service is healthy" },
     });
-  });
-
-  it("documents the checkout and portal parameters", async () => {
-    const response = await app.fetch(requestWithEnv("http://localhost/openapi.json", testEnv()));
-    const { paths } = await response.json();
-    expect(paths["/checkout"].get.parameters).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "products",
-          in: "query",
-          required: true,
-          schema: expect.objectContaining({
-            description: "Product IDs to purchase (comma-separated)",
-            examples: ["cheese-stack"],
-          }),
-        }),
-        expect.objectContaining({
-          name: "customerId",
-          schema: expect.objectContaining({ description: "Existing customer ID" }),
-        }),
-        expect.objectContaining({
-          name: "customerEmail",
-          schema: expect.objectContaining({ description: "Customer email address" }),
-        }),
-      ]),
-    );
-    expect(paths["/portal"].get.parameters).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          name: "customerId",
-          required: true,
-          schema: expect.objectContaining({
-            description: "Polar customer ID (uuid)",
-            format: "uuid",
-          }),
-        }),
-      ]),
-    );
   });
 });

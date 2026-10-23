@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import preview from "#.storybook/preview";
 import { Table } from "@tom/ui/table";
 import { TableBody } from "@tom/ui/table";
@@ -5,6 +6,8 @@ import { TableCell } from "@tom/ui/table";
 import { TableHead } from "@tom/ui/table";
 import { TableHeader } from "@tom/ui/table";
 import { TableRow } from "@tom/ui/table";
+
+const styles = stylex.create({ wide: { width: "36rem" } });
 
 const meta = preview.meta({
   title: "web/Table",
@@ -17,7 +20,7 @@ const meta = preview.meta({
 
 export const Default = meta.story({
   render: () => (
-    <Table class="w-xl">
+    <Table style={styles.wide}>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -43,7 +46,7 @@ export const Default = meta.story({
 
 export const FixedLayout = meta.story({
   render: () => (
-    <Table layout="fixed" class="w-xl">
+    <Table layout="fixed" style={styles.wide}>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>
@@ -69,7 +72,7 @@ export const FixedLayout = meta.story({
 
 export const WithSelectedRow = meta.story({
   render: () => (
-    <Table class="w-xl">
+    <Table style={styles.wide}>
       <TableHeader>
         <TableRow>
           <TableHead>Name</TableHead>

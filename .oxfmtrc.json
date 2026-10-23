@@ -1,4 +1,4 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": []
+  "ignorePatterns": ["packages/icons/src/[A-Z]*.tsx", "!packages/icons/src/IconBase.tsx"]
 }

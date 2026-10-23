@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./client": "./src/client.ts",
+    "./content": "./src/content.ts",
     "./service": "./src/service.ts"
   },
   "scripts": {
@@ -13,7 +14,7 @@
     "lint": "oxlint"
   },
   "dependencies": {
-    "@aredotna/sdk": "0.0.4",
+    "@aredotna/sdk": "0.1.1",
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
@@ -21,7 +22,7 @@
     "effect": "catalog:"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
+    "typescript": "catalog:",
     "vitest": "3.2.4"
   }
 }

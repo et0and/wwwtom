@@ -6,6 +6,7 @@
     "allowJs": true,
     "jsx": "preserve",
     "jsxImportSource": "@solidjs/web",
+    "rewriteRelativeImportExtensions": true,
     "skipLibCheck": true,
     "types": ["vite/client"],
     "paths": {

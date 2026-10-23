@@ -1,13 +1,18 @@
-@import "tailwindcss";
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
 
-@source "../../../packages/ui/src/**/*.tsx";
+/* Layer order, pinned in one place because the preflight lives in another
+   file and the imports have to stay above this statement.
 
-@theme {
-  --animate-blur-in: blurIn 0.3s ease-in;
-  --animate-blur-in-char: blurInChar 0.3s ease-in;
-}
+   base < prose < priority1..N
+
+   base carries the reset, prose the markdown defaults, and StyleX its
+   generated rules last. Prose must outrank base or the reset's
+   `* { padding: 0 }` eats the paragraph spacing, but it must still lose to
+   StyleX, which has no `!important` for a bare `h1` rule to be beaten by. */
+@layer base, prose;
+
+@stylex;
 
 :root {
   color-scheme: light dark;
@@ -20,44 +25,56 @@
   }
 }
 
-p {
-  letter-spacing: -0.05em;
-  padding-bottom: 1rem;
+@layer prose {
+  p {
+    letter-spacing: -0.05em;
+    padding-bottom: 1rem;
+  }
+
+  ul {
+    list-style-type: disc;
+    list-style-position: inside;
+  }
+
+  li {
+    letter-spacing: -0.05em;
+  }
+
+  figcaption {
+    font-size: 0.875rem;
+    letter-spacing: -0.05em;
+    color: #6b7280;
+    margin-top: 0.5rem;
+    text-align: center;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    figcaption {
+      color: #9ca3af;
+    }
+  }
 }
 
-h1 {
+/* Page headings keep the scale the site has always shipped: a 36px h1 and a
+   28px h2, both at -0.05em. Tailwind delivered these through unlayered app
+   CSS beating the `text-*` utilities on the element; StyleX emits into
+   `priority1..N`, so these stay unlayered and win the same way.
+
+   Scoped to `main` on purpose. Bare `h1` would also catch the nav brand,
+   which Tailwind only spared through an `!important` utility that StyleX
+   cannot express. Inside `main` every h1 is a page heading. */
+main h1 {
   font-size: 2.25rem;
+  line-height: 1.4;
   font-weight: 500;
   letter-spacing: -0.05em;
 }
 
-h2 {
+main h2 {
   font-size: 1.75rem;
+  line-height: 1.5;
   font-weight: 400;
   letter-spacing: -0.05em;
-}
-
-ul {
-  list-style-type: disc;
-  list-style-position: inside;
-}
-
-li {
-  letter-spacing: -0.05em;
-}
-
-figcaption {
-  font-size: 0.875rem;
-  letter-spacing: -0.05em;
-  color: #6b7280;
-  margin-top: 0.5rem;
-  text-align: center;
-}
-
-@media (prefers-color-scheme: dark) {
-  figcaption {
-    color: #9ca3af;
-  }
 }
 
 .banner {
@@ -280,30 +297,6 @@ a.page:hover {
   }
 }
 
-@keyframes blurIn {
-  0% {
-    opacity: 0;
-    filter: blur(0.2em);
-    transform: translateY(var(--offset, 0px));
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-    transform: translateY(0);
-  }
-}
-
-@keyframes blurInChar {
-  0% {
-    filter: blur(0.3em);
-    opacity: 0;
-  }
-  to {
-    filter: blur(0);
-    opacity: 1;
-  }
-}
-
 /* Respect reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   @view-transition {
@@ -314,14 +307,6 @@ a.page:hover {
   ::view-transition-new(*),
   ::view-transition-group(*) {
     animation: none !important;
-  }
-
-  .animate-blur-in,
-  .animate-blur-in-char {
-    animation: none;
-    opacity: 1;
-    filter: none;
-    transform: none;
   }
 }
 

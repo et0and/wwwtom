@@ -1,11 +1,12 @@
 import { createRouter } from "@solidjs/router";
-import { getQueryClient } from "~/libs/query-client";
+import { getQueryClient } from "~/data/query-client";
+import { parsePageNumber } from "@tom/utils/page";
 import {
   POSTS_PAGE_SIZE,
   fetchPostBySlug,
   fetchPosts,
-  fetchWorks,
   fetchWorkBySlug,
+  fetchWorks,
 } from "~/server/adapter";
 import NotFound from "~/routes/[...404]";
 import About from "~/routes/about";
@@ -14,11 +15,9 @@ import Guestbook, { fetchEntries } from "~/routes/guestbook";
 import Home from "~/routes/index";
 import PostPage from "~/routes/posts/[slug]";
 import PostsHome from "~/routes/posts/index";
-import Products from "~/routes/products";
-import Purchase from "~/routes/purchase/[productId]";
-import Thanks from "~/routes/thanks";
 import WorkPage from "~/routes/work/[slug]";
 import WorkHome from "~/routes/work/index";
+import Garden from "~/routes/work/wwwork/garden";
 import Kawara from "~/routes/work/wwwork/kawara";
 import Hold from "~/routes/work/wwwork/hold";
 import Worktable from "~/routes/worktable";
@@ -34,7 +33,6 @@ export const Router = createRouter({
     { path: "/", component: Home },
     { path: "/about", component: About },
     { path: "/accessibility", component: Accessibility },
-    { path: "/thanks", component: Thanks },
     {
       path: "/guestbook",
       component: Guestbook,
@@ -47,7 +45,7 @@ export const Router = createRouter({
       path: "/posts",
       component: PostsHome,
       preload: ({ location }) => {
-        const page = Math.max(1, Math.floor(Number(location.query.page) || 1));
+        const page = parsePageNumber(location.query.page);
         return getQueryClient()
           .prefetchQuery({
             queryKey: ["posts", page],
@@ -92,10 +90,9 @@ export const Router = createRouter({
           .catch(ignoredPrefetchError);
       },
     },
+    { path: "/work/wwwork/garden", component: Garden },
     { path: "/work/wwwork/hold", component: Hold },
     { path: "/work/wwwork/kawara", component: Kawara },
-    { path: "/products", component: Products },
-    { path: "/purchase/:productId", component: Purchase },
     { path: "/worktable", component: Worktable },
     { path: "*404", component: NotFound },
   ],

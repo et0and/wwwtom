@@ -125,6 +125,8 @@ export const adapter = Effect.gen(function* () {
         ? undefined
         : {
             TOM_SECRETS: tomSecrets,
+            // The only worker that reads `databaseUrl`, so it is the only
+            // stack that declares the connection — one per stage.
             HYPERDRIVE: webHyperdrive,
           }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),

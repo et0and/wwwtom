@@ -1,4 +1,5 @@
-import { fireEvent, render } from "@solidjs/testing-library";
+import { render } from "@solidjs/testing-library";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { App } from "../App";
 import {
@@ -27,7 +28,7 @@ describe("App", () => {
         jsonResponse({ url: "https://github.com/login/oauth/authorize?x=1", redirect: true }),
       );
     const { findByRole } = render(() => <App navigate={navigate} />);
-    fireEvent.click(await findByRole("button", { name: "Sign in with GitHub" }));
+    await userEvent.click(await findByRole("button", { name: "Sign in with GitHub" }));
     await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
     const [path] = fetchMock.mock.calls[1] as [string, RequestInit];
     expect(path).toBe("http://localhost:8788/auth/sign-in/social");
@@ -46,7 +47,7 @@ describe("App", () => {
     const { findByRole, findByText } = render(() => <App />);
     expect(await findByRole("heading", { name: "Camus" })).toBeInTheDocument();
     await findByText("Nothing here yet.");
-    fireEvent.click(await findByRole("tab", { name: "Media" }));
+    await userEvent.click(await findByRole("tab", { name: "Media" }));
     expect(await findByText("hero.webp")).toBeInTheDocument();
   });
 
@@ -58,9 +59,9 @@ describe("App", () => {
       .mockResolvedValueOnce(jsonResponse(null));
     const { findByText, findByRole, queryByText } = render(() => <App />);
     expect(queryByText("Signed in as gh@tomhackshaw.com")).toBeNull();
-    fireEvent.click(await findByRole("button", { name: "Account" }));
+    await userEvent.click(await findByRole("button", { name: "Account" }));
     expect(await findByText("Signed in as gh@tomhackshaw.com")).toBeInTheDocument();
-    fireEvent.click(await findByRole("menuitem", { name: "Sign out" }));
+    await userEvent.click(await findByRole("menuitem", { name: "Sign out" }));
     expect(await findByRole("button", { name: "Sign in with GitHub" })).toBeInTheDocument();
     const [, signOutInit] = fetchMock.mock.calls[2] as [string, RequestInit];
     expect(signOutInit.method).toBe("POST");
@@ -75,10 +76,10 @@ describe("App", () => {
       .mockResolvedValueOnce(jsonResponse(listBody([])));
     const { findByLabelText, findByRole, findByText } = render(() => <App />);
     await findByText("Nothing here yet.");
-    fireEvent.click(await findByRole("button", { name: "New" }));
+    await userEvent.click(await findByRole("button", { name: "New" }));
     expect(await findByLabelText("Title")).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledTimes(3);
-    fireEvent.click(await findByRole("button", { name: "← Back" }));
+    await userEvent.click(await findByRole("button", { name: "← Back" }));
     expect(await findByText("Nothing here yet.")).toBeInTheDocument();
   });
 
@@ -89,7 +90,7 @@ describe("App", () => {
       .mockResolvedValueOnce(jsonResponse([]));
     const { findByRole, findByText } = render(() => <App />);
     await findByText("Nothing here yet.");
-    fireEvent.click(await findByRole("tab", { name: "Categories" }));
+    await userEvent.click(await findByRole("tab", { name: "Categories" }));
     expect(await findByRole("button", { name: "Add category" })).toBeInTheDocument();
   });
 });

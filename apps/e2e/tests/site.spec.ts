@@ -10,8 +10,6 @@ test.describe("site chrome", () => {
   test("home page renders intro and nav", async ({ page }) => {
     const assertNoErrors = expectNoPageErrors(page);
     await page.goto("/");
-    // The intro is a BlurInText: its sr-only accessible text is duplicated
-    // by hydration, so assert the visible paragraph copy instead.
     await expect(
       page.getByText("I'm a software engineer with a background in the arts and education."),
     ).toBeVisible();
@@ -37,10 +35,24 @@ test.describe("site chrome", () => {
     await expect(page.getByRole("link", { name: /access@tomhackshaw.com/ })).toBeVisible();
   });
 
-  test("purchase thanks page", async ({ page }) => {
-    await page.goto("/thanks");
-    await expect(page.getByRole("heading", { name: "Thank you!", level: 1 })).toBeVisible();
-    await expect(page.getByText(/purchase has been completed successfully/i)).toBeVisible();
+  test("garden page lists the generative pieces", async ({ page }) => {
+    const assertNoErrors = expectNoPageErrors(page);
+    await page.goto("/work/wwwork/garden");
+    await expect(page.getByRole("heading", { name: "Garden", level: 1 })).toBeVisible();
+    for (const title of [
+      "Drift",
+      "Halo",
+      "After Rain",
+      "Canon",
+      "Low",
+      "Dust",
+      "Static",
+      "Haze",
+      "Gust",
+    ]) {
+      await expect(page.getByRole("heading", { name: title, level: 3 })).toBeVisible();
+    }
+    assertNoErrors();
   });
 
   test("unknown route renders the 404 page", async ({ page }) => {

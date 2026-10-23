@@ -15,7 +15,7 @@ import {
   type GuestbookEntryParams,
   type OAuthSessionParams,
 } from "../service";
-import { makeAppConfigLayer } from "@tom/utils/services/config";
+import { makeAppConfigLayer } from "@tom/utils/config";
 import type { Database } from "@tom/types/db";
 
 /**
@@ -124,7 +124,7 @@ describe("DatabaseService", () => {
   const getSession = (token: string) => (db: DatabaseServiceContract) => db.getOAuthSession(token);
   const deleteSession = (token: string) => (db: DatabaseServiceContract) =>
     db.deleteOAuthSession(token);
-  const cleanupSessions = () => (db: DatabaseServiceContract) => db.cleanupExpiredSessions();
+  const cleanupSessions = () => (db: DatabaseServiceContract) => db.cleanupExpiredSessions;
 
   describe("guestbook entries", () => {
     it("creates an entry and returns the row with generated id and timestamps", async () => {

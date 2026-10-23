@@ -1,17 +1,17 @@
 import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchWorks } from "~/server/adapter";
+import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
 import { Loading, For, Show } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
+import { bannerTitleStyles } from "../../chrome/layout.stylex";
 
 export default function WorkHome() {
-  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
-  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+  httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
+  httpHeader("CDN-Cache-Control", PUBLIC_PAGE_CDN_CACHE_CONTROL);
 
   const worksQuery = useQuery(() => ({
     queryKey: ["works"],
@@ -34,15 +34,17 @@ export default function WorkHome() {
         url: "https://tom.so/work",
       }}
     >
-      <BlurInText text="Work" tag="h1" baseDelay={0.1} step={0.025} />
-      <BlurInSection delay={0.3}>
+      <Text variant="heading" size="lg" as="h1">
+        Work
+      </Text>
+      <div>
         <Text>Some work that I have made.</Text>
-      </BlurInSection>
-      <BlurInSection delay={0.5}>
+      </div>
+      <div>
         <Loading fallback={<Loader />}>
           <Show when={worksQuery.isError}>
             <div class="banner" role="alert">
-              <Text class="banner-title">Error loading works</Text>
+              <Text style={bannerTitleStyles.bannerTitle}>Error loading works</Text>
               <Text>{worksQuery.error?.message}</Text>
             </div>
           </Show>
@@ -59,14 +61,14 @@ export default function WorkHome() {
                     <Text variant="heading" as="h2">
                       {work.title}
                     </Text>
-                    <Text>{work.summary}</Text>
+                    <Text>{work.summary ?? ""}</Text>
                   </Link>
                 )}
               </For>
             )}
           </Show>
         </Loading>
-      </BlurInSection>
+      </div>
     </PageLayout>
   );
 }

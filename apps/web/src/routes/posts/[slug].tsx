@@ -1,26 +1,28 @@
 import { Match, Switch, createMemo } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
 import { useParams } from "@solidjs/router";
 import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
 import { fetchPostBySlug } from "~/server/adapter";
+import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
+import { layout } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
-import { BlurInSection } from "~/components/BlurInSection";
-import { BlurInText } from "~/components/BlurInText";
-import { formatDate } from "~/libs/utils/date";
+import { formatDate } from "@tom/utils/date";
 import {
-  DetailArenaBlocks,
+  ArenaSourceLink,
   DetailError,
   DetailLoading,
   DetailNotFound,
-} from "~/components/DetailStates";
+} from "~/content/DetailStates";
+import { ContentBlocks } from "~/content/ContentBlocks";
 
 export default function PostPage() {
   const params = useParams();
   const slug = createMemo(() => params.slug);
 
-  httpHeader("Cache-Control", "public, max-age=600, s-maxage=3600, stale-while-revalidate=86400");
-  httpHeader("CDN-Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+  httpHeader("Cache-Control", PUBLIC_PAGE_CACHE_CONTROL);
+  httpHeader("CDN-Cache-Control", PUBLIC_PAGE_CDN_CACHE_CONTROL);
 
   const postQuery = useQuery(() => ({
     queryKey: ["post", slug()],
@@ -51,38 +53,39 @@ export default function PostPage() {
         {(post) => (
           <PageLayout
             title={post.title}
-            // An empty summary falls back to the meta description.
-            description={post.summary || post.meta?.description || ""}
+            description={post.summary ?? ""}
             canonical={`https://tom.so/posts/${slug()}`}
             jsonLd={{
               "@context": "https://schema.org",
               "@type": "BlogPosting",
               headline: post.title,
-              description: post.summary || post.meta?.description || "",
-              datePublished: post.publishedAt ?? "",
-              dateModified: post.updatedAt ?? "",
+              description: post.summary ?? "",
+              datePublished: post.publishedAt,
+              dateModified: post.updatedAt,
               url: `https://tom.so/posts/${slug()}`,
               author: { "@type": "Person", name: "Tom Hackshaw" },
             }}
           >
             <article>
-              <BlurInText text={post.title} tag="h1" baseDelay={0.1} step={0.025} />
-              <BlurInSection delay={0.3}>
+              <Text variant="heading" size="lg" as="h1">
+                {post.title}
+              </Text>
+              <div>
                 <Text variant="heading" as="h2">
-                  {post.meta?.description ?? ""}
+                  {post.summary ?? ""}
                 </Text>
-              </BlurInSection>
-              <BlurInSection delay={0.5}>
-                {post.publishedAt ? (
+              </div>
+              <div>
+                <div {...stylex.attrs(layout.flexCol, layout.gap1_5)}>
                   <Text variant="secondary" size="sm" as="time">
                     {formatDate(post.publishedAt)}
                   </Text>
-                ) : null}
-              </BlurInSection>
-              <BlurInSection delay={0.7}>
-                <div class="pt-8" innerHTML={post.html ?? ""} />
-              </BlurInSection>
-              <DetailArenaBlocks blocks={post.arenaBlocks ?? []} baseDelay={0.9} />
+                  <ArenaSourceLink arenaSlug={post.arenaSlug} />
+                </div>
+              </div>
+              <div>
+                <ContentBlocks blocks={post.blocks} />
+              </div>
             </article>
           </PageLayout>
         )}

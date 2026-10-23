@@ -1,6 +1,6 @@
 import { vi } from "vitest";
-import type { CloudflareEnv } from "@tom/utils/services/config";
-import type { RequestWithEnv } from "@tom/utils/services/worker";
+import type { CloudflareEnv } from "@tom/utils/config";
+import type { RequestWithEnv } from "@tom/utils/worker";
 
 export const fetchMock = vi.fn();
 

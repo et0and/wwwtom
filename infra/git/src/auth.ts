@@ -4,13 +4,15 @@ import { Effect } from "effect";
 import { Stage } from "alchemy/Stage";
 import * as Cloudflare from "alchemy/Cloudflare";
 import { AuthenticationError, SecretsError } from "@tom/types/errors";
-import {
-  isAdminEmail,
-  parseAdminEmails,
-  readCloudflareEnv,
-  type CloudflareEnv,
-  type CmsD1Binding,
-} from "@tom/utils/services/config";
+import { parseCommaSeparated } from "@tom/schemas/env";
+import { readCloudflareEnv, type CloudflareEnv, type CmsD1Binding } from "@tom/utils/config";
+
+/** Admin allowlist check (case-insensitive, whitespace-tolerant). */
+const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean => {
+  const candidate = email.trim().toLowerCase();
+  if (candidate.length === 0) return false;
+  return allowlist.some((entry) => entry.trim().toLowerCase() === candidate);
+};
 
 /** Worker env surface the Git host reads (bindings + the secret bundle). */
 export type GitEnv = CloudflareEnv & {
@@ -96,7 +98,7 @@ export const createGitAuthFromEnv = Effect.fn("GitAuth.fromEnv")(function* (
     resolved.GITHUB_CLIENT_ID?.trim(),
     resolved.GITHUB_CLIENT_SECRET?.trim(),
   );
-  const adminEmails = parseAdminEmails(resolved.CMS_ADMIN_EMAILS);
+  const adminEmails = parseCommaSeparated(resolved.CMS_ADMIN_EMAILS);
   if (
     database === undefined ||
     secret === undefined ||

@@ -7,7 +7,12 @@
     "skipLibCheck": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "types": ["node"],
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ]
   },
   "include": ["src/**/*.ts", "../../scripts/**/*.ts"]
 }

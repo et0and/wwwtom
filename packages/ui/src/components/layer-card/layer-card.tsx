@@ -1,26 +1,59 @@
+import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeBase } from "../../styles/typography.stylex";
 
-const LAYER_CARD_SURFACE_CLASSES =
-  "overflow-hidden rounded-lg bg-tomui-base shadow-xs ring ring-tomui-line";
-const LAYER_CARD_LAYERED_ROOT_CLASSES =
-  "flex w-full flex-col overflow-hidden rounded-lg bg-tomui-elevated text-base ring ring-tomui-hairline";
-const LAYER_CARD_SECONDARY_CLASSES =
-  "-my-2 flex items-center gap-2 bg-tomui-elevated p-4 text-base font-medium text-tomui-subtle";
-const LAYER_CARD_PRIMARY_CLASSES =
-  "relative flex flex-col gap-2 overflow-hidden rounded-lg bg-tomui-base p-4 pr-3 text-inherit no-underline ring ring-tomui-fill";
+const lineColor = colors["--color-tomui-line"];
 
-/** LayerCard variant definitions (currently empty, reserved for future additions). */
-export const TOMUI_LAYER_CARD_VARIANTS = {
-  // LayerCard currently has no variant options but structure is ready for future additions
-} as const;
+const styles = stylex.create({
+  surface: {
+    overflow: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    boxShadow: "0 0 0 1px " + lineColor + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
+  },
+  layeredRoot: {
+    display: "flex",
+    width: "100%",
+    flexDirection: "column",
+    overflow: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-elevated"],
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-hairline"],
+    ...fontSizeBase,
+  },
+  secondary: {
+    marginBlock: "-0.5rem",
+    display: "flex",
+    alignItems: "center",
+    gap: "0.5rem",
+    backgroundColor: colors["--color-tomui-elevated"],
+    padding: "1rem",
+    fontWeight: 500,
+    color: textColors["--text-color-tomui-subtle"],
+    ...fontSizeBase,
+  },
+  primary: {
+    position: "relative",
+    display: "flex",
+    flexDirection: "column",
+    gap: "0.5rem",
+    overflow: "hidden",
+    borderRadius: radius.lg.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    padding: "1rem",
+    paddingInlineEnd: "0.75rem",
+    color: "inherit",
+    textDecorationLine: "none",
+    boxShadow: "0 0 0 1px " + colors["--color-tomui-fill"],
+  },
+});
 
-// Derived types from TOMUI_LAYER_CARD_VARIANTS
-export interface TomuiLayerCardVariantsProps {}
-
-export function layerCardVariants(): string {
-  return cn(LAYER_CARD_SURFACE_CLASSES);
+export function layerCardVariants(): stylex.StyleXStyles {
+  return styles.surface;
 }
 
 /**
@@ -28,7 +61,7 @@ export function layerCardVariants(): string {
  *
  * @example
  * ```tsx
- * <LayerCard class="p-4">
+ * <LayerCard>
  *   Get started with Tomui
  * </LayerCard>
  *
@@ -38,24 +71,28 @@ export function layerCardVariants(): string {
  * </LayerCard>
  * ```
  */
-export type LayerCardProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "ref"> &
-  TomuiLayerCardVariantsProps & {
-    children?: JSX.Element;
-    class?: string;
-    /**
-     * Render the layered card treatment (elevated container for
-     * `LayerCard.Secondary` + `LayerCard.Primary` sections).
-     * Tomui auto-detects section children; Solid cannot inspect
-     * children types, so this is explicit.
-     * @default false
-     */
-    layered?: boolean;
-    ref?: HTMLDivElement | ((element: HTMLDivElement) => void) | undefined;
-  };
-
-export type LayerCardSectionProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "ref"> & {
+export type LayerCardProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "ref" | "class" | "style"> & {
   children?: JSX.Element;
-  class?: string;
+  /**
+   * Render the layered card treatment (elevated container for
+   * `LayerCard.Secondary` + `LayerCard.Primary` sections).
+   * Tomui auto-detects section children; Solid cannot inspect
+   * children types, so this is explicit.
+   * @default false
+   */
+  layered?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
+  ref?: HTMLDivElement | ((element: HTMLDivElement) => void) | undefined;
+};
+
+export type LayerCardSectionProps = Omit<
+  JSX.HTMLAttributes<HTMLDivElement>,
+  "ref" | "class" | "style"
+> & {
+  children?: JSX.Element;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
 /**
@@ -66,7 +103,7 @@ export type LayerCardSectionProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "re
  *
  * @example
  * ```tsx
- * <LayerCard class="rounded-lg p-4">Card content</LayerCard>
+ * <LayerCard>Card content</LayerCard>
  * ```
  *
  * @example
@@ -79,14 +116,11 @@ export type LayerCardSectionProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "re
  */
 function LayerCardRoot(props: LayerCardProps): JSX.Element {
   const merged = merge({ layered: false }, props);
-  const rest = omit(merged, "children", "class", "layered", "ref");
+  const rest = omit(merged, "children", "layered", "ref", "style");
   return (
     <div
       data-tomui-component="LayerCard"
-      class={cn(
-        merged.layered ? LAYER_CARD_LAYERED_ROOT_CLASSES : layerCardVariants(),
-        merged.class,
-      )}
+      {...stylex.attrs(merged.layered ? styles.layeredRoot : layerCardVariants(), merged.style)}
       ref={merged.ref}
       {...rest}
     >
@@ -96,11 +130,11 @@ function LayerCardRoot(props: LayerCardProps): JSX.Element {
 }
 
 function LayerCardSecondary(props: LayerCardSectionProps): JSX.Element {
-  const rest = omit(props, "children", "class");
+  const rest = omit(props, "children", "style");
   return (
     <div
       data-tomui-component="LayerCard.Secondary"
-      class={cn(LAYER_CARD_SECONDARY_CLASSES, props.class)}
+      {...stylex.attrs(styles.secondary, props.style)}
       {...rest}
     >
       {props.children}
@@ -109,11 +143,11 @@ function LayerCardSecondary(props: LayerCardSectionProps): JSX.Element {
 }
 
 function LayerCardPrimary(props: LayerCardSectionProps): JSX.Element {
-  const rest = omit(props, "children", "class");
+  const rest = omit(props, "children", "style");
   return (
     <div
       data-tomui-component="LayerCard.Primary"
-      class={cn(LAYER_CARD_PRIMARY_CLASSES, props.class)}
+      {...stylex.attrs(styles.primary, props.style)}
       {...rest}
     >
       {props.children}

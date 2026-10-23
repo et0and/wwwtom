@@ -1,3 +1,4 @@
+import * as stylex from "@stylexjs/stylex";
 import { Match, Show, Switch, createEffect, createSignal, onCleanup, onSettled } from "solid-js";
 import { Effect } from "effect";
 import { Banner } from "@tom/ui/banner";
@@ -5,16 +6,17 @@ import { Loader } from "@tom/ui/loader";
 import { DropdownMenu } from "@tom/ui/dropdown";
 import { Tabs } from "@tom/ui/tabs";
 import { useColorMode } from "@tom/ui/color-mode";
-import { runClient } from "@tom/utils/services/http";
-import { createSession, documentTitle, signOut } from "./lib/session";
-import type { ContentKind } from "./lib/content";
-import { SignInButton } from "./components/SignInButton";
-import { CamusLogo } from "./components/CamusLogo";
-import { Avatar } from "./components/Avatar";
-import { PostList } from "./components/PostList";
-import { EditorView } from "./components/EditorView";
-import { CategoriesView } from "./components/CategoriesView";
-import { MediaView } from "./components/MediaView";
+import { cursor, layout, radius, spacing } from "@tom/ui/primitives.stylex";
+import { runClient } from "@tom/utils/http";
+import { createSession, documentTitle, signOut } from "./auth/session";
+import type { ContentKind } from "./posts/content";
+import { SignInButton } from "./auth/SignInButton";
+import { CamusLogo } from "./brand/CamusLogo";
+import { Avatar } from "./brand/Avatar";
+import { PostList } from "./posts/PostList";
+import { EditorView } from "./editor/EditorView";
+import { CategoriesView } from "./posts/CategoriesView";
+import { MediaView } from "./media/MediaView";
 
 type View =
   | { readonly name: "list" }
@@ -43,6 +45,11 @@ const viewForTab = (tab: Tab): View => {
 };
 
 const assignUrl = (url: string): void => window.location.assign(url);
+
+const styles = stylex.create({
+  headerGroup: { columnGap: "1rem", rowGap: "0.5rem" },
+  accountTrigger: { borderWidth: 0, backgroundColor: "transparent" },
+});
 
 export const App = (props: { navigate?: (url: string) => void }) => {
   useColorMode();
@@ -76,7 +83,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
 
   const onSignOut = (): void => {
     void runClient(
-      signOut().pipe(
+      signOut.pipe(
         Effect.tap(() => Effect.sync(reloadSession)),
         Effect.catch(() => Effect.sync(() => setError("Sign out failed"))),
       ),
@@ -91,7 +98,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
       <Show when={error()}>{(message) => <Banner variant="error" description={message()} />}</Show>
       <Switch>
         <Match when={session() === undefined}>
-          <p class="flex items-center gap-2">
+          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
             <Loader size="sm" /> Loading…
           </p>
         </Match>
@@ -106,7 +113,9 @@ export const App = (props: { navigate?: (url: string) => void }) => {
           {(current) => (
             <div>
               <nav class="editor-nav">
-                <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2">
+                <div
+                  {...stylex.attrs(layout.flexWrapRow, layout.itemsBaseline, styles.headerGroup)}
+                >
                   <h1 class="editor-title">Camus</h1>
                   <Tabs
                     variant="underline"
@@ -120,7 +129,10 @@ export const App = (props: { navigate?: (url: string) => void }) => {
                 <div class="editor-user">
                   <DropdownMenu>
                     <DropdownMenu.Trigger
-                      class="cursor-pointer rounded-full border-0 bg-transparent p-0"
+                      class={
+                        stylex.attrs(cursor.pointer, radius.full, spacing.p0, styles.accountTrigger)
+                          .class ?? ""
+                      }
                       aria-label="Account"
                     >
                       <Avatar name={current().user.name} email={current().user.email} />

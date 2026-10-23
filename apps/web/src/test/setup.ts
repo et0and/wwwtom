@@ -2,7 +2,12 @@ import "@testing-library/jest-dom";
 import { cleanup } from "@solidjs/testing-library";
 import { afterEach } from "vitest";
 
-// Mock window.matchMedia
+// jsdom has no layout, so scrollTo and matchMedia need shims.
+Object.defineProperty(window, "scrollTo", {
+  writable: true,
+  value: () => {},
+});
+
 Object.defineProperty(window, "matchMedia", {
   writable: true,
   value: (query: string) => ({

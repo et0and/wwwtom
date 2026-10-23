@@ -1,29 +1,23 @@
+import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, onCleanup, onSettled, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
 
-export const TOMUI_CHART_VARIANTS = {
-  type: {
-    line: { classes: "", description: "Line chart rendered as SVG polyline" },
-    bar: { classes: "", description: "Bar chart rendered as SVG rects" },
-    sparkline: { classes: "", description: "Compact sparkline without axes" },
-    timeseries: { classes: "", description: "Timeseries line with time labels" },
-  },
-  size: {
-    sm: { classes: "h-16", description: "Small compact chart" },
-    base: { classes: "h-40", description: "Default chart height" },
-    lg: { classes: "h-64", description: "Large chart height" },
-  },
-} as const;
+const styles = stylex.create({
+  root: { width: "100%" },
+  sizeSm: { height: "4rem" },
+  sizeBase: { height: "10rem" },
+  sizeLg: { height: "16rem" },
+  svg: { height: "100%", width: "100%" },
+  host: { display: "contents" },
+});
 
 export const TOMUI_CHART_DEFAULT_VARIANTS = {
   type: "line",
   size: "base",
 } as const;
 
-export type TomuiChartType = keyof typeof TOMUI_CHART_VARIANTS.type;
-export type TomuiChartSize = keyof typeof TOMUI_CHART_VARIANTS.size;
+export type TomuiChartType = "line" | "bar" | "sparkline" | "timeseries";
+export type TomuiChartSize = "sm" | "base" | "lg";
 
 export interface ChartDatum {
   label: string;
@@ -32,26 +26,26 @@ export interface ChartDatum {
 
 export type ChartProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   children?: JSX.Element;
-  class?: string;
   data?: Array<ChartDatum>;
   height?: number;
   renderChart?: (el: HTMLDivElement) => void;
   size?: TomuiChartSize;
-  style?: JSX.CSSProperties;
   type?: TomuiChartType;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
+
+const sizeStyles = {
+  sm: styles.sizeSm,
+  base: styles.sizeBase,
+  lg: styles.sizeLg,
+} as const satisfies Record<TomuiChartSize, stylex.StyleXStyles>;
 
 export function chartVariants(
   props: { type?: TomuiChartType; size?: TomuiChartSize } = {},
-): string {
+): Array<stylex.StyleXStyles> {
   const merged = merge(TOMUI_CHART_DEFAULT_VARIANTS, props);
-  return cn(
-    "tomui-chart w-full",
-    resolveVariant(TOMUI_CHART_VARIANTS.type, merged.type, TOMUI_CHART_DEFAULT_VARIANTS.type)
-      .classes,
-    resolveVariant(TOMUI_CHART_VARIANTS.size, merged.size, TOMUI_CHART_DEFAULT_VARIANTS.size)
-      .classes,
-  );
+  return [styles.root, sizeStyles[merged.size]];
 }
 
 function toPoints(data: Array<ChartDatum>, width: number, height: number): string {
@@ -81,20 +75,12 @@ function Sparkline(props: { data: Array<ChartDatum>; type: TomuiChartType }): JS
     <Show
       when={props.type === "bar"}
       fallback={
-        <svg
-          viewBox={`0 0 ${width} ${height}`}
-          class="tomui-chart-svg h-full w-full"
-          aria-hidden="true"
-        >
+        <svg viewBox={`0 0 ${width} ${height}`} {...stylex.attrs(styles.svg)} aria-hidden="true">
           <polyline points={points()} fill="none" stroke="currentColor" stroke-width="2" />
         </svg>
       }
     >
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        class="tomui-chart-svg h-full w-full"
-        aria-hidden="true"
-      >
+      <svg viewBox={`0 0 ${width} ${height}`} {...stylex.attrs(styles.svg)} aria-hidden="true">
         <For each={props.data}>
           {(datum: ChartDatum, index: () => number) => {
             const values = props.data.map((entry: ChartDatum) => entry.value);
@@ -122,23 +108,10 @@ export function Chart(props: ChartProps) {
     { size: TOMUI_CHART_DEFAULT_VARIANTS.size, type: TOMUI_CHART_DEFAULT_VARIANTS.type },
     props,
   );
-  const rest = omit(
-    merged,
-    "children",
-    "class",
-    "data",
-    "height",
-    "renderChart",
-    "size",
-    "style",
-    "type",
-  );
+  const rest = omit(merged, "children", "style", "data", "height", "renderChart", "size", "type");
   const points = () => toPoints(merged.data ?? [], 600, 200);
-  const baseStyle = (): JSX.CSSProperties | undefined => merged.style;
-  const style = (): JSX.CSSProperties | undefined => {
-    if (merged.height === undefined) return baseStyle();
-    return { ...baseStyle(), height: `${merged.height}px` };
-  };
+  const inlineStyle = (): JSX.CSSProperties | undefined =>
+    merged.height === undefined ? undefined : { height: `${merged.height}px` };
   const hostRef: ChartHostRef = { current: undefined };
   onSettled(() => {
     const el = hostRef.current;
@@ -150,8 +123,8 @@ export function Chart(props: ChartProps) {
   return (
     <div
       data-tomui-component="Chart"
-      class={cn(chartVariants({ size: merged.size, type: merged.type }), merged.class)}
-      style={style()}
+      {...stylex.attrs(...chartVariants({ size: merged.size, type: merged.type }), merged.style)}
+      style={inlineStyle()}
       {...rest}
     >
       <Show when={merged.data && merged.data.length > 0}>
@@ -168,12 +141,7 @@ export function Chart(props: ChartProps) {
             <Sparkline data={merged.data ?? []} type={merged.type} />
           </Show>
           <Show when={merged.type !== "sparkline"}>
-            <svg
-              viewBox="0 0 600 200"
-              class="tomui-chart-svg h-full w-full"
-              role="img"
-              aria-label="Chart"
-            >
+            <svg viewBox="0 0 600 200" {...stylex.attrs(styles.svg)} role="img" aria-label="Chart">
               <Show
                 when={merged.type === "bar"}
                 fallback={
@@ -207,7 +175,7 @@ export function Chart(props: ChartProps) {
         ref={(el: HTMLDivElement) => {
           hostRef.current = el;
         }}
-        class="tomui-chart-host contents"
+        {...stylex.attrs(styles.host)}
       />
       {merged.children}
     </div>

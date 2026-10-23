@@ -4,20 +4,19 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./customer": "./src/customer.ts",
     "./db": "./src/db.ts",
-    "./errors": "./src/errors.ts",
-    "./product": "./src/product.ts"
+    "./errors": "./src/errors.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "oxlint"
   },
   "dependencies": {
+    "@tom/schemas": "workspace:*",
     "effect": "catalog:",
     "kysely": "catalog:"
   },
   "devDependencies": {
-    "typescript": "5.9.3"
+    "typescript": "catalog:"
   }
 }

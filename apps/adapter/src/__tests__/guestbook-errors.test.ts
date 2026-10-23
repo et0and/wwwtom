@@ -21,6 +21,7 @@ const expectValidationProblem = async (
   path: string,
   body: Record<string, string>,
   title: string,
+  errors?: ReadonlyArray<{ detail: string; pointer: string }>,
 ): Promise<void> => {
   const response = await app.fetch(postJson(`http://localhost${path}`, body));
   expect(response.status).toBe(400);
@@ -29,6 +30,7 @@ const expectValidationProblem = async (
     status: 400,
     title,
     instance: `http://localhost${path}`,
+    ...(errors !== undefined && { errors }),
   });
 };
 
@@ -52,10 +54,12 @@ describe("guestbook flow error mapping", () => {
   );
 
   it.each([
-    ["/guestbook/sign", { message: "" }, "Missing required field: message"],
-    ["/guestbook/auth/initiate", { handle: "" }, "Missing field: handle"],
-  ])("maps a missing field on %s to a 400 problem", async (path, body, title) => {
-    await expectValidationProblem(path, body, title);
+    ["/guestbook/sign", { message: "" }, "Validation error", "#/message"],
+    ["/guestbook/auth/initiate", { handle: "" }, "Validation error", "#/handle"],
+  ])("maps an empty field on %s to a 400 problem", async (path, body, title, pointer) => {
+    await expectValidationProblem(path, body, title, [
+      { detail: "Expected a value with a length of at least 1", pointer },
+    ]);
   });
 
   it("rejects a sign without a signed-in user as 401 unauthorized", async () => {

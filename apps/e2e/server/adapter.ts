@@ -1,7 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { Readable } from "node:stream";
 import adapterWorker from "@tom/adapter";
-import type { CloudflareEnv } from "@tom/utils/services/config";
+import type { CloudflareEnv } from "@tom/utils/config";
 
 /**
  * Plain-Node harness for the real adapter worker entry (apps/adapter).
@@ -23,7 +23,6 @@ const env: CloudflareEnv = {
   GUESTBOOK_RETURN_URL: "http://127.0.0.1:3000/guestbook",
   API_URL: SIMULATOR_URL,
   ARENA_API_URL: SIMULATOR_URL,
-  POLAR_API_URL: SIMULATOR_URL,
   SIMULATOR_URL,
   // Telegram error alerts must no-op (no real credentials in CI); failures
   // are swallowed by sendErrorAlert itself.

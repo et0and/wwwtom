@@ -1,23 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { checkProfanity, hasProfanity } from "../src/profanity";
-
-describe("hasProfanity", () => {
-  it("passes clean text as clean", () => {
-    expect(hasProfanity("hello world")).toBe(false);
-  });
-
-  it("passes empty text as clean", () => {
-    expect(hasProfanity("")).toBe(false);
-  });
-
-  it("flags profanity as profanity", () => {
-    expect(hasProfanity("fuck")).toBe(true);
-  });
-});
+import { checkProfanity } from "../src/profanity";
 
 describe("checkProfanity", () => {
   it("passes clean text as clean", () => {
     expect(checkProfanity("hello world")).toEqual({ hasProfanity: false });
+  });
+
+  it("passes empty text as clean", () => {
+    expect(checkProfanity("")).toEqual({ hasProfanity: false });
+  });
+
+  it("flags profanity as profanity", () => {
+    expect(checkProfanity("fuck").hasProfanity).toBe(true);
   });
 
   it("flags tricky profanity as profanity", () => {

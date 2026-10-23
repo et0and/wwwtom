@@ -1,5 +1,6 @@
 import { Effect, Option, Ref } from "effect";
 import type { CmsBannerStyle, TiptapBlock, TiptapDoc, TiptapInline } from "@tom/schemas/cms";
+import { ShikiError } from "@tom/types/errors";
 
 /** Resolve an editor media reference to its absolute public file URL. */
 export type MediaUrlResolver = (mediaId: string) => string;
@@ -21,21 +22,19 @@ const escapeHtml = (value: string): string =>
     .replace(/'/g, "&#39;");
 
 /** Keep only navigable link targets; anything else renders as plain text. */
-export const isSafeLinkHref = (href: string): boolean => {
+const safeHref = (href: string): string | null => {
   const target = href.trim();
-  return (
-    target.startsWith("https://") ||
+  return target.startsWith("https://") ||
     target.startsWith("http://") ||
     target.startsWith("mailto:") ||
     target.startsWith("/") ||
     target.startsWith("#")
-  );
+    ? target
+    : null;
 };
 
-const safeHref = (href: string): string | null => {
-  const target = href.trim();
-  return isSafeLinkHref(href) ? target : null;
-};
+/** Navigability check over the same trimmed target safeHref renders. */
+export const isSafeLinkHref = (href: string): boolean => safeHref(href) !== null;
 
 /**
  * Only these link targets render; anything else (e.g. pasted
@@ -105,10 +104,10 @@ const CODE_LANGUAGE_ALIASES: CodeLanguageAliases = {
 
 type Highlighter = Awaited<ReturnType<(typeof import("shiki/core"))["createHighlighterCore"]>>;
 
-const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Effect.runSync(Ref.make(Option.none()));
+const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Ref.makeUnsafe(Option.none());
 
 const createHighlighter = async (): Promise<Highlighter> => {
-  const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, ...bundles] =
+  const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, langModules, themeModules] =
     await Promise.all([
       import("shiki/core"),
       import("shiki/engine/javascript"),
@@ -132,8 +131,8 @@ const createHighlighter = async (): Promise<Highlighter> => {
       ]),
     ]);
   return createHighlighterCore({
-    themes: bundles[1].map((theme) => theme.default),
-    langs: bundles[0].map((lang) => lang.default),
+    themes: themeModules.map((theme) => theme.default),
+    langs: langModules.map((lang) => lang.default),
     engine: createJavaScriptRegexEngine(),
   });
 };
@@ -145,7 +144,7 @@ const getHighlighter = Effect.gen(function* () {
   const fresh = yield* Effect.option(
     Effect.tryPromise({
       try: () => createHighlighter(),
-      catch: () => new Error("shiki init failed"),
+      catch: () => new ShikiError({ message: "shiki init failed" }),
     }).pipe(Effect.tap((loaded) => Ref.set(highlighterRef, Option.some(loaded)))),
   );
   return fresh;
@@ -197,12 +196,10 @@ const highlightCode = (
           showLineNumbers,
         );
       },
-      catch: () => new Error("shiki highlight failed"),
+      catch: () => new ShikiError({ message: "shiki highlight failed" }),
     }).pipe(
       Effect.tapError((cause) => Effect.logWarning("Code highlight failed", cause)),
-      Effect.catch(() =>
-        Effect.succeed(codeFigure(plainCode(code, language), fileName, showLineNumbers)),
-      ),
+      Effect.orElseSucceed(() => codeFigure(plainCode(code, language), fileName, showLineNumbers)),
     );
   });
 

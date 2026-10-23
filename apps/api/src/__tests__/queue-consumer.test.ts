@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Effect, Layer } from "effect";
 import { TelegramService } from "@tom/utils/telegram";
-import { buildGuestbookSignAlert, processMessage } from "../services/queue-consumer";
+import { buildGuestbookSignAlert, processMessage } from "../queue/consumer";
 
 const testTelegramLayer = (sendAlert: (message: string) => void) =>
   Layer.succeed(TelegramService, {

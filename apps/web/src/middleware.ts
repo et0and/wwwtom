@@ -1,8 +1,8 @@
 import { getRequestEvent } from "@solidjs/web";
-import type { CloudflareEnv } from "@tom/utils/services/config";
-import { logLevelFromEnv, otelConfigFromEnv } from "@tom/utils/services/logging";
-import type { LogContext } from "@tom/utils/services/logging";
-import { createRequestQueryClient } from "~/libs/query-client";
+import type { CloudflareEnv } from "@tom/utils/config";
+import { logLevelFromEnv, otelConfigFromEnv } from "@tom/utils/logging";
+import type { LogContext } from "@tom/utils/logging";
+import { createRequestQueryClient } from "~/data/query-client";
 import { handleFeed, handleRobots, handleSitemap } from "~/server/static-routes";
 
 /**

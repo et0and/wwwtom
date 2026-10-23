@@ -4,7 +4,7 @@ import { defineConfig, devices } from "@playwright/test";
  * E2E suites for tom.so (all local).
  *
  * Topology (in order of startup):
- *   simulator (8789)  ← fixture stores: polar, arena, cms, guestbook, api
+ *   simulator (8789)  ← fixture stores: arena, cms, guestbook
  *   adapter   (8788)  ← real adapter Worker entry run under tsx (env attaches
  *                       SIMULATOR_URL; the x-use-simulator header does the swap)
  *   web       (3000)  ← `vite dev` of apps/web (see below for why dev)
@@ -14,7 +14,7 @@ import { defineConfig, devices } from "@playwright/test";
  * - fixture: every page on tom.so against the fixture stack. Every browser
  *   request carries `x-use-simulator: 1` (extraHTTPHeaders), so both
  *   browser→adapter calls (guestbook) and SSR web→adapter calls (posts,
- *   work, products, arena) hit the fixture data. Production never sets
+ *   work, arena) hit the fixture data. Production never sets
  *   SIMULATOR_URL, so the header is inert there.
  * - editor: the Camus SPA with every adapter call intercepted per test
  *   (VITE_ADAPTER_URL falls back to localhost:8788, which never needs to

@@ -10,7 +10,12 @@
     "jsxImportSource": "solid-js",
     "paths": {
       "@tom/*": ["../../packages/*/src"]
-    }
+    },
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      }
+    ]
   },
   "include": ["src/**/*.ts"]
 }

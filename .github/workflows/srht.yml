@@ -1,30 +1,27 @@
+# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
 name: Mirror to SourceHut
-
 on:
   push:
-    branches: [dev]
-
+    branches:
+      - dev
 jobs:
   mirror:
     runs-on: ubuntu-slim
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
-
       - name: Setup SSH
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SOURCEHUT_SSH_KEY }}
-        run: |
+        run: |-
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          # ssh-keyscan can flake on git.sr.ht egress; retry once before
-          # giving up (the step still fails if both attempts fail).
           ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts || { sleep 5; ssh-keyscan git.sr.ht >> ~/.ssh/known_hosts; }
-
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SOURCEHUT_SSH_KEY }}
       - name: Mirror to SourceHut
-        run: |
+        run: |-
           git remote add sourcehut git@git.sr.ht:~tomupom/wwwtom
           git push sourcehut dev --force
           git push sourcehut --all --force

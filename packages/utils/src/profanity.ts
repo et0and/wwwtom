@@ -5,14 +5,9 @@ const matcher = new RegExpMatcher({
   ...englishRecommendedTransformers,
 });
 
-export const hasProfanity = (text: string): boolean => {
-  return matcher.hasMatch(text);
-};
-
-export type ProfanityResult = {
-  hasProfanity: boolean;
-  message?: string;
-};
+export type ProfanityResult =
+  | { readonly hasProfanity: true; readonly message: string }
+  | { readonly hasProfanity: false; readonly message?: undefined };
 
 export const checkProfanity = (text: string): ProfanityResult => {
   if (matcher.hasMatch(text)) {

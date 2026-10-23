@@ -6,13 +6,27 @@ import { ArenaClient, type Fetch, type DateProvider } from "../src/client";
 type MockFetch = ReturnType<typeof vi.fn<Fetch>>;
 
 const createMockFetch = (response: Partial<Response> = {}): MockFetch => {
+  // Covers every makeRequest envelope (channels, user/group channels, thumb).
+  const validArenaResponse = {
+    per: 50,
+    page: 1,
+    owner: null,
+    collaborators: null,
+    total_pages: 1,
+    current_page: 1,
+    base_type: "User",
+    type: "User",
+    channels: [],
+    channel_title: null,
+    contents: null,
+  };
   const defaultResponse: Response = {
     ok: true,
     status: 200,
     statusText: "OK",
     headers: new Headers({ "content-type": "application/json" }),
-    json: async () => ({ data: {} }),
-    text: async () => JSON.stringify({ data: {} }),
+    json: async () => ({ ...validArenaResponse }),
+    text: async () => JSON.stringify(validArenaResponse),
     ...response,
   } as Response;
   return vi.fn(async () => defaultResponse);
@@ -94,7 +108,7 @@ describe("ArenaClient", () => {
     ])("$label", async ({ token, expected }) => {
       const client = new ArenaClient({ token, fetch: mockFetch });
 
-      await runEffect(client.me());
+      await runEffect(client.me);
 
       const call = mockFetch.mock.calls[0];
       expect(call).toBeDefined();
@@ -187,7 +201,7 @@ describe("ArenaClient", () => {
       const customFetch = createMockFetch();
       const client = new ArenaClient({ fetch: customFetch });
 
-      await runEffect(client.me());
+      await runEffect(client.me);
 
       expect(customFetch).toHaveBeenCalledTimes(1);
     });
@@ -200,7 +214,7 @@ describe("ArenaClient", () => {
       });
       const client = new ArenaClient({ fetch: networkErrorFetch });
 
-      const result = await Effect.runPromiseExit(client.me());
+      const result = await Effect.runPromiseExit(client.me);
 
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error("Expected Failure");
@@ -225,7 +239,7 @@ describe("ArenaClient", () => {
       const errorFetch = vi.fn(async () => errorResponse);
       const client = new ArenaClient({ fetch: errorFetch });
 
-      const result = await Effect.runPromiseExit(client.block(999).get());
+      const result = await Effect.runPromiseExit(client.block(999).get);
 
       expect(result._tag).toBe("Failure");
       if (result._tag !== "Failure") throw new Error("Expected Failure");
@@ -240,7 +254,7 @@ describe("ArenaClient", () => {
     it("me() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.me());
+      await runEffect(client.me);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -262,7 +276,7 @@ describe("ArenaClient", () => {
     it("user(id).get() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.user(42).get());
+      await runEffect(client.user(42).get);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -283,7 +297,7 @@ describe("ArenaClient", () => {
     it("channel(slug).get() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.channel("my-channel").get());
+      await runEffect(client.channel("my-channel").get);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -293,7 +307,7 @@ describe("ArenaClient", () => {
     it("block(id).get() calls correct endpoint", async () => {
       const client = new ArenaClient({ fetch: mockFetch });
 
-      await runEffect(client.block(123).get());
+      await runEffect(client.block(123).get);
 
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
@@ -309,6 +323,127 @@ describe("ArenaClient", () => {
       const url = getRequestUrl(call!);
       expect(url).toContain("https://api.are.na/v3/search");
       expect(url).toContain("query=test");
+    });
+  });
+
+  describe("worker cache", () => {
+    const stubCaches = (cached: Response | undefined) => {
+      const match = vi.fn(async (_key: Request) => cached);
+      const put = vi.fn(async (_key: Request, _response: Response) => undefined);
+      vi.stubGlobal("caches", { default: { match, put } });
+      return { match, put };
+    };
+
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    const realFetch = () =>
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify({ data: [] }), {
+            status: 200,
+            headers: { "content-type": "application/json" },
+          }),
+      );
+
+    it("serves a cached public response without calling are.na", async () => {
+      const cached = new Response(JSON.stringify({ data: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+      const { match, put } = stubCaches(cached);
+      const fetchSpy = realFetch();
+      const client = new ArenaClient({ fetch: fetchSpy });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(match).toHaveBeenCalledTimes(1);
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(put).not.toHaveBeenCalled();
+    });
+
+    it("stores a public response in the worker cache", async () => {
+      const { match, put } = stubCaches(undefined);
+      const fetchSpy = realFetch();
+      const client = new ArenaClient({ fetch: fetchSpy });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(match).toHaveBeenCalledTimes(1);
+      expect(fetchSpy).toHaveBeenCalledTimes(1);
+      expect(put).toHaveBeenCalledTimes(1);
+      // are.na sends max-age=300; the stored copy is rewritten to the 24h
+      // TTL, or the entry would expire in five minutes.
+      const stored = put.mock.calls[0]?.[1] as Response;
+      expect(stored.headers.get("cache-control")).toBe("public, max-age=86400");
+    });
+
+    it("never caches token reads", async () => {
+      const { match, put } = stubCaches(undefined);
+      const client = new ArenaClient({ token: "valid-token", fetch: realFetch() });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(match).not.toHaveBeenCalled();
+      expect(put).not.toHaveBeenCalled();
+    });
+  });
+
+  describe("edge cache", () => {
+    const cfOf = (call: unknown[]): { cacheTtl?: number } | undefined =>
+      (call[1] as { cf?: { cacheTtl?: number } } | undefined)?.cf;
+
+    it("caches unauthenticated SDK GET requests but never errors", async () => {
+      const client = new ArenaClient({ fetch: mockFetch });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(cfOf(mockFetch.mock.calls[0]!)).toMatchObject({
+        cacheTtl: 86400,
+        cacheTtlByStatus: { "400-599": 0 },
+      });
+    });
+
+    it("does not cache SDK requests that carry a token", async () => {
+      const client = new ArenaClient({ token: "valid-token", fetch: mockFetch });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(cfOf(mockFetch.mock.calls[0]!)).toMatchObject({ cacheTtl: 0 });
+    });
+
+    it("retries without the token when are.na rejects it", async () => {
+      const unauthorized = {
+        ok: false,
+        status: 401,
+        statusText: "Unauthorized",
+        headers: new Headers({ "content-type": "application/json" }),
+        text: async () => "",
+        json: async () => ({}),
+      } as Response;
+      const seen: Array<RequestInfo> = [];
+      const retryFetch = vi.fn(async (input: RequestInfo) => {
+        seen.push(input);
+        if (seen.length === 1) return unauthorized;
+        return {
+          ok: true,
+          status: 200,
+          statusText: "OK",
+          headers: new Headers({ "content-type": "application/json" }),
+          json: async () => ({ data: [], meta: {} }),
+          text: async () => JSON.stringify({ data: [], meta: {} }),
+        } as Response;
+      });
+      const client = new ArenaClient({ token: "valid-token", fetch: retryFetch });
+
+      await runEffect(client.channel("my-channel").contents());
+
+      expect(seen).toHaveLength(2);
+      const retryRequest = seen[1];
+      expect(retryRequest).toBeInstanceOf(Request);
+      if (!(retryRequest instanceof Request)) throw new Error("Expected a Request");
+      expect(retryRequest.headers.get("Authorization")).toBeNull();
     });
   });
 });

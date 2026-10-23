@@ -1,141 +1,279 @@
-import { createUniqueId, merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { cn } from "../../utils/cn";
-import { resolveVariant } from "../../utils/resolve-variant";
-
-/** Tooltip side variant definitions mapping positions to their Tailwind classes. */
-export const TOMUI_TOOLTIP_VARIANTS = {
-  side: {
-    top: {
-      classes: "",
-      description: "Tooltip appears above the trigger",
-    },
-    bottom: {
-      classes: "",
-      description: "Tooltip appears below the trigger",
-    },
-    left: {
-      classes: "",
-      description: "Tooltip appears to the left of the trigger",
-    },
-    right: {
-      classes: "",
-      description: "Tooltip appears to the right of the trigger",
-    },
-  },
-} as const;
+import { createUniqueId, merge, omit, onCleanup, Show } from "solid-js";
+import * as stylex from "@stylexjs/stylex";
+import { createDisclosureState } from "../../utils/state";
+import { colors } from "../../styles/colors.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm } from "../../styles/typography.stylex";
 
 export const TOMUI_TOOLTIP_DEFAULT_VARIANTS = {
   side: "top",
 } as const;
 
-// Derived types from TOMUI_TOOLTIP_VARIANTS
-export type TomuiTooltipSide = keyof typeof TOMUI_TOOLTIP_VARIANTS.side;
-
-export interface TomuiTooltipVariantsProps {
-  /**
-   * Preferred side of the trigger to render the tooltip.
-   * - `"top"` — Tooltip appears above the trigger
-   * - `"bottom"` — Tooltip appears below the trigger
-   * - `"left"` — Tooltip appears to the left of the trigger
-   * - `"right"` — Tooltip appears to the right of the trigger
-   * @default "top"
-   */
-  side?: TomuiTooltipSide;
-}
-
-export function tooltipVariants(props: TomuiTooltipVariantsProps = {}): string {
-  const merged = merge(TOMUI_TOOLTIP_DEFAULT_VARIANTS, props);
-  return cn(
-    // Base styles
-    "flex origin-[var(--transform-origin)] flex-col rounded-md bg-tomui-base px-2.5 py-1.5 text-sm text-tomui-default",
-    "shadow-md outline-1 outline-tomui-line",
-    // Apply side-specific styles (currently none, but extensible)
-    resolveVariant(TOMUI_TOOLTIP_VARIANTS.side, merged.side, TOMUI_TOOLTIP_DEFAULT_VARIANTS.side)
-      .classes,
-  );
-}
-
+export type TomuiTooltipSide = "top" | "bottom" | "left" | "right";
 export type TooltipAlign = "start" | "center" | "end";
 
-const TOMUI_TOOLTIP_POSITIONS = {
-  top: "bottom-full left-1/2 mb-2.5 -translate-x-1/2",
-  bottom: "top-full left-1/2 mt-2.5 -translate-x-1/2",
-  left: "top-1/2 right-full mr-2.5 -translate-y-1/2",
-  right: "top-1/2 left-full ml-2.5 -translate-y-1/2",
-} satisfies Record<TomuiTooltipSide, string>;
+/** Open/close transition states, driven by the disclosure state utilities. */
+const STARTING = ":is([data-starting-style])";
+const ENDING = ":is([data-ending-style])";
+const INSTANT = ":is([data-instant])";
 
-/**
- * Tooltip component props.
- *
- * @example
- * ```tsx
- * <Tooltip content="Add new item">Add</Tooltip>
- * ```
- */
+const styles = stylex.create({
+  wrapper: {
+    position: "relative",
+    display: "inline-flex",
+    cursor: "default",
+  },
+  popup: {
+    position: "absolute",
+    zIndex: 50,
+    pointerEvents: "none",
+    visibility: "visible",
+    opacity: 1,
+    display: "flex",
+    flexDirection: "column",
+    transformOrigin: "var(--transform-origin)",
+    borderRadius: radius.md.borderRadius,
+    backgroundColor: colors["--color-tomui-base"],
+    paddingInline: "0.625rem",
+    paddingBlock: "0.375rem",
+    fontSize: fontSizeSm.fontSize,
+    color: textColors["--text-color-tomui-default"],
+    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
+    outlineWidth: 1,
+    outlineStyle: "solid",
+    outlineColor: colors["--color-tomui-line"],
+    transitionProperty: "transform, scale, opacity",
+    transitionDuration: "150ms",
+    [STARTING]: { scale: 0.9, opacity: 0 },
+    [ENDING]: { scale: 0.9, opacity: 0 },
+    [INSTANT]: { transitionDuration: "0s" },
+  },
+
+  // Placement, one entry per side.
+  sideTop: { bottom: "100%", left: "50%", marginBottom: "0.625rem", translate: "-50% 0" },
+  sideBottom: { top: "100%", left: "50%", marginTop: "0.625rem", translate: "-50% 0" },
+  sideLeft: { top: "50%", right: "100%", marginRight: "0.625rem", translate: "0 -50%" },
+  sideRight: { top: "50%", left: "100%", marginLeft: "0.625rem", translate: "0 -50%" },
+});
+
+const sideStyles = {
+  top: styles.sideTop,
+  bottom: styles.sideBottom,
+  left: styles.sideLeft,
+  right: styles.sideRight,
+} as const satisfies Record<TomuiTooltipSide, stylex.StyleXStyles>;
+
+let globalWarmedUp = false;
+let globalCoolDownTimeout: ReturnType<typeof setTimeout> | undefined;
+let globalSkipDelayTimeout: ReturnType<typeof setTimeout> | undefined;
+const openTooltips = new Map<string, () => void>();
+
 export type TooltipProps = {
-  /**
-   * Alignment on the axis perpendicular to `side`.
-   * - `"start"` — Align to the start edge
-   * - `"center"` — Center-aligned
-   * - `"end"` — Align to the end edge
-   */
   align?: TooltipAlign;
-  /** Element that triggers the tooltip on hover/focus. */
   children?: JSX.Element;
-  /** Additional CSS classes merged via `cn()`. */
-  class?: string;
-  /** Content to display inside the tooltip popup. */
   content: JSX.Element;
   ref?: HTMLSpanElement | ((element: HTMLSpanElement) => void) | undefined;
-  /**
-   * Preferred side of the trigger to render the tooltip.
-   * @default "top"
-   */
   side?: TomuiTooltipSide;
+  openDelay?: number;
+  closeDelay?: number;
+  skipDelayDuration?: number;
+  disabled?: boolean;
+  /** Caller styles, merged last so they win. */
+  style?: stylex.StyleXStyles;
 };
 
-/**
- * Accessible popup that shows additional information on hover/focus.
- *
- * @example
- * ```tsx
- * <Tooltip content="Save changes">Save</Tooltip>
- * ```
- */
 export function Tooltip(props: TooltipProps): JSX.Element {
   const merged = merge(
-    { align: "center" as TooltipAlign, side: TOMUI_TOOLTIP_DEFAULT_VARIANTS.side },
+    {
+      align: "center" as TooltipAlign,
+      side: TOMUI_TOOLTIP_DEFAULT_VARIANTS.side,
+      openDelay: 700,
+      closeDelay: 300,
+      skipDelayDuration: 300,
+      disabled: false,
+    },
     props,
   );
-  const rest = omit(merged, "align", "children", "class", "content", "ref", "side");
+  const rest = omit(
+    merged,
+    "align",
+    "children",
+    "style",
+    "content",
+    "ref",
+    "side",
+    "openDelay",
+    "closeDelay",
+    "skipDelayDuration",
+    "disabled",
+  );
+
   const popupId = createUniqueId();
+  const state = createDisclosureState({});
+  let closeTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  let openTimeoutId: ReturnType<typeof setTimeout> | undefined;
+  let isHovered = false;
+  let isFocused = false;
+
+  const cancelOpening = () => {
+    clearTimeout(openTimeoutId);
+    openTimeoutId = undefined;
+  };
+
+  const cancelClosing = () => {
+    clearTimeout(closeTimeoutId);
+    closeTimeoutId = undefined;
+  };
+
+  const closeOpenTooltips = () => {
+    for (const [id, hide] of openTooltips) {
+      if (id !== popupId) hide();
+    }
+  };
+
+  const showTooltip = () => {
+    cancelClosing();
+    cancelOpening();
+    closeOpenTooltips();
+    openTooltips.set(popupId, () => state.close());
+    globalWarmedUp = true;
+    state.open();
+    clearTimeout(globalCoolDownTimeout);
+    globalCoolDownTimeout = undefined;
+    clearTimeout(globalSkipDelayTimeout);
+    globalSkipDelayTimeout = undefined;
+  };
+
+  const warmupTooltip = () => {
+    closeOpenTooltips();
+    openTooltips.set(popupId, () => state.close());
+
+    if (!state.isOpen() && !openTimeoutId && !globalWarmedUp) {
+      openTimeoutId = setTimeout(() => {
+        openTimeoutId = undefined;
+        globalWarmedUp = true;
+        showTooltip();
+      }, merged.openDelay);
+    } else if (!state.isOpen()) {
+      showTooltip();
+    }
+  };
+
+  const openTooltip = (immediate = false) => {
+    if (merged.disabled) return;
+    if (!immediate && merged.openDelay > 0 && !closeTimeoutId && !globalSkipDelayTimeout) {
+      warmupTooltip();
+    } else {
+      showTooltip();
+    }
+  };
+
+  const hideTooltip = (immediate = false) => {
+    if (immediate || merged.closeDelay <= 0) {
+      cancelClosing();
+      state.close();
+    } else if (!closeTimeoutId) {
+      closeTimeoutId = setTimeout(() => {
+        state.close();
+        closeTimeoutId = undefined;
+      }, merged.closeDelay);
+    }
+
+    clearTimeout(globalSkipDelayTimeout);
+    globalSkipDelayTimeout = setTimeout(() => {
+      globalSkipDelayTimeout = undefined;
+    }, merged.skipDelayDuration);
+
+    cancelOpening();
+
+    if (globalWarmedUp) {
+      clearTimeout(globalCoolDownTimeout);
+      globalCoolDownTimeout = setTimeout(() => {
+        openTooltips.delete(popupId);
+        globalWarmedUp = false;
+      }, merged.closeDelay);
+    }
+  };
+
+  const handleShow = () => {
+    if (!state.isOpen() && (isHovered || isFocused)) {
+      openTooltip(isFocused);
+    }
+  };
+
+  const handleHide = (immediate = false) => {
+    if (state.isOpen() && !isHovered && !isFocused) {
+      hideTooltip(immediate);
+    }
+  };
+
+  onCleanup(() => {
+    cancelOpening();
+    cancelClosing();
+    openTooltips.delete(popupId);
+  });
+
   return (
     <span
       data-tomui-component="Tooltip"
       data-side={merged.side}
-      class={cn("group/tooltip relative inline-flex cursor-default", merged.class)}
+      {...stylex.attrs(styles.wrapper, merged.style)}
       tabindex={0}
-      aria-describedby={popupId}
+      aria-describedby={state.isOpen() ? popupId : undefined}
       ref={merged.ref}
+      onPointerEnter={(e) => {
+        if (e.pointerType === "touch" || merged.disabled) return;
+        isHovered = true;
+        handleShow();
+      }}
+      onPointerLeave={(e) => {
+        if (e.pointerType === "touch") return;
+        isHovered = false;
+        isFocused = false;
+        if (state.isOpen()) handleHide();
+        else cancelOpening();
+      }}
+      onPointerDown={() => {
+        isHovered = false;
+        isFocused = false;
+        handleHide(true);
+      }}
+      onClick={() => {
+        isHovered = false;
+        isFocused = false;
+        handleHide(true);
+      }}
+      onFocus={() => {
+        if (merged.disabled) return;
+        isFocused = true;
+        handleShow();
+      }}
+      onBlur={() => {
+        isFocused = false;
+        handleHide(true);
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Escape" && state.isOpen()) {
+          e.stopPropagation();
+          hideTooltip(true);
+        }
+      }}
       {...rest}
     >
       {merged.children}
-      <span
-        id={popupId}
-        role="tooltip"
-        data-side={merged.side}
-        data-align={merged.align}
-        class={cn(
-          "pointer-events-none absolute z-50",
-          "invisible opacity-0 transition-[opacity,scale] duration-150",
-          "group-hover/tooltip:visible group-hover/tooltip:opacity-100 group-focus-within/tooltip:visible group-focus-within/tooltip:opacity-100",
-          TOMUI_TOOLTIP_POSITIONS[merged.side],
-          tooltipVariants({ side: merged.side }),
-        )}
-      >
-        {merged.content}
-      </span>
+      <Show when={state.isOpen()}>
+        <span
+          id={popupId}
+          role="tooltip"
+          data-side={merged.side}
+          data-align={merged.align}
+          {...stylex.attrs(styles.popup, sideStyles[merged.side])}
+        >
+          {merged.content}
+        </span>
+      </Show>
     </span>
   );
 }

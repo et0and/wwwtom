@@ -1,0 +1,1390 @@
+import { DateTime, Effect, Schema } from "effect";
+import {
+  CmsMediaVariantSchema,
+  TiptapDocSchema,
+  CmsCategorySchema,
+  CmsMediaSchema,
+  CmsMediaUsageRefSchema,
+  CmsPostInputSchema,
+  CmsPostSchema,
+  CmsPostSummarySchema,
+  CmsRevisionMetaSchema,
+  CmsWorkInputSchema,
+  CmsWorkSchema,
+  CmsWorkSummarySchema,
+} from "@tom/schemas/cms";
+import type {
+  CmsCategory,
+  CmsCategoryInput,
+  CmsListResponse,
+  CmsMediaId,
+  CmsPaging,
+  CmsPostInput,
+  CmsRevisionEntity,
+  CmsRevisionSnapshot,
+  CmsStatusFilter,
+  CmsWorkInput,
+} from "@tom/schemas/cms";
+import { NullableTimestamp } from "@tom/schemas/timestamp";
+import { CmsError } from "@tom/types/errors";
+import { DEFAULT_PAGE_SIZE } from "@tom/schemas/cms";
+import { HttpStatus } from "@tom/constants/http";
+import type { CmsD1Binding, CmsR2Binding } from "@tom/utils/config";
+import { renderTiptapHtml } from "@tom/utils/tiptap-html";
+
+/** The authoring schema owns the instant; the column stores its ISO form. */
+const encodeTimestamp = Schema.encodeSync(NullableTimestamp);
+
+/**
+ * Current instant as a wire timestamp, read once through `DateTime.now`
+ * rather than calling `new Date()` at each of the six CMS write sites.
+ */
+const nowTimestamp = DateTime.now.pipe(Effect.map((now) => DateTime.toDateUtc(now).toISOString()));
+
+/** Revisions kept per document; older snapshots prune on write. */
+const MAX_REVISIONS = 20;
+
+const POST_COLUMN_LIST = [
+  "p.id",
+  "p.slug",
+  "p.title",
+  "p.summary",
+  "p.content_json",
+  "p.html",
+  "p.status",
+  "p.published_at",
+  "p.hero_media_id",
+  "p.meta_title",
+  "p.meta_description",
+  "p.meta_image",
+  "p.created_at",
+  "p.updated_at",
+];
+
+const POST_COLUMNS = POST_COLUMN_LIST.join(", ");
+
+/**
+ * List columns: everything except the heavy body (content_json, html).
+ * Derived from POST_COLUMNS so a new column cannot silently miss the
+ * summary selects (a missing column 500s the summary decode instead).
+ */
+const POST_SUMMARY_COLUMNS = POST_COLUMN_LIST.filter(
+  (column) => column !== "p.content_json" && column !== "p.html",
+).join(", ");
+
+/**
+ * D1 row codecs: camelCase decoded fields map to snake_case columns via
+ * encodeKeys, and content_json/variants_json parse inside the same decode.
+ */
+const PostRowSchema = Schema.Struct({
+  id: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+  content: Schema.fromJsonString(TiptapDocSchema),
+  html: Schema.String,
+  status: Schema.String,
+  publishedAt: Schema.NullOr(Schema.String),
+  heroMediaId: Schema.NullOr(Schema.String),
+  metaTitle: Schema.NullOr(Schema.String),
+  metaDescription: Schema.NullOr(Schema.String),
+  metaImage: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+}).pipe(
+  Schema.encodeKeys({
+    content: "content_json",
+    publishedAt: "published_at",
+    heroMediaId: "hero_media_id",
+    metaTitle: "meta_title",
+    metaDescription: "meta_description",
+    metaImage: "meta_image",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }),
+);
+
+const PostSummaryRowSchema = Schema.Struct({
+  id: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+  summary: Schema.NullOr(Schema.String),
+  status: Schema.String,
+  publishedAt: Schema.NullOr(Schema.String),
+  heroMediaId: Schema.NullOr(Schema.String),
+  metaTitle: Schema.NullOr(Schema.String),
+  metaDescription: Schema.NullOr(Schema.String),
+  metaImage: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+}).pipe(
+  Schema.encodeKeys({
+    publishedAt: "published_at",
+    heroMediaId: "hero_media_id",
+    metaTitle: "meta_title",
+    metaDescription: "meta_description",
+    metaImage: "meta_image",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }),
+);
+
+const MediaRowSchema = Schema.Struct({
+  id: Schema.String,
+  key: Schema.String,
+  mime: Schema.String,
+  width: Schema.NullOr(Schema.Finite),
+  height: Schema.NullOr(Schema.Finite),
+  alt: Schema.NullOr(Schema.String),
+  caption: Schema.NullOr(Schema.String),
+  variants: Schema.fromJsonString(Schema.Array(CmsMediaVariantSchema)),
+  createdAt: Schema.String,
+  updatedAt: Schema.String,
+}).pipe(
+  Schema.encodeKeys({
+    variants: "variants_json",
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+  }),
+);
+
+/** pc.post_id arrives aliased as postId, so no encodeKeys mapping. */
+const CategoryLinkRowSchema = Schema.Struct({
+  postId: Schema.String,
+  id: Schema.String,
+  slug: Schema.String,
+  title: Schema.String,
+});
+
+const RevisionRowSchema = Schema.Struct({
+  id: Schema.String,
+  snapshotJson: Schema.String,
+  actor: Schema.NullOr(Schema.String),
+  createdAt: Schema.String,
+}).pipe(Schema.encodeKeys({ snapshotJson: "snapshot_json", createdAt: "created_at" }));
+
+// COUNT(*) and id-projection rows are SQL-computed shapes, not storage
+// rows, so they stay explicit inline types instead of decoded schemas.
+
+// encodeKeys renames keys 1:1; it cannot fold meta_title/description/image
+// into one nested object, so meta stays a pure mapper.
+const withMeta = <T extends typeof PostSummaryRowSchema.Type>(
+  row: T,
+): Omit<T, "metaTitle" | "metaDescription" | "metaImage"> & {
+  readonly meta: {
+    readonly title: string | null;
+    readonly description: string | null;
+    readonly image: string | null;
+  };
+} => {
+  const { metaTitle, metaDescription, metaImage, ...rest } = row;
+  return {
+    ...rest,
+    meta: { title: metaTitle, description: metaDescription, image: metaImage },
+  };
+};
+
+/** Slugs shadowed by static API routes; single reads for them are unreachable. */
+const RESERVED_SLUGS = ["summary"];
+
+const rejectReservedSlug = (slug: string, operation: string): Effect.Effect<void, CmsError> =>
+  RESERVED_SLUGS.includes(slug)
+    ? Effect.fail(
+        new CmsError({
+          message: `Slug reserved: ${slug}`,
+          status: HttpStatus.BadRequest,
+          operation,
+        }),
+      )
+    : Effect.void;
+
+const queryAll = <T>(
+  db: CmsD1Binding,
+  sql: string,
+  params: ReadonlyArray<string | number | null>,
+  operation: string,
+): Effect.Effect<ReadonlyArray<T>, CmsError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .prepare(sql)
+        .bind(...params)
+        .all<T>(),
+    catch: (cause) =>
+      new CmsError({
+        message: "CMS query failed",
+        status: HttpStatus.InternalServerError,
+        operation,
+        cause,
+      }),
+  }).pipe(Effect.map((result) => result.results));
+
+const queryFirst = <T>(
+  db: CmsD1Binding,
+  sql: string,
+  params: ReadonlyArray<string | number | null>,
+  operation: string,
+): Effect.Effect<T | null, CmsError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .prepare(sql)
+        .bind(...params)
+        .first<T>(),
+    catch: (cause) =>
+      new CmsError({
+        message: "CMS query failed",
+        status: HttpStatus.InternalServerError,
+        operation,
+        cause,
+      }),
+  });
+
+/** Decode an internal row against its owner schema; corrupt rows fail with 500. */
+const decodeCms = <A, I, B>(
+  schema: Schema.Codec<A, I>,
+  value: B,
+  message: string,
+  operation: string,
+): Effect.Effect<A, CmsError> =>
+  Schema.decodeUnknownEffect(schema)(value).pipe(
+    Effect.mapError(
+      (cause) =>
+        new CmsError({
+          message,
+          status: HttpStatus.InternalServerError,
+          operation,
+          cause,
+        }),
+    ),
+  );
+
+const toPost = Effect.fn("CmsService.toPost")(function* (
+  row: typeof PostRowSchema.Encoded,
+  categories: ReadonlyArray<CmsCategory>,
+) {
+  const decoded = yield* decodeCms(PostRowSchema, row, "Invalid CMS post row", "decode_post");
+  return yield* decodeCms(
+    CmsPostSchema,
+    { ...withMeta(decoded), categories },
+    "Invalid CMS post row",
+    "decode_post",
+  );
+});
+
+const toWork = Effect.fn("CmsService.toWork")(function* (row: typeof PostRowSchema.Encoded) {
+  const decoded = yield* decodeCms(PostRowSchema, row, "Invalid CMS work row", "decode_work");
+  return yield* decodeCms(CmsWorkSchema, withMeta(decoded), "Invalid CMS work row", "decode_work");
+});
+
+/** Slim post row: the body never leaves D1; categories attach after decode. */
+const toPostSummary = Effect.fn("CmsService.toPostSummary")(function* (
+  row: typeof PostSummaryRowSchema.Encoded,
+  categories: ReadonlyArray<CmsCategory>,
+) {
+  const decoded = yield* decodeCms(
+    PostSummaryRowSchema,
+    row,
+    "Invalid CMS post row",
+    "decode_post_summary",
+  );
+  return yield* decodeCms(
+    CmsPostSummarySchema,
+    { ...withMeta(decoded), categories },
+    "Invalid CMS post row",
+    "decode_post_summary",
+  );
+});
+
+/** Slim work row: no Tiptap parse, no HTML. */
+const toWorkSummary = Effect.fn("CmsService.toWorkSummary")(function* (
+  row: typeof PostSummaryRowSchema.Encoded,
+) {
+  const decoded = yield* decodeCms(
+    PostSummaryRowSchema,
+    row,
+    "Invalid CMS work row",
+    "decode_work_summary",
+  );
+  return yield* decodeCms(
+    CmsWorkSummarySchema,
+    withMeta(decoded),
+    "Invalid CMS work row",
+    "decode_work_summary",
+  );
+});
+
+const toMedia = Effect.fn("CmsService.toMedia")(function* (row: typeof MediaRowSchema.Encoded) {
+  const decoded = yield* decodeCms(MediaRowSchema, row, "Invalid CMS media row", "decode_media");
+  return yield* decodeCms(CmsMediaSchema, decoded, "Invalid CMS media row", "decode_media");
+});
+
+const categoriesForPosts = Effect.fn("CmsService.categoriesForPosts")(function* (
+  db: CmsD1Binding,
+  postIds: ReadonlyArray<string>,
+  operation: string,
+) {
+  const grouped: Record<string, Array<CmsCategory>> = {};
+  if (postIds.length === 0) return grouped;
+  const placeholders = postIds.map(() => "?").join(",");
+  const rows = yield* queryAll<typeof CategoryLinkRowSchema.Encoded>(
+    db,
+    "SELECT pc.post_id AS postId, c.id, c.slug, c.title FROM post_categories pc " +
+      "JOIN categories c ON c.id = pc.category_id " +
+      `WHERE pc.post_id IN (${placeholders})`,
+    postIds,
+    operation,
+  );
+  for (const row of rows) {
+    const link = yield* decodeCms(
+      CategoryLinkRowSchema,
+      row,
+      "Invalid CMS category row",
+      operation,
+    );
+    const category = yield* decodeCms(
+      CmsCategorySchema,
+      {
+        id: link.id,
+        slug: link.slug,
+        title: link.title,
+      },
+      "Invalid CMS category row",
+      operation,
+    );
+    const existing = grouped[link.postId] ?? [];
+    grouped[link.postId] = [...existing, category];
+  }
+  return grouped;
+});
+
+const toListResponse = <T>(
+  docs: ReadonlyArray<T>,
+  total: number,
+  page: number,
+  limit: number,
+): CmsListResponse<T> => {
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+  return {
+    docs,
+    totalDocs: total,
+    limit,
+    page,
+    totalPages,
+    hasNextPage: page < totalPages,
+    hasPrevPage: page > 1,
+  };
+};
+
+/**
+ * The SQL window for a validated paging request. The bounds live in
+ * `CmsPagingSchema`, so a decoded `page`/`pageSize` is already in range and
+ * this is arithmetic: nothing to clamp, nothing to fail on.
+ */
+const toPageWindow = (paging: CmsPaging) => {
+  const limit = paging.pageSize ?? DEFAULT_PAGE_SIZE;
+  const current = paging.page ?? 1;
+  return { limit, current, offset: (current - 1) * limit };
+};
+
+/**
+ * Category scoping for post lists, shared by full and summary selects so
+ * the two cannot diverge. `category` keeps only linked posts;
+ * `excludeCategory` drops one category (Sophie hides its reserved pages
+ * without skewing totals, which a client-side filter would).
+ */
+const postListFilters = (paging: CmsPaging) => {
+  const category = paging.category ?? null;
+  const excluded = paging.excludeCategory ?? null;
+  const includeFilter =
+    category === null
+      ? ""
+      : "AND EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = p.id AND c.slug = ?) ";
+  const includeCountFilter =
+    category === null
+      ? ""
+      : " AND EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = posts.id AND c.slug = ?)";
+  const excludeFilter =
+    excluded === null
+      ? ""
+      : "AND NOT EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = p.id AND c.slug = ?) ";
+  const excludeCountFilter =
+    excluded === null
+      ? ""
+      : " AND NOT EXISTS (SELECT 1 FROM post_categories pc " +
+        "JOIN categories c ON c.id = pc.category_id " +
+        "WHERE pc.post_id = posts.id AND c.slug = ?)";
+  return {
+    rowFilter: includeFilter + excludeFilter,
+    countFilter: includeCountFilter + excludeCountFilter,
+    params: [...(category === null ? [] : [category]), ...(excluded === null ? [] : [excluded])],
+  };
+};
+
+export const listPosts = Effect.fn("CmsService.listPosts")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+  status: CmsStatusFilter,
+) {
+  const { limit, current, offset } = toPageWindow(paging);
+  const { rowFilter, countFilter, params } = postListFilters(paging);
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<typeof PostRowSchema.Encoded>(
+      db,
+      `SELECT ${POST_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
+        rowFilter +
+        "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
+      [status, status, ...params, limit, offset],
+      "list_posts",
+    ),
+    queryFirst<{ readonly total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
+      [status, status, ...params],
+      "count_posts",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const grouped = yield* categoriesForPosts(
+    db,
+    rows.map((row) => row.id),
+    "list_posts",
+  );
+  const docs = yield* Effect.forEach(rows, (row) => toPost(row, grouped[row.id] ?? []));
+  return toListResponse(docs, total, current, limit);
+});
+
+/**
+ * Slim post list for indexes and sitemaps: selects no body columns and
+ * skips the Tiptap parse, so list payloads stay small. Full reads (single
+ * post, feed, editor) keep listPosts.
+ */
+export const listPostSummaries = Effect.fn("CmsService.listPostSummaries")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+  status: CmsStatusFilter,
+) {
+  const { limit, current, offset } = toPageWindow(paging);
+  const { rowFilter, countFilter, params } = postListFilters(paging);
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<typeof PostSummaryRowSchema.Encoded>(
+      db,
+      `SELECT ${POST_SUMMARY_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
+        rowFilter +
+        "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
+      [status, status, ...params, limit, offset],
+      "list_post_summaries",
+    ),
+    queryFirst<{ readonly total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
+      [status, status, ...params],
+      "count_post_summaries",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const grouped = yield* categoriesForPosts(
+    db,
+    rows.map((row) => row.id),
+    "list_post_summaries",
+  );
+  const docs = yield* Effect.forEach(rows, (row) => toPostSummary(row, grouped[row.id] ?? []));
+  return toListResponse(docs, total, current, limit);
+});
+
+export const getPostBySlug = Effect.fn("CmsService.getPostBySlug")(function* (
+  db: CmsD1Binding,
+  slug: string,
+  status: CmsStatusFilter,
+) {
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
+    db,
+    `SELECT ${POST_COLUMNS} FROM posts p WHERE p.slug = ? AND (? = 'all' OR p.status = ?) LIMIT 1`,
+    [slug, status, status],
+    "get_post",
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: `Post not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation: "get_post",
+    });
+  }
+  const grouped = yield* categoriesForPosts(db, [row.id], "get_post");
+  return yield* toPost(row, grouped[row.id] ?? []);
+});
+
+export const listWorks = Effect.fn("CmsService.listWorks")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+  status: CmsStatusFilter,
+) {
+  const { limit, current, offset } = toPageWindow(paging);
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<typeof PostRowSchema.Encoded>(
+      db,
+      `SELECT ${POST_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
+        "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
+      [status, status, limit, offset],
+      "list_works",
+    ),
+    queryFirst<{ readonly total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
+      [status, status],
+      "count_works",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const docs = yield* Effect.forEach(rows, (row) => toWork(row));
+  return toListResponse(docs, total, current, limit);
+});
+
+/**
+ * Slim work list for indexes and sitemaps: no body columns, no Tiptap
+ * parse. Full reads (single work, editor) keep listWorks.
+ */
+export const listWorkSummaries = Effect.fn("CmsService.listWorkSummaries")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+  status: CmsStatusFilter,
+) {
+  const { limit, current, offset } = toPageWindow(paging);
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<typeof PostSummaryRowSchema.Encoded>(
+      db,
+      `SELECT ${POST_SUMMARY_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
+        "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
+      [status, status, limit, offset],
+      "list_work_summaries",
+    ),
+    queryFirst<{ readonly total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
+      [status, status],
+      "count_work_summaries",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const docs = yield* Effect.forEach(rows, (row) => toWorkSummary(row));
+  return toListResponse(docs, total, current, limit);
+});
+
+export const getWorkBySlug = Effect.fn("CmsService.getWorkBySlug")(function* (
+  db: CmsD1Binding,
+  slug: string,
+  status: CmsStatusFilter,
+) {
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
+    db,
+    `SELECT ${POST_COLUMNS} FROM works p WHERE p.slug = ? AND (? = 'all' OR p.status = ?) LIMIT 1`,
+    [slug, status, status],
+    "get_work",
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: `Work not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation: "get_work",
+    });
+  }
+  return yield* toWork(row);
+});
+
+export const listCategories = Effect.fn("CmsService.listCategories")(function* (db: CmsD1Binding) {
+  const rows = yield* queryAll<typeof CmsCategorySchema.Encoded>(
+    db,
+    "SELECT id, slug, title FROM categories ORDER BY title ASC",
+    [],
+    "list_categories",
+  );
+  return yield* Effect.forEach(rows, (row) =>
+    decodeCms(CmsCategorySchema, row, "Invalid CMS category row", "list_categories"),
+  );
+});
+
+const MEDIA_COLUMNS =
+  "id, key, mime, width, height, alt, caption, variants_json, created_at, updated_at";
+
+/** Load a media row by id, failing the operation with 404 when absent. */
+const requireMediaRow = Effect.fn("CmsService.requireMediaRow")(function* (
+  db: CmsD1Binding,
+  id: string,
+  operation: string,
+) {
+  const row = yield* queryFirst<typeof MediaRowSchema.Encoded>(
+    db,
+    `SELECT ${MEDIA_COLUMNS} FROM media WHERE id = ? LIMIT 1`,
+    [id],
+    operation,
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: `Media not found: ${id}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  return row;
+});
+
+export const getMediaById = Effect.fn("CmsService.getMediaById")(function* (
+  db: CmsD1Binding,
+  id: string,
+) {
+  return yield* toMedia(yield* requireMediaRow(db, id, "get_media"));
+});
+
+export const listMedia = Effect.fn("CmsService.listMedia")(function* (
+  db: CmsD1Binding,
+  paging: CmsPaging,
+) {
+  const { limit, current, offset } = toPageWindow(paging);
+  const [rows, countRow] = yield* Effect.all([
+    queryAll<typeof MediaRowSchema.Encoded>(
+      db,
+      `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`,
+      [limit, offset],
+      "list_media",
+    ),
+    queryFirst<{ readonly total: number }>(
+      db,
+      "SELECT COUNT(*) AS total FROM media",
+      [],
+      "count_media",
+    ),
+  ]);
+  const total = countRow?.total ?? 0;
+  const docs = yield* Effect.forEach(rows, (row) => toMedia(row));
+  return toListResponse(docs, total, current, limit);
+});
+
+const usageRefs = Effect.fn("CmsService.usageRefs")(function* (
+  db: CmsD1Binding,
+  table: "posts" | "works",
+  id: string,
+  operation: string,
+) {
+  const rows = yield* queryAll<typeof CmsMediaUsageRefSchema.Encoded>(
+    db,
+    // Match the bare id: stored JSON spacing varies (compact or spaced),
+    // and a UUID never appears in prose by accident.
+    `SELECT slug, title FROM ${table} WHERE hero_media_id = ? OR instr(content_json, ?) > 0 ` +
+      "ORDER BY title COLLATE NOCASE ASC",
+    [id, id],
+    operation,
+  );
+  return yield* Effect.forEach(rows, (row) =>
+    decodeCms(CmsMediaUsageRefSchema, row, "Invalid CMS usage row", operation),
+  );
+});
+
+const mediaUsage = Effect.fn("CmsService.mediaUsage")(function* (
+  db: CmsD1Binding,
+  id: string,
+  operation: string,
+) {
+  const [posts, works] = yield* Effect.all([
+    usageRefs(db, "posts", id, operation),
+    usageRefs(db, "works", id, operation),
+  ]);
+  return { posts, works };
+});
+
+export const getMediaUsage = Effect.fn("CmsService.getMediaUsage")(function* (
+  db: CmsD1Binding,
+  id: string,
+) {
+  yield* requireMediaRow(db, id, "get_media_usage");
+  return yield* mediaUsage(db, id, "get_media_usage");
+});
+
+export type MediaUpload = {
+  readonly name: string;
+  readonly mime: string;
+  readonly bytes: ArrayBuffer;
+  readonly alt: string | null;
+  readonly caption: string | null;
+};
+
+const runStatement = (
+  db: CmsD1Binding,
+  sql: string,
+  params: ReadonlyArray<string | number | null>,
+  operation: string,
+): Effect.Effect<void, CmsError> =>
+  Effect.tryPromise({
+    try: () =>
+      db
+        .prepare(sql)
+        .bind(...params)
+        .run(),
+    catch: (cause) =>
+      new CmsError({
+        message: "CMS write failed",
+        status: HttpStatus.InternalServerError,
+        operation,
+        cause,
+      }),
+  }).pipe(Effect.asVoid);
+
+const findRowBySlug = <T>(
+  db: CmsD1Binding,
+  table: "posts" | "works" | "categories",
+  slug: string,
+  operation: string,
+): Effect.Effect<T | null, CmsError> =>
+  queryFirst<T>(
+    db,
+    table === "categories"
+      ? "SELECT id, slug, title FROM categories WHERE slug = ? LIMIT 1"
+      : `SELECT ${POST_COLUMNS} FROM ${table} p WHERE p.slug = ? LIMIT 1`,
+    [slug],
+    operation,
+  );
+
+/**
+ * The stored post/work row, decoded. The update path needs the real
+ * `createdAt` instant, so it cannot read the raw D1 string.
+ */
+const requireDecodedRow = Effect.fn("CmsService.requireDecodedRow")(function* (
+  db: CmsD1Binding,
+  table: "posts" | "works",
+  slug: string,
+  label: string,
+  operation: string,
+) {
+  const row = yield* findRowBySlug<typeof PostRowSchema.Encoded>(db, table, slug, operation);
+  if (!row) {
+    return yield* new CmsError({
+      message: `${label} not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  return yield* decodeCms(PostRowSchema, row, `Invalid CMS ${label.toLowerCase()} row`, operation);
+});
+
+const readPostById = Effect.fn("CmsService.readPostById")(function* (
+  db: CmsD1Binding,
+  id: string,
+  operation: string,
+) {
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
+    db,
+    `SELECT ${POST_COLUMNS} FROM posts p WHERE p.id = ? LIMIT 1`,
+    [id],
+    operation,
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: "Post not found",
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  const grouped = yield* categoriesForPosts(db, [row.id], operation);
+  return yield* toPost(row, grouped[row.id] ?? []);
+});
+
+const readWorkById = Effect.fn("CmsService.readWorkById")(function* (
+  db: CmsD1Binding,
+  id: string,
+  operation: string,
+) {
+  const row = yield* queryFirst<typeof PostRowSchema.Encoded>(
+    db,
+    `SELECT ${POST_COLUMNS} FROM works p WHERE p.id = ? LIMIT 1`,
+    [id],
+    operation,
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: "Work not found",
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  return yield* toWork(row);
+});
+
+/** Replace a post's category links after verifying every id exists. */
+const replacePostCategories = Effect.fn("CmsService.replacePostCategories")(function* (
+  db: CmsD1Binding,
+  postId: string,
+  categoryIds: ReadonlyArray<string>,
+  operation: string,
+) {
+  yield* runStatement(db, "DELETE FROM post_categories WHERE post_id = ?", [postId], operation);
+  const uniqueIds = [...new Set(categoryIds)];
+  if (uniqueIds.length === 0) return;
+  const placeholders = uniqueIds.map(() => "?").join(",");
+  const known = yield* queryAll<{ readonly id: string }>(
+    db,
+    `SELECT id FROM categories WHERE id IN (${placeholders})`,
+    uniqueIds,
+    operation,
+  );
+  if (known.length !== uniqueIds.length) {
+    return yield* new CmsError({
+      message: "Unknown category id",
+      status: HttpStatus.BadRequest,
+      operation,
+    });
+  }
+  yield* Effect.forEach(uniqueIds, (categoryId) =>
+    runStatement(
+      db,
+      "INSERT INTO post_categories (post_id, category_id) VALUES (?, ?)",
+      [postId, categoryId],
+      operation,
+    ),
+  );
+});
+
+const mediaUrlFor =
+  (adapterUrl: string) =>
+  (mediaId: CmsMediaId | string): string =>
+    `${adapterUrl}/content/media/${mediaId}/file`;
+
+/**
+ * Snapshot a write input as a revision, then prune past the cap. The
+ * snapshot is exactly what create/update accepts, so a restore replays it
+ * through the normal update path (and records its own revision).
+ */
+const recordRevision = Effect.fn("CmsService.recordRevision")(function* (
+  db: CmsD1Binding,
+  entity: CmsRevisionEntity,
+  entityId: string,
+  snapshot: CmsPostInput | CmsWorkInput,
+  actor: string,
+  operation: string,
+) {
+  const now = yield* nowTimestamp;
+  yield* runStatement(
+    db,
+    "INSERT INTO revisions (id, entity_type, entity_id, snapshot_json, actor, created_at) " +
+      "VALUES (?, ?, ?, ?, ?, ?)",
+    [crypto.randomUUID(), entity, entityId, JSON.stringify(snapshot), actor, now.toString()],
+    operation,
+  );
+  yield* runStatement(
+    db,
+    "DELETE FROM revisions WHERE entity_type = ? AND entity_id = ? AND id NOT IN " +
+      "(SELECT id FROM revisions WHERE entity_type = ? AND entity_id = ? " +
+      "ORDER BY created_at DESC, rowid DESC LIMIT ?)",
+    [entity, entityId, entity, entityId, MAX_REVISIONS],
+    operation,
+  );
+});
+
+const decodeJsonSnapshot = <A, I, B>(
+  schema: Schema.Codec<A, I>,
+  json: B,
+  operation: string,
+): Effect.Effect<A, CmsError> =>
+  decodeCms(Schema.fromJsonString(schema), json, "Invalid revision snapshot", operation);
+
+const parseSnapshot = (
+  json: string,
+  entity: CmsRevisionEntity,
+  operation: string,
+): Effect.Effect<CmsRevisionSnapshot, CmsError> =>
+  entity === "post"
+    ? decodeJsonSnapshot(CmsPostInputSchema, json, operation)
+    : decodeJsonSnapshot(CmsWorkInputSchema, json, operation);
+
+const toRevisionMeta = Effect.fn("CmsService.toRevisionMeta")(function* (
+  row: typeof RevisionRowSchema.Encoded,
+  entity: CmsRevisionEntity,
+  operation: string,
+) {
+  const decoded = yield* decodeCms(RevisionRowSchema, row, "Invalid revision row", operation);
+  const snapshot = yield* parseSnapshot(decoded.snapshotJson, entity, operation);
+  return yield* decodeCms(
+    CmsRevisionMetaSchema,
+    {
+      id: decoded.id,
+      createdAt: decoded.createdAt,
+      actor: decoded.actor,
+      title: snapshot.title,
+    },
+    "Invalid revision row",
+    operation,
+  );
+});
+
+const revisionTable = (entity: CmsRevisionEntity): "posts" | "works" =>
+  entity === "post" ? "posts" : "works";
+
+const findRevisionTarget = Effect.fn("CmsService.findRevisionTarget")(function* (
+  db: CmsD1Binding,
+  entity: CmsRevisionEntity,
+  slug: string,
+  operation: string,
+) {
+  const row = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    revisionTable(entity),
+    slug,
+    operation,
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: entity === "post" ? `Post not found: ${slug}` : `Work not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  return row;
+});
+
+export const listRevisions = Effect.fn("CmsService.listRevisions")(function* (
+  db: CmsD1Binding,
+  entity: CmsRevisionEntity,
+  slug: string,
+) {
+  const target = yield* findRevisionTarget(db, entity, slug, "list_revisions");
+  const rows = yield* queryAll<typeof RevisionRowSchema.Encoded>(
+    db,
+    "SELECT id, snapshot_json, actor, created_at FROM revisions " +
+      "WHERE entity_type = ? AND entity_id = ? ORDER BY created_at DESC, rowid DESC",
+    [entity, target.id],
+    "list_revisions",
+  );
+  return yield* Effect.forEach(rows, (row) => toRevisionMeta(row, entity, "list_revisions"));
+});
+
+const findRevisionRow = Effect.fn("CmsService.findRevisionRow")(function* (
+  db: CmsD1Binding,
+  entity: CmsRevisionEntity,
+  entityId: string,
+  revisionId: string,
+  operation: string,
+) {
+  const row = yield* queryFirst<typeof RevisionRowSchema.Encoded>(
+    db,
+    "SELECT id, snapshot_json, actor, created_at FROM revisions " +
+      "WHERE entity_type = ? AND entity_id = ? AND id = ? LIMIT 1",
+    [entity, entityId, revisionId],
+    operation,
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: `Revision not found: ${revisionId}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  return row;
+});
+
+export const getRevision = Effect.fn("CmsService.getRevision")(function* (
+  db: CmsD1Binding,
+  entity: CmsRevisionEntity,
+  slug: string,
+  revisionId: string,
+) {
+  const target = yield* findRevisionTarget(db, entity, slug, "get_revision");
+  const row = yield* findRevisionRow(db, entity, target.id, revisionId, "get_revision");
+  return yield* parseSnapshot(row.snapshot_json, entity, "get_revision");
+});
+
+export const restoreRevision = Effect.fn("CmsService.restoreRevision")(function* (
+  db: CmsD1Binding,
+  entity: CmsRevisionEntity,
+  slug: string,
+  revisionId: string,
+  actor: string,
+  adapterUrl: string,
+) {
+  const target = yield* findRevisionTarget(db, entity, slug, "restore_revision");
+  const row = yield* findRevisionRow(db, entity, target.id, revisionId, "restore_revision");
+  if (entity === "post") {
+    const snapshot = yield* decodeJsonSnapshot(
+      CmsPostInputSchema,
+      row.snapshot_json,
+      "restore_revision",
+    );
+    return yield* updatePost(db, slug, snapshot, actor, adapterUrl);
+  }
+  const snapshot = yield* decodeJsonSnapshot(
+    CmsWorkInputSchema,
+    row.snapshot_json,
+    "restore_revision",
+  );
+  return yield* updateWork(db, slug, snapshot, actor, adapterUrl);
+});
+
+/** A validated row in decoded shape: the row codec owns both directions. */
+type PostRow = typeof PostRowSchema.Type;
+
+const insertDocRow = (
+  db: CmsD1Binding,
+  table: "posts" | "works",
+  row: PostRow,
+  operation: string,
+): Effect.Effect<void, CmsError> => {
+  const encoded = Schema.encodeSync(PostRowSchema)(row);
+  return runStatement(
+    db,
+    `INSERT INTO ${table} (id, slug, title, summary, content_json, html, status, ` +
+      "published_at, hero_media_id, meta_title, meta_description, meta_image, " +
+      "created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    [
+      encoded.id,
+      encoded.slug,
+      encoded.title,
+      encoded.summary,
+      encoded.content_json,
+      encoded.html,
+      encoded.status,
+      encoded.published_at,
+      encoded.hero_media_id,
+      encoded.meta_title,
+      encoded.meta_description,
+      encoded.meta_image,
+      encoded.created_at,
+      encoded.updated_at,
+    ],
+    operation,
+  );
+};
+
+const updateDocRow = (
+  db: CmsD1Binding,
+  table: "posts" | "works",
+  row: PostRow,
+  operation: string,
+): Effect.Effect<void, CmsError> => {
+  const encoded = Schema.encodeSync(PostRowSchema)(row);
+  return runStatement(
+    db,
+    `UPDATE ${table} SET title = ?, summary = ?, content_json = ?, html = ?, status = ?, ` +
+      "published_at = ?, hero_media_id = ?, meta_title = ?, meta_description = ?, " +
+      "meta_image = ?, updated_at = ? WHERE id = ?",
+    [
+      encoded.title,
+      encoded.summary,
+      encoded.content_json,
+      encoded.html,
+      encoded.status,
+      encoded.published_at,
+      encoded.hero_media_id,
+      encoded.meta_title,
+      encoded.meta_description,
+      encoded.meta_image,
+      encoded.updated_at,
+      encoded.id,
+    ],
+    operation,
+  );
+};
+
+/**
+ * Build the stored row in decoded shape. `content` becomes a JSON string and
+ * the timestamps ISO strings through `encodeSync`, so nothing here formats a
+ * timestamp or serialises JSON by hand.
+ */
+const toPostRow = (
+  input: CmsPostInput | CmsWorkInput,
+  html: string,
+  id: string,
+  now: string,
+  createdAt: string,
+): PostRow => ({
+  id,
+  slug: input.slug,
+  title: input.title,
+  summary: input.summary,
+  content: input.content,
+  html,
+  status: input.status,
+  publishedAt: encodeTimestamp(input.publishedAt),
+  heroMediaId: input.heroMediaId,
+  metaTitle: input.meta.title,
+  metaDescription: input.meta.description,
+  metaImage: input.meta.image,
+  createdAt,
+  updatedAt: now,
+});
+
+export const createPost = Effect.fn("CmsService.createPost")(function* (
+  db: CmsD1Binding,
+  input: CmsPostInput,
+  actor: string,
+  adapterUrl: string,
+) {
+  yield* rejectReservedSlug(input.slug, "create_post");
+  const taken = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    "posts",
+    input.slug,
+    "create_post",
+  );
+  if (taken) {
+    return yield* new CmsError({
+      message: `Post slug taken: ${input.slug}`,
+      status: HttpStatus.Conflict,
+      operation: "create_post",
+    });
+  }
+  const id = crypto.randomUUID();
+  const now = yield* nowTimestamp;
+  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  yield* insertDocRow(db, "posts", toPostRow(input, html, id, now, now), "create_post");
+  yield* replacePostCategories(db, id, input.categoryIds, "create_post");
+  yield* recordRevision(db, "post", id, input, actor, "create_post");
+  return yield* readPostById(db, id, "create_post");
+});
+
+export const updatePost = Effect.fn("CmsService.updatePost")(function* (
+  db: CmsD1Binding,
+  slug: string,
+  input: CmsPostInput,
+  actor: string,
+  adapterUrl: string,
+) {
+  yield* rejectReservedSlug(slug, "update_post");
+  if (input.slug !== slug) {
+    return yield* new CmsError({
+      message: "Post slug is immutable",
+      status: HttpStatus.BadRequest,
+      operation: "update_post",
+    });
+  }
+  const existing = yield* requireDecodedRow(db, "posts", slug, "Post", "update_post");
+  const now = yield* nowTimestamp;
+  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  const row = toPostRow(input, html, existing.id, now, existing.createdAt);
+  yield* updateDocRow(db, "posts", row, "update_post");
+  yield* replacePostCategories(db, row.id, input.categoryIds, "update_post");
+  yield* recordRevision(db, "post", row.id, input, actor, "update_post");
+  return yield* readPostById(db, row.id, "update_post");
+});
+
+/** Delete a row by slug, failing the operation with 404 when absent. */
+const deleteRowBySlug = Effect.fn("CmsService.deleteRowBySlug")(function* (
+  db: CmsD1Binding,
+  table: "posts" | "works" | "categories",
+  label: string,
+  slug: string,
+  operation: string,
+) {
+  const existing = yield* findRowBySlug<{ readonly id: string }>(db, table, slug, operation);
+  if (!existing) {
+    return yield* new CmsError({
+      message: `${label} not found: ${slug}`,
+      status: HttpStatus.NotFound,
+      operation,
+    });
+  }
+  yield* runStatement(db, `DELETE FROM ${table} WHERE id = ?`, [existing.id], operation);
+  return { id: existing.id };
+});
+
+export const deletePost = Effect.fn("CmsService.deletePost")(function* (
+  db: CmsD1Binding,
+  slug: string,
+) {
+  return yield* deleteRowBySlug(db, "posts", "Post", slug, "delete_post");
+});
+
+export const createWork = Effect.fn("CmsService.createWork")(function* (
+  db: CmsD1Binding,
+  input: CmsWorkInput,
+  actor: string,
+  adapterUrl: string,
+) {
+  yield* rejectReservedSlug(input.slug, "create_work");
+  const taken = yield* findRowBySlug<typeof PostRowSchema.Encoded>(
+    db,
+    "works",
+    input.slug,
+    "create_work",
+  );
+  if (taken) {
+    return yield* new CmsError({
+      message: `Work slug taken: ${input.slug}`,
+      status: HttpStatus.Conflict,
+      operation: "create_work",
+    });
+  }
+  const id = crypto.randomUUID();
+  const now = yield* nowTimestamp;
+  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  yield* insertDocRow(db, "works", toPostRow(input, html, id, now, now), "create_work");
+  yield* recordRevision(db, "work", id, input, actor, "create_work");
+  return yield* readWorkById(db, id, "create_work");
+});
+
+export const updateWork = Effect.fn("CmsService.updateWork")(function* (
+  db: CmsD1Binding,
+  slug: string,
+  input: CmsWorkInput,
+  actor: string,
+  adapterUrl: string,
+) {
+  yield* rejectReservedSlug(slug, "update_work");
+  if (input.slug !== slug) {
+    return yield* new CmsError({
+      message: "Work slug is immutable",
+      status: HttpStatus.BadRequest,
+      operation: "update_work",
+    });
+  }
+  const existing = yield* requireDecodedRow(db, "works", slug, "Work", "update_work");
+  const now = yield* nowTimestamp;
+  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  const row = toPostRow(input, html, existing.id, now, existing.createdAt);
+  yield* updateDocRow(db, "works", row, "update_work");
+  yield* recordRevision(db, "work", row.id, input, actor, "update_work");
+  return yield* readWorkById(db, row.id, "update_work");
+});
+
+export const deleteWork = Effect.fn("CmsService.deleteWork")(function* (
+  db: CmsD1Binding,
+  slug: string,
+) {
+  return yield* deleteRowBySlug(db, "works", "Work", slug, "delete_work");
+});
+
+export const createCategory = Effect.fn("CmsService.createCategory")(function* (
+  db: CmsD1Binding,
+  input: CmsCategoryInput,
+) {
+  const taken = yield* findRowBySlug<{ readonly id: string }>(
+    db,
+    "categories",
+    input.slug,
+    "create_category",
+  );
+  if (taken) {
+    return yield* new CmsError({
+      message: `Category slug taken: ${input.slug}`,
+      status: HttpStatus.Conflict,
+      operation: "create_category",
+    });
+  }
+  const id = crypto.randomUUID();
+  yield* runStatement(
+    db,
+    "INSERT INTO categories (id, slug, title) VALUES (?, ?, ?)",
+    [id, input.slug, input.title],
+    "create_category",
+  );
+  return { id, slug: input.slug, title: input.title };
+});
+
+export const deleteCategory = Effect.fn("CmsService.deleteCategory")(function* (
+  db: CmsD1Binding,
+  slug: string,
+) {
+  return yield* deleteRowBySlug(db, "categories", "Category", slug, "delete_category");
+});
+
+export const createMedia = Effect.fn("CmsService.createMedia")(function* (
+  db: CmsD1Binding,
+  r2: CmsR2Binding,
+  upload: MediaUpload,
+) {
+  const id = crypto.randomUUID();
+  const now = yield* nowTimestamp;
+  const key = `media/${id}/${upload.name}`;
+  yield* Effect.tryPromise({
+    try: () => r2.put(key, upload.bytes, { httpMetadata: { contentType: upload.mime } }),
+    catch: (cause) =>
+      new CmsError({
+        message: "Media upload failed",
+        status: HttpStatus.InternalServerError,
+        operation: "create_media",
+        cause,
+      }),
+  });
+  yield* runStatement(
+    db,
+    "INSERT INTO media (id, key, mime, width, height, alt, caption, variants_json, " +
+      "created_at, updated_at) VALUES (?, ?, ?, NULL, NULL, ?, ?, '[]', ?, ?)",
+    [id, key, upload.mime, upload.alt, upload.caption, now.toString(), now.toString()],
+    "create_media",
+  );
+  const row = yield* queryFirst<typeof MediaRowSchema.Encoded>(
+    db,
+    `SELECT ${MEDIA_COLUMNS} FROM media WHERE id = ? LIMIT 1`,
+    [id],
+    "create_media",
+  );
+  if (!row) {
+    return yield* new CmsError({
+      message: "Media not found after upload",
+      status: HttpStatus.InternalServerError,
+      operation: "create_media",
+    });
+  }
+  return yield* toMedia(row);
+});
+
+export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
+  db: CmsD1Binding,
+  r2: CmsR2Binding,
+  id: string,
+) {
+  const row = yield* requireMediaRow(db, id, "delete_media");
+  // Never orphan published content: the editor checks usage first, and
+  // the service enforces it so direct API calls cannot break posts/works.
+  const usage = yield* mediaUsage(db, id, "delete_media");
+  if (usage.posts.length > 0 || usage.works.length > 0) {
+    return yield* new CmsError({
+      message: `Media in use by ${usage.posts.length} posts and ${usage.works.length} works`,
+      status: HttpStatus.Conflict,
+      operation: "delete_media",
+    });
+  }
+  // D1 first: a failed R2 delete then leaves orphaned bytes (cheap), never
+  // a published post pointing at a missing row.
+  yield* runStatement(db, "DELETE FROM media WHERE id = ?", [id], "delete_media");
+  yield* Effect.tryPromise({
+    try: () => r2.delete(row.key),
+    catch: (cause) =>
+      new CmsError({
+        message: "Media delete failed",
+        status: HttpStatus.InternalServerError,
+        operation: "delete_media",
+        cause,
+      }),
+  });
+  return { id };
+});
+
+/** Load a media object's bytes for public file serving. */
+export const getMediaFile = Effect.fn("CmsService.getMediaFile")(function* (
+  db: CmsD1Binding,
+  r2: CmsR2Binding,
+  id: string,
+) {
+  const row = yield* requireMediaRow(db, id, "get_media_file");
+  const object = yield* Effect.tryPromise({
+    try: () => r2.get(row.key),
+    catch: (cause) =>
+      new CmsError({
+        message: "Media read failed",
+        status: HttpStatus.InternalServerError,
+        operation: "get_media_file",
+        cause,
+      }),
+  });
+  if (!object) {
+    return yield* new CmsError({
+      message: `Media file missing: ${id}`,
+      status: HttpStatus.NotFound,
+      operation: "get_media_file",
+    });
+  }
+  return { mime: row.mime, object };
+});

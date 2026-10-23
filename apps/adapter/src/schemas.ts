@@ -2,8 +2,8 @@ import { Schema } from "effect";
 import { problemDetailsSchema as sharedProblemDetailsSchema } from "@tom/schemas/error";
 
 export const PaginationQuerySchema = Schema.Struct({
-  page: Schema.optional(Schema.NumberFromString),
-  per: Schema.optional(Schema.NumberFromString),
+  page: Schema.optional(Schema.FiniteFromString),
+  per: Schema.optional(Schema.FiniteFromString),
   sort: Schema.optional(Schema.String),
   direction: Schema.optional(Schema.Union([Schema.Literal("asc"), Schema.Literal("desc")])),
 });
@@ -22,8 +22,8 @@ export const SearchQuerySchema = Schema.Struct({
       Schema.Literal("users"),
     ]),
   ),
-  page: Schema.optional(Schema.NumberFromString),
-  per: Schema.optional(Schema.NumberFromString),
+  page: Schema.optional(Schema.FiniteFromString),
+  per: Schema.optional(Schema.FiniteFromString),
   sort: Schema.optional(Schema.String),
   direction: Schema.optional(Schema.Union([Schema.Literal("asc"), Schema.Literal("desc")])),
 });
@@ -55,10 +55,12 @@ export const guestbookUserCookieSchema = Schema.toStandardSchemaV1(
   }),
 );
 
-export const handleBodySchema = Schema.toStandardSchemaV1(Schema.Struct({ handle: Schema.String }));
+export const handleBodySchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ handle: Schema.NonEmptyString }),
+);
 
 export const messageBodySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ message: Schema.String }),
+  Schema.Struct({ message: Schema.NonEmptyString }),
 );
 
 export const callbackQuerySchema = Schema.toStandardSchemaV1(
@@ -72,5 +74,25 @@ export const authUrlResponseSchema = Schema.toStandardSchemaV1(
 export const successResponseSchema = Schema.toStandardSchemaV1(
   Schema.Struct({ success: Schema.Boolean }),
 );
+
+/**
+ * One guestbook entry on the wire. `created_at`/`updated_at` are ISO strings,
+ * not the `Date` objects Postgres returns: Kysely types the column as
+ * `Date | string`, and that union leaked all the way into the web client
+ * through Eden, where the value is a string at runtime. Declaring the response
+ * keeps the type honest.
+ */
+export const GuestbookEntrySchema = Schema.Struct({
+  id: Schema.Finite,
+  fediverse_username: Schema.String,
+  fediverse_instance: Schema.String,
+  display_name: Schema.NullOr(Schema.String),
+  avatar_url: Schema.NullOr(Schema.String),
+  message: Schema.String,
+  created_at: Schema.String,
+  updated_at: Schema.String,
+});
+
+export const guestbookEntriesSchema = Schema.toStandardSchemaV1(Schema.Array(GuestbookEntrySchema));
 
 export const problemDetailsSchema = Schema.toStandardSchemaV1(sharedProblemDetailsSchema);

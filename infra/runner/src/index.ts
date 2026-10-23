@@ -4,8 +4,8 @@ import { FetchHttpClient, Headers, HttpClient, HttpClientResponse } from "effect
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { GitHubApiError, RunnerError } from "@tom/types/errors";
-import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/services/logging";
-import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/services/config";
+import { logLevelFromEnv, otelConfigFromResolvedEnv } from "@tom/utils/logging";
+import { readCloudflareEnv, type CloudflareEnv } from "@tom/utils/config";
 import {
   attachRequestContext,
   logContextFromRequest,
@@ -13,7 +13,7 @@ import {
   sendErrorAlert,
   toErrorMessage,
   toProblemResponse,
-} from "@tom/utils/services/worker";
+} from "@tom/utils/worker";
 
 // The container-backed DO class this Worker hosts. The stack binds it via
 // `Cloudflare.Container("Sandbox", …)`; className defaults to the binding

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index";
 import { requestWithEnv, testEnv } from "../test/helpers";
 import { OgTemplates } from "@tom/ui/OgImage";
-import { getTemplate } from "../services/og";
+import { getTemplate } from "../og/operations";
 
 const fetchMock = vi.fn(
   async (_input: string): Promise<Response> => new Response(new ArrayBuffer(8)),

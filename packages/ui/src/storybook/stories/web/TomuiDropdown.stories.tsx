@@ -14,7 +14,7 @@ const meta = preview.meta({
 export const Open = meta.story({
   render: () => (
     <DropdownMenu defaultOpen>
-      <DropdownMenu.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <DropdownMenu.Trigger style={buttonVariants({ variant: "secondary" })}>
         Options
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
@@ -29,7 +29,7 @@ export const Open = meta.story({
 export const WithSections = meta.story({
   render: () => (
     <DropdownMenu defaultOpen>
-      <DropdownMenu.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <DropdownMenu.Trigger style={buttonVariants({ variant: "secondary" })}>
         Account
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
@@ -49,7 +49,7 @@ export const WithSections = meta.story({
 export const Danger = meta.story({
   render: () => (
     <DropdownMenu defaultOpen>
-      <DropdownMenu.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <DropdownMenu.Trigger style={buttonVariants({ variant: "secondary" })}>
         Manage
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
@@ -63,7 +63,7 @@ export const Danger = meta.story({
 export const WithCheckbox = meta.story({
   render: () => (
     <DropdownMenu defaultOpen>
-      <DropdownMenu.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <DropdownMenu.Trigger style={buttonVariants({ variant: "secondary" })}>
         View
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
@@ -77,7 +77,7 @@ export const WithCheckbox = meta.story({
 export const WithRadio = meta.story({
   render: () => (
     <DropdownMenu defaultOpen>
-      <DropdownMenu.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <DropdownMenu.Trigger style={buttonVariants({ variant: "secondary" })}>
         Sort by
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>
@@ -94,7 +94,7 @@ export const WithRadio = meta.story({
 export const WithTrigger = meta.story({
   render: () => (
     <DropdownMenu>
-      <DropdownMenu.Trigger class={buttonVariants({ variant: "secondary" })}>
+      <DropdownMenu.Trigger style={buttonVariants({ variant: "secondary" })}>
         Open menu
       </DropdownMenu.Trigger>
       <DropdownMenu.Content>

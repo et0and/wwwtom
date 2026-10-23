@@ -1,6 +1,6 @@
 import RSS from "rss";
 import { Effect } from "effect";
-import { callAdapter, adapterRequest } from "~/libs/adapter";
+import { callAdapter, adapterRequest } from "~/data/adapter";
 import { HttpStatus } from "@tom/constants/http";
 
 /**
@@ -10,7 +10,7 @@ import { HttpStatus } from "@tom/constants/http";
 
 export const handleFeed = () =>
   Effect.runPromise(
-    adapterRequest(() => callAdapter().content.feed.get({ query: { limit: 20 } })).pipe(
+    adapterRequest(() => callAdapter().content.arena.feed.get({ query: { limit: 20 } })).pipe(
       Effect.map(({ docs }) => {
         const feed = new RSS({
           title: "Tom Hackshaw",
@@ -27,8 +27,8 @@ export const handleFeed = () =>
             title: post.title,
             description: post.summary,
             url: postUrl,
-            guid: post.id,
-            date: new Date(post.publishedAt ?? ""),
+            guid: String(post.id),
+            date: new Date(post.publishedAt),
             author: "Tom Hackshaw",
             custom_elements: [{ "content:encoded": post.content }],
           });
@@ -42,12 +42,14 @@ export const handleFeed = () =>
         });
       }),
       Effect.catch((error) =>
-        Effect.succeed(
-          new Response("Error generating RSS feed", {
-            status: HttpStatus.InternalServerError,
-            headers: { "Content-Type": "text/plain" },
-            statusText: error.message,
-          }),
+        Effect.andThen(
+          Effect.logError("Failed to generate RSS feed", error),
+          Effect.succeed(
+            new Response("Error generating RSS feed", {
+              status: HttpStatus.InternalServerError,
+              headers: { "Content-Type": "text/plain" },
+            }),
+          ),
         ),
       ),
     ),
@@ -57,9 +59,9 @@ export const handleSitemap = () =>
   Effect.runPromise(
     Effect.all([
       adapterRequest(() =>
-        callAdapter().content.posts.summary.get({ query: { page: 1, pageSize: 500 } }),
+        callAdapter().content.arena.posts.get({ query: { page: 1, pageSize: 500 } }),
       ),
-      adapterRequest(() => callAdapter().content.works.summary.get()),
+      adapterRequest(() => callAdapter().content.arena.works.get()),
     ]).pipe(
       Effect.map(([postsResult, worksResult]) => {
         const posts = postsResult.docs;
@@ -117,11 +119,17 @@ ${works
         });
       }),
       Effect.catch((error) =>
-        Effect.succeed(
-          new Response(`<?xml version="1.0" encoding="UTF-8"?><error>${error.message}</error>`, {
-            status: HttpStatus.InternalServerError,
-            headers: { "Content-Type": "application/xml" },
-          }),
+        Effect.andThen(
+          Effect.logError("Failed to generate sitemap", error),
+          Effect.succeed(
+            new Response(
+              `<?xml version="1.0" encoding="UTF-8"?><error>Error generating sitemap</error>`,
+              {
+                status: HttpStatus.InternalServerError,
+                headers: { "Content-Type": "application/xml" },
+              },
+            ),
+          ),
         ),
       ),
     ),

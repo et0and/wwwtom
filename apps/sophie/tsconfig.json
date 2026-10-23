@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
+    "rewriteRelativeImportExtensions": true,
     "strict": true,
     "exactOptionalPropertyTypes": true,
     "noImplicitReturns": true,

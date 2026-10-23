@@ -6,31 +6,56 @@ Improve existing code; avoid new abstractions.
 
 ## Shape
 
-- `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Solid rules: `apps/web/AGENTS.md`.
+- `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`). Solid rules: `apps/web/AGENTS.md`.
 - `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
-- `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS: Tom Camus + Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Same Solid rules.
+- `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, checkout, constants, email.
-- `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, editor, sophie, git.
+- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
+- `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie, git. `preview` owns the consolidated PR comment and deploys last, after every host it links is live. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
 - one function unless composable/reusable
+- reach for core Effect APIs (`Crypto`, `Random`, `Option`, `Result`, `Schema.is`,
+  `Match`) before hand-rolling the same thing
+- single-use `toX` converters/wrappers are almost always slop — inline them; keep
+  one only when it enforces a contract (e.g. a wire-schema return type)
 - no unnecessary destructuring; no `else` unless needed; no `try`/`catch` — use Effect
 - no `any`; no `let` — prefer `const`; descriptive names
 - no Node-only APIs — Workers runtime; prefer web-standard/Worker-safe
 - improve existing files, don't rewrite patterns
+
+## Code layout
+
+- one file, one `Context.Service`+`Layer`
+- one file, one entrypoint+`Effect.provide`
+- one file, one API route — a domain `index.ts` only composes route plugins
+- route files are named `verb + full path`, params dropped: `get-content-feed.ts`,
+  `list-content-posts.ts`, `get-arena-channel.ts` — not `feed.ts` or `content-posts.ts`
+- `src/{domain}` not `src/{mechanism}` — e.g. `src/cms/list-posts.ts`, not
+  `src/routes/cms.ts`. No `services/`, `routes/`, `integrations/` or `config/`
+  dirs; shared per-domain runtime lives in `<domain>/shared.ts`
+- domains by area: backend `apps/api|adapter|simulator/src/{cms,og,auth,arena,guestbook,health,queue,github,image}`;
+  web/sophie/editor `src/{content,chrome,data,posts,media,garden,editor,brand,design}`
+- exceptions: framework-mandated dirs (`apps/web|sophie/src/routes`, `app.tsx`,
+  `middleware.ts`, entry files) and `packages/ui/src/components/*`
 
 ## Commands (root)
 
 - `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
-- `pnpm test:update` — snapshot update (web, utils)
-- `pnpm deploy` = shared → api → adapter → web → editor → sophie (Alchemy; `ALCHEMY_STAGE` required)
-- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:editor|deploy:sophie`
+- `pnpm workflows` — regenerate `.github/workflows/*.yml` + `.github/actions/*/action.yml` from `@tom/workflows` definitions (do not hand-edit generated files)
+- `pnpm test:update` — snapshot update (web, utils, icons, workflows)
+- `pnpm test:e2e` — Playwright fixture suite. Self-contained: the config's `webServer`
+  boots simulator, adapter, web and editor, so no manual `pnpm dev` first
+- `pnpm test:all` = `test` then `test:e2e`. A pre-push hook runs `test` always and
+  `test:e2e` when `apps/{e2e,simulator,adapter,web,api}` or
+  `packages/{schemas,utils,arena,ui}` changed — the surfaces the fixture stack serves
+- `pnpm deploy` = shared → api → adapter → web → sophie (Alchemy; `ALCHEMY_STAGE` required)
+- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:sophie`
 - `pnpm destroy` — destroy current Alchemy stage
 
 ## App scripts
@@ -42,7 +67,7 @@ Improve existing code; avoid new abstractions.
 ## Single tests
 
 - root filter: `pnpm test -- Nav.test.tsx`
-- web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/components/__tests__/Nav.test.tsx`)
+- web: `cd apps/web && npx vitest run Nav.test.tsx` (or `src/chrome/__tests__/Nav.test.tsx`)
 - utils: `cd packages/utils && pnpm vitest run __tests__/telegram.test.ts`
 
 ## Tests
@@ -60,22 +85,27 @@ Improve existing code; avoid new abstractions.
 ## TypeScript
 
 - strict; `exactOptionalPropertyTypes`, `noImplicitReturns`, `noFallthroughCasesInSwitch`, `noUncheckedIndexedAccess`; bundler resolution
-- Effect language service plugin (root `prepare: effect-language-service patch`)
+- Effect language service plugin (TS 7 via `@effect/tsgo`; root `prepare: effect-tsgo patch --typescript --no-oxlint`)
 - parse unknown input at boundaries; keep internal types trusted
 - NEVER `Record<string, unknown|any>` (oxlint `typescript/no-restricted-types`) — model with Effect Schema in `@tom/schemas`; fully-typed records like `Record<string, string>` fine
 - don't hand-edit generated `**/worker-configuration.d.ts` / `**/cloudflare-env.d.ts` (oxlint-ignored)
 
 ## Format / imports
 
-- oxfmt + oxlint; tabs (width 2), 80 cols, double quotes, semicolons, trailing commas
+- oxfmt + oxlint; 2-space indent, 80 cols, double quotes, semicolons, trailing commas
 - external imports first, then internal; `@tom/*` for shared; `~/*` alias in web; tidy import blocks
 
 ## Naming / data flow
 
 - names read like English; descriptive booleans (`isEnabled`, `hasAccess`); no multi-behavior flags
+- no deprecation paths: never keep a "Deprecated, use X instead" variant or prop
+  alongside its replacement. Update every caller in the same change and delete
+  the old one. Zero callers means delete it outright
 - explicit return types at boundaries; make invalid states hard to represent
 
 ## Effect
+
+Pinned to `4.0.0-rc.116` via the `effect` catalog entry. **Do not move this to 4.0.0 final yet**: Alchemy 2.0.0-beta.79 imports `effect/unstable/process*`, which final removed, so `pnpm deploy` breaks at module load. Its peer range claims `>=4.0.0`, so the mismatch is invisible to `pnpm peers check` and to typecheck — only a runtime import or a deploy reveals it.
 
 - `Effect.gen` | `Effect.succeed` | `Effect.fail` | `Effect.try` / `Effect.tryPromise`
 - `Effect.catch` for recovery — `catchAll` does not exist in Effect 4
@@ -83,7 +113,7 @@ Improve existing code; avoid new abstractions.
 
 ## Logging (Effect apps)
 
-Standard lives in `@tom/utils/services/logging` (`withLogging`/`LogContext`); worker entries attach context in `onRequest`.
+Standard lives in `@tom/utils/logging` (`withLogging`/`LogContext`); worker entries attach context in `onRequest`.
 
 - log via `Effect.log*`; never `console.*` in app code
 - every effect run goes through `runEffect`/`runAdapter` with a `LogContext` from `logContextFromRequest(request, "<service>")` — annotations `requestId`, `sessionId` (guestbook token, else visitor `tom_session` cookie), `userId` (signed-in guestbook handle)
@@ -125,7 +155,7 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web → editor → sophie → git; `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → api → adapter → web → sophie → git (then preview on a PR); `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed

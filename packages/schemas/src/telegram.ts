@@ -15,7 +15,7 @@ export type AlertLink = Schema.Schema.Type<typeof AlertLinkSchema>;
 const ErrorAlertDetailsSchema = Schema.Struct({
   service: Schema.optional(Schema.String),
   stage: Schema.optional(Schema.String),
-  status: Schema.optional(Schema.Number),
+  status: Schema.optional(Schema.Finite),
   method: Schema.optional(Schema.String),
   path: Schema.optional(Schema.String),
   requestId: Schema.optional(Schema.String),

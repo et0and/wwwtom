@@ -1,12 +1,16 @@
 import * as Cloudflare from "alchemy/Cloudflare";
-import * as GitHub from "alchemy/GitHub";
 import { ALCHEMY_DEV } from "alchemy";
-import { Effect, Layer } from "effect";
+import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { stageHost } from "../shared.run.ts";
-import { previewComment } from "../utils/github/preview-comment.ts";
 
+/**
+ * Retired: Tom's content now lives in are.na and the site reads it directly,
+ * so cms.tom.so is no longer deployed. This stack stays only so
+ * `pnpm destroy:editor` can tear the worker and domain down; delete the file
+ * once that has run. The editor app itself still serves Sophie.
+ */
 const rootDir = `${import.meta.dirname}/../../apps/editor`;
 
 export const editor = Effect.gen(function* () {
@@ -15,7 +19,7 @@ export const editor = Effect.gen(function* () {
   // PR preview editors authenticate through the dev adapter: OAuth
   // redirect URIs are exact-match at GitHub, so per-PR hosts can never be
   // registered. The dev API trusts each PR's editor origin (see
-  // previewEditorOrigins in apps/api/src/services/auth.ts).
+  // previewEditorOrigins in apps/api/src/auth/operations.ts).
   const adapterHost = stage.startsWith("pr-")
     ? stageHost("dev", "adapter")
     : stageHost(stage, "adapter");
@@ -41,12 +45,11 @@ export const editor = Effect.gen(function* () {
 export default Stack(
   "wwwtom-editor",
   {
-    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()) as never,
+    providers: Cloudflare.providers() as never,
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {
     const app = yield* editor;
-    yield* previewComment({ name: "Tom CMS", url: app.url });
 
     return {
       url: app.url,

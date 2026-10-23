@@ -1,6 +1,7 @@
-@import "tailwindcss";
 @import "@tom/ui/tomui.css";
 @import "@tom/ui/tomui/theme-tomui.css";
+
+@stylex;
 
 @source "../../../packages/ui/src/**/*.tsx";
 
@@ -28,119 +29,248 @@
 
 @layer base {
   body {
-    @apply bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100;
+    background-color: #fff;
+    color: oklch(24% 0 0);
     font-family: "Quattrocento", Georgia, "Times New Roman", serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    body {
+      background-color: oklch(15% 0 0);
+      color: oklch(96.5% 0 0);
+    }
   }
 }
 
 @layer components {
   .sophie-shell {
-    @apply mx-auto flex min-h-screen max-w-2xl flex-col px-4;
+    margin-inline: auto;
+    display: flex;
+    min-height: 100vh;
+    max-width: 42rem;
+    flex-direction: column;
+    padding-inline: calc(0.25rem * 4);
   }
 
   .sophie-main {
-    @apply flex-1 pb-16;
+    flex: 1;
+    padding-bottom: calc(0.25rem * 16);
   }
 
   .sophie-footer {
-    @apply py-6 text-sm text-neutral-500 dark:text-neutral-400;
+    padding-block: calc(0.25rem * 6);
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: oklch(32% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-footer {
+      color: oklch(89% 0 0);
+    }
   }
 
   .sophie-nav {
-    @apply flex items-baseline gap-4 py-6 text-sm;
+    display: flex;
+    align-items: baseline;
+    gap: calc(0.25rem * 4);
+    padding-block: calc(0.25rem * 6);
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
   }
 
   .sophie-nav a {
-    @apply cursor-pointer hover:underline;
+    cursor: pointer;
+  }
+
+  .sophie-nav a:hover {
+    text-decoration-line: underline;
   }
 
   .sophie-wordmark {
-    @apply text-xl font-semibold tracking-tight;
+    font-size: 20px;
+    line-height: calc(1.75 / 1.25);
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
   .sophie-about {
-    @apply ml-auto;
+    margin-left: auto;
   }
 
   .sophie-title {
-    @apply pb-2 text-3xl font-semibold tracking-tight;
+    padding-bottom: calc(0.25rem * 2);
+    font-size: 30px;
+    line-height: calc(2.25 / 1.875);
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 
   .sophie-crumbs {
-    @apply pb-4;
+    padding-bottom: calc(0.25rem * 4);
   }
 
   .sophie-post {
-    @apply block cursor-pointer py-6 no-underline hover:underline;
+    display: block;
+    cursor: pointer;
+    padding-block: calc(0.25rem * 6);
+    text-decoration-line: none;
+  }
+
+  .sophie-post:hover {
+    text-decoration-line: underline;
   }
 
   .sophie-post h2 {
-    @apply text-xl font-bold tracking-tight;
+    font-size: 20px;
+    line-height: calc(1.75 / 1.25);
+    font-weight: 700;
+    letter-spacing: -0.025em;
   }
 
   .sophie-meta {
-    @apply text-sm text-neutral-500 dark:text-neutral-400;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: oklch(32% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-meta {
+      color: oklch(89% 0 0);
+    }
   }
 
   .sophie-filter {
-    @apply cursor-pointer text-sm hover:underline;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+  }
+
+  .sophie-filter:hover {
+    text-decoration-line: underline;
   }
 
   /* Post HTML mirrors the editor preview scale, so posts read as authored. */
   .sophie-body {
-    @apply grid gap-4 leading-relaxed;
+    display: grid;
+    gap: calc(0.25rem * 4);
+    line-height: 1.625;
   }
 
   .sophie-body p {
-    @apply tracking-tight;
+    letter-spacing: -0.025em;
   }
 
   .sophie-body h1 {
-    @apply pb-2 text-3xl font-medium tracking-tight;
+    padding-bottom: calc(0.25rem * 2);
+    font-size: 30px;
+    line-height: calc(2.25 / 1.875);
+    font-weight: 500;
+    letter-spacing: -0.025em;
   }
 
   .sophie-body h2 {
-    @apply pt-4 pb-2 text-2xl tracking-tight;
+    padding-top: calc(0.25rem * 4);
+    padding-bottom: calc(0.25rem * 2);
+    font-size: 24px;
+    line-height: calc(2 / 1.5);
+    letter-spacing: -0.025em;
   }
 
   .sophie-body h3 {
-    @apply pt-2 pb-1 text-xl tracking-tight;
+    padding-top: calc(0.25rem * 2);
+    padding-bottom: 0.25rem;
+    font-size: 20px;
+    line-height: calc(1.75 / 1.25);
+    letter-spacing: -0.025em;
   }
 
   .sophie-body h4 {
-    @apply pt-2 pb-1 text-lg tracking-tight;
+    padding-top: calc(0.25rem * 2);
+    padding-bottom: 0.25rem;
+    font-size: 16px;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
   }
 
   .sophie-body a {
-    @apply underline;
+    text-decoration-line: underline;
   }
 
   .sophie-body hr {
-    @apply my-6 border-neutral-300 dark:border-neutral-700;
+    margin-block: calc(0.25rem * 6);
+    border-color: oklch(89% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body hr {
+      border-color: oklch(32% 0 0);
+    }
   }
 
   .sophie-body blockquote {
-    @apply my-8 border-l-2 border-neutral-300 pl-5 text-base leading-normal tracking-tight dark:border-neutral-700;
+    margin-block: calc(0.25rem * 8);
+    border-left-width: 2px;
+    border-color: oklch(89% 0 0);
+    padding-left: calc(0.25rem * 5);
+    font-size: 14px;
+    line-height: 1.5;
+    letter-spacing: -0.025em;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body blockquote {
+      border-color: oklch(32% 0 0);
+    }
   }
 
   .sophie-body figure {
-    @apply my-4;
+    margin-block: calc(0.25rem * 4);
   }
 
   .sophie-body img {
-    @apply rounded-md;
+    border-radius: 0.375rem;
   }
 
   .sophie-body figcaption {
-    @apply mt-2 text-center text-sm text-neutral-500 dark:text-neutral-400;
+    margin-top: calc(0.25rem * 2);
+    text-align: center;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: oklch(32% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body figcaption {
+      color: oklch(89% 0 0);
+    }
   }
 
   .sophie-body .banner {
-    @apply my-2 flex w-full items-baseline gap-2 border-b border-neutral-300 pb-2 dark:border-neutral-700;
+    margin-block: calc(0.25rem * 2);
+    display: flex;
+    width: 100%;
+    align-items: baseline;
+    gap: calc(0.25rem * 2);
+    border-bottom-width: 1px;
+    border-color: oklch(89% 0 0);
+    padding-bottom: calc(0.25rem * 2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body .banner {
+      border-color: oklch(32% 0 0);
+    }
   }
 
   .sophie-body .banner-title {
-    @apply shrink-0 px-2 py-1 text-sm font-semibold tracking-tight;
+    flex-shrink: 0;
+    padding-inline: calc(0.25rem * 2);
+    padding-block: 0.25rem;
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    font-weight: 600;
+    letter-spacing: -0.025em;
     background-color: rgb(230, 216, 226);
   }
 
@@ -151,11 +281,39 @@
   }
 
   .sophie-body [data-arena] {
-    @apply my-3 rounded-md border border-dashed border-neutral-400 p-3 text-sm text-neutral-500 dark:border-neutral-600 dark:text-neutral-400;
+    margin-block: calc(0.25rem * 3);
+    border-radius: 0.375rem;
+    border-width: 1px;
+    border-style: dashed;
+    border-color: oklch(89% 0 0);
+    padding: calc(0.25rem * 3);
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: oklch(32% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body [data-arena] {
+      border-color: oklch(32% 0 0);
+      color: oklch(89% 0 0);
+    }
   }
 
   .sophie-body pre {
-    @apply my-3 overflow-x-auto rounded-md bg-neutral-900 p-3 text-sm text-neutral-100 dark:bg-black;
+    margin-block: calc(0.25rem * 3);
+    overflow-x: auto;
+    border-radius: 0.375rem;
+    background-color: oklch(24% 0 0);
+    padding: calc(0.25rem * 3);
+    font-size: 13px;
+    line-height: calc(1 / 0.85);
+    color: oklch(96.5% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body pre {
+      background-color: #000;
+    }
   }
 
   .sophie-body pre code {
@@ -163,11 +321,31 @@
   }
 
   .sophie-body .code-block {
-    @apply relative my-6;
+    position: relative;
+    margin-block: calc(0.25rem * 6);
   }
 
   .sophie-body .code-filename {
-    @apply rounded-t-lg border border-b-0 border-neutral-200 bg-neutral-100 px-4 py-2 text-xs font-medium text-neutral-500 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400;
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+    border-width: 1px;
+    border-bottom-width: 0;
+    border-color: oklch(89% 0 0);
+    background-color: oklch(96.5% 0 0);
+    padding-inline: calc(0.25rem * 4);
+    padding-block: calc(0.25rem * 2);
+    font-size: 12px;
+    line-height: calc(1 / 0.75);
+    font-weight: 500;
+    color: oklch(32% 0 0);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .sophie-body .code-filename {
+      border-color: oklch(32% 0 0);
+      background-color: oklch(24% 0 0);
+      color: oklch(89% 0 0);
+    }
   }
 }
 

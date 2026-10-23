@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import { AppConfig } from "@tom/utils/services/config";
+import { AppConfig } from "@tom/utils/config";
 import { ArenaClient, type ArenaApi } from "./client";
 
 export interface ArenaServiceContract {
@@ -18,15 +18,10 @@ export class ArenaService extends Context.Service<ArenaService, ArenaServiceCont
     Effect.gen(function* () {
       const config = yield* AppConfig;
       const token = config.arenaToken ? Redacted.value(config.arenaToken) : null;
+      const baseUrl = config.arenaBaseUrl ?? "https://api.are.na";
 
-      const client = new ArenaClient({
-        token,
-        baseUrl: config.arenaBaseUrl ?? "https://api.are.na",
-      });
-      const publicClient = new ArenaClient({
-        token: null,
-        baseUrl: config.arenaBaseUrl ?? "https://api.are.na",
-      });
+      const client = new ArenaClient({ token, baseUrl });
+      const publicClient = new ArenaClient({ token: null, baseUrl });
 
       return { client, publicClient };
     }),

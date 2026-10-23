@@ -4,7 +4,7 @@ One config (`playwright.config.ts`) with two projects, plus the staging config:
 
 - **Fixture project** (`tests/`, minus `editor.spec.ts`): every page on tom.so
   against a fully local stack whose services serve **fixture stores** instead
-  of real upstreams (Polar, Are.na, the CMS API, D1, the internal API). Runs
+  of real upstreams (Are.na, the CMS API, D1, the internal API). Runs
   on every PR against `dev` (merge requirement) and nightly. Tests assert
   user-visible behaviour only — never wire formats, request shapes or
   headers — so they stay service-agnostic and break only when the site
@@ -34,8 +34,6 @@ web (vite dev, :3000) ── SSR forward ─┐   browser calls (guestbook) carr
 adapter proxies upstreams            │
    │  cms      → http://127.0.0.1:8789/posts, /works, /categories (API URL swap)
    │  arena    → http://127.0.0.1:8789/v3/*      (ArenaService URL swap)
-   │  polar    → http://127.0.0.1:8789/v1/*      (polarBaseUrl URL swap)
-   │  api      → http://127.0.0.1:8789/*         (callApi URL swap: /checkout, /portal)
    │  guestbook→ http://127.0.0.1:8789/guestbook/entries (D1 bypass branch)
    ▼
 simulator (:8789) — Elysia, fixture stores only
@@ -49,8 +47,8 @@ simulator (:8789) — Elysia, fixture stores only
   worker also has a `SIMULATOR_URL` env var. Production never sets
   `SIMULATOR_URL`, so the header alone cannot redirect real traffic — the
   switch is opt-in per environment, not per visitor.
-- `simulatorEnv(resolved, request)` rewrites `ARENA_API_URL`, `POLAR_API_URL`
-  and `API_URL` to the simulator base. The guestbook entries
+- `simulatorEnv(resolved, request)` rewrites `ARENA_API_URL` and `API_URL` to
+  the simulator base. The guestbook entries
   route has a small branch that fetches the simulator instead of D1 (the
   simulator mirrors `DatabaseService.getGuestbookEntries`'s
   `{ results, page, page_size, total_count }` shape).
@@ -60,7 +58,7 @@ simulator (:8789) — Elysia, fixture stores only
   context. Adapter CORS allows the header for the browser calls.
 
 Because the swap happens at the adapter's _service-boundary env_, no
-integration code knows about the simulator — cms/arena/polar still speak
+integration code knows about the simulator — cms/arena still speak
 their normal client contract, just against the fixture host.
 
 ## Fixture stores (single source of truth)
@@ -71,21 +69,22 @@ their normal client contract, just against the fixture host.
 asserting on exactly what the page rendered, which keeps assertions honest and
 diffs small when copy changes.
 
-| Store                    | Serves                                   | Drives                                            |
-| ------------------------ | ---------------------------------------- | ------------------------------------------------- |
-| `polar-products.json`    | `/v1/*` (products, customers, checkouts) | `/products`, `/purchase`                          |
-| `arena.json`             | `/v3/*` (channels, blocks, users)        | `/worktable` (channel `tom-s-worktable`)          |
-| `cms-posts.json`         | `/posts` (CMS list shape)                | `/posts`, pagination, `/feed.xml`, `/sitemap.xml` |
-| `cms-works.json`         | `/works`                                 | `/work`                                           |
-| `guestbook-entries.json` | `/guestbook/entries`                     | `/guestbook`                                      |
+| Store                    | Serves                                   | Drives                                     |
+| ------------------------ | ---------------------------------------- | ------------------------------------------ |
+| `arena.json`             | `/v3/*` (channels, blocks, users)        | `/worktable` (channel `tom-s-worktable`)   |
+| `arena-content.json`     | are.na master channels for posts + works | `/posts`, `/work`, pagination, `/feed.xml` |
+| `cms-posts.json`         | `/posts` (CMS list shape)                | the editor suite (Sophie's D1 CMS)         |
+| `cms-works.json`         | `/works`                                 | the editor suite (Sophie's D1 CMS)         |
+| `guestbook-entries.json` | `/guestbook/entries`                     | `/guestbook`                               |
 
 Runtime-mutated in-memory stores live in the simulator plugins
-(`customers` in `polar.ts`, `entries` in `guestbook.ts`) so write flows (e.g.
+(`entries` in `guestbook.ts`) so write flows (e.g.
 a future sign-in) behave like a real database within a run.
 
 To add a fixture store: drop the JSON in `apps/simulator/fixtures/`, add an
-Elysia plugin that serves the real service's wire shape (follow `polar.ts` /
-`arena.ts`), mount it in `apps/simulator/src/index.ts`, then type the new
+Elysia plugin that serves the real service's wire shape (follow a plugin in
+`apps/simulator/src/arena` or `apps/simulator/src/cms`), mount it in
+`apps/simulator/src/index.ts`, then type the new
 fixture in `apps/e2e/src/fixture-stores.ts` and write specs against it.
 
 ## Fixture stores vs Effect Layers (for testing)
@@ -165,11 +164,11 @@ locally.
 
 ## The staging suite
 
-`tests-staging/` runs against the **deployed staging stack** (real CMS, Polar,
+`tests-staging/` runs against the **deployed staging stack** (real CMS,
 Are.na — whatever the `staging` Alchemy stage holds), so assertions are
 content-agnostic: structure, headings, valid feeds/sitemap, 404s, og
-meta, and read-only navigation into the first live post/work/product. The
-guestbook and checkout flows are rendered but never submitted (they mutate
+meta, and read-only navigation into the first live post/work. The
+guestbook flow is rendered but never submitted (it mutates
 real data). Run it locally against any deployed stage:
 
 ```sh
@@ -180,7 +179,12 @@ pnpm --filter @tom/e2e test:e2e:staging
 ```
 
 The staging suite has no scheduled workflow (removed — Cloudflare
-bot-blocks GitHub runner IPs). Run it manually against any deployed stage.
+bot-blocks GitHub runner IPs), and CI never runs it: Cloudflare answers
+403 to a GitHub runner IP, and a deployed stage serves real are.na and
+CMS data rather than the fixtures a branch should be judged on. Run it
+manually against any deployed stage with `pnpm test:e2e:staging`. CI runs
+the fixture suite instead, which is why PRs are verifiable without a
+deployed stage at all.
 Every push to `dev` deploys the staging stage
 via the Deploy workflow (production deploys are manual), so a manual run
 validates the latest staged stack.
@@ -190,13 +194,12 @@ validates the latest staged stack.
 The suite is served through the Cloudflare edge (same `tom.so` zone), and
 GitHub-hosted runners come from datacenter IPs that Cloudflare bot
 protection intermittently fast-blocks (403 on API fetches) or answers with
-its Managed Challenge interstitial. Two layers make the suite resilient:
-config-level `retries` (`playwright.staging.config.ts`) re-run a failed
-test fresh, and the specific helpers in `src/helpers.ts`
-(`fetchWithBackoff` / `gotoWithBackoff`) retry transient
-transfer statuses with exponential backoff mirroring Effect's
-`Schedule.exponential`. Other statuses (404s, 422s, real app errors)
-pass through untouched so regressions surface immediately.
+its Managed Challenge interstitial. The suite relies on the runner's own
+retries: config-level `retries` (`playwright.staging.config.ts`) re-run a
+failed test fresh, and `expect.poll` covers a genuinely transient value.
+Do not wrap `page.goto` or `request.get` in a hand-rolled retry loop — it
+hides real failures, doubles the wait, and is rejected by the lint rule
+`anti-slop/no-hand-rolled-retry-loop`.
 
 ## Conventions for tests in this suite
 
@@ -204,10 +207,8 @@ pass through untouched so regressions surface immediately.
   headers, or the adapter/simulator wire format.
 - Prefer role-based locators (`getByRole`, `getByText`, `getByAltText`);
   structural selectors only for fixture-specific containers (`guestbook-entry`).
-- No `waitForTimeout`; rely on `expect` auto-waiting. Blur-in heading animations
-  are disabled via `helpers.disableAnimations` (they start invisible); the
-  sr-only accessible text they hide is preserved, so `getByRole("heading")`
-  still resolves.
+- No `waitForTimeout`; rely on `expect` auto-waiting. Headings render as
+  plain text, so `getByRole("heading")` resolves against the visible element.
 - Single browser project; **fully parallel** (`fullyParallel: true`, default
   workers). Solid 2 scopes SSR requests with `node:async_hooks`, and the web
   app owns a query cache per request, so concurrent renders don't race.
