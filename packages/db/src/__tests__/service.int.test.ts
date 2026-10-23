@@ -14,6 +14,8 @@ import {
   type DatabaseServiceContract,
   type GuestbookEntryParams,
   type OAuthSessionParams,
+  type ArenaOAuthSessionParams,
+  type ArenaAccountParams,
 } from "../service";
 import { makeAppConfigLayer } from "@tom/utils/config";
 import type { Database } from "@tom/types/db";
@@ -63,7 +65,7 @@ describe("DatabaseService", () => {
     });
     const result = await migrator.migrateToLatest();
     expect(result.error).toBeUndefined();
-    expect(result.results?.map((migration) => migration.status)).toEqual(["Success"]);
+    expect(result.results?.map((migration) => migration.status)).toEqual(["Success", "Success"]);
   }, 60_000);
 
   afterAll(async () => {
@@ -78,6 +80,8 @@ describe("DatabaseService", () => {
   beforeEach(async () => {
     await db.deleteFrom("oauth_sessions").execute();
     await db.deleteFrom("guestbook_entries").execute();
+    await db.deleteFrom("arena_accounts").execute();
+    await db.deleteFrom("arena_oauth_sessions").execute();
   });
 
   const run = <A, E>(use: (db: DatabaseServiceContract) => Effect.Effect<A, E>): Promise<A> =>
@@ -125,6 +129,37 @@ describe("DatabaseService", () => {
   const deleteSession = (token: string) => (db: DatabaseServiceContract) =>
     db.deleteOAuthSession(token);
   const cleanupSessions = () => (db: DatabaseServiceContract) => db.cleanupExpiredSessions;
+
+  const arenaSessionParams = (sessionToken: string, expiresAt: Date): ArenaOAuthSessionParams => ({
+    session_token: sessionToken,
+    state: "state",
+    code_verifier: "verifier",
+    expires_at: expiresAt,
+  });
+
+  const arenaAccountParams = (sessionId: string): ArenaAccountParams => ({
+    session_id: sessionId,
+    arena_user_id: 42,
+    arena_user_slug: "tom",
+    arena_user_name: "Tom Hackshaw",
+    arena_user_avatar_url: "https://images.are.na/avatar.png",
+    access_token: "arena-token",
+  });
+
+  const createArenaSession = (params: ArenaOAuthSessionParams) => (db: DatabaseServiceContract) =>
+    db.createArenaOAuthSession(params);
+  const getArenaSession = (token: string) => (db: DatabaseServiceContract) =>
+    db.getArenaOAuthSession(token);
+  const deleteArenaSession = (token: string) => (db: DatabaseServiceContract) =>
+    db.deleteArenaOAuthSession(token);
+  const saveArenaAccount = (params: ArenaAccountParams) => (db: DatabaseServiceContract) =>
+    db.upsertArenaAccount(params);
+  const getArenaProfile = (sessionId: string) => (db: DatabaseServiceContract) =>
+    db.getArenaAccountProfile(sessionId);
+  const getArenaToken = (sessionId: string) => (db: DatabaseServiceContract) =>
+    db.getArenaAccessToken(sessionId);
+  const deleteArenaAccount = (sessionId: string) => (db: DatabaseServiceContract) =>
+    db.deleteArenaAccount(sessionId);
 
   describe("guestbook entries", () => {
     it("creates an entry and returns the row with generated id and timestamps", async () => {
@@ -195,6 +230,60 @@ describe("DatabaseService", () => {
 
       expect(await run(cleanupSessions())).toBe(1);
       expect(await run(getSession("fresh"))).not.toBeNull();
+    });
+  });
+
+  describe("arena oauth sessions and accounts", () => {
+    it("stores a PKCE session and reads it back before it expires", async () => {
+      await run(createArenaSession(arenaSessionParams("sess-1", new Date(Date.now() + 60_000))));
+
+      const fetched = await run(getArenaSession("sess-1"));
+      expect(fetched?.state).toBe("state");
+      expect(fetched?.code_verifier).toBe("verifier");
+    });
+
+    it("hides expired arena sessions", async () => {
+      await run(createArenaSession(arenaSessionParams("sess-1", new Date(Date.now() - 60_000))));
+
+      expect(await run(getArenaSession("sess-1"))).toBeNull();
+    });
+
+    it("deletes an arena session", async () => {
+      await run(createArenaSession(arenaSessionParams("sess-1", new Date(Date.now() + 60_000))));
+
+      expect(await run(deleteArenaSession("sess-1"))).toBe(1);
+      expect(await run(getArenaSession("sess-1"))).toBeNull();
+    });
+
+    it("saves an are.na account, then reads back its profile and its token", async () => {
+      await run(saveArenaAccount(arenaAccountParams("sid-1")));
+
+      const profile = await run(getArenaProfile("sid-1"));
+      expect(profile?.name).toBe("Tom Hackshaw");
+      // The profile is the API's shape: the token is not part of it.
+      expect(profile).not.toHaveProperty("access_token");
+      expect(await run(getArenaToken("sid-1"))).toBe("arena-token");
+    });
+
+    it("upserts an account so a repeat login replaces the token", async () => {
+      await run(saveArenaAccount(arenaAccountParams("sid-1")));
+      await run(
+        saveArenaAccount({ ...arenaAccountParams("sid-1"), access_token: "arena-token-2" }),
+      );
+
+      expect(await run(getArenaToken("sid-1"))).toBe("arena-token-2");
+    });
+
+    it("returns null for an unknown session id", async () => {
+      expect(await run(getArenaProfile("missing"))).toBeNull();
+      expect(await run(getArenaToken("missing"))).toBeNull();
+    });
+
+    it("deletes an account", async () => {
+      await run(saveArenaAccount(arenaAccountParams("sid-1")));
+
+      expect(await run(deleteArenaAccount("sid-1"))).toBe(1);
+      expect(await run(getArenaProfile("sid-1"))).toBeNull();
     });
   });
 });

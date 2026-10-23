@@ -34,7 +34,14 @@ export const IdOrSlugParamsSchema = Schema.toStandardSchemaV1(
   }),
 );
 
-export const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite }));
+/**
+ * A block id from the path. Path params arrive as strings, so the id is
+ * decoded with `FiniteFromString`: a bare `Schema.Finite` rejects "101" and
+ * every block route answers 400.
+ */
+export const BlockIdParamsSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ id: Schema.FiniteFromString }),
+);
 
 /**
  * The pagination fields the caller set, or `undefined` when none were. Keys
