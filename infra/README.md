@@ -264,3 +264,12 @@ the custom domain (`preview.tom.so`, domain id
 `b1aff2f4298e7e9e19bac418c5c962d17781f5f1`) and deleting the Worker; that
 needs a token with Workers Scripts: Edit, which `wrangler login` does not
 grant.
+
+`payload.tom.so` is a Vercel-hosted Payload CMS deployed from
+`et0and/tom-cms-payload`, not a Worker in this repo. It is retired: tom.so
+content comes from are.na. It still answers `/admin` with 200, so a scanner
+reads its admin login as a find. Retiring it means deleting the Vercel
+project and its `payload.tom.so` domain and removing the Cloudflare DNS
+record; that needs Vercel access and a token with `DNS: Edit`, neither of
+which the local `wrangler login` grants. Until then, `edge.run.ts` answers
+every request to the host with the default 403 block page.
