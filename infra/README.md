@@ -132,17 +132,18 @@ from silently creating a new stage-specific Worker.
 origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
-- `http_request_firewall_custom`: credential and key paths (`.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`, `/.dev.vars`, `/.htpasswd`, `/.npmrc`, `/.s3cfg`,
-  `/.zshrc`, `/.bashrc`, `.pem`, `.key`, `credentials.json`,
-  `docker/config.json`, `proc/self/environ`, `service-account`,
-  `serviceaccount`, `cargo/credentials`, `sa.json`, `id_rsa`, `id_ed25519`,
-  `aws/credentials`) and the wider probe surface (`/.ds_store`, `/wp-*`,
-  `/phpmyadmin`, `/adminer`, `/phpinfo`, `.php`, `.sql`, `.bak`, `.old`,
-  `tfstate`, `docker-compose`, `backup`) answer the default 403 block page.
-  Custom response codes and bodies need a Pro plan, and both zones are Free,
-  so the rules cannot set a 404 — the separate rule names keep credential
-  probes visible in firewall analytics.
+- `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
+  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`, `secrets.*`,
+  `.my.cnf`, `auth.json`, `.pypirc`, `gem/credentials`, `kube/config`,
+  `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
+  `database.yml`, `id_rsa`, `id_ed25519`, `aws/credentials`) and the wider
+  probe surface (`/.ds_store`, `/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`,
+  `.php`, `.sql`, `.bak`, `.old`, `tfstate`, `docker-compose`, `backup`,
+  `/CLAUDE.md`, `/AGENTS.md`, `/README.md`, `/Jenkinsfile`, `mcp.json`,
+  `/.claude`, `claude.json`) answer the default 403 block page. Custom response
+  codes and bodies need a Pro plan, and both zones are Free, so the rules
+  cannot set a 404 — the separate rule names keep credential probes visible in
+  firewall analytics.
 - `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
   paths, 10s mitigation — the Free plan caps the counting period and
   mitigation timeout at 10s, so this preserves the original 120-per-minute
@@ -264,3 +265,12 @@ the custom domain (`preview.tom.so`, domain id
 `b1aff2f4298e7e9e19bac418c5c962d17781f5f1`) and deleting the Worker; that
 needs a token with Workers Scripts: Edit, which `wrangler login` does not
 grant.
+
+`payload.tom.so` is a Vercel-hosted Payload CMS deployed from
+`et0and/tom-cms-payload`, not a Worker in this repo. It is retired: tom.so
+content comes from are.na. It still answers `/admin` with 200, so a scanner
+reads its admin login as a find. Retiring it means deleting the Vercel
+project and its `payload.tom.so` domain and removing the Cloudflare DNS
+record; that needs Vercel access and a token with `DNS: Edit`, neither of
+which the local `wrangler login` grants. Until then, `edge.run.ts` answers
+every request to the host with the default 403 block page.
