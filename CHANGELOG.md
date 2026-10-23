@@ -1,3 +1,10 @@
+## [4.7.10](https://github.com/et0and/wwwtom/compare/v4.7.9...v4.7.10) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** consolidate the open edge probe PRs ([7dcd0ea](https://github.com/et0and/wwwtom/commit/7dcd0eab6f1b5efbbc8c3e8fb2dc2d88387d6e4d))
+
 ## [4.7.9](https://github.com/et0and/wwwtom/compare/v4.7.8...v4.7.9) (2026-10-23)
 
 
