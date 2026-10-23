@@ -139,10 +139,11 @@ third of all requests to this account, and none of it should reach a Worker.
   `database.yml`, `id_rsa`, `id_ed25519`) and the wider probe surface
   (`/wp-*`, `/phpmyadmin`, `/adminer`, `/admin`, `/phpinfo`, `.sql`, `.bak`,
   `.old`, `tfstate`, `docker-compose`, `/CLAUDE.md`, `/AGENTS.md`, `/README.md`,
-  `/Jenkinsfile`, `mcp.json`, `/.claude`, `claude.json`) answer the default 403
-  block page. Custom response codes and bodies need a Pro plan, and both zones
-  are Free, so the rules cannot set a 404 — the separate rule names keep
-  credential probes visible in firewall analytics.
+  `/Jenkinsfile`, `mcp.json`, `/.claude`, `claude.json`), and every path on
+  retired hosts such as `preview.tom.so`, answer the default 403 block page.
+  Custom response codes and bodies need a Pro plan, and both zones are Free,
+  so the rules cannot set a 404 — the separate rule names keep credential
+  probes visible in firewall analytics.
 - `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
   paths, 10s mitigation — the Free plan caps the counting period and
   mitigation timeout at 10s, so this preserves the original 120-per-minute
@@ -263,7 +264,8 @@ It answers 200 for every path, so `/.env`, `/.git/config` and
 the custom domain (`preview.tom.so`, domain id
 `b1aff2f4298e7e9e19bac418c5c962d17781f5f1`) and deleting the Worker; that
 needs a token with Workers Scripts: Edit, which `wrangler login` does not
-grant.
+grant. Until then `edge.run.ts` answers every request to this host with the
+default 403 block page, so the stale origin stops reading as a find.
 
 `payload.tom.so` is a Vercel-hosted Payload CMS deployed from
 `et0and/tom-cms-payload`, not a Worker in this repo. It is retired: tom.so
