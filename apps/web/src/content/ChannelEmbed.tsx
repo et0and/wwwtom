@@ -1,12 +1,20 @@
 import { For, Show, createMemo } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { useQuery } from "@tanstack/solid-query";
+import { Option, Schema } from "effect";
+import { ArenaContentBlockSchema } from "@tom/schemas/arena-content";
 import type { ArenaBlockImage, ArenaChannelContents } from "@tom/schemas/arena";
 import { colors } from "@tom/ui/colors.stylex";
 import { Loader } from "@tom/ui/loader";
 import { overflow } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { fetchChannel, fetchChannelContents } from "~/server/adapter";
+import {
+  AudioAttachment,
+  VideoAttachment,
+  attachmentKind,
+  attachmentName,
+} from "~/content/AttachmentMedia";
 import { arenaImageAlt, arenaImageSource, arenaImageSourceSet } from "~/content/arena-image";
 import { layoutStyles } from "~/chrome/layout.stylex";
 
@@ -30,6 +38,15 @@ const styles = stylex.create({
     height: "11rem",
     width: "auto",
     objectFit: "cover",
+  },
+  /** A player needs its own box: an audio element is not a 11rem-wide picture. */
+  mediaCard: {
+    width: "14rem",
+    flexShrink: 0,
+    overflow: "hidden",
+    backgroundColor: colors["--color-tomui-base"],
+    padding: "0.75rem",
+    boxShadow: ringLine,
   },
   root: {
     display: "flex",
@@ -72,30 +89,66 @@ const itemText = (item: ArenaChannelContents): string | null => {
   return item.title ?? null;
 };
 
+/**
+ * An mp3 or an mp4 carries no cover image, so it used to fall through to a card
+ * holding nothing but its filename: the one kind of item in a channel that has
+ * something to play was the one kind that could not be played. Media gets the
+ * player the post body draws; everything else keeps the image-or-title card.
+ */
 function StripItem(props: { item: ArenaChannelContents }) {
   const image = createMemo(() => itemImage(props.item));
   const text = createMemo(() => itemText(props.item));
+  const media = createMemo(() => {
+    const block = Option.getOrNull(Schema.decodeOption(ArenaContentBlockSchema)(props.item));
+    if (block?.type !== "Attachment") return null;
+    const kind = attachmentKind(block.attachment, block.title);
+    if (kind !== "audio" && kind !== "video") return null;
+    return {
+      isVideo: kind === "video",
+      url: block.attachment.url,
+      name: attachmentName(block.attachment, block.title),
+      cover: block.image ?? null,
+    };
+  });
   return (
     <Show
-      when={image()}
+      when={media()}
       fallback={
-        <Show when={text()}>
+        <Show
+          when={image()}
+          fallback={
+            <Show when={text()}>
+              {(value) => (
+                <div {...stylex.attrs(styles.placeholderCard, overflow.noShrink)}>
+                  <Text size="sm">{value()}</Text>
+                </div>
+              )}
+            </Show>
+          }
+        >
           {(value) => (
-            <div {...stylex.attrs(styles.placeholderCard, overflow.noShrink)}>
-              <Text size="sm">{value()}</Text>
-            </div>
+            <img
+              src={arenaImageSource(value())}
+              srcset={arenaImageSourceSet(value())}
+              alt={arenaImageAlt(value(), null)}
+              {...stylex.attrs(styles.stripImage, overflow.noShrink)}
+              loading="lazy"
+            />
           )}
         </Show>
       }
     >
       {(value) => (
-        <img
-          src={arenaImageSource(value())}
-          srcset={arenaImageSourceSet(value())}
-          alt={arenaImageAlt(value(), null)}
-          {...stylex.attrs(styles.stripImage, overflow.noShrink)}
-          loading="lazy"
-        />
+        <div {...stylex.attrs(styles.mediaCard, overflow.noShrink)}>
+          <Show
+            when={value().isVideo}
+            fallback={
+              <AudioAttachment url={value().url} name={value().name} cover={value().cover} />
+            }
+          >
+            <VideoAttachment url={value().url} name={value().name} cover={value().cover} />
+          </Show>
+        </div>
       )}
     </Show>
   );
