@@ -24,12 +24,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@pierre/highlights": "0.2.0",
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "effect": "catalog:",
-    "obscenity": "catalog:",
-    "shiki": "1.29.2"
+    "obscenity": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^26.2.0",
