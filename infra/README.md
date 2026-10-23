@@ -138,10 +138,11 @@ third of all requests to this account, and none of it should reach a Worker.
   `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
   `database.yml`) and the wider probe surface
   (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`, `.bak`, `.old`,
-  `/tfstate`, `docker-compose`) answer the default 403 block page. Custom
-  response codes and bodies need a Pro plan, and both zones are Free, so the
-  rules cannot set a 404 — the separate rule names keep credential probes
-  visible in firewall analytics.
+  `/tfstate`, `docker-compose`, `/CLAUDE.md`, `/AGENTS.md`, `/README.md`,
+  `/Jenkinsfile`, `mcp.json`, `/.claude`, `claude.json`) answer the default 403
+  block page. Custom response codes and bodies need a Pro plan, and both zones
+  are Free, so the rules cannot set a 404 — the separate rule names keep
+  credential probes visible in firewall analytics.
 - `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
   paths, 10s mitigation — the Free plan caps the counting period and
   mitigation timeout at 10s, so this preserves the original 120-per-minute

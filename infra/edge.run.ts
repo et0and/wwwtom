@@ -82,7 +82,8 @@ const CREDENTIAL_PATHS = [
 /**
  * Everything else no visitor or crawler requests. Matched case-insensitively
  * because scanners vary casing to dodge naive rules. This account serves no
- * WordPress, no PHP and no admin panel, so any hit is a probe.
+ * WordPress, no PHP, no admin panel and no repository or agent-tooling files,
+ * so any hit is a probe.
  */
 const PROBE_PATHS = [
   "/.ds_store",
@@ -97,6 +98,13 @@ const PROBE_PATHS = [
   "/tfstate",
   "docker-compose",
   "backup",
+  "/claude.md",
+  "/agents.md",
+  "/readme.md",
+  "/jenkinsfile",
+  "mcp.json",
+  "/.claude",
+  "claude.json",
 ] as const;
 
 const pathContains = (paths: ReadonlyArray<string>): string =>
