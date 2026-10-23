@@ -133,9 +133,10 @@ origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
 - `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`, `secrets.*`,
-  `.my.cnf`, `auth.json`, `.pypirc`, `gem/credentials`, `kube/config`,
-  `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
+  `/.svn`, `/.ssh`, `/.aws`, `/.netrc`, `/_netrc`, `/.pgpass`, `.p12`, `.pfx`,
+  `private-key`, `private_key`, `id_dsa`, `id_ecdsa`, `.cargo/credentials`,
+  `sa.json`, `secrets.*`, `.my.cnf`, `auth.json`, `.pypirc`, `gem/credentials`,
+  `kube/config`, `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
   `database.yml`, `id_rsa`, `id_ed25519`, `aws/credentials`) and the wider
   probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/admin`, `/phpinfo`,
   `.sql`, `.bak`, `.old`, `tfstate`, `docker-compose`, `/CLAUDE.md`,
