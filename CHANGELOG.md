@@ -1,3 +1,10 @@
+## [4.7.7](https://github.com/et0and/wwwtom/compare/v4.7.6...v4.7.7) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block secret and credential store probes at the edge ([3ef021d](https://github.com/et0and/wwwtom/commit/3ef021dd95e95c63e5d975a58ecf798a54d2af6d))
+
 ## [4.7.6](https://github.com/et0and/wwwtom/compare/v4.7.5...v4.7.6) (2026-10-22)
 
 
