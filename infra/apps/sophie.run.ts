@@ -17,6 +17,8 @@ export const sophieWeb = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("sophie-web", {
     rootDir: `${rootDir}/apps/sophie`,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     ...(stage === "production"
       ? { name: "sophie-web", domain: sophieWebHost(stage) }
       : { name: `sophie-web-${stage}`, domain: sophieWebHost(stage) }),
@@ -45,6 +47,8 @@ export const sophieEditor = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("sophie-editor", {
     rootDir: `${rootDir}/apps/editor`,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     ...(stage === "production"
       ? { name: "sophie-editor", domain: sophieStageHost(stage, "cms") }
       : { name: `sophie-editor-${stage}`, domain: sophieStageHost(stage, "cms") }),

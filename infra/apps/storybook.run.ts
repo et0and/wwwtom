@@ -18,6 +18,8 @@ export const storybook = Effect.gen(function* () {
     command: "pnpm --filter @tom/storybook build",
     outdir: "packages/ui/src/storybook/storybook-static",
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     ...(stage === "production"
       ? { name: "wwwtom-storybook", domain: stageHost(stage, "storybook") }
       : { name: `wwwtom-storybook-${stage}`, domain: stageHost(stage, "storybook") }),

@@ -103,6 +103,8 @@ export const adapter = Effect.gen(function* () {
   const worker = yield* Cloudflare.Worker("wwwtom-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     dev: {
       // Local workerd dev server via `alchemy dev`; ADAPTER_URL points back at it.
       port: 8788,
@@ -151,6 +153,8 @@ export const adapter = Effect.gen(function* () {
   const sophieWorker = yield* Cloudflare.Worker("sophie-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     dev: {
       port: 8790,
     },

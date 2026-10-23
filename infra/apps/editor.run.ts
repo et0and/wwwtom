@@ -29,6 +29,8 @@ export const editor = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("wwwtom-editor", {
     rootDir,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     ...(stage === "production"
       ? { name: "wwwtom-editor", domain: stageHost(stage, "cms") }
       : { name: `wwwtom-editor-${stage}`, domain: stageHost(stage, "cms") }),

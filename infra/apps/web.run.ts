@@ -27,6 +27,8 @@ export const web = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     // Every stage gets a deterministic worker name and custom domain so the
     // adapter can redirect back to it (production adopts the existing worker).
     ...(stage === "production"
