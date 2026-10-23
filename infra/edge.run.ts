@@ -42,8 +42,8 @@ const adoptZone = (zone: ZoneRef) =>
  * variants such as `/application/.local.env` are covered too, not only a
  * leading `/.env`. Covers the credential files scanners ask for by name —
  * `.dev.vars`, shell and package config, key material, cloud credentials,
- * package registry tokens, database and cluster credentials, framework
- * settings, secret files and the container token path.
+ * Terraform variable values, package registry tokens, database and cluster
+ * credentials, framework settings, secret files and the container token path.
  */
 const CREDENTIAL_PATHS = [
   ".env",
@@ -89,6 +89,9 @@ const CREDENTIAL_PATHS = [
   "sftp-config",
   "vscode/sftp.json",
   "aws/credentials",
+  "gcp-key.json",
+  "firebase-adminsdk",
+  "terraform.tfvars",
 ] as const;
 
 /**
@@ -99,6 +102,7 @@ const CREDENTIAL_PATHS = [
  */
 const PROBE_PATHS = [
   "/.ds_store",
+  "/.dockerenv",
   "/wp-",
   ".php",
   "/administrator",

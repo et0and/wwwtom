@@ -137,8 +137,9 @@ third of all requests to this account, and none of it should reach a Worker.
   `private-key`, `private_key`, `id_dsa`, `id_ecdsa`, `.cargo/credentials`,
   `sa.json`, `secrets.*`, `.my.cnf`, `auth.json`, `.pypirc`, `gem/credentials`,
   `kube/config`, `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
-  `database.yml`, `id_rsa`, `id_ed25519`, `aws/credentials`) and the wider
-  probe surface (`/wp-*`, `/administrator`, `/server-status`, `/actuator`,
+  `database.yml`, `id_rsa`, `id_ed25519`, `aws/credentials`, `gcp-key.json`,
+  `firebase-adminsdk`, `terraform.tfvars`) and the wider probe surface
+  (`/wp-*`, `/.dockerenv`, `/administrator`, `/server-status`, `/actuator`,
   `/config.json`, `/phpmyadmin`, `/adminer`, `/admin`, `/phpinfo`, `.sql`,
   `.bak`, `.old`, `tfstate`, `docker-compose`, `/CLAUDE.md`, `/AGENTS.md`,
   `/README.md`, `/Jenkinsfile`, `mcp.json`, `/.claude`, `claude.json`), and
