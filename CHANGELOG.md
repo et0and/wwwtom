@@ -1,3 +1,27 @@
+## [4.7.8](https://github.com/et0and/wwwtom/compare/v4.7.7...v4.7.8) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block agent and repository metadata probes at the edge ([07480aa](https://github.com/et0and/wwwtom/commit/07480aa30f6e664664862c2ac42c3a6123434e87))
+* **security:** retire payload.tom.so at the edge ([28b3941](https://github.com/et0and/wwwtom/commit/28b3941bf7cb2cd430c2593481bec176e7008ed1))
+
+## [4.7.7](https://github.com/et0and/wwwtom/compare/v4.7.6...v4.7.7) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block secret and credential store probes at the edge ([3ef021d](https://github.com/et0and/wwwtom/commit/3ef021dd95e95c63e5d975a58ecf798a54d2af6d))
+
+## [4.7.6](https://github.com/et0and/wwwtom/compare/v4.7.5...v4.7.6) (2026-10-22)
+
+
+### Bug Fixes
+
+* **scripts:** keep soft hits on our own hosts ([547772b](https://github.com/et0and/wwwtom/commit/547772b5a8ec2a18c07aee0c417bee600b843eb0))
+* **security:** block cargo and service-account key probes at the edge ([a1c1b6c](https://github.com/et0and/wwwtom/commit/a1c1b6c93b084d9abdd6652b0cc7071c40e8f2c9))
+* **security:** surface every soft hit in the infra scan ([c6689b6](https://github.com/et0and/wwwtom/commit/c6689b655b2bdf07a6a7decf7eb6c34084b8883f)), closes [hi#volume](https://github.com/hi/issues/volume)
+
 ## [4.7.5](https://github.com/et0and/wwwtom/compare/v4.7.4...v4.7.5) (2026-10-22)
 
 

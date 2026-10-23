@@ -133,10 +133,15 @@ origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
 - `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`) and the wider
-  probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`,
-  `.bak`, `.old`, `/tfstate`, `docker-compose`) answer the default 403 block
-  page, including every path on retired hosts such as `preview.tom.so`.
+- `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
+  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`, `secrets.*`,
+  `.my.cnf`, `auth.json`, `.pypirc`, `gem/credentials`, `kube/config`,
+  `kubeconfig`, `sftp-config`, `vscode/sftp.json`, `settings.py`,
+  `database.yml`) and the wider probe surface
+  (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`, `.bak`, `.old`,
+  `/tfstate`, `docker-compose`, `/CLAUDE.md`, `/AGENTS.md`, `/README.md`,
+  `/Jenkinsfile`, `mcp.json`, `/.claude`, `claude.json`), and every path on
+  retired hosts such as `preview.tom.so`, answer the default 403 block page.
   Custom response codes and bodies need a Pro plan, and both zones are Free,
   so the rules cannot set a 404 — the separate rule names keep credential
   probes visible in firewall analytics.
@@ -262,3 +267,12 @@ the custom domain (`preview.tom.so`, domain id
 needs a token with Workers Scripts: Edit, which `wrangler login` does not
 grant. Until then `edge.run.ts` answers every request to this host with the
 default 403 block page, so the stale origin stops reading as a find.
+
+`payload.tom.so` is a Vercel-hosted Payload CMS deployed from
+`et0and/tom-cms-payload`, not a Worker in this repo. It is retired: tom.so
+content comes from are.na. It still answers `/admin` with 200, so a scanner
+reads its admin login as a find. Retiring it means deleting the Vercel
+project and its `payload.tom.so` domain and removing the Cloudflare DNS
+record; that needs Vercel access and a token with `DNS: Edit`, neither of
+which the local `wrangler login` grants. Until then, `edge.run.ts` answers
+every request to the host with the default 403 block page.
