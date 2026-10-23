@@ -14,7 +14,7 @@ export const getBlockRoute = new Elysia().get(
     return block;
   },
   {
-    params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite })),
+    params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.FiniteFromString })),
     detail: { description: "Simulated Are.na get block", tags: ["arena"] },
   },
 );

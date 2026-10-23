@@ -10,7 +10,7 @@ export const blockConnectionsRoute = new Elysia().get(
     return { data, meta: paginationMeta(data.length, per, query.page ?? 1) };
   },
   {
-    params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite })),
+    params: Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.FiniteFromString })),
     query: Schema.toStandardSchemaV1(
       Schema.Struct({
         page: Schema.optional(Schema.FiniteFromString),

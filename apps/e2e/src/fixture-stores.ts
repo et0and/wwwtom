@@ -1,7 +1,9 @@
 import { Schema } from "effect";
 import { CmsPostSchema, CmsWorkSchema } from "@tom/schemas/cms";
 import { GuestbookEntrySchema } from "@tom/schemas/guestbook";
+import { CommentSchema } from "@tom/schemas/arena";
 import { ArenaChannelResourceSchema, ArenaContentBlockSchema } from "@tom/schemas/arena-content";
+import type { ArenaContentBlock } from "@tom/schemas/arena-content";
 import type { GuestbookEntryJson } from "@tom/types/db";
 import cmsPosts from "../../simulator/fixtures/cms-posts.json" with { type: "json" };
 import cmsWorks from "../../simulator/fixtures/cms-works.json" with { type: "json" };
@@ -58,6 +60,42 @@ export const nestedChannelBlocks = arenaChannels[0].blocks;
 /** The newest fixture post — the first entry in the master channel. */
 export const newestPost = arenaPosts[0].channel;
 export const newestPostBlocks = arenaPosts[0].blocks;
+
+/**
+ * A block of the newest post by are.na type, for specs that need one exact
+ * block. Throws when the fixture no longer carries it, so drift is loud.
+ */
+export const newestPostBlock = <T extends ArenaContentBlock["type"]>(
+  type: T,
+): Extract<ArenaContentBlock, { type: T }> => {
+  const block = newestPostBlocks.find((candidate) => candidate.type === type);
+  if (!block) throw new Error(`newest fixture post has no ${type} block`);
+  return block as Extract<ArenaContentBlock, { type: T }>;
+};
+
+/**
+ * Comment threads keyed by block id (fixtures/arena-content.json) — exactly
+ * what the simulator serves at /v3/blocks/:id/comments, so a spec can assert
+ * the badge count against the thread it opens.
+ */
+type ArenaComment = Schema.Schema.Type<typeof CommentSchema>;
+
+export const arenaBlockComments = new Map<number, ReadonlyArray<ArenaComment>>(
+  Object.entries(arenaContent.comments).map(([blockId, thread]) => [
+    Number(blockId),
+    thread.map((entry) => Schema.decodeUnknownSync(CommentSchema)(entry)),
+  ]),
+);
+
+export type { ArenaComment };
+
+/** One block's fixture thread. Throws when the fixture drops it, so a spec
+ *  can never assert against an empty list it mistook for a real one. */
+export const blockCommentThread = (blockId: number): ReadonlyArray<ArenaComment> => {
+  const thread = arenaBlockComments.get(blockId);
+  if (!thread) throw new Error(`no fixture comment thread for block ${blockId}`);
+  return thread;
+};
 
 /** The oldest fixture post — the only item on /posts page 2. */
 export const oldestPost = arenaPosts[arenaPosts.length - 1].channel;
