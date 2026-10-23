@@ -6,11 +6,11 @@ export default function Worktable() {
   return (
     <>
       <PageLayout title="Worktable" description="What I am currently working on or interested in">
-        <Text variant="heading" size="lg" as="h1">
+        <Text variant="heading" size="lg" as="h1" blurIn>
           Worktable
         </Text>
         <div>
-          <Text variant="heading" as="h2">
+          <Text variant="heading" as="h2" blurIn>
             What I am currently working on or interested in
           </Text>
         </div>
@@ -18,7 +18,7 @@ export default function Worktable() {
           <ArenaCarousel slug="tom-s-worktable" title="Tom's worktable" />
         </div>
         <div>
-          <Text>
+          <Text blurIn>
             At the moment I am focusing a lot on learning about data driven applications, as well as
             learning more about functional programming paradigms through libraries such as{" "}
             <a href="https://effect.website/">Effect</a>.

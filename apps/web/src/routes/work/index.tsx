@@ -34,11 +34,11 @@ export default function WorkHome() {
         url: "https://tom.so/work",
       }}
     >
-      <Text variant="heading" size="lg" as="h1">
+      <Text variant="heading" size="lg" as="h1" blurIn>
         Work
       </Text>
       <div>
-        <Text>Some work that I have made.</Text>
+        <Text blurIn>Some work that I have made.</Text>
       </div>
       <div>
         <Loading fallback={<Loader />}>

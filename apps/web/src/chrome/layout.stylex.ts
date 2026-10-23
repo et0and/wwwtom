@@ -6,12 +6,12 @@ import * as stylex from "@stylexjs/stylex";
  * display tweak passes one of these instead of a Tailwind class.
  */
 export const layoutStyles = stylex.create({
-  mt2: { marginTop: "0.5rem" },
-  mt1: { marginTop: "0.25rem" },
-  mb1: { marginBottom: "0.25rem" },
-  mb2: { marginBottom: "0.5rem" },
-  mb3: { marginBottom: "0.75rem" },
-  mb4: { marginBottom: "1rem" },
+  mt2: { marginBlockStart: "0.5rem" },
+  mt1: { marginBlockStart: "0.25rem" },
+  mb1: { marginBlockEnd: "0.25rem" },
+  mb2: { marginBlockEnd: "0.5rem" },
+  mb3: { marginBlockEnd: "0.75rem" },
+  mb4: { marginBlockEnd: "1rem" },
   block: { display: "block" },
   /** 24px heading, for the wait-timer readout. */
   text2xl: { fontSize: "1.5rem", lineHeight: "2rem" },
@@ -24,20 +24,22 @@ export const layoutStyles = stylex.create({
     height: "1px",
     padding: 0,
     margin: "-1px",
-    overflow: "hidden",
-    clip: "rect(0, 0, 0, 0)",
+    overflow: "clip",
+    clipPath: "inset(50%)",
     whiteSpace: "nowrap",
     borderWidth: 0,
   },
   /** Plain link: no underline at rest, underline on hover. */
   noUnderlineHover: {
     textDecorationLine: "none",
-    ":hover": { textDecorationLine: "underline" },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { textDecorationLine: "underline" },
+    },
   },
   /** `flex: 1 1 0%` — grow to fill remaining space in a flex layout. */
   flexOne: { flex: "1 1 0%" },
-  minHeightScreen: { minHeight: "100vh" },
-  heightScreen: { height: "100vh" },
+  minHeightScreen: { minHeight: "100dvh" },
+  heightScreen: { height: "100dvh" },
 });
 
 /**

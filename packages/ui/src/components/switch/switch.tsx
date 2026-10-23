@@ -87,13 +87,13 @@ const styles = stylex.create({
   thumb: {
     position: "absolute",
     insetBlock: 0,
-    left: 0,
+    insetInlineStart: 0,
     pointerEvents: "none",
     borderRadius: "5px",
     backgroundColor: base,
     boxShadow:
       "0 0 1px 0.5px var(--color-tomui-shadow-edge), 0 1px 2px var(--color-tomui-shadow-drop)",
-    transitionProperty: "all",
+    transitionProperty: "inset-inline-start",
     transitionDuration: "150ms",
     transitionTimingFunction: "ease-out",
     [REDUCED_MOTION]: { transitionProperty: "none" },

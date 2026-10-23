@@ -24,20 +24,20 @@ const styles = stylex.create({
     position: "relative",
     height: "0.5rem",
     width: "100%",
-    overflow: "hidden",
+    overflow: "clip",
     borderRadius: radius.full.borderRadius,
     backgroundColor: colors["--color-tomui-fill"],
   },
   indicator: {
     position: "absolute",
     insetBlock: 0,
-    left: 0,
+    insetInlineStart: 0,
     borderRadius: radius.full.borderRadius,
     backgroundImage:
       "linear-gradient(to right, var(--color-tomui-brand), var(--color-tomui-brand))",
     transitionProperty: "width",
     transitionDuration: "300ms",
-    transitionTimingFunction: "ease-out",
+    transitionTimingFunction: "var(--ease-out, ease-out)",
   },
 });
 

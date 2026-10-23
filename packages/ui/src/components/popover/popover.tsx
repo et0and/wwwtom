@@ -54,10 +54,10 @@ const styles = stylex.create({
   },
 
   // Placement. The side prop drives which edge the panel sits against.
-  sideTop: { bottom: "100%", marginBottom: "0.5rem" },
-  sideBottom: { top: "100%", marginTop: "0.5rem" },
-  sideLeft: { right: "100%", marginRight: "0.5rem" },
-  sideRight: { left: "100%", marginLeft: "0.5rem" },
+  sideTop: { insetBlockEnd: "100%", marginBlockEnd: "0.5rem" },
+  sideBottom: { insetBlockStart: "100%", marginBlockStart: "0.5rem" },
+  sideLeft: { insetInlineEnd: "100%", marginInlineEnd: "0.5rem" },
+  sideRight: { insetInlineStart: "100%", marginInlineStart: "0.5rem" },
 
   title: {
     margin: 0,

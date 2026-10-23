@@ -35,11 +35,11 @@ const styles = stylex.create({
   root: { position: "relative" },
   label: {
     display: "block",
-    marginBottom: "0.25rem",
+    marginBlockEnd: "0.25rem",
     fontSize: "0.8125rem",
     fontWeight: 500,
   },
-  message: { marginTop: "0.25rem", fontSize: "0.8125rem" },
+  message: { marginBlockStart: "0.25rem", fontSize: "0.8125rem" },
   messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
   messageDanger: { color: textColors["--text-color-tomui-danger"] },
   content: {
@@ -49,8 +49,8 @@ const styles = stylex.create({
     flexDirection: "column",
     maxHeight: "24rem",
     minWidth: "100%",
-    marginTop: "0.25rem",
-    overflow: "hidden",
+    marginBlockStart: "0.25rem",
+    overflow: "clip",
     borderRadius: radius.lg.borderRadius,
     backgroundColor: colors["--color-tomui-base"],
     paddingBlock: "0.375rem",
@@ -77,7 +77,7 @@ const styles = stylex.create({
   },
   iconButton: {
     position: "absolute",
-    top: "50%",
+    insetBlockStart: "50%",
     display: "flex",
     margin: 0,
     padding: 0,
@@ -87,8 +87,8 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     transform: "translateY(-50%)",
   },
-  clearButton: { right: "2rem" },
-  triggerButton: { right: "0.5rem", color: textColors["--text-color-tomui-subtle"] },
+  clearButton: { insetInlineEnd: "2rem" },
+  triggerButton: { insetInlineEnd: "0.5rem", color: textColors["--text-color-tomui-subtle"] },
   triggerValue: {
     position: "relative",
     display: "flex",
@@ -105,8 +105,8 @@ const styles = stylex.create({
   },
   caret: {
     position: "absolute",
-    top: "50%",
-    right: "0.5rem",
+    insetBlockStart: "50%",
+    insetInlineEnd: "0.5rem",
     display: "flex",
     alignItems: "center",
     color: textColors["--text-color-tomui-subtle"],
@@ -192,7 +192,9 @@ const styles = stylex.create({
     borderRadius: radius.md.borderRadius,
     backgroundColor: "transparent",
     padding: "0.25rem",
-    ":hover": { backgroundColor: colors["--color-tomui-fill-hover"] },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: colors["--color-tomui-fill-hover"] },
+    },
   },
 });
 
