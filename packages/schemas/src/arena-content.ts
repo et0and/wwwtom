@@ -1,4 +1,4 @@
-import { Schema } from "effect";
+import { Effect, Schema } from "effect";
 import { ListResponseSchema } from "./list";
 
 /**
@@ -68,6 +68,12 @@ const arenaBlockBase = {
   id: ArenaBlockId,
   title: Schema.optional(Schema.NullOr(Schema.String)),
   description: Schema.optional(Schema.NullOr(ArenaMarkdownSchema)),
+  /**
+   * are.na reports how many comments a block has. It is always sent, but
+   * fixtures and older payloads may omit it, so it decodes to zero rather
+   * than failing the block.
+   */
+  comment_count: Schema.Finite.pipe(Schema.withDecodingDefault(Effect.succeed(0))),
 };
 
 export const ArenaConnectionSchema = Schema.Struct({
