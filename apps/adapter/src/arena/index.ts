@@ -4,6 +4,10 @@ import { contentPostRoute } from "./get-content-arena-post";
 import { contentPostsRoute } from "./list-content-arena-posts";
 import { contentWorkRoute } from "./get-content-arena-work";
 import { contentWorksRoute } from "./list-content-arena-works";
+import { arenaMeRoute } from "./get-arena-me";
+import { arenaCallbackRoute } from "./handle-arena-callback";
+import { initiateArenaAuthRoute } from "./initiate-arena-auth";
+import { arenaLogoutRoute } from "./logout-arena";
 import { getBlockRoute } from "./get-arena-block";
 import { getBlockChannelsRoute } from "./list-arena-block-channels";
 import { getBlockCommentsRoute } from "./list-arena-block-comments";
@@ -30,6 +34,10 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .use(getBlockChannelsRoute)
   .use(getBlockCommentsRoute)
   .use(searchRoute)
+  .use(initiateArenaAuthRoute)
+  .use(arenaCallbackRoute)
+  .use(arenaMeRoute)
+  .use(arenaLogoutRoute)
   .use(contentPostsRoute)
   .use(contentPostRoute)
   .use(contentWorksRoute)
