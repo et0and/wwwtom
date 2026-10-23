@@ -2,11 +2,11 @@ import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
 import { colors } from "../../styles/colors.stylex";
-import { cursor, layout, radius, select } from "../../styles/primitives.stylex";
+import { cursor, layout, radius, select, spacing } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
 import { customProperties } from "../../utils/stylex-vars";
-import { buttonEmphasisVars } from "./button-vars.stylex";
+import { buttonEmphasisVars, buttonGlassVars } from "./button-vars.stylex";
 import { Loader } from "../loader/loader";
 
 export const TOMUI_BUTTON_DEFAULT_VARIANTS = {
@@ -23,7 +23,37 @@ export type TomuiButtonVariant =
   | "ghost"
   | "destructive"
   | "secondary-destructive"
-  | "outline";
+  | "outline"
+  | "glass";
+
+/** Matches the TomUI switch; the press scale is the only motion in the variant. */
+const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)";
+
+/**
+ * `glass` sits on a translucent fill, so its depth is a shadow stack that the
+ * generic focus ring must not overwrite: for a glass button the ring is one of
+ * these three values, not the plain 1px line. Highlight, hairline, and drop are
+ * restated together so every interaction state keeps the same face.
+ */
+const glassFace = buttonGlassVars.sheen + ", " + buttonGlassVars.surface;
+const glassFaceHover = buttonGlassVars.sheen + ", " + buttonGlassVars.surfaceHover;
+const glassDepth =
+  "inset 0 1px 0 0 " +
+  buttonGlassVars.hood +
+  ", inset 0 0 0 1px " +
+  buttonGlassVars.ring +
+  ", 0 1px 2px " +
+  buttonGlassVars.drop;
+const glassDepthFocused =
+  "inset 0 1px 0 0 " +
+  buttonGlassVars.hood +
+  ", inset 0 0 0 1px color-mix(in srgb, " +
+  colors["--color-tomui-focus"] +
+  " 50%, transparent)" +
+  ", 0 1px 2px " +
+  buttonGlassVars.drop;
+const glassDepthFocusVisible =
+  "inset 0 1px 0 0 " + buttonGlassVars.hood + ", 0 0 0 2px " + colors["--color-tomui-brand"];
 
 const disabledBase = {
   backgroundColor: "color-mix(in srgb, " + colors["--color-tomui-base"] + " 50%, transparent)",
@@ -47,8 +77,8 @@ const styles = stylex.create({
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
     fontFamily: "inherit",
     fontWeight: 500,
-    userSelect: select.none.userSelect,
-    cursor: cursor.pointer.cursor,
+    userSelect: select.none,
+    cursor: cursor.pointer,
     outlineWidth: 0,
     // Colour changes are immediate, never transitioned.
     transitionProperty: "none",
@@ -61,35 +91,35 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "center",
     padding: 0,
-    borderRadius: radius.full.borderRadius,
+    borderRadius: radius.full,
   },
 
   // Sizes
   sizeXs: {
     height: "1.25rem",
-    gap: layout.gap1.gap,
-    borderRadius: radius.sm.borderRadius,
+    gap: spacing.px1,
+    borderRadius: radius.sm,
     paddingInline: "0.375rem",
     fontSize: fontSizeXs.fontSize,
   },
   sizeSm: {
     height: "1.625rem",
-    gap: layout.gap1.gap,
-    borderRadius: radius.md.borderRadius,
+    gap: spacing.px1,
+    borderRadius: radius.md,
     paddingInline: "0.5rem",
     fontSize: fontSizeXs.fontSize,
   },
   sizeBase: {
     height: "2.25rem",
-    gap: layout.gap1_5.gap,
-    borderRadius: radius.lg.borderRadius,
+    gap: spacing.px1_5,
+    borderRadius: radius.lg,
     paddingInline: "0.75rem",
     fontSize: fontSizeBase.fontSize,
   },
   sizeLg: {
     height: "2.5rem",
-    gap: layout.gap2.gap,
-    borderRadius: radius.lg.borderRadius,
+    gap: spacing.px2,
+    borderRadius: radius.lg,
     paddingInline: "1rem",
     fontSize: fontSizeBase.fontSize,
   },
@@ -140,6 +170,33 @@ const styles = stylex.create({
         "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 25%, transparent)",
     },
   },
+  /**
+   * Translucent surface lit from the top left. The fill is a gradient rather
+   * than a colour, so the top edge reads brighter than the bottom, and a sheen
+   * layer sits over it at 160deg. Pressing scales the button instead of
+   * shifting colour, so the feedback is felt rather than seen — the hover fill
+   * swaps with no transition, as everywhere else in TomUI.
+   */
+  glass: {
+    position: "relative",
+    color: textColors["--text-color-tomui-default"],
+    backgroundImage: glassFace,
+    backdropFilter: "blur(12px) saturate(180%)",
+    boxShadow: {
+      default: glassDepth,
+      ":focus": glassDepthFocused,
+      ":focus-visible": glassDepthFocusVisible,
+    },
+    transitionProperty: "transform",
+    transitionDuration: "120ms",
+    transitionTimingFunction: "cubic-bezier(0.2, 0, 0, 1)",
+    ":hover": { backgroundImage: glassFaceHover },
+    ":active": { transform: "scale(0.97)" },
+    [REDUCED_MOTION]: {
+      transitionDuration: "0s",
+      ":active": { transform: "none" },
+    },
+  },
 
   // Focus ring. Overrides the variant box shadow, so it is applied last.
   focusRing: {
@@ -164,9 +221,15 @@ const styles = stylex.create({
       ")",
     boxShadow: "inset 0 1px 0 0 " + buttonEmphasisVars.bg,
   },
-  content: { position: "relative", display: "flex", alignItems: "center", gap: layout.gap1.gap },
+  content: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    gap: spacing.px1,
+  },
   dimmed: { opacity: 0.5 },
-  noUnderline: { textDecorationLine: "none" },
+  /** LinkButton: links select their text, buttons do not. */
+  linkButton: { userSelect: select.text, textDecorationLine: "none" },
 });
 
 /**
@@ -202,6 +265,7 @@ const variantStyles = {
   destructive: styles.emphasis,
   "secondary-destructive": styles["secondary-destructive"],
   outline: styles.outline,
+  glass: styles.glass,
 } as const satisfies Record<TomuiButtonVariant, stylex.StyleXStyles>;
 
 const isCompactForm = (form: TomuiButtonForm): boolean => form === "square" || form === "circle";
@@ -243,7 +307,9 @@ export function buttonVariants(props: {
     sizeStyles[merged.size],
     formStyles[merged.form],
     variantStyles[merged.variant],
-    styles.focusRing,
+    // `glass` carries its own ring inside its shadow stack, so the generic
+    // focus ring would flatten the surface back to a plain outline.
+    ...(merged.variant === "glass" ? [] : [styles.focusRing]),
   ];
 }
 
@@ -380,12 +446,7 @@ export function LinkButton(props: LinkButtonProps) {
       fallback={
         <a
           data-tomui-component="LinkButton"
-          {...stylex.attrs(
-            ...buttonVariants(merged),
-            styles.noUnderline,
-            select.text,
-            merged.style,
-          )}
+          {...stylex.attrs(...buttonVariants(merged), styles.linkButton, merged.style)}
           style={inlineVars()}
           target={merged.external ? "_blank" : undefined}
           rel={merged.external ? "noopener noreferrer" : undefined}
@@ -398,7 +459,7 @@ export function LinkButton(props: LinkButtonProps) {
     >
       <button
         data-tomui-component="LinkButton"
-        {...stylex.attrs(...buttonVariants(merged), styles.dimmed, select.text, merged.style)}
+        {...stylex.attrs(...buttonVariants(merged), styles.dimmed, styles.linkButton, merged.style)}
         disabled
       >
         {merged.icon}

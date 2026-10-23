@@ -184,6 +184,81 @@ describe("ContentBlocks", () => {
     expect(video.hasAttribute("controls")).toBe(true);
   });
 
+  it("renders an audio attachment as an inline player", () => {
+    const blocks = [
+      decodeBlock({
+        id: 8,
+        type: "Attachment",
+        title: "just-trust-the-universe.mp3",
+        attachment: {
+          url: "https://attachments.are.na/just-trust-the-universe.mp3",
+          filename: "285e74b50c0607f2f211627ef0f7d22f.mp3",
+          content_type: "audio/mpeg",
+        },
+      }),
+    ];
+
+    const { container } = render(() => <ContentBlocks blocks={blocks} />);
+    const player = container.querySelector("audio") as HTMLAudioElement;
+
+    expect(player).toBeTruthy();
+    expect(player.getAttribute("src")).toBe(
+      "https://attachments.are.na/just-trust-the-universe.mp3",
+    );
+    expect(player.hasAttribute("controls")).toBe(true);
+    expect(container.querySelector("a")).toBeNull();
+  });
+
+  it("previews a video whose title carries no extension", () => {
+    // are.na titles are free text and content_type is optional, so the stored
+    // filename has to decide. This used to fall through to a download link.
+    const blocks = [
+      decodeBlock({
+        id: 9,
+        type: "Attachment",
+        title: "Holiday clip",
+        attachment: {
+          url: "https://attachments.are.na/holiday.mp4",
+          filename: "a7e22f45ab4e7a240c73b570ff53b3fa.mp4",
+          content_type: "application/octet-stream",
+        },
+      }),
+    ];
+
+    const { container } = render(() => <ContentBlocks blocks={blocks} />);
+
+    expect(screen.getByRole("button", { name: "Play Holiday clip" })).toBeTruthy();
+    expect(container.querySelector("a")).toBeNull();
+  });
+
+  it("uses the are.na cover as the video poster", async () => {
+    const blocks = [
+      decodeBlock({
+        id: 10,
+        type: "Attachment",
+        title: "clip.mp4",
+        attachment: {
+          url: "https://attachments.are.na/clip.mp4",
+          filename: "clip.mp4",
+          content_type: "video/mp4",
+        },
+        image: {
+          src: "https://d2w9rnfcy7mm78.cloudfront.net/original.png",
+          medium: { src: "https://images.are.na/cover.png" },
+        },
+      }),
+    ];
+
+    const { container } = render(() => <ContentBlocks blocks={blocks} />);
+    await userEvent.click(screen.getByRole("button", { name: "Play clip.mp4" }));
+
+    await waitFor(() =>
+      expect(container.querySelector("video")?.getAttribute("poster")).toBe(
+        "https://images.are.na/cover.png",
+      ),
+    );
+  });
+
   const pdfBlocks = [
     decodeBlock({
       id: 6,

@@ -60,7 +60,7 @@ const styles = stylex.create({
     padding: "0.75rem",
     borderWidth: 1,
     borderColor: hairline,
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-base"],
     transitionProperty: "background-color",
     ":has([data-checked])": {
@@ -88,7 +88,7 @@ const styles = stylex.create({
     appearance: "none",
     cursor: "pointer",
     borderWidth: 0,
-    borderRadius: radius.full.borderRadius,
+    borderRadius: radius.full,
     backgroundColor: colors["--color-tomui-base"],
     outlineWidth: 0,
     ":checked": { backgroundColor: colors["--color-tomui-contrast"] },
@@ -122,7 +122,7 @@ const styles = stylex.create({
   indicatorDot: {
     height: "0.5rem",
     width: "0.5rem",
-    borderRadius: radius.full.borderRadius,
+    borderRadius: radius.full,
     backgroundColor: colors["--color-tomui-base"],
   },
   labelText: { fontSize: "0.875rem", color: textColors["--text-color-tomui-default"] },

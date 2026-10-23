@@ -31,7 +31,7 @@ const styles = stylex.create({
   sizeBase: {
     alignItems: "flex-start",
     gap: "0.75rem",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     paddingInline: "1rem",
     paddingBlock: "0.75rem",
     ...fontSizeBase,
@@ -39,7 +39,7 @@ const styles = stylex.create({
   sizeSm: {
     alignItems: "center",
     gap: "0.5rem",
-    borderRadius: radius.md.borderRadius,
+    borderRadius: radius.md,
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",
     ...fontSizeSm,

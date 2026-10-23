@@ -54,6 +54,42 @@ export const Outline = meta.story({
   },
 });
 
+export const Glass = meta.story({
+  args: {
+    variant: "glass",
+    children: "Glass",
+  },
+});
+
+/**
+ * The variant is translucent and blurred, so what sits behind it is part of how
+ * it reads. Stripes make that legible: the banding stops at the edge and
+ * smears behind the fill, which is the effect a flat canvas cannot show.
+ */
+export const GlassOverContent = meta.story({
+  args: {
+    variant: "glass",
+    size: "lg",
+    children: "Glass",
+  },
+  decorators: [
+    (Story) => (
+      <div
+        style={{
+          display: "grid",
+          "place-items": "center",
+          padding: "5rem 6rem",
+          "border-radius": "1rem",
+          background:
+            "repeating-linear-gradient(135deg, #6d5efc 0 18px, #18d4c4 18px 36px, #ff7ac2 36px 54px)",
+        }}
+      >
+        <Story />
+      </div>
+    ),
+  ],
+});
+
 export const Small = meta.story({
   args: {
     size: "sm",

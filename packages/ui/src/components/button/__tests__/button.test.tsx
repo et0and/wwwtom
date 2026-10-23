@@ -35,7 +35,14 @@ describe("Button", () => {
   it("applies a distinct rule set per visual variant", () => {
     // `primary` and `destructive` deliberately share one rule; they differ by
     // the accent custom properties, not by class list.
-    const distinct = ["primary", "secondary", "ghost", "secondary-destructive", "outline"] as const;
+    const distinct = [
+      "primary",
+      "secondary",
+      "ghost",
+      "secondary-destructive",
+      "outline",
+      "glass",
+    ] as const;
     const seen = new Set<string>();
 
     for (const variant of distinct) {
@@ -44,6 +51,18 @@ describe("Button", () => {
     }
 
     expect(seen.size).toBe(distinct.length);
+  });
+
+  it("omits the shared focus ring for the glass variant", () => {
+    // The glass surface is a shadow stack, so the shared ring — which would
+    // replace it with a plain 1px line — is dropped for this variant alone.
+    const secondary = buttonVariants({ variant: "secondary" });
+    const glass = buttonVariants({ variant: "glass" });
+    const sharedRing = secondary[secondary.length - 1];
+
+    expect(secondary).toContain(sharedRing);
+    expect(glass).not.toContain(sharedRing);
+    expect(glass).toHaveLength(secondary.length - 1);
   });
 
   it("gives primary and destructive different accent colours", () => {

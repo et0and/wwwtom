@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, merge, omit, Show, useContext } from "solid-js";
 import { colors } from "../../styles/colors.stylex";
-import { layout } from "../../styles/primitives.stylex";
+import { spacing } from "../../styles/primitives.stylex";
 import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 import { createDisclosureState } from "../../utils/state";
@@ -30,7 +30,7 @@ const styles = stylex.create({
     display: "flex",
     cursor: "pointer",
     alignItems: "center",
-    gap: layout.gap1.gap,
+    gap: spacing.px1,
     fontSize: fontSizeBase.fontSize,
     fontWeight: 500,
     color: textColors["--text-color-tomui-default"],
@@ -80,7 +80,7 @@ const styles = stylex.create({
     marginBlock: "0.5rem",
     display: "flex",
     flexDirection: "column",
-    gap: layout.gap4.gap,
+    gap: spacing.px4,
     borderLeftWidth: 2,
     borderLeftColor: colors["--color-tomui-fill"],
     paddingBlock: "0.25rem",

@@ -48,7 +48,13 @@ const assignUrl = (url: string): void => window.location.assign(url);
 
 const styles = stylex.create({
   headerGroup: { columnGap: "1rem", rowGap: "0.5rem" },
-  accountTrigger: { borderWidth: 0, backgroundColor: "transparent" },
+  accountTrigger: {
+    borderWidth: 0,
+    backgroundColor: "transparent",
+    cursor: cursor.pointer,
+    borderRadius: radius.full,
+    padding: spacing.p0,
+  },
 });
 
 export const App = (props: { navigate?: (url: string) => void }) => {
@@ -129,10 +135,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
                 <div class="editor-user">
                   <DropdownMenu>
                     <DropdownMenu.Trigger
-                      class={
-                        stylex.attrs(cursor.pointer, radius.full, spacing.p0, styles.accountTrigger)
-                          .class ?? ""
-                      }
+                      class={stylex.attrs(styles.accountTrigger).class ?? ""}
                       aria-label="Account"
                     >
                       <Avatar name={current().user.name} email={current().user.email} />

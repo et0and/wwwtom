@@ -5,10 +5,62 @@ import { textColors } from "./tokens.stylex";
 /**
  * Layout primitives shared across TomUI components.
  *
- * StyleX cannot merge a runtime class string, so the recurring utility
- * combinations that Tailwind components used to repeat inline live here as
- * named styles instead. Components compose these rather than restating values.
+ * Two kinds of thing live here, and the distinction matters:
+ *
+ * - **Values** (`radius`, `spacing`, `cursor`, `select`) are `defineConsts`, so
+ *   a component can embed them in its own rule: `borderRadius: radius.lg`.
+ * - **Styles** (`layout`, `sizing`, `overflow`, `textAlign`, `menuItem`) are
+ *   `stylex.create`, so a component can compose whole style objects:
+ *   `stylex.attrs(styles.row, layout.itemsCenter)`.
+ *
+ * Reading a property off a `stylex.create` namespace — the pattern
+ * `radius.lg` — compiles to a `var()` that nothing ever defines, so
+ * the declaration is dropped and the property silently falls back to its initial
+ * value. Consts have no such problem: they compile to the literal.
  */
+export const radius = stylex.defineConsts({
+  none: "0",
+  sm: "0.25rem",
+  md: "0.375rem",
+  lg: "0.5rem",
+  xl: "0.75rem",
+  full: "9999px",
+  inherit: "inherit",
+});
+
+/** Single-direction spacing. Gaps draw from the same scale as padding. */
+export const spacing = stylex.defineConsts({
+  p0: "0",
+  px1: "0.25rem",
+  px1_5: "0.375rem",
+  px2: "0.5rem",
+  px3: "0.75rem",
+  px4: "1rem",
+  px5: "1.25rem",
+  px6: "1.5rem",
+  py0: "0",
+  py0_5: "0.125rem",
+  py1: "0.25rem",
+  py1_5: "0.375rem",
+  py2: "0.5rem",
+  py2_5: "0.625rem",
+  py3: "0.75rem",
+  py4: "1rem",
+  py6: "1.5rem",
+});
+
+/** Cursor intents. */
+export const cursor = stylex.defineConsts({
+  pointer: "pointer",
+  notAllowed: "not-allowed",
+});
+
+/** User-select intents. */
+export const select = stylex.defineConsts({
+  none: "none",
+  text: "text",
+});
+
 export const layout = stylex.create({
   flexRow: { display: "flex", flexDirection: "row" },
   flexRowCentered: { display: "flex", flexDirection: "row", alignItems: "center" },
@@ -25,13 +77,10 @@ export const layout = stylex.create({
   justifyStart: { justifyContent: "flex-start" },
   justifyEnd: { justifyContent: "flex-end" },
 
-  gap1: { gap: "0.25rem" },
-  gap1_5: { gap: "0.375rem" },
-  gap2: { gap: "0.5rem" },
-  gap3: { gap: "0.75rem" },
-  gap4: { gap: "1rem" },
-  gap6: { gap: "1.5rem" },
-  gap8: { gap: "2rem" },
+  gap1: { gap: spacing.px1 },
+  gap1_5: { gap: spacing.px1_5 },
+  gap2: { gap: spacing.px2 },
+  gap4: { gap: spacing.px4 },
 
   fullWidth: { width: "100%" },
   autoWidth: { width: "auto" },
@@ -64,27 +113,6 @@ export const textAlign = stylex.create({
   balance: { textWrap: "balance" },
 });
 
-/** Single-direction spacing used by form controls and buttons. */
-export const spacing = stylex.create({
-  p0: { padding: 0 },
-  px1: { paddingInline: "0.25rem" },
-  px1_5: { paddingInline: "0.375rem" },
-  px2: { paddingInline: "0.5rem" },
-  px3: { paddingInline: "0.75rem" },
-  px4: { paddingInline: "1rem" },
-  px5: { paddingInline: "1.25rem" },
-  px6: { paddingInline: "1.5rem" },
-  py0: { paddingBlock: 0 },
-  py0_5: { paddingBlock: "0.125rem" },
-  py1: { paddingBlock: "0.25rem" },
-  py1_5: { paddingBlock: "0.375rem" },
-  py2: { paddingBlock: "0.5rem" },
-  py2_5: { paddingBlock: "0.625rem" },
-  py3: { paddingBlock: "0.75rem" },
-  py4: { paddingBlock: "1rem" },
-  py6: { paddingBlock: "1.5rem" },
-});
-
 /** Square sizing for icon-sized controls. */
 export const sizing = stylex.create({
   size3_5: { width: "0.875rem", height: "0.875rem" },
@@ -99,18 +127,6 @@ export const sizing = stylex.create({
   h10: { height: "2.5rem" },
 });
 
-/** Border radius steps. Concentric shapes use outer = inner + padding. */
-export const radius = stylex.create({
-  none: { borderRadius: 0 },
-  sm: { borderRadius: "0.25rem" },
-  md: { borderRadius: "0.375rem" },
-  lg: { borderRadius: "0.5rem" },
-  xl: { borderRadius: "0.75rem" },
-  full: { borderRadius: "9999px" },
-  /** Matches the parent's radius, for overlays and focus rings. */
-  inherit: { borderRadius: "inherit" },
-});
-
 /** Overflow, truncation, and scroll helpers. */
 export const overflow = stylex.create({
   hidden: { overflow: "hidden" },
@@ -120,18 +136,6 @@ export const overflow = stylex.create({
   /** Prevents an icon from wrapping onto its own line beside text. */
   noShrink: { flexShrink: 0 },
   shrink: { flexShrink: 1 },
-});
-
-/** Cursor intents. */
-export const cursor = stylex.create({
-  pointer: { cursor: "pointer" },
-  notAllowed: { cursor: "not-allowed" },
-});
-
-/** User-select intents. */
-export const select = stylex.create({
-  none: { userSelect: "none" },
-  text: { userSelect: "text" },
 });
 
 const brandColor = colors["--color-tomui-brand"];

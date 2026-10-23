@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { merge, omit } from "solid-js";
 import { colors } from "../../styles/colors.stylex";
-import { layout, radius, spacing } from "../../styles/primitives.stylex";
+import { radius, spacing } from "../../styles/primitives.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
@@ -10,7 +10,7 @@ const styles = stylex.create({
     display: "inline-flex",
     width: "fit-content",
     alignItems: "stretch",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-control"],
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
     fontSize: fontSizeBase.fontSize,
@@ -32,23 +32,23 @@ const styles = stylex.create({
     display: "inline-flex",
     cursor: "pointer",
     alignItems: "center",
-    gap: layout.gap1.gap,
-    paddingInline: spacing.px2.paddingInline,
-    paddingBlock: spacing.py1.paddingBlock,
+    gap: spacing.px1,
+    paddingInline: spacing.px2,
+    paddingBlock: spacing.py1,
     color: "inherit",
   },
   link: {
     display: "inline-flex",
     alignItems: "center",
-    gap: layout.gap1.gap,
-    paddingInline: spacing.px2.paddingInline,
-    paddingBlock: spacing.py1.paddingBlock,
+    gap: spacing.px1,
+    paddingInline: spacing.px2,
+    paddingBlock: spacing.py1,
     color: "inherit",
     textDecorationLine: "none",
   },
   input: {
-    paddingInline: spacing.px2.paddingInline,
-    paddingBlock: spacing.py1.paddingBlock,
+    paddingInline: spacing.px2,
+    paddingBlock: spacing.py1,
     color: "inherit",
     ":focus": { borderRadius: "inherit" },
   },
