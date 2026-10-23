@@ -157,6 +157,15 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
         expression: pathContains(PROBE_PATHS),
         action: "block",
       },
+      {
+        // A retired app on a stale origin still answers, and its admin login
+        // reads as a find. Block the whole host until the hosting project and
+        // DNS record are removed (see README, "Retired hosts"). `http.host`
+        // keeps the client's casing, so compare the lowercased value.
+        description: "Retire payload.tom.so: the retired Payload CMS still answers /admin",
+        expression: 'lower(http.host) eq "payload.tom.so"',
+        action: "block",
+      },
     ],
   });
 
