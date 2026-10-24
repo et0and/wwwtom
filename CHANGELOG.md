@@ -1,3 +1,17 @@
+# [4.8.0](https://github.com/et0and/wwwtom/compare/v4.7.13...v4.8.0) (2026-10-24)
+
+
+### Bug Fixes
+
+* **api:** address Google OAuth broker review findings ([6ad002b](https://github.com/et0and/wwwtom/commit/6ad002b6ba3cf9031bb108480d1274d919406d98))
+* **api:** finish OAuth broker review follow-up ([4117658](https://github.com/et0and/wwwtom/commit/4117658a227e3685c3b6aa16d2fcf01e6f27fd39))
+* **security:** block firebase admin credential files at the edge ([e2d62ff](https://github.com/et0and/wwwtom/commit/e2d62ff7c34951c36b4b1540f92e95ea4ac7d51e))
+
+
+### Features
+
+* **api:** add a generic Google OAuth token broker ([8d7157f](https://github.com/et0and/wwwtom/commit/8d7157f00c2ac09a9a181d30f65341e365a25889))
+
 ## [4.7.13](https://github.com/et0and/wwwtom/compare/v4.7.12...v4.7.13) (2026-10-24)
 
 
