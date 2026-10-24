@@ -1,3 +1,10 @@
+## [4.7.11](https://github.com/et0and/wwwtom/compare/v4.7.10...v4.7.11) (2026-10-24)
+
+
+### Bug Fixes
+
+* **web:** preview are.na media attachments ([b443247](https://github.com/et0and/wwwtom/commit/b4432470eb0a29669ddb3989f918277f81ebca7b))
+
 ## [4.7.10](https://github.com/et0and/wwwtom/compare/v4.7.9...v4.7.10) (2026-10-23)
 
 
