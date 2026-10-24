@@ -2,10 +2,18 @@ import { For, Match, Show, Switch, createSignal, onSettled } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { isServer } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
-import type { ArenaContentBlock, ArenaImage } from "@tom/schemas/arena-content";
+import type { ArenaContentBlock } from "@tom/schemas/arena-content";
 import { colors } from "@tom/ui/colors.stylex";
-import { layout, cursor, textAlign, spacing, radius } from "@tom/ui/primitives.stylex";
+import { layout, spacing } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
+import { attachmentMediaStyles } from "~/content/attachment-media.stylex";
+import {
+  AudioAttachment,
+  PlayOverlay,
+  VideoAttachment,
+  attachmentKind,
+  attachmentName,
+} from "~/content/AttachmentMedia";
 import { sanitizeEmbedHtml, sanitizeRichHtml } from "~/content/sanitize";
 import { ChannelEmbed } from "~/content/ChannelEmbed";
 import {
@@ -23,40 +31,6 @@ const DEFAULT_EMBED_ASPECT_RATIO = "16 / 9";
 const styles = stylex.create({
   textBlock: { maxWidth: "none", overflowWrap: "break-word", whiteSpace: "normal" },
   figureReset: { margin: 0 },
-  playOverlay: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  playButton: {
-    display: "flex",
-    height: "3.5rem",
-    width: "3.5rem",
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: radius.full.borderRadius,
-    backgroundColor: `color-mix(in srgb, ${colors["--color-black"]} 60%, transparent)`,
-    color: colors["--color-white"],
-  },
-  playIcon: {
-    height: "1.5rem",
-    width: "1.5rem",
-    fill: "currentColor",
-  },
-  videoTrigger: {
-    display: "block",
-    borderWidth: 0,
-    backgroundColor: "transparent",
-  },
-  videoCoverFallback: {
-    position: "relative",
-    display: "flex",
-    height: "11rem",
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: colors["--color-tomui-tint"],
-  },
   embedContainer: {
     position: "relative",
     width: "100%",
@@ -183,123 +157,57 @@ function LinkBlock(props: { block: Extract<ArenaContentBlock, { type: "Link" }> 
   );
 }
 
-function PlayOverlay() {
-  return (
-    <span {...stylex.attrs(layout.absoluteInset0, styles.playOverlay)}>
-      <span {...stylex.attrs(styles.playButton)}>
-        <svg viewBox="0 0 24 24" {...stylex.attrs(styles.playIcon)} aria-hidden="true">
-          <path d="M8 5v14l11-7z" />
-        </svg>
-      </span>
-    </span>
-  );
-}
-
-/** Videos load only after a click, so are.na serves no bytes up front. */
-function VideoAttachment(props: { url: string; name: string; cover: ArenaImage | null }) {
-  const [isPlaying, setIsPlaying] = createSignal(false);
-  const cover = () => (props.cover && hasArenaImageSource(props.cover) ? props.cover : null);
-  return (
-    <Show
-      when={isPlaying()}
-      fallback={
-        <button
-          type="button"
-          onClick={() => setIsPlaying(true)}
-          aria-label={`Play ${props.name}`}
-          {...stylex.attrs(
-            styles.videoTrigger,
-            layout.fullWidth,
-            cursor.pointer,
-            spacing.p0,
-            textAlign.left,
-          )}
-        >
-          <Show
-            when={cover()}
-            fallback={
-              <span {...stylex.attrs(styles.videoCoverFallback)}>
-                <PlayOverlay />
-              </span>
-            }
-          >
-            {(cover) => (
-              <span {...stylex.attrs(layout.relative, layout.block)}>
-                <img
-                  src={arenaImageSource(cover())}
-                  srcset={arenaImageSourceSet(cover())}
-                  alt={props.name}
-                  {...stylex.attrs(layout.fullWidth)}
-                  loading="lazy"
-                  {...arenaImageDimensions(cover())}
-                />
-                <PlayOverlay />
-              </span>
-            )}
-          </Show>
-          <Text>{props.name}</Text>
-        </button>
-      }
-    >
-      <video src={props.url} controls preload="metadata" {...stylex.attrs(layout.fullWidth)}>
-        Your browser does not support the video element.
-      </video>
-    </Show>
-  );
-}
-
 function AttachmentBlock(props: { block: Extract<ArenaContentBlock, { type: "Attachment" }> }) {
-  const displayName = () =>
-    props.block.title || props.block.attachment.filename || "Download attachment";
-  const contentType = () => props.block.attachment.content_type ?? "";
-  const isPdf = () =>
-    contentType() === "application/pdf" || displayName().toLowerCase().endsWith(".pdf");
-  const isVideo = () =>
-    contentType().startsWith("video/") || /\.(mp4|webm|mov|m4v)$/i.test(displayName());
+  const name = () => attachmentName(props.block.attachment, props.block.title);
+  const kind = () => attachmentKind(props.block.attachment, props.block.title);
   const body = (
     <>
       <Show when={hasArenaImageSource(props.block.image)}>
         <img
           src={arenaImageSource(props.block.image)}
           srcset={arenaImageSourceSet(props.block.image)}
-          alt={displayName()}
+          alt={name()}
           {...stylex.attrs(layout.fullWidth)}
           loading="lazy"
           {...arenaImageDimensions(props.block.image)}
         />
       </Show>
-      <Text>{displayName()}</Text>
+      <Text>{name()}</Text>
     </>
   );
   return (
-    <Show
-      when={isVideo()}
+    <Switch
       fallback={
-        <Show
-          when={isPdf()}
-          fallback={
-            <a
-              href={props.block.attachment.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              {...stylex.attrs(layout.block, layoutStyles.noUnderlineHover)}
-            >
-              {body}
-            </a>
-          }
+        <a
+          href={props.block.attachment.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          {...stylex.attrs(layout.block, layoutStyles.noUnderlineHover)}
         >
-          <PdfDialog url={props.block.attachment.url} title={displayName()}>
-            {body}
-          </PdfDialog>
-        </Show>
+          {body}
+        </a>
       }
     >
-      <VideoAttachment
-        url={props.block.attachment.url}
-        name={displayName()}
-        cover={props.block.image ?? null}
-      />
-    </Show>
+      <Match when={kind() === "video"}>
+        <VideoAttachment
+          url={props.block.attachment.url}
+          name={name()}
+          cover={props.block.image ?? null}
+        />
+      </Match>
+      <Match when={kind() === "audio"}>
+        <AudioAttachment
+          url={props.block.attachment.url}
+          name={name()}
+          cover={props.block.image ?? null}
+        />
+      </Match>
+      <Match when={kind() === "pdf"}>
+        <PdfDialog url={props.block.attachment.url} title={name()}>
+          {body}
+        </PdfDialog>
+      </Match>
+    </Switch>
   );
 }
 
@@ -335,10 +243,8 @@ function EmbedBlock(props: { block: Extract<ArenaContentBlock, { type: "Embed" }
               aria-label={`Play ${props.block.title ?? "video"}`}
               {...stylex.attrs(
                 layout.relative,
-                styles.videoTrigger,
+                attachmentMediaStyles.videoTrigger,
                 layout.fullWidth,
-                cursor.pointer,
-                spacing.p0,
               )}
             >
               <span {...stylex.attrs(layout.relative, layout.block)}>
