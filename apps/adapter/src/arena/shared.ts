@@ -1,4 +1,6 @@
-import { Effect, Schema } from "effect";
+import type { Crypto } from "effect/Crypto";
+import { Effect, Layer, Match, Schema } from "effect";
+import { DatabaseService } from "@tom/db/service";
 import {
   getEntry,
   listEntries,
@@ -11,12 +13,22 @@ import type { PaginationAttributes } from "@tom/schemas/arena";
 import type { ArenaEntry, ArenaEntryList, ArenaEntrySummary } from "@tom/schemas/arena-content";
 import { ARENA_POSTS_CHANNEL_SLUG } from "@tom/constants/arena";
 import { HttpStatus } from "@tom/constants/http";
-import { HttpError } from "@tom/types/errors";
+import {
+  AuthenticationError,
+  DatabaseConnectionError,
+  HttpError,
+  OAuthSessionError,
+} from "@tom/types/errors";
 import { retryPolicy } from "@tom/utils/retry";
-import { readCloudflareEnv } from "@tom/utils/config";
+import {
+  AppConfig,
+  readCloudflareEnv,
+  type CloudflareEnv,
+  type ResolvedCloudflareEnv,
+} from "@tom/utils/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/worker";
 import type { LogContext } from "@tom/utils/logging";
-import { AdapterError, createArenaLayer, runAdapter } from "../runtime";
+import { AdapterError, createArenaLayer, createDbLayer, cryptoLayer, runAdapter } from "../runtime";
 import { tenantFromValue } from "../origins";
 import { simulatorEnv } from "../simulator";
 import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "../schemas";
@@ -98,6 +110,65 @@ export const runArena = <T>(
           : new HttpError({
               message: error.message,
               status: HttpStatus.InternalServerError,
+              cause: error,
+            }),
+      ),
+    ),
+    (error) => new AdapterError({ status: error.status, message: error.message }),
+    context,
+  );
+
+export type ArenaAuthError =
+  | HttpError
+  | AuthenticationError
+  | OAuthSessionError
+  | DatabaseConnectionError;
+
+/**
+ * HTTP status for an are.na OAuth failure. `HttpError` carries its own; the
+ * client-flow failures map to 4xx. The union is discriminated, so `Match`
+ * rejects a member that is not handled.
+ */
+const arenaAuthStatus = Match.typeTags<ArenaAuthError, number>()({
+  HttpError: (error) => error.status,
+  AuthenticationError: () => HttpStatus.Unauthorized,
+  OAuthSessionError: () => HttpStatus.BadRequest,
+  DatabaseConnectionError: () => HttpStatus.InternalServerError,
+});
+
+/** Env resolution fails as an HttpError, so the error channel stays one union. */
+const resolveArenaEnv = (env: CloudflareEnv): Effect.Effect<ResolvedCloudflareEnv, HttpError> =>
+  Effect.tryPromise({
+    try: () => readCloudflareEnv(env),
+    catch: (cause) =>
+      new HttpError({
+        message: "are.na configuration unavailable",
+        status: HttpStatus.InternalServerError,
+        cause,
+      }),
+  });
+
+/**
+ * Run an are.na OAuth effect with the database and Worker crypto it needs.
+ * These routes are the only arena paths that read the account table, so they
+ * get their own runner rather than the content client's.
+ */
+export const runArenaAuth = <T>(
+  request: Request,
+  effect: Effect.Effect<T, ArenaAuthError, DatabaseService | AppConfig | Crypto>,
+  context: LogContext,
+): Promise<T> =>
+  runAdapter(
+    resolveArenaEnv(getRequestEnv(request)).pipe(
+      Effect.flatMap((resolved) =>
+        effect.pipe(Effect.provide(Layer.mergeAll(createDbLayer(resolved), cryptoLayer))),
+      ),
+      Effect.mapError((error) =>
+        Schema.is(HttpError)(error)
+          ? error
+          : new HttpError({
+              message: error.message,
+              status: arenaAuthStatus(error),
               cause: error,
             }),
       ),
