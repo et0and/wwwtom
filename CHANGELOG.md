@@ -1,3 +1,10 @@
+## [4.7.12](https://github.com/et0and/wwwtom/compare/v4.7.11...v4.7.12) (2026-10-24)
+
+
+### Bug Fixes
+
+* **security:** disable workers.dev routes on deployed workers ([c493fb0](https://github.com/et0and/wwwtom/commit/c493fb081a280f8abd288c9c75f870f882a7b310))
+
 ## [4.7.11](https://github.com/et0and/wwwtom/compare/v4.7.10...v4.7.11) (2026-10-24)
 
 
