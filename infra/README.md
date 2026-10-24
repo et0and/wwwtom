@@ -132,6 +132,10 @@ from silently creating a new stage-specific Worker.
 origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
+Every Worker this repository deploys sets `workersDev: false`, so its custom
+domain is the only public entry point. A workers.dev URL would bypass both the
+custom rules and the per-IP rate limit.
+
 - `http_request_firewall_custom`: credential and key-material paths
   (`CREDENTIAL_PATHS` in `edge.run.ts`), the remaining probe surface
   (`PROBE_PATHS`), raw paths containing `//` or a backslash, and the retired

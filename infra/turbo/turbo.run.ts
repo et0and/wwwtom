@@ -41,6 +41,8 @@ export const turbo = Effect.gen(function* () {
   return yield* Cloudflare.Worker("wwwtom-turbo", {
     main: `${import.meta.dirname}/src/index.ts`,
     compatibility: { date: "2026-08-12", flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     dev: {
       // Local workerd dev server via `alchemy dev`.
       port: 8790,
