@@ -78,12 +78,16 @@ const styles = stylex.create({
   itemLabelCardStart: { flexDirection: "row-reverse" },
   disabled: { cursor: "not-allowed", opacity: 0.5 },
   enabled: { cursor: "pointer" },
-  cardHover: { ":hover": { backgroundColor: colors["--color-tomui-tint"] } },
-  controlWrap: { position: "relative", display: "inline-flex", marginTop: "0.125rem" },
+  cardHover: {
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    },
+  },
+  controlWrap: { position: "relative", display: "inline-flex", marginBlockStart: "0.125rem" },
   control: {
     height: "1rem",
     width: "1rem",
-    marginTop: "0.125rem",
+    marginBlockStart: "0.125rem",
     flexShrink: 0,
     appearance: "none",
     cursor: "pointer",

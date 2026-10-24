@@ -20,7 +20,7 @@ const styles = stylex.create({
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    height: "100vh",
+    height: "100dvh",
   },
   kawaraContainer: { backgroundColor: colors["--color-white"] },
   // Tailwind's `container` utility: full width, capped at each breakpoint.
@@ -111,17 +111,17 @@ export default function Kawara() {
         <style>{`
 					html, body {
 						overflow: hidden;
-						height: 100vh;
+						height: 100dvh;
 					}
 					.kawara-container {
 						container-type: inline-size;
-						height: 100vh;
+						height: 100dvh;
 						overflow: hidden;
 					}
 					.kawara-main {
 						container-type: inline-size;
-						height: 100vh;
-						padding: 2rem 0;
+						height: 100dvh;
+						padding-block: 2rem;
 					}
 					/* Hide Nav and Footer specifically for this page */
 					body > div > div > nav,
@@ -157,8 +157,8 @@ export default function Kawara() {
                       <div
                         style={{
                           position: "absolute",
-                          top: 0,
-                          left: 0,
+                          "inset-block-start": 0,
+                          "inset-inline-start": 0,
                           width: "100%",
                           height: `${ITEM_HEIGHT}px`,
                           transform: `translateY(${index * ITEM_HEIGHT}px)`,

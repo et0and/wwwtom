@@ -46,16 +46,37 @@ const styles = stylex.create({
     outlineColor: colors["--color-tomui-line"],
     transitionProperty: "transform, scale, opacity",
     transitionDuration: "150ms",
+    transitionTimingFunction: "var(--ease-out, ease-out)",
     [STARTING]: { scale: 0.9, opacity: 0 },
     [ENDING]: { scale: 0.9, opacity: 0 },
     [INSTANT]: { transitionDuration: "0s" },
   },
 
   // Placement, one entry per side.
-  sideTop: { bottom: "100%", left: "50%", marginBottom: "0.625rem", translate: "-50% 0" },
-  sideBottom: { top: "100%", left: "50%", marginTop: "0.625rem", translate: "-50% 0" },
-  sideLeft: { top: "50%", right: "100%", marginRight: "0.625rem", translate: "0 -50%" },
-  sideRight: { top: "50%", left: "100%", marginLeft: "0.625rem", translate: "0 -50%" },
+  sideTop: {
+    insetBlockEnd: "100%",
+    insetInlineStart: "50%",
+    marginBlockEnd: "0.625rem",
+    translate: "-50% 0",
+  },
+  sideBottom: {
+    insetBlockStart: "100%",
+    insetInlineStart: "50%",
+    marginBlockStart: "0.625rem",
+    translate: "-50% 0",
+  },
+  sideLeft: {
+    insetBlockStart: "50%",
+    insetInlineEnd: "100%",
+    marginInlineEnd: "0.625rem",
+    translate: "0 -50%",
+  },
+  sideRight: {
+    insetBlockStart: "50%",
+    insetInlineStart: "100%",
+    marginInlineStart: "0.625rem",
+    translate: "0 -50%",
+  },
 });
 
 const sideStyles = {

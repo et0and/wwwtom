@@ -16,19 +16,40 @@
 
 :root {
   color-scheme: light dark;
+
+  /* One token per colour, both schemes in one value. The greys use `none`
+     for their hue, so a later mix keeps its own hue instead of drifting red.
+     The motion curves are here as well; both apps share one definition. */
+  --web-bg: light-dark(oklch(100% 0 none), oklch(14.5% 0 none));
+  --web-fg: light-dark(oklch(14.5% 0 none), oklch(98.5% 0 none));
+  --web-muted: light-dark(oklch(55.1% 0.023 264.4), oklch(71.4% 0.019 261.3));
+  --web-line: light-dark(oklch(87.2% 0.009 258.3), oklch(44.6% 0.026 256.8));
+  --web-brand: light-dark(oklch(55.5% 0.23 351.9), oklch(69.4% 0.226 354.1));
+  --web-focus: light-dark(oklch(49.9% 0.2 349.3), oklch(69.4% 0.226 354.1));
+  --web-banner-title: light-dark(oklch(89.6% 0.02 335.7), oklch(37.6% 0.026 338.6));
+  --web-on-brand: oklch(100% 0 none);
 }
 
-@media (prefers-color-scheme: dark) {
+html {
+  background-color: var(--web-bg);
+  color: var(--web-fg);
+  /* Reserve the scrollbar gutter, so opening the nav overlay does not shift
+     the page sideways when the scrollbar disappears. */
+  scrollbar-gutter: stable;
+  /* Desktop loses the macOS trackpad rubber-band; touch keeps its own. */
+  overscroll-behavior-y: none;
+}
+
+@media (any-pointer: coarse) {
   html {
-    background-color: #0a0a0a;
-    color: #fafafa;
+    overscroll-behavior-y: auto;
   }
 }
 
 @layer prose {
   p {
     letter-spacing: -0.05em;
-    padding-bottom: 1rem;
+    padding-block-end: 1rem;
   }
 
   ul {
@@ -43,15 +64,9 @@
   figcaption {
     font-size: 0.875rem;
     letter-spacing: -0.05em;
-    color: #6b7280;
-    margin-top: 0.5rem;
+    color: var(--web-muted);
+    margin-block-start: 0.5rem;
     text-align: center;
-  }
-
-  @media (prefers-color-scheme: dark) {
-    figcaption {
-      color: #9ca3af;
-    }
   }
 }
 
@@ -80,60 +95,37 @@ main h2 {
 .banner {
   position: relative;
   line-height: 1.5;
-  margin-top: 1rem;
+  margin-block-start: 1rem;
   width: 100%;
-  border-width: 0 0 1px 0;
-  border-style: solid;
-  padding-left: 0;
-  padding-right: 0;
-  padding-top: 1rem;
-  color: rgb(0 0 0);
-  border-color: rgb(209 213 219);
+  border-block-end: 1px solid var(--web-line);
+  padding-block-start: 1rem;
+  color: light-dark(oklch(0% 0 none), oklch(100% 0 none));
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  .banner {
-    color: rgb(255 255 255);
-    border-color: rgb(75 85 99);
-  }
 }
 
 .banner-title {
   font-size: 0.875rem;
   font-weight: 600;
   letter-spacing: -0.05em;
-  background-color: rgb(230, 216, 226);
-  padding: 0.25rem 0.5rem;
+  background-color: var(--web-banner-title);
+  padding-block: 0.25rem;
+  padding-inline: 0.5rem;
   flex-shrink: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  .banner-title {
-    background-color: rgb(75, 60, 70);
-  }
 }
 
 blockquote {
   font-size: 1rem;
   line-height: 1.5;
   letter-spacing: -0.05em;
-  margin-top: 2rem;
-  margin-bottom: 2rem;
-  padding-left: 1.25rem;
-  border-left: 2px solid rgb(209 213 219);
+  margin-block: 2rem;
+  padding-inline-start: 1.25rem;
+  border-inline-start: 2px solid var(--web-line);
 }
 
 blockquote > p:last-child {
-  padding-bottom: 0;
-}
-
-@media (prefers-color-scheme: dark) {
-  blockquote {
-    border-color: rgb(75 85 99);
-  }
+  padding-block-end: 0;
 }
 
 footer {
@@ -144,18 +136,14 @@ a {
   cursor: pointer;
   outline-color: transparent;
   text-decoration: underline;
-  transition: color 100ms ease-in-out;
+  /* Colour changes are immediate; no transition here. */
   border: 2px solid transparent;
   letter-spacing: -0.05em;
 }
 
-a:hover {
-  color: #cc0081;
-}
-
-@media (prefers-color-scheme: dark) {
+@media (hover: hover) and (pointer: fine) {
   a:hover {
-    color: #ff4da6;
+    color: var(--web-brand);
   }
 }
 
@@ -163,19 +151,9 @@ input:focus-visible,
 textarea:focus-visible,
 a:focus-visible,
 button:focus-visible {
-  outline: 2px solid #ad1174;
+  outline: 2px solid var(--web-focus);
   outline-offset: 4px;
-  border-color: #ad1174;
-}
-
-@media (prefers-color-scheme: dark) {
-  input:focus-visible,
-  textarea:focus-visible,
-  a:focus-visible,
-  button:focus-visible {
-    outline-color: #ff4da6;
-    border-color: #ff4da6;
-  }
+  border-color: var(--web-focus);
 }
 
 a.page {
@@ -183,66 +161,35 @@ a.page {
   text-decoration: none;
 }
 
-a.page:hover {
-  text-decoration: underline;
-  color: #cc0081;
-}
-
-@media (prefers-color-scheme: dark) {
+@media (hover: hover) and (pointer: fine) {
   a.page:hover {
-    color: #ff4da6;
+    text-decoration: underline;
+    color: var(--web-brand);
   }
 }
 
-*::selection {
-  background: #cc0081;
-  color: #ffffff;
-}
-*::-moz-selection {
-  background: #cc0081;
-  color: #ffffff;
-}
-*::-webkit-selection {
-  background: #cc0081;
-  color: #ffffff;
+::selection {
+  background: var(--web-brand);
+  color: var(--web-on-brand);
 }
 
 .guestbook-entry {
   padding: 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--web-line);
   border-radius: 0.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  .guestbook-entry {
-    border-color: #374151;
-  }
-}
-
 .guestbook-message {
-  color: #374151;
-}
-
-@media (prefers-color-scheme: dark) {
-  .guestbook-message {
-    color: #d1d5db;
-  }
+  color: light-dark(oklch(37.3% 0.031 259.7), oklch(87.2% 0.009 258.3));
 }
 
 .nav-dropdown {
   position: fixed;
-  top: 4rem;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset-block-start: 4rem;
+  inset-inline: 0;
+  inset-block-end: 0;
   z-index: 50;
-  background-color: #ffffff;
-}
-
-@media (prefers-color-scheme: dark) {
-  .nav-dropdown {
-    background-color: #0a0a0a;
-  }
+  background-color: var(--web-bg);
 }
 
 /* View Transitions. The router swaps routes in place, and ViewTransitions
@@ -254,11 +201,11 @@ a.page:hover {
 }
 
 ::view-transition-old(root) {
-  animation: fade-out 250ms ease-in-out both;
+  animation: fade-out 250ms var(--ease-in-out) both;
 }
 
 ::view-transition-new(root) {
-  animation: fade-in 250ms ease-in-out both;
+  animation: fade-in 250ms var(--ease-in-out) both;
 }
 
 /* The nav is persistent chrome: only the live header shows while content
@@ -311,7 +258,7 @@ a.page:hover {
 }
 
 .code-block {
-  margin: 1.5rem 0;
+  margin-block: 1.5rem;
   position: relative;
 }
 
@@ -344,20 +291,14 @@ pre code {
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: -0.02em;
-  padding: 0.5rem 1rem;
-  background-color: rgb(243 244 246);
-  border: 1px solid rgb(229 231 235);
-  border-bottom: none;
-  border-radius: 0.5rem 0.5rem 0 0;
-  color: rgb(75 85 99);
-}
-
-@media (prefers-color-scheme: dark) {
-  .code-filename {
-    background-color: rgb(31 41 55);
-    border-color: rgb(75 85 99);
-    color: rgb(156 163 175);
-  }
+  padding-block: 0.5rem;
+  padding-inline: 1rem;
+  background-color: light-dark(oklch(96.7% 0.003 264.5), oklch(27.8% 0.03 256.8));
+  border: 1px solid light-dark(oklch(92.8% 0.006 264.5), oklch(44.6% 0.026 256.8));
+  border-block-end: none;
+  border-start-start-radius: 0.5rem;
+  border-start-end-radius: 0.5rem;
+  color: light-dark(oklch(44.6% 0.026 256.8), oklch(71.4% 0.019 261.3));
 }
 
 .shiki-dark {
@@ -383,15 +324,15 @@ pre code {
   content: counter(step);
   display: inline-block;
   width: 2em;
-  margin-right: 1em;
+  margin-inline-end: 1em;
   text-align: right;
-  color: rgb(156 163 175);
+  color: oklch(71.4% 0.019 261.3);
   font-variant-numeric: tabular-nums;
 }
 
 @media (prefers-color-scheme: dark) {
   .code-block[data-line-numbers="true"] pre .line::before {
-    color: rgb(107 114 133);
+    color: oklch(55.3% 0.031 269.4);
   }
 }
 

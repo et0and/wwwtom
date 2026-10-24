@@ -29,7 +29,7 @@ export type TableOfContentsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "style"
 
 const styles = stylex.create({
   title: {
-    marginBottom: "0.75rem",
+    marginBlockEnd: "0.75rem",
     fontSize: fontSizeXs.fontSize,
     fontWeight: 600,
     letterSpacing: "0.025em",
@@ -40,30 +40,32 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     gap: "0.5rem",
-    borderLeftWidth: 2,
-    borderLeftColor: colors["--color-tomui-hairline"],
+    borderInlineStartWidth: 2,
+    borderInlineStartColor: colors["--color-tomui-hairline"],
   },
-  listItem: { marginLeft: "-0.125rem" },
+  listItem: { marginInlineStart: "-0.125rem" },
   itemBase: {
     display: "block",
     width: "100%",
     paddingBlock: "0.125rem",
-    paddingLeft: "1rem",
-    borderLeftWidth: 2,
-    borderLeftColor: "transparent",
+    paddingInlineStart: "1rem",
+    borderInlineStartWidth: 2,
+    borderInlineStartColor: "transparent",
     fontSize: fontSizeSm.fontSize,
     textDecorationLine: "none",
   },
   itemDefault: {
     color: textColors["--text-color-tomui-subtle"],
-    ":hover": {
-      borderLeftColor: colors["--color-tomui-line"],
-      color: textColors["--text-color-tomui-default"],
-      fontWeight: 500,
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": {
+        borderInlineStartColor: colors["--color-tomui-line"],
+        color: textColors["--text-color-tomui-default"],
+        fontWeight: 500,
+      },
     },
   },
   itemActive: {
-    borderLeftColor: colors["--color-tomui-brand"],
+    borderInlineStartColor: colors["--color-tomui-brand"],
     fontWeight: 500,
     color: textColors["--text-color-tomui-default"],
   },
@@ -151,7 +153,7 @@ export function TableOfContents(props: TableOfContentsProps) {
                   )}
                   style={
                     heading.level !== undefined && heading.level > 2
-                      ? { "padding-left": `${1 + (heading.level - 2) * 0.75}rem` }
+                      ? { "padding-inline-start": `${1 + (heading.level - 2) * 0.75}rem` }
                       : undefined
                   }
                 >

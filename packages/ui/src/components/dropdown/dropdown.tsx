@@ -27,11 +27,11 @@ const styles = stylex.create({
     padding: "0.375rem",
     color: textColors["--text-color-tomui-default"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-line"] + ", 0 10px 15px -3px rgb(0 0 0 / 0.1)",
-    top: "100%",
-    marginTop: "0.5rem",
+    insetBlockStart: "100%",
+    marginBlockStart: "0.5rem",
   },
-  alignStart: { right: "auto", left: 0 },
-  alignEnd: { right: 0, left: "auto" },
+  alignStart: { insetInlineEnd: "auto", insetInlineStart: 0 },
+  alignEnd: { insetInlineEnd: 0, insetInlineStart: "auto" },
   /** Link items must not inherit link styling from the document. */
   link: { width: "100%", color: "inherit", textDecorationLine: "none" },
 });

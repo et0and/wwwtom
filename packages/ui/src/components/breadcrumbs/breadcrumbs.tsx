@@ -11,7 +11,7 @@ const styles = stylex.create({
     minWidth: 0,
     flexGrow: 1,
     alignItems: "center",
-    overflow: "hidden",
+    overflow: "clip",
     whiteSpace: "nowrap",
     marginInlineEnd: "1rem",
   },

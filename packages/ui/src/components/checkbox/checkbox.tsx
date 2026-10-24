@@ -44,7 +44,9 @@ const styles = stylex.create({
     ":checked": { backgroundColor: contrast, boxShadow: "0 0 0 1px " + contrast },
   },
   controlInteractive: {
-    ":hover": { boxShadow: "0 0 0 1px " + hairline },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { boxShadow: "0 0 0 1px " + hairline },
+    },
     ":focus": { boxShadow: "0 0 0 2px " + focus },
     ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
   },

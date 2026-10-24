@@ -17,7 +17,7 @@ const styles = stylex.create({
     lineHeight: fontSizeSm.lineHeight,
     flexShrink: 0,
     [SM]: { flexDirection: "row", alignItems: "center" },
-    [MD]: { position: "sticky", bottom: 0 },
+    [MD]: { position: "sticky", insetBlockEnd: 0 },
   },
 });
 

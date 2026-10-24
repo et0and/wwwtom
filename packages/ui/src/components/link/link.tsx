@@ -28,7 +28,9 @@ const styles = stylex.create({
   plain: {
     color: linkColor,
     transitionProperty: "color",
-    ":hover": { color: "color-mix(in srgb, " + linkColor + " 70%, transparent)" },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { color: "color-mix(in srgb, " + linkColor + " 70%, transparent)" },
+    },
   },
   underlined: {
     textDecorationLine: "underline",
@@ -37,7 +39,9 @@ const styles = stylex.create({
     textDecorationColor: "color-mix(in oklch, currentColor 35%, transparent)",
     transitionProperty: "color, text-decoration-color",
     [DARK]: { textDecorationColor: "color-mix(in oklch, currentColor 65%, transparent)" },
-    ":hover": { textDecorationColor: "currentColor" },
+    "@media (hover: hover) and (pointer: fine)": {
+      ":hover": { textDecorationColor: "currentColor" },
+    },
   },
   /** A thicker stroke keeps the external-link icon visible on dark backgrounds. */
   externalIcon: {
