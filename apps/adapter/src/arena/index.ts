@@ -1,4 +1,6 @@
 import { Elysia } from "elysia";
+import { createBlockCommentRoute } from "./create-block-comment";
+import { deleteCommentRoute } from "./delete-comment";
 import { contentFeedRoute } from "./get-content-arena-feed";
 import { contentPostRoute } from "./get-content-arena-post";
 import { contentPostsRoute } from "./list-content-arena-posts";
@@ -33,6 +35,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .use(getBlockRoute)
   .use(getBlockChannelsRoute)
   .use(getBlockCommentsRoute)
+  .use(createBlockCommentRoute)
+  .use(deleteCommentRoute)
   .use(searchRoute)
   .use(initiateArenaAuthRoute)
   .use(arenaCallbackRoute)
