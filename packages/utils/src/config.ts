@@ -261,7 +261,8 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
     Object.entries({
       GOOGLE_CLIENT_ID: rest.GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: rest.GOOGLE_CLIENT_SECRET,
-    }).filter(([, value]) => value !== undefined),
+      GOOGLE_OAUTH_CLIENTS: rest.GOOGLE_OAUTH_CLIENTS,
+    }).filter(([, value]) => value !== undefined && value !== ""),
   );
 
   return {

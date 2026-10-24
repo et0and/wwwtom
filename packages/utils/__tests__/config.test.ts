@@ -81,6 +81,23 @@ describe("readCloudflareEnv tenant secrets", () => {
     expect(resolved.GOOGLE_CLIENT_SECRET).toBe("explicit-secret");
   });
 
+  it("lets explicit worker env win for the Google OAuth client map", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv(
+        { ...sharedBundle, GOOGLE_OAUTH_CLIENTS: "bundle" },
+        { GOOGLE_OAUTH_CLIENTS: "explicit" },
+      ),
+    );
+    expect(resolved.GOOGLE_OAUTH_CLIENTS).toBe("explicit");
+  });
+
+  it("falls back to the bundle when the explicit Google OAuth client map is blank", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv({ ...sharedBundle, GOOGLE_OAUTH_CLIENTS: "bundle" }, { GOOGLE_OAUTH_CLIENTS: "" }),
+    );
+    expect(resolved.GOOGLE_OAUTH_CLIENTS).toBe("bundle");
+  });
+
   it("falls back to bundle provider keys without explicit worker env", async () => {
     const resolved = await readCloudflareEnv(
       bundleEnv(

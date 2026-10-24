@@ -37,6 +37,7 @@ const tokenResponse = () =>
     JSON.stringify({
       access_token: "access-token",
       expires_in: 3600,
+      id_token: "identity-token",
       refresh_token: "refresh-token",
       scope: "https://www.googleapis.com/auth/drive.readonly",
       token_type: "Bearer",
@@ -64,6 +65,7 @@ describe("Google OAuth token broker", () => {
     expect(await response.json()).toEqual({
       access_token: "access-token",
       expires_in: 3600,
+      id_token: "identity-token",
       refresh_token: "refresh-token",
       scope: "https://www.googleapis.com/auth/drive.readonly",
       token_type: "Bearer",
@@ -114,6 +116,21 @@ describe("Google OAuth token broker", () => {
 
     expect(response.status).toBe(400);
     expect(response.headers.get("content-type")).toBe("application/problem+json");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects inherited object properties as client IDs", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await tokenRequest("/oauth/google/token", {
+      client_id: "constructor",
+      code: "authorization-code",
+      code_verifier: verifier,
+      redirect_uri: redirectUri,
+    });
+
+    expect(response.status).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

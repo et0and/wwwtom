@@ -1,7 +1,7 @@
 import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
-import { readCloudflareEnv } from "@tom/utils/config";
+import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { getRequestEnv } from "@tom/utils/worker";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -12,6 +12,7 @@ const GoogleOAuthClientsSchema = Schema.fromJsonString(Schema.Record(Schema.Stri
 export const GoogleTokenResponseSchema = Schema.Struct({
   access_token: Schema.String,
   expires_in: Schema.optional(Schema.Finite),
+  id_token: Schema.optional(Schema.String),
   refresh_token: Schema.optional(Schema.String),
   scope: Schema.optional(Schema.String),
   token_type: Schema.optional(Schema.String),
@@ -62,16 +63,37 @@ const isLoopbackRedirect = (value: string): boolean => {
 
 const resolveClientSecret = (request: Request, clientId: string) =>
   Effect.gen(function* () {
-    const env = yield* Effect.tryPromise({
-      try: () => readCloudflareEnv(getRequestEnv(request)),
-      catch: (cause) =>
-        new HttpError({
-          message: "Google OAuth broker configuration is unavailable",
+    const env = getRequestEnv(request);
+    let rawClients = env.GOOGLE_OAUTH_CLIENTS?.trim();
+    if (rawClients === undefined || rawClients === "") {
+      const binding = env.TOM_SECRETS;
+      if (binding === undefined) {
+        return yield* new HttpError({
+          message: "Google OAuth broker is not configured",
           status: HttpStatus.InternalServerError,
-          cause,
-        }),
-    });
-    const rawClients = env.GOOGLE_OAUTH_CLIENTS;
+        });
+      }
+      const raw = yield* Effect.tryPromise({
+        try: () => binding.get(),
+        catch: (cause) =>
+          new HttpError({
+            message: "Google OAuth broker configuration is unavailable",
+            status: HttpStatus.InternalServerError,
+            cause,
+          }),
+      });
+      const bundle = yield* Schema.decodeEffect(TomSecretsSchema)(raw).pipe(
+        Effect.mapError(
+          (cause) =>
+            new HttpError({
+              message: "Google OAuth broker configuration is invalid",
+              status: HttpStatus.InternalServerError,
+              cause,
+            }),
+        ),
+      );
+      rawClients = bundle.GOOGLE_OAUTH_CLIENTS;
+    }
     if (rawClients === undefined || rawClients.trim() === "") {
       return yield* new HttpError({
         message: "Google OAuth broker is not configured",
@@ -88,7 +110,7 @@ const resolveClientSecret = (request: Request, clientId: string) =>
           }),
       ),
     );
-    const secret = clients[clientId];
+    const secret = new Map(Object.entries(clients)).get(clientId);
     if (secret === undefined || secret.trim() === "") {
       return yield* new HttpError({
         message: "Unknown Google OAuth client",
