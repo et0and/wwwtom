@@ -1,5 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { loadSecrets } from "../catalog/onepassword";
 import { secret } from "../catalog/secrets";
 import { ex } from "../expressions";
 
@@ -34,15 +35,13 @@ export const previewSweep = workflow("preview-sweep", {
       "runs-on": "namespace-profile-yufugumi",
       env: {
         CLOUDFLARE_ACCOUNT_ID: secret("CLOUDFLARE_DEFAULT_ACCOUNT_ID"),
-        CLOUDFLARE_API_TOKEN: secret("CLOUDFLARE_API_TOKEN"),
-        TOM_SECRETS: secret("TOM_SECRETS"),
-        AXIOM_TOKEN: secret("AXIOM_TOKEN"),
         ALCHEMY_ENV_FILE: "/dev/null",
         GITHUB_TOKEN: ex("github.token"),
         GH_TOKEN: ex("github.token"),
       },
       steps: [
         checkout(),
+        loadSecrets("preview"),
         setupStep(),
         run("Destroy preview stages of recently closed PRs", [
           "cutoff=$(date -u -d '30 days ago' +%Y-%m-%dT%H:%M:%SZ)",

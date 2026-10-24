@@ -22,7 +22,6 @@ export const storybookPreviewEnv = (stage: string): Env => ({
   ALCHEMY_STAGE: stage,
   PULL_REQUEST: prNumberExpression,
   CLOUDFLARE_ACCOUNT_ID: secret("CLOUDFLARE_DEFAULT_ACCOUNT_ID"),
-  CLOUDFLARE_API_TOKEN: secret("CLOUDFLARE_API_TOKEN"),
   ALCHEMY_ENV_FILE: "/dev/null",
   GITHUB_TOKEN: ex("github.token"),
 });
@@ -35,9 +34,6 @@ export const previewEnv = (stage: string): Env => ({
   ALCHEMY_STAGE: stage,
   PULL_REQUEST: prNumberExpression,
   CLOUDFLARE_ACCOUNT_ID: secret("CLOUDFLARE_DEFAULT_ACCOUNT_ID"),
-  CLOUDFLARE_API_TOKEN: secret("CLOUDFLARE_API_TOKEN"),
-  TOM_SECRETS: secret("TOM_SECRETS"),
-  AXIOM_TOKEN: secret("AXIOM_TOKEN"),
   ALCHEMY_ENV_FILE: "/dev/null",
   GITHUB_TOKEN: ex("github.token"),
 });

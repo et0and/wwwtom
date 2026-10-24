@@ -93,8 +93,5 @@ export const destroySteps = (stacks: ReadonlyArray<DestroyStack>): ReadonlyArray
 export const alchemyEnv = (stage: Expression): Env => ({
   ALCHEMY_STAGE: stage,
   CLOUDFLARE_ACCOUNT_ID: secret("CLOUDFLARE_DEFAULT_ACCOUNT_ID"),
-  CLOUDFLARE_API_TOKEN: secret("CLOUDFLARE_API_TOKEN"),
-  TOM_SECRETS: secret("TOM_SECRETS"),
-  AXIOM_TOKEN: secret("AXIOM_TOKEN"),
   ALCHEMY_ENV_FILE: "/dev/null",
 });
