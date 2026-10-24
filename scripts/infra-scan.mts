@@ -24,7 +24,9 @@
  *   node scripts/infra-scan.mts --host=tom.so
  *
  * Env:
- *   CLOUDFLARE_API_TOKEN     else the local wrangler OAuth token
+ *   CLOUDFLARE_API_TOKEN     else infra/.dev.vars, else the local wrangler
+ *                            OAuth token (which expires after an hour, so it
+ *                            is only a convenience for interactive runs)
  *   CLOUDFLARE_ACCOUNT_ID    else discovered from GET /accounts
  */
 
@@ -171,13 +173,42 @@ const readWranglerToken = async (): Promise<string | null> => {
   return null;
 };
 
-const resolveToken = async (): Promise<string> => {
+/**
+ * `CLOUDFLARE_API_TOKEN` from the repo's deploy env file.
+ *
+ * The wrangler OAuth token below is not usable unattended: it expires after
+ * an hour and only wrangler refreshes it, so a sweep that runs every three
+ * hours would fail almost every time. An API token lives until revoked, and
+ * the deploy env file is where this repo already keeps the deploy credential.
+ */
+const readDevVarsToken = async (): Promise<string | null> => {
+  const candidates = [join(process.cwd(), "infra", ".dev.vars"), join(process.cwd(), ".dev.vars")];
+  for (const path of candidates) {
+    const contents = await readFile(path, "utf8").catch(() => null);
+    if (contents === null) continue;
+    for (const line of contents.split("\n")) {
+      const value = /^\s*CLOUDFLARE_API_TOKEN\s*=\s*(.*)$/.exec(line)?.[1];
+      if (value === undefined) continue;
+      const unquoted = value.trim().replace(/^["']|["']$/g, "");
+      if (unquoted) return unquoted;
+    }
+  }
+  return null;
+};
+
+type TokenSource = "env" | "dev.vars" | "wrangler";
+
+type ResolvedToken = { readonly token: string; readonly source: TokenSource };
+
+const resolveToken = async (): Promise<ResolvedToken> => {
   const fromEnv = process.env.CLOUDFLARE_API_TOKEN ?? process.env.CF_API_TOKEN;
-  if (fromEnv) return fromEnv;
+  if (fromEnv) return { token: fromEnv, source: "env" };
+  const fromDevVars = await readDevVarsToken();
+  if (fromDevVars) return { token: fromDevVars, source: "dev.vars" };
   const fromWrangler = await readWranglerToken();
-  if (fromWrangler) return fromWrangler;
+  if (fromWrangler) return { token: fromWrangler, source: "wrangler" };
   throw new Error(
-    "no Cloudflare token: set CLOUDFLARE_API_TOKEN, or run `wrangler login` on this machine",
+    "no Cloudflare token: set CLOUDFLARE_API_TOKEN (or put it in infra/.dev.vars), or run `wrangler login`",
   );
 };
 
@@ -199,10 +230,19 @@ async function request<T>(url: string, token: string, graphql?: string): Promise
   return body;
 }
 
-const resolveAccountId = async (token: string): Promise<string> => {
+const resolveAccountId = async ({ token, source }: ResolvedToken): Promise<string> => {
   const fromEnv = process.env.CLOUDFLARE_ACCOUNT_ID ?? process.env.CF_ACCOUNT_ID;
   if (fromEnv) return fromEnv;
-  const body = await request<{ result?: ReadonlyArray<{ id: string }> }>(ACCOUNTS_URL, token);
+  const body = await request<{ result?: ReadonlyArray<{ id: string }> }>(ACCOUNTS_URL, token).catch(
+    (cause) => {
+      if (source !== "wrangler") throw cause;
+      // The common unattended failure: wrangler's OAuth access token is an
+      // hour old and only wrangler can refresh it.
+      throw new Error(
+        "the wrangler OAuth token was rejected. It expires after an hour and only wrangler refreshes it, so an unattended scan cannot rely on it — set CLOUDFLARE_API_TOKEN in the environment or in infra/.dev.vars.",
+      );
+    },
+  );
   const account = body.result?.[0];
   if (!account) throw new Error("the token can read no accounts; set CLOUDFLARE_ACCOUNT_ID");
   return account.id;
@@ -400,15 +440,15 @@ const main = async (): Promise<void> => {
   if (args === null) return;
 
   const sinceIso = new Date(Date.now() - args.sinceMs).toISOString();
-  const token = await resolveToken();
-  const accountId = await resolveAccountId(token);
+  const resolved = await resolveToken();
+  const accountId = await resolveAccountId(resolved);
   const query = buildQuery(args, sinceIso).replace("ACCOUNT_ID", accountId);
 
   const body = await request<{
     data?: { viewer: { accounts: ReadonlyArray<Readonly<Record<string, ReadonlyArray<Group>>>> } };
     // GraphQL answers with `errors: null` on success, so null is a real case.
     errors?: ReadonlyArray<{ message: string }> | null;
-  }>(GRAPHQL_URL, token, query);
+  }>(GRAPHQL_URL, resolved.token, query);
 
   if (body.errors !== undefined && body.errors !== null && body.errors.length > 0) {
     throw new Error(
