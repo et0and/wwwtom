@@ -1,3 +1,10 @@
+## [4.7.13](https://github.com/et0and/wwwtom/compare/v4.7.12...v4.7.13) (2026-10-24)
+
+
+### Bug Fixes
+
+* **test:** run vitest once instead of watching ([e34849b](https://github.com/et0and/wwwtom/commit/e34849bbbe241fdb307ac46d1c2277ab6113cfb1))
+
 ## [4.7.12](https://github.com/et0and/wwwtom/compare/v4.7.11...v4.7.12) (2026-10-24)
 
 
