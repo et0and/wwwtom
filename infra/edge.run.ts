@@ -90,7 +90,7 @@ const CREDENTIAL_PATHS = [
   "vscode/sftp.json",
   "aws/credentials",
   "gcp-key.json",
-  "firebase-adminsdk",
+  "firebase-admin",
   "terraform.tfvars",
 ] as const;
 
