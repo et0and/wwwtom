@@ -11,14 +11,17 @@ import {
 
 export const postOAuthGoogleRefreshRoute = new Elysia().post(
   "/oauth/google/refresh",
-  ({ body, request }) =>
-    runEffect(
+  ({ body, request, set }) => {
+    set.headers["cache-control"] = "no-store";
+    set.headers["pragma"] = "no-cache";
+    return runEffect(
       Effect.gen(function* () {
         const input = yield* decodeGoogleRefreshRequest(body);
         return yield* refreshGoogleToken(request, input);
       }),
       logContextFromRequest(request, "tom-api"),
-    ),
+    );
+  },
   {
     body: toOpenApiSchema(GoogleRefreshRequestSchema),
     response: {

@@ -62,6 +62,8 @@ describe("Google OAuth token broker", () => {
     });
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("pragma")).toBe("no-cache");
     expect(await response.json()).toEqual({
       access_token: "access-token",
       expires_in: 3600,
@@ -97,6 +99,8 @@ describe("Google OAuth token broker", () => {
     });
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    expect(response.headers.get("pragma")).toBe("no-cache");
     const form = formFrom(fetchMock.mock.calls[0]?.[1]);
     expect(form.get("grant_type")).toBe("refresh_token");
     expect(form.get("refresh_token")).toBe("refresh-token");

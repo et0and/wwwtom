@@ -2,6 +2,7 @@ import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
+import type { CloudflareEnv } from "@tom/utils/config";
 import { getRequestEnv } from "@tom/utils/worker";
 
 const GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token";
@@ -61,159 +62,157 @@ const isLoopbackRedirect = (value: string): boolean => {
   );
 };
 
-const resolveClientSecret = (request: Request, clientId: string) =>
-  Effect.gen(function* () {
-    const env = getRequestEnv(request);
-    let rawClients = env.GOOGLE_OAUTH_CLIENTS?.trim();
-    if (rawClients === undefined || rawClients === "") {
-      const binding = env.TOM_SECRETS;
-      if (binding === undefined) {
-        return yield* new HttpError({
-          message: "Google OAuth broker is not configured",
-          status: HttpStatus.InternalServerError,
-        });
-      }
-      const raw = yield* Effect.tryPromise({
-        try: () => binding.get(),
-        catch: (cause) =>
-          new HttpError({
-            message: "Google OAuth broker configuration is unavailable",
-            status: HttpStatus.InternalServerError,
-            cause,
-          }),
-      });
-      const bundle = yield* Schema.decodeEffect(TomSecretsSchema)(raw).pipe(
-        Effect.mapError(
-          (cause) =>
-            new HttpError({
-              message: "Google OAuth broker configuration is invalid",
-              status: HttpStatus.InternalServerError,
-              cause,
-            }),
-        ),
-      );
-      rawClients = bundle.GOOGLE_OAUTH_CLIENTS;
-    }
-    if (rawClients === undefined || rawClients.trim() === "") {
-      return yield* new HttpError({
-        message: "Google OAuth broker is not configured",
+const readBundledClients = Effect.fn("OAuth.readBundledClients")(function* (env: CloudflareEnv) {
+  const binding = env.TOM_SECRETS;
+  if (binding === undefined) return undefined;
+  const raw = yield* Effect.tryPromise({
+    try: () => binding.get(),
+    catch: (cause) =>
+      new HttpError({
+        message: "Google OAuth broker configuration is unavailable",
         status: HttpStatus.InternalServerError,
-      });
-    }
-    const clients = yield* Schema.decodeEffect(GoogleOAuthClientsSchema)(rawClients).pipe(
-      Effect.mapError(
-        (cause) =>
-          new HttpError({
-            message: "Google OAuth broker configuration is invalid",
-            status: HttpStatus.InternalServerError,
-            cause,
-          }),
-      ),
-    );
-    const secret = new Map(Object.entries(clients)).get(clientId);
-    if (secret === undefined || secret.trim() === "") {
-      return yield* new HttpError({
-        message: "Unknown Google OAuth client",
-        status: HttpStatus.BadRequest,
-      });
-    }
-    return secret;
+        cause,
+      }),
   });
-
-const postGoogleToken = (params: URLSearchParams): Effect.Effect<GoogleTokenResponse, HttpError> =>
-  Effect.gen(function* () {
-    const response = yield* Effect.tryPromise({
-      try: () =>
-        fetch(GOOGLE_TOKEN_ENDPOINT, {
-          method: "POST",
-          headers: { "content-type": "application/x-www-form-urlencoded" },
-          body: params,
-          signal: AbortSignal.timeout(GOOGLE_REQUEST_TIMEOUT_MS),
-        }),
-      catch: (cause) =>
+  const bundle = yield* Schema.decodeEffect(TomSecretsSchema)(raw).pipe(
+    Effect.mapError(
+      (cause) =>
         new HttpError({
-          message: "Google token request failed",
+          message: "Google OAuth broker configuration is invalid",
+          status: HttpStatus.InternalServerError,
+          cause,
+        }),
+    ),
+  );
+  return bundle.GOOGLE_OAUTH_CLIENTS;
+});
+
+const resolveClientSecret = Effect.fn("OAuth.resolveClientSecret")(function* (
+  request: Request,
+  clientId: string,
+) {
+  const env = getRequestEnv(request);
+  const explicit = env.GOOGLE_OAUTH_CLIENTS?.trim();
+  const clientsEffect = explicit ? Effect.void : readBundledClients(env);
+  const bundled = yield* clientsEffect;
+  const rawClients = explicit || bundled;
+  if (rawClients === undefined || rawClients === "") {
+    return yield* new HttpError({
+      message: "Google OAuth broker is not configured",
+      status: HttpStatus.InternalServerError,
+    });
+  }
+  const clients = yield* Schema.decodeEffect(GoogleOAuthClientsSchema)(rawClients).pipe(
+    Effect.mapError(
+      (cause) =>
+        new HttpError({
+          message: "Google OAuth broker configuration is invalid",
+          status: HttpStatus.InternalServerError,
+          cause,
+        }),
+    ),
+  );
+  const secret = new Map(Object.entries(clients)).get(clientId);
+  if (secret === undefined || secret.trim() === "") {
+    return yield* new HttpError({
+      message: "Unknown Google OAuth client",
+      status: HttpStatus.BadRequest,
+    });
+  }
+  return secret;
+});
+
+const postGoogleToken = Effect.fn("OAuth.postGoogleToken")(function* (params: URLSearchParams) {
+  const response = yield* Effect.tryPromise({
+    try: () =>
+      fetch(GOOGLE_TOKEN_ENDPOINT, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: params,
+        signal: AbortSignal.timeout(GOOGLE_REQUEST_TIMEOUT_MS),
+      }),
+    catch: (cause) =>
+      new HttpError({
+        message: "Google token request failed",
+        status: HttpStatus.BadGateway,
+        cause,
+      }),
+  });
+  const body = yield* Effect.tryPromise({
+    try: () => response.text(),
+    catch: (cause) =>
+      new HttpError({
+        message: "Google token response could not be read",
+        status: HttpStatus.BadGateway,
+        cause,
+      }),
+  });
+  if (!response.ok) {
+    return yield* new HttpError({
+      message: "Google rejected the token request",
+      status:
+        response.status === HttpStatus.BadRequest ||
+        response.status === HttpStatus.Unauthorized ||
+        response.status === HttpStatus.Forbidden
+          ? response.status
+          : HttpStatus.BadGateway,
+      cause: body.slice(0, 1000),
+    });
+  }
+  return yield* Schema.decodeEffect(GoogleTokenResponseJsonSchema)(body).pipe(
+    Effect.mapError(
+      (cause) =>
+        new HttpError({
+          message: "Google returned an invalid token response",
           status: HttpStatus.BadGateway,
           cause,
         }),
-    });
-    const body = yield* Effect.tryPromise({
-      try: () => response.text(),
-      catch: (cause) =>
-        new HttpError({
-          message: "Google token response could not be read",
-          status: HttpStatus.BadGateway,
-          cause,
-        }),
-    });
-    if (!response.ok) {
-      return yield* new HttpError({
-        message: "Google rejected the token request",
-        status:
-          response.status === HttpStatus.BadRequest ||
-          response.status === HttpStatus.Unauthorized ||
-          response.status === HttpStatus.Forbidden
-            ? response.status
-            : HttpStatus.BadGateway,
-        cause: body.slice(0, 1000),
-      });
-    }
-    return yield* Schema.decodeEffect(GoogleTokenResponseJsonSchema)(body).pipe(
-      Effect.mapError(
-        (cause) =>
-          new HttpError({
-            message: "Google returned an invalid token response",
-            status: HttpStatus.BadGateway,
-            cause,
-          }),
-      ),
-    );
-  });
+    ),
+  );
+});
 
-export const exchangeGoogleCode = (
+export const exchangeGoogleCode = Effect.fn("OAuth.exchangeGoogleCode")(function* (
   request: Request,
   input: GoogleTokenRequest,
-): Effect.Effect<GoogleTokenResponse, HttpError> =>
-  Effect.gen(function* () {
-    if (!isLoopbackRedirect(input.redirect_uri)) {
-      return yield* badRequest("redirect_uri must be a loopback HTTP URL");
-    }
-    if (input.code.length === 0 || input.code_verifier.length < 43) {
-      return yield* badRequest("invalid authorization code or PKCE verifier");
-    }
-    const clientSecret = yield* resolveClientSecret(request, input.client_id);
-    const params = new URLSearchParams({
-      grant_type: "authorization_code",
-      code: input.code,
-      code_verifier: input.code_verifier,
-      client_id: input.client_id,
-      client_secret: clientSecret,
-      redirect_uri: input.redirect_uri,
-    });
-    const token = yield* postGoogleToken(params);
-    yield* Effect.logInfo("Google OAuth code exchanged", { clientId: input.client_id });
-    return token;
+) {
+  if (!isLoopbackRedirect(input.redirect_uri)) {
+    return yield* badRequest("redirect_uri must be a loopback HTTP URL");
+  }
+  if (input.code.length === 0 || input.code_verifier.length < 43) {
+    return yield* badRequest("invalid authorization code or PKCE verifier");
+  }
+  const clientSecret = yield* resolveClientSecret(request, input.client_id);
+  const params = new URLSearchParams({
+    grant_type: "authorization_code",
+    code: input.code,
+    code_verifier: input.code_verifier,
+    client_id: input.client_id,
+    client_secret: clientSecret,
+    redirect_uri: input.redirect_uri,
   });
+  const token = yield* postGoogleToken(params);
+  yield* Effect.logInfo("Google OAuth code exchanged", { clientId: input.client_id });
+  return token;
+});
 
-export const refreshGoogleToken = (
+export const refreshGoogleToken = Effect.fn("OAuth.refreshGoogleToken")(function* (
   request: Request,
   input: GoogleRefreshRequest,
-): Effect.Effect<GoogleTokenResponse, HttpError> =>
-  Effect.gen(function* () {
-    if (input.refresh_token.length === 0) {
-      return yield* badRequest("refresh_token is required");
-    }
-    const clientSecret = yield* resolveClientSecret(request, input.client_id);
-    const params = new URLSearchParams({
-      grant_type: "refresh_token",
-      refresh_token: input.refresh_token,
-      client_id: input.client_id,
-      client_secret: clientSecret,
-    });
-    const token = yield* postGoogleToken(params);
-    yield* Effect.logInfo("Google OAuth token refreshed", { clientId: input.client_id });
-    return token;
+) {
+  if (input.refresh_token.length === 0) {
+    return yield* badRequest("refresh_token is required");
+  }
+  const clientSecret = yield* resolveClientSecret(request, input.client_id);
+  const params = new URLSearchParams({
+    grant_type: "refresh_token",
+    refresh_token: input.refresh_token,
+    client_id: input.client_id,
+    client_secret: clientSecret,
   });
+  const token = yield* postGoogleToken(params);
+  yield* Effect.logInfo("Google OAuth token refreshed", { clientId: input.client_id });
+  return token;
+});
 
 export const decodeGoogleTokenRequest = <B>(
   input: B,

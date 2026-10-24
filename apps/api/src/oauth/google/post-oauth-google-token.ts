@@ -11,14 +11,17 @@ import {
 
 export const postOAuthGoogleTokenRoute = new Elysia().post(
   "/oauth/google/token",
-  ({ body, request }) =>
-    runEffect(
+  ({ body, request, set }) => {
+    set.headers["cache-control"] = "no-store";
+    set.headers["pragma"] = "no-cache";
+    return runEffect(
       Effect.gen(function* () {
         const input = yield* decodeGoogleTokenRequest(body);
         return yield* exchangeGoogleCode(request, input);
       }),
       logContextFromRequest(request, "tom-api"),
-    ),
+    );
+  },
   {
     body: toOpenApiSchema(GoogleTokenRequestSchema),
     response: {
