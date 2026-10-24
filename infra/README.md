@@ -221,7 +221,10 @@ random value of at least 32 characters.
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
 credentials for Tom CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
 `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are the Google OAuth
-credentials for Sophie CMS sign-in.
+credentials for Sophie CMS sign-in. `GOOGLE_OAUTH_CLIENTS` is an optional JSON
+object mapping public Google OAuth client IDs to client secrets for the generic
+`/oauth/google/token` and `/oauth/google/refresh` broker. Keep it in
+`TOM_SECRETS`; never commit it.
 `BETTER_AUTH_SECRET` signs sessions (min 32 chars; `openssl rand -base64 32`).
 `CMS_ADMIN_EMAILS` is the comma-separated allowlist for sign-in; everyone else
 is rejected before a user row is created.

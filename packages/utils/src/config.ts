@@ -119,6 +119,9 @@ export type CloudflareEnv = {
   // Google only. Shared auth code reads both and enables each when present.
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  // JSON map of public Google OAuth client IDs to their client secrets.
+  // The generic token broker uses this map; secrets never reach the app.
+  GOOGLE_OAUTH_CLIENTS?: string;
   // Tenant tag isolating the Tom and Sophie deployments ("tom" |
   // "sophie"). Set per worker in infra (api + adapter run files); runtime
   // code selects tenant-scoped origins and per-tenant bundle keys from it.
@@ -171,6 +174,7 @@ const secretKeys = [
   "GITHUB_CLIENT_SECRET",
   "GOOGLE_CLIENT_ID",
   "GOOGLE_CLIENT_SECRET",
+  "GOOGLE_OAUTH_CLIENTS",
   "CMS_ADMIN_EMAILS",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",

@@ -92,6 +92,14 @@ describe("readCloudflareEnv tenant secrets", () => {
     expect(resolved.GOOGLE_CLIENT_SECRET).toBe("bundle-secret");
   });
 
+  it("resolves the generic Google OAuth client map", async () => {
+    const clients = JSON.stringify({ "client-id": "client-secret" });
+    const resolved = await readCloudflareEnv(
+      bundleEnv({ ...sharedBundle, GOOGLE_OAUTH_CLIENTS: clients }),
+    );
+    expect(resolved.GOOGLE_OAUTH_CLIENTS).toBe(clients);
+  });
+
   it("throws SecretsError when TOM_SECRETS is not valid JSON", async () => {
     await expect(
       readCloudflareEnv({ TOM_SECRETS: { get: async () => "not-json" } }),
