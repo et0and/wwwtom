@@ -701,7 +701,8 @@
     }
   }
 
-  /* Shiki output in previews mirrors the site's code treatment. */
+  /* Highlighted output mirrors the site's code treatment. The shiki-*
+     wrappers remain for revisions saved before the Highlights swap. */
   .preview .code-block {
     margin: 1.5rem 0;
     position: relative;

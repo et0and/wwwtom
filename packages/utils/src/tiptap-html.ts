@@ -1,6 +1,9 @@
-import { Effect, Option, Ref } from "effect";
+import { Effect } from "effect";
+import { codeToTokens, isSupportedLanguage, type Lang, type ThemedToken } from "@pierre/highlights";
+import githubLight from "@pierre/highlights/themes/github-light";
+import vitesseDark from "@pierre/highlights/themes/vitesse-dark";
 import type { CmsBannerStyle, TiptapBlock, TiptapDoc, TiptapInline } from "@tom/schemas/cms";
-import { ShikiError } from "@tom/types/errors";
+import { CodeHighlightError } from "@tom/types/errors";
 
 /** Resolve an editor media reference to its absolute public file URL. */
 export type MediaUrlResolver = (mediaId: string) => string;
@@ -72,83 +75,34 @@ const renderBlocks = (
     Effect.map((parts) => parts.join("")),
   );
 
-/** Languages bundled for highlighting; anything else renders plain. */
-const KNOWN_CODE_LANGUAGES: ReadonlyArray<string> = [
-  "typescript",
-  "javascript",
-  "python",
-  "bash",
-  "json",
-  "html",
-  "css",
-  "sql",
-  "yaml",
-  "markdown",
-  "go",
-  "rust",
-];
+const PLAIN_CODE_LANGUAGES: ReadonlySet<string> = new Set(["plain", "plaintext", "text", "txt"]);
 
-/** Short aliases to bundled language ids. */
-type CodeLanguageAliases = {
-  readonly [alias: string]: string | undefined;
-};
-const CODE_LANGUAGE_ALIASES: CodeLanguageAliases = {
-  ts: "typescript",
-  tsx: "typescript",
-  js: "javascript",
-  py: "python",
-  sh: "bash",
-  md: "markdown",
-  yml: "yaml",
+const renderToken = (token: ThemedToken): string => {
+  const declarations = Object.entries(token.htmlStyle ?? {})
+    .map(([property, value]) => `${property}:${value}`)
+    .join(";");
+  const style = declarations === "" ? "" : ` style="${escapeHtml(declarations)}"`;
+  return `<span${style}>${escapeHtml(token.content)}</span>`;
 };
 
-type Highlighter = Awaited<ReturnType<(typeof import("shiki/core"))["createHighlighterCore"]>>;
-
-const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Ref.makeUnsafe(Option.none());
-
-const createHighlighter = async (): Promise<Highlighter> => {
-  const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, langModules, themeModules] =
-    await Promise.all([
-      import("shiki/core"),
-      import("shiki/engine/javascript"),
-      Promise.all([
-        import("shiki/langs/typescript.mjs"),
-        import("shiki/langs/javascript.mjs"),
-        import("shiki/langs/python.mjs"),
-        import("shiki/langs/bash.mjs"),
-        import("shiki/langs/json.mjs"),
-        import("shiki/langs/html.mjs"),
-        import("shiki/langs/css.mjs"),
-        import("shiki/langs/sql.mjs"),
-        import("shiki/langs/yaml.mjs"),
-        import("shiki/langs/markdown.mjs"),
-        import("shiki/langs/go.mjs"),
-        import("shiki/langs/rust.mjs"),
-      ]),
-      Promise.all([
-        import("shiki/themes/github-light.mjs"),
-        import("shiki/themes/vitesse-dark.mjs"),
-      ]),
-    ]);
-  return createHighlighterCore({
-    themes: themeModules.map((theme) => theme.default),
-    langs: langModules.map((lang) => lang.default),
-    engine: createJavaScriptRegexEngine(),
+const highlightedCode = (code: string, language: Lang): string => {
+  const { tokens, fg, bg } = codeToTokens(code, {
+    lang: language,
+    themes: { light: githubLight, dark: vitesseDark },
+    defaultColor: "light-dark()",
   });
+  const declarations = [
+    fg === undefined ? undefined : `color:${fg}`,
+    bg === undefined ? undefined : `background-color:${bg}`,
+  ]
+    .filter((value): value is string => value !== undefined)
+    .join(";");
+  const style = declarations === "" ? "" : ` style="${escapeHtml(declarations)}"`;
+  const lines = tokens
+    .map((line) => `<span class="line">${line.map(renderToken).join("")}</span>`)
+    .join("\n");
+  return `<pre${style}><code>${lines}</code></pre>`;
 };
-
-/** Cached Shiki instance; init failures retry on the next code block. */
-const getHighlighter = Effect.gen(function* () {
-  const cached = yield* Ref.get(highlighterRef);
-  if (Option.isSome(cached)) return cached;
-  const fresh = yield* Effect.option(
-    Effect.tryPromise({
-      try: () => createHighlighter(),
-      catch: () => new ShikiError({ message: "shiki init failed" }),
-    }).pipe(Effect.tap((loaded) => Ref.set(highlighterRef, Option.some(loaded)))),
-  );
-  return fresh;
-});
 
 const codeFigure = (
   inner: string,
@@ -162,46 +116,29 @@ const codeFigure = (
   inner +
   `</figure>`;
 
-/** Plain fallback matching the highlighted structure (both themes). */
-const plainCode = (code: string, language: string): string => {
-  const pre = `<pre><code class="language-${escapeHtml(language)}">${escapeHtml(code)}</code></pre>`;
-  return `<div class="shiki-light">${pre}</div><div class="shiki-dark">${pre}</div>`;
-};
+/** Plain fallback used when a language has no lexer or highlighting fails. */
+const plainCode = (code: string, language: string): string =>
+  `<pre><code class="language-${escapeHtml(language)}">${escapeHtml(code)}</code></pre>`;
 
 const highlightCode = (
   code: string,
   language: string,
   fileName: string | undefined,
   showLineNumbers: boolean,
-): Effect.Effect<string, never> =>
-  Effect.gen(function* () {
-    const canonical = CODE_LANGUAGE_ALIASES[language] ?? language;
-    if (!KNOWN_CODE_LANGUAGES.includes(canonical)) {
-      return codeFigure(plainCode(code, language), fileName, showLineNumbers);
-    }
-    const highlighter = yield* getHighlighter;
-    if (Option.isNone(highlighter)) {
-      return codeFigure(plainCode(code, language), fileName, showLineNumbers);
-    }
-    return yield* Effect.try({
-      try: () => {
-        const light = highlighter.value.codeToHtml(code, {
-          lang: canonical,
-          theme: "github-light",
-        });
-        const dark = highlighter.value.codeToHtml(code, { lang: canonical, theme: "vitesse-dark" });
-        return codeFigure(
-          `<div class="shiki-light">${light}</div><div class="shiki-dark">${dark}</div>`,
-          fileName,
-          showLineNumbers,
-        );
-      },
-      catch: () => new ShikiError({ message: "shiki highlight failed" }),
-    }).pipe(
-      Effect.tapError((cause) => Effect.logWarning("Code highlight failed", cause)),
-      Effect.orElseSucceed(() => codeFigure(plainCode(code, language), fileName, showLineNumbers)),
-    );
-  });
+): Effect.Effect<string, never> => {
+  const fallback = codeFigure(plainCode(code, language), fileName, showLineNumbers);
+  const canonical = language.trim().toLowerCase();
+  if (PLAIN_CODE_LANGUAGES.has(canonical) || !isSupportedLanguage(canonical)) {
+    return Effect.succeed(fallback);
+  }
+  return Effect.try({
+    try: () => codeFigure(highlightedCode(code, canonical), fileName, showLineNumbers),
+    catch: (cause) => new CodeHighlightError({ message: "code highlight failed", cause }),
+  }).pipe(
+    Effect.tapError((cause) => Effect.logWarning("Code highlight failed", cause)),
+    Effect.orElseSucceed(() => fallback),
+  );
+};
 
 const renderBlock = (
   block: TiptapBlock,
