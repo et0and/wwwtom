@@ -50,6 +50,13 @@ const getRequestHeaders = (call: unknown[]): Headers => {
   return new Headers(init.headers as Record<string, string>);
 };
 
+/** The SDK sometimes passes a Request and sometimes (url, init); normalise both. */
+const toRequest = (call: unknown[]): Request => {
+  const input = call[0];
+  if (input instanceof Request) return input;
+  return new Request(String(input), call[1] as RequestInit | undefined);
+};
+
 const runEffect = <A, E>(effect: Effect.Effect<A, E>): Promise<A> => Effect.runPromise(effect);
 
 describe("ArenaClient", () => {
@@ -312,6 +319,55 @@ describe("ArenaClient", () => {
       const call = mockFetch.mock.calls[0];
       const url = getRequestUrl(call!);
       expect(url).toBe("https://api.are.na/v3/blocks/123");
+    });
+
+    it("block(id).comment() posts the body to the block's comments endpoint", async () => {
+      const comment = {
+        id: 5,
+        type: "Comment",
+        body: { markdown: "Nice one", html: "<p>Nice one</p>", plain: "Nice one" },
+        created_at: "2026-02-01T00:00:00Z",
+        updated_at: "2026-02-01T00:00:00Z",
+        user: { id: 1, type: "User", name: "Tom", slug: "tom" },
+        _links: {},
+      };
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 201,
+        statusText: "Created",
+        headers: new Headers({ "content-type": "application/json" }),
+        json: async () => comment,
+        // The SDK reads the body via `response.text()` and parses it.
+        text: async () => JSON.stringify(comment),
+      } as Response);
+
+      const client = new ArenaClient({ fetch: mockFetch });
+      const created = await runEffect(client.block(123).comment("Nice one"));
+
+      const call = mockFetch.mock.calls[0]!;
+      const request = toRequest(call);
+      expect(request.url).toBe("https://api.are.na/v3/blocks/123/comments");
+      expect(request.method).toBe("POST");
+      await expect(request.clone().json()).resolves.toEqual({ body: "Nice one" });
+      expect(created.id).toBe(5);
+    });
+
+    it("comments.delete() deletes a comment by id", async () => {
+      mockFetch.mockResolvedValue({
+        ok: true,
+        status: 204,
+        statusText: "No Content",
+        headers: new Headers(),
+        json: async () => ({}),
+        text: async () => "",
+      } as Response);
+
+      const client = new ArenaClient({ fetch: mockFetch });
+      await runEffect(client.comments.delete(5));
+
+      const request = toRequest(mockFetch.mock.calls[0]!);
+      expect(request.url).toBe("https://api.are.na/v3/comments/5");
+      expect(request.method).toBe("DELETE");
     });
 
     it("search.everything() calls correct endpoint with query", async () => {
