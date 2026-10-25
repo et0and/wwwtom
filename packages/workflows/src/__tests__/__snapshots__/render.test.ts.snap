@@ -267,6 +267,37 @@ jobs:
 "
 `;
 
+exports[`renderDefinition > renders '.github/workflows/infra-ban.yml' > .github/workflows/infra-ban.yml 1`] = `
+"# GENERATED FILE - DO NOT EDIT.
+# Regenerate with: pnpm workflows
+name: Temporary scanner IP bans
+on:
+  schedule:
+    - cron: 23 * * * *
+  workflow_dispatch: null
+permissions:
+  contents: read
+concurrency:
+  group: infra-ban
+  cancel-in-progress: false
+jobs:
+  ban:
+    name: Ban loud scanner IPs
+    runs-on: namespace-profile-yufugumi
+    env:
+      CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: \${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: ./.github/actions/setup
+        with:
+          install: "false"
+      - name: Ban loud scanner IPs for six hours
+        run: node scripts/infra-ban.mts --apply --since=1h --ttl=6h
+"
+`;
+
 exports[`renderDefinition > renders '.github/workflows/opencode.yml' > .github/workflows/opencode.yml 1`] = `
 "# GENERATED FILE - DO NOT EDIT.
 # Regenerate with: pnpm workflows

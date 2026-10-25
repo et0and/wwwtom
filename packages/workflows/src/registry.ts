@@ -4,6 +4,7 @@ import { setup } from "./definitions/actions/setup";
 import { ci } from "./definitions/ci";
 import { deploy } from "./definitions/deploy";
 import { e2e } from "./definitions/e2e";
+import { infraBan } from "./definitions/infra-ban";
 import { opencode } from "./definitions/opencode";
 import { prComments } from "./definitions/pr-comments";
 import { prReview } from "./definitions/pr-review";
@@ -26,6 +27,7 @@ export const definitions: ReadonlyArray<Definition> = [
   preview,
   previewStorybook,
   previewSweep,
+  infraBan,
   prReview,
   prComments,
   opencode,
