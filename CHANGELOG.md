@@ -1,3 +1,15 @@
+# [4.9.0](https://github.com/et0and/wwwtom/compare/v4.8.0...v4.9.0) (2026-10-25)
+
+
+### Bug Fixes
+
+* **scripts:** retry the infra scan after an analytics budget reset ([872a102](https://github.com/et0and/wwwtom/commit/872a102912de18c075539d0b730e0572c0162e0b))
+
+
+### Features
+
+* **observability:** enable worker observability for web and sophie ([3c2ae85](https://github.com/et0and/wwwtom/commit/3c2ae85cbd72416be299f9c473a81684e6e89023))
+
 # [4.8.0](https://github.com/et0and/wwwtom/compare/v4.7.13...v4.8.0) (2026-10-24)
 
 
