@@ -171,6 +171,24 @@ Deploying this stack needs a token with **Zone WAF: Edit** and **Zone: Read**
 existing `CLOUDFLARE_API_TOKEN` must be granted those zone permissions, or the
 production deploy fails at the "Deploy zone edge rules" step.
 
+## Temporary scanner bans
+
+`scripts/infra-ban.mts` runs hourly from `infra-ban.yml`. It reads the top
+probe IPs from the same analytics families as the sweep and blocks them with
+zone IP Access Rules for six hours. Access rules have no TTL, so each rule's
+note carries `infra-ban:<expiresAt>` and the next run deletes expired rules
+before adding new ones. It skips Cloudflare's egress ranges and private
+addresses, requires at least 200 probe requests in the hour, and keeps at most
+10 active rules per zone. IP Access Rules are separate from the five custom
+rules, so this does not consume the WAF rule budget.
+
+The token needs **Account: Read**, **Account Analytics: Read**, **Zone:
+Read** and **Zone Firewall Access Rules: Edit**. The existing
+`CLOUDFLARE_API_TOKEN` must be granted the last permission, or the job fails
+at the rule listing step. Run `node scripts/infra-ban.mts --dry-run` to see
+candidates without writing. If the workflow is disabled, the last rules stay
+in place; remove them from the zone firewall.
+
 ## Environment
 
 Alchemy uses the Cloudflare credentials configured by `alchemy login`, or
