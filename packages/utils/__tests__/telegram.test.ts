@@ -62,6 +62,9 @@ const sendAlertEffect = (message: string) =>
 const sendErrorEffect = (message: string, cause?: unknown, details?: ErrorAlertDetails) =>
   Effect.flatMap(TelegramService, (service) => service.sendError(message, cause, details));
 
+const sendMessageEffect = (options: { chatId: string; text: string; replyToMessageId?: number }) =>
+  Effect.flatMap(TelegramService, (service) => service.sendMessage(options));
+
 const stubAlertFetch = () => {
   const response = new Response(JSON.stringify({ ok: true }), {
     status: 200,
@@ -72,7 +75,7 @@ const stubAlertFetch = () => {
   return fetcher;
 };
 
-const captureAlert = async <A, E>(
+const captureSend = async <A, E>(
   effect: Effect.Effect<A, E, TelegramService>,
   config: TestConfig,
 ): Promise<{
@@ -107,10 +110,13 @@ describe("TelegramService", () => {
 
     await runTestEffect(sendAlertEffect("Hello"), {});
     expect(fetcher).not.toHaveBeenCalled();
+
+    await runTestEffect(sendMessageEffect({ chatId: "123", text: "Hello" }), {});
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it("sends alerts with expected payload", async () => {
-    const { fetcher, url, options, body } = await captureAlert(sendAlertEffect("Hello"), {
+    const { fetcher, url, options, body } = await captureSend(sendAlertEffect("Hello"), {
       telegramBotToken: "token",
       telegramChatId: "123",
     });
@@ -129,7 +135,7 @@ describe("TelegramService", () => {
     const error = new Error("Boom");
     error.stack = "Boom stack";
 
-    const { body } = await captureAlert(sendErrorEffect("Something broke", error), {
+    const { body } = await captureSend(sendErrorEffect("Something broke", error), {
       telegramBotToken: "token",
       telegramChatId: "123",
     });
@@ -143,7 +149,7 @@ describe("TelegramService", () => {
   });
 
   it("includes request details and log lookup in alert payloads", async () => {
-    const { body } = await captureAlert(
+    const { body } = await captureSend(
       sendErrorEffect("Adapter 500 error", new Error("Boom"), {
         service: "tom-adapter",
         stage: "staging",
@@ -165,7 +171,7 @@ describe("TelegramService", () => {
   });
 
   it("attaches link buttons when details include links", async () => {
-    const { body } = await captureAlert(
+    const { body } = await captureSend(
       sendErrorEffect("Something broke", new Error("Boom"), {
         service: "tom-api",
         links: [{ text: "Cloudflare Workers", url: "https://dash.cloudflare.com/?to=/:account/x" }],
@@ -181,7 +187,7 @@ describe("TelegramService", () => {
   });
 
   it("omits reply markup when details have no links", async () => {
-    const { body } = await captureAlert(sendErrorEffect("Something broke", new Error("Boom")), {
+    const { body } = await captureSend(sendErrorEffect("Something broke", new Error("Boom")), {
       telegramBotToken: "token",
       telegramChatId: "123",
     });
@@ -193,7 +199,7 @@ describe("TelegramService", () => {
     const error = new Error("Boom");
     error.stack = "x".repeat(5000);
 
-    const { body } = await captureAlert(sendErrorEffect("Something broke", error), {
+    const { body } = await captureSend(sendErrorEffect("Something broke", error), {
       telegramBotToken: "token",
       telegramChatId: "123",
     });
@@ -201,6 +207,26 @@ describe("TelegramService", () => {
 
     expect(text).toContain("(truncated)");
     expect(text.length).toBeLessThanOrEqual(3900);
+  });
+
+  it("sends replies as plain text to the requested chat", async () => {
+    const { fetcher, url, body } = await captureSend(
+      sendMessageEffect({
+        chatId: "555",
+        text: "Agent reply",
+        replyToMessageId: 7,
+      }),
+      { telegramBotToken: "token", telegramChatId: "123" },
+    );
+
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(url).toBe("https://api.telegram.org/bottoken/sendMessage");
+    expect(body.chat_id).toBe("555");
+    expect(body.text).toBe("Agent reply");
+    expect(body.reply_to_message_id).toBe(7);
+    // Replies skip parse_mode: agent output must never trip Markdown parsing.
+    expect(body.parse_mode).toBeUndefined();
+    expect(body.reply_markup).toBeUndefined();
   });
 
   it("surfaces fetch errors as TelegramError", async () => {

@@ -81,6 +81,15 @@ export const api = Effect.gen(function* () {
       TENANT: "tom",
       // GitHub-only OAuth for this worker (runtime-enforced allowlist).
       CMS_AUTH_PROVIDERS: "github",
+      // The agent Durable Object class exported by src/index.ts; className
+      // must match the export (it does not default to the binding key).
+      AGENT_CHAT: Cloudflare.DurableObject("AGENT_CHAT", { className: "AgentChat" }),
+      // OpenCode Go serves each model on one wire API. The agent provider
+      // speaks Anthropic Messages, so pick a Go model served there
+      // (claude-haiku-5-5, qwen3.8-*, minimax-m3, ...); AGENT_API_KEY rides
+      // the TOM_SECRETS bundle.
+      AGENT_BASE_URL: "https://opencode.ai/inference/go/anthropic",
+      AGENT_MODEL: "claude-haiku-5-5",
       ...tomDevSecrets,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),

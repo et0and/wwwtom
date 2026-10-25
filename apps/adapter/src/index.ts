@@ -26,6 +26,7 @@ import { guestbookUserFromCookie } from "./guestbook/shared";
 import { githubIntegration } from "./github";
 import { imageIntegration } from "./image";
 import { ogIntegration } from "./og";
+import { telegramIntegration } from "./telegram";
 
 const VISITOR_SESSION_MAX_AGE = 60 * 60 * 24 * 90;
 
@@ -146,6 +147,7 @@ export const app = new Elysia({
   .use(githubIntegration)
   .use(imageIntegration)
   .use(ogIntegration)
+  .use(telegramIntegration)
   .compile();
 
 export type AdapterApp = typeof app;

@@ -87,6 +87,16 @@ export const resolveSecretValue = (
   return pending;
 };
 
+// Minimal Worker-safe agent surface: the Durable Object namespace binding
+// (AGENT_CHAT) reduced to the one RPC method routes call. One DO instance
+// exists per chat, so the message is the only argument. The real binding
+// satisfies this structurally; tests fake it.
+export interface AgentChatNamespace {
+  readonly getByName: (name: string) => {
+    readonly ask: (message: string) => Promise<string>;
+  };
+}
+
 export type CloudflareEnv = {
   ARENA_TOKEN?: string;
   ARENA_API_URL?: string;
@@ -105,6 +115,16 @@ export type CloudflareEnv = {
   };
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
+  // Webhook secret checked on every Telegram update (setWebhook secret_token).
+  TELEGRAM_WEBHOOK_SECRET?: string;
+  // Telegram agent (Chat in a Durable Object, entered via the adapter's
+  // Telegram webhook). The key rides the TOM_SECRETS bundle; the base URL
+  // overrides the OpenAI-compatible endpoint (OpenRouter, AI Gateway, ...).
+  AGENT_API_KEY?: string;
+  AGENT_BASE_URL?: string;
+  AGENT_MODEL?: string;
+  // Durable Object namespace binding for the agent (one instance per chat).
+  AGENT_CHAT?: AgentChatNamespace;
   INTERNAL_API_TOKEN?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
@@ -178,6 +198,8 @@ const secretKeys = [
   "CMS_ADMIN_EMAILS",
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
+  "TELEGRAM_WEBHOOK_SECRET",
+  "AGENT_API_KEY",
   "INTERNAL_API_TOKEN",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",

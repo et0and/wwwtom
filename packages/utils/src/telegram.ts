@@ -18,6 +18,24 @@ export interface TelegramServiceContract {
     cause?: unknown,
     details?: ErrorAlertDetails,
   ) => Effect.Effect<void, TelegramError>;
+  /**
+   * Send a plain-text reply to one chat (no Markdown parsing, so agent
+   * output never trips Telegram's parser). Replies thread onto the inbound
+   * message when `replyToMessageId` is set.
+   */
+  readonly sendMessage: (options: {
+    readonly chatId: string;
+    readonly text: string;
+    readonly replyToMessageId?: number;
+  }) => Effect.Effect<void, TelegramError>;
+}
+
+interface TelegramSendOptions {
+  readonly chatId: string;
+  readonly text: string;
+  readonly parseMode?: "Markdown";
+  readonly replyToMessageId?: number;
+  readonly links?: readonly AlertLink[];
 }
 
 const truncate = (value: string, max: number): string =>
@@ -85,6 +103,9 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
           sendError: Effect.fn("TelegramService.sendError")(
             (): Effect.Effect<void, TelegramError> => Effect.void,
           ),
+          sendMessage: Effect.fn("TelegramService.sendMessage")(
+            (): Effect.Effect<void, TelegramError> => Effect.void,
+          ),
         };
         return service;
       }
@@ -92,21 +113,23 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
       const token = Redacted.value(config.telegramBotToken);
       const chatId = config.telegramChatId;
 
-      const doSendTelegramAlert = Effect.fn("doSendTelegramAlert")(function* (
-        text: string,
-        links?: readonly AlertLink[],
-      ) {
+      const doSendTelegram = Effect.fn("doSendTelegram")(function* (options: TelegramSendOptions) {
         const client = yield* HttpClient.HttpClient;
         const telegramUrl = `https://api.telegram.org/bot${token}/sendMessage`;
 
         const requestBody = yield* HttpBody.json({
-          chat_id: chatId,
-          text,
-          parse_mode: "Markdown",
-          ...(links &&
-            links.length > 0 && {
+          chat_id: options.chatId,
+          text: options.text,
+          ...(options.parseMode && { parse_mode: options.parseMode }),
+          ...(options.replyToMessageId && {
+            reply_to_message_id: options.replyToMessageId,
+          }),
+          ...(options.links &&
+            options.links.length > 0 && {
               reply_markup: {
-                inline_keyboard: [links.map((link) => ({ text: link.text, url: link.url }))],
+                inline_keyboard: [
+                  options.links.map((link) => ({ text: link.text, url: link.url })),
+                ],
               },
             }),
         }).pipe(
@@ -151,14 +174,32 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
         // first-seen implementation process-wide, which breaks stubbed fetch
         // in tests (and hides the seam in production).
         sendAlert: Effect.fn("TelegramService.sendAlert")((message: string) =>
-          Effect.provide(doSendTelegramAlert(message), liveHttpClient()),
+          Effect.provide(
+            doSendTelegram({ chatId, text: message, parseMode: "Markdown" }),
+            liveHttpClient(),
+          ),
         ),
         sendError: Effect.fn("TelegramService.sendError")(
           (message: string, cause?: unknown, details?: ErrorAlertDetails) =>
             Effect.provide(
-              doSendTelegramAlert(formatErrorMessage(message, cause, details), details?.links),
+              doSendTelegram({
+                chatId,
+                text: formatErrorMessage(message, cause, details),
+                parseMode: "Markdown",
+                ...(details?.links && { links: details.links }),
+              }),
               liveHttpClient(),
             ),
+        ),
+        sendMessage: Effect.fn("TelegramService.sendMessage")((options) =>
+          Effect.provide(
+            doSendTelegram({
+              chatId: options.chatId,
+              text: truncate(options.text, MAX_ALERT_LENGTH),
+              ...(options.replyToMessageId && { replyToMessageId: options.replyToMessageId }),
+            }),
+            liveHttpClient(),
+          ),
         ),
       };
       return service;

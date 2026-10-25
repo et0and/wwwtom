@@ -10,6 +10,7 @@ const testTelegramLayer = (sendAlert: (message: string) => void) =>
         sendAlert(message);
       }),
     sendError: () => Effect.void,
+    sendMessage: () => Effect.void,
   });
 
 const guestbookSignMessage = {
