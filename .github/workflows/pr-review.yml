@@ -1,6 +1,6 @@
 # GENERATED FILE - DO NOT EDIT.
 # Regenerate with: pnpm workflows
-name: PR review triage
+name: PR triage
 on:
   pull_request:
     branches:
@@ -11,16 +11,19 @@ on:
       - reopened
       - ready_for_review
 permissions:
+  id-token: write
   contents: read
   pull-requests: write
+  issues: write
 concurrency:
-  group: pr-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  group: pr-triage-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 jobs:
   triage:
-    name: Triage changed files
+    name: Triage the diff
     runs-on: namespace-profile-yufugumi
     if: github.event.pull_request.draft == false && github.event.pull_request.head.repo.fork == false
+    timeout-minutes: 30
     steps:
       - name: Checkout base branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -30,63 +33,28 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           install: "false"
-      - name: Classify changed files and upsert the sticky comment
-        run: |-
-          # On the PR that introduces this workflow the base branch has no
-          # script yet; skip until it lands there.
-          if [ ! -f scripts/pr-review.ts ]; then
-            echo "scripts/pr-review.ts not on the base branch yet; skipping."
-            exit 0
-          fi
-          node scripts/pr-review.ts \
-            --repo="${{ github.repository }}" \
-            --pr=${{ github.event.pull_request.number }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-  address:
-    name: Address the triage
-    runs-on: namespace-profile-yufugumi
-    needs: triage
-    if: (github.event.action == 'opened' || github.event.action == 'ready_for_review') && github.actor == 'et0and'
-    permissions:
-      id-token: write
-      contents: write
-      pull-requests: write
-    steps:
-      - name: Checkout base branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          ref: ${{ github.event.pull_request.base.sha }}
-          persist-credentials: false
-      - name: Address the triage
+      - name: Triage
         uses: anomalyco/opencode/github@latest
         with:
-          model: opencode-go/muse-spark-1.3-contributor
+          model: opencode-go/deepseek-v4.1-flash
+          variant: low
           prompt: |-
-            Respond to the classifier.dev review triage on this pull request.
+            Triage pull request #${{ github.event.pull_request.number }}
+            against its base branch. `gh pr diff` has the change; read the
+            files it touches for the parts that matter.
 
-            The sticky comment whose first line is
-            `<!-- classifier-pr-review -->`, posted by this workflow, groups
-            the changed files by review attention. Work through the files it
-            lists under "needs careful review".
+            Report only what is genuinely wrong: real defects, and
+            violations of AGENTS.md or the nearest AGENTS.md in a
+            directory. Skip style nits, anything a formatter or linter
+            already catches, and anything already correct.
 
-            For each flagged file:
-            1. Read the file and the part of the diff that touches it.
-            2. Review it for real defects and repo-standard violations
-               (AGENTS.md, plus the nearest AGENTS.md in its directory).
-            3. Fix genuine issues with the smallest correct change. When a
-               flag is already handled, is not a real issue, or needs a
-               human call, leave the code alone and say why.
+            Post exactly one comment on the PR: the findings that matter,
+            most important first, each with the file and the reason. Say
+            plainly when a change is fine. If you find nothing, post one
+            line saying so.
 
-            Do not touch unrelated code, do not merge, and do not edit
-            .github/workflows/ or .github/actions/.
-
-            Verify before pushing: `pnpm turbo run typecheck`,
-            `pnpm turbo run test`, `pnpm turbo run lint`, `pnpm format`.
-
-            Then commit (conventional commits), push to this PR's branch, and
-            keep the response short: what you fixed, what you checked and
-            left alone, and the verification results. If the sticky triage
-            comment is missing, say so in one line and stop.
+            Do not edit files, do not push, do not approve, and do not
+            merge — this run must not change the branch it reviews.
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          HUSKY: "0"

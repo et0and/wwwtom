@@ -103,6 +103,8 @@ export const adapter = Effect.gen(function* () {
   const worker = yield* Cloudflare.Worker("wwwtom-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     dev: {
       // Local workerd dev server via `alchemy dev`; ADAPTER_URL points back at it.
       port: 8788,
@@ -125,6 +127,8 @@ export const adapter = Effect.gen(function* () {
         ? undefined
         : {
             TOM_SECRETS: tomSecrets,
+            // The only worker that reads `databaseUrl`, so it is the only
+            // stack that declares the connection — one per stage.
             HYPERDRIVE: webHyperdrive,
           }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
@@ -149,6 +153,8 @@ export const adapter = Effect.gen(function* () {
   const sophieWorker = yield* Cloudflare.Worker("sophie-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     dev: {
       port: 8790,
     },

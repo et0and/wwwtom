@@ -1,5 +1,5 @@
 import { Effect, Schema } from "effect";
-import type { Block, Channel, Group, User } from "@aredotna/sdk";
+import type { Block, Channel, Comment, Connection, Group, User } from "@aredotna/sdk";
 import type {
   BlockImage,
   ChannelListResponse,
@@ -47,11 +47,28 @@ export type ArenaChannelContents = ConnectableListResponse["data"][number];
 const isChannel = (input: unknown): input is Channel =>
   // oxlint-disable-next-line anti-slop/no-runtime-typeof -- opaque SDK type; object check is the boundary
   typeof input === "object" && input !== null;
-// oxlint-disable-next-line anti-slop/no-unknown-parameters, anti-slop/no-runtime-typeof -- declare guard over unknown wire data; SDK owns the User shape
+// oxlint-disable-next-line anti-slop/no-unknown-parameters, anti-slop/no-runtime-typeof -- opaque SDK type; object check is the boundary
 const isUser = (input: unknown): input is User => typeof input === "object" && input !== null;
 
 export const ChannelSchema = Schema.declare<Channel>(isChannel);
 export const UserSchema = Schema.declare<User>(isUser);
+
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- declare guard over unknown wire data; SDK owns the Block shape
+const isBlock = (input: unknown): input is Block =>
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- opaque SDK type; object check is the boundary
+  typeof input === "object" && input !== null;
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- declare guard over unknown wire data; SDK owns the Comment shape
+const isComment = (input: unknown): input is Comment =>
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- opaque SDK type; object check is the boundary
+  typeof input === "object" && input !== null;
+// oxlint-disable-next-line anti-slop/no-unknown-parameters -- declare guard over unknown wire data; SDK owns the Connection shape
+const isConnection = (input: unknown): input is Connection =>
+  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- opaque SDK type; object check is the boundary
+  typeof input === "object" && input !== null;
+
+export const BlockSchema = Schema.declare<Block>(isBlock);
+export const CommentSchema = Schema.declare<Comment>(isComment);
+export const ConnectionSchema = Schema.declare<Connection>(isConnection);
 
 export const GetUserChannelsApiResponseSchema = Schema.Struct({
   total_pages: Schema.Finite,

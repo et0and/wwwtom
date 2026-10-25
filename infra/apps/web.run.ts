@@ -4,7 +4,6 @@ import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
-import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
 import { stageHost, stageWebHost, tomSecrets, workerObservability } from "../shared.run.ts";
@@ -28,6 +27,8 @@ export const web = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so the
     // adapter can redirect back to it (production adopts the existing worker).
@@ -39,7 +40,6 @@ export const web = Effect.gen(function* () {
       TOM_SECRETS: tomSecrets,
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       TOM_RATE_LIMIT_KV: webKv,
-      HYPERDRIVE: webHyperdrive,
       WORK_QUEUE: tomQueue.pipe(retain()),
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
       // Inlined into the client bundle at build time (Alchemy VITE_ prefix).

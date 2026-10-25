@@ -12,6 +12,7 @@ Effect V4.
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; same tenant split)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
+- `edge`: zone-level WAF and rate limiting rules for `tom.so` and `sophie.st` (`edge.run.ts`)
 
 The `production` stage adopts the existing resources instead of replacing
 them:
@@ -37,6 +38,7 @@ ALCHEMY_STAGE=staging pnpm deploy
 
 # Deploy one component
 pnpm deploy:shared
+pnpm deploy:edge
 pnpm deploy:api
 pnpm deploy:adapter
 pnpm deploy:web
@@ -46,6 +48,8 @@ pnpm deploy:turbo
 ```
 
 Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`.
+The zone-level `edge` stack deploys separately, from a production dispatch
+only (see Edge protection).
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
@@ -122,6 +126,51 @@ The cache worker runs on `http://localhost:8790` by default. Deploy with
 `ALCHEMY_STAGE` is required. This prevents a command intended for production
 from silently creating a new stage-specific Worker.
 
+## Edge protection
+
+`edge.run.ts` owns the zone-level rules that keep reconnaissance off the
+origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
+third of all requests to this account, and none of it should reach a Worker.
+
+Every Worker this repository deploys sets `workersDev: false`, so its custom
+domain is the only public entry point. A workers.dev URL would bypass both the
+custom rules and the per-IP rate limit.
+
+- `http_request_firewall_custom`: credential and key-material paths
+  (`CREDENTIAL_PATHS` in `edge.run.ts`), the remaining probe surface
+  (`PROBE_PATHS`), raw paths containing `//` or a backslash, and the retired
+  hosts `preview.tom.so` and `payload.tom.so` answer the default 403 block
+  page. Cloudflare normalizes `http.request.uri.path` before custom rules run,
+  so the malformed-path rule matches `raw.http.request.uri.path`. Custom
+  response codes and bodies need a Pro plan, and both zones are Free, so the
+  rules cannot set a 404 — the separate rule names keep credential probes
+  visible in firewall analytics.
+- `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
+  paths, 10s mitigation — the Free plan caps the counting period and
+  mitigation timeout at 10s, so this preserves the original 120-per-minute
+  budget). One rule only — the Free plan allows a single rate limiting rule
+  per zone, so a second would fail to deploy. The Free plan also rejects the
+  `matches` operator, so the asset exclusion checks
+  `http.request.uri.path.extension` against a set of asset extensions. A
+  Workers Paid subscription is account-level and does not change these zone
+  entitlements.
+
+The zones are referenced by id, never declared as resources here, so this
+stack cannot adopt, rename or delete a zone. It does own both phase
+entrypoints: rules added to those phases in the dashboard are overwritten on
+the next deploy.
+
+Rules live on the zone itself, so they are shared by every stage: exactly one
+stage may own them. The deploy workflow runs this stack only on a production
+dispatch (`if: github.event_name == 'workflow_dispatch' && inputs.stage ==
+'production'`), and PR previews never run it — concurrent preview runs would
+otherwise fight over the same ruleset.
+
+Deploying this stack needs a token with **Zone WAF: Edit** and **Zone: Read**
+(in addition to the account-level permissions the other stacks use). The
+existing `CLOUDFLARE_API_TOKEN` must be granted those zone permissions, or the
+production deploy fails at the "Deploy zone edge rules" step.
+
 ## Environment
 
 Alchemy uses the Cloudflare credentials configured by `alchemy login`, or
@@ -172,7 +221,10 @@ random value of at least 32 characters.
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
 credentials for Tom CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
 `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are the Google OAuth
-credentials for Sophie CMS sign-in.
+credentials for Sophie CMS sign-in. `GOOGLE_OAUTH_CLIENTS` is an optional JSON
+object mapping public Google OAuth client IDs to client secrets for the generic
+`/oauth/google/token` and `/oauth/google/refresh` broker. Keep it in
+`TOM_SECRETS`; never commit it.
 `BETTER_AUTH_SECRET` signs sessions (min 32 chars; `openssl rand -base64 32`).
 `CMS_ADMIN_EMAILS` is the comma-separated allowlist for sign-in; everyone else
 is rejected before a user row is created.
@@ -202,3 +254,28 @@ Preview editors authenticate through the dev adapters: OAuth redirect
 URIs are exact-match at Google/GitHub, so per-PR hosts can never be
 registered. The dev APIs trust each PR's editor origin
 (`pr-<n>-cms.tom.so`, `pr-<n>-cms.sophie.st`).
+
+## Retired hosts
+
+`preview.tom.so` is **not** a preview host, despite the name. It is served
+by `wwwtom-preview`, a Worker last deployed on 2025-09-07 that nothing in
+this repo declares any more — the `preview` stack only posts the PR
+comment, so no stack owns that Worker or its custom domain. Current
+previews live on `pr-<n>-web.tom.so` / `pr-<n>-web.sophie.st`.
+
+It answers 200 for every path, so `/.env`, `/.git/config` and
+`/.ssh/id_rsa` all read as hits to a scanner. Retiring it means detaching
+the custom domain (`preview.tom.so`, domain id
+`b1aff2f4298e7e9e19bac418c5c962d17781f5f1`) and deleting the Worker; that
+needs a token with Workers Scripts: Edit, which `wrangler login` does not
+grant. Until then `edge.run.ts` answers every request to this host with the
+default 403 block page, so the stale origin stops reading as a find.
+
+`payload.tom.so` is a Vercel-hosted Payload CMS deployed from
+`et0and/tom-cms-payload`, not a Worker in this repo. It is retired: tom.so
+content comes from are.na. It still answers `/admin` with 200, so a scanner
+reads its admin login as a find. Retiring it means deleting the Vercel
+project and its `payload.tom.so` domain and removing the Cloudflare DNS
+record; that needs Vercel access and a token with `DNS: Edit`, neither of
+which the local `wrangler login` grants. Until then, `edge.run.ts` answers
+every request to the host with the default 403 block page.

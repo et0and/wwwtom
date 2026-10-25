@@ -25,9 +25,6 @@ export const storybookPreviewEnv = (stage: string): Env => ({
   CLOUDFLARE_API_TOKEN: secret("CLOUDFLARE_API_TOKEN"),
   ALCHEMY_ENV_FILE: "/dev/null",
   GITHUB_TOKEN: ex("github.token"),
-  // `storybook build` peaks above Node's default ~2 GB heap on the Namespace
-  // runner. Give it 4 GB so the build does not OOM.
-  NODE_OPTIONS: "--max-old-space-size=4096",
 });
 
 /**

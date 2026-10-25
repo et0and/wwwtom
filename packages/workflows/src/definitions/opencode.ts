@@ -1,5 +1,5 @@
 import { step, workflow } from "../builders";
-import { actionPins, checkout } from "../catalog/actions";
+import { actionPins, checkout, setupStep } from "../catalog/actions";
 import { secret } from "../catalog/secrets";
 
 /**
@@ -30,11 +30,15 @@ export const opencode = workflow("opencode", {
           with: { "allowed-users": "et0and" },
         }),
         step({
+          ...setupStep(),
+          if: "steps.oc.outputs.triggered == 'true'",
+        }),
+        step({
           name: "Run opencode",
           if: "steps.oc.outputs.triggered == 'true'",
           uses: actionPins.opencode,
-          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY") },
-          with: { model: "deepseek/deepseek-v4-flash-0731" },
+          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY"), HUSKY: "true" },
+          with: { model: "opencode-go/muse-spark-1.3-contributor" },
         }),
       ],
     },

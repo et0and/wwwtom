@@ -1,3 +1,224 @@
+# [4.8.0](https://github.com/et0and/wwwtom/compare/v4.7.13...v4.8.0) (2026-10-24)
+
+
+### Bug Fixes
+
+* **api:** address Google OAuth broker review findings ([6ad002b](https://github.com/et0and/wwwtom/commit/6ad002b6ba3cf9031bb108480d1274d919406d98))
+* **api:** finish OAuth broker review follow-up ([4117658](https://github.com/et0and/wwwtom/commit/4117658a227e3685c3b6aa16d2fcf01e6f27fd39))
+* **security:** block firebase admin credential files at the edge ([e2d62ff](https://github.com/et0and/wwwtom/commit/e2d62ff7c34951c36b4b1540f92e95ea4ac7d51e))
+
+
+### Features
+
+* **api:** add a generic Google OAuth token broker ([8d7157f](https://github.com/et0and/wwwtom/commit/8d7157f00c2ac09a9a181d30f65341e365a25889))
+
+## [4.7.13](https://github.com/et0and/wwwtom/compare/v4.7.12...v4.7.13) (2026-10-24)
+
+
+### Bug Fixes
+
+* **test:** run vitest once instead of watching ([e34849b](https://github.com/et0and/wwwtom/commit/e34849bbbe241fdb307ac46d1c2277ab6113cfb1))
+
+## [4.7.12](https://github.com/et0and/wwwtom/compare/v4.7.11...v4.7.12) (2026-10-24)
+
+
+### Bug Fixes
+
+* **security:** disable workers.dev routes on deployed workers ([c493fb0](https://github.com/et0and/wwwtom/commit/c493fb081a280f8abd288c9c75f870f882a7b310))
+
+## [4.7.11](https://github.com/et0and/wwwtom/compare/v4.7.10...v4.7.11) (2026-10-24)
+
+
+### Bug Fixes
+
+* **web:** preview are.na media attachments ([b443247](https://github.com/et0and/wwwtom/commit/b4432470eb0a29669ddb3989f918277f81ebca7b))
+
+## [4.7.10](https://github.com/et0and/wwwtom/compare/v4.7.9...v4.7.10) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** consolidate the open edge probe PRs ([7dcd0ea](https://github.com/et0and/wwwtom/commit/7dcd0eab6f1b5efbbc8c3e8fb2dc2d88387d6e4d))
+
+## [4.7.9](https://github.com/et0and/wwwtom/compare/v4.7.8...v4.7.9) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block ssh key, admin and tfstate probes at the edge ([e2a575c](https://github.com/et0and/wwwtom/commit/e2a575c4093d636a71fb5807bc31dfe99fddacc3))
+
+## [4.7.8](https://github.com/et0and/wwwtom/compare/v4.7.7...v4.7.8) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block agent and repository metadata probes at the edge ([07480aa](https://github.com/et0and/wwwtom/commit/07480aa30f6e664664862c2ac42c3a6123434e87))
+* **security:** retire payload.tom.so at the edge ([28b3941](https://github.com/et0and/wwwtom/commit/28b3941bf7cb2cd430c2593481bec176e7008ed1))
+
+## [4.7.7](https://github.com/et0and/wwwtom/compare/v4.7.6...v4.7.7) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block secret and credential store probes at the edge ([3ef021d](https://github.com/et0and/wwwtom/commit/3ef021dd95e95c63e5d975a58ecf798a54d2af6d))
+
+## [4.7.6](https://github.com/et0and/wwwtom/compare/v4.7.5...v4.7.6) (2026-10-22)
+
+
+### Bug Fixes
+
+* **scripts:** keep soft hits on our own hosts ([547772b](https://github.com/et0and/wwwtom/commit/547772b5a8ec2a18c07aee0c417bee600b843eb0))
+* **security:** block cargo and service-account key probes at the edge ([a1c1b6c](https://github.com/et0and/wwwtom/commit/a1c1b6c93b084d9abdd6652b0cc7071c40e8f2c9))
+* **security:** surface every soft hit in the infra scan ([c6689b6](https://github.com/et0and/wwwtom/commit/c6689b655b2bdf07a6a7decf7eb6c34084b8883f)), closes [hi#volume](https://github.com/hi/issues/volume)
+
+## [4.7.5](https://github.com/et0and/wwwtom/compare/v4.7.4...v4.7.5) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** use a Free-plan rate limit expression at the edge ([cd91e43](https://github.com/et0and/wwwtom/commit/cd91e43435245c6158948e6194dd76d1e9c98e97))
+
+## [4.7.4](https://github.com/et0and/wwwtom/compare/v4.7.3...v4.7.4) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** block credential files and .env variants at the edge ([cc23e46](https://github.com/et0and/wwwtom/commit/cc23e4665bfcae014471753658bcbba972a6da01)), closes [#216](https://github.com/et0and/wwwtom/issues/216) [#207](https://github.com/et0and/wwwtom/issues/207) [#211](https://github.com/et0and/wwwtom/issues/211) [#212](https://github.com/et0and/wwwtom/issues/212) [#214](https://github.com/et0and/wwwtom/issues/214)
+* **security:** include the colo in edge rate limit characteristics ([6430b02](https://github.com/et0and/wwwtom/commit/6430b02241c5ab6ddac6aeeb278b03933c1e78ac))
+
+## [4.7.3](https://github.com/et0and/wwwtom/compare/v4.7.2...v4.7.3) (2026-10-22)
+
+
+### Bug Fixes
+
+* **security:** block backup-file probes at the edge ([98d19b4](https://github.com/et0and/wwwtom/commit/98d19b4c5d69ed8342164d3ed2034da569da8902))
+
+## [4.7.2](https://github.com/et0and/wwwtom/compare/v4.7.1...v4.7.2) (2026-10-22)
+
+
+### Bug Fixes
+
+* **ci:** cap the PR triage agent at 30 minutes ([ec89f8f](https://github.com/et0and/wwwtom/commit/ec89f8f0cc3350effdfe951b6b60e706ac5239dd)), closes [#212](https://github.com/et0and/wwwtom/issues/212)
+* **security:** answer every PHP probe at the edge ([dbb197b](https://github.com/et0and/wwwtom/commit/dbb197b850ba1c4468cad7457b3dcdbbe86ba643)), closes [#207](https://github.com/et0and/wwwtom/issues/207)
+* **security:** finish destroying orphaned PR previews ([f9710f7](https://github.com/et0and/wwwtom/commit/f9710f7e12a1079391b2c0fa1c03f2521862c363))
+
+## [4.7.1](https://github.com/et0and/wwwtom/compare/v4.7.0...v4.7.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **security:** deploy edge rules within free-plan limits ([a84407b](https://github.com/et0and/wwwtom/commit/a84407bd2dac25b28c85556dcd677decb998c466))
+
+# [4.7.0](https://github.com/et0and/wwwtom/compare/v4.6.0...v4.7.0) (2026-10-20)
+
+
+### Features
+
+* **ci:** triage PRs with an opencode agent on a flash model ([dcc3888](https://github.com/et0and/wwwtom/commit/dcc3888d3b320c221d9697014570d1cb7e03a185))
+
+# [4.6.0](https://github.com/et0and/wwwtom/compare/v4.5.2...v4.6.0) (2026-10-19)
+
+
+### Bug Fixes
+
+* **sophie:** answer unknown paths with 404, not 200 ([ce521c2](https://github.com/et0and/wwwtom/commit/ce521c2cf7d59a42930a575a32f3012d9709b821))
+* **workflows:** deploy the edge stack from production only ([eabd116](https://github.com/et0and/wwwtom/commit/eabd11625d760253a0f9d98447d64452c465d8fc))
+
+
+### Features
+
+* **security:** answer reconnaissance probes at the edge ([dd10080](https://github.com/et0and/wwwtom/commit/dd10080b802f6117da922baa38596f2f8b27b85b))
+
+## [4.5.2](https://github.com/et0and/wwwtom/compare/v4.5.1...v4.5.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **infra:** only the adapter declares the Hyperdrive ([5bbb981](https://github.com/et0and/wwwtom/commit/5bbb981501622bc82e54a5151cd22af702b54fa1))
+
+## [4.5.1](https://github.com/et0and/wwwtom/compare/v4.5.0...v4.5.1) (2026-10-14)
+
+
+### Bug Fixes
+
+* **e2e:** decode fixture stores at boot and add garden e2e coverage ([94c2aaa](https://github.com/et0and/wwwtom/commit/94c2aaa9ff890d009588fcd5489ad7d3c57bd37e))
+* **e2e:** silence CodeQL format-string flag and serve real PNG bytes in garden spec ([24c1fe0](https://github.com/et0and/wwwtom/commit/24c1fe0ed83707ee6356289baada8739c309b893))
+
+# [4.5.0](https://github.com/et0and/wwwtom/compare/v4.4.0...v4.5.0) (2026-10-13)
+
+
+### Features
+
+* **web:** add cover images for the new Garden pieces ([#188](https://github.com/et0and/wwwtom/issues/188)) ([f57ef67](https://github.com/et0and/wwwtom/commit/f57ef6776f9830e133f4ada87b415269856b4288))
+
+# [4.4.0](https://github.com/et0and/wwwtom/compare/v4.3.0...v4.4.0) (2026-10-13)
+
+
+### Features
+
+* **web:** make Low and Dust ambient and add noise pieces ([#187](https://github.com/et0and/wwwtom/issues/187)) ([64ec67b](https://github.com/et0and/wwwtom/commit/64ec67bbfa220b56f7179ce5a853b884a53c81bb))
+
+# [4.3.0](https://github.com/et0and/wwwtom/compare/v4.2.0...v4.3.0) (2026-10-11)
+
+
+### Features
+
+* **web:** widen Garden seed variety ([#186](https://github.com/et0and/wwwtom/issues/186)) ([484eb44](https://github.com/et0and/wwwtom/commit/484eb44a54572148e2814dd7ccdbb9903b5c65f0))
+
+# [4.2.0](https://github.com/et0and/wwwtom/compare/v4.1.2...v4.2.0) (2026-10-10)
+
+
+### Bug Fixes
+
+* **web,workflows:** resume Garden from lock-screen Play, restore valid opencode model ([9de0f0e](https://github.com/et0and/wwwtom/commit/9de0f0ea3b46147098628c51889e069440a1bb05))
+* **web:** drop the Garden media bridge for background playback ([0adc025](https://github.com/et0and/wwwtom/commit/0adc025b4c9e817a5f5d64c12c5a0d08dad9eea0))
+* **web:** release the Garden audio bridge cleanly ([c013368](https://github.com/et0and/wwwtom/commit/c013368d5d6a526a1a405665469d75cb61862732))
+* **workflows:** do not fail the check when the review agent cannot push ([95f0346](https://github.com/et0and/wwwtom/commit/95f034699dd1bdb40709302ef67a047727e02d7a))
+* **workflows:** skip the pre-push hook when the review agent pushes ([cc5713e](https://github.com/et0and/wwwtom/commit/cc5713e02d86d615ed4c26e6ec732da6bacc2595))
+
+
+### Features
+
+* **web:** add Low and Dust beat pieces to Garden ([ca2721f](https://github.com/et0and/wwwtom/commit/ca2721f9e072a3985a2bc3c8f3cff648176f70d8))
+* **web:** keep Garden audio playing in the iOS background ([13a8ddc](https://github.com/et0and/wwwtom/commit/13a8ddcf42fccbc40c3c2b7bbbe0801f0427d290))
+* **web:** make Low and Dust raw noise with clipped beats ([f1d799f](https://github.com/et0and/wwwtom/commit/f1d799f08bac1a8d39f2bba7b958f5b7d20dfd3b))
+
+## [4.1.2](https://github.com/et0and/wwwtom/compare/v4.1.1...v4.1.2) (2026-10-10)
+
+
+### Bug Fixes
+
+* **workflows:** set up Node and enable husky for the agent jobs ([3026d5e](https://github.com/et0and/wwwtom/commit/3026d5eab091fb250d0fbb9d1cb675745e4826a8))
+
+## [4.1.1](https://github.com/et0and/wwwtom/compare/v4.1.0...v4.1.1) (2026-10-10)
+
+
+### Bug Fixes
+
+* **workflows:** use a valid opencode model id ([df1e57a](https://github.com/et0and/wwwtom/commit/df1e57a484fa8ae7ad78ad2f7560eeb550ee20d5))
+
+# [4.1.0](https://github.com/et0and/wwwtom/compare/v4.0.2...v4.1.0) (2026-10-09)
+
+
+### Bug Fixes
+
+* **web:** retry the Garden engine after a failed load ([c44d457](https://github.com/et0and/wwwtom/commit/c44d4572d3a09ea4d9161112b5a320267e0d03bc))
+* **workflows:** rebase before the PR review agent pushes ([3d33ffe](https://github.com/et0and/wwwtom/commit/3d33ffec52b12d068a984d21c637c2dca13eaf26))
+
+
+### Features
+
+* **web:** add a dot-matrix meter and CDN covers to Garden ([b4d5f6d](https://github.com/et0and/wwwtom/commit/b4d5f6d66f82037a015902d77911056a646cf115))
+* **web:** add Seed, a seeded generative music page ([a602c56](https://github.com/et0and/wwwtom/commit/a602c569d57f14cdd389136499bf076a4ea2888d))
+* **web:** polish the Garden player controls and tiles ([fef83f9](https://github.com/et0and/wwwtom/commit/fef83f9f6180cf0300620ebf98417f460899cf20))
+
+## [4.0.2](https://github.com/et0and/wwwtom/compare/v4.0.1...v4.0.2) (2026-10-08)
+
+
+### Bug Fixes
+
+* **workflows:** set up Node in the PR review address job ([07d8b47](https://github.com/et0and/wwwtom/commit/07d8b475e2f7a21f9727ac181bdb97c07d0e2791))
+
 ## [4.0.1](https://github.com/et0and/wwwtom/compare/v4.0.0...v4.0.1) (2026-10-06)
 
 
