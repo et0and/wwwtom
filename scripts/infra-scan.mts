@@ -12,6 +12,9 @@
  * probe that answered 2xx or 3xx — a scanner walking away believing it found
  * something, which is the signal worth acting on first.
  *
+ * A depleted GraphQL analytics budget is retried once after five minutes;
+ * the budget is shared per account and resets on that window.
+ *
  * Dependency-free (node builtins only), like scripts/pr-review.ts, so the
  * sweep runs it with plain node type stripping — no pnpm install. `.mts`
  * rather than `.ts` because this file imports (`pr-review.ts` does not), and
@@ -395,6 +398,36 @@ const renderMarkdown = (report: Report): string => {
   return lines.join("\n");
 };
 
+type AnalyticsBody = {
+  data?: { viewer: { accounts: ReadonlyArray<Readonly<Record<string, ReadonlyArray<Group>>>> } };
+  // GraphQL answers with `errors: null` on success, so null is a real case.
+  errors?: ReadonlyArray<{ message: string; extensions?: { readonly code?: string } }> | null;
+};
+
+/**
+ * Cloudflare resets the shared GraphQL analytics budget on a five-minute
+ * window, so a retry has to wait out the whole window to succeed.
+ */
+const BUDGET_RETRY_DELAY_MS = 5 * 60_000;
+
+const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isBudgetError = (body: AnalyticsBody): boolean =>
+  body.errors?.some((error) => error.extensions?.code === "budget") ?? false;
+
+/**
+ * The analytics API shares a five-minute query budget per account. A scan
+ * that runs while another query drained it gets a `budget` error; wait for
+ * the window and try once more instead of failing the whole sweep.
+ */
+const queryAnalytics = async (token: string, query: string): Promise<AnalyticsBody> => {
+  const body = await request<AnalyticsBody>(GRAPHQL_URL, token, query);
+  if (!isBudgetError(body)) return body;
+  process.stderr.write("analytics budget depleted; retrying in 5 minutes\n");
+  await sleep(BUDGET_RETRY_DELAY_MS);
+  return request<AnalyticsBody>(GRAPHQL_URL, token, query);
+};
+
 const main = async (): Promise<void> => {
   const args = parseArgs(process.argv.slice(2));
   if (args === null) return;
@@ -404,11 +437,7 @@ const main = async (): Promise<void> => {
   const accountId = await resolveAccountId(token);
   const query = buildQuery(args, sinceIso).replace("ACCOUNT_ID", accountId);
 
-  const body = await request<{
-    data?: { viewer: { accounts: ReadonlyArray<Readonly<Record<string, ReadonlyArray<Group>>>> } };
-    // GraphQL answers with `errors: null` on success, so null is a real case.
-    errors?: ReadonlyArray<{ message: string }> | null;
-  }>(GRAPHQL_URL, token, query);
+  const body = await queryAnalytics(token, query);
 
   if (body.errors !== undefined && body.errors !== null && body.errors.length > 0) {
     throw new Error(
