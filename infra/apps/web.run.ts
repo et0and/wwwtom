@@ -6,7 +6,7 @@ import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
+import { stageHost, stageWebHost, tomSecrets, workerObservability } from "../shared.run.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
 
@@ -29,6 +29,7 @@ export const web = Effect.gen(function* () {
     compatibility: { flags: ["nodejs_compat"] },
     // Only the custom domain: workers.dev would bypass the zone edge rules.
     workersDev: false,
+    observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so the
     // adapter can redirect back to it (production adopts the existing worker).
     ...(stage === "production"
