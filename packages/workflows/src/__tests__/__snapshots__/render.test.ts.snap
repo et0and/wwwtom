@@ -437,7 +437,8 @@ jobs:
             against its base branch. The PR head is checked out; see the
             change with \`git diff \${{ env.PR_MERGE_BASE }} HEAD\`, and read
             the files it touches for the parts that matter. Do not use \`gh\`
-            or the network.
+            or the network, and stay inside the checkout — external
+            directory access is denied.
 
             Report only what is genuinely wrong: real defects, and
             violations of AGENTS.md or the nearest AGENTS.md in a
@@ -454,6 +455,7 @@ jobs:
         env:
           OPENCODE_API_KEY: \${{ secrets.OPENCODE_API_KEY }}
           HUSKY: "0"
+          OPENCODE_CONFIG_CONTENT: '{"permission":{"external_directory":"deny"}}'
 "
 `;
 

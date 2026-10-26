@@ -72,10 +72,17 @@ export const prReview = workflow("pr-review", {
         // the agent's own tooling needs Node 24 and pnpm on the job PATH. It
         // installs dependencies itself; nothing here needs them.
         setupStep({ install: "false" }),
+        // Headless CI has no one to answer a permission prompt. Anything that
+        // reaches outside the checkout (gh's own config, /tmp caches) must fail
+        // immediately instead of stalling until the job timeout.
         step({
           name: "Triage",
           uses: actionPins.opencode,
-          env: { OPENCODE_API_KEY: secret("OPENCODE_API_KEY"), HUSKY: "0" },
+          env: {
+            OPENCODE_API_KEY: secret("OPENCODE_API_KEY"),
+            HUSKY: "0",
+            OPENCODE_CONFIG_CONTENT: '{"permission":{"external_directory":"deny"}}',
+          },
           with: {
             model: "opencode-go/deepseek-v4.1-flash",
             // Low reasoning effort: a cheap read of the diff, not a deep audit.
@@ -85,7 +92,8 @@ export const prReview = workflow("pr-review", {
               "against its base branch. The PR head is checked out; see the",
               "change with `git diff ${{ env.PR_MERGE_BASE }} HEAD`, and read",
               "the files it touches for the parts that matter. Do not use `gh`",
-              "or the network.",
+              "or the network, and stay inside the checkout — external",
+              "directory access is denied.",
               "",
               "Report only what is genuinely wrong: real defects, and",
               "violations of AGENTS.md or the nearest AGENTS.md in a",
