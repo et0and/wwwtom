@@ -86,81 +86,10 @@ ul {
 }
 
 .brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-name {
+  display: inline-block;
   font-size: 21px;
   font-weight: 500;
   letter-spacing: -0.03em;
-}
-
-.mark {
-  position: relative;
-  display: inline-block;
-  width: 36px;
-  height: 36px;
-  flex: 0 0 36px;
-  animation: mark-orbit 28s linear infinite;
-}
-
-.petal {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px;
-  border-radius: 2px;
-  background: var(--primary);
-  transform: rotate(var(--angle)) translateY(-12px) scale(0.86);
-  transform-origin: center;
-  animation: petal-breathe 5.4s ease-in-out infinite;
-  animation-delay: calc(var(--i) * -0.45s);
-}
-
-.petal-1 {
-  --angle: 0deg;
-  --i: 0;
-}
-.petal-2 {
-  --angle: 60deg;
-  --i: 1;
-}
-.petal-3 {
-  --angle: 120deg;
-  --i: 2;
-}
-.petal-4 {
-  --angle: 180deg;
-  --i: 3;
-}
-.petal-5 {
-  --angle: 240deg;
-  --i: 4;
-}
-.petal-6 {
-  --angle: 300deg;
-  --i: 5;
-}
-
-.core {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 4px;
-  height: 4px;
-  margin: -2px;
-  border-radius: 50%;
-  background: var(--primary);
-  opacity: 0.32;
-  animation: core-pulse 5.4s ease-in-out infinite;
-}
-
-.brand:hover .mark {
-  animation-duration: 8s;
 }
 
 .site-nav {
@@ -401,22 +330,6 @@ main {
   line-height: 1.4;
 }
 
-.media-section {
-  padding-top: 80px;
-}
-
-.media-head {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 32px;
-  margin-bottom: 24px;
-}
-
-.media-head .section-intro {
-  max-width: 680px;
-}
-
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -428,65 +341,6 @@ main {
   color: var(--muted-foreground);
   font-size: 13px;
   font-weight: 500;
-}
-
-.eyebrow-dot {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--primary);
-  opacity: 0.14;
-}
-
-.screen-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: 16px;
-}
-
-.screen-card {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--muted);
-}
-
-.screen-card img {
-  width: 100%;
-  height: 100%;
-  min-height: 0;
-  object-fit: cover;
-}
-
-.screen-card-wide {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  padding: 16px;
-}
-
-.screen-card-wide img {
-  height: auto;
-  border: 1px solid rgb(11 11 11 / 8%);
-  border-radius: 10px;
-  box-shadow: 0 18px 50px rgb(11 11 11 / 12%);
-}
-
-.screen-card-dark {
-  background: #050505;
-}
-
-.screen-card-dark img {
-  height: 100%;
-  min-height: 340px;
-}
-
-.screen-caption {
-  margin-top: 10px;
-  color: var(--muted-foreground);
-  font-size: 12px;
-  line-height: 1.3;
 }
 
 .showcase-section {
@@ -737,6 +591,33 @@ main {
   background: linear-gradient(135deg, #6f8072, #d4ddd2);
 }
 
+.rename-mock {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgb(255 255 255 / 46%);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10px;
+}
+
+.rename-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 2px;
+  border-bottom: 1px solid rgb(0 0 0 / 10%);
+}
+
+.rename-row:last-child {
+  border-bottom: 0;
+}
+
+.rename-row span:last-child {
+  opacity: 0.58;
+}
+
 .film-mock {
   display: flex;
   gap: 5px;
@@ -879,36 +760,6 @@ main {
   font-size: 12px;
 }
 
-@keyframes mark-orbit {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes petal-breathe {
-  0%,
-  100% {
-    opacity: 0.82;
-    scale: 0.84;
-  }
-  50% {
-    opacity: 1;
-    scale: 1.08;
-  }
-}
-
-@keyframes core-pulse {
-  0%,
-  100% {
-    opacity: 0.18;
-    scale: 0.72;
-  }
-  50% {
-    opacity: 0.44;
-    scale: 1;
-  }
-}
-
 @media (max-width: 900px) {
   .hero-actions {
     align-items: flex-start;
@@ -917,19 +768,6 @@ main {
 
   .feature-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .screen-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .screen-card-dark img {
-    min-height: 0;
-    aspect-ratio: 1.54;
-  }
-
-  .screen-card-wide img {
-    width: 100%;
   }
 
   .usecase-grid {
@@ -1011,7 +849,6 @@ main {
     min-height: 210px;
   }
 
-  .media-head,
   .showcase-head {
     align-items: flex-start;
     flex-direction: column;
@@ -1044,11 +881,5 @@ main {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-
-  .mark,
-  .petal,
-  .core {
-    animation: none;
   }
 }

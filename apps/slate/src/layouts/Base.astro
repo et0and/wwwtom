@@ -10,12 +10,12 @@ interface Props {
 }
 
 const {
-  title = "Slate — A quieter way to finish a shoot",
-  description = "A local-first photography workflow for artists, studios and photographers. Cull, colour, rename and print without moving your archive into another cloud.",
+  title = "Slate — The workstation for photographs",
+  description = "A local-first photography workstation for culling, colour, renaming, conversion, storyboards and delivery.",
 } = Astro.props;
 const origin = Astro.site ?? new URL("https://slate.tom.so");
 const canonical = new URL(Astro.url.pathname, origin);
-const ogImage = new URL("/screens/sheet-builder.jpg", origin);
+const ogImage = new URL("/screens/readme-workstation.jpg", origin);
 ---
 <!doctype html>
 <html lang="en">
@@ -32,7 +32,7 @@ const ogImage = new URL("/screens/sheet-builder.jpg", origin);
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
-    <meta property="og:image:alt" content="Slate contact sheet builder" />
+    <meta property="og:image:alt" content="Slate photo workstation" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />

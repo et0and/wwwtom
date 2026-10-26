@@ -5,10 +5,10 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
 ---
 <Base>
   <section class="hero container" aria-labelledby="hero-title">
-    <h1 id="hero-title">A quieter way to finish a shoot.</h1>
+    <h1 id="hero-title">The workstation for photographs.</h1>
     <p class="lede">
-      Cull, colour, rename and print from local folders or Google Drive. A fast,
-      local-first workflow for artists, studios and photographers.
+      Cull, colour, rename, convert, storyboard and deliver in one local-first
+      app.
     </p>
 
     <div class="hero-actions">
@@ -22,20 +22,20 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
           <span>macOS · Windows · Linux</span>
         </div>
       </div>
-      <a class="watch-link" href="#workflow">
-        See the workflow
+      <a class="watch-link" href="#workstation">
+        See the workstation
         <span class="play-circle"><Icon name="play" size={16} /></span>
       </a>
     </div>
 
     <div class="hero-frame">
       <img
-        src="/screens/sheet-builder.jpg"
-        alt="Slate with a photo grid, photo inspector and contact sheet preview"
+        src="/screens/readme-workstation.jpg"
+        alt="Slate photo workstation with the library and photo inspector"
       />
     </div>
 
-    <div class="for-row" aria-label="What Slate is for">
+    <div class="for-row" aria-label="What Slate does">
       {forRow.map((item) => (
         <span class="for-item">
           <Icon name={item.icon} size={20} />
@@ -45,9 +45,9 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
     </div>
   </section>
 
-  <section id="workflow" class="section container" aria-labelledby="workflow-title">
-    <h2 id="workflow-title" class="section-intro">
-      Everything the edit needs. Nothing it does not.
+  <section id="workstation" class="section container" aria-labelledby="workstation-title">
+    <h2 id="workstation-title" class="section-intro">
+      One workspace. Every pass.
     </h2>
     <div class="feature-grid">
       {features.map((feature) => (
@@ -60,42 +60,13 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
     </div>
   </section>
 
-  <section id="screens" class="media-section container" aria-labelledby="screens-title">
-    <div class="media-head">
-      <div>
-        <span class="eyebrow"><Icon name="spark" size={16} /> The print is the point</span>
-        <h2 id="screens-title" class="section-intro">A proof you can hold.</h2>
-      </div>
-    </div>
-    <div class="screen-grid">
-      <figure class="screen-card screen-card-wide">
-        <img
-          src="/screens/sheet-preview.jpg"
-          alt="A contact sheet preview with twelve photographs"
-        />
-        <figcaption class="screen-caption">
-          Contact sheet · A4 portrait · 3 × 4 · twelve frames
-        </figcaption>
-      </figure>
-      <figure class="screen-card screen-card-dark">
-        <img
-          src="/screens/photo-preview.jpg"
-          alt="A photograph reviewed full screen in Slate"
-        />
-        <figcaption class="screen-caption">
-          Full-screen review · scroll to zoom · drag to pan
-        </figcaption>
-      </figure>
-    </div>
-  </section>
-
-  <section class="showcase-section" data-carousel aria-labelledby="showcase-title">
+  <section id="why" class="showcase-section" data-carousel aria-labelledby="showcase-title">
     <div class="container">
       <div class="showcase-head">
         <div>
-          <span class="eyebrow"><Icon name="spark" size={16} /> Built for the contact sheet</span>
+          <span class="eyebrow"><Icon name="spark" size={16} /> A DAW for photographs</span>
           <h2 id="showcase-title" class="section-intro">
-            Every decision leads to the sheet.
+            The whole edit, in one window.
           </h2>
         </div>
         <div class="carousel-controls">
@@ -129,7 +100,7 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
             <div class="select-row"><span class="select-thumb"></span><span class="select-name">landscape-01.jpg</span><span class="select-stars">★★★★★</span></div>
             <div class="select-row"><span class="select-thumb"></span><span class="select-name">portrait-02.jpg</span><span class="select-stars">★★★★☆</span></div>
             <div class="select-row"><span class="select-thumb"></span><span class="select-name">landscape-05.jpg</span><span class="select-stars">★★★★★</span></div>
-            <div class="select-row"><span class="select-thumb"></span><span class="select-name">contact-sheet.pdf</span><span class="select-stars">12 selected</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">portrait-04.jpg</span><span class="select-stars">★★★★☆</span></div>
           </div>
         </article>
 
@@ -155,11 +126,10 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
             <h3>{showcase[2].title}</h3>
             <p>{showcase[2].body}</p>
           </div>
-          <div class="mock" aria-hidden="true">
-            <div class="sheet-mock">
-              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
-              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
-            </div>
+          <div class="mock rename-mock" aria-hidden="true">
+            <div class="rename-row"><span>IMG_0001.jpg</span><span>walk-001.jpg</span></div>
+            <div class="rename-row"><span>IMG_0002.jpg</span><span>walk-002.jpg</span></div>
+            <div class="rename-row"><span>IMG_0003.jpg</span><span>walk-003.jpg</span></div>
           </div>
         </article>
 
@@ -170,10 +140,9 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
             <p>{showcase[3].body}</p>
           </div>
           <div class="mock" aria-hidden="true">
-            <div class="film-mock">
-              <span class="film-frame">00:04</span>
-              <span class="film-frame">01:12</span>
-              <span class="film-frame">02:28</span>
+            <div class="sheet-mock">
+              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
+              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
             </div>
           </div>
         </article>
@@ -183,11 +152,8 @@ import { features, forRow, links, showcase, useCases } from "../data/site";
 
   <section class="usecase-section container" aria-labelledby="usecase-title">
     <div class="usecase-copy">
-      <h2 id="usecase-title">What will you make with Slate?</h2>
-      <p>
-        From a first pass through a shoot to a sheet on the wall, the work
-        stays close to the files.
-      </p>
+      <h2 id="usecase-title">What will you make?</h2>
+      <p>A folder, a shoot, an archive. Start there.</p>
     </div>
     <div class="usecase-grid">
       {useCases.map((item) => (
