@@ -1,0 +1,32 @@
+---
+import { links } from "../data/site";
+import Logo from "./Logo.astro";
+---
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <Logo />
+        <p>A quieter photography workflow for people who still care about the contact sheet.</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <span class="footer-label">Slate</span>
+          <a href={links.website}>Website</a>
+          <a href={links.github}>GitHub</a>
+          <a href={links.releases}>Releases</a>
+        </div>
+        <div>
+          <span class="footer-label">Read</span>
+          <a href={links.readme}>Documentation</a>
+          <a href={links.drive}>Google Drive setup</a>
+          <a href={links.license}>License</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Slate. Free software under the GNU GPLv3.</span>
+      <span>Made by Tom Hackshaw.</span>
+    </div>
+  </div>
+</footer>

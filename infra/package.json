@@ -10,6 +10,7 @@
     "deploy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/web.run.ts --stage $ALCHEMY_STAGE",
     "deploy:preview": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy preview.run.ts --stage $ALCHEMY_STAGE",
     "deploy:sophie": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/sophie.run.ts --stage $ALCHEMY_STAGE",
+    "deploy:slate": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy apps/slate.run.ts --stage $ALCHEMY_STAGE",
     "deploy:turbo": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy turbo/turbo.run.ts --stage $ALCHEMY_STAGE",
     "deploy:runner": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy runner/runner.run.ts --stage $ALCHEMY_STAGE",
     "deploy:edge": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js deploy edge.run.ts --stage $ALCHEMY_STAGE",
@@ -26,6 +27,7 @@
     "destroy:web": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/web.run.ts --stage $ALCHEMY_STAGE",
     "destroy:editor": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/editor.run.ts --stage $ALCHEMY_STAGE",
     "destroy:sophie": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/sophie.run.ts --stage $ALCHEMY_STAGE",
+    "destroy:slate": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/slate.run.ts --stage $ALCHEMY_STAGE",
     "destroy:turbo": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy turbo/turbo.run.ts --stage $ALCHEMY_STAGE",
     "destroy:runner": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy runner/runner.run.ts --stage $ALCHEMY_STAGE",
     "destroy:storybook": ": \"${ALCHEMY_STAGE:?Set ALCHEMY_STAGE (for example: production, staging, or dev)}\" && node --env-file=${ALCHEMY_ENV_FILE:-.dev.vars} ./node_modules/alchemy/bin/cli.js destroy apps/storybook.run.ts --stage $ALCHEMY_STAGE",
@@ -47,7 +49,9 @@
     "vite": "^8.1.5"
   },
   "devDependencies": {
+    "@alchemy.run/frontend-frameworks": "2.0.0-beta.79",
     "@types/node": "^24.9.1",
+    "astro": "7.3.1",
     "vitest": "catalog:"
   }
 }

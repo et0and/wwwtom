@@ -1,0 +1,15 @@
+---
+import { links } from "../data/site";
+import Logo from "./Logo.astro";
+---
+<header class="site-header">
+  <div class="container header-inner">
+    <Logo />
+    <nav class="site-nav" aria-label="Primary">
+      <a class="nav-link" href="#workflow">Workflow</a>
+      <a class="nav-link" href="#screens">Screens</a>
+      <a class="nav-link" href={links.releases}>Releases</a>
+      <a class="nav-pill" href={links.releases}>Download</a>
+    </nav>
+  </div>
+</header>

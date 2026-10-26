@@ -1,0 +1,218 @@
+---
+import Base from "../layouts/Base.astro";
+import Icon from "../components/Icon.astro";
+import { features, forRow, links, showcase, useCases } from "../data/site";
+---
+<Base>
+  <section class="hero container" aria-labelledby="hero-title">
+    <h1 id="hero-title">A quieter way to finish a shoot.</h1>
+    <p class="lede">
+      Cull, colour, rename and print from local folders or Google Drive. A fast,
+      local-first workflow for artists, studios and photographers.
+    </p>
+
+    <div class="hero-actions">
+      <div class="download-group">
+        <a class="download-button" href={links.releases}>
+          <Icon name="download" size={20} />
+          Download Slate
+        </a>
+        <div class="download-meta">
+          <strong>Free and open source</strong>
+          <span>macOS · Windows · Linux</span>
+        </div>
+      </div>
+      <a class="watch-link" href="#workflow">
+        See the workflow
+        <span class="play-circle"><Icon name="play" size={16} /></span>
+      </a>
+    </div>
+
+    <div class="hero-frame">
+      <img
+        src="/screens/sheet-builder.jpg"
+        alt="Slate with a photo grid, photo inspector and contact sheet preview"
+      />
+    </div>
+
+    <div class="for-row" aria-label="What Slate is for">
+      {forRow.map((item) => (
+        <span class="for-item">
+          <Icon name={item.icon} size={20} />
+          {item.label}
+        </span>
+      ))}
+    </div>
+  </section>
+
+  <section id="workflow" class="section container" aria-labelledby="workflow-title">
+    <h2 id="workflow-title" class="section-intro">
+      Everything the edit needs. Nothing it does not.
+    </h2>
+    <div class="feature-grid">
+      {features.map((feature) => (
+        <article class="feature-card">
+          <Icon name={feature.icon} size={26} />
+          <h3>{feature.title}</h3>
+          <p>{feature.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section id="screens" class="media-section container" aria-labelledby="screens-title">
+    <div class="media-head">
+      <div>
+        <span class="eyebrow"><Icon name="spark" size={16} /> The print is the point</span>
+        <h2 id="screens-title" class="section-intro">A proof you can hold.</h2>
+      </div>
+    </div>
+    <div class="screen-grid">
+      <figure class="screen-card screen-card-wide">
+        <img
+          src="/screens/sheet-preview.jpg"
+          alt="A contact sheet preview with twelve photographs"
+        />
+        <figcaption class="screen-caption">
+          Contact sheet · A4 portrait · 3 × 4 · twelve frames
+        </figcaption>
+      </figure>
+      <figure class="screen-card screen-card-dark">
+        <img
+          src="/screens/photo-preview.jpg"
+          alt="A photograph reviewed full screen in Slate"
+        />
+        <figcaption class="screen-caption">
+          Full-screen review · scroll to zoom · drag to pan
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="showcase-section" data-carousel aria-labelledby="showcase-title">
+    <div class="container">
+      <div class="showcase-head">
+        <div>
+          <span class="eyebrow"><Icon name="spark" size={16} /> Built for the contact sheet</span>
+          <h2 id="showcase-title" class="section-intro">
+            Every decision leads to the sheet.
+          </h2>
+        </div>
+        <div class="carousel-controls">
+          <button
+            class="carousel-button"
+            type="button"
+            aria-label="Previous cards"
+            data-carousel-prev
+          >
+            <Icon name="chevron-left" size={20} />
+          </button>
+          <button
+            class="carousel-button"
+            type="button"
+            aria-label="Next cards"
+            data-carousel-next
+          >
+            <Icon name="chevron-right" size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div class="showcase-track" id="showcase-track" data-carousel-track>
+        <article class="showcase-card green">
+          <div>
+            <span class="showcase-label"><Icon name={showcase[0].icon} size={26} /> {showcase[0].eyebrow}</span>
+            <h3>{showcase[0].title}</h3>
+            <p>{showcase[0].body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">landscape-01.jpg</span><span class="select-stars">★★★★★</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">portrait-02.jpg</span><span class="select-stars">★★★★☆</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">landscape-05.jpg</span><span class="select-stars">★★★★★</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">contact-sheet.pdf</span><span class="select-stars">12 selected</span></div>
+          </div>
+        </article>
+
+        <article class="showcase-card orange">
+          <div>
+            <span class="showcase-label"><Icon name={showcase[1].icon} size={26} /> {showcase[1].eyebrow}</span>
+            <h3>{showcase[1].title}</h3>
+            <p>{showcase[1].body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="slider-mock">
+              <div class="slider-line"><span>Exposure</span><span class="slider-track" style="--fill: 62%"></span><em>+0.35</em></div>
+              <div class="slider-line"><span>Contrast</span><span class="slider-track" style="--fill: 58%"></span><em>+12</em></div>
+              <div class="slider-line"><span>Warmth</span><span class="slider-track" style="--fill: 54%"></span><em>+4</em></div>
+              <div class="slider-line"><span>Curve</span><span class="slider-track" style="--fill: 48%"></span><em>S</em></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="showcase-card blue">
+          <div>
+            <span class="showcase-label"><Icon name={showcase[2].icon} size={26} /> {showcase[2].eyebrow}</span>
+            <h3>{showcase[2].title}</h3>
+            <p>{showcase[2].body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="sheet-mock">
+              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
+              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
+            </div>
+          </div>
+        </article>
+
+        <article class="showcase-card pink">
+          <div>
+            <span class="showcase-label"><Icon name={showcase[3].icon} size={26} /> {showcase[3].eyebrow}</span>
+            <h3>{showcase[3].title}</h3>
+            <p>{showcase[3].body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="film-mock">
+              <span class="film-frame">00:04</span>
+              <span class="film-frame">01:12</span>
+              <span class="film-frame">02:28</span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="usecase-section container" aria-labelledby="usecase-title">
+    <div class="usecase-copy">
+      <h2 id="usecase-title">What will you make with Slate?</h2>
+      <p>
+        From a first pass through a shoot to a sheet on the wall, the work
+        stays close to the files.
+      </p>
+    </div>
+    <div class="usecase-grid">
+      {useCases.map((item) => (
+        <article class="usecase-card">
+          <h3>{item.title}</h3>
+          <p>{item.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <script>
+    const carousel = document.querySelector<HTMLElement>("[data-carousel]");
+    const track = carousel?.querySelector<HTMLElement>("[data-carousel-track]");
+    const previous = carousel?.querySelector<HTMLButtonElement>("[data-carousel-prev]");
+    const next = carousel?.querySelector<HTMLButtonElement>("[data-carousel-next]");
+
+    if (track) {
+      const step = 340;
+      previous?.addEventListener("click", () => {
+        track.scrollBy({ left: -step, behavior: "smooth" });
+      });
+      next?.addEventListener("click", () => {
+        track.scrollBy({ left: step, behavior: "smooth" });
+      });
+    }
+  </script>
+</Base>
