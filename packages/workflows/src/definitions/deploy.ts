@@ -9,6 +9,7 @@ import {
   stageExpression,
   stageLabel,
 } from "../catalog/alchemy";
+import { loadSecrets } from "../catalog/onepassword";
 
 /**
  * Pushes to dev deploy the staging stage. Production is a manual
@@ -42,6 +43,7 @@ export const deploy = workflow("deploy", {
         // Full history so `git describe --tags` can stamp the release version
         // into the web build.
         checkout("Checkout", { "fetch-depth": 0 }),
+        loadSecrets(stageExpression),
         setupStep(),
         run("Deploy infrastructure", deployChain(deployStacks)),
         // Zone-level rules are shared by every stage, so exactly one stage may

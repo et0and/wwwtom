@@ -162,6 +162,7 @@ Never guess at Effect patterns - check the guide first.
 - Alchemy deploy order shared → api → adapter → web → sophie (then preview on a PR); `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
+- 1Password is the deploy-time source: workflows load `CLOUDFLARE_API_TOKEN` and `AXIOM_TOKEN` from `op://wwwtom/<stage>/…` and `TOM_SECRETS` from `op://wwwtom/shared/TOM_SECRETS`; GitHub holds only the 1Password bootstrap secret `OP_SERVICE_ACCOUNT_TOKEN` (plus the non-sensitive account id). Local dev uses `pnpm dev:op` and `infra/.dev.vars.op`.
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed
 - `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker
 - Sophie binds no Hyperdrive (CMS is D1+R2; nothing reads `databaseUrl`)

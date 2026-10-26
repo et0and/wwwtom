@@ -8,13 +8,11 @@ import type { Expression } from "../model";
  */
 const secretNames = [
   "ARENA_TOKEN",
-  "AXIOM_TOKEN",
-  "CLOUDFLARE_API_TOKEN",
   "CLOUDFLARE_DEFAULT_ACCOUNT_ID",
   "GITHUB_TOKEN",
   "OPENCODE_API_KEY",
+  "OP_SERVICE_ACCOUNT_TOKEN",
   "SOURCEHUT_SSH_KEY",
-  "TOM_SECRETS",
   "TURBO_CACHE_SIGNATURE_KEY",
   "TURBO_CACHE_TOKEN",
 ] as const;
