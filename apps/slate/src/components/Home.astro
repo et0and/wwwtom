@@ -10,6 +10,8 @@ interface Props {
 
 const { locale } = Astro.props;
 const { hero, features, noLimits, themes } = getContent(locale);
+// Placeholder until the Slate demo video is ready.
+const videoEmbed = "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=1&rel=0";
 ---
 <Base locale={locale}>
   <section class="hero container" aria-labelledby="hero-title">
@@ -29,10 +31,10 @@ const { hero, features, noLimits, themes } = getContent(locale);
           <span>{hero.platforms}</span>
         </div>
       </div>
-      <a class="watch-link" href="#workstation">
+      <button class="watch-link" type="button" data-video-open aria-haspopup="dialog">
         {hero.watch}
         <span class="play-circle"><Icon name="play" size={16} /></span>
-      </a>
+      </button>
     </div>
 
     <div class="hero-frame">
@@ -116,6 +118,60 @@ const { hero, features, noLimits, themes } = getContent(locale);
       ))}
     </div>
   </section>
+
+  <dialog class="video-modal" data-video-dialog aria-labelledby="video-title">
+    <div class="video-modal-inner">
+      <div class="video-modal-head">
+        <h2 id="video-title">{hero.watch}</h2>
+        <button
+          class="video-modal-close"
+          type="button"
+          aria-label={hero.videoClose}
+          data-video-close
+        >
+          <Icon name="close" size={18} />
+        </button>
+      </div>
+      <div class="video-frame">
+        <iframe
+          data-video-frame
+          data-src={videoEmbed}
+          title={hero.watch}
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          allowfullscreen
+          referrerpolicy="strict-origin-when-cross-origin"
+        ></iframe>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const videoDialog = document.querySelector<HTMLDialogElement>("[data-video-dialog]");
+    const videoOpen = document.querySelector<HTMLButtonElement>("[data-video-open]");
+    const videoClose = document.querySelector<HTMLButtonElement>("[data-video-close]");
+    const videoFrame = document.querySelector<HTMLIFrameElement>("[data-video-frame]");
+
+    if (videoDialog && videoOpen && videoFrame) {
+      const videoSrc = videoFrame.dataset.src;
+
+      videoOpen.addEventListener("click", () => {
+        if (videoSrc) videoFrame.src = videoSrc;
+        document.documentElement.classList.add("video-open");
+        videoDialog.showModal();
+      });
+
+      videoClose?.addEventListener("click", () => videoDialog.close());
+
+      videoDialog.addEventListener("click", (event) => {
+        if (event.target === videoDialog) videoDialog.close();
+      });
+
+      videoDialog.addEventListener("close", () => {
+        videoFrame.removeAttribute("src");
+        document.documentElement.classList.remove("video-open");
+      });
+    }
+  </script>
 
   <script>
     const carousels = document.querySelectorAll<HTMLElement>("[data-carousel]");

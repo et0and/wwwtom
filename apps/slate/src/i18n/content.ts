@@ -53,6 +53,7 @@ export interface SiteCopy {
     readonly free: string;
     readonly platforms: string;
     readonly watch: string;
+    readonly videoClose: string;
     readonly imageAlt: string;
   };
   readonly features: {
@@ -106,7 +107,8 @@ const en: SiteCopy = {
     download: "Download Slate",
     free: "Free and open source",
     platforms: "macOS · Windows · Linux",
-    watch: "See what it does",
+    watch: "See it in action",
+    videoClose: "Close video",
     imageAlt: "Slate photo DAM with the library and photo inspector",
   },
   features: {
@@ -216,7 +218,8 @@ const ja: SiteCopy = {
     download: "Slateをダウンロード",
     free: "無料・オープンソース",
     platforms: "macOS · Windows · Linux",
-    watch: "できることを見る",
+    watch: "実際の動作を見る",
+    videoClose: "動画を閉じる",
     imageAlt: "ライブラリと写真インスペクターを表示したSlateの写真DAM",
   },
   features: {
