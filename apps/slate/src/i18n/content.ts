@@ -3,8 +3,6 @@ import type { IconName } from "../data/site";
 export const locales = ["en", "ja"] as const;
 export type Locale = (typeof locales)[number];
 
-export const defaultLocale: Locale = "en";
-
 export const localeNames = {
   en: "English",
   ja: "日本語",
@@ -21,19 +19,6 @@ export function otherLocale(locale: Locale): Locale {
 
 export interface Feature {
   readonly icon: IconName;
-  readonly title: string;
-  readonly body: string;
-}
-
-export interface UseCase {
-  readonly title: string;
-  readonly body: string;
-}
-
-export interface ShowcaseCard {
-  readonly tone: "green" | "orange" | "blue" | "pink";
-  readonly icon: IconName;
-  readonly eyebrow: string;
   readonly title: string;
   readonly body: string;
 }
@@ -70,7 +55,14 @@ export interface SiteCopy {
     readonly watch: string;
     readonly imageAlt: string;
   };
-  readonly features: ReadonlyArray<Feature>;
+  readonly features: {
+    readonly title: string;
+    readonly items: ReadonlyArray<Feature>;
+  };
+  readonly noLimits: {
+    readonly title: string;
+    readonly body: string;
+  };
   readonly themes: {
     readonly eyebrow: string;
     readonly title: string;
@@ -79,27 +71,8 @@ export interface SiteCopy {
     readonly dotLabel: (name: string) => string;
     readonly items: ReadonlyArray<ThemePreview>;
   };
-  readonly showcase: {
-    readonly eyebrow: string;
-    readonly title: string;
-    readonly previous: string;
-    readonly next: string;
-    readonly sliders: {
-      readonly exposure: string;
-      readonly contrast: string;
-      readonly warmth: string;
-      readonly curve: string;
-    };
-    readonly items: readonly [ShowcaseCard, ShowcaseCard, ShowcaseCard, ShowcaseCard];
-  };
-  readonly useCases: {
-    readonly title: string;
-    readonly lede: string;
-    readonly items: ReadonlyArray<UseCase>;
-  };
   readonly footer: {
     readonly brandAria: string;
-    readonly tagline: string;
     readonly slateLabel: string;
     readonly readLabel: string;
     readonly website: string;
@@ -113,11 +86,10 @@ export interface SiteCopy {
 
 const en: SiteCopy = {
   meta: {
-    title: "Slate — A photo manager, shaped for you",
-    description:
-      "A local-first photography workstation for culling, colour, renaming, conversion, storyboards and delivery.",
+    title: "Slate — A DAM for photographers",
+    description: "A local-first DAM to preview, organise, edit and publish your whole library.",
     ogLocale: "en_US",
-    ogImageAlt: "Slate photo workstation",
+    ogImageAlt: "Slate photo DAM",
   },
   nav: {
     brandAria: "Slate home",
@@ -129,22 +101,53 @@ const en: SiteCopy = {
     switchAria: "日本語で表示",
   },
   hero: {
-    titleLines: ["A photo manager, shaped for you."],
-    lede: "Cull, colour, rename, convert, storyboard and deliver in one local-first app.",
+    titleLines: ["A DAM for photographers."],
+    lede: "The whole library, in one local-first app.",
     download: "Download Slate",
     free: "Free and open source",
     platforms: "macOS · Windows · Linux",
-    watch: "See the workstation",
-    imageAlt: "Slate photo workstation with the library and photo inspector",
+    watch: "See what it does",
+    imageAlt: "Slate photo DAM with the library and photo inspector",
   },
-  features: [
-    { icon: "grid", title: "Cull", body: "Rate, label and tag at speed." },
-    { icon: "sliders", title: "Colour", body: "Non-destructive adjustments." },
-    { icon: "tag", title: "Rename", body: "Review every name first." },
-    { icon: "layers", title: "Convert", body: "JPEG, PNG, WebP and TIFF." },
-    { icon: "film", title: "Storyboard", body: "Turn a clip into frames." },
-    { icon: "printer", title: "Print", body: "Contact sheets when you need them." },
-  ],
+  features: {
+    title: "What you can do.",
+    items: [
+      {
+        icon: "aperture",
+        title: "Preview",
+        body: "Thumbnails and rich previews for raw, PSD, PDF, video and 3D files.",
+      },
+      {
+        icon: "tag",
+        title: "Organise",
+        body: "Ratings, labels, keywords and metadata, with multiple folders open at once.",
+      },
+      {
+        icon: "grid",
+        title: "Find",
+        body: "Collections, advanced filters and metadata search.",
+      },
+      {
+        icon: "sliders",
+        title: "Edit",
+        body: "Non-destructive tone and colour, raw files, external editors and custom shortcuts.",
+      },
+      {
+        icon: "layers",
+        title: "Batch",
+        body: "Rename, convert, resize and export folders, or chain tasks into one workflow.",
+      },
+      {
+        icon: "printer",
+        title: "Publish",
+        body: "Contact sheets, portfolio sites, shared libraries and stock.",
+      },
+    ],
+  },
+  noLimits: {
+    title: "No subscription.",
+    body: "RAW editing is included.",
+  },
   themes: {
     eyebrow: "Themes",
     title: "A workspace that fits the room.",
@@ -178,65 +181,8 @@ const en: SiteCopy = {
       },
     ],
   },
-  showcase: {
-    eyebrow: "A DAW for photographs",
-    title: "The whole edit, in one window.",
-    previous: "Previous cards",
-    next: "Next cards",
-    sliders: {
-      exposure: "Exposure",
-      contrast: "Contrast",
-      warmth: "Warmth",
-      curve: "Curve",
-    },
-    items: [
-      {
-        tone: "green",
-        icon: "star",
-        eyebrow: "Cull",
-        title: "Keep the good ones.",
-        body: "Rate, label and tag.",
-      },
-      {
-        tone: "orange",
-        icon: "sliders",
-        eyebrow: "Colour",
-        title: "Make it feel right.",
-        body: "Tone, colour and effects.",
-      },
-      {
-        tone: "blue",
-        icon: "tag",
-        eyebrow: "Rename",
-        title: "Names that stay in order.",
-        body: "Batch rename, no overwrites.",
-      },
-      {
-        tone: "pink",
-        icon: "printer",
-        eyebrow: "Print",
-        title: "A proof when you need it.",
-        body: "Contact sheets, on demand.",
-      },
-    ],
-  },
-  useCases: {
-    title: "What will you make?",
-    lede: "A folder, a shoot, an archive. Start there.",
-    items: [
-      { title: "Portfolio", body: "Shape a long edit." },
-      { title: "Client proof", body: "Send a folder." },
-      { title: "Archive", body: "Make it findable." },
-      { title: "Zine", body: "Check the sequence." },
-      { title: "Exhibition", body: "Test the wall." },
-      { title: "Storyboard", body: "Turn clips into frames." },
-      { title: "Campaign", body: "Keep the finals close." },
-      { title: "Print", body: "Make a sheet." },
-    ],
-  },
   footer: {
     brandAria: "Slate home",
-    tagline: "A photo manager, shaped for you.",
     slateLabel: "Slate",
     readLabel: "Read",
     website: "Website",
@@ -250,11 +196,10 @@ const en: SiteCopy = {
 
 const ja: SiteCopy = {
   meta: {
-    title: "Slate — あなたに合わせるフォトマネージャー",
-    description:
-      "選別、色調整、名前変更、変換、絵コンテ、書き出しのためのローカル優先の写真ワークステーション。",
+    title: "Slate — 写真のためのDAM",
+    description: "写真をプレビュー、整理、編集、公開できるローカル優先のDAM。",
     ogLocale: "ja_JP",
-    ogImageAlt: "Slateの写真ワークステーション",
+    ogImageAlt: "Slateの写真DAM",
   },
   nav: {
     brandAria: "Slate ホーム",
@@ -266,22 +211,53 @@ const ja: SiteCopy = {
     switchAria: "英語で表示",
   },
   hero: {
-    titleLines: ["あなたに合わせる", "フォトマネージャー。"],
-    lede: "選別から色調整、名前変更、変換、絵コンテ、書き出しまで。ローカル優先のひとつのアプリで。",
+    titleLines: ["写真のための", "DAM。"],
+    lede: "ライブラリ全体を、ひとつのローカル優先アプリで。",
     download: "Slateをダウンロード",
     free: "無料・オープンソース",
     platforms: "macOS · Windows · Linux",
-    watch: "ワークステーションを見る",
-    imageAlt: "ライブラリと写真インスペクターを表示したSlateの写真ワークステーション",
+    watch: "できることを見る",
+    imageAlt: "ライブラリと写真インスペクターを表示したSlateの写真DAM",
   },
-  features: [
-    { icon: "grid", title: "選別", body: "評価、ラベル、タグをすばやく。" },
-    { icon: "sliders", title: "色調整", body: "非破壊の調整。" },
-    { icon: "tag", title: "名前変更", body: "適用前にすべて確認。" },
-    { icon: "layers", title: "変換", body: "JPEG、PNG、WebP、TIFF。" },
-    { icon: "film", title: "絵コンテ", body: "動画からフレームを作成。" },
-    { icon: "printer", title: "プリント", body: "必要なときにコンタクトシート。" },
-  ],
+  features: {
+    title: "Slateでできること。",
+    items: [
+      {
+        icon: "aperture",
+        title: "プレビュー",
+        body: "RAW、PSD、PDF、動画、3Dファイルをサムネイルとリッチプレビューで確認。",
+      },
+      {
+        icon: "tag",
+        title: "整理",
+        body: "評価、ラベル、キーワード、メタデータをライブラリ全体に。複数のフォルダも同時に開けます。",
+      },
+      {
+        icon: "grid",
+        title: "検索",
+        body: "コレクション、詳細フィルター、メタデータ検索。",
+      },
+      {
+        icon: "sliders",
+        title: "編集",
+        body: "トーンと色を非破壊で調整。RAW、外部エディター、カスタムショートカットに対応。",
+      },
+      {
+        icon: "layers",
+        title: "一括処理",
+        body: "名前変更、変換、サイズ変更、書き出し。タスクをつないでワークフローに。",
+      },
+      {
+        icon: "printer",
+        title: "公開",
+        body: "コンタクトシート、ポートフォリオサイト、共有ライブラリ、ストックへ。",
+      },
+    ],
+  },
+  noLimits: {
+    title: "サブスクリプション不要。",
+    body: "RAW編集も利用できます。",
+  },
   themes: {
     eyebrow: "テーマ",
     title: "空間に合うワークスペース。",
@@ -315,65 +291,8 @@ const ja: SiteCopy = {
       },
     ],
   },
-  showcase: {
-    eyebrow: "写真のためのDAW",
-    title: "編集のすべてを、ひとつのウィンドウで。",
-    previous: "前のカード",
-    next: "次のカード",
-    sliders: {
-      exposure: "露出",
-      contrast: "コントラスト",
-      warmth: "暖色",
-      curve: "カーブ",
-    },
-    items: [
-      {
-        tone: "green",
-        icon: "star",
-        eyebrow: "選別",
-        title: "残す一枚を選ぶ。",
-        body: "評価、ラベル、タグ。",
-      },
-      {
-        tone: "orange",
-        icon: "sliders",
-        eyebrow: "色調整",
-        title: "色を、思い通りに。",
-        body: "トーン、色、エフェクト。",
-      },
-      {
-        tone: "blue",
-        icon: "tag",
-        eyebrow: "名前変更",
-        title: "整理された名前。",
-        body: "一括変更。上書きなし。",
-      },
-      {
-        tone: "pink",
-        icon: "printer",
-        eyebrow: "プリント",
-        title: "必要なときに、証明に。",
-        body: "コンタクトシートを必要なときに。",
-      },
-    ],
-  },
-  useCases: {
-    title: "何をつくりますか？",
-    lede: "フォルダ、撮影、アーカイブ。そこから始めよう。",
-    items: [
-      { title: "ポートフォリオ", body: "長い編集を整える。" },
-      { title: "クライアント確認", body: "フォルダを送る。" },
-      { title: "アーカイブ", body: "見つけられるように。" },
-      { title: "ZINE", body: "並びを確認する。" },
-      { title: "展示", body: "壁での見え方を試す。" },
-      { title: "絵コンテ", body: "動画をフレームに。" },
-      { title: "キャンペーン", body: "最終版を手元に。" },
-      { title: "プリント", body: "シートをつくる。" },
-    ],
-  },
   footer: {
     brandAria: "Slate ホーム",
-    tagline: "あなたに合わせるフォトマネージャー。",
     slateLabel: "Slate",
     readLabel: "リソース",
     website: "ウェブサイト",
