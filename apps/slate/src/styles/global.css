@@ -346,14 +346,6 @@ main {
   max-width: 680px;
 }
 
-.section-copy {
-  max-width: 460px;
-  margin-top: 12px;
-  color: var(--muted-foreground);
-  font-size: 15px;
-  line-height: 1.45;
-}
-
 .theme-track {
   display: flex;
   gap: 16px;
