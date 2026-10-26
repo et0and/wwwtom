@@ -29,7 +29,12 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
           persist-credentials: false
+      - name: Find the merge base
+        run: |-
+          merge_base=$(git merge-base ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          echo "PR_MERGE_BASE=$merge_base" >> "$GITHUB_ENV"
       - uses: ./.github/actions/setup
         with:
           install: "false"
@@ -40,21 +45,25 @@ jobs:
           variant: low
           prompt: |-
             Triage pull request #${{ github.event.pull_request.number }}
-            against its base branch. `gh pr diff` has the change; read the
-            files it touches for the parts that matter.
+            against its base branch. The PR head is checked out; see the
+            change with `git diff ${{ env.PR_MERGE_BASE }} HEAD`, and read
+            the files it touches for the parts that matter. Do not use `gh`
+            or the network, and stay inside the checkout — external
+            directory access is denied.
 
             Report only what is genuinely wrong: real defects, and
             violations of AGENTS.md or the nearest AGENTS.md in a
             directory. Skip style nits, anything a formatter or linter
             already catches, and anything already correct.
 
-            Post exactly one comment on the PR: the findings that matter,
-            most important first, each with the file and the reason. Say
-            plainly when a change is fine. If you find nothing, post one
-            line saying so.
+            End with the review comment: the findings that matter, most
+            important first, each with the file and the reason. Say plainly
+            when a change is fine. If you find nothing, say so in one line.
+            The action posts your final response as the single comment.
 
             Do not edit files, do not push, do not approve, and do not
             merge — this run must not change the branch it reviews.
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           HUSKY: "0"
+          OPENCODE_CONFIG_CONTENT: '{"permission":{"external_directory":"deny"}}'
