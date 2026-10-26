@@ -47,6 +47,11 @@ button {
   color: inherit;
 }
 
+:where(a, button):focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
+}
+
 img {
   display: block;
   max-width: 100%;
@@ -324,6 +329,99 @@ main {
   color: var(--muted-foreground);
   font-size: 14px;
   line-height: 1.4;
+}
+
+.theme-section {
+  padding-top: 72px;
+}
+
+.theme-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+}
+
+.theme-head .section-intro {
+  max-width: 680px;
+}
+
+.section-copy {
+  max-width: 460px;
+  margin-top: 12px;
+  color: var(--muted-foreground);
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.theme-track {
+  display: flex;
+  gap: 16px;
+  margin-top: 28px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.theme-track::-webkit-scrollbar {
+  display: none;
+}
+
+.theme-slide {
+  flex: 0 0 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--theme-bg);
+  color: var(--theme-ink);
+  scroll-snap-align: start;
+}
+
+.theme-slide img {
+  width: 100%;
+}
+
+.theme-slide figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 11px 16px;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.theme-slide figcaption span:first-child {
+  font-weight: 500;
+}
+
+.theme-slide figcaption span:last-child {
+  opacity: 0.55;
+}
+
+.theme-dots {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.theme-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: #d4d4d0;
+  cursor: pointer;
+  transition:
+    width 180ms ease,
+    background 180ms ease;
+}
+
+.theme-dot.is-active {
+  width: 22px;
+  background: var(--foreground);
 }
 
 .eyebrow {
@@ -844,6 +942,11 @@ main {
     min-height: 210px;
   }
 
+  .theme-section {
+    padding-top: 48px;
+  }
+
+  .theme-head,
   .showcase-head {
     align-items: flex-start;
     flex-direction: column;
