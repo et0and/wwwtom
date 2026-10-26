@@ -1,3 +1,12 @@
+## [4.9.1](https://github.com/et0and/wwwtom/compare/v4.9.0...v4.9.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **ci:** diff the PR triage against its merge base ([2cdca25](https://github.com/et0and/wwwtom/commit/2cdca255c27eb0db1296cc15436c08dabb568f0a))
+* **ci:** fail fast when the triage agent leaves the checkout ([7f41b64](https://github.com/et0and/wwwtom/commit/7f41b640e6a5ee732301d530dfbf590bfa64dd16))
+* **ci:** give the PR triage agent its diff without gh ([f559efa](https://github.com/et0and/wwwtom/commit/f559efac68ab17a5dd0d09ca645d3627ab7ca6a5)), closes [#212](https://github.com/et0and/wwwtom/issues/212) [#215](https://github.com/et0and/wwwtom/issues/215)
+
 # [4.9.0](https://github.com/et0and/wwwtom/compare/v4.8.0...v4.9.0) (2026-10-25)
 
 
