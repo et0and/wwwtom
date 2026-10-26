@@ -1,14 +1,41 @@
 ---
 import { links } from "../data/site";
+import {
+  getContent,
+  localeNames,
+  localePaths,
+  otherLocale,
+  type Locale,
+} from "../i18n/content";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getContent(locale);
+const alternate = otherLocale(locale);
+const switchHref = localePaths[alternate];
 ---
 <header class="site-header">
   <div class="container header-inner">
-    <a class="brand" href="/" aria-label="Slate home">Slate</a>
-    <nav class="site-nav" aria-label="Primary">
-      <a class="nav-link" href="#workstation">Workstation</a>
-      <a class="nav-link" href="#themes">Themes</a>
-      <a class="nav-link" href={links.releases}>Releases</a>
-      <a class="nav-pill" href={links.releases}>Download</a>
+    <a class="brand" href={localePaths[locale]} aria-label={copy.nav.brandAria}>
+      Slate
+    </a>
+    <nav class="site-nav" aria-label={copy.nav.label}>
+      <a class="nav-link" href="#workstation">{copy.nav.workstation}</a>
+      <a class="nav-link" href="#themes">{copy.nav.themes}</a>
+      <a class="nav-link" href={links.releases}>{copy.nav.releases}</a>
+      <a
+        class="locale-switch"
+        href={switchHref}
+        hreflang={alternate}
+        lang={alternate}
+        aria-label={copy.nav.switchAria}
+      >
+        {localeNames[alternate]}
+      </a>
+      <a class="nav-pill" href={links.releases}>{copy.nav.download}</a>
     </nav>
   </div>
 </header>

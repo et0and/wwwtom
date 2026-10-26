@@ -1,0 +1,292 @@
+---
+import Base from "../layouts/Base.astro";
+import Icon from "../components/Icon.astro";
+import { links } from "../data/site";
+import { getContent, type Locale } from "../i18n/content";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getContent(locale);
+const { hero, features, themes, showcase, useCases } = copy;
+const [cull, colour, rename, print] = showcase.items;
+---
+<Base locale={locale}>
+  <section class="hero container" aria-labelledby="hero-title">
+    <h1 id="hero-title">
+      {hero.titleLines.map((line) => <span class="hero-line">{line}</span>)}
+    </h1>
+    <p class="lede">{hero.lede}</p>
+
+    <div class="hero-actions">
+      <div class="download-group">
+        <a class="download-button" href={links.releases}>
+          <Icon name="download" size={20} />
+          {hero.download}
+        </a>
+        <div class="download-meta">
+          <strong>{hero.free}</strong>
+          <span>{hero.platforms}</span>
+        </div>
+      </div>
+      <a class="watch-link" href="#workstation">
+        {hero.watch}
+        <span class="play-circle"><Icon name="play" size={16} /></span>
+      </a>
+    </div>
+
+    <div class="hero-frame">
+      <img src="/screens/readme-workstation.jpg" alt={hero.imageAlt} />
+    </div>
+  </section>
+
+  <section
+    id="workstation"
+    class="section container"
+    aria-label={copy.nav.workstation}
+  >
+    <div class="feature-grid">
+      {features.map((feature) => (
+        <article class="feature-card">
+          <Icon name={feature.icon} size={26} />
+          <h3>{feature.title}</h3>
+          <p>{feature.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <section
+    id="themes"
+    class="theme-section container"
+    data-carousel
+    aria-labelledby="themes-title"
+  >
+    <div class="theme-head">
+      <div>
+        <span class="eyebrow"><Icon name="palette" size={16} /> {themes.eyebrow}</span>
+        <h2 id="themes-title" class="section-intro">{themes.title}</h2>
+      </div>
+      <div class="carousel-controls">
+        <button
+          class="carousel-button"
+          type="button"
+          aria-label={themes.previous}
+          data-carousel-prev
+        >
+          <Icon name="chevron-left" size={20} />
+        </button>
+        <button
+          class="carousel-button"
+          type="button"
+          aria-label={themes.next}
+          data-carousel-next
+        >
+          <Icon name="chevron-right" size={20} />
+        </button>
+      </div>
+    </div>
+
+    <div class="theme-track" data-carousel-track>
+      {themes.items.map((theme) => (
+        <figure
+          class="theme-slide"
+          style={`--theme-bg: ${theme.background};`}
+          data-carousel-item
+        >
+          <img src={theme.src} alt={theme.alt} loading="lazy" />
+        </figure>
+      ))}
+    </div>
+
+    <div class="theme-dots" data-carousel-dots>
+      {themes.items.map((theme, index) => (
+        <button
+          class={index === 0 ? "theme-dot is-active" : "theme-dot"}
+          type="button"
+          aria-label={themes.dotLabel(theme.name)}
+          data-carousel-dot={index}
+        />
+      ))}
+    </div>
+  </section>
+
+  <section
+    id="why"
+    class="showcase-section"
+    data-carousel
+    aria-labelledby="showcase-title"
+  >
+    <div class="container">
+      <div class="showcase-head">
+        <div>
+          <span class="eyebrow"><Icon name="spark" size={16} /> {showcase.eyebrow}</span>
+          <h2 id="showcase-title" class="section-intro">{showcase.title}</h2>
+        </div>
+        <div class="carousel-controls">
+          <button
+            class="carousel-button"
+            type="button"
+            aria-label={showcase.previous}
+            data-carousel-prev
+          >
+            <Icon name="chevron-left" size={20} />
+          </button>
+          <button
+            class="carousel-button"
+            type="button"
+            aria-label={showcase.next}
+            data-carousel-next
+          >
+            <Icon name="chevron-right" size={20} />
+          </button>
+        </div>
+      </div>
+
+      <div class="showcase-track" id="showcase-track" data-carousel-track>
+        <article class="showcase-card green">
+          <div>
+            <span class="showcase-label"><Icon name={cull.icon} size={26} /> {cull.eyebrow}</span>
+            <h3>{cull.title}</h3>
+            <p>{cull.body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">landscape-01.jpg</span><span class="select-stars">★★★★★</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">portrait-02.jpg</span><span class="select-stars">★★★★☆</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">landscape-05.jpg</span><span class="select-stars">★★★★★</span></div>
+            <div class="select-row"><span class="select-thumb"></span><span class="select-name">portrait-04.jpg</span><span class="select-stars">★★★★☆</span></div>
+          </div>
+        </article>
+
+        <article class="showcase-card orange">
+          <div>
+            <span class="showcase-label"><Icon name={colour.icon} size={26} /> {colour.eyebrow}</span>
+            <h3>{colour.title}</h3>
+            <p>{colour.body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="slider-mock">
+              <div class="slider-line"><span>{showcase.sliders.exposure}</span><span class="slider-track" style="--fill: 62%"></span><em>+0.35</em></div>
+              <div class="slider-line"><span>{showcase.sliders.contrast}</span><span class="slider-track" style="--fill: 58%"></span><em>+12</em></div>
+              <div class="slider-line"><span>{showcase.sliders.warmth}</span><span class="slider-track" style="--fill: 54%"></span><em>+4</em></div>
+              <div class="slider-line"><span>{showcase.sliders.curve}</span><span class="slider-track" style="--fill: 48%"></span><em>S</em></div>
+            </div>
+          </div>
+        </article>
+
+        <article class="showcase-card blue">
+          <div>
+            <span class="showcase-label"><Icon name={rename.icon} size={26} /> {rename.eyebrow}</span>
+            <h3>{rename.title}</h3>
+            <p>{rename.body}</p>
+          </div>
+          <div class="mock rename-mock" aria-hidden="true">
+            <div class="rename-row"><span>IMG_0001.jpg</span><span>walk-001.jpg</span></div>
+            <div class="rename-row"><span>IMG_0002.jpg</span><span>walk-002.jpg</span></div>
+            <div class="rename-row"><span>IMG_0003.jpg</span><span>walk-003.jpg</span></div>
+          </div>
+        </article>
+
+        <article class="showcase-card pink">
+          <div>
+            <span class="showcase-label"><Icon name={print.icon} size={26} /> {print.eyebrow}</span>
+            <h3>{print.title}</h3>
+            <p>{print.body}</p>
+          </div>
+          <div class="mock" aria-hidden="true">
+            <div class="sheet-mock">
+              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
+              <span class="sheet-tile"></span><span class="sheet-tile"></span><span class="sheet-tile"></span>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="usecase-section container" aria-labelledby="usecase-title">
+    <div class="usecase-copy">
+      <h2 id="usecase-title">{useCases.title}</h2>
+      <p>{useCases.lede}</p>
+    </div>
+    <div class="usecase-grid">
+      {useCases.items.map((item) => (
+        <article class="usecase-card">
+          <h3>{item.title}</h3>
+          <p>{item.body}</p>
+        </article>
+      ))}
+    </div>
+  </section>
+
+  <script>
+    const carousels = document.querySelectorAll<HTMLElement>("[data-carousel]");
+
+    carousels.forEach((carousel) => {
+      const track = carousel.querySelector<HTMLElement>("[data-carousel-track]");
+      if (!track) return;
+
+      const previous = carousel.querySelector<HTMLButtonElement>("[data-carousel-prev]");
+      const next = carousel.querySelector<HTMLButtonElement>("[data-carousel-next]");
+      const dots = Array.from(
+        carousel.querySelectorAll<HTMLButtonElement>("[data-carousel-dot]"),
+      );
+      const items = Array.from(
+        track.querySelectorAll<HTMLElement>("[data-carousel-item]"),
+      );
+      const gap =
+        Number.parseFloat(getComputedStyle(track).columnGap) ||
+        Number.parseFloat(getComputedStyle(track).gap) ||
+        0;
+      const step = items[0] ? items[0].getBoundingClientRect().width + gap : 340;
+
+      previous?.addEventListener("click", () => {
+        track.scrollBy({ left: -step, behavior: "smooth" });
+      });
+      next?.addEventListener("click", () => {
+        track.scrollBy({ left: step, behavior: "smooth" });
+      });
+
+      if (dots.length) {
+        const syncDots = () => {
+          const trackLeft = track.getBoundingClientRect().left;
+          let active = 0;
+          let closest = Number.POSITIVE_INFINITY;
+
+          items.forEach((item, index) => {
+            const distance = Math.abs(item.getBoundingClientRect().left - trackLeft);
+            if (distance < closest) {
+              closest = distance;
+              active = index;
+            }
+          });
+
+          dots.forEach((dot, index) => {
+            dot.classList.toggle("is-active", index === active);
+          });
+        };
+
+        track.addEventListener(
+          "scroll",
+          () => requestAnimationFrame(syncDots),
+          { passive: true },
+        );
+        syncDots();
+
+        dots.forEach((dot, index) => {
+          dot.addEventListener("click", () => {
+            const item = items[index];
+            if (!item) return;
+            const left =
+              track.scrollLeft +
+              item.getBoundingClientRect().left -
+              track.getBoundingClientRect().left;
+            track.scrollTo({ left, behavior: "smooth" });
+          });
+        });
+      }
+    });
+  </script>
+</Base>

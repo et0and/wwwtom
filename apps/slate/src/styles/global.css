@@ -8,7 +8,9 @@
   --primary-foreground: #ffffff;
   --radius: 24px;
   --max: 1024px;
-  --font: "Inter Variable", "InterVariable", "Inter", sans-serif;
+  --font:
+    "Inter Variable", "InterVariable", "Inter", "Hiragino Sans", "Yu Gothic", "Noto Sans JP",
+    sans-serif;
   color-scheme: light;
 }
 
@@ -116,6 +118,20 @@ ul {
   color: var(--primary);
 }
 
+.locale-switch {
+  padding: 7px 8px;
+  color: var(--muted-foreground);
+  font-size: 13px;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+  transition: color 160ms ease;
+}
+
+.locale-switch:hover {
+  color: var(--primary);
+}
+
 .nav-pill {
   margin-left: 8px;
   padding: 7px 14px;
@@ -143,6 +159,36 @@ main {
   line-height: 1.08;
   font-weight: 500;
   letter-spacing: -0.045em;
+}
+
+.hero-line {
+  display: block;
+}
+
+html[lang="ja"] .hero h1 {
+  max-width: 840px;
+  font-size: clamp(32px, 8.2vw, 48px);
+  line-height: 1.18;
+  letter-spacing: -0.03em;
+}
+
+html[lang="ja"] .hero-line:last-child {
+  white-space: nowrap;
+}
+
+html[lang="ja"] .lede {
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+html[lang="ja"] .section-intro {
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+html[lang="ja"] .showcase-card h3,
+html[lang="ja"] .usecase-card h3 {
+  letter-spacing: -0.015em;
 }
 
 .lede a {
@@ -577,6 +623,11 @@ main {
 .slider-line span:first-child {
   width: 62px;
   opacity: 0.72;
+}
+
+html[lang="ja"] .slider-line span:first-child {
+  width: 80px;
+  white-space: nowrap;
 }
 
 .slider-track {
