@@ -57,13 +57,6 @@ export const links = {
   website: "https://tom.so/work/slate",
 } as const;
 
-export const forRow: ReadonlyArray<{ readonly icon: IconName; readonly label: string }> = [
-  { icon: "aperture", label: "Cull" },
-  { icon: "sliders", label: "Colour" },
-  { icon: "tag", label: "Rename" },
-  { icon: "film", label: "Storyboard" },
-];
-
 export const features: ReadonlyArray<Feature> = [
   {
     icon: "grid",
