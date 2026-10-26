@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./agent": "./src/agent.ts",
     "./arena": "./src/arena.ts",
     "./arena-content": "./src/arena-content.ts",
     "./cms": "./src/cms.ts",

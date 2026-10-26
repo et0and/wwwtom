@@ -20,6 +20,8 @@ import { ProblemType } from "@tom/constants/problem";
 import { healthRoutes } from "./health";
 import { requireInternalTokenBeforeHandle } from "./internal";
 import { authRoutes } from "./auth";
+import { agentRoutes } from "./agent";
+import { AgentChat } from "./agent/object";
 import { cmsRoutes, cmsWriteRoutes } from "./cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./og";
@@ -156,11 +158,16 @@ export const app = new Elysia({
   // iMessage) fetch the image URL without any auth headers.
   .use(ogRoutes)
   .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) =>
-    app.use(authRoutes).use(cmsWriteRoutes),
+    app.use(authRoutes).use(agentRoutes).use(cmsWriteRoutes),
   )
   .compile();
 
 export type ApiApp = typeof app;
+
+// The agent Durable Object class this worker hosts. The stack binds it via
+// `Cloudflare.DurableObject("AGENT_CHAT", { className: "AgentChat" })`; the
+// exported name must match the className.
+export { AgentChat };
 
 const worker = {
   fetch: (request: Request, env: CloudflareEnv) => app.fetch(attachRequestEnv(request, env)),

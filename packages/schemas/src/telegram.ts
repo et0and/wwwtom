@@ -44,3 +44,23 @@ const TelegramSendResponseSchema = Schema.Struct({
 });
 
 export const telegramSendResponseSchema = TelegramSendResponseSchema;
+
+/**
+ * Minimal inbound Telegram update. Only text messages inside a chat matter;
+ * every other update type (callback queries, edits, media) succeeds silently
+ * so the webhook never 500s on an update shape this app ignores.
+ *
+ * @see https://core.telegram.org/bots/api#update
+ */
+export const TelegramUpdateSchema = Schema.Struct({
+  update_id: Schema.Finite,
+  message: Schema.optional(
+    Schema.Struct({
+      message_id: Schema.Finite,
+      chat: Schema.Struct({ id: Schema.Finite }),
+      text: Schema.optional(Schema.String),
+    }),
+  ),
+});
+
+export type TelegramUpdate = Schema.Schema.Type<typeof TelegramUpdateSchema>;

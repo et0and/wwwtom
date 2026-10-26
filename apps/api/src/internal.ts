@@ -3,17 +3,8 @@ import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { readCloudflareEnv } from "@tom/utils/config";
+import { timingSafeEqual } from "@tom/utils/crypto";
 import { getRequestEnv, toProblemResponse } from "@tom/utils/worker";
-
-/** Constant-time comparison so token timing can't leak the shared secret. */
-const timingSafeEqual = (a: string, b: string): boolean => {
-  if (a.length !== b.length) return false;
-  const diff = Array.from(a, (char, index) => char.charCodeAt(0) ^ b.charCodeAt(index)).reduce(
-    (acc, code) => acc | code,
-    0,
-  );
-  return diff === 0;
-};
 
 /**
  * beforeHandle for routes only the adapter may call. Verifies the
