@@ -43,11 +43,9 @@ export interface ShowcaseCard {
 
 export interface ThemePreview {
   readonly name: string;
-  readonly note: string;
   readonly src: string;
   readonly alt: string;
   readonly background: string;
-  readonly ink: string;
 }
 
 export const links = {
@@ -133,35 +131,27 @@ export const showcase = [
 export const themes = [
   {
     name: "Nord",
-    note: "Cool blue",
     src: "/screens/themes/nord.png",
     alt: "Slate in the Nord theme",
     background: "#2e3440",
-    ink: "#eceff4",
   },
   {
     name: "Dark",
-    note: "Ink black",
     src: "/screens/themes/dark.png",
     alt: "Slate in the Dark theme",
     background: "#0b0b0c",
-    ink: "#f3f3f1",
   },
   {
     name: "Monokai",
-    note: "Warm grey",
     src: "/screens/themes/monokai.png",
     alt: "Slate in the Monokai theme",
     background: "#1f1f1c",
-    ink: "#f8f8f2",
   },
   {
     name: "Light",
-    note: "Paper white",
     src: "/screens/themes/light.png",
     alt: "Slate in the Light theme",
     background: "#f6f6f4",
-    ink: "#111111",
   },
 ] as const satisfies ReadonlyArray<ThemePreview>;
 

@@ -373,30 +373,11 @@ main {
   margin: 0;
   overflow: hidden;
   background: var(--theme-bg);
-  color: var(--theme-ink);
   scroll-snap-align: start;
 }
 
 .theme-slide img {
   width: 100%;
-}
-
-.theme-slide figcaption {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 11px 16px;
-  font-size: 13px;
-  line-height: 1.2;
-}
-
-.theme-slide figcaption span:first-child {
-  font-weight: 500;
-}
-
-.theme-slide figcaption span:last-child {
-  opacity: 0.55;
 }
 
 .theme-dots {

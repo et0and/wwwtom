@@ -93,14 +93,10 @@ import { features, forRow, links, showcase, themes, useCases } from "../data/sit
       {themes.map((theme) => (
         <figure
           class="theme-slide"
-          style={`--theme-bg: ${theme.background}; --theme-ink: ${theme.ink};`}
+          style={`--theme-bg: ${theme.background};`}
           data-carousel-item
         >
           <img src={theme.src} alt={theme.alt} loading="lazy" />
-          <figcaption>
-            <span>{theme.name}</span>
-            <span>{theme.note}</span>
-          </figcaption>
         </figure>
       ))}
     </div>
