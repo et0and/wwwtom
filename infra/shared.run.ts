@@ -74,6 +74,12 @@ export const sophieWebHost = (stage: string): string =>
   stage === "production" ? "sophie.st" : `${stage}-sophie.sophie.st`;
 
 /**
+ * Hostname for the Slate marketing site.
+ */
+export const slateWebHost = (stage: string): string =>
+  stage === "production" ? "slate.tom.so" : `${stage}-slate.tom.so`;
+
+/**
  * Axiom datasets and ingest token for OpenTelemetry shipping, owned by the
  * production stage (see the shared stack below).
  *

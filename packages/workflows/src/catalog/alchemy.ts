@@ -19,7 +19,7 @@ export const stageConcurrencyGroup = `deploy-${stageExpression}`;
  * The application pipeline, in dependency order: later stacks depend on
  * earlier ones.
  */
-const appStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
+const appStacks = ["shared", "api", "adapter", "web", "sophie", "slate"] as const;
 
 /**
  * Zone-level stacks. They own resources shared by every stage (WAF rules live
@@ -65,7 +65,15 @@ export const deployChain = (
 /**
  * Teardown order: the reverse of the deploy stack order.
  */
-export const destroyStacks = ["web", "editor", "sophie", "adapter", "api", "shared"] as const;
+export const destroyStacks = [
+  "web",
+  "editor",
+  "sophie",
+  "slate",
+  "adapter",
+  "api",
+  "shared",
+] as const;
 
 export type DestroyStack = (typeof destroyStacks)[number];
 

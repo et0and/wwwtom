@@ -210,6 +210,7 @@ jobs:
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
+          pnpm deploy:slate --yes &&
           pnpm deploy:storybook --yes
       - name: Deploy zone edge rules
         if: github.event_name == 'workflow_dispatch' && inputs.stage == 'production'
@@ -506,6 +507,7 @@ jobs:
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
+          pnpm deploy:slate --yes &&
           pnpm deploy:preview --yes
   destroy:
     name: Destroy PR preview
@@ -534,6 +536,9 @@ jobs:
       - name: Destroy sophie preview stage
         if: always()
         run: pnpm destroy:sophie --yes
+      - name: Destroy slate preview stage
+        if: always()
+        run: pnpm destroy:slate --yes
       - name: Destroy adapter preview stage
         if: always()
         run: pnpm destroy:adapter --yes
@@ -656,6 +661,7 @@ jobs:
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
             pnpm destroy:sophie --yes || true
+            pnpm destroy:slate --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true
             pnpm destroy:shared --yes || true

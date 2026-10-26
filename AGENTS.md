@@ -11,6 +11,7 @@ Improve existing code; avoid new abstractions.
 - `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
+- `apps/slate` — Slate marketing site: static Astro, deployed at slate.tom.so.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
 - `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. `preview` owns the consolidated PR comment and deploys last, after every host it links is live. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
@@ -64,6 +65,7 @@ for declarations. Read more source only when the returned lines need context.
 
 ## App scripts
 
+- slate: `dev|build|preview|typecheck|lint`
 - web: `dev|build|start|typecheck|lint|test`
 - editor: `dev|build|preview|typecheck|lint|test`
 - api: `dev|build|deploy|test|typecheck|lint|cf-typegen`
@@ -159,7 +161,7 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web → sophie (then preview on a PR); `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → api → adapter → web → sophie → slate (then preview on a PR); `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed
@@ -183,4 +185,5 @@ Never guess at Effect patterns - check the guide first.
 
 - web `https://tom.so`, api `https://api.tom.so`
 - sophie `https://sophie.st`, sophie api `https://api.sophie.st`
+- slate `https://slate.tom.so`
 - if unsure, read nearest package or app config before changing patterns

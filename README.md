@@ -2,7 +2,7 @@
 
 ![Screenshot my website](wwwtom.png)
 
-A monorepo for [tom.so](https://tom.so), [sophie.st](https://sophie.st), and the services behind them.
+A monorepo for [tom.so](https://tom.so), [sophie.st](https://sophie.st), [slate.tom.so](https://slate.tom.so), and the services behind them.
 
 This is still a work in progress and has some rough edges. I use it to explore different technologies and patterns, mostly for my own enjoyment.
 
@@ -11,6 +11,7 @@ This is still a work in progress and has some rough edges. I use it to explore d
 - `apps/web` — tom.so: Solid 2 + Vite on Workers. Posts and works read are.na master channels through the adapter.
 - `apps/sophie` — sophie.st: Solid 2 SSR blog on the Camus CMS.
 - `apps/editor` — Camus: the Tiptap editor SPA. It serves Sophie. Tom's instance is retired.
+- `apps/slate` — Slate: the static Astro marketing site.
 - `apps/api` — Elysia + Effect Worker for both tenants (`TENANT=tom|sophie`).
 - `apps/adapter` — Elysia + Effect BFF Worker: are.na, auth, CMS, guestbook, GitHub, image, and OG.
 - `apps/simulator` — fixture upstreams for the e2e suite.
@@ -33,6 +34,7 @@ pnpm dev # Start every app via Turbo
 pnpm dev:web # tom.so
 pnpm dev:sophie # sophie.st
 pnpm dev:editor # Camus editor
+pnpm dev:slate # slate.tom.so
 pnpm dev:api # API worker
 pnpm dev:adapter # Adapter worker
 pnpm build # Production build
@@ -45,7 +47,7 @@ pnpm write # Format files with oxfmt
 
 ## Previews
 
-Every PR against `dev` gets preview deploys for tom.so and sophie.st. The preview stack posts one PR comment with both links. Preview stages use `ALCHEMY_STAGE=pr-<number>`.
+Every PR against `dev` gets preview deploys for tom.so, sophie.st and slate.tom.so. The preview stack posts one PR comment with all links. Preview stages use `ALCHEMY_STAGE=pr-<number>`.
 
 Sophie's editor preview authenticates through the dev adapter. OAuth redirect URIs are exact-match, so per-PR hosts cannot be registered.
 
@@ -53,7 +55,7 @@ Sophie's editor preview authenticates through the dev adapter. OAuth redirect UR
 
 The main site is cheap and bare bones. It uses [Cloudflare Workers](https://workers.cloudflare.com) and [Alchemy](https://alchemy.run) to build and deploy. Static media assets such as images live on a separate CDN to keep the site light and fast.
 
-Alchemy deploys in dependency order: shared, turbo, api, adapter, web, then sophie. `pnpm deploy` runs the chain plus the zone edge rules, and `ALCHEMY_STAGE` is required. Production deploys are manual. Every push to `dev` deploys the `staging` stage.
+Alchemy deploys in dependency order: shared, turbo, api, adapter, web, sophie, then slate. `pnpm deploy` runs the chain plus the zone edge rules, and `ALCHEMY_STAGE` is required. Production deploys are manual. Every push to `dev` deploys the `staging` stage.
 
 This project uses many Cloudflare services: Workers, Wrangler, KV, D1, R2, and Hyperdrive. That makes it less portable than it could be. Alchemy keeps the provider surface in `infra`, so a move to another provider such as AWS should stay contained.
 
