@@ -59,10 +59,10 @@ export interface SiteCopy {
   readonly features: {
     readonly title: string;
     readonly items: ReadonlyArray<Feature>;
-  };
-  readonly noLimits: {
-    readonly title: string;
-    readonly body: string;
+    readonly cloud: {
+      readonly title: string;
+      readonly body: string;
+    };
   };
   readonly themes: {
     readonly eyebrow: string;
@@ -87,10 +87,11 @@ export interface SiteCopy {
 
 const en: SiteCopy = {
   meta: {
-    title: "Slate — A DAM for photographers",
-    description: "A local-first DAM to preview, organise, edit and publish your whole library.",
+    title: "Slate — A digital asset manager, shaped for you",
+    description:
+      "A local-first digital asset manager to preview, organise, edit and publish your whole library.",
     ogLocale: "en_US",
-    ogImageAlt: "Slate photo DAM",
+    ogImageAlt: "Slate digital asset manager",
   },
   nav: {
     brandAria: "Slate home",
@@ -102,14 +103,14 @@ const en: SiteCopy = {
     switchAria: "日本語で表示",
   },
   hero: {
-    titleLines: ["A DAM for photographers."],
+    titleLines: ["A digital asset manager,", "shaped for you"],
     lede: "The whole library, in one local-first app.",
     download: "Download Slate",
     free: "Free and open source",
     platforms: "macOS · Windows · Linux",
     watch: "See it in action",
     videoClose: "Close video",
-    imageAlt: "Slate photo DAM with the library and photo inspector",
+    imageAlt: "Slate digital asset manager with the library and photo inspector",
   },
   features: {
     title: "What you can do.",
@@ -145,10 +146,10 @@ const en: SiteCopy = {
         body: "Contact sheets, portfolio sites, shared libraries and stock.",
       },
     ],
-  },
-  noLimits: {
-    title: "No subscription.",
-    body: "RAW editing is included.",
+    cloud: {
+      title: "Cloud sync",
+      body: "Two-way sync with Google Drive, OneDrive and Dropbox.",
+    },
   },
   themes: {
     eyebrow: "Themes",
@@ -198,10 +199,11 @@ const en: SiteCopy = {
 
 const ja: SiteCopy = {
   meta: {
-    title: "Slate — 写真のためのDAM",
-    description: "写真をプレビュー、整理、編集、公開できるローカル優先のDAM。",
+    title: "Slate — あなたに合わせるデジタルアセットマネージャー",
+    description:
+      "写真をプレビュー、整理、編集、公開できるローカル優先のデジタルアセットマネージャー。",
     ogLocale: "ja_JP",
-    ogImageAlt: "Slateの写真DAM",
+    ogImageAlt: "Slateのデジタルアセットマネージャー",
   },
   nav: {
     brandAria: "Slate ホーム",
@@ -213,14 +215,14 @@ const ja: SiteCopy = {
     switchAria: "英語で表示",
   },
   hero: {
-    titleLines: ["写真のための", "DAM。"],
+    titleLines: ["あなたに合わせる", "デジタルアセットマネージャー"],
     lede: "ライブラリ全体を、ひとつのローカル優先アプリで。",
     download: "Slateをダウンロード",
     free: "無料・オープンソース",
     platforms: "macOS · Windows · Linux",
     watch: "実際の動作を見る",
     videoClose: "動画を閉じる",
-    imageAlt: "ライブラリと写真インスペクターを表示したSlateの写真DAM",
+    imageAlt: "ライブラリと写真インスペクターを表示したSlateのデジタルアセットマネージャー",
   },
   features: {
     title: "Slateでできること。",
@@ -256,10 +258,10 @@ const ja: SiteCopy = {
         body: "コンタクトシート、ポートフォリオサイト、共有ライブラリ、ストックへ。",
       },
     ],
-  },
-  noLimits: {
-    title: "サブスクリプション不要。",
-    body: "RAW編集も利用できます。",
+    cloud: {
+      title: "クラウド同期",
+      body: "Google Drive、OneDrive、Dropboxと双方向に同期。",
+    },
   },
   themes: {
     eyebrow: "テーマ",

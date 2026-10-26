@@ -7,6 +7,7 @@ export type IconName =
   | "check"
   | "chevron-left"
   | "close"
+  | "cloud"
   | "chevron-right"
   | "download"
   | "drive"

@@ -9,7 +9,7 @@ interface Props {
 }
 
 const { locale } = Astro.props;
-const { hero, features, noLimits, themes } = getContent(locale);
+const { hero, features, themes } = getContent(locale);
 // Placeholder until the Slate demo video is ready.
 const videoEmbed = "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=1&rel=0";
 ---
@@ -57,11 +57,13 @@ const videoEmbed = "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=
         </article>
       ))}
     </div>
-  </section>
-
-  <section class="no-limits container" aria-labelledby="no-limits-title">
-    <h2 id="no-limits-title">{noLimits.title}</h2>
-    <p>{noLimits.body}</p>
+    <div class="cloud-feature">
+      <Icon name="cloud" size={26} />
+      <div>
+        <h3>{features.cloud.title}</h3>
+        <p>{features.cloud.body}</p>
+      </div>
+    </div>
   </section>
 
   <section
