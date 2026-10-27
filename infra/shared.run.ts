@@ -1,6 +1,6 @@
 import { adopt } from "alchemy/AdoptPolicy";
-import * as Axiom from "alchemy/Axiom";
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Axiom from "@alchemy.run/axiom";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { retain } from "alchemy/RemovalPolicy";
 import { Effect, Layer, Redacted, Schema } from "effect";
 import { ConfigError } from "effect/Config";
@@ -144,7 +144,7 @@ export const tomSecrets = Effect.gen(function* () {
 export default Stack(
   "wwwtom",
   {
-    providers: Layer.provideMerge(Cloudflare.providers(), Axiom.providers()) as never,
+    providers: Layer.provideMerge(Cloudflare.providers(), Axiom.providers()),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

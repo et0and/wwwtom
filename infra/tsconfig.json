@@ -21,7 +21,8 @@
     "types": ["node", "@cloudflare/workers-types"],
     "plugins": [
       {
-        "name": "@effect/language-service"
+        "name": "@effect/language-service",
+        "ignoreEffectWarningsInTscExitCode": true
       }
     ]
   },

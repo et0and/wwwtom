@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Effect, Schema } from "effect";
-import { Arbitrary } from "effect/unstable/arbitrary";
+import { Arbitrary, Effect, Schema } from "effect";
 import { TomWorkMessage } from "@tom/schemas/queue";
 import type { TiptapDoc } from "@tom/schemas/cms";
 import { isSafeLinkHref, renderTiptapHtml } from "../src/tiptap-html";

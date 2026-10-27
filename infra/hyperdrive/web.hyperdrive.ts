@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { Effect, Option, Redacted, Schema } from "effect";
 import { PortNumber } from "@tom/schemas/env";
 import { InfrastructureConfigError } from "@tom/types/errors";

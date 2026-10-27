@@ -1,6 +1,6 @@
 import { getSandbox, type Sandbox } from "@cloudflare/sandbox";
 import { Effect, Layer, Schema } from "effect";
-import { FetchHttpClient, Headers, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { FetchHttpClient, Headers, HttpClient, HttpClientResponse } from "effect/http";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { GitHubApiError, RunnerError } from "@tom/types/errors";

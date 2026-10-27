@@ -12,9 +12,9 @@ onlyBuiltDependencies:
   - "unrs-resolver"
   - "workerd"
 catalog:
-  effect: 4.0.0-rc.116
-  "@effect/platform-node": 4.0.0-rc.116
-  "@effect/tsgo": 0.45.0
+  effect: 4.0.6
+  "@effect/platform-node": 4.0.6
+  "@effect/tsgo": 0.59.0
   kysely: 0.28.9
   postgres: 3.4.7
   solid-js: 2.0.0-rc.6
@@ -61,7 +61,15 @@ allowBuilds:
   workerd: true
 minimumReleaseAgeExclude:
   - "@solidjs/vite-plugin@3.0.0-next.39"
-  - "@effect/platform-bun@4.0.0-rc.116"
-  - "@effect/platform-node-shared@4.0.0-rc.116"
-  - "@effect/platform-node@4.0.0-rc.116"
-  - effect@4.0.0-rc.116
+  - "@effect/platform-bun@4.0.6"
+  - "@effect/platform-node-shared@4.0.6"
+  - "@effect/platform-node@4.0.6"
+  - effect@4.0.6
+  - "@effect/tsgo-darwin-arm64@0.59.0"
+  - "@effect/tsgo-darwin-x64@0.59.0"
+  - "@effect/tsgo-linux-arm64@0.59.0"
+  - "@effect/tsgo-linux-arm@0.59.0"
+  - "@effect/tsgo-linux-x64@0.59.0"
+  - "@effect/tsgo-win32-arm64@0.59.0"
+  - "@effect/tsgo-win32-x64@0.59.0"
+  - "@effect/tsgo@0.59.0"
