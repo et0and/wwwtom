@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
 import { Effect } from "effect";
 import { ConfigError } from "effect/Config";
@@ -181,7 +181,7 @@ export const api = Effect.gen(function* () {
 export default Stack(
   "wwwtom-api",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

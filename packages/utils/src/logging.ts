@@ -1,11 +1,6 @@
 import { Effect, Layer, Logger, References, Tracer } from "effect";
-import { FetchHttpClient } from "effect/unstable/http";
-import {
-  OtlpExporter,
-  OtlpLogger,
-  OtlpSerialization,
-  OtlpTracer,
-} from "effect/unstable/observability";
+import { FetchHttpClient } from "effect/http";
+import { OtlpExporter, OtlpLogger, OtlpSerialization, OtlpTracer } from "effect/observability";
 import { readCloudflareEnv, type CloudflareEnv, type ResolvedCloudflareEnv } from "./config";
 
 /**

@@ -13,7 +13,7 @@ Improve existing code; avoid new abstractions.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
-- `infra` — Alchemy 2.0.0-beta.79 + Effect 4.0.0-rc.116 stacks: shared, turbo, api, adapter, web, sophie. `preview` owns the consolidated PR comment and deploys last, after every host it links is live. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
+- `infra` — Alchemy 2.0.0-beta.84 + Effect 4.0.6 stacks: shared, turbo, api, adapter, web, sophie. `preview` owns the consolidated PR comment and deploys last, after every host it links is live. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
@@ -109,7 +109,17 @@ for declarations. Read more source only when the returned lines need context.
 
 ## Effect
 
-Pinned to `4.0.0-rc.116` via the `effect` catalog entry. **Do not move this to 4.0.0 final yet**: Alchemy 2.0.0-beta.79 imports `effect/unstable/process*`, which final removed, so `pnpm deploy` breaks at module load. Its peer range claims `>=4.0.0`, so the mismatch is invisible to `pnpm peers check` and to typecheck — only a runtime import or a deploy reveals it.
+Pinned to `4.0.6` via the `effect` catalog entry, with `alchemy@2.0.0-beta.84`;
+both move together — Alchemy imports `effect/process*` and `@effect/platform-*`,
+so a lone bump breaks at runtime, not at typecheck. In Alchemy 2.0, providers are
+their own packages: `@alchemy.run/cloudflare`, `@alchemy.run/github`,
+`@alchemy.run/axiom`. Core (`Stack`, `Stage`, `RemovalPolicy`, `AdoptPolicy`,
+`ALCHEMY_DEV`) stays in `alchemy`.
+
+`effect/http` and `effect/observability` are still `@stability unstable` in
+Effect 4, so every use warns. Every `tsconfig.json` that loads the Effect
+language service sets `ignoreEffectWarningsInTscExitCode: true` to keep those
+warnings visible without failing `pnpm typecheck`.
 
 - `Effect.gen` | `Effect.succeed` | `Effect.fail` | `Effect.try` / `Effect.tryPromise`
 - `Effect.catch` for recovery — `catchAll` does not exist in Effect 4

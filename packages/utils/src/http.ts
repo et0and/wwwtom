@@ -1,5 +1,5 @@
 import { Effect, Layer, Option, Schema } from "effect";
-import { FetchHttpClient, HttpClient } from "effect/unstable/http";
+import { FetchHttpClient, HttpClient } from "effect/http";
 import { HttpStatus } from "@tom/constants/http";
 import { problemDetailsSchema } from "@tom/schemas/error";
 import { HttpError } from "@tom/types/errors";
