@@ -139,7 +139,13 @@ export const tomSecrets = Effect.gen(function* () {
     value: Redacted.make(yield* requireJsonSecret("TOM_SECRETS")),
     comment: "wwwtom secret bundle as a JSON object",
   }).pipe(retain());
-});
+}).pipe(
+  // Store secrets carry no ownership tags, so the provider's `read` brands
+  // every name match `Unowned`. Every stage writes the same account-level
+  // bundle, so taking over a secret an earlier stage created is correct and
+  // keeps a fresh preview stage from failing on the shared name.
+  adopt(true),
+);
 
 export default Stack(
   "wwwtom",
