@@ -7,6 +7,7 @@ Effect V4.
 
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/sophie`: Sophie SSR blog, built by `Cloudflare.Website.Vite`
+- `apps/slate`: Slate marketing site, built by `Cloudflare.Website.Astro` as static assets
 - `apps/editor`: Camus CMS SPA, built by `Cloudflare.Website.Vite` (Tom instance + Sophie instance via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`)
 - `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated D1+R2 per tenant)
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; same tenant split)
@@ -43,11 +44,12 @@ pnpm deploy:api
 pnpm deploy:adapter
 pnpm deploy:web
 pnpm deploy:sophie
+pnpm deploy:slate
 pnpm deploy:runner
 pnpm deploy:turbo
 ```
 
-Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`.
+Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie -> slate`.
 The zone-level `edge` stack deploys separately, from a production dispatch
 only (see Edge protection).
 
@@ -66,7 +68,7 @@ registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
-(`sophie -> editor -> web -> adapter -> api -> turbo -> shared`).
+(`sophie -> slate -> editor -> web -> adapter -> api -> turbo -> shared`).
 
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 

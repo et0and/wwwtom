@@ -63,6 +63,7 @@ export const previewSweep = workflow("preview-sweep", {
           "  pnpm destroy:web --yes || true",
           "  pnpm destroy:editor --yes || true",
           "  pnpm destroy:sophie --yes || true",
+          "  pnpm destroy:slate --yes || true",
           "  pnpm destroy:adapter --yes || true",
           "  pnpm destroy:api --yes || true",
           "  pnpm destroy:shared --yes || true",

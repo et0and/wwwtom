@@ -79,6 +79,7 @@ describe("renderDefinition", () => {
         "pnpm deploy:adapter --yes",
         "pnpm deploy:web --yes",
         "pnpm deploy:sophie --yes",
+        "pnpm deploy:slate --yes",
         "pnpm deploy:storybook --yes",
       ].join(" &&\n"),
     );

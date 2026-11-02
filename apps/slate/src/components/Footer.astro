@@ -1,0 +1,40 @@
+---
+import { links } from "../data/site";
+import { getContent, localePaths, type Locale } from "../i18n/content";
+
+interface Props {
+  locale: Locale;
+}
+
+const { locale } = Astro.props;
+const copy = getContent(locale);
+const footer = copy.footer;
+---
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href={localePaths[locale]} aria-label={footer.brandAria}>
+          Slate
+        </a>
+      </div>
+      <div class="footer-links">
+        <div>
+          <span class="footer-label">{footer.slateLabel}</span>
+          <a href={links.website}>{footer.website}</a>
+          <a href={links.github}>{footer.github}</a>
+          <a href={links.releases}>{footer.releases}</a>
+        </div>
+        <div>
+          <span class="footer-label">{footer.readLabel}</span>
+          <a href={links.readme}>{footer.documentation}</a>
+          <a href={links.drive}>{footer.drive}</a>
+          <a href={links.license}>{footer.license}</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Yufugumi Holdings.</span>
+    </div>
+  </div>
+</footer>
