@@ -54,6 +54,8 @@ char weatherCondition[64] = "";
 char weatherTemperature[16] = "";
 uint32_t weatherFetchedAt = 0;
 bool clockSynced = false;
+int lastOverlayMinute = -1;
+uint32_t lastOverlayCheck = 0;
 
 void showMessage(const char *message) {
   display.fillScreen(TFT_BLACK);
@@ -95,6 +97,7 @@ void drawOverlay() {
   const time_t now = time(nullptr);
   struct tm local = {};
   localtime_r(&now, &local);
+  lastOverlayMinute = local.tm_min;
 
   char clockText[8] = "--:--";
   char dateText[24] = "";
@@ -118,6 +121,22 @@ void drawOverlay() {
   }
   display.setTextDatum(TL_DATUM);
   display.drawString(lower, 6, 20, 1);
+}
+
+// The picture stays put between cycles, but the clock should not. Redrawing
+// only the 30px bar leaves the image untouched and costs one blocking SPI
+// write per minute.
+void refreshOverlayIfNeeded() {
+  const uint32_t now = millis();
+  if (now - lastOverlayCheck < 1000) return;
+  lastOverlayCheck = now;
+
+  const time_t clock = time(nullptr);
+  struct tm local = {};
+  localtime_r(&clock, &local);
+  if (local.tm_min == lastOverlayMinute) return;
+  Serial.printf("[frame] overlay %02d:%02d\n", local.tm_hour, local.tm_min);
+  drawOverlay();
 }
 
 bool connectWifi() {
@@ -364,6 +383,7 @@ void waitForNext() {
       }
       return;
     }
+    refreshOverlayIfNeeded();
     delay(50);
   }
   advanceFrame();
