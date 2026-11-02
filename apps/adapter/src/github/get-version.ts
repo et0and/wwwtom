@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import { Headers, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { Headers, HttpClient, HttpClientResponse } from "effect/http";
 import { HttpError } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 import { logApiFailure, logContextFromRequest, runEffect, toErrorMessage } from "@tom/utils/worker";

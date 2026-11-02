@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { adopt } from "alchemy/AdoptPolicy";
@@ -255,7 +255,7 @@ const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
 export default Stack(
   "wwwtom-edge",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

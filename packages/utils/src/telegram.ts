@@ -1,5 +1,5 @@
 import { Context, Effect, Layer, Redacted } from "effect";
-import { Headers, HttpBody, HttpClient, HttpClientResponse } from "effect/unstable/http";
+import { Headers, HttpBody, HttpClient, HttpClientResponse } from "effect/http";
 import { TelegramError } from "@tom/types/errors";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
 import {

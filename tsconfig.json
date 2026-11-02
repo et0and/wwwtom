@@ -28,7 +28,10 @@
     },
     "plugins": [
       {
-        "name": "@effect/language-service"
+        "name": "@effect/language-service",
+        // Effect 4 marks effect/http and effect/observability @stability
+        // unstable, so every use warns. Keep the warning, do not fail tsc.
+        "ignoreEffectWarningsInTscExitCode": true
       }
     ]
   }
