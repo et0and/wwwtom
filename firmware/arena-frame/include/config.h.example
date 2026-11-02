@@ -9,6 +9,10 @@
 // Any are.na channel: a worktable, a work, a moodboard.
 #define CHANNEL_SLUG "tom-s-worktable"
 
+// Shared secret for GET /frame/state. Must match FRAME_DEVICE_TOKEN in the
+// adapter's TOM_SECRETS bundle. The fallback keeps the deck working if unset.
+#define FRAME_DEVICE_TOKEN "replace-with-the-frame-device-token"
+
 // 1 or 3. Flip to 3 if the picture is upside down for the way you stand it.
 #define FRAME_ROTATION 1
 

@@ -6,22 +6,10 @@ import { HttpStatus } from "@tom/constants/http";
 import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { parseCommaSeparated } from "@tom/schemas/env";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
+import { isAdminEmail } from "@tom/utils/auth";
 import { tenantFromValue, type CloudflareEnv, type CmsD1Binding } from "@tom/utils/config";
 
 type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
-
-/**
- * Admin allowlist check (case-insensitive, whitespace-tolerant).
- *
- * Normalises with a short-circuiting `some` rather than building a normalised
- * copy of the allowlist: this runs on every authenticated CMS request, and the
- * allowlist is only a handful of entries but the copy is pure waste.
- */
-export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean => {
-  const candidate = email.trim().toLowerCase();
-  if (candidate.length === 0) return false;
-  return allowlist.some((entry) => entry.trim().toLowerCase() === candidate);
-};
 
 type OAuthProvider = {
   readonly clientId: string;
@@ -182,13 +170,20 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
   }
   const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
   const editorUrl = env.EDITOR_URL ?? LOCAL_SERVICE_URLS.editor;
+  const webUrl =
+    env.WEB_URL ?? (env.NODE_ENV === "production" ? undefined : LOCAL_SERVICE_URLS.web);
   return yield* Effect.try({
     try: () =>
       createAuth({
         database,
         secret,
         baseURL: adapterUrl,
-        trustedOrigins: [adapterUrl, editorUrl, ...previewEditorPatterns(env)],
+        trustedOrigins: [
+          adapterUrl,
+          editorUrl,
+          ...(webUrl !== undefined && webUrl !== "" ? [webUrl] : []),
+          ...previewEditorPatterns(env),
+        ],
         ...(github && { github }),
         ...(google && { google }),
         adminEmails: parseCommaSeparated(env.CMS_ADMIN_EMAILS),

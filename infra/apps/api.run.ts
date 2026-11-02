@@ -7,13 +7,28 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { resolveDeploySecrets } from "./api.secrets.ts";
-import { stageHost, sophieStageHost, tomSecrets, workerObservability } from "../shared.run.ts";
+import {
+  sophieStageHost,
+  sophieWebHost,
+  stageHost,
+  stageWebHost,
+  tomSecrets,
+  workerObservability,
+} from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { sophieQueue, sophieQueueDlq } from "../queues/sophie.queue.ts";
 import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
 import { sophieD1, sophieMediaBucket } from "../cms/sophie.storage.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
+
+/** Web origin for OAuth callbacks; local dev ports differ per tenant. */
+const stageWebUrl = (
+  stage: string,
+  isAlchemyDev: boolean,
+  devUrl: string,
+  host: (stageName: string) => string,
+): string => (isAlchemyDev ? devUrl : `https://${host(stage)}`);
 
 export const api = Effect.gen(function* () {
   const stage = yield* Stage;
@@ -94,6 +109,7 @@ export const api = Effect.gen(function* () {
         ? "http://localhost:8788"
         : `https://${stageHost(stage, "adapter")}`,
       EDITOR_URL: isAlchemyDev ? "http://localhost:5173" : `https://${stageHost(stage, "cms")}`,
+      WEB_URL: stageWebUrl(stage, isAlchemyDev, "http://localhost:3000", stageWebHost),
     },
   });
 
@@ -162,6 +178,7 @@ export const api = Effect.gen(function* () {
       EDITOR_URL: isAlchemyDev
         ? "http://localhost:5174"
         : `https://${sophieStageHost(stage, "cms")}`,
+      WEB_URL: stageWebUrl(stage, isAlchemyDev, "http://localhost:3001", sophieWebHost),
     },
   });
 

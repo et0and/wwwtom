@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
+import { isAdminEmail } from "@tom/utils/auth";
 import type { CmsD1Binding, CloudflareEnv } from "@tom/utils/config";
 import {
   createAuth,
   createAuthFromEnv,
-  isAdminEmail,
   parseAuthProviders,
   requireSession,
 } from "../auth/operations";
@@ -175,7 +175,10 @@ describe("preview editor origins", () => {
 
   it("trusts no preview pattern without a tenant tag", async () => {
     const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv()));
-    expect(auth.options.trustedOrigins).toHaveLength(2);
+    const origins = auth.options.trustedOrigins ?? [];
+    expect(origins).toHaveLength(3);
+    expect(origins).toContain("http://localhost:3000");
+    expect(origins.every((origin) => !origin.includes("pr-"))).toBe(true);
   });
 });
 

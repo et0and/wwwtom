@@ -11,6 +11,7 @@ import {
 import NotFound from "~/routes/[...404]";
 import About from "~/routes/about";
 import Accessibility from "~/routes/accessibility";
+import FrameControl from "~/routes/frame";
 import Guestbook, { fetchEntries } from "~/routes/guestbook";
 import Home from "~/routes/index";
 import PostPage from "~/routes/posts/[slug]";
@@ -33,6 +34,7 @@ export const Router = createRouter({
     { path: "/", component: Home },
     { path: "/about", component: About },
     { path: "/accessibility", component: Accessibility },
+    { path: "/frame", component: FrameControl },
     {
       path: "/guestbook",
       component: Guestbook,

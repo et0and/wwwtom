@@ -11,7 +11,8 @@ import { hasSessionCredential } from "@tom/utils/session";
 import { workerCache } from "@tom/utils/http";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/worker";
 import { toOpenApiSchema } from "../openapi";
-import { createAuthFromEnv, isAdminEmail, requireSession } from "../auth/operations";
+import { isAdminEmail } from "@tom/utils/auth";
+import { createAuthFromEnv, requireSession } from "../auth/operations";
 import type { MediaUpload } from "./operations";
 
 export const cmsListQuerySchema = toOpenApiSchema(CmsPagingSchema);

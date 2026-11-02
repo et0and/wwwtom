@@ -26,8 +26,10 @@ are.na → adapter /arena/frame/:slug        deck: block ids + image URLs
    cp include/config.h.example include/config.h
    ```
 
-3. Set your WiFi, adapter base URL, channel slug, `TIMEZONE` and
-   `WEATHER_LOCATION`.
+3. Set your WiFi, adapter base URL, channel slug, `TIMEZONE`,
+   `WEATHER_LOCATION`, and `FRAME_DEVICE_TOKEN`. The token must match the
+   adapter's `FRAME_DEVICE_TOKEN` secret; without it the board stays on the
+   deck.
 4. Build and flash:
 
    ```bash
@@ -40,8 +42,10 @@ If it does not appear, install the WCH CH9102 driver.
 
 ## Behaviour
 
-- Fetches the deck once per cycle, draws the current block, then turns WiFi off.
-- Holds each image for `FRAME_CYCLE_SECONDS` (default 600, so 10 minutes).
+- Fetches the deck, draws the current block, then holds it for
+  `FRAME_CYCLE_SECONDS` (default 600, so 10 minutes).
+- Keeps WiFi on and polls the adapter's `/frame/state` every 15 seconds, so
+  the web UI can switch modes without waiting for the next cycle.
 - The deck is 20 blocks per page. When the page is exhausted the firmware asks
   for the next page and wraps to page 1 after the last one.
 - **Tap GPIO0** cycles the face forward; **tap GPIO35** cycles it backward.
@@ -59,6 +63,28 @@ If it does not appear, install the WCH CH9102 driver.
 - Weather comes from the adapter's `/weather/:location`, which proxies and
   caches wttr.in for 15 minutes. The device refreshes it every 15 minutes, and
   falls back to clock and date only when it is unavailable.
+
+## Modes
+
+The adapter stores one state document (`mode`, `channel`, `streamUrl`) in KV.
+`https://tom.so/frame` edits it after GitHub sign-in with the existing admin
+allowlist. The board reads it with `FRAME_DEVICE_TOKEN`.
+
+- `deck` — the are.na frame (default).
+- `clock` — the current face on a black background, still ticking.
+- `video` — reserved for the MJPEG stream. The current firmware shows a
+  placeholder and keeps polling; the decoder lands next.
+- `off` — black screen and backlight off.
+
+## Video
+
+The board only decodes MJPEG. A transcoder must produce 240×135 JPEG frames
+from the source video; the firmware will parse a `multipart/x-mixed-replace`
+response. MediaBunny (`@mediabunny/server`) can demux and decode H.264/HEVC in
+Node/Bun/Deno through NodeAV's native FFmpeg bindings, but it does not run in
+Cloudflare Workers and does not emit MJPEG directly. Pair it with a JPEG
+encoder (Canvas in the browser, `sharp`/NodeAV on a server), or use ffmpeg.
+No audio: the T-Display has no speaker.
 
 ## Flash and partitions
 

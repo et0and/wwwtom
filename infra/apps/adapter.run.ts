@@ -12,6 +12,7 @@ import {
   tomSecrets,
   workerObservability,
 } from "../shared.run.ts";
+import { frameKv } from "../kv/frame.kv.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
 import { sophieQueue } from "../queues/sophie.queue.ts";
@@ -123,6 +124,7 @@ export const adapter = Effect.gen(function* () {
       TENANT: "tom",
       ...adapterDevSecrets,
       WORK_QUEUE: tomQueue.pipe(retain()),
+      FRAME_KV: frameKv,
       ...(isAlchemyDev
         ? undefined
         : {

@@ -15,6 +15,10 @@
 #error "Copy include/config.h.example to include/config.h and set your network."
 #endif
 
+#ifndef FRAME_DEVICE_TOKEN
+#define FRAME_DEVICE_TOKEN ""
+#endif
+
 namespace {
 
 constexpr int kWidth = 240;
@@ -33,9 +37,14 @@ constexpr uint32_t kWatchdogMs = 120UL * 1000UL;
 constexpr uint32_t kWeatherRefreshMs = 15UL * 60UL * 1000UL;
 constexpr int kOverlayHeight = 30;
 constexpr uint32_t kHoldMs = 700;
+constexpr uint32_t kStatePollMs = 15UL * 1000UL;
+constexpr size_t kStateBytes = 512;
+constexpr size_t kChannelBytes = 64;
 constexpr uint8_t kFaceCount = 4;
 constexpr int kButtonNext = 0;  // BOOT, press after boot
 constexpr int kButtonPrev = 35;
+
+enum class FrameMode : uint8_t { Deck, Clock, Video, Off };
 
 TFT_eSPI display;
 WiFiClientSecure secureClient;
@@ -62,11 +71,29 @@ uint32_t lastOverlayCheck = 0;
 uint8_t face = 0;
 const char *const kFaceNames[kFaceCount] = {"bar", "minimal", "big", "line"};
 
+char statePayload[kStateBytes];
+char stateChannel[kChannelBytes] = CHANNEL_SLUG;
+char stateStreamUrl[kUrlBytes] = "";
+FrameMode mode = FrameMode::Deck;
+uint32_t lastStatePoll = 0;
+bool stateDirty = false;
+
 void showMessage(const char *message) {
   display.fillScreen(TFT_BLACK);
   display.setTextColor(TFT_WHITE, TFT_BLACK);
   display.setTextDatum(MC_DATUM);
   display.drawString(message, kWidth / 2, kHeight / 2, 2);
+}
+
+void setBacklight(bool isOn) {
+#ifdef TFT_BL
+  constexpr uint8_t onLevel = TFT_BACKLIGHT_ON;
+  constexpr uint8_t offLevel = TFT_BACKLIGHT_ON == HIGH ? LOW : HIGH;
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, isOn ? onLevel : offLevel);
+#else
+  (void)isOn;
+#endif
 }
 
 // A hung TLS read reboots instead of freezing the frame.
@@ -192,6 +219,7 @@ void refreshOverlayIfNeeded() {
 }
 
 bool connectWifi() {
+  if (WiFi.status() == WL_CONNECTED) return true;
   WiFi.mode(WIFI_STA);
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   const uint32_t start = millis();
@@ -238,6 +266,78 @@ int httpGet(HTTPClient &http, const char *url) {
     }
   }
   return status;
+}
+
+FrameMode modeFromString(const char *value) {
+  if (strcmp(value, "clock") == 0) return FrameMode::Clock;
+  if (strcmp(value, "video") == 0) return FrameMode::Video;
+  if (strcmp(value, "off") == 0) return FrameMode::Off;
+  return FrameMode::Deck;
+}
+
+// The mode lives in the adapter's KV. Polling it every 15 seconds keeps the
+// web UI responsive without dropping the WiFi connection between pictures.
+bool fetchState() {
+  char url[kUrlBytes];
+  const int written = snprintf(url, sizeof(url), "%s/frame/state", ADAPTER_BASE_URL);
+  if (written < 0 || static_cast<size_t>(written) >= sizeof(url)) return false;
+
+  HTTPClient http;
+  http.setConnectTimeout(8000);
+  http.setTimeout(8000);
+  if (!http.begin(clientFor(url), url)) return false;
+  http.addHeader("Authorization", "Bearer " FRAME_DEVICE_TOKEN);
+  const int status = http.GET();
+  if (status != HTTP_CODE_OK) {
+    http.end();
+    Serial.printf("[frame] state failed: %d\n", status);
+    return false;
+  }
+  const String body = http.getString();
+  http.end();
+  if (body.length() == 0 || body.length() >= sizeof(statePayload)) {
+    Serial.printf("[frame] state rejected, %u bytes\n", body.length());
+    return false;
+  }
+  memcpy(statePayload, body.c_str(), body.length());
+  statePayload[body.length()] = '\0';
+
+  JsonDocument doc;
+  if (deserializeJson(doc, statePayload, body.length()) != DeserializationError::Ok) {
+    Serial.println("[frame] state JSON invalid");
+    return false;
+  }
+
+  const char *nextMode = doc["mode"] | "deck";
+  const char *nextChannel = doc["channel"] | CHANNEL_SLUG;
+  const char *nextStream = doc["streamUrl"] | "";
+  if (strlen(nextChannel) >= sizeof(stateChannel)) {
+    Serial.println("[frame] state channel too long");
+    return false;
+  }
+
+  const FrameMode nextModeValue = modeFromString(nextMode);
+  const bool channelChanged = strcmp(nextChannel, stateChannel) != 0;
+  const bool modeChanged = nextModeValue != mode;
+  if (channelChanged) {
+    snprintf(stateChannel, sizeof(stateChannel), "%s", nextChannel);
+    cursor = 0;
+    page = 1;
+  }
+  snprintf(stateStreamUrl, sizeof(stateStreamUrl), "%s", nextStream);
+  mode = nextModeValue;
+  if (modeChanged || channelChanged) stateDirty = true;
+  Serial.printf(
+      "[frame] state mode=%s channel=%s\n",
+      nextMode,
+      stateChannel);
+  return true;
+}
+
+void pollState() {
+  if (millis() - lastStatePoll < kStatePollMs) return;
+  lastStatePoll = millis();
+  fetchState();
 }
 
 // The deck is small, but it is copied into a fixed buffer. A response larger
@@ -385,7 +485,7 @@ bool drawCurrent() {
       sizeof(deckUrl),
       "%s/arena/frame/%s?page=%u&t=%u",
       ADAPTER_BASE_URL,
-      CHANNEL_SLUG,
+      stateChannel,
       static_cast<unsigned>(page),
       static_cast<unsigned>(deckToken));
   if (deckWritten < 0 || static_cast<size_t>(deckWritten) >= sizeof(deckUrl)) return false;
@@ -466,6 +566,9 @@ void waitForNext() {
   const uint32_t start = millis();
   while (millis() - start < kCycleMs) {
     esp_task_wdt_reset();
+    pollState();
+    if (stateDirty) return;
+    if (WiFi.status() != WL_CONNECTED) return;
 
     if (digitalRead(kButtonNext) == LOW) {
       const uint32_t pressedAt = millis();
@@ -501,6 +604,19 @@ void waitForNext() {
   advanceFrame();
 }
 
+// Off, clock, and video modes have no playlist to advance. Stay here until
+// the adapter reports another mode or channel.
+void waitForModeChange() {
+  while (true) {
+    esp_task_wdt_reset();
+    pollState();
+    if (stateDirty) return;
+    if (WiFi.status() != WL_CONNECTED) return;
+    if (mode == FrameMode::Clock) refreshOverlayIfNeeded();
+    delay(50);
+  }
+}
+
 }  // namespace
 
 void setup() {
@@ -512,6 +628,7 @@ void setup() {
   display.setRotation(FRAME_ROTATION);
   display.setSwapBytes(false);
   display.fillScreen(TFT_BLACK);
+  setBacklight(true);
 
   // Avoid an NVS write on every reconnect.
   WiFi.persistent(false);
@@ -533,22 +650,50 @@ void loop() {
     return;
   }
 
+  if (lastStatePoll == 0) {
+    fetchState();
+    lastStatePoll = millis();
+  } else {
+    pollState();
+  }
+
+  if (mode == FrameMode::Off) {
+    setBacklight(false);
+    display.fillScreen(TFT_BLACK);
+    stateDirty = false;
+    waitForModeChange();
+    return;
+  }
+
+  setBacklight(true);
+
+  if (mode == FrameMode::Video) {
+    showMessage("Video mode");
+    stateDirty = false;
+    waitForModeChange();
+    return;
+  }
+
   if (!clockSynced) syncClock();
   if (weatherFetchedAt == 0 || millis() - weatherFetchedAt > kWeatherRefreshMs) {
     fetchWeather();
   }
 
+  if (mode == FrameMode::Clock) {
+    display.fillScreen(TFT_BLACK);
+    drawFace();
+    stateDirty = false;
+    waitForModeChange();
+    return;
+  }
+
   if (!drawCurrent()) {
     Serial.println("[frame] draw failed");
     showMessage("Fetch failed");
-    WiFi.disconnect(true);
-    WiFi.mode(WIFI_OFF);
     waitMs(kRetryMs);
     return;
   }
 
-  // No traffic while the picture sits still.
-  WiFi.disconnect(true);
-  WiFi.mode(WIFI_OFF);
+  stateDirty = false;
   waitForNext();
 }
