@@ -1,3 +1,13 @@
+## [4.10.1](https://github.com/et0and/wwwtom/compare/v4.10.0...v4.10.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **adapter:** force metric weather units ([fac290f](https://github.com/et0and/wwwtom/commit/fac290f75a5b497f30ab43e7c9bb4dee8be98ebe))
+* **frame:** read frames in chunks over TLS ([1ff6afe](https://github.com/et0and/wwwtom/commit/1ff6afe5f26dd98ec63a379babb35165f5ba40d8))
+* **frame:** refresh the deck on boot ([505186c](https://github.com/et0and/wwwtom/commit/505186cc780cdb01d1e8921f1b8ad6a2059e97d7))
+* **frame:** wire the boot token into the are.na cache key ([f731031](https://github.com/et0and/wwwtom/commit/f731031f788ba2ed1f18209bea1378451ef6ebde))
+
 # [4.10.0](https://github.com/et0and/wwwtom/compare/v4.9.1...v4.10.0) (2026-11-02)
 
 
