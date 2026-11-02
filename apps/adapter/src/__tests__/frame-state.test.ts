@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
-import type { FrameKvBinding } from "@tom/utils/config";
+import type { CloudflareEnv } from "@tom/utils/config";
 import { app } from "../index";
 import {
   fetchMock,
@@ -15,7 +15,9 @@ beforeEach(stubFetch);
 
 afterEach(unstubFetch);
 
-const createKv = (): FrameKvBinding & { store: Map<string, string> } => {
+type FrameKv = NonNullable<CloudflareEnv["FRAME_KV"]>;
+
+const createKv = (): FrameKv & { store: Map<string, string> } => {
   const store = new Map<string, string>();
   return {
     store,
@@ -26,7 +28,7 @@ const createKv = (): FrameKvBinding & { store: Map<string, string> } => {
   };
 };
 
-const envFor = (kv: FrameKvBinding) =>
+const envFor = (kv: FrameKv) =>
   testEnv({
     ADAPTER_URL: "https://adapter.tom.so",
     API_URL: "http://localhost:8787",

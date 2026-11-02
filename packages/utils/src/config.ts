@@ -64,13 +64,6 @@ export interface CmsR2Binding {
   readonly delete: (key: string) => Promise<void>;
 }
 
-// Minimal Worker-safe KV surface used by the frame control plane. The real
-// KVNamespace binding satisfies it structurally; tests use an in-memory map.
-export interface FrameKvBinding {
-  readonly get: (key: string) => Promise<string | null>;
-  readonly put: (key: string, value: string) => Promise<void>;
-}
-
 // AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
 // Secrets Store binding (production; minted by the Axiom provider). Narrow
 // the union with typeof at the env boundary.
@@ -151,7 +144,12 @@ export type CloudflareEnv = {
   CMS_D1?: CmsD1Binding;
   CMS_MEDIA?: CmsR2Binding;
   // Frame control state (mode/channel/stream URL), owned by the adapter stack.
-  FRAME_KV?: FrameKvBinding;
+  // Minimal Worker-safe shape: the real KVNamespace binding satisfies it
+  // structurally, and tests use an in-memory map.
+  FRAME_KV?: {
+    readonly get: (key: string) => Promise<string | null>;
+    readonly put: (key: string, value: string) => Promise<void>;
+  };
   // Workers Static Assets binding serving apps/api/public (OG fonts). Set
   // by the api stack; absent in tests, which fall back to same-origin fetch.
   ASSETS?: CmsAssetsBinding;

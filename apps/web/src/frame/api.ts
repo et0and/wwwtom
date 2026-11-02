@@ -29,7 +29,10 @@ const request = (path: string, init?: RequestInit): Promise<Response> =>
   });
 
 const problemFor = async (response: Response): Promise<HttpError> => {
-  const json: unknown = await response.json().catch(() => null);
+  const body = await response.text();
+  const json = Option.getOrNull(
+    Schema.decodeUnknownOption(Schema.fromJsonString(Schema.Json))(body),
+  );
   const problem = Option.getOrNull(Schema.decodeUnknownOption(ProblemSchema)(json));
   return new HttpError({
     message: problem?.title ?? problem?.detail ?? `Request failed (${response.status})`,
@@ -104,14 +107,14 @@ export const startSignIn = async (): Promise<void> => {
     SignInResponseSchema,
     "The adapter returned an invalid sign-in response",
   );
-  const url = new URL(result.url);
-  if (url.protocol !== "https:" || url.hostname !== "github.com") {
+  const url = Option.getOrNull(Schema.decodeUnknownOption(Schema.URLFromString)(result.url));
+  if (url === null || url.protocol !== "https:" || url.hostname !== "github.com") {
     throw new HttpError({
       message: "The adapter returned an untrusted sign-in URL",
       status: HttpStatus.BadGateway,
     });
   }
-  window.location.assign(result.url);
+  window.location.assign(url.href);
 };
 
 export const signOut = async (): Promise<void> => {
