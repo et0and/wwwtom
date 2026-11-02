@@ -1,3 +1,10 @@
+## [4.10.3](https://github.com/et0and/wwwtom/compare/v4.10.2...v4.10.3) (2026-11-02)
+
+
+### Bug Fixes
+
+* **infra:** adopt the shared TOM_SECRETS secret ([a07b6b2](https://github.com/et0and/wwwtom/commit/a07b6b2fabe46e543170f21a44d52b3139450ae0))
+
 ## [4.10.2](https://github.com/et0and/wwwtom/compare/v4.10.1...v4.10.2) (2026-11-02)
 
 
