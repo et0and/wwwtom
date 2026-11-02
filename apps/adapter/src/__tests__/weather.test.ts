@@ -33,6 +33,26 @@ describe("GET /weather/:location", () => {
     expect(requested.searchParams.get("format")).toBe("%C|%t");
   });
 
+  it("normalises whitespace and strips non-ASCII", async () => {
+    fetchMock.mockResolvedValue(new Response("  Partly   cloudy ☀|+16 °C  "));
+
+    const response = await app.fetch(requestWithEnv("http://localhost/weather/Wellington", tomEnv));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      condition: "Partly cloudy",
+      temperature: "+16C",
+    });
+  });
+
+  it("rejects an empty reading", async () => {
+    fetchMock.mockResolvedValue(new Response("|"));
+
+    const response = await app.fetch(requestWithEnv("http://localhost/weather/Wellington", tomEnv));
+
+    expect(response.status).toBe(502);
+  });
+
   it("rejects an invalid location before calling upstream", async () => {
     const response = await app.fetch(
       requestWithEnv("http://localhost/weather/%2E%2E%2Fetc", tomEnv),

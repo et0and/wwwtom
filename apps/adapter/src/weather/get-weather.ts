@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import type { Weather } from "@tom/schemas/weather";
+import { WeatherReadingSchema, type Weather } from "@tom/schemas/weather";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { logContextFromRequest } from "@tom/utils/worker";
@@ -19,14 +19,6 @@ const LocationParamsSchema = Schema.toStandardSchemaV1(
     location: Schema.String.pipe(Schema.check(isLocation)),
   }),
 );
-
-/** The panel font is printable ASCII only: drop the degree sign, keep the C. */
-const toAscii = (value: string): string =>
-  value
-    .replace(/°\s*([CF])/g, "$1")
-    .replace(/[^\x20-\x7E]/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
 
 const fetchWeather = (location: string): Effect.Effect<Weather, HttpError> =>
   Effect.gen(function* () {
@@ -60,20 +52,25 @@ const fetchWeather = (location: string): Effect.Effect<Weather, HttpError> =>
         }),
     });
 
-    const [rawCondition, rawTemperature] = body.split("|");
-    const condition = toAscii(rawCondition ?? "").slice(0, 60);
-    const temperature = toAscii(rawTemperature ?? "").slice(0, 12);
-    if (condition === "" && temperature === "") {
-      return yield* new HttpError({
-        message: "Weather upstream returned no data",
-        status: HttpStatus.BadGateway,
-      });
-    }
+    const [rawCondition = "", rawTemperature = ""] = body.split("|");
+    const reading = yield* Schema.decodeUnknownEffect(WeatherReadingSchema)({
+      condition: rawCondition,
+      temperature: rawTemperature,
+    }).pipe(
+      Effect.mapError(
+        (cause) =>
+          new HttpError({
+            message: "Weather upstream returned no data",
+            status: HttpStatus.BadGateway,
+            cause,
+          }),
+      ),
+    );
 
     return {
       location,
-      condition,
-      temperature,
+      condition: reading.condition,
+      temperature: reading.temperature,
       observedAt: new Date().toISOString(),
     } satisfies Weather;
   });
