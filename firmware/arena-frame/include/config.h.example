@@ -15,6 +15,7 @@
 // Seconds each image stays up. Lower it to 30 while testing.
 #define FRAME_CYCLE_SECONDS 600
 
-// POSIX TZ string for Pacific/Auckland.
+// POSIX TZ for Pacific/Auckland: UTC+12 standard, UTC+13 while NZDT.
+// DST runs from the last Sunday of September to the first Sunday of April.
 #define TIMEZONE "NZST-12NZDT,M9.5.0,M4.1.0/3"
 #define WEATHER_LOCATION "Wellington"

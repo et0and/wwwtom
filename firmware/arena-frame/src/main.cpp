@@ -202,16 +202,25 @@ bool fetchFrame(const char *url, uint16_t *pixels, size_t bytes) {
 }
 
 void syncClock() {
-  setenv("TZ", TIMEZONE, 1);
-  tzset();
-  configTime(0, 0, "time.cloudflare.com", "pool.ntp.org");
+  // configTzTime sets TZ and starts SNTP in one call; the POSIX rule in
+  // TIMEZONE carries the NZ DST transitions, so the clock follows NZST/NZDT.
+  configTzTime(TIMEZONE, "time.cloudflare.com", "pool.ntp.org");
   const uint32_t start = millis();
   while (time(nullptr) < 1700000000 && millis() - start < 10000) {
     esp_task_wdt_reset();
     delay(200);
   }
   clockSynced = time(nullptr) >= 1700000000;
-  Serial.printf("[frame] clock %s\n", clockSynced ? "synced" : "not synced");
+  if (!clockSynced) {
+    Serial.println("[frame] clock not synced");
+    return;
+  }
+  const time_t now = time(nullptr);
+  struct tm local = {};
+  localtime_r(&now, &local);
+  char stamp[40];
+  strftime(stamp, sizeof(stamp), "%Y-%m-%d %H:%M:%S %Z", &local);
+  Serial.printf("[frame] clock synced: %s\n", stamp);
 }
 
 void fetchWeather() {

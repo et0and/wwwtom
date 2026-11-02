@@ -49,7 +49,8 @@ If it does not appear, install the WCH CH9102 driver.
 - The top 30px is an overlay: `21:04` and `+16C` on the first line, the date and
   condition on the second. It covers the top of the picture.
 - The clock syncs once per boot over NTP (`time.cloudflare.com`,
-  `pool.ntp.org`) using the POSIX `TIMEZONE` value.
+  `pool.ntp.org`) with `configTzTime` and the POSIX `TIMEZONE` rule, so it
+  follows NZST/NZDT without a fixed offset.
 - Weather comes from the adapter's `/weather/:location`, which proxies and
   caches wttr.in for 15 minutes. The device refreshes it every 15 minutes, and
   falls back to clock and date only when it is unavailable.
