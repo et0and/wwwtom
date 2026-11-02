@@ -1,3 +1,16 @@
+# [4.11.0](https://github.com/et0and/wwwtom/compare/v4.10.3...v4.11.0) (2026-11-02)
+
+
+### Bug Fixes
+
+* **api:** bind the Tom D1 for frame auth ([a7308d2](https://github.com/et0and/wwwtom/commit/a7308d2fc0a5f86bcd2136d6f884746ec67bcfd2))
+* **frame:** address clock, channel, and token review ([396c246](https://github.com/et0and/wwwtom/commit/396c2468d4ab2df59952d06125f4b1e69dd0d406))
+
+
+### Features
+
+* **frame:** add web-controlled modes ([05ccf17](https://github.com/et0and/wwwtom/commit/05ccf170a7d47af137b74f210634350a39051c2c))
+
 ## [4.10.3](https://github.com/et0and/wwwtom/compare/v4.10.2...v4.10.3) (2026-11-02)
 
 
