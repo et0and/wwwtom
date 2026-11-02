@@ -119,6 +119,18 @@ describe("are.na frame integration", () => {
       expect(contentsUrl.searchParams.get("sort")).toBe("position_desc");
       expect(contentsUrl.searchParams.get("per")).toBe("20");
       expect(contentsUrl.searchParams.get("page")).toBe("1");
+      expect(contentsUrl.searchParams.has("date")).toBe(false);
+    });
+
+    it("forwards the per-boot token as an are.na cache-bust", async () => {
+      stubArena([[`/v3/channels/${CHANNEL}/contents`, contentsEnvelope([])]]);
+
+      await app.fetch(
+        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}?page=1&t=1735607571`, tomEnv),
+      );
+
+      const contentsUrl = new URL(requestedUrlFor(`${CHANNEL}/contents`));
+      expect(contentsUrl.searchParams.get("date")).toBe("1735607571");
     });
 
     it("serves the requested page and reports whether another follows", async () => {
