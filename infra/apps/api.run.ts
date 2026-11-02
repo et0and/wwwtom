@@ -59,9 +59,11 @@ export const api = Effect.gen(function* () {
 
   // Tom's CMS is retired: the site reads are.na and the editor is gone. The
   // storage stays declared — production retains it — so the content can be
-  // migrated by hand; no worker binds it any more. PR previews keep the
-  // retained handles to the dev database and bucket (see cms.storage.ts).
-  yield* stage === "production"
+  // migrated by hand. The API still binds the D1 database because the frame
+  // control page authenticates through the shared Better Auth session store.
+  // PR previews keep the retained handles to the dev database and bucket (see
+  // cms.storage.ts).
+  const tomD1 = yield* stage === "production"
     ? cmsD1.pipe(retain())
     : stage.startsWith("pr-")
       ? previewCmsD1
@@ -103,6 +105,8 @@ export const api = Effect.gen(function* () {
       // Admin allowlist as explicit stage config (deploy-time env or
       // bundle, never code): it wins over the opaque shared bundle value.
       CMS_ADMIN_EMAILS: tomAdminEmails,
+      // Better Auth's session store (the frame control page uses it).
+      CMS_D1: tomD1,
       // Better Auth builds OAuth redirect URLs from the adapter origin and
       // only returns to trusted editor origins after sign-in.
       ADAPTER_URL: isAlchemyDev
