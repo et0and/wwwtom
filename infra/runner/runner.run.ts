@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
 import { Effect, Option, Schema } from "effect";
 import { Stack } from "alchemy/Stack";
@@ -33,6 +33,8 @@ export const runner = Effect.gen(function* () {
   return yield* Cloudflare.Worker("wwwtom-runner", {
     main: `${import.meta.dirname}/src/index.ts`,
     compatibility: { date: "2026-08-12", flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     dev: {
       // Local workerd dev server via `alchemy dev`; POST /runners to test.
       // Requires Docker locally — the container image is built from ./image.
@@ -68,7 +70,7 @@ export const runner = Effect.gen(function* () {
 export default Stack(
   "wwwtom-runner",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

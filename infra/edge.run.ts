@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { adopt } from "alchemy/AdoptPolicy";
@@ -42,7 +42,8 @@ const adoptZone = (zone: ZoneRef) =>
  * variants such as `/application/.local.env` are covered too, not only a
  * leading `/.env`. Covers the credential files scanners ask for by name —
  * `.dev.vars`, shell and package config, key material, cloud credentials,
- * package registry tokens and the container token path.
+ * Terraform variable values, package registry tokens, database and cluster
+ * credentials, framework settings, secret files and the container token path.
  */
 const CREDENTIAL_PATHS = [
   ".env",
@@ -56,8 +57,19 @@ const CREDENTIAL_PATHS = [
   "/.s3cfg",
   "/.zshrc",
   "/.bashrc",
+  "/.netrc",
+  "/_netrc",
+  "/.pgpass",
   ".pem",
   ".key",
+  "id_rsa",
+  "id_ed25519",
+  ".p12",
+  ".pfx",
+  "private-key",
+  "private_key",
+  "id_dsa",
+  "id_ecdsa",
   "credentials.json",
   "docker/config.json",
   "proc/self/environ",
@@ -65,26 +77,55 @@ const CREDENTIAL_PATHS = [
   "serviceaccount",
   "cargo/credentials",
   "sa.json",
+  "secrets.",
+  "auth.json",
+  ".my.cnf",
+  "settings.py",
+  "database.yml",
+  ".pypirc",
+  "gem/credentials",
+  "kube/config",
+  "kubeconfig",
+  "sftp-config",
+  "vscode/sftp.json",
+  "aws/credentials",
+  "gcp-key.json",
+  "firebase-admin",
+  "terraform.tfvars",
 ] as const;
 
 /**
  * Everything else no visitor or crawler requests. Matched case-insensitively
  * because scanners vary casing to dodge naive rules. This account serves no
- * WordPress, no PHP and no admin panel, so any hit is a probe.
+ * WordPress, no PHP, no admin panel and no repository or agent-tooling files,
+ * so any hit is a probe.
  */
 const PROBE_PATHS = [
   "/.ds_store",
+  "/.dockerenv",
   "/wp-",
   ".php",
+  "/administrator",
   "/phpmyadmin",
   "/adminer",
+  "/admin",
   "/phpinfo",
+  "/server-status",
+  "/actuator",
+  "/config.json",
   ".sql",
   ".bak",
   ".old",
-  "/tfstate",
+  "tfstate",
   "docker-compose",
   "backup",
+  "/claude.md",
+  "/agents.md",
+  "/readme.md",
+  "/jenkinsfile",
+  "mcp.json",
+  "/.claude",
+  "claude.json",
 ] as const;
 
 const pathContains = (paths: ReadonlyArray<string>): string =>
@@ -136,6 +177,16 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
       "Answer reconnaissance probes at the edge: credential files, VCS metadata, WordPress paths, admin panels, backups.",
     rules: [
       {
+        // The Worker and custom domain were never removed (see README,
+        // "Retired hosts"), so the stale origin still answers 200 for every
+        // path. Block the host at the edge until the Worker is deleted.
+        // Hostnames are case-insensitive, but `http.host` keeps the client's
+        // casing, so compare the lowercased value like the path rules do.
+        description: "Retire preview.tom.so: the orphaned Worker answers 200 for every path",
+        expression: 'lower(http.host) eq "preview.tom.so"',
+        action: "block",
+      },
+      {
         description: "Block credential and key material paths",
         expression: pathContains(CREDENTIAL_PATHS),
         action: "block",
@@ -143,6 +194,28 @@ const probeRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
       {
         description: "Block the remaining probe surface",
         expression: pathContains(PROBE_PATHS),
+        action: "block",
+      },
+      {
+        // A retired app on a stale origin still answers, and its admin login
+        // reads as a find. Block the whole host until the hosting project and
+        // DNS record are removed (see README, "Retired hosts"). `http.host`
+        // keeps the client's casing, so compare the lowercased value.
+        description: "Retire payload.tom.so: the retired Payload CMS still answers /admin",
+        expression: 'lower(http.host) eq "payload.tom.so"',
+        action: "block",
+      },
+      {
+        // Cloudflare normalizes `http.request.uri.path` before custom rules
+        // and always merges adjacent slashes, so only the raw path still sees
+        // the malformed sequence. The app's router soft-200s when `//` or two
+        // slash-like characters appear anywhere in the path:
+        // `/x//config.json`, `/x/\config.json`, `/x\/config.json` and
+        // `/x\\config.json` all return its 200 shell while `/x/config.json`
+        // 404s. Block `//` anywhere and any raw backslash, which covers the
+        // remaining combinations.
+        description: "Block malformed slash and backslash paths",
+        expression: String.raw`raw.http.request.uri.path contains "//" or raw.http.request.uri.path contains "\\"`,
         action: "block",
       },
     ],
@@ -182,7 +255,7 @@ const rateLimitRuleset = (zone: Cloudflare.Zone.Zone, zoneId: string) =>
 export default Stack(
   "wwwtom-edge",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

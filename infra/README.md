@@ -132,13 +132,19 @@ from silently creating a new stage-specific Worker.
 origins entirely. A scanner's `.env`/`.git`/`.svn`/WordPress sweep is around a
 third of all requests to this account, and none of it should reach a Worker.
 
-- `http_request_firewall_custom`: credential and key paths (`/.env`, `/.git`,
-  `/.svn`, `/.ssh`, `/.aws`, `.cargo/credentials`, `sa.json`) and the wider
-  probe surface (`/wp-*`, `/phpmyadmin`, `/adminer`, `/phpinfo`, `.sql`,
-  `.bak`, `.old`, `/tfstate`, `docker-compose`) answer the default 403 block
-  page. Custom response codes and bodies need a Pro plan, and both zones are
-  Free, so the rules cannot set a 404 — the separate rule names keep credential
-  probes visible in firewall analytics.
+Every Worker this repository deploys sets `workersDev: false`, so its custom
+domain is the only public entry point. A workers.dev URL would bypass both the
+custom rules and the per-IP rate limit.
+
+- `http_request_firewall_custom`: credential and key-material paths
+  (`CREDENTIAL_PATHS` in `edge.run.ts`), the remaining probe surface
+  (`PROBE_PATHS`), raw paths containing `//` or a backslash, and the retired
+  hosts `preview.tom.so` and `payload.tom.so` answer the default 403 block
+  page. Cloudflare normalizes `http.request.uri.path` before custom rules run,
+  so the malformed-path rule matches `raw.http.request.uri.path`. Custom
+  response codes and bodies need a Pro plan, and both zones are Free, so the
+  rules cannot set a 404 — the separate rule names keep credential probes
+  visible in firewall analytics.
 - `http_ratelimit`: one per-IP rule per zone (20 requests/10s on non-asset
   paths, 10s mitigation — the Free plan caps the counting period and
   mitigation timeout at 10s, so this preserves the original 120-per-minute
@@ -230,7 +236,10 @@ random value of at least 32 characters.
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
 credentials for Tom CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
 `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are the Google OAuth
-credentials for Sophie CMS sign-in.
+credentials for Sophie CMS sign-in. `GOOGLE_OAUTH_CLIENTS` is an optional JSON
+object mapping public Google OAuth client IDs to client secrets for the generic
+`/oauth/google/token` and `/oauth/google/refresh` broker. Keep it in
+`TOM_SECRETS`; never commit it.
 `BETTER_AUTH_SECRET` signs sessions (min 32 chars; `openssl rand -base64 32`).
 `CMS_ADMIN_EMAILS` is the comma-separated allowlist for sign-in; everyone else
 is rejected before a user row is created.
@@ -274,4 +283,14 @@ It answers 200 for every path, so `/.env`, `/.git/config` and
 the custom domain (`preview.tom.so`, domain id
 `b1aff2f4298e7e9e19bac418c5c962d17781f5f1`) and deleting the Worker; that
 needs a token with Workers Scripts: Edit, which `wrangler login` does not
-grant.
+grant. Until then `edge.run.ts` answers every request to this host with the
+default 403 block page, so the stale origin stops reading as a find.
+
+`payload.tom.so` is a Vercel-hosted Payload CMS deployed from
+`et0and/tom-cms-payload`, not a Worker in this repo. It is retired: tom.so
+content comes from are.na. It still answers `/admin` with 200, so a scanner
+reads its admin login as a find. Retiring it means deleting the Vercel
+project and its `payload.tom.so` domain and removing the Cloudflare DNS
+record; that needs Vercel access and a token with `DNS: Edit`, neither of
+which the local `wrangler login` grants. Until then, `edge.run.ts` answers
+every request to the host with the default 403 block page.

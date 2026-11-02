@@ -1,9 +1,9 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
 import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { sophieStageHost, sophieWebHost } from "../shared.run.ts";
+import { sophieStageHost, sophieWebHost, workerObservability } from "../shared.run.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
 
@@ -12,16 +12,29 @@ export const sophieWeb = Effect.gen(function* () {
   const isAlchemyDev = yield* ALCHEMY_DEV;
   const adapterHost = sophieStageHost(stage, "adapter");
 
+  // The Axiom ingest token is minted by the shared stack (production only);
+  // reference it there instead of re-registering, which would fight over
+  // dataset ownership. Secrets Store bindings are unsupported in local
+  // workerd mode, so skip the ref under `alchemy dev`.
+  const axiomToken =
+    stage === "production" && !isAlchemyDev
+      ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
+      : undefined;
+
   // SSR Sophie blog frontend (posts plus categories, TomUI). No SPA
   // fallback: deep links like /posts/:slug server-render crawler meta.
   return yield* Cloudflare.Website.Vite("sophie-web", {
     rootDir: `${rootDir}/apps/sophie`,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
+    observability: workerObservability,
     ...(stage === "production"
       ? { name: "sophie-web", domain: sophieWebHost(stage) }
       : { name: `sophie-web-${stage}`, domain: sophieWebHost(stage) }),
     env: {
       NODE_ENV: "production",
+      ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       VITE_ADAPTER_URL: isAlchemyDev ? "http://localhost:8790" : `https://${adapterHost}`,
       // Runtime adapter origin for server-side data fetching.
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8790" : `https://${adapterHost}`,
@@ -45,6 +58,8 @@ export const sophieEditor = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("sophie-editor", {
     rootDir: `${rootDir}/apps/editor`,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     ...(stage === "production"
       ? { name: "sophie-editor", domain: sophieStageHost(stage, "cms") }
       : { name: `sophie-editor-${stage}`, domain: sophieStageHost(stage, "cms") }),
@@ -61,7 +76,7 @@ export const sophieEditor = Effect.gen(function* () {
 export default Stack(
   "sophie",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

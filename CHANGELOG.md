@@ -1,3 +1,130 @@
+## [4.10.3](https://github.com/et0and/wwwtom/compare/v4.10.2...v4.10.3) (2026-11-02)
+
+
+### Bug Fixes
+
+* **infra:** adopt the shared TOM_SECRETS secret ([a07b6b2](https://github.com/et0and/wwwtom/commit/a07b6b2fabe46e543170f21a44d52b3139450ae0))
+
+## [4.10.2](https://github.com/et0and/wwwtom/compare/v4.10.1...v4.10.2) (2026-11-02)
+
+
+### Bug Fixes
+
+* **adapter:** add Open-Meteo weather fallback ([6d79c4f](https://github.com/et0and/wwwtom/commit/6d79c4faa14754b9ff94ca9278fd3faa67582294))
+* **adapter:** type the weather JSON boundary ([089eb70](https://github.com/et0and/wwwtom/commit/089eb70cafa83b45432ae5513b967ec850d66c11))
+
+## [4.10.1](https://github.com/et0and/wwwtom/compare/v4.10.0...v4.10.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **adapter:** force metric weather units ([fac290f](https://github.com/et0and/wwwtom/commit/fac290f75a5b497f30ab43e7c9bb4dee8be98ebe))
+* **frame:** read frames in chunks over TLS ([1ff6afe](https://github.com/et0and/wwwtom/commit/1ff6afe5f26dd98ec63a379babb35165f5ba40d8))
+* **frame:** refresh the deck on boot ([505186c](https://github.com/et0and/wwwtom/commit/505186cc780cdb01d1e8921f1b8ad6a2059e97d7))
+* **frame:** wire the boot token into the are.na cache key ([f731031](https://github.com/et0and/wwwtom/commit/f731031f788ba2ed1f18209bea1378451ef6ebde))
+
+# [4.10.0](https://github.com/et0and/wwwtom/compare/v4.9.1...v4.10.0) (2026-11-02)
+
+
+### Bug Fixes
+
+* **adapter:** allow the current are.na image CDN host ([d306d09](https://github.com/et0and/wwwtom/commit/d306d09a6c7a6aea76f0263327008ed7cd24e356))
+* **frame:** percent-encode the weather location ([9bdf9a5](https://github.com/et0and/wwwtom/commit/9bdf9a5a13e2ea2ca527137278624678f785529d))
+* **frame:** refresh the clock overlay every minute ([26b1168](https://github.com/et0and/wwwtom/commit/26b1168a31c1ba7b4d286a7300549b79c45a3fc0))
+* **frame:** sync NZST/NZDT with configTzTime ([10fa024](https://github.com/et0and/wwwtom/commit/10fa024159a31ac14b8118b95f853f23cae2c163))
+
+
+### Features
+
+* add are.na desk frame with weather overlay ([cbcccd5](https://github.com/et0and/wwwtom/commit/cbcccd5bc1be40c06ff83c2df58e9e8453ad6b12))
+* **frame:** add button-switchable display faces ([2aab86c](https://github.com/et0and/wwwtom/commit/2aab86cc11f4e1d50e8cdfe028ea420d404c5228))
+* **frame:** paginate the deck through large channels ([12947d1](https://github.com/et0and/wwwtom/commit/12947d1cd884ed9cdf158efeff80a8c1c1562412))
+
+## [4.9.1](https://github.com/et0and/wwwtom/compare/v4.9.0...v4.9.1) (2026-10-26)
+
+
+### Bug Fixes
+
+* **ci:** diff the PR triage against its merge base ([2cdca25](https://github.com/et0and/wwwtom/commit/2cdca255c27eb0db1296cc15436c08dabb568f0a))
+* **ci:** fail fast when the triage agent leaves the checkout ([7f41b64](https://github.com/et0and/wwwtom/commit/7f41b640e6a5ee732301d530dfbf590bfa64dd16))
+* **ci:** give the PR triage agent its diff without gh ([f559efa](https://github.com/et0and/wwwtom/commit/f559efac68ab17a5dd0d09ca645d3627ab7ca6a5)), closes [#212](https://github.com/et0and/wwwtom/issues/212) [#215](https://github.com/et0and/wwwtom/issues/215)
+
+# [4.9.0](https://github.com/et0and/wwwtom/compare/v4.8.0...v4.9.0) (2026-10-25)
+
+
+### Bug Fixes
+
+* **scripts:** retry the infra scan after an analytics budget reset ([872a102](https://github.com/et0and/wwwtom/commit/872a102912de18c075539d0b730e0572c0162e0b))
+
+
+### Features
+
+* **observability:** enable worker observability for web and sophie ([3c2ae85](https://github.com/et0and/wwwtom/commit/3c2ae85cbd72416be299f9c473a81684e6e89023))
+
+# [4.8.0](https://github.com/et0and/wwwtom/compare/v4.7.13...v4.8.0) (2026-10-24)
+
+
+### Bug Fixes
+
+* **api:** address Google OAuth broker review findings ([6ad002b](https://github.com/et0and/wwwtom/commit/6ad002b6ba3cf9031bb108480d1274d919406d98))
+* **api:** finish OAuth broker review follow-up ([4117658](https://github.com/et0and/wwwtom/commit/4117658a227e3685c3b6aa16d2fcf01e6f27fd39))
+* **security:** block firebase admin credential files at the edge ([e2d62ff](https://github.com/et0and/wwwtom/commit/e2d62ff7c34951c36b4b1540f92e95ea4ac7d51e))
+
+
+### Features
+
+* **api:** add a generic Google OAuth token broker ([8d7157f](https://github.com/et0and/wwwtom/commit/8d7157f00c2ac09a9a181d30f65341e365a25889))
+
+## [4.7.13](https://github.com/et0and/wwwtom/compare/v4.7.12...v4.7.13) (2026-10-24)
+
+
+### Bug Fixes
+
+* **test:** run vitest once instead of watching ([e34849b](https://github.com/et0and/wwwtom/commit/e34849bbbe241fdb307ac46d1c2277ab6113cfb1))
+
+## [4.7.12](https://github.com/et0and/wwwtom/compare/v4.7.11...v4.7.12) (2026-10-24)
+
+
+### Bug Fixes
+
+* **security:** disable workers.dev routes on deployed workers ([c493fb0](https://github.com/et0and/wwwtom/commit/c493fb081a280f8abd288c9c75f870f882a7b310))
+
+## [4.7.11](https://github.com/et0and/wwwtom/compare/v4.7.10...v4.7.11) (2026-10-24)
+
+
+### Bug Fixes
+
+* **web:** preview are.na media attachments ([b443247](https://github.com/et0and/wwwtom/commit/b4432470eb0a29669ddb3989f918277f81ebca7b))
+
+## [4.7.10](https://github.com/et0and/wwwtom/compare/v4.7.9...v4.7.10) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** consolidate the open edge probe PRs ([7dcd0ea](https://github.com/et0and/wwwtom/commit/7dcd0eab6f1b5efbbc8c3e8fb2dc2d88387d6e4d))
+
+## [4.7.9](https://github.com/et0and/wwwtom/compare/v4.7.8...v4.7.9) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block ssh key, admin and tfstate probes at the edge ([e2a575c](https://github.com/et0and/wwwtom/commit/e2a575c4093d636a71fb5807bc31dfe99fddacc3))
+
+## [4.7.8](https://github.com/et0and/wwwtom/compare/v4.7.7...v4.7.8) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block agent and repository metadata probes at the edge ([07480aa](https://github.com/et0and/wwwtom/commit/07480aa30f6e664664862c2ac42c3a6123434e87))
+* **security:** retire payload.tom.so at the edge ([28b3941](https://github.com/et0and/wwwtom/commit/28b3941bf7cb2cd430c2593481bec176e7008ed1))
+
+## [4.7.7](https://github.com/et0and/wwwtom/compare/v4.7.6...v4.7.7) (2026-10-23)
+
+
+### Bug Fixes
+
+* **security:** block secret and credential store probes at the edge ([3ef021d](https://github.com/et0and/wwwtom/commit/3ef021dd95e95c63e5d975a58ecf798a54d2af6d))
+
 ## [4.7.6](https://github.com/et0and/wwwtom/compare/v4.7.5...v4.7.6) (2026-10-22)
 
 

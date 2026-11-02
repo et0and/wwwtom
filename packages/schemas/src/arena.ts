@@ -16,6 +16,12 @@ export type PaginationAttributes = {
   readonly sort?: string;
   readonly direction?: "asc" | "desc";
   readonly forceRefresh?: boolean;
+  /**
+   * Stable cache-busting value for are.na reads. Unlike `forceRefresh`, it is
+   * not a timestamp: the same token reuses the upstream cache, and a new token
+   * (for example, a device boot) forces a fresh read.
+   */
+  readonly cacheBust?: string;
 };
 
 /**

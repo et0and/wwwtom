@@ -133,16 +133,17 @@ describe("ArenaCarousel", { timeout: 30_000 }, () => {
     expect(link).toHaveAttribute("href", expect.stringContaining(".epub"));
   });
 
-  it("renders audio attachments as a download link", async () => {
+  it("renders audio attachments as an inline player", async () => {
     fetchMock.mockResolvedValue(jsonResponse({ data: [audioAttachment] }));
     renderCarousel();
 
-    const link = await screen.findByRole("link", { name: /alan-watts-just-trust-the-universe/ });
-    expect(link).toHaveAttribute(
-      "href",
+    await waitFor(() => expect(document.querySelector("audio")).toBeTruthy());
+    const player = document.querySelector("audio") as HTMLAudioElement;
+    expect(player.getAttribute("src")).toBe(
       "https://attachments.are.na/3/285e74b50c0607f2f211627ef0f7d22f.mp3",
     );
-    expect(document.querySelector("audio")).toBeNull();
+    expect(player.hasAttribute("controls")).toBe(true);
+    expect(screen.getByText("alan-watts-just-trust-the-universe.mp3")).toBeTruthy();
   });
 
   it("shows a play poster for video embeds and loads the iframe on click", async () => {

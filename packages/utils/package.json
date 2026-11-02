@@ -19,7 +19,7 @@
     "./worker": "./src/worker.ts"
   },
   "scripts": {
-    "test": "vitest",
+    "test": "vitest run",
     "lint": "oxlint",
     "typecheck": "tsc --noEmit"
   },

@@ -3,8 +3,7 @@ import { CmsSlug } from "@tom/schemas/cms";
 import type { CmsCategory, CmsListResponse, CmsPost, CmsPostSummary } from "@tom/schemas/cms";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
-import { runClient, runClientOrNull } from "@tom/utils/http";
-import { adapterRequest, callSophie } from "./api";
+import { adapterRequest, callSophie, runSophieRequest, runSophieRequestOrNull } from "./api";
 
 /**
  * Parse the category filter at the boundary. Invalid slugs fail fast with
@@ -61,10 +60,14 @@ export const listCategories: Effect.Effect<ReadonlyArray<CmsCategory>, HttpError
 export const fetchPosts = (
   page: number,
   category: string | null = null,
-): Promise<CmsListResponse<CmsPostSummary>> => runClient(listPosts(page, category));
+): Promise<CmsListResponse<CmsPostSummary>> =>
+  runSophieRequest(listPosts(page, category), "sophie.listPosts");
 
-export const fetchPost = (slug: string): Promise<CmsPost | null> => runClientOrNull(getPost(slug));
+export const fetchPost = (slug: string): Promise<CmsPost | null> =>
+  runSophieRequestOrNull(getPost(slug), "sophie.getPost");
 
-export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> => runClient(listCategories);
+export const fetchCategories = (): Promise<ReadonlyArray<CmsCategory>> =>
+  runSophieRequest(listCategories, "sophie.listCategories");
 
-export const fetchAbout = (): Promise<CmsPost | null> => runClientOrNull(getPost(ABOUT_SLUG));
+export const fetchAbout = (): Promise<CmsPost | null> =>
+  runSophieRequestOrNull(getPost(ABOUT_SLUG), "sophie.getAbout");

@@ -12,7 +12,6 @@ app.config.timestamp_*.js
 /tasks
 tsconfig.tsbuildinfo
 .turbo
-.open-next
 .alchemy
 
 db.sqlite3

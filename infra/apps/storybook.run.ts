@@ -1,5 +1,5 @@
-import * as Cloudflare from "alchemy/Cloudflare";
-import * as GitHub from "alchemy/GitHub";
+import * as Cloudflare from "@alchemy.run/cloudflare";
+import * as GitHub from "@alchemy.run/github";
 import { Effect, Layer } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
@@ -18,6 +18,8 @@ export const storybook = Effect.gen(function* () {
     command: "pnpm --filter @tom/storybook build",
     outdir: "packages/ui/src/storybook/storybook-static",
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     ...(stage === "production"
       ? { name: "wwwtom-storybook", domain: stageHost(stage, "storybook") }
       : { name: `wwwtom-storybook-${stage}`, domain: stageHost(stage, "storybook") }),
@@ -33,7 +35,7 @@ export const storybook = Effect.gen(function* () {
 export default Stack(
   "wwwtom-storybook",
   {
-    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()) as never,
+    providers: Layer.mergeAll(Cloudflare.providers(), GitHub.providers()),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

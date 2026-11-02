@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
 import { Effect } from "effect";
 import { ConfigError } from "effect/Config";
@@ -60,6 +60,8 @@ export const api = Effect.gen(function* () {
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     // OG fonts ship as static files (apps/api/public/fonts) served by the
     // worker itself; the OG service fetches them from its own origin.
     assets: { directory: `${rootDir}/apps/api/public` },
@@ -126,6 +128,8 @@ export const api = Effect.gen(function* () {
   const sophieWorker = yield* Cloudflare.Worker("sophie-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
     compatibility: { date: "2025-12-10" },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
     assets: { directory: `${rootDir}/apps/api/public` },
     dev: {
       port: 8789,
@@ -177,7 +181,7 @@ export const api = Effect.gen(function* () {
 export default Stack(
   "wwwtom-api",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

@@ -2,7 +2,7 @@ import { Elysia } from "elysia";
 import { CloudflareAdapter } from "elysia/adapter/cloudflare-worker";
 import { openapi } from "@elysiajs/openapi";
 import { Effect, Schema } from "effect";
-import { CmsError } from "@tom/types/errors";
+import { CmsError, HttpError } from "@tom/types/errors";
 import { otelConfigFromEnv, logLevelFromEnv } from "@tom/utils/logging";
 import {
   attachRequestContext,
@@ -23,6 +23,7 @@ import { authRoutes } from "./auth";
 import { cmsRoutes, cmsWriteRoutes } from "./cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./og";
+import { oauthRoutes } from "./oauth";
 import { queueHandler, type MessageBatch } from "./queue/consumer";
 
 export const app = new Elysia({
@@ -70,6 +71,31 @@ export const app = new Elysia({
   })
   .onError(({ code, error, request }) => {
     Effect.runFork(Effect.logError("API error", { code, cause: String(error) }));
+    if (Schema.is(HttpError)(error)) {
+      const status = error.status;
+      const type = problemTypeForStatus(status);
+      if (status >= HttpStatus.InternalServerError) {
+        Effect.runFork(
+          Effect.logError("HTTP service error", {
+            path: request.url,
+            status,
+            message: error.message,
+          }),
+        );
+      } else {
+        Effect.runFork(
+          Effect.logWarning("HTTP client error", {
+            path: request.url,
+            status,
+            message: error.message,
+          }),
+        );
+      }
+      return toProblemResponse(status, error.message, {
+        ...(type && { type }),
+        instance: request.url,
+      });
+    }
     if (Schema.is(CmsError)(error)) {
       const isKnownClientError =
         error.status === HttpStatus.BadRequest ||
@@ -124,6 +150,7 @@ export const app = new Elysia({
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
   .use(healthRoutes)
+  .use(oauthRoutes)
   .use(cmsRoutes)
   // OG image generation is a public route: social crawlers (Twitter, Slack,
   // iMessage) fetch the image URL without any auth headers.

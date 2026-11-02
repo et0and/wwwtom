@@ -1,11 +1,14 @@
 import { treaty } from "@elysiajs/eden";
-import { isServer } from "@solidjs/web";
+import { getRequestEvent, isServer } from "@solidjs/web";
 import { Effect } from "effect";
 import type { AdapterApp } from "@tom/adapter";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
+import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { adapterRequest as sharedAdapterRequest } from "@tom/utils/http";
 import type { EdenResult } from "@tom/utils/http";
+import { withLogging } from "@tom/utils/logging";
+import type { LogContext } from "@tom/utils/logging";
 
 const DEV_ADAPTER_URL = LOCAL_SERVICE_URLS.sophieAdapter;
 const PROD_ADAPTER_URL = "https://adapter.sophie.st";
@@ -39,3 +42,39 @@ const SOPHIE_REQUEST_MESSAGES = {
 export const adapterRequest = <T>(
   request: () => Promise<EdenResult<T>>,
 ): Effect.Effect<T, HttpError> => sharedAdapterRequest(request, SOPHIE_REQUEST_MESSAGES);
+
+/** Logging context for the current SSR request, if any. */
+const getServerLogContext = (): LogContext => {
+  if (!isServer) return { serviceName: "sophie-web" };
+  const event = getRequestEvent();
+  return event?.locals.logContext ?? { serviceName: "sophie-web" };
+};
+
+/**
+ * Run a Sophie request as a promise in the current SSR context. The wrapped
+ * effect exports a span and log records with the request's annotations, so
+ * the adapter round-trips are queryable alongside web's.
+ */
+export const runSophieRequest = <T, E>(
+  effect: Effect.Effect<T, E>,
+  operation: string,
+): Promise<T> =>
+  Effect.runPromise(withLogging(effect.pipe(Effect.withSpan(operation)), getServerLogContext()));
+
+/**
+ * Run a Sophie read, mapping a 404 to null (absent resource). Other failures
+ * still reject, so lists keep throwing while detail pages render a not-found
+ * state from settled null data.
+ */
+export const runSophieRequestOrNull = <T>(
+  effect: Effect.Effect<T, HttpError>,
+  operation: string,
+): Promise<T | null> =>
+  runSophieRequest(
+    effect.pipe(
+      Effect.catchTag("HttpError", (error) =>
+        error.status === HttpStatus.NotFound ? Effect.succeed(null) : Effect.fail(error),
+      ),
+    ),
+    operation,
+  );

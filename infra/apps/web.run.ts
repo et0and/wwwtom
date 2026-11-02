@@ -1,4 +1,4 @@
-import * as Cloudflare from "alchemy/Cloudflare";
+import * as Cloudflare from "@alchemy.run/cloudflare";
 import { ALCHEMY_DEV } from "alchemy";
 import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
@@ -6,7 +6,7 @@ import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { webKv } from "../kv/web.kv.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { stageHost, stageWebHost, tomSecrets } from "../shared.run.ts";
+import { stageHost, stageWebHost, tomSecrets, workerObservability } from "../shared.run.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
 
@@ -27,6 +27,9 @@ export const web = Effect.gen(function* () {
   return yield* Cloudflare.Website.Vite("wwwtom-web", {
     rootDir,
     compatibility: { flags: ["nodejs_compat"] },
+    // Only the custom domain: workers.dev would bypass the zone edge rules.
+    workersDev: false,
+    observability: workerObservability,
     // Every stage gets a deterministic worker name and custom domain so the
     // adapter can redirect back to it (production adopts the existing worker).
     ...(stage === "production"
@@ -48,7 +51,7 @@ export const web = Effect.gen(function* () {
 export default Stack(
   "wwwtom-web",
   {
-    providers: Cloudflare.providers() as never,
+    providers: Cloudflare.providers(),
     state: Cloudflare.state(),
   },
   Effect.gen(function* () {

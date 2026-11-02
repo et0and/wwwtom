@@ -10,7 +10,7 @@
     "start": "vite preview",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "dependencies": {
     "@elysiajs/eden": "catalog:",
