@@ -227,12 +227,14 @@ export const listFrameImages = (
   channelSlug: string,
   limit: number,
   page: number = 1,
+  forceRefresh: boolean = false,
 ): Effect.Effect<ArenaFramePage, HttpError> =>
   Effect.gen(function* () {
     const response = yield* client.channel(channelSlug).contents({
       ...CONTENT_SORT,
       page: normalizePage(page),
       per: Math.min(Math.max(limit, 1), MAX_PER_PAGE),
+      forceRefresh,
     });
     const contents = yield* decodeContents(response);
     const blocks = yield* decodeEach(

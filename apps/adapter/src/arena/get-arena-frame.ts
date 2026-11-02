@@ -24,7 +24,7 @@ export const getArenaFrameRoute = new Elysia().get(
     requireArenaTenant(request);
     const result = await runArena(
       request,
-      (client) => listFrameImages(client, params.slug, FRAME_BLOCK_LIMIT, query.page ?? 1),
+      (client) => listFrameImages(client, params.slug, FRAME_BLOCK_LIMIT, query.page ?? 1, true),
       logContextFromRequest(request, "tom-adapter"),
       "public",
     );

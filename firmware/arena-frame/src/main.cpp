@@ -52,6 +52,7 @@ size_t cursor = 0;
 size_t blockCount = 0;
 size_t page = 1;
 bool hasMore = false;
+uint32_t deckToken = 0;
 char weatherCondition[64] = "";
 char weatherTemperature[16] = "";
 uint32_t weatherFetchedAt = 0;
@@ -382,10 +383,11 @@ bool drawCurrent() {
   const int deckWritten = snprintf(
       deckUrl,
       sizeof(deckUrl),
-      "%s/arena/frame/%s?page=%u",
+      "%s/arena/frame/%s?page=%u&t=%u",
       ADAPTER_BASE_URL,
       CHANNEL_SLUG,
-      static_cast<unsigned>(page));
+      static_cast<unsigned>(page),
+      static_cast<unsigned>(deckToken));
   if (deckWritten < 0 || static_cast<size_t>(deckWritten) >= sizeof(deckUrl)) return false;
 
   size_t deckLength = 0;
@@ -513,6 +515,10 @@ void setup() {
 
   // Avoid an NVS write on every reconnect.
   WiFi.persistent(false);
+  // A per-boot token gives the deck a fresh edge-cache key, so new are.na
+  // blocks appear on the first page after a restart instead of waiting out
+  // the CDN TTL.
+  deckToken = esp_random();
   startWatchdog();
   Serial.printf(
       "[frame] boot reason=%d heap=%u\n",
