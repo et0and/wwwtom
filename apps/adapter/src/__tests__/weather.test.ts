@@ -31,6 +31,7 @@ describe("GET /weather/:location", () => {
     expect(requested.origin).toBe("https://wttr.in");
     expect(requested.pathname).toBe("/Wellington");
     expect(requested.searchParams.get("format")).toBe("%C|%t");
+    expect(requested.searchParams.has("m")).toBe(true);
   });
 
   it("normalises whitespace and strips non-ASCII", async () => {
