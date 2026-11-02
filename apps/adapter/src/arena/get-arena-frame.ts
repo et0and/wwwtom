@@ -15,7 +15,11 @@ import { ChannelSlugParamsSchema, requireArenaTenant, runArena } from "./shared"
 const FRAME_BLOCK_LIMIT = 20;
 
 const FrameQuerySchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ page: Schema.optional(Schema.FiniteFromString) }),
+  Schema.Struct({
+    page: Schema.optional(Schema.FiniteFromString),
+    /** Per-boot token: a new value forces a fresh are.na read. */
+    t: Schema.optional(Schema.FiniteFromString),
+  }),
 );
 
 export const getArenaFrameRoute = new Elysia().get(
@@ -24,7 +28,14 @@ export const getArenaFrameRoute = new Elysia().get(
     requireArenaTenant(request);
     const result = await runArena(
       request,
-      (client) => listFrameImages(client, params.slug, FRAME_BLOCK_LIMIT, query.page ?? 1),
+      (client) =>
+        listFrameImages(
+          client,
+          params.slug,
+          FRAME_BLOCK_LIMIT,
+          query.page ?? 1,
+          query.t === undefined ? undefined : String(query.t),
+        ),
       logContextFromRequest(request, "tom-adapter"),
       "public",
     );

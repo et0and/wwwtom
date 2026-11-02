@@ -22,7 +22,9 @@ const LocationParamsSchema = Schema.toStandardSchemaV1(
 
 const fetchWeather = (location: string): Effect.Effect<Weather, HttpError> =>
   Effect.gen(function* () {
-    const url = `${WEATHER_ENDPOINT}/${encodeURIComponent(location)}?format=%C|%t`;
+    // `m` forces metric units; wttr.in otherwise picks units from the caller's
+    // egress location, which is a US Cloudflare colo in production.
+    const url = `${WEATHER_ENDPOINT}/${encodeURIComponent(location)}?format=%C|%t&m`;
     const response = yield* Effect.tryPromise({
       try: () =>
         fetch(url, {

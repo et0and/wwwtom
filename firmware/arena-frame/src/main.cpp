@@ -52,6 +52,7 @@ size_t cursor = 0;
 size_t blockCount = 0;
 size_t page = 1;
 bool hasMore = false;
+uint32_t deckToken = 0;
 char weatherCondition[64] = "";
 char weatherTemperature[16] = "";
 uint32_t weatherFetchedAt = 0;
@@ -228,6 +229,14 @@ int httpGet(HTTPClient &http, const char *url) {
   }
   const int status = http.GET();
   Serial.printf("[frame] GET %d %s\n", status, url);
+  if (status < 0) {
+    Serial.printf("[frame] http error: %s\n", http.errorToString(status).c_str());
+    if (strncmp(url, "https://", 8) == 0) {
+      char tlsError[128] = {0};
+      secureClient.lastError(tlsError, sizeof(tlsError));
+      Serial.printf("[frame] tls: %s\n", tlsError);
+    }
+  }
   return status;
 }
 
@@ -263,8 +272,29 @@ bool fetchFrame(const char *url, uint16_t *pixels, size_t bytes) {
   }
   WiFiClient *stream = http.getStreamPtr();
   stream->setTimeout(20000);
-  const size_t received =
-      stream->readBytes(reinterpret_cast<uint8_t *>(pixels), bytes);
+  size_t received = 0;
+  const uint32_t deadline = millis() + 25000;
+  while (received < bytes && static_cast<int32_t>(millis() - deadline) < 0) {
+    const int available = stream->available();
+    if (available <= 0) {
+      delay(1);
+      continue;
+    }
+    const size_t remaining = bytes - received;
+    const size_t want =
+        static_cast<size_t>(available) < remaining ? static_cast<size_t>(available) : remaining;
+    const int read = stream->read(reinterpret_cast<uint8_t *>(pixels) + received, want);
+    if (read > 0) received += static_cast<size_t>(read);
+  }
+  if (received != bytes) {
+    char tlsError[128] = {0};
+    secureClient.lastError(tlsError, sizeof(tlsError));
+    Serial.printf(
+        "[frame] short read %u/%u tls=%s\n",
+        static_cast<unsigned>(received),
+        static_cast<unsigned>(bytes),
+        tlsError);
+  }
   http.end();
   Serial.printf(
       "[frame] frame %u/%u bytes\n",
@@ -353,10 +383,11 @@ bool drawCurrent() {
   const int deckWritten = snprintf(
       deckUrl,
       sizeof(deckUrl),
-      "%s/arena/frame/%s?page=%u",
+      "%s/arena/frame/%s?page=%u&t=%u",
       ADAPTER_BASE_URL,
       CHANNEL_SLUG,
-      static_cast<unsigned>(page));
+      static_cast<unsigned>(page),
+      static_cast<unsigned>(deckToken));
   if (deckWritten < 0 || static_cast<size_t>(deckWritten) >= sizeof(deckUrl)) return false;
 
   size_t deckLength = 0;
@@ -484,6 +515,10 @@ void setup() {
 
   // Avoid an NVS write on every reconnect.
   WiFi.persistent(false);
+  // A per-boot token gives the deck a fresh edge-cache key, so new are.na
+  // blocks appear on the first page after a restart instead of waiting out
+  // the CDN TTL.
+  deckToken = esp_random();
   startWatchdog();
   Serial.printf(
       "[frame] boot reason=%d heap=%u\n",

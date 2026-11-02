@@ -181,13 +181,14 @@ export function paginationQueryString(
   options: PaginationAttributes | undefined,
   dateProvider: DateProvider,
 ): string {
-  const { page, per, sort, direction, forceRefresh } = resolvePagination(options);
+  const { page, per, sort, direction, forceRefresh, cacheBust } = resolvePagination(options);
   const attrs: string[] = [];
   if (page) attrs.push(`page=${page}`);
   if (per) attrs.push(`per_page=${per}`);
   const combined = formatSort(sort, direction);
   if (combined) attrs.push(`sort=${combined}`);
   if (forceRefresh) attrs.push(`date=${dateProvider.now()}`);
+  else if (cacheBust !== undefined) attrs.push(`date=${encodeURIComponent(cacheBust)}`);
   return attrs.join("&");
 }
 
@@ -267,10 +268,14 @@ const resolvePagination = (options: PaginationAttributes | undefined): Paginatio
 const withSort = <TSort extends string>(
   options: PaginationAttributes | undefined,
   schema: Schema.Codec<TSort>,
-): PageParams & { sort?: TSort } => {
-  const { sort, direction } = resolvePagination(options);
+): PageParams & { sort?: TSort; date?: string } => {
+  const { sort, direction, cacheBust } = resolvePagination(options);
   const picked = pickSort(sort, direction, schema);
-  return { ...pageParams(options), ...(picked !== undefined && { sort: picked }) };
+  return {
+    ...pageParams(options),
+    ...(picked !== undefined && { sort: picked }),
+    ...(cacheBust !== undefined && { date: cacheBust }),
+  };
 };
 
 const toConnectionsQuery = (options: PaginationAttributes | undefined): ConnectionsQuery =>
