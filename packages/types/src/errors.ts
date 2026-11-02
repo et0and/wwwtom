@@ -160,7 +160,7 @@ export class WorkflowInvalidError extends Schema.TaggedError<WorkflowInvalidErro
   },
 ) {}
 
-export class ShikiError extends Schema.TaggedError<ShikiError>()(
-  "ShikiError",
+export class CodeHighlightError extends Schema.TaggedError<CodeHighlightError>()(
+  "CodeHighlightError",
   messageCauseFields,
 ) {}

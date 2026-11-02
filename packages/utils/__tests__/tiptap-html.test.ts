@@ -43,8 +43,7 @@ describe("renderTiptapHtml", () => {
     expect(html).toBe("<h2>Title</h2><hr>");
   });
 
-  // Shiki engine init takes seconds on cold CI runners — allow a minute.
-  it("highlights code blocks with filename and line numbers", { timeout: 60000 }, async () => {
+  it("highlights code blocks with filename and line numbers", async () => {
     const html = await render({
       type: "doc",
       content: [
@@ -57,10 +56,27 @@ describe("renderTiptapHtml", () => {
     });
     expect(html).toContain(`<figure class="code-block" data-line-numbers="true">`);
     expect(html).toContain(`<figcaption class="code-filename">a.ts</figcaption>`);
-    expect(html).toContain(`class="shiki-light"`);
-    expect(html).toContain(`class="shiki-dark"`);
     expect(html).toContain(`<span class="line">`);
+    expect(html).toContain("light-dark(");
+    expect(html).not.toContain(`class="shiki-light"`);
+    expect(html).not.toContain(`class="shiki-dark"`);
     expect(html).toContain("const");
+  });
+
+  it("highlights languages beyond the old Shiki allowlist", async () => {
+    const html = await render({
+      type: "doc",
+      content: [
+        {
+          type: "codeBlock",
+          attrs: { language: "toml" },
+          content: [{ type: "text", text: `title = "Hello"` }],
+        },
+      ],
+    });
+    expect(html).toContain(`<span class="line">`);
+    expect(html).toContain("light-dark(");
+    expect(html).toContain("title");
   });
 
   it("renders plain code without spans for unknown languages", async () => {
@@ -70,14 +86,31 @@ describe("renderTiptapHtml", () => {
         {
           type: "codeBlock",
           attrs: { language: "text" },
-          content: [{ type: "text", text: "just words" }],
+          content: [{ type: "text", text: "just <words> & more" }],
         },
       ],
     });
     expect(html).toContain(`<figure class="code-block">`);
     expect(html).toContain(`language-text`);
-    expect(html).toContain("just words");
+    expect(html).toContain("just &lt;words&gt; &amp; more");
     expect(html).not.toContain(`<span class="line">`);
+    expect(html).not.toContain("shiki-");
+  });
+
+  it("escapes code content inside highlighted output", async () => {
+    const html = await render({
+      type: "doc",
+      content: [
+        {
+          type: "codeBlock",
+          attrs: { language: "ts" },
+          content: [{ type: "text", text: `const x = "<tag>&";` }],
+        },
+      ],
+    });
+    expect(html).toContain("&lt;tag&gt;&amp;");
+    expect(html).not.toContain("<tag>");
+    expect(html).not.toContain("shiki-");
   });
 
   it("renders blockquotes", async () => {
