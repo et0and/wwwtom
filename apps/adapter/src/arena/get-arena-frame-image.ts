@@ -17,7 +17,12 @@ type PhotonModule = typeof import("@cf-wasm/photon");
 const FRAME_IMAGE_CACHE_CONTROL = "public, max-age=3600, s-maxage=604800";
 
 /** are.na serves block images from these hosts. Anything else is refused. */
-const IMAGE_HOSTS = new Set(["cdn.are.na", "images.are.na", "d2w9rnfck5c9ki.cloudfront.net"]);
+const IMAGE_HOSTS = new Set([
+  "cdn.are.na",
+  "images.are.na",
+  "d2w9rnfck5c9ki.cloudfront.net",
+  "d2w9rnfcy7mm78.cloudfront.net",
+]);
 
 const FrameImageParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({ slug: Schema.String, id: Schema.FiniteFromString }),

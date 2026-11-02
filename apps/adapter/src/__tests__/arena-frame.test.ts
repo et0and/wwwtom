@@ -17,7 +17,7 @@ const tomEnv = testEnv({ TENANT: "tom" });
 const sophieEnv = testEnv({ TENANT: "sophie" });
 
 const CHANNEL = "tom-s-worktable";
-const CDN_HOST = "https://d2w9rnfck5c9ki.cloudfront.net";
+const CDN_HOST = "https://d2w9rnfcy7mm78.cloudfront.net";
 
 const markdown = (text: string) => ({ markdown: text, html: `<p>${text}</p>`, plain: text });
 
