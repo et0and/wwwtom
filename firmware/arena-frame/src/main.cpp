@@ -32,6 +32,8 @@ constexpr uint32_t kWifiTimeoutMs = 20UL * 1000UL;
 constexpr uint32_t kWatchdogMs = 120UL * 1000UL;
 constexpr uint32_t kWeatherRefreshMs = 15UL * 60UL * 1000UL;
 constexpr int kOverlayHeight = 30;
+constexpr uint32_t kHoldMs = 700;
+constexpr uint8_t kFaceCount = 4;
 constexpr int kButtonNext = 0;  // BOOT, press after boot
 constexpr int kButtonPrev = 35;
 
@@ -56,6 +58,8 @@ uint32_t weatherFetchedAt = 0;
 bool clockSynced = false;
 int lastOverlayMinute = -1;
 uint32_t lastOverlayCheck = 0;
+uint8_t face = 0;
+const char *const kFaceNames[kFaceCount] = {"bar", "minimal", "big", "line"};
 
 void showMessage(const char *message) {
   display.fillScreen(TFT_BLACK);
@@ -88,24 +92,11 @@ void waitMs(uint32_t durationMs) {
   }
 }
 
-// The overlay is the only text on screen: clock and temperature on the first
-// line, date and condition on the second. It covers the top of the picture.
-void drawOverlay() {
+// Four faces, all of them showing the clock. The picture is pushed first;
+// each face draws its own chrome on top.
+void drawBarFace(const char *clockText, const char *dateText) {
   display.fillRect(0, 0, kWidth, kOverlayHeight, TFT_BLACK);
   display.setTextColor(TFT_WHITE, TFT_BLACK);
-
-  const time_t now = time(nullptr);
-  struct tm local = {};
-  localtime_r(&now, &local);
-  lastOverlayMinute = local.tm_min;
-
-  char clockText[8] = "--:--";
-  char dateText[24] = "";
-  if (now > 1700000000) {
-    strftime(clockText, sizeof(clockText), "%H:%M", &local);
-    strftime(dateText, sizeof(dateText), "%a %d %b", &local);
-  }
-
   display.setTextDatum(TL_DATUM);
   display.drawString(clockText, 6, 2, 2);
   if (weatherTemperature[0] != '\0') {
@@ -123,9 +114,69 @@ void drawOverlay() {
   display.drawString(lower, 6, 20, 1);
 }
 
+void drawMinimalFace(const char *clockText) {
+  display.fillRect(0, 0, 68, 22, TFT_BLACK);
+  display.setTextColor(TFT_WHITE, TFT_BLACK);
+  display.setTextDatum(TL_DATUM);
+  display.drawString(clockText, 6, 3, 2);
+  if (weatherTemperature[0] != '\0') {
+    display.fillRect(kWidth - 56, 0, 56, 22, TFT_BLACK);
+    display.setTextDatum(TR_DATUM);
+    display.drawString(weatherTemperature, kWidth - 6, 3, 2);
+  }
+}
+
+void drawBigFace(const char *clockText, const char *dateText) {
+  display.fillRect(0, 0, kWidth, kHeight, TFT_BLACK);
+  display.setTextColor(TFT_WHITE, TFT_BLACK);
+  display.setTextDatum(MC_DATUM);
+  display.drawString(clockText, kWidth / 2, 52, 6);
+  display.drawString(dateText, kWidth / 2, 94, 2);
+  display.drawString(weatherCondition, kWidth / 2, 114, 1);
+}
+
+void drawLineFace(const char *clockText) {
+  display.fillRect(0, kHeight - 20, kWidth, 20, TFT_BLACK);
+  char line[96];
+  snprintf(
+      line, sizeof(line), "%s  %s  %s", clockText, weatherTemperature, weatherCondition);
+  display.setTextColor(TFT_WHITE, TFT_BLACK);
+  display.setTextDatum(ML_DATUM);
+  display.drawString(line, 6, kHeight - 10, 2);
+}
+
+void drawFace() {
+  const time_t now = time(nullptr);
+  struct tm local = {};
+  localtime_r(&now, &local);
+  lastOverlayMinute = local.tm_min;
+
+  char clockText[8] = "--:--";
+  char dateText[24] = "";
+  if (now > 1700000000) {
+    strftime(clockText, sizeof(clockText), "%H:%M", &local);
+    strftime(dateText, sizeof(dateText), "%a %d %b", &local);
+  }
+
+  switch (face) {
+    case 1:
+      drawMinimalFace(clockText);
+      break;
+    case 2:
+      drawBigFace(clockText, dateText);
+      break;
+    case 3:
+      drawLineFace(clockText);
+      break;
+    default:
+      drawBarFace(clockText, dateText);
+      break;
+  }
+}
+
 // The picture stays put between cycles, but the clock should not. Redrawing
-// only the 30px bar leaves the image untouched and costs one blocking SPI
-// write per minute.
+// only the face chrome leaves the image untouched (except on the big face,
+// which is clock-only) and costs one blocking SPI write per minute.
 void refreshOverlayIfNeeded() {
   const uint32_t now = millis();
   if (now - lastOverlayCheck < 1000) return;
@@ -136,7 +187,7 @@ void refreshOverlayIfNeeded() {
   localtime_r(&clock, &local);
   if (local.tm_min == lastOverlayMinute) return;
   Serial.printf("[frame] overlay %02d:%02d\n", local.tm_hour, local.tm_min);
-  drawOverlay();
+  drawFace();
 }
 
 bool connectWifi() {
@@ -249,8 +300,8 @@ void syncClock() {
 void encodePathSegment(const char *value, char *output, size_t capacity) {
   static constexpr char kHex[] = "0123456789ABCDEF";
   size_t written = 0;
-  for (const char *cursor = value; *cursor != '\0'; ++cursor) {
-    const unsigned char character = static_cast<unsigned char>(*cursor);
+  for (const char *position = value; *position != '\0'; ++position) {
+    const unsigned char character = static_cast<unsigned char>(*position);
     const bool isUnreserved =
         (character >= 'A' && character <= 'Z') ||
         (character >= 'a' && character <= 'z') ||
@@ -348,7 +399,7 @@ bool drawCurrent() {
   // is exactly the MSB-first order the ST7789 expects. Turning swapping on
   // would reverse every pixel.
   display.pushImage(0, 0, kWidth, kHeight, framePixels);
-  drawOverlay();
+  drawFace();
   return true;
 }
 
@@ -362,27 +413,57 @@ void advanceFrame() {
   page = hasMore ? page + 1 : 1;
 }
 
+void retreatFrame() {
+  if (blockCount == 0) return;
+  cursor = cursor == 0 ? blockCount - 1 : cursor - 1;
+}
+
+void redisplay() {
+  if (blockCount == 0) return;
+  display.pushImage(0, 0, kWidth, kHeight, framePixels);
+  drawFace();
+}
+
+void changeFace(int delta) {
+  face = static_cast<uint8_t>((face + kFaceCount + delta) % kFaceCount);
+  Serial.printf("[frame] face %u (%s)\n", static_cast<unsigned>(face), kFaceNames[face]);
+  redisplay();
+}
+
 void waitForNext() {
   if (blockCount == 0) return;
   const uint32_t start = millis();
   while (millis() - start < kCycleMs) {
     esp_task_wdt_reset();
+
     if (digitalRead(kButtonNext) == LOW) {
-      advanceFrame();
+      const uint32_t pressedAt = millis();
       while (digitalRead(kButtonNext) == LOW) {
         esp_task_wdt_reset();
-        delay(50);
+        delay(20);
       }
-      return;
+      if (millis() - pressedAt >= kHoldMs) {
+        advanceFrame();
+        return;
+      }
+      changeFace(1);
+      continue;
     }
+
     if (digitalRead(kButtonPrev) == LOW) {
-      cursor = (cursor + blockCount - 1) % blockCount;
+      const uint32_t pressedAt = millis();
       while (digitalRead(kButtonPrev) == LOW) {
         esp_task_wdt_reset();
-        delay(50);
+        delay(20);
       }
-      return;
+      if (millis() - pressedAt >= kHoldMs) {
+        retreatFrame();
+        return;
+      }
+      changeFace(-1);
+      continue;
     }
+
     refreshOverlayIfNeeded();
     delay(50);
   }

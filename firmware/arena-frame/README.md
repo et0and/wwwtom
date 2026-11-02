@@ -44,12 +44,15 @@ If it does not appear, install the WCH CH9102 driver.
 - Holds each image for `FRAME_CYCLE_SECONDS` (default 600, so 10 minutes).
 - The deck is 20 blocks per page. When the page is exhausted the firmware asks
   for the next page and wraps to page 1 after the last one.
-- **GPIO0 (BOOT)** shows the next image. Press it after boot; held at reset it
-  enters the bootloader instead.
-- **GPIO35** shows the previous image.
+- **Tap GPIO0** cycles the face forward; **tap GPIO35** cycles it backward.
+- **Hold GPIO0** (700ms) shows the next image; **hold GPIO35** the previous one.
+  GPIO0 held at reset enters the bootloader, so press after boot.
 - A failed fetch shows a message and retries after 30 seconds.
-- The top 30px is an overlay: `21:04` and `+16C` on the first line, the date and
-  condition on the second. It covers the top of the picture.
+- Four faces, all of them showing the clock:
+  - `bar` — 30px top bar: time and temperature, date and condition below.
+  - `minimal` — small clock top-left, temperature top-right, no bar.
+  - `big` — clock only: large time, date and condition, image hidden.
+  - `line` — full image with a 20px line at the bottom.
 - The clock syncs once per boot over NTP (`time.cloudflare.com`,
   `pool.ntp.org`) with `configTzTime` and the POSIX `TIMEZONE` rule, so it
   follows NZST/NZDT without a fixed offset.
