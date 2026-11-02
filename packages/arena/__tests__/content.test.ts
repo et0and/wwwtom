@@ -284,6 +284,33 @@ describe("getEntry", () => {
     });
   });
 
+  it("carries each block's comment count, defaulting to zero", async () => {
+    const client = stubClient({
+      [INDEX_SLUG]: {
+        contents: () =>
+          contentsPage([
+            indexItem({
+              id: 11,
+              slug: "first-post-abc123",
+              title: "First post",
+              connectedAt: "2026-02-03T00:00:00Z",
+            }),
+          ]),
+      },
+      "first-post-abc123": {
+        contents: () =>
+          contentsPage([
+            { ...textBlock(101, "Hello"), comment_count: 3 },
+            textBlock(102, "No comments"),
+          ]),
+      },
+    });
+
+    const result = await run(getEntry(client, INDEX_SLUG, "first-post"));
+
+    expect(result?.blocks.map((block) => block.comment_count)).toEqual([3, 0]);
+  });
+
   it("finds an entry on a later page of the master channel", async () => {
     const client = stubClient({
       [INDEX_SLUG]: {

@@ -13,6 +13,7 @@ onlyBuiltDependencies:
   - "workerd"
 catalog:
   effect: 4.0.0-rc.116
+  "@aredotna/sdk": 0.1.1
   "@effect/platform-node": 4.0.0-rc.116
   "@effect/tsgo": 0.45.0
   kysely: 0.28.9
