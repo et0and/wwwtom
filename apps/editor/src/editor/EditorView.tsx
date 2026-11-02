@@ -118,7 +118,6 @@ export const EditorView = (props: {
           <div {...stylex.attrs(layoutStyles.grid, layout.gap2)}>
             <Banner variant="error" description={message()} />
             <Button
-              type="button"
               size="sm"
               variant="ghost"
               style={layoutStyles.justifySelfStart}
@@ -348,7 +347,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
   return (
     <div class="editor-body">
       <div class="editor-topbar">
-        <Button type="button" size="sm" variant="ghost" onClick={onBack}>
+        <Button size="sm" variant="ghost" onClick={onBack}>
           ← Back
         </Button>
         <div
@@ -376,7 +375,6 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         <aside class="editor-sidebar">
           <div class="editor-actions">
             <Button
-              type="button"
               size="sm"
               variant="primary"
               loading={saveState().status === "saving"}
@@ -385,15 +383,10 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
               {savedSlug() === null ? "Create" : "Save"}
             </Button>
             <Show when={savedSlug() !== null}>
-              <Button type="button" size="sm" variant="secondary-destructive" onClick={onDelete}>
+              <Button size="sm" variant="secondary-destructive" onClick={onDelete}>
                 Delete
               </Button>
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                onClick={() => setShowHistory(!showHistory())}
-              >
+              <Button size="sm" variant="outline" onClick={() => setShowHistory(!showHistory())}>
                 {showHistory() ? "Hide history" : "History"}
               </Button>
             </Show>
@@ -558,10 +551,10 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
               <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
-                <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
+                <Button size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
-                <Button type="button" size="sm" variant="secondary" onClick={onApplyLink}>
+                <Button size="sm" variant="secondary" onClick={onApplyLink}>
                   Apply
                 </Button>
               </div>
@@ -591,10 +584,10 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
               <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
-                <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
+                <Button size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
-                <Button type="button" size="sm" variant="secondary" onClick={onInsertArena}>
+                <Button size="sm" variant="secondary" onClick={onInsertArena}>
                   Insert
                 </Button>
               </div>
@@ -624,11 +617,10 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
                 {(message) => <Banner variant="error" description={message()} />}
               </Show>
               <div {...stylex.attrs(layout.flexWrapRow, layout.justifyEnd, layout.gap2)}>
-                <Button type="button" size="sm" variant="ghost" onClick={closePanel}>
+                <Button size="sm" variant="ghost" onClick={closePanel}>
                   Cancel
                 </Button>
                 <Button
-                  type="button"
                   size="sm"
                   variant="secondary"
                   loading={uploading()}

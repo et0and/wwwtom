@@ -8,6 +8,7 @@
     "./arena-content": "./src/arena-content.ts",
     "./arena-frame": "./src/arena-frame.ts",
     "./cms": "./src/cms.ts",
+    "./frame-state": "./src/frame-state.ts",
     "./error": "./src/error.ts",
     "./guestbook": "./src/guestbook.ts",
     "./health": "./src/health.ts",

@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./config": "./src/config.ts",
+    "./auth": "./src/auth.ts",
     "./date": "./src/date.ts",
     "./http": "./src/http.ts",
     "./logging": "./src/logging.ts",

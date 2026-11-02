@@ -106,10 +106,15 @@ export type CloudflareEnv = {
   TELEGRAM_BOT_TOKEN?: string;
   TELEGRAM_CHAT_ID?: string;
   INTERNAL_API_TOKEN?: string;
+  // Shared secret the desk frame sends to read its mode state. Optional in
+  // type so tests can omit it; the route fails closed when unset.
+  FRAME_DEVICE_TOKEN?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
   EDITOR_URL?: string;
+  // Public origin of the web app; trusted for OAuth callbacks from the frame UI.
+  WEB_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
   // Slim CMS auth (Better Auth + GitHub OAuth), owned by the api stack.
   BETTER_AUTH_SECRET?: string;
@@ -138,6 +143,13 @@ export type CloudflareEnv = {
   // api stack (infra/cms/cms.storage.ts). Only the API binds them.
   CMS_D1?: CmsD1Binding;
   CMS_MEDIA?: CmsR2Binding;
+  // Frame control state (mode/channel/stream URL), owned by the adapter stack.
+  // Minimal Worker-safe shape: the real KVNamespace binding satisfies it
+  // structurally, and tests use an in-memory map.
+  FRAME_KV?: {
+    readonly get: (key: string) => Promise<string | null>;
+    readonly put: (key: string, value: string) => Promise<void>;
+  };
   // Workers Static Assets binding serving apps/api/public (OG fonts). Set
   // by the api stack; absent in tests, which fall back to same-origin fetch.
   ASSETS?: CmsAssetsBinding;
@@ -179,6 +191,7 @@ const secretKeys = [
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
   "INTERNAL_API_TOKEN",
+  "FRAME_DEVICE_TOKEN",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
   "TURBO_CACHE_TOKEN",

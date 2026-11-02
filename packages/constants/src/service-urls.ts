@@ -3,4 +3,5 @@ export const LOCAL_SERVICE_URLS = {
   adapter: "http://localhost:8788",
   sophieAdapter: "http://localhost:8790",
   editor: "http://localhost:5173",
+  web: "http://localhost:3000",
 } as const;

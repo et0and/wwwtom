@@ -142,7 +142,6 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
       <div class="content-list-header">
         <div role="group" aria-label="Content kind" {...stylex.attrs(layout.flexRow, layout.gap1)}>
           <Button
-            type="button"
             size="sm"
             variant={!pagesOnly() && kind() === "posts" ? "secondary" : "ghost"}
             aria-pressed={!pagesOnly() && kind() === "posts" ? "true" : "false"}
@@ -154,7 +153,6 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
             when={sophieMode()}
             fallback={
               <Button
-                type="button"
                 size="sm"
                 variant={kind() === "works" ? "secondary" : "ghost"}
                 aria-pressed={kind() === "works" ? "true" : "false"}
@@ -165,7 +163,6 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
             }
           >
             <Button
-              type="button"
               size="sm"
               variant={pagesOnly() ? "secondary" : "ghost"}
               aria-pressed={pagesOnly() ? "true" : "false"}
@@ -175,12 +172,7 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
             </Button>
           </Show>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant="primary"
-          onClick={() => props.onEdit(kind(), null)}
-        >
+        <Button size="sm" variant="primary" onClick={() => props.onEdit(kind(), null)}>
           New
         </Button>
       </div>
@@ -210,7 +202,6 @@ export const PostList = (props: { onEdit: (kind: ContentKind, slug: string | nul
                     </span>
                   </button>
                   <Button
-                    type="button"
                     size="sm"
                     variant="secondary-destructive"
                     aria-label={`Delete ${row.slug}`}

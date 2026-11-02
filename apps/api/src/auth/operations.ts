@@ -6,22 +6,10 @@ import { HttpStatus } from "@tom/constants/http";
 import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { parseCommaSeparated } from "@tom/schemas/env";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
+import { NormalizedEntry, isAdminEmail, toAdminEmailSet } from "@tom/utils/auth";
 import { tenantFromValue, type CloudflareEnv, type CmsD1Binding } from "@tom/utils/config";
 
 type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
-
-/**
- * Admin allowlist check (case-insensitive, whitespace-tolerant).
- *
- * Normalises with a short-circuiting `some` rather than building a normalised
- * copy of the allowlist: this runs on every authenticated CMS request, and the
- * allowlist is only a handful of entries but the copy is pure waste.
- */
-export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean => {
-  const candidate = email.trim().toLowerCase();
-  if (candidate.length === 0) return false;
-  return allowlist.some((entry) => entry.trim().toLowerCase() === candidate);
-};
 
 type OAuthProvider = {
   readonly clientId: string;
@@ -45,7 +33,7 @@ type CreateAuthOptions = {
  * is the adapter origin so OAuth redirects stay on one domain.
  */
 export const createAuth = (options: CreateAuthOptions) => {
-  const adminEmails = options.adminEmails;
+  const adminEmails = toAdminEmailSet(options.adminEmails);
   return betterAuth({
     appName: "tom-cms",
     baseURL: options.baseURL,
@@ -98,18 +86,10 @@ const CmsAuthProviderSchema = Schema.Literals(["github", "google"]);
 
 type CmsAuthProvider = typeof CmsAuthProviderSchema.Type;
 
-/** One allowlist entry, normalised: trimmed and lowercased. */
-const ProviderEntry = Schema.String.pipe(
-  Schema.decode({
-    decode: SchemaGetter.transform((entry: string) => entry.trim().toLowerCase()),
-    encode: SchemaGetter.transform((entry: string) => entry.trim()),
-  }),
-);
-
 /** The allowlist itself: unset or blank means "not configured". */
 const ProviderAllowlist = Schema.Trim.pipe(
   Schema.check(Schema.isMinLength(1)),
-  Schema.decodeTo(Schema.Array(ProviderEntry), {
+  Schema.decodeTo(Schema.Array(NormalizedEntry), {
     decode: SchemaGetter.transform((allowlist: string) => allowlist.split(",")),
     encode: SchemaGetter.transform((entries: ReadonlyArray<string>) => entries.join(",")),
   }),
@@ -132,10 +112,7 @@ export const parseAuthProviders = (
     Schema.decodeOption(Schema.UndefinedOr(ProviderAllowlist))(value),
   );
   if (entries === undefined) return undefined;
-  return Array.filter(
-    Array.map(entries, (entry) => Option.getOrUndefined(Schema.decodeOption(ProviderEntry)(entry))),
-    Schema.is(CmsAuthProviderSchema),
-  );
+  return Array.filter(entries, Schema.is(CmsAuthProviderSchema));
 };
 
 /** Provider allowlist check. Unset allowlists keep legacy behavior. */
@@ -182,13 +159,20 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
   }
   const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
   const editorUrl = env.EDITOR_URL ?? LOCAL_SERVICE_URLS.editor;
+  const webUrl =
+    env.WEB_URL ?? (env.NODE_ENV === "production" ? undefined : LOCAL_SERVICE_URLS.web);
   return yield* Effect.try({
     try: () =>
       createAuth({
         database,
         secret,
         baseURL: adapterUrl,
-        trustedOrigins: [adapterUrl, editorUrl, ...previewEditorPatterns(env)],
+        trustedOrigins: [
+          adapterUrl,
+          editorUrl,
+          ...(webUrl !== undefined && webUrl !== "" ? [webUrl] : []),
+          ...previewEditorPatterns(env),
+        ],
         ...(github && { github }),
         ...(google && { google }),
         adminEmails: parseCommaSeparated(env.CMS_ADMIN_EMAILS),

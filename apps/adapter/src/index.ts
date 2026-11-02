@@ -21,6 +21,7 @@ import { allowLocalOriginsForAdapter, isTrustedWebOrigin, tenantFromValue } from
 import { arenaIntegration } from "./arena";
 import { authIntegration } from "./auth";
 import { cmsIntegration } from "./cms";
+import { frameIntegration } from "./frame";
 import { guestbookIntegration } from "./guestbook";
 import { guestbookUserFromCookie } from "./guestbook/shared";
 import { githubIntegration } from "./github";
@@ -143,6 +144,7 @@ export const app = new Elysia({
   .use(arenaIntegration)
   .use(authIntegration)
   .use(cmsIntegration)
+  .use(frameIntegration)
   .use(guestbookIntegration)
   .use(githubIntegration)
   .use(imageIntegration)

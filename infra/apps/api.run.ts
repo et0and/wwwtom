@@ -7,13 +7,28 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { retain } from "alchemy/RemovalPolicy";
 import { resolveDeploySecrets } from "./api.secrets.ts";
-import { stageHost, sophieStageHost, tomSecrets, workerObservability } from "../shared.run.ts";
+import {
+  sophieStageHost,
+  sophieWebHost,
+  stageHost,
+  stageWebHost,
+  tomSecrets,
+  workerObservability,
+} from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
 import { sophieQueue, sophieQueueDlq } from "../queues/sophie.queue.ts";
 import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
 import { sophieD1, sophieMediaBucket } from "../cms/sophie.storage.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
+
+/** Web origin for OAuth callbacks; local dev ports differ per tenant. */
+const stageWebUrl = (
+  stage: string,
+  isAlchemyDev: boolean,
+  devUrl: string,
+  host: (stageName: string) => string,
+): string => (isAlchemyDev ? devUrl : `https://${host(stage)}`);
 
 export const api = Effect.gen(function* () {
   const stage = yield* Stage;
@@ -44,9 +59,11 @@ export const api = Effect.gen(function* () {
 
   // Tom's CMS is retired: the site reads are.na and the editor is gone. The
   // storage stays declared — production retains it — so the content can be
-  // migrated by hand; no worker binds it any more. PR previews keep the
-  // retained handles to the dev database and bucket (see cms.storage.ts).
-  yield* stage === "production"
+  // migrated by hand. The API still binds the D1 database because the frame
+  // control page authenticates through the shared Better Auth session store.
+  // PR previews keep the retained handles to the dev database and bucket (see
+  // cms.storage.ts).
+  const tomD1 = yield* stage === "production"
     ? cmsD1.pipe(retain())
     : stage.startsWith("pr-")
       ? previewCmsD1
@@ -88,12 +105,15 @@ export const api = Effect.gen(function* () {
       // Admin allowlist as explicit stage config (deploy-time env or
       // bundle, never code): it wins over the opaque shared bundle value.
       CMS_ADMIN_EMAILS: tomAdminEmails,
+      // Better Auth's session store (the frame control page uses it).
+      CMS_D1: tomD1,
       // Better Auth builds OAuth redirect URLs from the adapter origin and
       // only returns to trusted editor origins after sign-in.
       ADAPTER_URL: isAlchemyDev
         ? "http://localhost:8788"
         : `https://${stageHost(stage, "adapter")}`,
       EDITOR_URL: isAlchemyDev ? "http://localhost:5173" : `https://${stageHost(stage, "cms")}`,
+      WEB_URL: stageWebUrl(stage, isAlchemyDev, "http://localhost:3000", stageWebHost),
     },
   });
 
@@ -162,6 +182,7 @@ export const api = Effect.gen(function* () {
       EDITOR_URL: isAlchemyDev
         ? "http://localhost:5174"
         : `https://${sophieStageHost(stage, "cms")}`,
+      WEB_URL: stageWebUrl(stage, isAlchemyDev, "http://localhost:3001", sophieWebHost),
     },
   });
 
