@@ -223,10 +223,37 @@ void syncClock() {
   Serial.printf("[frame] clock synced: %s\n", stamp);
 }
 
+// Percent-encode a path segment so a multi-word location ("New York") is a
+// valid URL. Unreserved characters pass through; everything else becomes %XX.
+void encodePathSegment(const char *value, char *output, size_t capacity) {
+  static constexpr char kHex[] = "0123456789ABCDEF";
+  size_t written = 0;
+  for (const char *cursor = value; *cursor != '\0'; ++cursor) {
+    const unsigned char character = static_cast<unsigned char>(*cursor);
+    const bool isUnreserved =
+        (character >= 'A' && character <= 'Z') ||
+        (character >= 'a' && character <= 'z') ||
+        (character >= '0' && character <= '9') ||
+        character == '-' || character == '.' || character == '_' || character == '~';
+    if (isUnreserved) {
+      if (written + 1 >= capacity) break;
+      output[written++] = static_cast<char>(character);
+      continue;
+    }
+    if (written + 3 >= capacity) break;
+    output[written++] = '%';
+    output[written++] = kHex[character >> 4];
+    output[written++] = kHex[character & 0x0F];
+  }
+  output[written] = '\0';
+}
+
 void fetchWeather() {
+  char encodedLocation[96];
+  encodePathSegment(WEATHER_LOCATION, encodedLocation, sizeof(encodedLocation));
   char url[kUrlBytes];
   const int written =
-      snprintf(url, sizeof(url), "%s/weather/%s", ADAPTER_BASE_URL, WEATHER_LOCATION);
+      snprintf(url, sizeof(url), "%s/weather/%s", ADAPTER_BASE_URL, encodedLocation);
   if (written < 0 || static_cast<size_t>(written) >= sizeof(url)) return;
 
   HTTPClient http;
@@ -288,8 +315,9 @@ bool drawCurrent() {
   if (!fetchFrame(frameUrl, framePixels, kFrameBytes)) return false;
   Serial.printf("[frame] drew %s\n", imageUrl);
 
-  // pushImage() writes memory as-is when setSwapBytes(false), which is what the
-  // panel wants for big-endian frame bytes.
+  // pushPixels() writes the buffer bytes unchanged when swapping is off, which
+  // is exactly the MSB-first order the ST7789 expects. Turning swapping on
+  // would reverse every pixel.
   display.pushImage(0, 0, kWidth, kHeight, framePixels);
   drawOverlay();
   return true;
