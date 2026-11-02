@@ -6,12 +6,11 @@ import { HttpStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import type { CmsD1Binding, CmsR2Binding, CloudflareEnv } from "@tom/utils/config";
 import { readCloudflareEnv, tenantFromValue } from "@tom/utils/config";
-import { parseCommaSeparated } from "@tom/schemas/env";
 import { hasSessionCredential } from "@tom/utils/session";
 import { workerCache } from "@tom/utils/http";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/worker";
 import { toOpenApiSchema } from "../openapi";
-import { isAdminEmail } from "@tom/utils/auth";
+import { isAdminEmail, parseAdminEmails } from "@tom/utils/auth";
 import { createAuthFromEnv, requireSession } from "../auth/operations";
 import type { MediaUpload } from "./operations";
 
@@ -284,7 +283,7 @@ export const requireAuthor = (request: Request): Effect.Effect<AuthorContext, Cm
     const email = Option.filter(Option.fromNullishOr(author.user.email), Schema.is(Schema.String));
     if (
       Option.isNone(email) ||
-      !isAdminEmail(email.value, parseCommaSeparated(env.CMS_ADMIN_EMAILS))
+      !isAdminEmail(email.value, parseAdminEmails(env.CMS_ADMIN_EMAILS))
     ) {
       return yield* new CmsError({
         message: "Forbidden",

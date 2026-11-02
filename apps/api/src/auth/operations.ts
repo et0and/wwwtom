@@ -6,7 +6,7 @@ import { HttpStatus } from "@tom/constants/http";
 import { normalizeOptionalSecret } from "@tom/schemas/secrets";
 import { parseCommaSeparated } from "@tom/schemas/env";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
-import { isAdminEmail } from "@tom/utils/auth";
+import { NormalizedEntry, isAdminEmail, toAdminEmailSet } from "@tom/utils/auth";
 import { tenantFromValue, type CloudflareEnv, type CmsD1Binding } from "@tom/utils/config";
 
 type AuthDatabase = CmsD1Binding | ReturnType<typeof memoryAdapter>;
@@ -33,7 +33,7 @@ type CreateAuthOptions = {
  * is the adapter origin so OAuth redirects stay on one domain.
  */
 export const createAuth = (options: CreateAuthOptions) => {
-  const adminEmails = options.adminEmails;
+  const adminEmails = toAdminEmailSet(options.adminEmails);
   return betterAuth({
     appName: "tom-cms",
     baseURL: options.baseURL,
@@ -86,18 +86,10 @@ const CmsAuthProviderSchema = Schema.Literals(["github", "google"]);
 
 type CmsAuthProvider = typeof CmsAuthProviderSchema.Type;
 
-/** One allowlist entry, normalised: trimmed and lowercased. */
-const ProviderEntry = Schema.String.pipe(
-  Schema.decode({
-    decode: SchemaGetter.transform((entry: string) => entry.trim().toLowerCase()),
-    encode: SchemaGetter.transform((entry: string) => entry.trim()),
-  }),
-);
-
 /** The allowlist itself: unset or blank means "not configured". */
 const ProviderAllowlist = Schema.Trim.pipe(
   Schema.check(Schema.isMinLength(1)),
-  Schema.decodeTo(Schema.Array(ProviderEntry), {
+  Schema.decodeTo(Schema.Array(NormalizedEntry), {
     decode: SchemaGetter.transform((allowlist: string) => allowlist.split(",")),
     encode: SchemaGetter.transform((entries: ReadonlyArray<string>) => entries.join(",")),
   }),
@@ -120,10 +112,7 @@ export const parseAuthProviders = (
     Schema.decodeOption(Schema.UndefinedOr(ProviderAllowlist))(value),
   );
   if (entries === undefined) return undefined;
-  return Array.filter(
-    Array.map(entries, (entry) => Option.getOrUndefined(Schema.decodeOption(ProviderEntry)(entry))),
-    Schema.is(CmsAuthProviderSchema),
-  );
+  return Array.filter(entries, Schema.is(CmsAuthProviderSchema));
 };
 
 /** Provider allowlist check. Unset allowlists keep legacy behavior. */

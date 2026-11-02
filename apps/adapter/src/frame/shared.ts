@@ -1,9 +1,8 @@
 import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
-import { parseCommaSeparated } from "@tom/schemas/env";
 import { defaultFrameState, FrameStateSchema, type FrameState } from "@tom/schemas/frame-state";
-import { isAdminEmail } from "@tom/utils/auth";
+import { isAdminEmail, parseAdminEmails } from "@tom/utils/auth";
 import { readCloudflareEnv, type ResolvedCloudflareEnv } from "@tom/utils/config";
 import { getRequestEnv } from "@tom/utils/worker";
 import { forwardHeaders } from "../auth/forward";
@@ -149,7 +148,7 @@ export const requireAdminSession = (
         message: "Unauthorized",
       });
     }
-    const allowlist = parseCommaSeparated(env.CMS_ADMIN_EMAILS);
+    const allowlist = parseAdminEmails(env.CMS_ADMIN_EMAILS);
     if (!isAdminEmail(session.user.email, allowlist)) {
       return yield* new AdapterError({
         status: HttpStatus.Forbidden,

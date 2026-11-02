@@ -1,12 +1,31 @@
-/**
- * Admin allowlist check (case-insensitive, whitespace-tolerant).
- *
- * Normalises with a short-circuiting `some` rather than building a normalised
- * copy of the allowlist: this runs on every authenticated CMS request, and the
- * allowlist is only a handful of entries but the copy is pure waste.
- */
-export const isAdminEmail = (email: string, allowlist: ReadonlyArray<string>): boolean => {
-  const candidate = email.trim().toLowerCase();
-  if (candidate.length === 0) return false;
-  return allowlist.some((entry) => entry.trim().toLowerCase() === candidate);
+import { Array, Schema, SchemaGetter } from "effect";
+import { parseCommaSeparated } from "@tom/schemas/env";
+
+/** Trim and lowercase an allowlist entry once, at the config boundary. */
+export const NormalizedEntry = Schema.String.pipe(
+  Schema.decodeTo(Schema.String, {
+    decode: SchemaGetter.transform((entry: string) => entry.trim().toLowerCase()),
+    encode: SchemaGetter.transform((entry: string) => entry.trim()),
+  }),
+);
+
+const normalizeEntry = (entry: string): string => Schema.decodeUnknownSync(NormalizedEntry)(entry);
+
+/** Normalize allowlist entries and drop blanks. */
+export const toAdminEmailSet = (emails: ReadonlyArray<string>): ReadonlySet<string> =>
+  new Set(
+    Array.filter(
+      Array.map(emails, (email) => normalizeEntry(email)),
+      (email) => email !== "",
+    ),
+  );
+
+/** Parse the comma-separated CMS_ADMIN_EMAILS env value. */
+export const parseAdminEmails = (value: string | undefined): ReadonlySet<string> =>
+  toAdminEmailSet(parseCommaSeparated(value));
+
+/** Case-insensitive, whitespace-tolerant allowlist lookup. */
+export const isAdminEmail = (email: string, allowlist: ReadonlySet<string>): boolean => {
+  const normalized = normalizeEntry(email);
+  return normalized !== "" && allowlist.has(normalized);
 };
