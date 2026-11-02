@@ -1,3 +1,20 @@
+# [4.10.0](https://github.com/et0and/wwwtom/compare/v4.9.1...v4.10.0) (2026-11-02)
+
+
+### Bug Fixes
+
+* **adapter:** allow the current are.na image CDN host ([d306d09](https://github.com/et0and/wwwtom/commit/d306d09a6c7a6aea76f0263327008ed7cd24e356))
+* **frame:** percent-encode the weather location ([9bdf9a5](https://github.com/et0and/wwwtom/commit/9bdf9a5a13e2ea2ca527137278624678f785529d))
+* **frame:** refresh the clock overlay every minute ([26b1168](https://github.com/et0and/wwwtom/commit/26b1168a31c1ba7b4d286a7300549b79c45a3fc0))
+* **frame:** sync NZST/NZDT with configTzTime ([10fa024](https://github.com/et0and/wwwtom/commit/10fa024159a31ac14b8118b95f853f23cae2c163))
+
+
+### Features
+
+* add are.na desk frame with weather overlay ([cbcccd5](https://github.com/et0and/wwwtom/commit/cbcccd5bc1be40c06ff83c2df58e9e8453ad6b12))
+* **frame:** add button-switchable display faces ([2aab86c](https://github.com/et0and/wwwtom/commit/2aab86cc11f4e1d50e8cdfe028ea420d404c5228))
+* **frame:** paginate the deck through large channels ([12947d1](https://github.com/et0and/wwwtom/commit/12947d1cd884ed9cdf158efeff80a8c1c1562412))
+
 ## [4.9.1](https://github.com/et0and/wwwtom/compare/v4.9.0...v4.9.1) (2026-10-26)
 
 
