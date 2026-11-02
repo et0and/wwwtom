@@ -21,7 +21,6 @@ export function FrameSignIn() {
         )}
       </Show>
       <Button
-        type="button"
         variant="primary"
         loading={signInMutation.isPending}
         disabled={signInMutation.isPending}

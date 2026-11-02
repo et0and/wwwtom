@@ -111,7 +111,6 @@ export const HistoryPanel = (props: {
           <For each={revisions()}>
             {(meta) => (
               <Button
-                type="button"
                 size="sm"
                 variant={selected()?.meta.id === meta.id ? "secondary" : "ghost"}
                 style={[layoutStyles.fullWidth, layoutStyles.justifyBetween]}
@@ -136,7 +135,6 @@ export const HistoryPanel = (props: {
             </p>
             <div class="preview" innerHTML={current().html} />
             <Button
-              type="button"
               size="sm"
               variant="primary"
               loading={restoring()}

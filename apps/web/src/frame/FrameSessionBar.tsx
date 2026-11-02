@@ -28,7 +28,6 @@ export function FrameSessionBar(props: FrameSessionBarProps) {
           Signed in as {props.email}
         </Text>
         <Button
-          type="button"
           variant="secondary"
           size="sm"
           loading={signOutMutation.isPending}

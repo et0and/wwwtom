@@ -66,7 +66,6 @@ export const CategoriesView = () => {
                     {category.title} · {category.slug}
                   </span>
                   <Button
-                    type="button"
                     size="sm"
                     variant="secondary-destructive"
                     aria-label={`Delete category ${category.slug}`}
@@ -98,7 +97,6 @@ export const CategoriesView = () => {
               />
             </label>
             <Button
-              type="button"
               size="sm"
               variant="secondary"
               style={layoutStyles.justifySelfStart}
