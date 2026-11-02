@@ -14,6 +14,7 @@ import {
   type ArenaEntry,
   type ArenaEntryList,
   type ArenaEntrySummary,
+  type ArenaBlockId,
 } from "@tom/schemas/arena-content";
 
 /**
@@ -201,6 +202,44 @@ const allBlocks = (
     if (!result.hasMore) return result.blocks;
     const rest = yield* allBlocks(client, channelSlug, result.nextPage);
     return [...result.blocks, ...rest];
+  });
+
+/** One image-bearing block, ready for a surface that draws are.na itself. */
+export interface ArenaFrameImage {
+  readonly id: ArenaBlockId;
+  readonly title: string | null;
+  readonly source: string;
+}
+
+/**
+ * The image blocks in a channel, in display order. Text, channel and
+ * image-less link blocks are dropped: the frame has nothing to draw for them,
+ * and keeping the list pure means the device never handles a dead entry.
+ */
+export const listFrameImages = (
+  client: ArenaContentClient,
+  channelSlug: string,
+  limit: number,
+): Effect.Effect<ReadonlyArray<ArenaFrameImage>, HttpError> =>
+  Effect.gen(function* () {
+    const response = yield* client.channel(channelSlug).contents({
+      ...CONTENT_SORT,
+      page: 1,
+      per: Math.min(Math.max(limit, 1), MAX_PER_PAGE),
+    });
+    const contents = yield* decodeContents(response);
+    const blocks = yield* decodeEach(
+      ArenaContentBlockSchema,
+      contents.data,
+      "Skipping are.na block that does not match the content contract",
+    );
+    return blocks.flatMap((block) => {
+      if (!("image" in block)) return [];
+      const image = block.image;
+      const source = image?.medium?.src ?? image?.large?.src ?? image?.src;
+      if (source === undefined) return [];
+      return [{ id: block.id, title: block.title ?? null, source }];
+    });
   });
 
 /** A channel missing from the master channel is a draft, so it never renders. */

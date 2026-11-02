@@ -1,0 +1,20 @@
+// Copy to config.h and fill in your network. config.h is gitignored.
+#define WIFI_SSID "your-network"
+#define WIFI_PASSWORD "your-password"
+
+// Adapter that serves /arena/frame. Production: https://adapter.tom.so
+// Local: http://<your-computer>.local:8788 (the sketch handles plain HTTP)
+#define ADAPTER_BASE_URL "https://adapter.tom.so"
+
+// Any are.na channel: a worktable, a work, a moodboard.
+#define CHANNEL_SLUG "tom-s-worktable"
+
+// 1 or 3. Flip to 3 if the picture is upside down for the way you stand it.
+#define FRAME_ROTATION 1
+
+// Seconds each image stays up. Lower it to 30 while testing.
+#define FRAME_CYCLE_SECONDS 600
+
+// POSIX TZ string for Pacific/Auckland.
+#define TIMEZONE "NZST-12NZDT,M9.5.0,M4.1.0/3"
+#define WEATHER_LOCATION "Wellington"
