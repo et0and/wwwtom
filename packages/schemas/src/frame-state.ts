@@ -1,7 +1,8 @@
 import { Option, Schema } from "effect";
+import { ArenaSlug } from "./arena-content";
 
 /** Channel the frame falls back to until the control UI sets another one. */
-export const FRAME_STATE_DEFAULT_CHANNEL = "imaginary-museum";
+export const FRAME_STATE_DEFAULT_CHANNEL = Schema.decodeUnknownSync(ArenaSlug)("imaginary-museum");
 
 /**
  * What the desk frame should draw. `video` is reserved for the MJPEG mode;
@@ -25,15 +26,9 @@ const isHttpUrl = Schema.makeFilter((value: string) =>
  */
 export const FrameStreamUrlSchema = Schema.String.pipe(Schema.check(isHttpUrl));
 
-const isChannelSlug = Schema.makeFilter((value: string) =>
-  /^[A-Za-z0-9_-]{1,64}$/.test(value) ? true : "must be a channel slug",
-);
-
-const FrameChannelSchema = Schema.Trim.pipe(Schema.check(isChannelSlug));
-
 export const FrameStateSchema = Schema.Struct({
   mode: FrameModeSchema,
-  channel: FrameChannelSchema,
+  channel: ArenaSlug,
   streamUrl: Schema.NullOr(FrameStreamUrlSchema),
   updatedAt: Schema.String,
 });
@@ -42,7 +37,7 @@ export type FrameState = typeof FrameStateSchema.Type;
 /** Fields the control UI may change; the adapter stamps `updatedAt`. */
 export const FrameStateUpdateSchema = Schema.Struct({
   mode: FrameModeSchema,
-  channel: FrameChannelSchema,
+  channel: ArenaSlug,
   streamUrl: Schema.NullOr(FrameStreamUrlSchema),
 });
 export type FrameStateUpdate = typeof FrameStateUpdateSchema.Type;
