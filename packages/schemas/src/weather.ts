@@ -1,8 +1,9 @@
 import { Schema, SchemaGetter } from "effect";
 
 /**
- * The panel font has printable ASCII only. wttr.in returns UTF-8 with a degree
- * sign, so the wire contract is the normalised ASCII form, not the raw text.
+ * The panel font has printable ASCII only. Upstreams may return UTF-8 (wttr.in
+ * includes a degree sign), so the wire contract is the normalised ASCII form,
+ * not the raw text.
  */
 export const WeatherTextSchema = Schema.String.pipe(
   Schema.decodeTo(Schema.String, {
@@ -17,7 +18,7 @@ export const WeatherTextSchema = Schema.String.pipe(
   }),
 );
 
-/** One `wttr.in?format=%C|%t` reading, split and normalised for the panel. */
+/** One current-conditions reading, split and normalised for the panel. */
 export const WeatherReadingSchema = Schema.Struct({
   condition: WeatherTextSchema,
   temperature: WeatherTextSchema,
@@ -31,9 +32,9 @@ export const WeatherReadingSchema = Schema.Struct({
 export type WeatherReading = typeof WeatherReadingSchema.Type;
 
 /**
- * Current conditions from wttr.in, reduced to ASCII because the frame's small
- * panel font has no glyphs beyond printable ASCII. `observedAt` is when the
- * adapter fetched it, not the upstream's own timestamp.
+ * Current conditions from wttr.in or Open-Meteo, reduced to ASCII because the
+ * frame's small panel font has no glyphs beyond printable ASCII. `observedAt`
+ * is when the adapter fetched it, not the upstream's own timestamp.
  */
 export const WeatherSchema = Schema.Struct({
   location: Schema.String,
