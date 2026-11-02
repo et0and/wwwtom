@@ -1,3 +1,10 @@
+## [4.11.1](https://github.com/et0and/wwwtom/compare/v4.11.0...v4.11.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **frame:** defer control content until hydration ([f3817c9](https://github.com/et0and/wwwtom/commit/f3817c96f6eaec75bd28a74cff83e81f9708dc19))
+
 # [4.11.0](https://github.com/et0and/wwwtom/compare/v4.10.3...v4.11.0) (2026-11-02)
 
 
