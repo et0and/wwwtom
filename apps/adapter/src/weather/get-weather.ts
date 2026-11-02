@@ -65,7 +65,7 @@ const fetchJson = <A, I>(
         status: HttpStatus.BadGateway,
       });
     }
-    const json = yield* Effect.tryPromise({
+    const json: unknown = yield* Effect.tryPromise({
       try: () => response.json(),
       catch: (cause) =>
         new HttpError({
