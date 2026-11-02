@@ -1,3 +1,11 @@
+## [4.10.2](https://github.com/et0and/wwwtom/compare/v4.10.1...v4.10.2) (2026-11-02)
+
+
+### Bug Fixes
+
+* **adapter:** add Open-Meteo weather fallback ([6d79c4f](https://github.com/et0and/wwwtom/commit/6d79c4faa14754b9ff94ca9278fd3faa67582294))
+* **adapter:** type the weather JSON boundary ([089eb70](https://github.com/et0and/wwwtom/commit/089eb70cafa83b45432ae5513b967ec850d66c11))
+
 ## [4.10.1](https://github.com/et0and/wwwtom/compare/v4.10.0...v4.10.1) (2026-11-02)
 
 
