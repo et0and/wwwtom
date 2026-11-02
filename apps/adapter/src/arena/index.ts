@@ -5,6 +5,8 @@ import { contentPostsRoute } from "./list-content-arena-posts";
 import { contentWorkRoute } from "./get-content-arena-work";
 import { contentWorksRoute } from "./list-content-arena-works";
 import { getBlockRoute } from "./get-arena-block";
+import { getArenaFrameRoute } from "./get-arena-frame";
+import { getArenaFrameImageRoute } from "./get-arena-frame-image";
 import { getBlockChannelsRoute } from "./list-arena-block-channels";
 import { getBlockCommentsRoute } from "./list-arena-block-comments";
 import { getChannelRoute } from "./get-arena-channel";
@@ -27,6 +29,8 @@ export const arenaIntegration = new Elysia({ name: "arena" })
   .use(getUserFollowingRoute)
   .use(getUserFollowersRoute)
   .use(getBlockRoute)
+  .use(getArenaFrameRoute)
+  .use(getArenaFrameImageRoute)
   .use(getBlockChannelsRoute)
   .use(getBlockCommentsRoute)
   .use(searchRoute)
