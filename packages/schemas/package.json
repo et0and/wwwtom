@@ -6,6 +6,7 @@
   "exports": {
     "./arena": "./src/arena.ts",
     "./arena-content": "./src/arena-content.ts",
+    "./arena-frame": "./src/arena-frame.ts",
     "./cms": "./src/cms.ts",
     "./error": "./src/error.ts",
     "./guestbook": "./src/guestbook.ts",
@@ -17,6 +18,7 @@
     "./secrets": "./src/secrets.ts",
     "./telegram": "./src/telegram.ts",
     "./timestamp": "./src/timestamp.ts",
+    "./weather": "./src/weather.ts",
     "./env": "./src/env.ts"
   },
   "scripts": {
