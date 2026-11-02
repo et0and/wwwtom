@@ -2,7 +2,7 @@ import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { defaultFrameState, FrameStateSchema, type FrameState } from "@tom/schemas/frame-state";
-import { isAdminEmail, parseAdminEmails } from "@tom/utils/auth";
+import { isAdminEmail, parseAdminEmails, timingSafeEqual } from "@tom/utils/auth";
 import { readCloudflareEnv, type ResolvedCloudflareEnv } from "@tom/utils/config";
 import { getRequestEnv } from "@tom/utils/worker";
 import { forwardHeaders } from "../auth/forward";
@@ -86,7 +86,9 @@ export const requireDeviceToken = (
 ): Effect.Effect<void, AdapterError> => {
   const expected = env.FRAME_DEVICE_TOKEN;
   const header = request.headers.get("authorization");
-  if (expected === undefined || expected === "" || header !== `Bearer ${expected}`) {
+  const prefix = "Bearer ";
+  const token = header?.startsWith(prefix) === true ? header.slice(prefix.length) : "";
+  if (expected === undefined || expected === "" || !timingSafeEqual(token, expected)) {
     return Effect.fail(
       new AdapterError({ status: HttpStatus.Unauthorized, message: "Unauthorized" }),
     );

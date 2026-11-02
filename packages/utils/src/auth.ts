@@ -29,3 +29,13 @@ export const isAdminEmail = (email: string, allowlist: ReadonlySet<string>): boo
   const normalized = normalizeEntry(email);
   return normalized !== "" && allowlist.has(normalized);
 };
+
+/** Constant-time comparison so token timing cannot leak the shared secret. */
+export const timingSafeEqual = (a: string, b: string): boolean => {
+  if (a.length !== b.length) return false;
+  const diff = globalThis.Array.from(
+    a,
+    (char, index) => char.charCodeAt(0) ^ b.charCodeAt(index),
+  ).reduce((acc, code) => acc | code, 0);
+  return diff === 0;
+};

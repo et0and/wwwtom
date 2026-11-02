@@ -54,7 +54,7 @@ describe("GET /frame/state", () => {
     expect(response.headers.get("cache-control")).toBe("no-store");
     expect(await response.json()).toEqual({
       mode: "deck",
-      channel: "imaginary-museum",
+      channel: null,
       streamUrl: null,
       updatedAt: "1970-01-01T00:00:00.000Z",
     });

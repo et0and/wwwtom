@@ -49,17 +49,20 @@ If it does not appear, install the WCH CH9102 driver.
 - The deck is 20 blocks per page. When the page is exhausted the firmware asks
   for the next page and wraps to page 1 after the last one.
 - **Tap GPIO0** cycles the face forward; **tap GPIO35** cycles it backward.
+  This works in deck and clock modes.
 - **Hold GPIO0** (700ms) shows the next image; **hold GPIO35** the previous one.
-  GPIO0 held at reset enters the bootloader, so press after boot.
+  Holds are deck-only; in clock mode a hold is ignored. GPIO0 held at reset
+  enters the bootloader, so press after boot.
 - A failed fetch shows a message and retries after 30 seconds.
 - Four faces, all of them showing the clock:
   - `bar` — 30px top bar: time and temperature, date and condition below.
   - `minimal` — small clock top-left, temperature top-right, no bar.
   - `big` — clock only: large time, date and condition, image hidden.
   - `line` — full image with a 20px line at the bottom.
-- The clock syncs once per boot over NTP (`time.cloudflare.com`,
-  `pool.ntp.org`) with `configTzTime` and the POSIX `TIMEZONE` rule, so it
-  follows NZST/NZDT without a fixed offset.
+- The clock syncs over NTP (`time.cloudflare.com`, `pool.ntp.org`) with
+  `configTzTime` and the POSIX `TIMEZONE` rule, so it follows NZST/NZDT
+  without a fixed offset. A failed sync, and weather refresh, are retried
+  while the frame sits still, including in clock mode.
 - Weather comes from the adapter's `/weather/:location`, which uses wttr.in
   with an Open-Meteo fallback and caches the result for 15 minutes. The device
   refreshes it every 15 minutes, and falls back to clock and date only when
@@ -71,8 +74,12 @@ The adapter stores one state document (`mode`, `channel`, `streamUrl`) in KV.
 `https://tom.so/frame` edits it after GitHub sign-in with the existing admin
 allowlist. The board reads it with `FRAME_DEVICE_TOKEN`.
 
+The stored channel starts as `null`. Until the web UI saves one, the board
+keeps using its configured `CHANNEL_SLUG`; a saved channel overrides it.
+
 - `deck` — the are.na frame (default).
-- `clock` — the current face on a black background, still ticking.
+- `clock` — the current face on a black background, still ticking. Clock and
+  weather keep refreshing, and the face buttons keep working.
 - `video` — reserved for the MJPEG stream. The current firmware shows a
   placeholder and keeps polling; the decoder lands next.
 - `off` — black screen and backlight off.

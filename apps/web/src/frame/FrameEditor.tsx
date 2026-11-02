@@ -17,7 +17,7 @@ export interface FrameEditorProps {
 export function FrameEditor(props: FrameEditorProps) {
   const initial = untrack(() => props.frame);
   const [mode, setMode] = createSignal<FrameMode>(initial.mode);
-  const [channel, setChannel] = createSignal<string>(initial.channel);
+  const [channel, setChannel] = createSignal<string>(initial.channel ?? "");
   const [streamUrl, setStreamUrl] = createSignal(initial.streamUrl ?? "");
   const [validationError, setValidationError] = createSignal<string | null>(null);
   const [notice, setNotice] = createSignal<string | null>(null);
@@ -26,7 +26,7 @@ export function FrameEditor(props: FrameEditorProps) {
     mutationFn: saveFrameState,
     onSuccess: (saved) => {
       setMode(saved.mode);
-      setChannel(saved.channel);
+      setChannel(saved.channel ?? "");
       setStreamUrl(saved.streamUrl ?? "");
       queryClient.setQueryData(FRAME_STATE_QUERY_KEY, saved);
       setNotice("The board polls every 15 seconds.");

@@ -1,9 +1,6 @@
 import { Option, Schema } from "effect";
 import { ArenaSlug } from "./arena-content";
 
-/** Channel the frame falls back to until the control UI sets another one. */
-export const FRAME_STATE_DEFAULT_CHANNEL = Schema.decodeUnknownSync(ArenaSlug)("imaginary-museum");
-
 /**
  * What the desk frame should draw. `video` is reserved for the MJPEG mode;
  * the firmware can acknowledge it before the decoder lands.
@@ -28,7 +25,7 @@ export const FrameStreamUrlSchema = Schema.String.pipe(Schema.check(isHttpUrl));
 
 export const FrameStateSchema = Schema.Struct({
   mode: FrameModeSchema,
-  channel: ArenaSlug,
+  channel: Schema.NullOr(ArenaSlug),
   streamUrl: Schema.NullOr(FrameStreamUrlSchema),
   updatedAt: Schema.String,
 });
@@ -44,7 +41,7 @@ export type FrameStateUpdate = typeof FrameStateUpdateSchema.Type;
 
 export const defaultFrameState = (updatedAt: string): FrameState => ({
   mode: "deck",
-  channel: FRAME_STATE_DEFAULT_CHANNEL,
+  channel: null,
   streamUrl: null,
   updatedAt,
 });

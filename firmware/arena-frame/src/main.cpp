@@ -38,6 +38,8 @@ constexpr uint32_t kWeatherRefreshMs = 15UL * 60UL * 1000UL;
 constexpr int kOverlayHeight = 30;
 constexpr uint32_t kHoldMs = 700;
 constexpr uint32_t kStatePollMs = 15UL * 1000UL;
+constexpr uint32_t kMaintenanceMs = 60UL * 1000UL;
+constexpr uint32_t kWeatherRetryMs = 5UL * 60UL * 1000UL;
 constexpr size_t kStateBytes = 512;
 constexpr size_t kChannelBytes = 64;
 constexpr uint8_t kFaceCount = 4;
@@ -76,6 +78,8 @@ char stateChannel[kChannelBytes] = CHANNEL_SLUG;
 char stateStreamUrl[kUrlBytes] = "";
 FrameMode mode = FrameMode::Deck;
 uint32_t lastStatePoll = 0;
+uint32_t lastMaintenance = 0;
+uint32_t weatherAttemptedAt = 0;
 bool stateDirty = false;
 
 void showMessage(const char *message) {
@@ -309,15 +313,16 @@ bool fetchState() {
   }
 
   const char *nextMode = doc["mode"] | "deck";
-  const char *nextChannel = doc["channel"] | CHANNEL_SLUG;
+  const char *nextChannel = doc["channel"] | "";
   const char *nextStream = doc["streamUrl"] | "";
-  if (strlen(nextChannel) >= sizeof(stateChannel)) {
+  const bool hasChannel = nextChannel[0] != '\0';
+  if (hasChannel && strlen(nextChannel) >= sizeof(stateChannel)) {
     Serial.println("[frame] state channel too long");
     return false;
   }
 
   const FrameMode nextModeValue = modeFromString(nextMode);
-  const bool channelChanged = strcmp(nextChannel, stateChannel) != 0;
+  const bool channelChanged = hasChannel && strcmp(nextChannel, stateChannel) != 0;
   const bool modeChanged = nextModeValue != mode;
   if (channelChanged) {
     snprintf(stateChannel, sizeof(stateChannel), "%s", nextChannel);
@@ -479,6 +484,20 @@ void fetchWeather() {
   Serial.printf("[frame] weather %s %s\n", weatherCondition, weatherTemperature);
 }
 
+// Clock and weather are not tied to the image cycle. Retry failed syncs and
+// refresh weather while the frame sits in clock mode, too.
+void maintainIfDue() {
+  if (lastMaintenance != 0 && millis() - lastMaintenance < kMaintenanceMs) return;
+  lastMaintenance = millis();
+  if (!clockSynced) syncClock();
+  if (weatherFetchedAt == 0 || millis() - weatherFetchedAt > kWeatherRefreshMs) {
+    if (weatherAttemptedAt == 0 || millis() - weatherAttemptedAt >= kWeatherRetryMs) {
+      weatherAttemptedAt = millis();
+      fetchWeather();
+    }
+  }
+}
+
 bool drawCurrent() {
   const int deckWritten = snprintf(
       deckUrl,
@@ -558,7 +577,34 @@ void redisplay() {
 void changeFace(int delta) {
   face = static_cast<uint8_t>((face + kFaceCount + delta) % kFaceCount);
   Serial.printf("[frame] face %u (%s)\n", static_cast<unsigned>(face), kFaceNames[face]);
-  redisplay();
+  if (mode == FrameMode::Clock) {
+    display.fillScreen(TFT_BLACK);
+    drawFace();
+  } else {
+    redisplay();
+  }
+}
+
+// Clock mode keeps the face buttons live; hold-to-change-image is deck-only.
+void handleClockButtons() {
+  if (digitalRead(kButtonNext) == LOW) {
+    const uint32_t pressedAt = millis();
+    while (digitalRead(kButtonNext) == LOW) {
+      esp_task_wdt_reset();
+      delay(20);
+    }
+    if (millis() - pressedAt < kHoldMs) changeFace(1);
+    return;
+  }
+
+  if (digitalRead(kButtonPrev) == LOW) {
+    const uint32_t pressedAt = millis();
+    while (digitalRead(kButtonPrev) == LOW) {
+      esp_task_wdt_reset();
+      delay(20);
+    }
+    if (millis() - pressedAt < kHoldMs) changeFace(-1);
+  }
 }
 
 void waitForNext() {
@@ -567,6 +613,7 @@ void waitForNext() {
   while (millis() - start < kCycleMs) {
     esp_task_wdt_reset();
     pollState();
+    maintainIfDue();
     if (stateDirty) return;
     if (WiFi.status() != WL_CONNECTED) return;
 
@@ -612,7 +659,11 @@ void waitForModeChange() {
     pollState();
     if (stateDirty) return;
     if (WiFi.status() != WL_CONNECTED) return;
-    if (mode == FrameMode::Clock) refreshOverlayIfNeeded();
+    if (mode == FrameMode::Clock) {
+      maintainIfDue();
+      handleClockButtons();
+      refreshOverlayIfNeeded();
+    }
     delay(50);
   }
 }
@@ -674,10 +725,7 @@ void loop() {
     return;
   }
 
-  if (!clockSynced) syncClock();
-  if (weatherFetchedAt == 0 || millis() - weatherFetchedAt > kWeatherRefreshMs) {
-    fetchWeather();
-  }
+  maintainIfDue();
 
   if (mode == FrameMode::Clock) {
     display.fillScreen(TFT_BLACK);
