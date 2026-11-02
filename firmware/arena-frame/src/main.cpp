@@ -48,6 +48,8 @@ char frameUrl[kUrlBytes];
 
 size_t cursor = 0;
 size_t blockCount = 0;
+size_t page = 1;
+bool hasMore = false;
 char weatherCondition[64] = "";
 char weatherTemperature[16] = "";
 uint32_t weatherFetchedAt = 0;
@@ -279,7 +281,12 @@ void fetchWeather() {
 
 bool drawCurrent() {
   const int deckWritten = snprintf(
-      deckUrl, sizeof(deckUrl), "%s/arena/frame/%s", ADAPTER_BASE_URL, CHANNEL_SLUG);
+      deckUrl,
+      sizeof(deckUrl),
+      "%s/arena/frame/%s?page=%u",
+      ADAPTER_BASE_URL,
+      CHANNEL_SLUG,
+      static_cast<unsigned>(page));
   if (deckWritten < 0 || static_cast<size_t>(deckWritten) >= sizeof(deckUrl)) return false;
 
   size_t deckLength = 0;
@@ -293,6 +300,7 @@ bool drawCurrent() {
 
   JsonArray blocks = doc["blocks"].as<JsonArray>();
   blockCount = blocks.size();
+  hasMore = doc["hasMore"] | false;
   if (blockCount == 0) {
     Serial.println("[frame] deck has no images");
     return false;
@@ -305,8 +313,10 @@ bool drawCurrent() {
     return false;
   }
   Serial.printf(
-      "[frame] deck=%u bytes blocks=%u cursor=%u\n",
+      "[frame] deck=%u bytes page=%u hasMore=%d blocks=%u cursor=%u\n",
       static_cast<unsigned>(deckLength),
+      static_cast<unsigned>(page),
+      hasMore ? 1 : 0,
       static_cast<unsigned>(blockCount),
       static_cast<unsigned>(cursor));
 
@@ -323,13 +333,23 @@ bool drawCurrent() {
   return true;
 }
 
+// Advance within the page; at the end, move to the next page, wrapping to
+// page 1 after the last one.
+void advanceFrame() {
+  if (blockCount == 0) return;
+  cursor++;
+  if (cursor < blockCount) return;
+  cursor = 0;
+  page = hasMore ? page + 1 : 1;
+}
+
 void waitForNext() {
   if (blockCount == 0) return;
   const uint32_t start = millis();
   while (millis() - start < kCycleMs) {
     esp_task_wdt_reset();
     if (digitalRead(kButtonNext) == LOW) {
-      cursor = (cursor + 1) % blockCount;
+      advanceFrame();
       while (digitalRead(kButtonNext) == LOW) {
         esp_task_wdt_reset();
         delay(50);
@@ -346,7 +366,7 @@ void waitForNext() {
     }
     delay(50);
   }
-  cursor = (cursor + 1) % blockCount;
+  advanceFrame();
 }
 
 }  // namespace

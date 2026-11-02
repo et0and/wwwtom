@@ -42,6 +42,8 @@ If it does not appear, install the WCH CH9102 driver.
 
 - Fetches the deck once per cycle, draws the current block, then turns WiFi off.
 - Holds each image for `FRAME_CYCLE_SECONDS` (default 600, so 10 minutes).
+- The deck is 20 blocks per page. When the page is exhausted the firmware asks
+  for the next page and wraps to page 1 after the last one.
 - **GPIO0 (BOOT)** shows the next image. Press it after boot; held at reset it
   enters the bootloader instead.
 - **GPIO35** shows the previous image.
@@ -84,7 +86,7 @@ the way the frame sits. Both give 240×135.
 
 - TLS uses `setInsecure()`. That is fine for public are.na images, but it does
   not verify the adapter. Pin the Cloudflare CA before this leaves your desk.
-- Only the first 20 image blocks of a channel are in the deck.
+- The deck reads 20 blocks per page. Large channels are traversed page by page.
 - No OTA yet: flashing means a cable.
 - No on-device cache: every cycle is two HTTPS requests. A 16MB flash has room
   for a frame cache later.

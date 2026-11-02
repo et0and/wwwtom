@@ -23,12 +23,14 @@ export const ArenaFrameBlockSchema = Schema.Struct({
 export type ArenaFrameBlock = typeof ArenaFrameBlockSchema.Type;
 
 /**
- * The device's playlist: every image-bearing block in a channel, in display
- * order. The firmware keeps this list and advances through it locally, so one
- * request per wake-up is enough.
+ * One page of the device's playlist: image-bearing blocks in display order,
+ * plus whether another page follows. The firmware advances through the page
+ * locally and fetches the next one when it runs out.
  */
 export const ArenaFrameSchema = Schema.Struct({
   channel: Schema.String,
+  page: Schema.Finite,
+  hasMore: Schema.Boolean,
   width: Schema.Literal(ARENA_FRAME_WIDTH),
   height: Schema.Literal(ARENA_FRAME_HEIGHT),
   format: Schema.Literal(ARENA_FRAME_FORMAT),

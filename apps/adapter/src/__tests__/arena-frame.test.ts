@@ -21,16 +21,27 @@ const CDN_HOST = "https://d2w9rnfck5c9ki.cloudfront.net";
 
 const markdown = (text: string) => ({ markdown: text, html: `<p>${text}</p>`, plain: text });
 
-const contentsEnvelope = (data: ReadonlyArray<unknown>) => ({
+const contentsEnvelope = (data: ReadonlyArray<unknown>, hasMore = false, currentPage = 1) => ({
   meta: {
-    current_page: 1,
+    current_page: currentPage,
     per_page: 20,
-    total_pages: 1,
+    total_pages: hasMore ? 2 : 1,
     total_count: data.length,
-    has_more_pages: false,
+    has_more_pages: hasMore,
   },
   data,
 });
+
+const requestedUrlFor = (fragment: string): string => {
+  const found = fetchMock.mock.calls
+    .map((call) => {
+      const [input] = call as [RequestInfo, RequestInit | undefined];
+      return input instanceof Request ? input.url : String(input);
+    })
+    .find((url) => url.includes(fragment));
+  if (found === undefined) throw new Error(`No request matched ${fragment}`);
+  return found;
+};
 
 const imageBlock = (id: number, title: string, src = `${CDN_HOST}/medium.jpg`) => ({
   id,
@@ -84,6 +95,8 @@ describe("are.na frame integration", () => {
       const body = await response.json();
       expect(body).toMatchObject({
         channel: CHANNEL,
+        page: 1,
+        hasMore: false,
         width: 240,
         height: 135,
         format: "rgb565be",
@@ -102,15 +115,26 @@ describe("are.na frame integration", () => {
 
       await app.fetch(requestWithEnv(`http://localhost/arena/frame/${CHANNEL}`, tomEnv));
 
-      const contentsUrl = new URL(
-        fetchMock.mock.calls
-          .map((call) => {
-            const [input] = call as [RequestInfo, RequestInit | undefined];
-            return input instanceof Request ? input.url : String(input);
-          })
-          .find((url) => url.includes(`${CHANNEL}/contents`)) ?? "",
-      );
+      const contentsUrl = new URL(requestedUrlFor(`${CHANNEL}/contents`));
       expect(contentsUrl.searchParams.get("sort")).toBe("position_desc");
+      expect(contentsUrl.searchParams.get("per")).toBe("20");
+      expect(contentsUrl.searchParams.get("page")).toBe("1");
+    });
+
+    it("serves the requested page and reports whether another follows", async () => {
+      stubArena([
+        [`/v3/channels/${CHANNEL}/contents`, contentsEnvelope([imageBlock(9, "Older")], true, 2)],
+      ]);
+
+      const response = await app.fetch(
+        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}?page=2`, tomEnv),
+      );
+
+      expect(response.status).toBe(200);
+      const body = await response.json();
+      expect(body).toMatchObject({ page: 2, hasMore: true });
+      const contentsUrl = new URL(requestedUrlFor(`${CHANNEL}/contents`));
+      expect(contentsUrl.searchParams.get("page")).toBe("2");
       expect(contentsUrl.searchParams.get("per")).toBe("20");
     });
 

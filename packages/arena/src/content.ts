@@ -211,6 +211,12 @@ export interface ArenaFrameImage {
   readonly source: string;
 }
 
+export interface ArenaFramePage {
+  readonly images: ReadonlyArray<ArenaFrameImage>;
+  readonly page: number;
+  readonly hasMore: boolean;
+}
+
 /**
  * The image blocks in a channel, in display order. Text, channel and
  * image-less link blocks are dropped: the frame has nothing to draw for them,
@@ -220,11 +226,12 @@ export const listFrameImages = (
   client: ArenaContentClient,
   channelSlug: string,
   limit: number,
-): Effect.Effect<ReadonlyArray<ArenaFrameImage>, HttpError> =>
+  page: number = 1,
+): Effect.Effect<ArenaFramePage, HttpError> =>
   Effect.gen(function* () {
     const response = yield* client.channel(channelSlug).contents({
       ...CONTENT_SORT,
-      page: 1,
+      page: normalizePage(page),
       per: Math.min(Math.max(limit, 1), MAX_PER_PAGE),
     });
     const contents = yield* decodeContents(response);
@@ -233,13 +240,18 @@ export const listFrameImages = (
       contents.data,
       "Skipping are.na block that does not match the content contract",
     );
-    return blocks.flatMap((block) => {
+    const images = blocks.flatMap((block) => {
       if (!("image" in block)) return [];
       const image = block.image;
       const source = image?.medium?.src ?? image?.large?.src ?? image?.src;
       if (source === undefined) return [];
       return [{ id: block.id, title: block.title ?? null, source }];
     });
+    return {
+      images,
+      page: contents.meta.current_page,
+      hasMore: contents.meta.has_more_pages,
+    };
   });
 
 /** A channel missing from the master channel is a draft, so it never renders. */
