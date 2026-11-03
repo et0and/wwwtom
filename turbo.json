@@ -11,7 +11,8 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "outputs": []
+      "outputs": [],
+      "passThroughEnv": ["ALCHEMY_ENV_FILE", "AXIOM_TOKEN", "CLOUDFLARE_API_TOKEN", "TOM_SECRETS"]
     },
     "lint": {
       "dependsOn": ["^build"]
