@@ -174,7 +174,15 @@ const blockPage = (
   client: ArenaContentClient,
   channelSlug: string,
   page: number,
-): Effect.Effect<{ blocks: ArenaContentBlock[]; hasMore: boolean; nextPage: number }, HttpError> =>
+): Effect.Effect<
+  {
+    blocks: ArenaContentBlock[];
+    hasMore: boolean;
+    currentPage: number;
+    totalPages: number;
+  },
+  HttpError
+> =>
   Effect.gen(function* () {
     const response = yield* client
       .channel(channelSlug)
@@ -188,20 +196,37 @@ const blockPage = (
     return {
       blocks,
       hasMore: contents.meta.has_more_pages,
-      nextPage: contents.meta.current_page + 1,
+      currentPage: contents.meta.current_page,
+      totalPages: contents.meta.total_pages,
     };
   });
 
+/** Bounded page fan-out: parallel reads without tripping are.na's rate limit. */
+const ARENA_PAGE_CONCURRENCY = 4;
+
+/**
+ * Every block in a channel, in page order. The first page reports the total,
+ * so the remaining pages are independent reads: fetch them together instead
+ * of one round-trip at a time.
+ */
 const allBlocks = (
   client: ArenaContentClient,
   channelSlug: string,
   page: number,
 ): Effect.Effect<ArenaContentBlock[], HttpError> =>
   Effect.gen(function* () {
-    const result = yield* blockPage(client, channelSlug, page);
-    if (!result.hasMore) return result.blocks;
-    const rest = yield* allBlocks(client, channelSlug, result.nextPage);
-    return [...result.blocks, ...rest];
+    const first = yield* blockPage(client, channelSlug, page);
+    if (!first.hasMore || first.totalPages <= first.currentPage) return first.blocks;
+    const remainingPages = Array.from(
+      { length: first.totalPages - first.currentPage },
+      (_, index) => first.currentPage + index + 1,
+    );
+    const rest = yield* Effect.forEach(
+      remainingPages,
+      (nextPage) => blockPage(client, channelSlug, nextPage),
+      { concurrency: ARENA_PAGE_CONCURRENCY },
+    );
+    return [...first.blocks, ...rest.flatMap((result) => result.blocks)];
   });
 
 /** One image-bearing block, ready for a surface that draws are.na itself. */
@@ -256,6 +281,38 @@ export const listFrameImages = (
     };
   });
 
+/**
+ * Search the remaining index pages in bounded batches, stopping at the first
+ * batch that contains the entry. A full fan-out would fetch pages after the
+ * match and let an unrelated page failure sink an already-found lookup; a
+ * single-page walk would serialise every round-trip.
+ */
+const findIndexBatches = (
+  client: ArenaContentClient,
+  indexSlug: string,
+  entrySlug: string,
+  pages: ReadonlyArray<number>,
+): Effect.Effect<ArenaEntrySummary | null, HttpError> =>
+  Effect.gen(function* () {
+    if (pages.length === 0) return null;
+    const batch = pages.slice(0, ARENA_PAGE_CONCURRENCY);
+    const results = yield* Effect.forEach(
+      batch,
+      (nextPage) => indexPage(client, indexSlug, nextPage, MAX_PER_PAGE),
+      { concurrency: ARENA_PAGE_CONCURRENCY },
+    );
+    const found = results
+      .flatMap((result) => result.entries)
+      .find((entry) => entry.slug === entrySlug);
+    if (found !== undefined) return found;
+    return yield* findIndexBatches(
+      client,
+      indexSlug,
+      entrySlug,
+      pages.slice(ARENA_PAGE_CONCURRENCY),
+    );
+  });
+
 /** A channel missing from the master channel is a draft, so it never renders. */
 const findIndexEntry = (
   client: ArenaContentClient,
@@ -264,11 +321,15 @@ const findIndexEntry = (
   page: number,
 ): Effect.Effect<ArenaEntrySummary | null, HttpError> =>
   Effect.gen(function* () {
-    const result = yield* indexPage(client, indexSlug, page, MAX_PER_PAGE);
-    const found = result.entries.find((entry) => entry.slug === entrySlug);
+    const first = yield* indexPage(client, indexSlug, page, MAX_PER_PAGE);
+    const found = first.entries.find((entry) => entry.slug === entrySlug);
     if (found !== undefined) return found;
-    if (!result.contents.meta.has_more_pages) return null;
-    return yield* findIndexEntry(client, indexSlug, entrySlug, page + 1);
+    if (!first.contents.meta.has_more_pages) return null;
+    const remainingPages = Array.from(
+      { length: first.contents.meta.total_pages - first.contents.meta.current_page },
+      (_, index) => first.contents.meta.current_page + index + 1,
+    );
+    return yield* findIndexBatches(client, indexSlug, entrySlug, remainingPages);
   });
 
 /**

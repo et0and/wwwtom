@@ -101,13 +101,17 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
   const instance = handle.instance;
   const instanceUrl = `https://${instance}`;
 
-  const snsType = yield* detector(instanceUrl).pipe(
-    Effect.orElseSucceed(() => "mastodon" as const),
+  // Nodeinfo detection, the client module, and the state token are
+  // independent: one round-trip instead of three.
+  const [snsType, generator, state] = yield* Effect.all(
+    [
+      detector(instanceUrl).pipe(Effect.orElseSucceed(() => "mastodon" as const)),
+      loadGenerator(),
+      secureHex(16),
+    ],
+    { concurrency: "unbounded" },
   );
-
-  const generator = yield* loadGenerator();
   const client = generator(snsType, instanceUrl);
-  const state = yield* secureHex(16);
 
   const mapRegisterAppError = Effect.fn("mapRegisterAppError")(function* (cause: unknown) {
     yield* Effect.logWarning("Megalodon registerApp error:", cause);
@@ -164,9 +168,14 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
     }),
   ).pipe(Effect.catch(mapRegisterAppError));
 
-  const sessionToken = yield* secureHex(32);
-  const expiresAt = yield* DateTime.now.pipe(
-    Effect.map((now) => DateTime.toDateUtc(DateTime.addDuration(now, Duration.minutes(15)))),
+  const [sessionToken, expiresAt] = yield* Effect.all(
+    [
+      secureHex(32),
+      DateTime.now.pipe(
+        Effect.map((now) => DateTime.toDateUtc(DateTime.addDuration(now, Duration.minutes(15)))),
+      ),
+    ],
+    { concurrency: "unbounded" },
   );
 
   yield* db.createOAuthSession({
@@ -211,11 +220,10 @@ export const handleCallback = Effect.fn("handleCallback")(function* (params: {
 
   const instanceUrl = `https://${session.fediverse_instance}`;
 
-  const snsType = yield* detector(instanceUrl).pipe(
-    Effect.orElseSucceed(() => "mastodon" as const),
+  const [snsType, generator] = yield* Effect.all(
+    [detector(instanceUrl).pipe(Effect.orElseSucceed(() => "mastodon" as const)), loadGenerator()],
+    { concurrency: "unbounded" },
   );
-
-  const generator = yield* loadGenerator();
   const client = generator(snsType, instanceUrl);
 
   const tokenData = yield* Effect.tryPromise({

@@ -97,10 +97,10 @@ export const versionRoute = new Elysia().get(
       Effect.gen(function* () {
         yield* Effect.logInfo("Version endpoint called");
 
-        const [version, commitHash] = yield* Effect.all([
-          getLatestVersionWithFallback(),
-          getLatestCommitHashWithFallback(),
-        ]);
+        const [version, commitHash] = yield* Effect.all(
+          [getLatestVersionWithFallback(), getLatestCommitHashWithFallback()],
+          { concurrency: "unbounded" },
+        );
 
         const shortHash = commitHash.substring(0, 7);
         const versionString = `${version}-${shortHash}`;

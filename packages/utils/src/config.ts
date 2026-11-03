@@ -231,12 +231,15 @@ const readTomSecrets = (binding: SecretBinding): Promise<TomSecrets> => {
 
 export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedCloudflareEnv> => {
   const { AXIOM_TOKEN: axiomBinding, ...rest } = env;
-  const axiomToken = await resolveSecretValue(axiomBinding);
-  if (!env.TOM_SECRETS) {
+  // Two independent Secrets Store reads: resolve them together instead of
+  // paying both round-trips serially on every request.
+  const [axiomToken, parsed] = await Promise.all([
+    resolveSecretValue(axiomBinding),
+    env.TOM_SECRETS ? readTomSecrets(env.TOM_SECRETS) : undefined,
+  ]);
+  if (parsed === undefined) {
     return axiomToken ? { ...rest, AXIOM_TOKEN: axiomToken } : rest;
   }
-
-  const parsed = await readTomSecrets(env.TOM_SECRETS);
 
   const bundle = Object.fromEntries(
     secretKeys.flatMap((key) => {
