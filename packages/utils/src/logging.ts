@@ -35,7 +35,15 @@ export type LogContext = {
   readonly otel?: OtelConfig;
 };
 
-const stripTrailingSlashes = (value: string): string => value.replace(/\/+$/, "");
+/**
+ * Remove every trailing slash without a backtracking regex: `/\/+$/` is
+ * quadratic on a long slash run, and the endpoint is library input.
+ */
+const stripTrailingSlashes = (value: string): string => {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 0x2f) end -= 1;
+  return value.slice(0, end);
+};
 
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
   if (raw === undefined) return undefined;
