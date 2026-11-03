@@ -29,16 +29,21 @@ export function FrameForm(props: FrameFormProps) {
     >
       <ModePicker value={props.mode} disabled={props.busy} onChange={props.onModeChange} />
 
-      <Input
-        label="are.na channel"
-        type="text"
-        name="channel"
-        value={props.channel}
-        onInput={(event) => props.onChannelChange(event.currentTarget.value)}
-        required
-        disabled={props.busy}
-        style={styles.field}
-      />
+      <Show when={props.mode === "deck"}>
+        <Input
+          label="are.na channel"
+          type="text"
+          name="channel"
+          placeholder="imaginary-museum"
+          value={props.channel}
+          onInput={(event) => props.onChannelChange(event.currentTarget.value)}
+          disabled={props.busy}
+          style={styles.field}
+        />
+        <Text variant="secondary" size="sm" style={styles.note}>
+          Leave blank to use the channel stored on the board.
+        </Text>
+      </Show>
 
       <Show when={props.mode === "video"}>
         <Input
@@ -52,7 +57,7 @@ export function FrameForm(props: FrameFormProps) {
           style={styles.field}
         />
         <Text variant="secondary" size="sm" style={styles.note}>
-          MJPEG only. The on-device decoder arrives in the next slice.
+          MJPEG only. Video playback is not on the board yet.
         </Text>
       </Show>
 

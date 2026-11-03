@@ -10,7 +10,7 @@ const styles = stylex.create({
     display: "inline-flex",
     width: "fit-content",
     alignItems: "stretch",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-control"],
     boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
     fontSize: fontSizeBase.fontSize,
