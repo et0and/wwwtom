@@ -43,6 +43,20 @@ describe("renderTiptapHtml", () => {
     expect(html).toBe("<h2>Title</h2><hr>");
   });
 
+  it("escapes ampersands in text", async () => {
+    const html = await render(
+      doc({
+        type: "paragraph",
+        content: [{ type: "text", text: "Tom & Jerry" }],
+      }),
+    );
+    expect(html).toBe("<p>Tom &amp; Jerry</p>");
+  });
+
+  it("renders a paragraph without content", async () => {
+    expect(await render(doc({ type: "paragraph" }))).toBe("<p></p>");
+  });
+
   // Shiki engine init takes seconds on cold CI runners — allow a minute.
   it("highlights code blocks with filename and line numbers", { timeout: 60000 }, async () => {
     const html = await render({
@@ -74,10 +88,75 @@ describe("renderTiptapHtml", () => {
         },
       ],
     });
-    expect(html).toContain(`<figure class="code-block">`);
+    expect(html).toContain(`<figure class="code-block"><div class="shiki-light">`);
     expect(html).toContain(`language-text`);
     expect(html).toContain("just words");
+    expect(html).toContain("</figure>");
+    expect(html).not.toContain("figcaption");
     expect(html).not.toContain(`<span class="line">`);
+  });
+
+  it("renders a code block without content", async () => {
+    const html = await render(
+      doc({
+        type: "codeBlock",
+        attrs: { language: "text" },
+      }),
+    );
+    expect(html).toContain(`<code class="language-text"></code>`);
+  });
+
+  it("joins multiple text nodes in a code block", async () => {
+    const html = await render(
+      doc({
+        type: "codeBlock",
+        attrs: { language: "text" },
+        content: [
+          { type: "text", text: "const " },
+          { type: "text", text: "x = 1;" },
+        ],
+      }),
+    );
+    expect(html).toContain("const x = 1;");
+  });
+
+  // Shiki engine init takes seconds on cold CI runners — allow a minute.
+  it("highlights every bundled language and alias", { timeout: 60000 }, async () => {
+    const languages = [
+      "typescript",
+      "javascript",
+      "python",
+      "bash",
+      "json",
+      "html",
+      "css",
+      "sql",
+      "yaml",
+      "markdown",
+      "go",
+      "rust",
+      "ts",
+      "tsx",
+      "js",
+      "py",
+      "sh",
+      "md",
+      "yml",
+    ];
+
+    for (const language of languages) {
+      const html = await render({
+        type: "doc",
+        content: [
+          {
+            type: "codeBlock",
+            attrs: { language },
+            content: [{ type: "text", text: "sample" }],
+          },
+        ],
+      });
+      expect(html, language).toContain(`<span class="line">`);
+    }
   });
 
   it("renders blockquotes", async () => {
@@ -116,11 +195,31 @@ describe("renderTiptapHtml", () => {
     );
   });
 
+  it("renders every banner title", async () => {
+    const banners = [
+      ["info", "Note"],
+      ["warning", "Warning"],
+      ["error", "Error"],
+      ["success", "Success"],
+    ] as const;
+
+    for (const [style, title] of banners) {
+      const html = await render(doc({ type: "banner", attrs: { style }, content: [] }));
+      expect(html).toContain(`<p class="banner-title">${title}</p>`);
+    }
+  });
+
   it("renders arena refs and escapes titles", async () => {
     const arena = await render(
       doc({ type: "arena", attrs: { slug: "toms-place", title: "Tom's Place" } }),
     );
     expect(arena).toBe(`<div data-arena="toms-place" data-title="Tom&#39;s Place"></div>`);
+  });
+
+  it("omits an absent arena title", async () => {
+    expect(await render(doc({ type: "arena", attrs: { slug: "toms-place" } }))).toBe(
+      `<div data-arena="toms-place"></div>`,
+    );
   });
 
   it("renders media and escapes alt text", async () => {
@@ -130,6 +229,39 @@ describe("renderTiptapHtml", () => {
     expect(media).toBe(
       `<figure><img src="https://cdn.tom.so/content/media/media-1/file" alt="A &lt;photo&gt;"></figure>`,
     );
+  });
+
+  it("omits absent media alt text", async () => {
+    expect(
+      await render(doc({ type: "cmsMedia", attrs: { mediaId: "media-1" as CmsMediaId } })),
+    ).toBe(`<figure><img src="https://cdn.tom.so/content/media/media-1/file"></figure>`);
+  });
+
+  it("keeps every allowed link scheme and trims whitespace", async () => {
+    const hrefs = [
+      "https://tom.so",
+      "http://tom.so",
+      "mailto:hi@tom.so",
+      "/posts",
+      "#top",
+      "  https://tom.so  ",
+    ];
+
+    for (const href of hrefs) {
+      const html = await render(
+        doc({
+          type: "paragraph",
+          content: [
+            {
+              type: "text",
+              text: "link",
+              marks: [{ type: "link", attrs: { href } }],
+            },
+          ],
+        }),
+      );
+      expect(html, href).toContain(`<a href="${href.trim()}">link</a>`);
+    }
   });
 
   it("escapes text and drops dangerous link targets", async () => {

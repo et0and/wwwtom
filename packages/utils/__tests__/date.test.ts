@@ -4,8 +4,12 @@ import { formatDate, formatDateTime } from "../src/date";
 describe("formatDate", () => {
   it("formats a valid date string with long month", () => {
     const formatted = formatDate("2026-09-21");
-    expect(formatted).toContain("2026");
-    expect(formatted).toContain("September");
+    expect(formatted).toContain("21 September 2026");
+  });
+
+  it("renders the Auckland calendar day, not the UTC day", () => {
+    // 12:30 UTC is 00:30 the next day in Auckland during NZST.
+    expect(formatDate("2026-09-21T12:30:00.000Z")).toContain("22 September 2026");
   });
 
   it("returns empty for null and unparseable input", () => {
@@ -31,8 +35,12 @@ describe("formatDate", () => {
 describe("formatDateTime", () => {
   it("formats a valid date string with time", () => {
     const formatted = formatDateTime("2026-09-21T10:30:00Z");
-    expect(formatted).toContain("2026");
-    expect(formatted).toContain("September");
+    expect(formatted).toContain("21 September 2026");
+    expect(formatted).toContain("10:30 pm");
+  });
+
+  it("renders the Auckland calendar day, not the UTC day", () => {
+    expect(formatDateTime("2026-09-21T12:30:00.000Z")).toContain("22 September 2026");
   });
 
   it("returns empty for null and unparseable input", () => {
