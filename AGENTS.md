@@ -46,6 +46,8 @@ Improve existing code; avoid new abstractions.
 
 - `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
+- `pnpm test:mutation` — Stryker mutation run for `packages/utils` (config in
+  `packages/utils/stryker.config.mjs`; HTML report in `coverage/mutation`)
 - `pnpm format` = `oxfmt --check .`; `pnpm write` = `oxfmt --write .`
 - `pnpm workflows` — regenerate `.github/workflows/*.yml` + `.github/actions/*/action.yml` from `@tom/workflows` definitions (do not hand-edit generated files)
 - `pnpm test:update` — snapshot update (web, utils, icons, workflows)
