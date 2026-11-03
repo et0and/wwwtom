@@ -168,7 +168,10 @@ describe("TomQueueService", () => {
     );
     expect(result.tag).toBe("error");
     if (result.tag === "error") {
-      expect(result.error).toMatchObject({ _tag: "QueueError" });
+      expect(result.error).toMatchObject({
+        _tag: "QueueError",
+        message: "Failed to send to tom work queue",
+      });
     }
   });
 
@@ -189,7 +192,10 @@ describe("TomQueueService", () => {
     );
     expect(result.tag).toBe("error");
     if (result.tag === "error") {
-      expect(result.error).toMatchObject({ _tag: "QueueError" });
+      expect(result.error).toMatchObject({
+        _tag: "QueueError",
+        message: "Failed to send to tom work queue",
+      });
     }
   });
 });

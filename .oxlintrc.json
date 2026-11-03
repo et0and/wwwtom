@@ -20,6 +20,7 @@
     "anti-slop/no-hand-rolled-retry-loop": "error",
     "anti-slop/no-known-value-widening": "error",
     "anti-slop/no-object-parameters": "error",
+    "anti-slop/no-redundant-button-type": "error",
     "anti-slop/no-runtime-typeof": "error",
     "anti-slop/no-shape-in-symbol-names": "error",
     "anti-slop/no-unknown-parameters": "error",

@@ -34,7 +34,7 @@ const styles = stylex.create({
     display: "flex",
     flexDirection: "column",
     transformOrigin: "var(--transform-origin)",
-    borderRadius: radius.md.borderRadius,
+    borderRadius: radius.md,
     backgroundColor: colors["--color-tomui-base"],
     paddingInline: "0.625rem",
     paddingBlock: "0.375rem",

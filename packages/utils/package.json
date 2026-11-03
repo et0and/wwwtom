@@ -5,6 +5,7 @@
   "type": "module",
   "exports": {
     "./config": "./src/config.ts",
+    "./auth": "./src/auth.ts",
     "./date": "./src/date.ts",
     "./http": "./src/http.ts",
     "./logging": "./src/logging.ts",
@@ -20,6 +21,7 @@
   },
   "scripts": {
     "test": "vitest run",
+    "test:mutation": "stryker run",
     "lint": "oxlint",
     "typecheck": "tsc --noEmit"
   },
@@ -32,6 +34,8 @@
     "shiki": "1.29.2"
   },
   "devDependencies": {
+    "@stryker-mutator/core": "10.1.1",
+    "@stryker-mutator/vitest-runner": "10.1.1",
     "@types/node": "^26.2.0",
     "typescript": "catalog:",
     "vite": "^8.1.5",

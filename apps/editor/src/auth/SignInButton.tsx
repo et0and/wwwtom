@@ -36,7 +36,6 @@ export const SignInButton = (props: {
 
   return (
     <Button
-      type="button"
       variant="primary"
       disabled={isSigningIn()}
       onClick={onClick}

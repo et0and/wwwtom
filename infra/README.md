@@ -205,6 +205,7 @@ Secrets Store, which exposes it to both Workers as `TOM_SECRETS`.
   "TELEGRAM_BOT_TOKEN": "...",
   "TELEGRAM_CHAT_ID": "...",
   "INTERNAL_API_TOKEN": "...",
+  "FRAME_DEVICE_TOKEN": "...",
   "GITHUB_TOKEN": "...",
   "GITHUB_CLIENT_ID": "...",
   "GITHUB_CLIENT_SECRET": "...",
@@ -255,6 +256,11 @@ latter).
 `x-internal-token` header when calling the API's protected routes
 (`/og`, `/auth/*`, `/cms/*`). Generate a long random value; requests
 without a matching token are rejected with 401.
+
+`FRAME_DEVICE_TOKEN` guards the desk frame's `GET /frame/state` route.
+Generate a long random value and put the same value in the firmware's
+`include/config.h`. Without it the board stays on the are.na deck; the web
+control page still works through the admin session.
 
 `DATABASE_URL` is also used to configure the Hyperdrive origin. At runtime,
 web code prefers the `HYPERDRIVE` binding’s connection string.

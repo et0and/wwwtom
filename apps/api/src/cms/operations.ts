@@ -434,22 +434,25 @@ export const listPosts = Effect.fn("CmsService.listPosts")(function* (
 ) {
   const { limit, current, offset } = toPageWindow(paging);
   const { rowFilter, countFilter, params } = postListFilters(paging);
-  const [rows, countRow] = yield* Effect.all([
-    queryAll<typeof PostRowSchema.Encoded>(
-      db,
-      `SELECT ${POST_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
-        rowFilter +
-        "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
-      [status, status, ...params, limit, offset],
-      "list_posts",
-    ),
-    queryFirst<{ readonly total: number }>(
-      db,
-      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
-      [status, status, ...params],
-      "count_posts",
-    ),
-  ]);
+  const [rows, countRow] = yield* Effect.all(
+    [
+      queryAll<typeof PostRowSchema.Encoded>(
+        db,
+        `SELECT ${POST_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
+          rowFilter +
+          "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
+        [status, status, ...params, limit, offset],
+        "list_posts",
+      ),
+      queryFirst<{ readonly total: number }>(
+        db,
+        "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
+        [status, status, ...params],
+        "count_posts",
+      ),
+    ],
+    { concurrency: "unbounded" },
+  );
   const total = countRow?.total ?? 0;
   const grouped = yield* categoriesForPosts(
     db,
@@ -472,22 +475,25 @@ export const listPostSummaries = Effect.fn("CmsService.listPostSummaries")(funct
 ) {
   const { limit, current, offset } = toPageWindow(paging);
   const { rowFilter, countFilter, params } = postListFilters(paging);
-  const [rows, countRow] = yield* Effect.all([
-    queryAll<typeof PostSummaryRowSchema.Encoded>(
-      db,
-      `SELECT ${POST_SUMMARY_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
-        rowFilter +
-        "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
-      [status, status, ...params, limit, offset],
-      "list_post_summaries",
-    ),
-    queryFirst<{ readonly total: number }>(
-      db,
-      "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
-      [status, status, ...params],
-      "count_post_summaries",
-    ),
-  ]);
+  const [rows, countRow] = yield* Effect.all(
+    [
+      queryAll<typeof PostSummaryRowSchema.Encoded>(
+        db,
+        `SELECT ${POST_SUMMARY_COLUMNS} FROM posts p WHERE (? = 'all' OR p.status = ?) ` +
+          rowFilter +
+          "ORDER BY p.published_at DESC LIMIT ? OFFSET ?",
+        [status, status, ...params, limit, offset],
+        "list_post_summaries",
+      ),
+      queryFirst<{ readonly total: number }>(
+        db,
+        "SELECT COUNT(*) AS total FROM posts WHERE (? = 'all' OR status = ?)" + countFilter,
+        [status, status, ...params],
+        "count_post_summaries",
+      ),
+    ],
+    { concurrency: "unbounded" },
+  );
   const total = countRow?.total ?? 0;
   const grouped = yield* categoriesForPosts(
     db,
@@ -526,21 +532,24 @@ export const listWorks = Effect.fn("CmsService.listWorks")(function* (
   status: CmsStatusFilter,
 ) {
   const { limit, current, offset } = toPageWindow(paging);
-  const [rows, countRow] = yield* Effect.all([
-    queryAll<typeof PostRowSchema.Encoded>(
-      db,
-      `SELECT ${POST_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
-        "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
-      [status, status, limit, offset],
-      "list_works",
-    ),
-    queryFirst<{ readonly total: number }>(
-      db,
-      "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
-      [status, status],
-      "count_works",
-    ),
-  ]);
+  const [rows, countRow] = yield* Effect.all(
+    [
+      queryAll<typeof PostRowSchema.Encoded>(
+        db,
+        `SELECT ${POST_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
+          "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
+        [status, status, limit, offset],
+        "list_works",
+      ),
+      queryFirst<{ readonly total: number }>(
+        db,
+        "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
+        [status, status],
+        "count_works",
+      ),
+    ],
+    { concurrency: "unbounded" },
+  );
   const total = countRow?.total ?? 0;
   const docs = yield* Effect.forEach(rows, (row) => toWork(row));
   return toListResponse(docs, total, current, limit);
@@ -556,21 +565,24 @@ export const listWorkSummaries = Effect.fn("CmsService.listWorkSummaries")(funct
   status: CmsStatusFilter,
 ) {
   const { limit, current, offset } = toPageWindow(paging);
-  const [rows, countRow] = yield* Effect.all([
-    queryAll<typeof PostSummaryRowSchema.Encoded>(
-      db,
-      `SELECT ${POST_SUMMARY_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
-        "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
-      [status, status, limit, offset],
-      "list_work_summaries",
-    ),
-    queryFirst<{ readonly total: number }>(
-      db,
-      "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
-      [status, status],
-      "count_work_summaries",
-    ),
-  ]);
+  const [rows, countRow] = yield* Effect.all(
+    [
+      queryAll<typeof PostSummaryRowSchema.Encoded>(
+        db,
+        `SELECT ${POST_SUMMARY_COLUMNS} FROM works p WHERE (? = 'all' OR p.status = ?) ` +
+          "ORDER BY p.title COLLATE NOCASE ASC LIMIT ? OFFSET ?",
+        [status, status, limit, offset],
+        "list_work_summaries",
+      ),
+      queryFirst<{ readonly total: number }>(
+        db,
+        "SELECT COUNT(*) AS total FROM works WHERE (? = 'all' OR status = ?)",
+        [status, status],
+        "count_work_summaries",
+      ),
+    ],
+    { concurrency: "unbounded" },
+  );
   const total = countRow?.total ?? 0;
   const docs = yield* Effect.forEach(rows, (row) => toWorkSummary(row));
   return toListResponse(docs, total, current, limit);
@@ -646,20 +658,23 @@ export const listMedia = Effect.fn("CmsService.listMedia")(function* (
   paging: CmsPaging,
 ) {
   const { limit, current, offset } = toPageWindow(paging);
-  const [rows, countRow] = yield* Effect.all([
-    queryAll<typeof MediaRowSchema.Encoded>(
-      db,
-      `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`,
-      [limit, offset],
-      "list_media",
-    ),
-    queryFirst<{ readonly total: number }>(
-      db,
-      "SELECT COUNT(*) AS total FROM media",
-      [],
-      "count_media",
-    ),
-  ]);
+  const [rows, countRow] = yield* Effect.all(
+    [
+      queryAll<typeof MediaRowSchema.Encoded>(
+        db,
+        `SELECT ${MEDIA_COLUMNS} FROM media ORDER BY created_at DESC, rowid DESC LIMIT ? OFFSET ?`,
+        [limit, offset],
+        "list_media",
+      ),
+      queryFirst<{ readonly total: number }>(
+        db,
+        "SELECT COUNT(*) AS total FROM media",
+        [],
+        "count_media",
+      ),
+    ],
+    { concurrency: "unbounded" },
+  );
   const total = countRow?.total ?? 0;
   const docs = yield* Effect.forEach(rows, (row) => toMedia(row));
   return toListResponse(docs, total, current, limit);
@@ -690,10 +705,10 @@ const mediaUsage = Effect.fn("CmsService.mediaUsage")(function* (
   id: string,
   operation: string,
 ) {
-  const [posts, works] = yield* Effect.all([
-    usageRefs(db, "posts", id, operation),
-    usageRefs(db, "works", id, operation),
-  ]);
+  const [posts, works] = yield* Effect.all(
+    [usageRefs(db, "posts", id, operation), usageRefs(db, "works", id, operation)],
+    { concurrency: "unbounded" },
+  );
   return { posts, works };
 });
 
@@ -701,8 +716,11 @@ export const getMediaUsage = Effect.fn("CmsService.getMediaUsage")(function* (
   db: CmsD1Binding,
   id: string,
 ) {
-  yield* requireMediaRow(db, id, "get_media_usage");
-  return yield* mediaUsage(db, id, "get_media_usage");
+  const [, usage] = yield* Effect.all(
+    [requireMediaRow(db, id, "get_media_usage"), mediaUsage(db, id, "get_media_usage")],
+    { concurrency: "unbounded" },
+  );
+  return usage;
 });
 
 export type MediaUpload = {
@@ -1136,8 +1154,10 @@ export const createPost = Effect.fn("CmsService.createPost")(function* (
     });
   }
   const id = crypto.randomUUID();
-  const now = yield* nowTimestamp;
-  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  const [now, html] = yield* Effect.all(
+    [nowTimestamp, renderTiptapHtml(input.content, mediaUrlFor(adapterUrl))],
+    { concurrency: "unbounded" },
+  );
   yield* insertDocRow(db, "posts", toPostRow(input, html, id, now, now), "create_post");
   yield* replacePostCategories(db, id, input.categoryIds, "create_post");
   yield* recordRevision(db, "post", id, input, actor, "create_post");
@@ -1160,8 +1180,10 @@ export const updatePost = Effect.fn("CmsService.updatePost")(function* (
     });
   }
   const existing = yield* requireDecodedRow(db, "posts", slug, "Post", "update_post");
-  const now = yield* nowTimestamp;
-  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  const [now, html] = yield* Effect.all(
+    [nowTimestamp, renderTiptapHtml(input.content, mediaUrlFor(adapterUrl))],
+    { concurrency: "unbounded" },
+  );
   const row = toPostRow(input, html, existing.id, now, existing.createdAt);
   yield* updateDocRow(db, "posts", row, "update_post");
   yield* replacePostCategories(db, row.id, input.categoryIds, "update_post");
@@ -1217,8 +1239,10 @@ export const createWork = Effect.fn("CmsService.createWork")(function* (
     });
   }
   const id = crypto.randomUUID();
-  const now = yield* nowTimestamp;
-  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  const [now, html] = yield* Effect.all(
+    [nowTimestamp, renderTiptapHtml(input.content, mediaUrlFor(adapterUrl))],
+    { concurrency: "unbounded" },
+  );
   yield* insertDocRow(db, "works", toPostRow(input, html, id, now, now), "create_work");
   yield* recordRevision(db, "work", id, input, actor, "create_work");
   return yield* readWorkById(db, id, "create_work");
@@ -1240,8 +1264,10 @@ export const updateWork = Effect.fn("CmsService.updateWork")(function* (
     });
   }
   const existing = yield* requireDecodedRow(db, "works", slug, "Work", "update_work");
-  const now = yield* nowTimestamp;
-  const html = yield* renderTiptapHtml(input.content, mediaUrlFor(adapterUrl));
+  const [now, html] = yield* Effect.all(
+    [nowTimestamp, renderTiptapHtml(input.content, mediaUrlFor(adapterUrl))],
+    { concurrency: "unbounded" },
+  );
   const row = toPostRow(input, html, existing.id, now, existing.createdAt);
   yield* updateDocRow(db, "works", row, "update_work");
   yield* recordRevision(db, "work", row.id, input, actor, "update_work");
@@ -1335,10 +1361,12 @@ export const deleteMedia = Effect.fn("CmsService.deleteMedia")(function* (
   r2: CmsR2Binding,
   id: string,
 ) {
-  const row = yield* requireMediaRow(db, id, "delete_media");
   // Never orphan published content: the editor checks usage first, and
   // the service enforces it so direct API calls cannot break posts/works.
-  const usage = yield* mediaUsage(db, id, "delete_media");
+  const [row, usage] = yield* Effect.all(
+    [requireMediaRow(db, id, "delete_media"), mediaUsage(db, id, "delete_media")],
+    { concurrency: "unbounded" },
+  );
   if (usage.posts.length > 0 || usage.works.length > 0) {
     return yield* new CmsError({
       message: `Media in use by ${usage.posts.length} posts and ${usage.works.length} works`,

@@ -57,12 +57,15 @@ export const handleFeed = () =>
 
 export const handleSitemap = () =>
   Effect.runPromise(
-    Effect.all([
-      adapterRequest(() =>
-        callAdapter().content.arena.posts.get({ query: { page: 1, pageSize: 500 } }),
-      ),
-      adapterRequest(() => callAdapter().content.arena.works.get()),
-    ]).pipe(
+    Effect.all(
+      [
+        adapterRequest(() =>
+          callAdapter().content.arena.posts.get({ query: { page: 1, pageSize: 500 } }),
+        ),
+        adapterRequest(() => callAdapter().content.arena.works.get()),
+      ],
+      { concurrency: "unbounded" },
+    ).pipe(
       Effect.map(([postsResult, worksResult]) => {
         const posts = postsResult.docs;
         const works = worksResult.docs;

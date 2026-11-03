@@ -59,24 +59,14 @@ const UsageList = (props: {
         <div class="media-usage">
           <For each={found().posts}>
             {(post) => (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => props.onEdit("posts", post.slug)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => props.onEdit("posts", post.slug)}>
                 Post: {post.title}
               </Button>
             )}
           </For>
           <For each={found().works}>
             {(work) => (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => props.onEdit("works", work.slug)}
-              >
+              <Button size="sm" variant="ghost" onClick={() => props.onEdit("works", work.slug)}>
                 Work: {work.title}
               </Button>
             )}
@@ -176,16 +166,10 @@ export const MediaView = (props: { onEdit: (kind: ContentKind, slug: string) => 
                     <MediaThumb item={item} />
                     <p class="media-name">{mediaFileName(item.key)}</p>
                     <div class="media-actions">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => toggleUsage(item.id)}
-                      >
+                      <Button size="sm" variant="ghost" onClick={() => toggleUsage(item.id)}>
                         {openUsage() === item.id ? "Hide usage" : "Usage"}
                       </Button>
                       <Button
-                        type="button"
                         size="sm"
                         variant="secondary-destructive"
                         onClick={() => onDelete(item)}

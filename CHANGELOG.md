@@ -1,3 +1,49 @@
+## [4.12.1](https://github.com/et0and/wwwtom/compare/v4.12.0...v4.12.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **arena:** stop scanning index pages after the matching batch ([d506709](https://github.com/et0and/wwwtom/commit/d506709210e22decea424ca74e8534a62413233a))
+
+
+### Performance Improvements
+
+* parallelize independent async reads on hot paths ([2d43530](https://github.com/et0and/wwwtom/commit/2d43530b37d098a1eb297519a6b260a98e7f57e2))
+
+# [4.12.0](https://github.com/et0and/wwwtom/compare/v4.11.1...v4.12.0) (2026-11-03)
+
+
+### Bug Fixes
+
+* **frame:** clear stale status on mode change ([1e80500](https://github.com/et0and/wwwtom/commit/1e80500a89997b0f5a2ab7913a393cc5ebd8b595))
+* **ui:** remove unused inherit radius token ([af449f0](https://github.com/et0and/wwwtom/commit/af449f02b0c85eb872edc3ab6dd42338a1b9a278))
+* **ui:** resolve radius tokens as CSS variables ([7799ba5](https://github.com/et0and/wwwtom/commit/7799ba55a7480d1922fb6d4c0cef4b8bff4d37bc))
+
+
+### Features
+
+* **frame:** explain frame modes and scope their settings ([049ebc2](https://github.com/et0and/wwwtom/commit/049ebc2e0db741b640ae56207f92a889c75a2d9e))
+
+## [4.11.1](https://github.com/et0and/wwwtom/compare/v4.11.0...v4.11.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **frame:** defer control content until hydration ([f3817c9](https://github.com/et0and/wwwtom/commit/f3817c96f6eaec75bd28a74cff83e81f9708dc19))
+
+# [4.11.0](https://github.com/et0and/wwwtom/compare/v4.10.3...v4.11.0) (2026-11-02)
+
+
+### Bug Fixes
+
+* **api:** bind the Tom D1 for frame auth ([a7308d2](https://github.com/et0and/wwwtom/commit/a7308d2fc0a5f86bcd2136d6f884746ec67bcfd2))
+* **frame:** address clock, channel, and token review ([396c246](https://github.com/et0and/wwwtom/commit/396c2468d4ab2df59952d06125f4b1e69dd0d406))
+
+
+### Features
+
+* **frame:** add web-controlled modes ([05ccf17](https://github.com/et0and/wwwtom/commit/05ccf170a7d47af137b74f210634350a39051c2c))
+
 ## [4.10.3](https://github.com/et0and/wwwtom/compare/v4.10.2...v4.10.3) (2026-11-02)
 
 

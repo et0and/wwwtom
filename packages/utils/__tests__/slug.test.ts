@@ -13,6 +13,9 @@ describe("toSlug", () => {
 
   it("collapses runs and trims the ends", () => {
     expect(toSlug("  --Hello___World!!  ")).toBe("hello-world");
+    expect(toSlug("---Hello World---")).toBe("hello-world");
+    expect(toSlug("---Hello World")).toBe("hello-world");
+    expect(toSlug("Hello World---")).toBe("hello-world");
   });
 
   it("returns empty for a title with nothing sluggable", () => {

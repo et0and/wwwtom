@@ -22,7 +22,7 @@ const styles = stylex.create({
     maxHeight: "var(--available-height)",
     overflowY: "auto",
     overflowX: "hidden",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-control"],
     padding: "0.375rem",
     color: textColors["--text-color-tomui-default"],

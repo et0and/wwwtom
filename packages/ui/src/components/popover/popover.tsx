@@ -36,7 +36,7 @@ const styles = stylex.create({
     zIndex: 50,
     display: "flex",
     flexDirection: "column",
-    borderRadius: radius.lg.borderRadius,
+    borderRadius: radius.lg,
     backgroundColor: colors["--color-tomui-base"],
     paddingInline: "1rem",
     paddingBlock: "0.75rem",

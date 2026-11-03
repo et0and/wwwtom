@@ -51,5 +51,6 @@ playwright-report/
 test-results/
 blob-report/
 
-# Vitest coverage artifacts
+# Vitest coverage and Stryker mutation artifacts
 coverage/
+.stryker-tmp/

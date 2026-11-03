@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import { CmsError } from "@tom/types/errors";
+import { isAdminEmail, parseAdminEmails } from "@tom/utils/auth";
 import type { CmsD1Binding, CloudflareEnv } from "@tom/utils/config";
 import {
   createAuth,
   createAuthFromEnv,
-  isAdminEmail,
   parseAuthProviders,
   requireSession,
 } from "../auth/operations";
@@ -53,20 +53,20 @@ describe("social providers", () => {
   });
 
   it("gates Sophie to one Gmail account", () => {
-    expect(isAdminEmail("sophie@example.com", ["sophie@example.com"])).toBe(true);
-    expect(isAdminEmail("stranger@gmail.com", ["sophie@example.com"])).toBe(false);
+    expect(isAdminEmail("sophie@example.com", parseAdminEmails("sophie@example.com"))).toBe(true);
+    expect(isAdminEmail("stranger@gmail.com", parseAdminEmails("sophie@example.com"))).toBe(false);
   });
 });
 
 describe("isAdminEmail", () => {
   it("matches case-insensitively with whitespace tolerance", () => {
-    expect(isAdminEmail("Tom@Example.COM ", [" tom@example.com "])).toBe(true);
+    expect(isAdminEmail("Tom@Example.COM ", parseAdminEmails(" tom@example.com "))).toBe(true);
   });
 
   it("denies strangers and empty allowlists", () => {
-    expect(isAdminEmail("stranger@example.com", ["tom@example.com"])).toBe(false);
-    expect(isAdminEmail("tom@example.com", [])).toBe(false);
-    expect(isAdminEmail("tom@example.com", ["", "  "])).toBe(false);
+    expect(isAdminEmail("stranger@example.com", parseAdminEmails("tom@example.com"))).toBe(false);
+    expect(isAdminEmail("tom@example.com", parseAdminEmails(""))).toBe(false);
+    expect(isAdminEmail("tom@example.com", parseAdminEmails(" ,  "))).toBe(false);
   });
 });
 
@@ -175,7 +175,10 @@ describe("preview editor origins", () => {
 
   it("trusts no preview pattern without a tenant tag", async () => {
     const auth = await Effect.runPromise(createAuthFromEnv(bothProvidersEnv()));
-    expect(auth.options.trustedOrigins).toHaveLength(2);
+    const origins = auth.options.trustedOrigins ?? [];
+    expect(origins).toHaveLength(3);
+    expect(origins).toContain("http://localhost:3000");
+    expect(origins.every((origin) => !origin.includes("pr-"))).toBe(true);
   });
 });
 

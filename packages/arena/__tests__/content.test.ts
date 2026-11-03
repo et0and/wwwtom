@@ -323,6 +323,45 @@ describe("getEntry", () => {
     expect(result?.blocks).toHaveLength(1);
   });
 
+  it("stops scanning index pages once a batch contains the entry", async () => {
+    const requestedPages: number[] = [];
+    const client = stubClient({
+      [INDEX_SLUG]: {
+        contents: (options) => {
+          const page = options?.page ?? 1;
+          requestedPages.push(page);
+          if (page === 2) {
+            return contentsPage(
+              [
+                indexItem({
+                  id: 11,
+                  slug: "first-post-abc123",
+                  title: "First post",
+                  connectedAt: "2026-02-01T00:00:00Z",
+                }),
+              ],
+              { current_page: page, total_pages: 10 },
+            );
+          }
+          return contentsPage([], {
+            current_page: page,
+            total_pages: 10,
+            has_more_pages: page < 10,
+          });
+        },
+      },
+      "first-post-abc123": {
+        contents: () => contentsPage([textBlock(101, "Hello")]),
+      },
+    });
+
+    const result = await run(getEntry(client, INDEX_SLUG, "first-post"));
+
+    expect(result?.slug).toBe("first-post");
+    // Page one plus the first batch of four; pages six onward stay unread.
+    expect(requestedPages.sort((left, right) => left - right)).toEqual([1, 2, 3, 4, 5]);
+  });
+
   it("reads every page of blocks", async () => {
     const client = stubClient({
       [INDEX_SLUG]: {
