@@ -53,6 +53,13 @@ export function FrameEditor(props: FrameEditorProps) {
     saveMutation.mutate(update.value);
   };
 
+  const changeMode = (next: FrameMode): void => {
+    setValidationError(null);
+    setNotice(null);
+    saveMutation.reset();
+    setMode(next);
+  };
+
   const updatedLabel = (): string => {
     const timestamp = new Date(props.frame.updatedAt).getTime();
     return timestamp === 0
@@ -85,7 +92,7 @@ export function FrameEditor(props: FrameEditorProps) {
         channel={channel()}
         streamUrl={streamUrl()}
         busy={saveMutation.isPending}
-        onModeChange={setMode}
+        onModeChange={changeMode}
         onChannelChange={setChannel}
         onStreamUrlChange={setStreamUrl}
         onSubmit={submit}

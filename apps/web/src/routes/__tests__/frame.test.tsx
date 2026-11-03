@@ -74,6 +74,25 @@ describe("frame control page", () => {
     expect(screen.queryByLabelText("are.na channel")).toBeNull();
   });
 
+  it("clears a validation error when the mode changes", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(session));
+    fetchMock.mockResolvedValueOnce(jsonResponse(deckState));
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/Signed in as/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText("are.na channel")).toBeTruthy());
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("radio", { name: /^Video/ }));
+    await waitFor(() => expect(screen.getByLabelText("MJPEG stream URL")).toBeTruthy());
+    await user.type(screen.getByLabelText("MJPEG stream URL"), "ftp://example.com/stream.mjpg");
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => expect(screen.getByText("Check the frame settings")).toBeTruthy());
+    await user.click(screen.getByRole("radio", { name: /^Deck/ }));
+    await waitFor(() => expect(screen.queryByText("Check the frame settings")).toBeNull());
+  });
+
   it("saves clock mode when no channel has been chosen", async () => {
     const stateWithoutChannel = { ...deckState, channel: null };
     fetchMock.mockResolvedValueOnce(jsonResponse(session));
