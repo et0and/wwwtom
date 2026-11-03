@@ -49,7 +49,54 @@ describe("frame control page", () => {
     await waitFor(() => expect(screen.getByText(/Signed in as/)).toBeTruthy());
     await waitFor(() => expect(screen.getByLabelText("are.na channel")).toBeTruthy());
     expect(screen.getByLabelText("are.na channel")).toHaveValue("imaginary-museum");
-    expect(screen.getByRole("radio", { name: "Deck" })).toBeTruthy();
+    expect(screen.getByRole("radio", { name: /^Deck/ })).toBeTruthy();
+  });
+
+  it("shows only the settings that apply to the selected mode", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(session));
+    fetchMock.mockResolvedValueOnce(jsonResponse(deckState));
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/Signed in as/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText("are.na channel")).toBeTruthy());
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("radio", { name: /^Clock/ }));
+    await waitFor(() => expect(screen.queryByLabelText("are.na channel")).toBeNull());
+    expect(screen.queryByLabelText("MJPEG stream URL")).toBeNull();
+
+    await user.click(screen.getByRole("radio", { name: /^Video/ }));
+    await waitFor(() => expect(screen.getByLabelText("MJPEG stream URL")).toBeTruthy());
+    expect(screen.queryByLabelText("are.na channel")).toBeNull();
+
+    await user.click(screen.getByRole("radio", { name: /^Screen off/ }));
+    await waitFor(() => expect(screen.queryByLabelText("MJPEG stream URL")).toBeNull());
+    expect(screen.queryByLabelText("are.na channel")).toBeNull();
+  });
+
+  it("saves clock mode when no channel has been chosen", async () => {
+    const stateWithoutChannel = { ...deckState, channel: null };
+    fetchMock.mockResolvedValueOnce(jsonResponse(session));
+    fetchMock.mockResolvedValueOnce(jsonResponse(stateWithoutChannel));
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/Signed in as/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByRole("radio", { name: /^Deck/ })).toBeTruthy());
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("radio", { name: /^Clock/ }));
+    fetchMock.mockResolvedValueOnce(jsonResponse({ ...stateWithoutChannel, mode: "clock" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => expect(screen.getByText(/Frame updated/)).toBeTruthy());
+    const [url, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    expect(url).toBe("http://localhost:8788/frame/state");
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body as string)).toEqual({
+      mode: "clock",
+      channel: null,
+      streamUrl: null,
+    });
   });
 
   it("saves a mode change", async () => {
@@ -62,7 +109,7 @@ describe("frame control page", () => {
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ ...deckState, mode: "clock" }));
     const user = userEvent.setup();
-    await user.click(screen.getByRole("radio", { name: "Clock" }));
+    await user.click(screen.getByRole("radio", { name: /^Clock/ }));
     await user.click(screen.getByRole("button", { name: "Apply" }));
 
     await waitFor(() => expect(screen.getByText(/Frame updated/)).toBeTruthy());
@@ -108,7 +155,7 @@ describe("frame control page", () => {
 
     fetchMock.mockResolvedValueOnce(jsonResponse({ title: "Forbidden" }, 403));
     const user = userEvent.setup();
-    await user.click(screen.getByRole("radio", { name: "Clock" }));
+    await user.click(screen.getByRole("radio", { name: /^Clock/ }));
     await user.click(screen.getByRole("button", { name: "Apply" }));
 
     await waitFor(() => expect(screen.getByText("Could not update the frame")).toBeTruthy());

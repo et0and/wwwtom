@@ -140,6 +140,26 @@ describe("PUT /frame/state", () => {
     expect(await read.json()).toMatchObject({ mode: "clock" });
   });
 
+  it("accepts a null channel for clock mode", async () => {
+    const kv = createKv();
+    fetchMock.mockResolvedValueOnce(session("admin@example.com"));
+
+    const response = await app.fetch(
+      putRequest(envFor(kv), {
+        mode: "clock",
+        channel: null,
+        streamUrl: null,
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      mode: "clock",
+      channel: null,
+      streamUrl: null,
+    });
+  });
+
   it("rejects an untrusted origin before checking the session", async () => {
     const kv = createKv();
     const response = await app.fetch(
