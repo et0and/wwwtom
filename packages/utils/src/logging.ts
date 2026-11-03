@@ -36,13 +36,13 @@ export type LogContext = {
 };
 
 /**
- * Remove every trailing slash without a backtracking regex: `/\/+$/` is
- * quadratic on a long slash run, and the endpoint is library input.
+ * Remove every trailing slash without a backtracking regex or a mutable
+ * cursor: `/\/+$/` is quadratic on a long slash run, and the endpoint is
+ * library input.
  */
 const stripTrailingSlashes = (value: string): string => {
-  let end = value.length;
-  while (end > 0 && value.charCodeAt(end - 1) === 0x2f) end -= 1;
-  return value.slice(0, end);
+  const lastNonSlash = value.split("").findLastIndex((char) => char !== "/");
+  return value.slice(0, lastNonSlash + 1);
 };
 
 const parseOtelEndpoint = (raw: string | undefined): string | undefined => {
