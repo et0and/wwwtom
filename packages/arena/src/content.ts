@@ -281,6 +281,38 @@ export const listFrameImages = (
     };
   });
 
+/**
+ * Search the remaining index pages in bounded batches, stopping at the first
+ * batch that contains the entry. A full fan-out would fetch pages after the
+ * match and let an unrelated page failure sink an already-found lookup; a
+ * single-page walk would serialise every round-trip.
+ */
+const findIndexBatches = (
+  client: ArenaContentClient,
+  indexSlug: string,
+  entrySlug: string,
+  pages: ReadonlyArray<number>,
+): Effect.Effect<ArenaEntrySummary | null, HttpError> =>
+  Effect.gen(function* () {
+    if (pages.length === 0) return null;
+    const batch = pages.slice(0, ARENA_PAGE_CONCURRENCY);
+    const results = yield* Effect.forEach(
+      batch,
+      (nextPage) => indexPage(client, indexSlug, nextPage, MAX_PER_PAGE),
+      { concurrency: ARENA_PAGE_CONCURRENCY },
+    );
+    const found = results
+      .flatMap((result) => result.entries)
+      .find((entry) => entry.slug === entrySlug);
+    if (found !== undefined) return found;
+    return yield* findIndexBatches(
+      client,
+      indexSlug,
+      entrySlug,
+      pages.slice(ARENA_PAGE_CONCURRENCY),
+    );
+  });
+
 /** A channel missing from the master channel is a draft, so it never renders. */
 const findIndexEntry = (
   client: ArenaContentClient,
@@ -292,22 +324,12 @@ const findIndexEntry = (
     const first = yield* indexPage(client, indexSlug, page, MAX_PER_PAGE);
     const found = first.entries.find((entry) => entry.slug === entrySlug);
     if (found !== undefined) return found;
-    // The first page reports the range, so the rest can be read together
-    // rather than walked one page at a time.
     if (!first.contents.meta.has_more_pages) return null;
     const remainingPages = Array.from(
       { length: first.contents.meta.total_pages - first.contents.meta.current_page },
       (_, index) => first.contents.meta.current_page + index + 1,
     );
-    if (remainingPages.length === 0) return null;
-    const rest = yield* Effect.forEach(
-      remainingPages,
-      (nextPage) => indexPage(client, indexSlug, nextPage, MAX_PER_PAGE),
-      { concurrency: ARENA_PAGE_CONCURRENCY },
-    );
-    return (
-      rest.flatMap((result) => result.entries).find((entry) => entry.slug === entrySlug) ?? null
-    );
+    return yield* findIndexBatches(client, indexSlug, entrySlug, remainingPages);
   });
 
 /**
