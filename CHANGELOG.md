@@ -1,3 +1,10 @@
+## [4.12.2](https://github.com/et0and/wwwtom/compare/v4.12.1...v4.12.2) (2026-11-03)
+
+
+### Bug Fixes
+
+* **utils:** strip trailing slashes without a backtracking regex ([d48e182](https://github.com/et0and/wwwtom/commit/d48e182799f386f07ab651092b9eebd07e4e13a3))
+
 ## [4.12.1](https://github.com/et0and/wwwtom/compare/v4.12.0...v4.12.1) (2026-11-03)
 
 
