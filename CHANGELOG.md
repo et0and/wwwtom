@@ -1,3 +1,15 @@
+## [4.12.1](https://github.com/et0and/wwwtom/compare/v4.12.0...v4.12.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **arena:** stop scanning index pages after the matching batch ([d506709](https://github.com/et0and/wwwtom/commit/d506709210e22decea424ca74e8534a62413233a))
+
+
+### Performance Improvements
+
+* parallelize independent async reads on hot paths ([2d43530](https://github.com/et0and/wwwtom/commit/2d43530b37d098a1eb297519a6b260a98e7f57e2))
+
 # [4.12.0](https://github.com/et0and/wwwtom/compare/v4.11.1...v4.12.0) (2026-11-03)
 
 
