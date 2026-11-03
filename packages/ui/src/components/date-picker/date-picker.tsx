@@ -14,7 +14,7 @@ export type TomuiDatePickerSize = "xs" | "sm" | "base" | "lg";
 const styles = stylex.create({
   base: {
     borderWidth: 0,
-    borderRadius: radius.xl.borderRadius,
+    borderRadius: radius.xl,
     backgroundColor: colors["--color-tomui-base"],
     color: textColors["--text-color-tomui-default"],
     userSelect: "none",
