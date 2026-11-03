@@ -34,19 +34,19 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@alchemy.run/axiom": "2.0.0-beta.84",
-    "@alchemy.run/cloudflare": "2.0.0-beta.84",
-    "@alchemy.run/github": "2.0.0-beta.84",
+    "@alchemy.run/axiom": "2.0.0-beta.85",
+    "@alchemy.run/cloudflare": "2.0.0-beta.85",
+    "@alchemy.run/github": "2.0.0-beta.85",
     "@cloudflare/sandbox": "0.12.5",
     "@cloudflare/workers-types": "^4.20250408.0",
-    "@effect/platform-bun": "4.0.6",
-    "@effect/platform-node": "4.0.6",
+    "@effect/platform-bun": "4.1.2",
+    "@effect/platform-node": "4.1.2",
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
-    "alchemy": "2.0.0-beta.84",
-    "effect": "4.0.6",
+    "alchemy": "2.0.0-beta.85",
+    "effect": "4.1.2",
     "vite": "^8.1.5"
   },
   "devDependencies": {

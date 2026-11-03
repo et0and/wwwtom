@@ -1,4 +1,4 @@
-import { Crypto } from "effect/Crypto";
+import { SecureRandom } from "effect/crypto";
 import { DateTime, Duration, Effect, Option, Schema, SchemaGetter, SchemaIssue } from "effect";
 import { DatabaseService } from "@tom/db/service";
 import { toErrorMessage } from "@tom/utils/worker";
@@ -22,21 +22,12 @@ export const fediverseUserSchema = Schema.Struct({
 export type FediverseUser = Schema.Schema.Type<typeof fediverseUserSchema>;
 
 /** Cryptographically secure hex token of `byteLength` random bytes. */
-const secureHex = (byteLength: number): Effect.Effect<string, HttpError, Crypto> =>
+const secureHex = (byteLength: number): Effect.Effect<string, never, SecureRandom.SecureRandom> =>
   Effect.gen(function* () {
-    const crypto = yield* Crypto;
-    const bytes = yield* crypto.randomBytes(byteLength);
+    const random = yield* SecureRandom.SecureRandom;
+    const bytes = yield* random.randomBytes(byteLength);
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
-  }).pipe(
-    Effect.mapError(
-      (cause) =>
-        new HttpError({
-          message: "Failed to generate a secure token",
-          status: HttpStatus.InternalServerError,
-          cause,
-        }),
-    ),
-  );
+  });
 
 /**
  * A `user@instance.social` handle split into its two parts. Decoding keeps
