@@ -112,8 +112,6 @@ export const radius = stylex.defineVars({
   lg: "0.5rem",
   xl: "0.75rem",
   full: "9999px",
-  /** Matches the parent's radius, for overlays and focus rings. */
-  inherit: "inherit",
 });
 
 /** Overflow, truncation, and scroll helpers. */
