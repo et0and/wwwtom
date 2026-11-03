@@ -177,10 +177,11 @@ Alchemy uses the Cloudflare credentials configured by `alchemy login`, or the
 credentials loaded from 1Password in CI. The deploy workflow stores
 `OP_SERVICE_ACCOUNT_TOKEN` as its only credential secret;
 `CLOUDFLARE_DEFAULT_ACCOUNT_ID` remains a non-sensitive GitHub secret. Each
-stage has a 1Password item (`production`, `staging`, or `preview`) with
-`CLOUDFLARE_API_TOKEN` and `AXIOM_TOKEN`. `TOM_SECRETS` comes from the shared
-`wwwtom/shared` item because Cloudflare Secrets Store holds one account-level
-bundle for every stage.
+stage has a 1Password item (`production`, `staging`, `preview`, or `dev`) with
+`CLOUDFLARE_API_TOKEN` and `AXIOM_TOKEN`; `preview` serves every PR stage and
+`dev` backs local work. `TOM_SECRETS` comes from the shared `wwwtom/shared`
+item because Cloudflare Secrets Store holds one account-level bundle for every
+stage.
 
 `infra/.dev.vars.op` holds the same `op://` references for local work. Run
 `pnpm dev:op` for local development. For a local dev-material deploy, run:
