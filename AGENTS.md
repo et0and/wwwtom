@@ -23,7 +23,7 @@ Improve existing code; avoid new abstractions.
 - single-use `toX` converters/wrappers are almost always slop — inline them; keep
   one only when it enforces a contract (e.g. a wire-schema return type)
 - no unnecessary destructuring; no `else` unless needed; no `try`/`catch` — use Effect
-- no `any`; no `let` — prefer `const`; descriptive names
+- no `any`; no `let` (oxlint `anti-slop/no-let`) — prefer `const`; descriptive names
 - no Node-only APIs — Workers runtime; prefer web-standard/Worker-safe
 - improve existing files, don't rewrite patterns
 
