@@ -27,9 +27,9 @@ const loadStep = (name: string, env: Readonly<Record<string, string>>): UsesStep
  * workflow holds only `op://` pointers; the action resolves them at run time
  * and masks the values in logs.
  *
- * `item` selects the stage item: `production`, `staging`, or the shared
- * `preview` item. The item holds `CLOUDFLARE_API_TOKEN` and `AXIOM_TOKEN`;
- * `TOM_SECRETS` comes from the shared item.
+ * `item` selects the item for a stage: `production`, `staging`, `dev`, or
+ * `preview` (shared by every PR stage). The item holds `CLOUDFLARE_API_TOKEN`
+ * and `AXIOM_TOKEN`; `TOM_SECRETS` comes from the shared item.
  *
  * Runtime code never calls 1Password: Alchemy writes `TOM_SECRETS` to the
  * Cloudflare Secrets Store, and Workers read the binding.
