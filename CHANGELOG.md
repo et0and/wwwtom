@@ -1,3 +1,17 @@
+# [4.12.0](https://github.com/et0and/wwwtom/compare/v4.11.1...v4.12.0) (2026-11-03)
+
+
+### Bug Fixes
+
+* **frame:** clear stale status on mode change ([1e80500](https://github.com/et0and/wwwtom/commit/1e80500a89997b0f5a2ab7913a393cc5ebd8b595))
+* **ui:** remove unused inherit radius token ([af449f0](https://github.com/et0and/wwwtom/commit/af449f02b0c85eb872edc3ab6dd42338a1b9a278))
+* **ui:** resolve radius tokens as CSS variables ([7799ba5](https://github.com/et0and/wwwtom/commit/7799ba55a7480d1922fb6d4c0cef4b8bff4d37bc))
+
+
+### Features
+
+* **frame:** explain frame modes and scope their settings ([049ebc2](https://github.com/et0and/wwwtom/commit/049ebc2e0db741b640ae56207f92a889c75a2d9e))
+
 ## [4.11.1](https://github.com/et0and/wwwtom/compare/v4.11.0...v4.11.1) (2026-11-02)
 
 

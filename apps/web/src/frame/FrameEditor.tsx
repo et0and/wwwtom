@@ -34,20 +34,30 @@ export function FrameEditor(props: FrameEditorProps) {
   }));
 
   const submit = (): void => {
-    const url = streamUrl().trim();
+    const channelValue = mode() === "deck" ? channel().trim() : (props.frame.channel ?? "");
+    const streamValue = mode() === "video" ? streamUrl().trim() : (props.frame.streamUrl ?? "");
     const update = Schema.decodeUnknownOption(FrameStateUpdateSchema)({
       mode: mode(),
-      channel: channel().trim(),
-      streamUrl: url === "" ? null : url,
+      channel: channelValue === "" ? null : channelValue,
+      streamUrl: streamValue === "" ? null : streamValue,
     });
     if (Option.isNone(update)) {
-      setValidationError("Enter an are.na channel and an http(s) MJPEG URL.");
+      setValidationError(
+        mode() === "video" ? "Enter an http(s) MJPEG URL." : "Enter a valid are.na channel slug.",
+      );
       return;
     }
     setValidationError(null);
     setNotice(null);
     saveMutation.reset();
     saveMutation.mutate(update.value);
+  };
+
+  const changeMode = (next: FrameMode): void => {
+    setValidationError(null);
+    setNotice(null);
+    saveMutation.reset();
+    setMode(next);
   };
 
   const updatedLabel = (): string => {
@@ -82,7 +92,7 @@ export function FrameEditor(props: FrameEditorProps) {
         channel={channel()}
         streamUrl={streamUrl()}
         busy={saveMutation.isPending}
-        onModeChange={setMode}
+        onModeChange={changeMode}
         onChannelChange={setChannel}
         onStreamUrlChange={setStreamUrl}
         onSubmit={submit}

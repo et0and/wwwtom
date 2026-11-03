@@ -20,7 +20,7 @@ const styles = stylex.create({
     display: "flex",
     width: "fit-content",
     flexDirection: "column",
-    borderRadius: radius.xl.borderRadius,
+    borderRadius: radius.xl,
     userSelect: "none",
   },
   variantDefault: { backgroundColor: colors["--color-tomui-overlay"] },

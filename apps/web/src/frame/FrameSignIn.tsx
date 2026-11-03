@@ -12,9 +12,7 @@ export function FrameSignIn() {
 
   return (
     <div {...stylex.attrs(styles.stack)}>
-      <Text>
-        Sign in with GitHub to switch the frame between the are.na deck, the clock, and video mode.
-      </Text>
+      <Text>Sign in with GitHub to change what the desk frame shows.</Text>
       <Show when={signInMutation.error}>
         {(error) => (
           <Banner variant="error" title="Sign-in failed" description={errorMessage(error())} />

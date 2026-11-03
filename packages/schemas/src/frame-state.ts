@@ -2,8 +2,11 @@ import { Option, Schema } from "effect";
 import { ArenaSlug } from "./arena-content";
 
 /**
- * What the desk frame should draw. `video` is reserved for the MJPEG mode;
- * the firmware can acknowledge it before the decoder lands.
+ * What the desk frame should draw:
+ * - `deck`: cycle the are.na channel, with the clock and weather overlay.
+ * - `clock`: show the clock and weather only; the face buttons change the layout.
+ * - `video`: play an MJPEG stream (the decoder is not on the board yet).
+ * - `off`: blank the display and turn the backlight off; the board stays online.
  */
 export const FrameModeSchema = Schema.Literals(["deck", "clock", "video", "off"]);
 export type FrameMode = typeof FrameModeSchema.Type;
@@ -31,10 +34,13 @@ export const FrameStateSchema = Schema.Struct({
 });
 export type FrameState = typeof FrameStateSchema.Type;
 
-/** Fields the control UI may change; the adapter stamps `updatedAt`. */
+/**
+ * Fields the control UI may change; the adapter stamps `updatedAt`.
+ * A null channel leaves the board's current channel in place.
+ */
 export const FrameStateUpdateSchema = Schema.Struct({
   mode: FrameModeSchema,
-  channel: ArenaSlug,
+  channel: Schema.NullOr(ArenaSlug),
   streamUrl: Schema.NullOr(FrameStreamUrlSchema),
 });
 export type FrameStateUpdate = typeof FrameStateUpdateSchema.Type;

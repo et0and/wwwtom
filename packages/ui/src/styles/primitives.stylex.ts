@@ -99,16 +99,19 @@ export const sizing = stylex.create({
   h10: { height: "2.5rem" },
 });
 
-/** Border radius steps. Concentric shapes use outer = inner + padding. */
-export const radius = stylex.create({
-  none: { borderRadius: 0 },
-  sm: { borderRadius: "0.25rem" },
-  md: { borderRadius: "0.375rem" },
-  lg: { borderRadius: "0.5rem" },
-  xl: { borderRadius: "0.75rem" },
-  full: { borderRadius: "9999px" },
-  /** Matches the parent's radius, for overlays and focus rings. */
-  inherit: { borderRadius: "inherit" },
+/**
+ * Border radius steps. Concentric shapes use outer = inner + padding.
+ * Components use `radius.full` directly inside StyleX declarations. These are
+ * variables, not classes, so a declaration like `borderRadius: radius.full`
+ * resolves to a real value.
+ */
+export const radius = stylex.defineVars({
+  none: "0",
+  sm: "0.25rem",
+  md: "0.375rem",
+  lg: "0.5rem",
+  xl: "0.75rem",
+  full: "9999px",
 });
 
 /** Overflow, truncation, and scroll helpers. */
