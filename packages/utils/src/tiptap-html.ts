@@ -1,4 +1,4 @@
-import { Effect, Option, Ref } from "effect";
+import { Duration, Effect, Exit, Option } from "effect";
 import type { CmsBannerStyle, TiptapBlock, TiptapDoc, TiptapInline } from "@tom/schemas/cms";
 import { ShikiError } from "@tom/types/errors";
 
@@ -104,8 +104,6 @@ const CODE_LANGUAGE_ALIASES: CodeLanguageAliases = {
 
 type Highlighter = Awaited<ReturnType<(typeof import("shiki/core"))["createHighlighterCore"]>>;
 
-const highlighterRef: Ref.Ref<Option.Option<Highlighter>> = Ref.makeUnsafe(Option.none());
-
 const createHighlighter = async (): Promise<Highlighter> => {
   const [{ createHighlighterCore }, { createJavaScriptRegexEngine }, langModules, themeModules] =
     await Promise.all([
@@ -137,18 +135,20 @@ const createHighlighter = async (): Promise<Highlighter> => {
   });
 };
 
-/** Cached Shiki instance; init failures retry on the next code block. */
-const getHighlighter = Effect.gen(function* () {
-  const cached = yield* Ref.get(highlighterRef);
-  if (Option.isSome(cached)) return cached;
-  const fresh = yield* Effect.option(
+/**
+ * Cached Shiki instance. A success stays cached for the isolate's lifetime, a
+ * failed init has a zero TTL so the next code block retries, and concurrent
+ * blocks share one init.
+ */
+const getHighlighter = Effect.runSync(
+  Effect.cachedWithTTL(
     Effect.tryPromise({
       try: () => createHighlighter(),
       catch: () => new ShikiError({ message: "shiki init failed" }),
-    }).pipe(Effect.tap((loaded) => Ref.set(highlighterRef, Option.some(loaded)))),
-  );
-  return fresh;
-});
+    }),
+    (exit) => (Exit.isFailure(exit) ? Duration.zero : Duration.infinity),
+  ),
+);
 
 const codeFigure = (
   inner: string,
@@ -179,7 +179,7 @@ const highlightCode = (
     if (!KNOWN_CODE_LANGUAGES.includes(canonical)) {
       return codeFigure(plainCode(code, language), fileName, showLineNumbers);
     }
-    const highlighter = yield* getHighlighter;
+    const highlighter = yield* Effect.option(getHighlighter);
     if (Option.isNone(highlighter)) {
       return codeFigure(plainCode(code, language), fileName, showLineNumbers);
     }

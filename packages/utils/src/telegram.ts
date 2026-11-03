@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Redacted } from "effect";
+import { Context, DateTime, Effect, Layer, Redacted } from "effect";
 import { Headers, HttpBody, HttpClient, HttpClientResponse } from "effect/http";
 import { TelegramError } from "@tom/types/errors";
 import type { AlertLink, ErrorAlertDetails } from "@tom/schemas/telegram";
@@ -50,10 +50,10 @@ const formatLogSection = (requestId?: string): string =>
 
 const formatErrorMessage = (
   message: string,
+  timestamp: string,
   cause?: unknown,
   details?: ErrorAlertDetails,
 ): string => {
-  const timestamp = new Date().toISOString();
   const title = [details?.service, details?.stage, details?.status]
     .filter((part) => part !== undefined)
     .join(" · ");
@@ -155,10 +155,13 @@ export class TelegramService extends Context.Service<TelegramService, TelegramSe
         ),
         sendError: Effect.fn("TelegramService.sendError")(
           (message: string, cause?: unknown, details?: ErrorAlertDetails) =>
-            Effect.provide(
-              doSendTelegramAlert(formatErrorMessage(message, cause, details), details?.links),
-              liveHttpClient(),
-            ),
+            Effect.gen(function* () {
+              const timestamp = DateTime.formatIso(yield* DateTime.now);
+              return yield* doSendTelegramAlert(
+                formatErrorMessage(message, timestamp, cause, details),
+                details?.links,
+              );
+            }).pipe(Effect.provide(liveHttpClient())),
         ),
       };
       return service;

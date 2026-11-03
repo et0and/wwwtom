@@ -9,7 +9,7 @@ export const NormalizedEntry = Schema.String.pipe(
   }),
 );
 
-const normalizeEntry = (entry: string): string => Schema.decodeUnknownSync(NormalizedEntry)(entry);
+const normalizeEntry = (entry: string): string => Schema.decodeSync(NormalizedEntry)(entry);
 
 /** Normalize allowlist entries and drop blanks. */
 export const toAdminEmailSet = (emails: ReadonlyArray<string>): ReadonlySet<string> =>
