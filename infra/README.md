@@ -181,7 +181,8 @@ stage has a 1Password item (`production`, `staging`, `preview`, or `dev`) with
 `CLOUDFLARE_API_TOKEN` and `AXIOM_TOKEN`; `preview` serves every PR stage and
 `dev` backs local work. `TOM_SECRETS` comes from the shared `wwwtom/shared`
 item because Cloudflare Secrets Store holds one account-level bundle for every
-stage.
+stage; that item also holds the non-sensitive `CLOUDFLARE_ACCOUNT_ID`, which
+local deploys read alongside the token.
 
 `infra/.dev.vars.op` holds the same `op://` references for local work. Run
 `pnpm dev:op` for local development. For a local dev-material deploy, run:

@@ -1,7 +1,8 @@
 # 1Password secret references for local development.
 # The CLI resolves each reference at run time. No plaintext value is stored here.
 # Run: pnpm dev:op
-# Shared Cloudflare token: op://wwwtom/dev/CLOUDFLARE_API_TOKEN
+# Alchemy reads the token and account id together; both must be present.
+CLOUDFLARE_ACCOUNT_ID=op://wwwtom/shared/CLOUDFLARE_ACCOUNT_ID
 CLOUDFLARE_API_TOKEN=op://wwwtom/dev/CLOUDFLARE_API_TOKEN
 TOM_SECRETS=op://wwwtom/shared/TOM_SECRETS
 AXIOM_TOKEN=op://wwwtom/dev/AXIOM_TOKEN
