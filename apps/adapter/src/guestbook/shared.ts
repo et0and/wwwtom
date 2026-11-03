@@ -1,4 +1,4 @@
-import type { Crypto } from "effect/Crypto";
+import type { SecureRandom } from "effect/crypto";
 import { Effect, Layer, Match, Option, Schema } from "effect";
 import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import { makeTomQueueLayer, TomQueueService } from "@tom/utils/queue";
@@ -78,7 +78,11 @@ const resolveGuestbookEnv = (env: CloudflareEnv): Effect.Effect<CloudflareEnv, H
 
 export const runGuestbook = <T>(
   env: CloudflareEnv,
-  effect: Effect.Effect<T, GuestbookError, DatabaseService | TomQueueService | Crypto>,
+  effect: Effect.Effect<
+    T,
+    GuestbookError,
+    DatabaseService | TomQueueService | SecureRandom.SecureRandom
+  >,
   context: LogContext,
 ): Promise<T> =>
   runAdapter(

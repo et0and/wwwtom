@@ -1,4 +1,4 @@
-import { Effect, Layer, Option, Schema } from "effect";
+import { Effect, Inspectable, JsonPointer, Layer, Option, Schema } from "effect";
 import { problemDetailsSchema, type ProblemDetails } from "@tom/schemas/error";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { PROBLEM_JSON_MEDIA_TYPE, ProblemType } from "@tom/constants/problem";
@@ -219,13 +219,7 @@ export const toValidationProblems = (
   // Dot-joined Elysia error paths become RFC 6901 JSON pointers.
   return parsed.value.all.map(({ path, message }) => ({
     detail: message,
-    pointer:
-      path === "root"
-        ? "#"
-        : `#/${path
-            .split(".")
-            .map((segment) => segment.replace(/~/g, "~0").replace(/\//g, "~1"))
-            .join("/")}`,
+    pointer: path === "root" ? "#" : JsonPointer.formatUriFragment(path.split(".")),
   }));
 };
 
@@ -236,5 +230,5 @@ type ProblemDetailsOptions = {
 /** Human-readable message from an unknown failure (Error or string). */
 export const toErrorMessage = (cause: unknown): string => {
   if (cause === null || cause === undefined) return "unknown error";
-  return cause instanceof Error ? cause.message : String(cause);
+  return cause instanceof Error ? cause.message : Inspectable.toStringUnknown(cause);
 };

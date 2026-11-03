@@ -1,5 +1,5 @@
-import { Crypto, make as makeCrypto } from "effect/Crypto";
-import { Effect, Layer, PlatformError, Schema } from "effect";
+import { SecureRandom } from "effect/crypto";
+import { Effect, Layer, Schema } from "effect";
 import { type AppConfig, type CloudflareEnv, makeAppConfigLayer } from "@tom/utils/config";
 import { type LogContext, withLogging } from "@tom/utils/logging";
 import { DatabaseService } from "@tom/db/service";
@@ -31,26 +31,11 @@ export const createDbLayer = (env: CloudflareEnv) =>
   createServiceLayer(env, DatabaseService.Default);
 
 /**
- * Crypto bound to the Worker's Web Crypto. Only `randomBytes` is used here;
- * `digest` satisfies the service's construction contract.
+ * Randomness bound to the Worker's Web Crypto. `layerWebCrypto` reads
+ * `getRandomValues` from the platform `WebCrypto` reference, so the isolate
+ * needs no extra wiring.
  */
-const webCrypto = makeCrypto({
-  randomBytes: (size) => crypto.getRandomValues(new Uint8Array(size)),
-  digest: (algorithm, data) =>
-    Effect.tryPromise({
-      try: () => crypto.subtle.digest(algorithm, new Uint8Array(data)),
-      catch: (cause) =>
-        PlatformError.systemError({
-          _tag: "Unknown",
-          module: "Crypto",
-          method: "digest",
-          description: "crypto.subtle.digest failed",
-          cause,
-        }),
-    }).pipe(Effect.map((buffer) => new Uint8Array(buffer))),
-});
-
-export const cryptoLayer = Layer.succeed(Crypto, webCrypto);
+export const cryptoLayer = SecureRandom.layerWebCrypto;
 
 /**
  * Error thrown by integration runners when the underlying Effect fails.

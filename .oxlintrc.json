@@ -19,6 +19,7 @@
     "anti-slop/no-conditional-empty-object-spread": "error",
     "anti-slop/no-hand-rolled-retry-loop": "error",
     "anti-slop/no-known-value-widening": "error",
+    "anti-slop/no-let": "error",
     "anti-slop/no-object-parameters": "error",
     "anti-slop/no-redundant-button-type": "error",
     "anti-slop/no-runtime-typeof": "error",
@@ -50,7 +51,42 @@
     {
       "files": [".oxlint/**/*"],
       "rules": {
-        "complexity": ["error", 30]
+        "complexity": ["error", 30],
+        "anti-slop/no-let": "off"
+      }
+    },
+    {
+      "files": ["**/__tests__/**", "**/*.test.ts", "**/*.test.tsx", "**/*.spec.ts"],
+      "rules": {
+        "anti-slop/no-let": "off"
+      }
+    },
+    {
+      "files": [
+        "apps/adapter/src/arena/get-arena-frame-image.ts",
+        "apps/api/src/cms/shared.ts",
+        "apps/editor/src/editor/EditorView.tsx",
+        "apps/web/src/content/AttachmentMedia.tsx",
+        "apps/web/src/garden/GardenPlayer.tsx",
+        "apps/web/src/garden/engine.ts",
+        "apps/web/src/garden/generators/canon.ts",
+        "apps/web/src/garden/rng.ts",
+        "apps/web/src/routes/work/wwwork/hold.tsx",
+        "apps/web/src/routes/work/wwwork/kawara.tsx",
+        "infra/turbo/src/index.ts",
+        "packages/ui/src/ViewTransitions.tsx",
+        "packages/ui/src/components/checkbox/checkbox.tsx",
+        "packages/ui/src/components/dropdown/dropdown.tsx",
+        "packages/ui/src/components/radio/radio.tsx",
+        "packages/ui/src/components/select/select.tsx",
+        "packages/ui/src/components/switch/switch.tsx",
+        "packages/ui/src/components/toast/toast.tsx",
+        "packages/ui/src/components/tooltip/tooltip.tsx",
+        "packages/ui/src/utils/dismissable.ts",
+        "packages/ui/src/utils/focus.ts"
+      ],
+      "rules": {
+        "anti-slop/no-let": "off"
       }
     }
   ],

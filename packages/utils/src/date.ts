@@ -40,12 +40,12 @@ const WireTimestamp = Schema.DateTimeUtcFromString;
  * renders empty. An unparseable one also renders empty, because a timestamp
  * that reaches this far is a display detail, not a data problem worth throwing
  * over inside a render — the server already rejected a bad one at the decode
- * boundary. `Intl` rejects `DateTime.Utc`, so the instant crosses to a `Date`
- * here and nowhere else.
+ * boundary. `DateTime.formatIntl` hands the instant to `Intl` without a `Date`
+ * bridge.
  */
 const format = (formatter: Intl.DateTimeFormat, value: string | null): string => {
   const decoded = Option.getOrUndefined(Schema.decodeUnknownOption(WireTimestamp)(value));
-  return decoded === undefined ? "" : formatter.format(DateTime.toDate(decoded));
+  return decoded === undefined ? "" : DateTime.formatIntl(decoded, formatter);
 };
 
 export const formatDate = (value: string | null): string => format(dayFormatter, value);

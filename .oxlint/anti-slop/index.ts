@@ -4,6 +4,7 @@ import { noChainedTypeAssertionsRule } from "./rules/no-chained-type-assertions.
 import { noConditionalEmptyObjectSpreadRule } from "./rules/no-conditional-empty-object-spread.ts";
 import { noHandRolledRetryLoopRule } from "./rules/no-hand-rolled-retry-loop.ts";
 import { noKnownValueWideningRule } from "./rules/no-known-value-widening.ts";
+import { noLetRule } from "./rules/no-let.ts";
 import { noObjectParametersRule } from "./rules/no-object-parameters.ts";
 import { noRedundantButtonTypeRule } from "./rules/no-redundant-button-type.ts";
 import { noRuntimeTypeofRule } from "./rules/no-runtime-typeof.ts";
@@ -21,6 +22,7 @@ const antiSlopPlugin = definePlugin({
 		"no-conditional-empty-object-spread": noConditionalEmptyObjectSpreadRule,
 		"no-hand-rolled-retry-loop": noHandRolledRetryLoopRule,
 		"no-known-value-widening": noKnownValueWideningRule,
+		"no-let": noLetRule,
 		"no-object-parameters": noObjectParametersRule,
 		"no-redundant-button-type": noRedundantButtonTypeRule,
 		"no-runtime-typeof": noRuntimeTypeofRule,

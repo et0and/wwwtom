@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, Redacted, Schema } from "effect";
+import { Context, Effect, Layer, Predicate, Redacted, Schema } from "effect";
 import { TomSecretsSchema, normalizeOptionalSecret } from "@tom/schemas/secrets";
 import {
   tenantPrefixFor,
@@ -66,15 +66,14 @@ export interface CmsR2Binding {
 
 // AXIOM_TOKEN is either a plain string (local dev, tests) or a Cloudflare
 // Secrets Store binding (production; minted by the Axiom provider). Narrow
-// the union with typeof at the env boundary.
+// the union with a predicate at the env boundary.
 const secretValueCache = new WeakMap<SecretBinding, Promise<string>>();
 
 export const resolveSecretValue = (
   value: string | SecretBinding | undefined,
 ): Promise<string | undefined> => {
   if (value === undefined) return Promise.resolve(undefined);
-  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- string|binding union narrows with typeof
-  if (typeof value === "string") return Promise.resolve(value);
+  if (Predicate.isString(value)) return Promise.resolve(value);
   const cached = secretValueCache.get(value);
   if (cached !== undefined) return cached;
   const pending = value.get();
