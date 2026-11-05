@@ -14,7 +14,7 @@ concurrency:
 jobs:
   sweep:
     name: Destroy previews of closed PRs
-    runs-on: namespace-profile-yufugumi
+    runs-on: ubuntu-latest
     env:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_DEFAULT_ACCOUNT_ID }}
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

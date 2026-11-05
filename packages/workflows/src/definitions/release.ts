@@ -19,7 +19,7 @@ export const release = workflow("release", {
   jobs: {
     release: {
       name: "Release",
-      "runs-on": "namespace-profile-yufugumi",
+      "runs-on": "ubuntu-latest",
       steps: [
         checkout("Checkout", { "fetch-depth": 0, "persist-credentials": true }),
         setupStep(),

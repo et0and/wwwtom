@@ -43,7 +43,7 @@ export const prReview = workflow("pr-review", {
   jobs: {
     triage: {
       name: "Triage the diff",
-      "runs-on": "namespace-profile-yufugumi",
+      "runs-on": "ubuntu-latest",
       // A cheap triage pass has no reason to run for hours, and the agent can
       // loop on a difficult diff. GitHub's six-hour default is not a cap.
       "timeout-minutes": 30,

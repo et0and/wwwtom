@@ -29,7 +29,7 @@ export const previewStorybook = workflow("preview-storybook", {
     deploy: {
       if: notClosedAction,
       name: "Deploy Storybook preview",
-      "runs-on": "namespace-profile-yufugumi",
+      "runs-on": "ubuntu-latest",
       env: storybookPreviewEnv(prStage),
       steps: [
         checkout(),
@@ -40,7 +40,7 @@ export const previewStorybook = workflow("preview-storybook", {
     destroy: {
       if: closedAction,
       name: "Destroy Storybook preview",
-      "runs-on": "namespace-profile-yufugumi",
+      "runs-on": "ubuntu-latest",
       env: storybookPreviewEnv(prStage),
       steps: [
         // Teardown needs the infra code and secrets, not the PR head (which

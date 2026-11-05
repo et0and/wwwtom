@@ -26,9 +26,8 @@ export const setup = compositeAction("setup", {
     steps: [
       step({ uses: actionPins.setupNode, with: { "node-version": 24 } }),
       step({ uses: actionPins.pnpmSetup }),
-      // Node's default heap is ~2 GB on the Namespace runners, and the
-      // build-heavy steps (Storybook, Vite, Turbo) exceed it. Raise the ceiling
-      // for every job that calls this setup composite.
+      // The build-heavy steps (Storybook, Vite, Turbo) exceed Node's default
+      // heap. Raise the ceiling for every job that calls this setup composite.
       step({
         name: "Raise the Node heap for build-heavy steps",
         shell: "bash",

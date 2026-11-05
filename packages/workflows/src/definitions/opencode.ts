@@ -14,7 +14,7 @@ export const opencode = workflow("opencode", {
   },
   jobs: {
     opencode: {
-      "runs-on": "namespace-profile-yufugumi",
+      "runs-on": "ubuntu-latest",
       permissions: {
         "id-token": "write",
         contents: "read",
