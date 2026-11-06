@@ -85,9 +85,6 @@ runs:
       with:
         node-version: 24
     - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
-    - name: Raise the Node heap for build-heavy steps
-      run: echo "NODE_OPTIONS=--max-old-space-size=4096" >> "$GITHUB_ENV"
-      shell: bash
     - name: Resolve the pnpm store path
       run: echo "PNPM_STORE_PATH=$(pnpm store path)" >> "$GITHUB_ENV"
       shell: bash
@@ -125,6 +122,8 @@ on:
   pull_request:
     branches:
       - dev
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   test:
     name: Test
@@ -185,6 +184,8 @@ permissions:
 concurrency:
   group: deploy-\${{ github.event_name == 'push' && 'staging' || inputs.stage }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   deploy:
     name: Deploy \${{ github.event_name == 'push' && 'staging' || inputs.stage }}
@@ -234,6 +235,8 @@ permissions:
 concurrency:
   group: e2e-\${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   playwright:
     name: Playwright (tom.so fixture store)
@@ -278,6 +281,8 @@ on:
   pull_request_review_comment:
     types:
       - created
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   opencode:
     runs-on: ubuntu-latest
@@ -320,6 +325,8 @@ on:
   pull_request_review_comment:
     types:
       - created
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   respond:
     runs-on: ubuntu-latest
@@ -407,6 +414,8 @@ permissions:
 concurrency:
   group: pr-triage-\${{ github.event.pull_request.number }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   triage:
     name: Triage the diff
@@ -479,6 +488,8 @@ permissions:
 concurrency:
   group: preview-\${{ github.event.pull_request.number }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   deploy:
     name: Deploy PR preview
@@ -566,6 +577,8 @@ permissions:
 concurrency:
   group: storybook-preview-\${{ github.event.pull_request.number }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   deploy:
     name: Deploy Storybook preview
@@ -620,6 +633,8 @@ permissions:
 concurrency:
   group: preview-sweep
   cancel-in-progress: false
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   sweep:
     name: Destroy previews of closed PRs
@@ -676,6 +691,8 @@ permissions:
   issues: write
   pull-requests: write
   id-token: write
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   release:
     name: Release

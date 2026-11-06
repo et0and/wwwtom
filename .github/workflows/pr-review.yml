@@ -18,6 +18,8 @@ permissions:
 concurrency:
   group: pr-triage-${{ github.event.pull_request.number }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   triage:
     name: Triage the diff

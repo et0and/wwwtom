@@ -1,5 +1,6 @@
 import { run, step, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 
 /**
@@ -16,6 +17,7 @@ export const release = workflow("release", {
     "pull-requests": "write",
     "id-token": "write",
   },
+  env: nodeHeapEnv(),
   jobs: {
     release: {
       name: "Release",

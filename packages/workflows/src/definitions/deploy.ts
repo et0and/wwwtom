@@ -9,6 +9,7 @@ import {
   stageExpression,
   stageLabel,
 } from "../catalog/alchemy";
+import { nodeHeapEnv } from "../catalog/node";
 
 /**
  * Pushes to dev deploy the staging stage. Production is a manual
@@ -32,6 +33,7 @@ export const deploy = workflow("deploy", {
   },
   permissions: { contents: "read" },
   concurrency: { group: stageConcurrencyGroup, "cancel-in-progress": true },
+  env: nodeHeapEnv(),
   jobs: {
     deploy: {
       name: stageLabel,

@@ -1,5 +1,6 @@
 import { run, step, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 import { turboEnv, turboTask } from "../catalog/turbo";
 
@@ -14,6 +15,7 @@ export const ci = workflow("ci", {
     push: { branches: ["dev"] },
     pull_request: { branches: ["dev"] },
   },
+  env: nodeHeapEnv(),
   jobs: {
     test: {
       name: "Test",

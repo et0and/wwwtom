@@ -14,6 +14,8 @@ permissions:
 concurrency:
   group: e2e-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   playwright:
     name: Playwright (tom.so fixture store)

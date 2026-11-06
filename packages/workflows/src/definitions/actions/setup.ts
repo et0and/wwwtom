@@ -26,13 +26,6 @@ export const setup = compositeAction("setup", {
     steps: [
       step({ uses: actionPins.setupNode, with: { "node-version": 24 } }),
       step({ uses: actionPins.pnpmSetup }),
-      // The build-heavy steps (Storybook, Vite, Turbo) exceed Node's default
-      // heap. Raise the ceiling for every job that calls this setup composite.
-      step({
-        name: "Raise the Node heap for build-heavy steps",
-        shell: "bash",
-        run: `echo "NODE_OPTIONS=--max-old-space-size=4096" >> "$GITHUB_ENV"`,
-      }),
       // The pnpm store is content-addressed and shared across every job on
       // this runner type, so one warm store makes each parallel job's
       // `pnpm install` a near-instant restore.
