@@ -1,0 +1,373 @@
+---
+import Icon from "./Icon.astro";
+import type { FeatureDemoKind } from "../i18n/content";
+
+interface Props {
+  kind: FeatureDemoKind | "cloud";
+  status: string;
+}
+
+const { kind, status } = Astro.props;
+---
+
+<div
+  class:list={["demo", `demo-${kind}`]}
+  data-demo={kind}
+  data-step="0"
+  aria-hidden="true"
+>
+  <div class="demo-chrome">
+    <span class="demo-lights"><i></i><i></i><i></i></span>
+    <span class="demo-app">Slate</span>
+    <span class="demo-status">{status}</span>
+  </div>
+
+  {
+    kind === "preview" && (
+      <div class="demo-screen preview-ui">
+        <div class="preview-side">
+          <span class="demo-label">Shoot 042</span>
+          <div class="file-list">
+            <div class="file-row">
+              <span class="file-badge">RAW</span>
+              <span class="file-name">after-rain.CR3</span>
+              <span class="file-size">45 MB</span>
+            </div>
+            <div class="file-row">
+              <span class="file-badge">PSD</span>
+              <span class="file-name">gardens.psd</span>
+              <span class="file-size">812 MB</span>
+            </div>
+            <div class="file-row">
+              <span class="file-badge">PDF</span>
+              <span class="file-name">selects.pdf</span>
+              <span class="file-size">24 MB</span>
+            </div>
+            <div class="file-row">
+              <span class="file-badge">MOV</span>
+              <span class="file-name">studio-tour.mov</span>
+              <span class="file-size">1.2 GB</span>
+            </div>
+            <div class="file-row">
+              <span class="file-badge">3D</span>
+              <span class="file-name">chair.obj</span>
+              <span class="file-size">68 MB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-main">
+          <div class="preview-art">
+            <div class="preview-art-item art-photo">
+              <img src="/screens/demo/after-rain.jpg" alt="" />
+            </div>
+            <div class="preview-art-item art-psd">
+              <span class="psd-layer psd-layer-a"></span>
+              <span class="psd-layer psd-layer-b"></span>
+              <span class="psd-layer psd-layer-c"></span>
+              <span class="psd-copy">Layers</span>
+            </div>
+            <div class="preview-art-item art-pdf">
+              <div class="pdf-sheet">
+                <span class="pdf-head"></span>
+                <span class="pdf-grid">
+                  <i></i><i></i><i></i><i></i><i></i><i></i>
+                </span>
+                <span class="pdf-foot"></span>
+              </div>
+            </div>
+            <div class="preview-art-item art-mov">
+              <div class="film-frame">
+                <span class="film-strip"></span>
+                <span class="film-play"><Icon name="play" size={14} /></span>
+                <span class="film-strip"></span>
+              </div>
+            </div>
+            <div class="preview-art-item art-3d">
+              <svg viewBox="0 0 120 120" class="cube-art">
+                <path d="M60 12 103 36v48L60 108 17 84V36Z" />
+                <path d="m17 36 43 24 43-24M60 60v48" />
+              </svg>
+            </div>
+          </div>
+
+          <div class="preview-captions">
+            <span class="preview-caption">after-rain.CR3 <b>RAW · 45.2 MB</b></span>
+            <span class="preview-caption">gardens.psd <b>Photoshop · 18 layers</b></span>
+            <span class="preview-caption">selects.pdf <b>PDF · 12 pages</b></span>
+            <span class="preview-caption">studio-tour.mov <b>H.264 · 00:48</b></span>
+            <span class="preview-caption">chair.obj <b>3D · 8,412 faces</b></span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "organise" && (
+      <div class="demo-screen organise-ui">
+        <div class="folder-tabs">
+          <span class="folder-tab folder-a">Client A <b>12</b></span>
+          <span class="folder-tab folder-b">Client B <b>8</b></span>
+          <span class="folder-state folder-one">1 open</span>
+          <span class="folder-state folder-two">2 open</span>
+        </div>
+        <div class="organise-main">
+          <div class="thumb-grid">
+            <span class="demo-thumb selected"><img src="/screens/demo/after-rain.jpg" alt="" /></span>
+            <span class="demo-thumb"><img src="/screens/demo/canon.jpg" alt="" /></span>
+            <span class="demo-thumb"><img src="/screens/demo/flowers.jpg" alt="" /></span>
+            <span class="demo-thumb"><img src="/screens/demo/sunflower.jpg" alt="" /></span>
+          </div>
+          <div class="inspector">
+            <span class="inspector-name">after-rain.jpg</span>
+            <div class="inspector-row">
+              <span class="inspector-label">Rating</span>
+              <span class="rating">
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+                <span class="star">★</span>
+              </span>
+            </div>
+            <div class="inspector-row">
+              <span class="inspector-label">Label</span>
+              <span class="label-row">
+                <i class="label-dot label-red"></i>
+                <i class="label-dot label-amber"></i>
+                <i class="label-dot label-green"></i>
+                <i class="label-dot label-blue"></i>
+                <i class="label-dot label-purple"></i>
+              </span>
+            </div>
+            <div class="inspector-row">
+              <span class="inspector-label">Tags</span>
+              <span class="tag-row">
+                <span class="tag-empty">No tags</span>
+                <span class="tag-chip tag-client">client</span>
+                <span class="tag-chip tag-final">final</span>
+              </span>
+            </div>
+            <div class="inspector-row">
+              <span class="inspector-label">Folder</span>
+              <span class="folder-value">Client A</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "find" && (
+      <div class="demo-screen find-ui">
+        <div class="find-toolbar">
+          <div class="find-input">
+            <Icon name="search" size={13} />
+            <span class="find-placeholder">Search library</span>
+            <span class="find-query">flower</span>
+            <span class="find-caret"></span>
+          </div>
+          <span class="find-count count-all">24</span>
+          <span class="find-count count-query">8</span>
+          <span class="find-count count-filtered">2</span>
+        </div>
+        <div class="find-filters">
+          <span class="filter-chip filter-all">All images</span>
+          <span class="filter-chip filter-rated">Rated 4+</span>
+          <span class="filter-chip filter-client">Client A</span>
+        </div>
+        <div class="find-grid">
+          <span class="find-thumb find-thumb-1"><img src="/screens/demo/after-rain.jpg" alt="" /></span>
+          <span class="find-thumb find-thumb-2"><img src="/screens/demo/canon.jpg" alt="" /></span>
+          <span class="find-thumb find-thumb-3"><img src="/screens/demo/drift.jpg" alt="" /></span>
+          <span class="find-thumb find-thumb-4"><img src="/screens/demo/flowers.jpg" alt="" /></span>
+          <span class="find-thumb find-thumb-5"><img src="/screens/demo/red.jpg" alt="" /></span>
+          <span class="find-thumb find-thumb-6"><img src="/screens/demo/sunflower.jpg" alt="" /></span>
+        </div>
+        <div class="find-foot">
+          <span class="find-scope">Search in 4 folders</span>
+          <span class="find-result find-result-all">24 images</span>
+          <span class="find-result find-result-query">8 images</span>
+          <span class="find-result find-result-filtered">2 matches</span>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "edit" && (
+      <div class="demo-screen edit-ui">
+        <div class="edit-frame">
+          <img class="edit-base" src="/screens/demo/sunflower.jpg" alt="" />
+          <img class="edit-adjusted" src="/screens/demo/sunflower.jpg" alt="" />
+          <span class="edit-split"></span>
+          <span class="edit-before">Before</span>
+          <span class="edit-after">After</span>
+        </div>
+        <div class="edit-controls">
+          <div class="edit-control" data-control="exposure">
+            <span class="edit-label">Exposure</span>
+            <span class="edit-track"><i></i><b></b></span>
+          </div>
+          <div class="edit-control" data-control="contrast">
+            <span class="edit-label">Contrast</span>
+            <span class="edit-track"><i></i><b></b></span>
+          </div>
+          <div class="edit-control" data-control="color">
+            <span class="edit-label">Colour</span>
+            <span class="edit-track"><i></i><b></b></span>
+          </div>
+        </div>
+        <div class="edit-status">
+          <span>Non-destructive</span>
+          <span class="edit-original">Original untouched</span>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "batch" && (
+      <div class="demo-screen batch-ui">
+        <div class="batch-head">
+          <span class="batch-title">Batch · 3 files</span>
+          <span class="batch-preset">Rename · Convert · Resize</span>
+        </div>
+        <div class="batch-list">
+          <div class="batch-row">
+            <span class="batch-type">RAW</span>
+            <span class="batch-name">after-rain.CR3</span>
+            <span class="batch-track"><i></i></span>
+            <span class="batch-state state-wait">Waiting</span>
+            <span class="batch-state state-run">Converting</span>
+            <span class="batch-state state-done">Done</span>
+          </div>
+          <div class="batch-row">
+            <span class="batch-type">PSD</span>
+            <span class="batch-name">gardens.psd</span>
+            <span class="batch-track"><i></i></span>
+            <span class="batch-state state-wait">Waiting</span>
+            <span class="batch-state state-run">Resizing</span>
+            <span class="batch-state state-done">Done</span>
+          </div>
+          <div class="batch-row">
+            <span class="batch-type">JPG</span>
+            <span class="batch-name">canon.jpg</span>
+            <span class="batch-track"><i></i></span>
+            <span class="batch-state state-wait">Waiting</span>
+            <span class="batch-state state-run">Exporting</span>
+            <span class="batch-state state-done">Done</span>
+          </div>
+        </div>
+        <div class="batch-foot">
+          <span>Exports / 2026-10</span>
+          <span class="batch-summary summary-0">0 / 3</span>
+          <span class="batch-summary summary-1">1 / 3</span>
+          <span class="batch-summary summary-2">2 / 3</span>
+          <span class="batch-summary summary-3">3 files complete</span>
+          <span class="batch-check"><Icon name="check" size={13} /></span>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "publish" && (
+      <div class="demo-screen publish-ui">
+        <div class="sheet-stack">
+          <div class="sheet-page sheet-back"></div>
+          <div class="sheet-page">
+            <div class="sheet-title">
+              <span>Selects 042</span>
+              <span>12</span>
+            </div>
+            <div class="sheet-grid">
+              <img src="/screens/demo/after-rain.jpg" alt="" />
+              <img src="/screens/demo/canon.jpg" alt="" />
+              <img src="/screens/demo/drift.jpg" alt="" />
+              <img src="/screens/demo/flowers.jpg" alt="" />
+              <img src="/screens/demo/red.jpg" alt="" />
+              <img src="/screens/demo/sunflower.jpg" alt="" />
+            </div>
+            <div class="sheet-foot"><span>Slate</span><span>Contact sheet</span></div>
+          </div>
+        </div>
+        <div class="publish-panel">
+          <span class="demo-label">Export</span>
+          <span class="publish-option publish-contact">Contact sheet</span>
+          <span class="publish-option publish-pdf">Portfolio PDF</span>
+          <span class="publish-track"><i></i></span>
+          <span class="publish-status status-ready">Ready</span>
+          <span class="publish-status status-working">Building pages…</span>
+          <span class="publish-status status-done">12 pages · 24.8 MB</span>
+          <span class="publish-share">Shared link copied</span>
+        </div>
+      </div>
+    )
+  }
+
+  {
+    kind === "cloud" && (
+      <div class="demo-screen cloud-ui">
+        <div class="cloud-head">
+          <span class="cloud-title">Cloud library</span>
+          <span class="cloud-state">
+            <i class="cloud-pulse"></i>
+            <span class="cloud-state-idle">Connecting</span>
+            <span class="cloud-state-live">2-way sync</span>
+          </span>
+        </div>
+        <div class="cloud-providers">
+          <div class="provider provider-drive">
+            <Icon name="drive" size={22} />
+            <span class="provider-name">Google Drive</span>
+            <span class="provider-status provider-on">Connected</span>
+            <span class="provider-status provider-connect">Connect</span>
+          </div>
+          <div class="provider provider-onedrive">
+            <Icon name="cloud" size={22} />
+            <span class="provider-name">OneDrive</span>
+            <span class="provider-status provider-on">Connected</span>
+            <span class="provider-status provider-connect">Connect</span>
+          </div>
+          <div class="provider provider-dropbox">
+            <Icon name="dropbox" size={22} />
+            <span class="provider-name">Dropbox</span>
+            <span class="provider-status provider-on">Connected</span>
+            <span class="provider-status provider-connect">Connect</span>
+          </div>
+        </div>
+        <div class="cloud-activity">
+          <div class="cloud-folder cloud-folder-selects">
+            <span class="cloud-folder-name">Selects 042</span>
+            <span class="cloud-folder-count">24 files</span>
+            <span class="cloud-folder-state state-queue">Queued</span>
+            <span class="cloud-folder-state state-sync">Syncing</span>
+            <span class="cloud-folder-state state-done">Synced</span>
+          </div>
+          <div class="cloud-folder cloud-folder-archive">
+            <span class="cloud-folder-name">Archive</span>
+            <span class="cloud-folder-count">1,204 files</span>
+            <span class="cloud-folder-state state-done">Synced</span>
+          </div>
+          <div class="cloud-folder cloud-folder-portfolio">
+            <span class="cloud-folder-name">Portfolio 2026</span>
+            <span class="cloud-folder-count">36 files</span>
+            <span class="cloud-folder-state state-done">Synced</span>
+          </div>
+        </div>
+        <div class="cloud-sync">
+          <span class="cloud-sync-line"><i></i></span>
+          <div class="cloud-local">
+            <span>Local library</span>
+            <b>18,204 assets</b>
+          </div>
+          <span class="cloud-progress"><i></i></span>
+          <span class="cloud-updated">Up to date</span>
+        </div>
+      </div>
+    )
+  }
+</div>

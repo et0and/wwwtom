@@ -17,8 +17,11 @@ export function otherLocale(locale: Locale): Locale {
   return locale === "en" ? "ja" : "en";
 }
 
+export type FeatureDemoKind = "preview" | "organise" | "find" | "edit" | "batch" | "publish";
+
 export interface Feature {
   readonly icon: IconName;
+  readonly demo: FeatureDemoKind;
   readonly title: string;
   readonly body: string;
 }
@@ -117,31 +120,37 @@ const en: SiteCopy = {
     items: [
       {
         icon: "aperture",
+        demo: "preview",
         title: "Preview",
         body: "Thumbnails and rich previews for raw, PSD, PDF, video and 3D files.",
       },
       {
         icon: "tag",
+        demo: "organise",
         title: "Organise",
         body: "Ratings, labels, keywords and metadata, with multiple folders open at once.",
       },
       {
         icon: "grid",
+        demo: "find",
         title: "Find",
         body: "Collections, advanced filters and metadata search.",
       },
       {
         icon: "sliders",
+        demo: "edit",
         title: "Edit",
         body: "Non-destructive tone and colour, raw files, external editors and custom shortcuts.",
       },
       {
         icon: "layers",
+        demo: "batch",
         title: "Batch",
         body: "Rename, convert, resize and export folders, or chain tasks into one workflow.",
       },
       {
         icon: "printer",
+        demo: "publish",
         title: "Publish",
         body: "Contact sheets, portfolio sites, shared libraries and stock.",
       },
@@ -229,31 +238,37 @@ const ja: SiteCopy = {
     items: [
       {
         icon: "aperture",
+        demo: "preview",
         title: "プレビュー",
         body: "RAW、PSD、PDF、動画、3Dファイルをサムネイルとリッチプレビューで確認。",
       },
       {
         icon: "tag",
+        demo: "organise",
         title: "整理",
         body: "評価、ラベル、キーワード、メタデータをライブラリ全体に。複数のフォルダも同時に開けます。",
       },
       {
         icon: "grid",
+        demo: "find",
         title: "検索",
         body: "コレクション、詳細フィルター、メタデータ検索。",
       },
       {
         icon: "sliders",
+        demo: "edit",
         title: "編集",
         body: "トーンと色を非破壊で調整。RAW、外部エディター、カスタムショートカットに対応。",
       },
       {
         icon: "layers",
+        demo: "batch",
         title: "一括処理",
         body: "名前変更、変換、サイズ変更、書き出し。タスクをつないでワークフローに。",
       },
       {
         icon: "printer",
+        demo: "publish",
         title: "公開",
         body: "コンタクトシート、ポートフォリオサイト、共有ライブラリ、ストックへ。",
       },

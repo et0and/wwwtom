@@ -1,5 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
+import FeatureDemo from "../components/FeatureDemo.astro";
+import "../styles/features.css";
 import Icon from "../components/Icon.astro";
 import { links } from "../data/site";
 import { getContent, type Locale } from "../i18n/content";
@@ -50,19 +52,31 @@ const videoEmbed = "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=
     <h2 id="workstation-title" class="section-intro">{features.title}</h2>
     <div class="feature-grid">
       {features.items.map((feature) => (
-        <article class="feature-card">
-          <Icon name={feature.icon} size={26} />
-          <h3>{feature.title}</h3>
-          <p>{feature.body}</p>
+        <article class:list={["feature-card", `feature-card--${feature.demo}`]}>
+          <div class="feature-demo">
+            <FeatureDemo kind={feature.demo} status={feature.title} />
+          </div>
+          <div class="feature-copy">
+            <div class="feature-heading">
+              <Icon name={feature.icon} size={20} />
+              <h3>{feature.title}</h3>
+            </div>
+            <p>{feature.body}</p>
+          </div>
         </article>
       ))}
-    </div>
-    <div class="cloud-feature">
-      <Icon name="cloud" size={26} />
-      <div>
-        <h3>{features.cloud.title}</h3>
-        <p>{features.cloud.body}</p>
-      </div>
+      <article class="feature-card feature-card--cloud">
+        <div class="feature-copy">
+          <div class="feature-heading">
+            <Icon name="cloud" size={20} />
+            <h3>{features.cloud.title}</h3>
+          </div>
+          <p>{features.cloud.body}</p>
+        </div>
+        <div class="feature-demo">
+          <FeatureDemo kind="cloud" status={features.cloud.title} />
+        </div>
+      </article>
     </div>
   </section>
 
@@ -241,6 +255,84 @@ const videoEmbed = "https://www.youtube-nocookie.com/embed/aqz-KE-bpKQ?autoplay=
           });
         });
       }
+    });
+  </script>
+
+  <script>
+    const demos = Array.from(document.querySelectorAll<HTMLElement>(".demo[data-demo]"));
+    const sequences = {
+      preview: { steps: [0, 1, 2, 3, 4], hold: 1900 },
+      organise: { steps: [0, 1, 2, 3], hold: 2100 },
+      find: { steps: [0, 1, 2, 3], hold: 2300 },
+      edit: { steps: [0, 1, 2, 3], hold: 2300 },
+      batch: { steps: [0, 1, 2, 3], hold: 2000 },
+      publish: { steps: [0, 1, 2, 3], hold: 2200 },
+      cloud: { steps: [0, 1, 2], hold: 2200 },
+    };
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const visibleDemos = new Set<HTMLElement>();
+    const timers = new Map<HTMLElement, number>();
+
+    const stopDemo = (demo: HTMLElement) => {
+      const timer = timers.get(demo);
+      if (timer !== undefined) window.clearTimeout(timer);
+      timers.delete(demo);
+    };
+
+    const startDemo = (demo: HTMLElement) => {
+      if (document.hidden) return;
+      const name = demo.dataset.demo;
+      const sequence = name ? sequences[name as keyof typeof sequences] : undefined;
+      if (!sequence || timers.has(demo)) return;
+
+      if (reducedMotion.matches) {
+        const finalStep = sequence.steps.at(-1);
+        if (finalStep !== undefined) demo.dataset.step = String(finalStep);
+        return;
+      }
+
+      let index = 0;
+      const tick = () => {
+        const step = sequence.steps[index];
+        if (step !== undefined) demo.dataset.step = String(step);
+        index = (index + 1) % sequence.steps.length;
+        const timer = window.setTimeout(tick, sequence.hold);
+        timers.set(demo, timer);
+      };
+      tick();
+    };
+
+    const syncDemos = () => {
+      demos.forEach((demo) => {
+        if (document.hidden || !visibleDemos.has(demo)) {
+          stopDemo(demo);
+        } else {
+          startDemo(demo);
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          const demo = entry.target as HTMLElement;
+          if (entry.isIntersecting) {
+            visibleDemos.add(demo);
+            startDemo(demo);
+          } else {
+            visibleDemos.delete(demo);
+            stopDemo(demo);
+          }
+        });
+      },
+      { threshold: 0.35 },
+    );
+
+    demos.forEach((demo) => observer.observe(demo));
+    document.addEventListener("visibilitychange", syncDemos);
+    reducedMotion.addEventListener("change", () => {
+      demos.forEach(stopDemo);
+      syncDemos();
     });
   </script>
 </Base>

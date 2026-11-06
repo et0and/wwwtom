@@ -385,74 +385,6 @@ html.video-open {
   letter-spacing: -0.04em;
 }
 
-.feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-  margin-top: 20px;
-}
-
-.feature-card {
-  display: flex;
-  min-height: 238px;
-  flex-direction: column;
-  padding: 14px 16px 16px;
-  border-radius: var(--radius);
-  background: var(--muted);
-}
-
-.feature-card > svg {
-  width: 26px;
-  height: 26px;
-}
-
-.feature-card h3 {
-  margin-top: auto;
-  padding-top: 48px;
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.feature-card p {
-  max-width: 86%;
-  margin-top: 8px;
-  color: var(--muted-foreground);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.cloud-feature {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-top: 16px;
-  padding: 18px 20px;
-  border-radius: var(--radius);
-  background: var(--muted);
-}
-
-.cloud-feature > svg {
-  flex: 0 0 auto;
-  width: 26px;
-  height: 26px;
-}
-
-.cloud-feature h3 {
-  font-size: 18px;
-  line-height: 1.2;
-  font-weight: 500;
-  letter-spacing: -0.02em;
-}
-
-.cloud-feature p {
-  margin-top: 4px;
-  color: var(--muted-foreground);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
 .theme-section {
   padding-top: 72px;
 }
@@ -621,10 +553,6 @@ html.video-open {
     flex-direction: column;
   }
 
-  .feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   .footer-grid {
     flex-direction: column;
   }
@@ -690,19 +618,6 @@ html.video-open {
 
   .section {
     padding-top: 48px;
-  }
-
-  .feature-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-card {
-    min-height: 210px;
-  }
-
-  .cloud-feature {
-    align-items: flex-start;
-    padding: 16px;
   }
 
   .theme-section {
