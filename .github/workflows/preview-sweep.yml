@@ -11,6 +11,8 @@ permissions:
 concurrency:
   group: preview-sweep
   cancel-in-progress: false
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   sweep:
     name: Destroy previews of closed PRs

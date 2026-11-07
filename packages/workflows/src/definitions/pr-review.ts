@@ -1,5 +1,6 @@
 import { step, workflow } from "../builders";
 import { actionPins, checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 
 /**
@@ -40,6 +41,7 @@ export const prReview = workflow("pr-review", {
     group: "pr-triage-${{ github.event.pull_request.number }}",
     "cancel-in-progress": true,
   },
+  env: nodeHeapEnv(),
   jobs: {
     triage: {
       name: "Triage the diff",

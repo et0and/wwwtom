@@ -1,5 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 import {
   closedAction,
   notClosedAction,
@@ -25,6 +26,7 @@ export const previewStorybook = workflow("preview-storybook", {
     group: storybookPreviewConcurrencyGroup,
     "cancel-in-progress": true,
   },
+  env: nodeHeapEnv(),
   jobs: {
     deploy: {
       if: notClosedAction,

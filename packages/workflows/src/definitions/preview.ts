@@ -1,6 +1,7 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
 import { deployChain, previewStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
+import { nodeHeapEnv } from "../catalog/node";
 import {
   closedAction,
   notClosedAction,
@@ -30,6 +31,7 @@ export const preview = workflow("preview", {
   },
   permissions: { contents: "read", issues: "write", "pull-requests": "write" },
   concurrency: { group: previewConcurrencyGroup, "cancel-in-progress": true },
+  env: nodeHeapEnv(),
   jobs: {
     deploy: {
       if: notClosedAction,

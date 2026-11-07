@@ -1,5 +1,6 @@
 import { step, workflow } from "../builders";
 import { actionPins, checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 
 /**
@@ -12,6 +13,7 @@ export const opencode = workflow("opencode", {
     issue_comment: { types: ["created"] },
     pull_request_review_comment: { types: ["created"] },
   },
+  env: nodeHeapEnv(),
   jobs: {
     opencode: {
       "runs-on": "ubuntu-latest",

@@ -1,5 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 import { ex } from "../expressions";
 
@@ -28,6 +29,7 @@ export const previewSweep = workflow("preview-sweep", {
   },
   permissions: { contents: "read", "pull-requests": "read" },
   concurrency: { group: "preview-sweep", "cancel-in-progress": false },
+  env: nodeHeapEnv(),
   jobs: {
     sweep: {
       name: "Destroy previews of closed PRs",

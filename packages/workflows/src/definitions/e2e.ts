@@ -1,5 +1,6 @@
 import { step, workflow } from "../builders";
 import { actionPins, checkout, setupStep } from "../catalog/actions";
+import { nodeHeapEnv } from "../catalog/node";
 
 /**
  * Runs the Playwright suite daily and on every PR against dev. No `push`
@@ -20,6 +21,7 @@ export const e2e = workflow("e2e", {
     group: "e2e-${{ github.event.pull_request.number || github.ref }}",
     "cancel-in-progress": true,
   },
+  env: nodeHeapEnv(),
   jobs: {
     playwright: {
       name: "Playwright (tom.so fixture store)",

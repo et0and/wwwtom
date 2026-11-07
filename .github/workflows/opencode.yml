@@ -8,6 +8,8 @@ on:
   pull_request_review_comment:
     types:
       - created
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   opencode:
     runs-on: ubuntu-latest

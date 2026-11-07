@@ -20,6 +20,8 @@ permissions:
 concurrency:
   group: deploy-${{ github.event_name == 'push' && 'staging' || inputs.stage }}
   cancel-in-progress: true
+env:
+  NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   deploy:
     name: Deploy ${{ github.event_name == 'push' && 'staging' || inputs.stage }}
