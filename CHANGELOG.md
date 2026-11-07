@@ -1,3 +1,10 @@
+## [4.12.3](https://github.com/et0and/wwwtom/compare/v4.12.2...v4.12.3) (2026-11-07)
+
+
+### Bug Fixes
+
+* **ci:** support Ubuntu 26.04 runners ([f30a931](https://github.com/et0and/wwwtom/commit/f30a931a729d24a692f1031dcd0d2cda25f1d54d))
+
 ## [4.12.2](https://github.com/et0and/wwwtom/compare/v4.12.1...v4.12.2) (2026-11-03)
 
 
