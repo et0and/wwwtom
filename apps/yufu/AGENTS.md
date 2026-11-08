@@ -12,6 +12,12 @@ read it before changing this app.
 - Tests live in `src/__tests__` and drive `foldkit/scene`.
 - The DevTools MCP server is not wired into this monorepo. Run
   `npx @foldkit/devtools-mcp init` when you need live Model inspection.
-- To re-pin the vendored source after a Foldkit upgrade, run the subtree
-  pull from the repository root and read the installed version from this
-  app: `node -p "require('./apps/yufu/node_modules/foldkit/package.json').version"`.
+- `repos/foldkit` is a git submodule, not a subtree. `FOLDKIT.md` is the
+  upstream template, so its subtree commands are superseded. Re-pin the
+  submodule from the repository root:
+
+  ```sh
+  git -C repos/foldkit fetch --tags
+  git -C repos/foldkit checkout "foldkit@$(node -p "require('./apps/yufu/node_modules/foldkit/package.json').version")"
+  git add repos/foldkit
+  ```

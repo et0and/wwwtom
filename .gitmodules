@@ -1,0 +1,3 @@
+[submodule "repos/foldkit"]
+	path = repos/foldkit
+	url = https://github.com/foldkit/foldkit.git

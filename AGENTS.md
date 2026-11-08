@@ -184,9 +184,9 @@ Never guess at Effect patterns - check the guide first.
 ## Foldkit (apps/yufu)
 
 `apps/yufu` is a client-rendered Foldkit app. Read `FOLDKIT.md` before changing
-it. `repos/foldkit` is the vendored reference, pinned to the installed `foldkit`
-release with `git subtree`; treat it as read-only and import from the npm
-package.
+it. `FOLDKIT.md` is the upstream template, so its subtree commands are
+superseded. `repos/foldkit` is a git submodule pinned to the installed
+`foldkit` release; treat it as read-only and import from the npm package.
 
 subtree_prompted: true
 
