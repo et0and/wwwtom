@@ -1,0 +1,28 @@
+{
+  "name": "@tom/yufu",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Yufu Foldkit web app",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite --port 3002",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@effect/platform-browser": "catalog:",
+    "effect": "catalog:",
+    "foldkit": "0.170.0"
+  },
+  "devDependencies": {
+    "@foldkit/devtools": "0.170.0",
+    "@foldkit/vite-plugin": "0.29.0",
+    "@types/node": "catalog:",
+    "jsdom": "27.0.0",
+    "vite": "^8.1.5",
+    "vitest": "4.1.10"
+  }
+}

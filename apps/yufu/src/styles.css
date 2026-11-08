@@ -1,0 +1,28 @@
+:root {
+  color-scheme: light dark;
+  font-family: ui-sans-serif, system-ui, sans-serif;
+  line-height: 1.5;
+}
+
+body {
+  margin: 0;
+}
+
+.page {
+  display: grid;
+  min-height: 100dvh;
+  place-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.title {
+  font-size: clamp(2.5rem, 8vw, 5rem);
+  letter-spacing: -0.04em;
+  margin: 0;
+}
+
+.tagline {
+  margin: 0.5rem 0 0;
+  opacity: 0.6;
+}

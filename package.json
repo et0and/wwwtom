@@ -8,6 +8,7 @@
     "dev:web": "turbo run dev --filter=@tom/web",
     "dev:sophie": "turbo run dev --filter=@tom/sophie",
     "dev:editor": "turbo run dev --filter=@tom/editor",
+    "dev:yufu": "turbo run dev --filter=@tom/yufu",
     "dev:api": "pnpm --filter @tom/infra run dev:api",
     "dev:adapter": "pnpm --filter @tom/infra run dev:adapter",
     "lint": "turbo run lint",
