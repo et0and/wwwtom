@@ -9,6 +9,7 @@ Improve existing code; avoid new abstractions.
 - `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`). Solid rules: `apps/web/AGENTS.md`.
 - `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
 - `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
+- `apps/yufu` — Foldkit SPA (Elm architecture on Effect). Framework rules: `FOLDKIT.md`; vendored reference: `repos/foldkit`.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
@@ -44,7 +45,7 @@ Improve existing code; avoid new abstractions.
 
 ## Commands (root)
 
-- `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
+- `pnpm dev` (all via Turbo) | `dev:web` | `dev:sophie` | `dev:editor` | `dev:yufu` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm test:mutation` — Stryker mutation run for `packages/utils` (config in
   `packages/utils/stryker.config.mjs`; HTML report in `coverage/mutation`)
@@ -178,6 +179,15 @@ Never guess at Effect patterns - check the guide first.
 - `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker
 - Sophie binds no Hyperdrive (CMS is D1+R2; nothing reads `databaseUrl`)
 - web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
+
+## Foldkit (apps/yufu)
+
+`apps/yufu` is a client-rendered Foldkit app. Read `FOLDKIT.md` before changing
+it. `repos/foldkit` is the vendored reference, pinned to the installed `foldkit`
+release with `git subtree`; treat it as read-only and import from the npm
+package.
+
+subtree_prompted: true
 
 ## Rule files
 

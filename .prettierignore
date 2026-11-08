@@ -11,3 +11,7 @@ CHANGELOG.md
 
 # Vendored: classifier.dev skill (installed by `npx skills add`, kept diff-able with upstream)
 .agents/skills/bulk-classify/**
+
+# Vendored Foldkit reference (pinned subtree; keep upstream formatting)
+repos/
+FOLDKIT.md
