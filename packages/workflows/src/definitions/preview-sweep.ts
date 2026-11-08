@@ -62,6 +62,7 @@ export const previewSweep = workflow("preview-sweep", {
           '      pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true',
           "  done",
           "  pnpm destroy:storybook --yes || true",
+          "  pnpm destroy:yufu --yes || true",
           "  pnpm destroy:web --yes || true",
           "  pnpm destroy:editor --yes || true",
           "  pnpm destroy:sophie --yes || true",

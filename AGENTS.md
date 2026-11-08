@@ -172,13 +172,14 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web → sophie (then preview on a PR); `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → api → adapter → web → sophie → yufu (then preview on a PR); `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed
 - `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker
 - Sophie binds no Hyperdrive (CMS is D1+R2; nothing reads `databaseUrl`)
 - web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
+- yufu deploys via `Cloudflare.Website.Foldkit` (client-only SPA; SPA fallback from the plugin's build metadata)
 
 ## Foldkit (apps/yufu)
 
