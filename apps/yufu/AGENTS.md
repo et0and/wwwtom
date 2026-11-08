@@ -10,6 +10,8 @@ read it before changing this app.
 - `src/entry.ts` boots the runtime; `src/main.ts` holds the pure Model,
   Message, update, init, and view definitions.
 - Tests live in `src/__tests__` and drive `foldkit/scene`.
+- Styling is StyleX (`src/styles.stylex.ts`); both Vite and Vitest load
+  `stylex.vite(stylexOptions)` from `@tom/ui/stylex.config`.
 - The DevTools MCP server is not wired into this monorepo. Run
   `npx @foldkit/devtools-mcp init` when you need live Model inspection.
 - `repos/foldkit` is a git submodule, not a subtree. `FOLDKIT.md` is the

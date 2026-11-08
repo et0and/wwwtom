@@ -1,7 +1,10 @@
+import * as stylex from "@stylexjs/stylex";
 import { Schema } from "effect";
 import { Runtime, type Update } from "foldkit";
 import { Document, HtmlBuilder } from "foldkit/html";
 import { defineMessageUnion } from "foldkit/message";
+
+import { styles } from "./styles.stylex";
 
 // MODEL
 
@@ -26,10 +29,47 @@ export const init: Runtime.ApplicationInit<Model, Message> = () => ({
 
 // VIEW
 
+const sx = (...values: ReadonlyArray<stylex.StyleXStyles>): string =>
+  stylex.attrs(...values).class ?? "";
+
 export const view = (_model: Model, h: HtmlBuilder<Message>): Document => ({
   title: "Yufu",
   body: h.main(
-    [h.Class("page")],
-    [h.h1([h.Class("title")], ["Yufu"]), h.p([h.Class("tagline")], ["A blank page."])],
+    [h.Class(sx(styles.root))],
+    [
+      h.pre(
+        [h.Class(sx(styles.document))],
+        [
+          h.code(
+            [h.Class(sx(styles.code))],
+            [
+              h.span(
+                [h.Class(sx(styles.header))],
+                ["YUFU ", h.span([h.Class(sx(styles.cursor))], ["█"]), "\nFOLDKIT WEB APP\n2026"],
+              ),
+              "\n\n",
+              h.span([h.Class(sx(styles.spaced))], ["~*~ © Yufu ~*~"]),
+              "\n\n",
+              h.span([h.Class(sx(styles.h1))], ["ABOUT YUFU"]),
+              "\n\nYufu is a blank Foldkit web app.\n\n",
+              h.span([h.Class(sx(styles.h2))], ["STACK"]),
+              "\n\nFoldkit, Effect, and StyleX.\n\n",
+              h.span([h.Class(sx(styles.h2))], ["LINKS"]),
+              "\n\n- [Foldkit](",
+              h.a(
+                [
+                  h.Href("https://foldkit.dev"),
+                  h.Target("_blank"),
+                  h.Rel("noreferrer"),
+                  h.Class(sx(styles.link)),
+                ],
+                ["https://foldkit.dev"],
+              ),
+              ")\n",
+            ],
+          ),
+        ],
+      ),
+    ],
   ),
 });

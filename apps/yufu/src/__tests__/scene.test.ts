@@ -7,6 +7,6 @@ const initialModel: Model = {};
 
 describe("view", () => {
   test("renders the app heading", () => {
-    scene({ update, view }, given(initialModel), expect(text("Yufu")).toExist());
+    scene({ update, view }, given(initialModel), expect(text("ABOUT YUFU")).toExist());
   });
 });

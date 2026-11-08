@@ -1,4 +1,6 @@
 import { foldkit } from "@foldkit/vite-plugin";
+import stylex from "@stylexjs/unplugin";
+import { stylexOptions } from "@tom/ui/stylex.config";
 import { defineConfig } from "vite";
 
 if (process.cwd() !== import.meta.dirname) {
@@ -6,7 +8,7 @@ if (process.cwd() !== import.meta.dirname) {
 }
 
 export default defineConfig({
-  plugins: [foldkit()],
+  plugins: [stylex.vite(stylexOptions), foldkit()],
   optimizeDeps: {
     entries: ["src/entry.ts"],
   },

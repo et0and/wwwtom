@@ -569,6 +569,12 @@ importers:
       '@effect/platform-browser':
         specifier: 'catalog:'
         version: 4.1.2(effect@4.1.2)
+      '@stylexjs/stylex':
+        specifier: 'catalog:'
+        version: 0.19.1
+      '@tom/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       effect:
         specifier: 'catalog:'
         version: 4.1.2
@@ -582,6 +588,9 @@ importers:
       '@foldkit/vite-plugin':
         specifier: 0.29.0
         version: 0.29.0(effect@4.1.2)(foldkit@0.170.0(@effect/platform-browser@4.1.2(effect@4.1.2))(effect@4.1.2))(redis@6.2.1)(vite@8.1.5(@types/node@26.2.0)(esbuild@0.27.7)(tsx@4.21.0)(yaml@2.9.1))
+      '@stylexjs/unplugin':
+        specifier: 'catalog:'
+        version: 0.19.1(unplugin@2.3.11)
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
