@@ -13,7 +13,8 @@ read it before changing this app.
 - The DevTools MCP server is not wired into this monorepo. Run
   `npx @foldkit/devtools-mcp init` when you need live Model inspection.
 - `repos/foldkit` is a git submodule, not a subtree. `FOLDKIT.md` is the
-  upstream template, so its subtree commands are superseded. Re-pin the
+  upstream template, so its subtree commands are superseded. Initialize it
+  after a clone with `git submodule update --init repos/foldkit`. Re-pin the
   submodule from the repository root:
 
   ```sh
