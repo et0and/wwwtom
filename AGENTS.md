@@ -181,15 +181,6 @@ Never guess at Effect patterns - check the guide first.
 - web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
 - yufu deploys via `Cloudflare.Website.Foldkit` (client-only SPA; SPA fallback from the plugin's build metadata)
 
-## Foldkit (apps/yufu)
-
-`apps/yufu` is a client-rendered Foldkit app. Read `FOLDKIT.md` before changing
-it. `FOLDKIT.md` is the upstream template, so its subtree commands are
-superseded. `repos/foldkit` is a git submodule pinned to the installed
-`foldkit` release; treat it as read-only and import from the npm package.
-
-subtree_prompted: true
-
 ## Rule files
 
 - no `.cursor/` rules, `.cursorrules`, `.github/copilot-instructions.md`, or `CLAUDE.md`
