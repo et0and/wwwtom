@@ -7,6 +7,9 @@
 #include <WiFi.h>
 #include <WiFiClientSecure.h>
 #include <esp_task_wdt.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/queue.h>
+#include <freertos/task.h>
 #include <time.h>
 
 #if __has_include("config.h")
@@ -57,6 +60,7 @@ constexpr int kGavinRightEyeX = 156;
 constexpr int kGavinLookMaxX = 32;
 constexpr int kGavinLookMaxY = 8;
 constexpr uint32_t kGavinFrameMs = 33;
+constexpr uint32_t kGavinStatePollMs = 750UL;
 
 enum class FrameMode : uint8_t { Deck, Clock, Gavin, Video, Off };
 enum class GavinMood : uint8_t {
@@ -73,6 +77,17 @@ TFT_eSPI display;
 TFT_eSprite gavinFace(&display);
 WiFiClientSecure secureClient;
 WiFiClient plainClient;
+// The state poll task gets its own clients so a poll can never borrow the
+// render loop's connection.
+WiFiClientSecure statePollSecureClient;
+WiFiClient statePollPlainClient;
+
+struct StatePayload {
+  char body[kStateBytes];
+};
+
+QueueHandle_t stateQueue = nullptr;
+TaskHandle_t statePollTaskHandle = nullptr;
 
 // All long-lived buffers are static. The pixel buffer is uint16_t so its
 // alignment is guaranteed by the type, not assumed from malloc.
@@ -95,10 +110,10 @@ uint32_t lastOverlayCheck = 0;
 uint8_t face = 0;
 const char *const kFaceNames[kFaceCount] = {"bar", "minimal", "big", "line"};
 
-char statePayload[kStateBytes];
 char stateChannel[kChannelBytes] = CHANNEL_SLUG;
 char stateStreamUrl[kUrlBytes] = "";
-FrameMode mode = FrameMode::Deck;
+// The poll task reads mode to choose its interval; the render task writes it.
+volatile FrameMode mode = FrameMode::Deck;
 GavinMood gavinMood = GavinMood::Idle;
 uint32_t lastStatePoll = 0;
 uint32_t lastMaintenance = 0;
@@ -275,6 +290,14 @@ WiFiClient &clientFor(const char *url) {
   return plainClient;
 }
 
+WiFiClient &statePollClientFor(const char *url) {
+  if (strncmp(url, "https://", 8) == 0) {
+    statePollSecureClient.setInsecure();
+    return statePollSecureClient;
+  }
+  return statePollPlainClient;
+}
+
 int httpGet(HTTPClient &http, const char *url) {
   http.setConnectTimeout(15000);
   http.setTimeout(30000);
@@ -313,17 +336,18 @@ GavinMood gavinMoodFromString(const char *value) {
   return GavinMood::Idle;
 }
 
-// The mode lives in the adapter's KV. Polling it every 15 seconds keeps the
-// web UI responsive without dropping the WiFi connection between pictures.
-bool fetchState() {
+// The network poll runs in its own task so a slow TLS request never blocks
+// the 30 fps Gavin render loop. The task only fills a one-slot queue; the
+// render task applies the snapshot without touching the network.
+bool fetchStatePayload(char *bodyOut, size_t capacity) {
   char url[kUrlBytes];
   const int written = snprintf(url, sizeof(url), "%s/frame/state", ADAPTER_BASE_URL);
   if (written < 0 || static_cast<size_t>(written) >= sizeof(url)) return false;
 
   HTTPClient http;
-  http.setConnectTimeout(8000);
-  http.setTimeout(8000);
-  if (!http.begin(clientFor(url), url)) return false;
+  http.setConnectTimeout(5000);
+  http.setTimeout(5000);
+  if (!http.begin(statePollClientFor(url), url)) return false;
   http.addHeader("Authorization", "Bearer " FRAME_DEVICE_TOKEN);
   const int status = http.GET();
   if (status != HTTP_CODE_OK) {
@@ -333,15 +357,18 @@ bool fetchState() {
   }
   const String body = http.getString();
   http.end();
-  if (body.length() == 0 || body.length() >= sizeof(statePayload)) {
+  if (body.length() == 0 || body.length() >= capacity) {
     Serial.printf("[frame] state rejected, %u bytes\n", body.length());
     return false;
   }
-  memcpy(statePayload, body.c_str(), body.length());
-  statePayload[body.length()] = '\0';
+  memcpy(bodyOut, body.c_str(), body.length());
+  bodyOut[body.length()] = '\0';
+  return true;
+}
 
+bool applyStatePayload(const char *payload) {
   JsonDocument doc;
-  if (deserializeJson(doc, statePayload, body.length()) != DeserializationError::Ok) {
+  if (deserializeJson(doc, payload, strlen(payload)) != DeserializationError::Ok) {
     Serial.println("[frame] state JSON invalid");
     return false;
   }
@@ -359,6 +386,7 @@ bool fetchState() {
   const FrameMode nextModeValue = modeFromString(nextMode);
   const bool channelChanged = hasChannel && strcmp(nextChannel, stateChannel) != 0;
   const bool modeChanged = nextModeValue != mode;
+  const bool enteredGavin = modeChanged && nextModeValue == FrameMode::Gavin;
   if (channelChanged) {
     snprintf(stateChannel, sizeof(stateChannel), "%s", nextChannel);
     cursor = 0;
@@ -368,6 +396,10 @@ bool fetchState() {
   gavinMood = gavinMoodFromString(nextGavin);
   mode = nextModeValue;
   if (modeChanged || channelChanged) stateDirty = true;
+  if (enteredGavin && statePollTaskHandle != nullptr) {
+    // Wake the poll task now instead of waiting out the 15 s deck interval.
+    (void)xTaskNotifyGive(statePollTaskHandle);
+  }
   Serial.printf(
       "[frame] state mode=%s channel=%s\n",
       nextMode,
@@ -375,11 +407,61 @@ bool fetchState() {
   return true;
 }
 
+bool fetchStateOnce() {
+  char body[kStateBytes];
+  if (!fetchStatePayload(body, sizeof(body))) return false;
+  return applyStatePayload(body);
+}
+
+void statePollTask(void *) {
+  for (;;) {
+    StatePayload payload;
+    if (fetchStatePayload(payload.body, sizeof(payload.body))) {
+      (void)xQueueOverwrite(stateQueue, &payload);
+    }
+    const uint32_t interval =
+        mode == FrameMode::Gavin ? kGavinStatePollMs : kStatePollMs;
+    (void)ulTaskNotifyTake(pdTRUE, pdMS_TO_TICKS(interval));
+  }
+}
+
+void startStatePollTask() {
+  if (statePollTaskHandle != nullptr) return;
+  stateQueue = xQueueCreate(1, sizeof(StatePayload));
+  if (stateQueue == nullptr) {
+    Serial.println("[frame] state queue allocation failed");
+    return;
+  }
+  if (xTaskCreatePinnedToCore(
+          statePollTask,
+          "state-poll",
+          8192,
+          nullptr,
+          1,
+          &statePollTaskHandle,
+          0) != pdPASS) {
+    Serial.println("[frame] state task creation failed");
+    statePollTaskHandle = nullptr;
+    vQueueDelete(stateQueue);
+    stateQueue = nullptr;
+  }
+}
+
 void pollState() {
-  const uint32_t interval = mode == FrameMode::Gavin ? 750UL : kStatePollMs;
-  if (millis() - lastStatePoll < interval) return;
-  lastStatePoll = millis();
-  fetchState();
+  if (stateQueue == nullptr) {
+    // Fallback if the task could not start: keep the original blocking poll,
+    // but only at the slow interval so this is a last resort.
+    const uint32_t interval =
+        mode == FrameMode::Gavin ? kGavinStatePollMs : kStatePollMs;
+    if (millis() - lastStatePoll < interval) return;
+    lastStatePoll = millis();
+    fetchStateOnce();
+    return;
+  }
+
+  StatePayload payload;
+  if (xQueueReceive(stateQueue, &payload, 0) != pdTRUE) return;
+  applyStatePayload(payload.body);
 }
 
 // The deck is small, but it is copied into a fixed buffer. A response larger
@@ -879,6 +961,7 @@ void runGavin() {
 
   while (true) {
     esp_task_wdt_reset();
+    // Non-blocking: statePollTask owns the HTTP request.
     pollState();
     if (mode != FrameMode::Gavin) break;
     if (stateDirty) stateDirty = false;
@@ -933,8 +1016,11 @@ void loop() {
   }
 
   if (lastStatePoll == 0) {
-    fetchState();
+    // One synchronous read at boot gives the first frame a mode. After that
+    // the background task owns polling and the render loop only drains it.
+    fetchStateOnce();
     lastStatePoll = millis();
+    startStatePollTask();
   } else {
     pollState();
   }
