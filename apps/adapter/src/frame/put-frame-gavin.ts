@@ -3,7 +3,7 @@ import { Effect, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { type FrameState } from "@tom/schemas/frame-state";
-import { GavinMoodSchema } from "@tom/schemas/gavin";
+import { GavinMoodUpdateSchema } from "@tom/schemas/gavin";
 import { logContextFromRequest } from "@tom/utils/worker";
 import { requireArenaTenant } from "../arena/shared";
 import { allowLocalOriginsForAdapter, tenantFromValue } from "../origins";
@@ -11,7 +11,6 @@ import { AdapterError, runAdapter } from "../runtime";
 import { requireTrustedWriteOrigin } from "../write-origin-gate";
 import { readFrameEnv, readFrameState, requireAdminSession, writeFrameState } from "./shared";
 
-const GavinMoodUpdateSchema = Schema.Struct({ mood: GavinMoodSchema });
 const GavinMoodUpdateBodySchema = Schema.toStandardSchemaV1(GavinMoodUpdateSchema);
 
 export const putFrameGavinRoute = new Elysia().put(
