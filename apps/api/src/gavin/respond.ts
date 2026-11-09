@@ -9,15 +9,23 @@ import { getRequestEnv } from "@tom/utils/worker";
 
 const GavinRequestBodySchema = Schema.toStandardSchemaV1(GavinRequestSchema);
 
-const OpenCodeCompletionSchema = Schema.Struct({
-  choices: Schema.Array(
-    Schema.Struct({
-      message: Schema.Struct({ content: Schema.String }),
-    }),
+const OpenCodeResponseItemSchema = Schema.Struct({
+  type: Schema.optional(Schema.String),
+  content: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        type: Schema.optional(Schema.String),
+        text: Schema.optional(Schema.String),
+      }),
+    ),
   ),
 });
 
-const MODEL = "muse-spark-1.3-contributor";
+const OpenCodeResponsesSchema = Schema.Struct({
+  output_text: Schema.optional(Schema.String),
+  output: Schema.Array(OpenCodeResponseItemSchema),
+});
+
 const SYSTEM_PROMPT = `You are Gavin, a small desk companion. You have two narrow white eyes on a black screen.
 The user is speaking to you through a web page. You cannot see or hear; their words arrive as text.
 Reply in one or two short, warm, curious sentences. Do not use markdown.
@@ -40,6 +48,7 @@ export const respondRoute = new Elysia().post(
     const env = await readCloudflareEnv(getRequestEnv(request));
     const baseUrl = env.OPENCODE_GO_BASE_URL?.replace(/\/+$/, "");
     const apiKey = env.OPENCODE_GO_API_KEY;
+    const model = env.OPENCODE_GO_MODEL ?? "muse-spark-1.3-contributor";
     if (!baseUrl || !apiKey) {
       throw new HttpError({
         status: HttpStatus.ServiceUnavailable,
@@ -47,22 +56,22 @@ export const respondRoute = new Elysia().post(
       });
     }
 
-    const response = await fetch(`${baseUrl}/chat/completions`, {
+    const response = await fetch(`${baseUrl}/responses`, {
       method: "POST",
       headers: {
         authorization: `Bearer ${apiKey}`,
         "content-type": "application/json",
+        "user-agent": "gavin-frame/1.0",
+        "x-opencode-session": "gavin-desk-frame",
       },
       body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: body.transcript },
-        ],
-        temperature: 0.8,
-        max_tokens: 160,
+        model,
+        instructions: SYSTEM_PROMPT,
+        input: body.transcript,
+        max_output_tokens: 600,
+        reasoning: { effort: "low" },
       }),
-      signal: AbortSignal.timeout(20000),
+      signal: AbortSignal.timeout(30000),
     });
 
     if (!response.ok) {
@@ -74,9 +83,15 @@ export const respondRoute = new Elysia().post(
 
     const payload: unknown = await response.json();
     const completion = Option.getOrNull(
-      Schema.decodeUnknownOption(OpenCodeCompletionSchema)(payload),
+      Schema.decodeUnknownOption(OpenCodeResponsesSchema)(payload),
     );
-    const content = completion?.choices[0]?.message.content.trim();
+    const outputText = completion?.output_text;
+    const content = (
+      outputText ??
+      completion?.output
+        .flatMap((item) => item.content ?? [])
+        .find((item) => item.type === "output_text" && item.text !== undefined)?.text
+    )?.trim();
     if (!content) {
       throw new HttpError({
         status: HttpStatus.BadGateway,

@@ -112,6 +112,7 @@ export type CloudflareEnv = {
   // adapter or the browser. The base URL includes the API version prefix.
   OPENCODE_GO_BASE_URL?: string;
   OPENCODE_GO_API_KEY?: string;
+  OPENCODE_GO_MODEL?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
@@ -197,6 +198,7 @@ const secretKeys = [
   "FRAME_DEVICE_TOKEN",
   "OPENCODE_GO_BASE_URL",
   "OPENCODE_GO_API_KEY",
+  "OPENCODE_GO_MODEL",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
   "TURBO_CACHE_TOKEN",
@@ -285,6 +287,7 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
       GOOGLE_OAUTH_CLIENTS: rest.GOOGLE_OAUTH_CLIENTS,
       OPENCODE_GO_BASE_URL: rest.OPENCODE_GO_BASE_URL,
       OPENCODE_GO_API_KEY: rest.OPENCODE_GO_API_KEY,
+      OPENCODE_GO_MODEL: rest.OPENCODE_GO_MODEL,
     }).filter(([, value]) => value !== undefined && value !== ""),
   );
 

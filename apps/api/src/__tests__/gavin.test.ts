@@ -33,13 +33,8 @@ describe("POST /gavin/respond", () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
-          choices: [
-            {
-              message: {
-                content: JSON.stringify({ reply: "Hello. I see you.", mood: "happy" }),
-              },
-            },
-          ],
+          output_text: JSON.stringify({ reply: "Hello. I see you.", mood: "happy" }),
+          output: [],
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       ),
@@ -51,11 +46,12 @@ describe("POST /gavin/respond", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ reply: "Hello. I see you.", mood: "happy" });
     expect(fetchMock).toHaveBeenCalledWith(
-      "https://opencode.example/v1/chat/completions",
+      "https://opencode.example/v1/responses",
       expect.objectContaining({
         method: "POST",
         headers: expect.objectContaining({
           authorization: "Bearer test-key",
+          "x-opencode-session": "gavin-desk-frame",
         }),
       }),
     );
@@ -67,7 +63,12 @@ describe("POST /gavin/respond", () => {
       vi.fn().mockResolvedValue(
         new Response(
           JSON.stringify({
-            choices: [{ message: { content: "Just a plain reply." } }],
+            output: [
+              {
+                type: "message",
+                content: [{ type: "output_text", text: "Just a plain reply." }],
+              },
+            ],
           }),
           { status: 200, headers: { "content-type": "application/json" } },
         ),
