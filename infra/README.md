@@ -69,8 +69,8 @@ Target it from a workflow with `runs-on: cloudflare-sandbox`. Each runner
 registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
-`pnpm destroy` tears down the current stage in reverse order
-(`yufu -> sophie -> editor -> web -> adapter -> api -> turbo -> shared`).
+`pnpm destroy` tears down the current stage in teardown order
+(`yufu -> web -> editor -> sophie -> adapter -> api -> turbo -> shared`).
 
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 
