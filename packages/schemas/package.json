@@ -9,6 +9,7 @@
     "./arena-frame": "./src/arena-frame.ts",
     "./cms": "./src/cms.ts",
     "./frame-state": "./src/frame-state.ts",
+    "./gavin": "./src/gavin.ts",
     "./error": "./src/error.ts",
     "./guestbook": "./src/guestbook.ts",
     "./health": "./src/health.ts",

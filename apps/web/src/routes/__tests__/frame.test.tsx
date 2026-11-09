@@ -69,6 +69,11 @@ describe("frame control page", () => {
     await waitFor(() => expect(screen.getByLabelText("MJPEG stream URL")).toBeTruthy());
     expect(screen.queryByLabelText("are.na channel")).toBeNull();
 
+    await user.click(screen.getByRole("radio", { name: /^Gavin/ }));
+    await waitFor(() => expect(screen.queryByLabelText("MJPEG stream URL")).toBeNull());
+    expect(screen.queryByLabelText("are.na channel")).toBeNull();
+    expect(screen.getByText(/Apply to put Gavin/)).toBeTruthy();
+
     await user.click(screen.getByRole("radio", { name: /^Screen off/ }));
     await waitFor(() => expect(screen.queryByLabelText("MJPEG stream URL")).toBeNull());
     expect(screen.queryByLabelText("are.na channel")).toBeNull();
@@ -116,6 +121,24 @@ describe("frame control page", () => {
       channel: null,
       streamUrl: null,
     });
+  });
+
+  it("shows Gavin talk controls after Gavin mode is saved", async () => {
+    fetchMock.mockResolvedValueOnce(jsonResponse(session));
+    fetchMock.mockResolvedValueOnce(jsonResponse(deckState));
+
+    renderPage();
+    await waitFor(() => expect(screen.getByText(/Signed in as/)).toBeTruthy());
+    await waitFor(() => expect(screen.getByLabelText("are.na channel")).toBeTruthy());
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("radio", { name: /^Gavin/ }));
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse({ ...deckState, mode: "gavin", gavinMood: "idle" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Apply" }));
+
+    await waitFor(() => expect(screen.getByLabelText("Or type to Gavin")).toBeTruthy());
   });
 
   it("saves a mode change", async () => {

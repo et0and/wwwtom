@@ -108,6 +108,10 @@ export type CloudflareEnv = {
   // Shared secret the desk frame sends to read its mode state. Optional in
   // type so tests can omit it; the route fails closed when unset.
   FRAME_DEVICE_TOKEN?: string;
+  // OpenCode Go is called only by the API. The key never reaches the
+  // adapter or the browser. The base URL includes the API version prefix.
+  OPENCODE_GO_BASE_URL?: string;
+  OPENCODE_GO_API_KEY?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
@@ -191,6 +195,8 @@ const secretKeys = [
   "TELEGRAM_CHAT_ID",
   "INTERNAL_API_TOKEN",
   "FRAME_DEVICE_TOKEN",
+  "OPENCODE_GO_BASE_URL",
+  "OPENCODE_GO_API_KEY",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
   "TURBO_CACHE_TOKEN",
@@ -277,6 +283,8 @@ export const readCloudflareEnv = async (env: CloudflareEnv): Promise<ResolvedClo
       GOOGLE_CLIENT_ID: rest.GOOGLE_CLIENT_ID,
       GOOGLE_CLIENT_SECRET: rest.GOOGLE_CLIENT_SECRET,
       GOOGLE_OAUTH_CLIENTS: rest.GOOGLE_OAUTH_CLIENTS,
+      OPENCODE_GO_BASE_URL: rest.OPENCODE_GO_BASE_URL,
+      OPENCODE_GO_API_KEY: rest.OPENCODE_GO_API_KEY,
     }).filter(([, value]) => value !== undefined && value !== ""),
   );
 

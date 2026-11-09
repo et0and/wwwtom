@@ -45,10 +45,32 @@ constexpr size_t kChannelBytes = 64;
 constexpr uint8_t kFaceCount = 4;
 constexpr int kButtonNext = 0;  // BOOT, press after boot
 constexpr int kButtonPrev = 35;
+constexpr int kGavinSpriteX = 20;
+constexpr int kGavinSpriteY = 20;
+constexpr int kGavinSpriteW = 200;
+constexpr int kGavinSpriteH = 100;
+constexpr int kGavinEyeWidth = 58;
+constexpr int kGavinEyeHeight = 18;
+constexpr int kGavinEyeY = 58;
+constexpr int kGavinLeftEyeX = 84;
+constexpr int kGavinRightEyeX = 156;
+constexpr int kGavinLookMaxX = 32;
+constexpr int kGavinLookMaxY = 8;
+constexpr uint32_t kGavinFrameMs = 33;
 
-enum class FrameMode : uint8_t { Deck, Clock, Video, Off };
+enum class FrameMode : uint8_t { Deck, Clock, Gavin, Video, Off };
+enum class GavinMood : uint8_t {
+  Idle,
+  Listening,
+  Thinking,
+  Speaking,
+  Happy,
+  Sleepy,
+  Surprised,
+};
 
 TFT_eSPI display;
+TFT_eSprite gavinFace(&display);
 WiFiClientSecure secureClient;
 WiFiClient plainClient;
 
@@ -77,6 +99,7 @@ char statePayload[kStateBytes];
 char stateChannel[kChannelBytes] = CHANNEL_SLUG;
 char stateStreamUrl[kUrlBytes] = "";
 FrameMode mode = FrameMode::Deck;
+GavinMood gavinMood = GavinMood::Idle;
 uint32_t lastStatePoll = 0;
 uint32_t lastMaintenance = 0;
 uint32_t weatherAttemptedAt = 0;
@@ -274,9 +297,20 @@ int httpGet(HTTPClient &http, const char *url) {
 
 FrameMode modeFromString(const char *value) {
   if (strcmp(value, "clock") == 0) return FrameMode::Clock;
+  if (strcmp(value, "gavin") == 0) return FrameMode::Gavin;
   if (strcmp(value, "video") == 0) return FrameMode::Video;
   if (strcmp(value, "off") == 0) return FrameMode::Off;
   return FrameMode::Deck;
+}
+
+GavinMood gavinMoodFromString(const char *value) {
+  if (strcmp(value, "listening") == 0) return GavinMood::Listening;
+  if (strcmp(value, "thinking") == 0) return GavinMood::Thinking;
+  if (strcmp(value, "speaking") == 0) return GavinMood::Speaking;
+  if (strcmp(value, "happy") == 0) return GavinMood::Happy;
+  if (strcmp(value, "sleepy") == 0) return GavinMood::Sleepy;
+  if (strcmp(value, "surprised") == 0) return GavinMood::Surprised;
+  return GavinMood::Idle;
 }
 
 // The mode lives in the adapter's KV. Polling it every 15 seconds keeps the
@@ -315,6 +349,7 @@ bool fetchState() {
   const char *nextMode = doc["mode"] | "deck";
   const char *nextChannel = doc["channel"] | "";
   const char *nextStream = doc["streamUrl"] | "";
+  const char *nextGavin = doc["gavinMood"] | "idle";
   const bool hasChannel = nextChannel[0] != '\0';
   if (hasChannel && strlen(nextChannel) >= sizeof(stateChannel)) {
     Serial.println("[frame] state channel too long");
@@ -330,6 +365,7 @@ bool fetchState() {
     page = 1;
   }
   snprintf(stateStreamUrl, sizeof(stateStreamUrl), "%s", nextStream);
+  gavinMood = gavinMoodFromString(nextGavin);
   mode = nextModeValue;
   if (modeChanged || channelChanged) stateDirty = true;
   Serial.printf(
@@ -340,7 +376,8 @@ bool fetchState() {
 }
 
 void pollState() {
-  if (millis() - lastStatePoll < kStatePollMs) return;
+  const uint32_t interval = mode == FrameMode::Gavin ? 750UL : kStatePollMs;
+  if (millis() - lastStatePoll < interval) return;
   lastStatePoll = millis();
   fetchState();
 }
@@ -668,6 +705,200 @@ void waitForModeChange() {
   }
 }
 
+
+uint32_t gavinLastFrameAt = 0;
+uint32_t gavinNextBlinkAt = 0;
+uint32_t gavinBlinkUntil = 0;
+uint32_t gavinNextLookAt = 0;
+uint32_t gavinNextVerticalAt = 0;
+uint32_t gavinVerticalUntil = 0;
+uint32_t gavinDoubleBlinkAt = 0;
+int gavinLookX = 0;
+int gavinLookY = 0;
+int gavinLookTargetX = 0;
+int gavinLookTargetY = 0;
+
+int gavinRandomBetween(int low, int high) {
+  return low + static_cast<int>(esp_random() % static_cast<uint32_t>(high - low + 1));
+}
+
+int gavinApproach(int value, int target) {
+  const int delta = target - value;
+  if (delta > 1) return value + (delta / 3) + 1;
+  if (delta < -1) return value + (delta / 3) - 1;
+  return target;
+}
+
+void drawGavinEye(int centerX, int eyeY, int height, int shiftX, int shiftY) {
+  gavinFace.fillRoundRect(
+      centerX - kGavinEyeWidth / 2 + shiftX - kGavinSpriteX,
+      eyeY + shiftY - kGavinSpriteY,
+      kGavinEyeWidth,
+      height,
+      height / 2,
+      TFT_WHITE);
+}
+
+void drawGavinClosedEyes(int shiftX, int shiftY) {
+  const int centerY = kGavinEyeY + kGavinEyeHeight / 2 + shiftY - kGavinSpriteY;
+  const int left = kGavinLeftEyeX - kGavinEyeWidth / 2 + shiftX - kGavinSpriteX;
+  const int right = kGavinRightEyeX - kGavinEyeWidth / 2 + shiftX - kGavinSpriteX;
+  gavinFace.fillRoundRect(left, centerY - 2, kGavinEyeWidth, 4, 2, TFT_WHITE);
+  gavinFace.fillRoundRect(right, centerY - 2, kGavinEyeWidth, 4, 2, TFT_WHITE);
+}
+
+void drawGavinVerticalEyes(int shiftX, int shiftY) {
+  const int centerY = kGavinEyeY + kGavinEyeHeight / 2 + shiftY - kGavinSpriteY;
+  const int left = kGavinLeftEyeX - 9 + shiftX - kGavinSpriteX;
+  const int right = kGavinRightEyeX - 9 + shiftX - kGavinSpriteX;
+  gavinFace.fillRoundRect(left, centerY - 29, 18, 58, 9, TFT_WHITE);
+  gavinFace.fillRoundRect(right, centerY - 29, 18, 58, 9, TFT_WHITE);
+}
+
+void drawGavinHappyEyes(int shiftX) {
+  const float centerY =
+      static_cast<float>(kGavinEyeY + kGavinEyeHeight / 2 - kGavinSpriteY);
+  const float left = static_cast<float>(kGavinLeftEyeX + shiftX - kGavinSpriteX);
+  const float right = static_cast<float>(kGavinRightEyeX + shiftX - kGavinSpriteX);
+  gavinFace.drawWideLine(left - 24.0f, centerY + 8.0f, left, centerY - 8.0f, 7.0f, TFT_WHITE);
+  gavinFace.drawWideLine(left, centerY - 8.0f, left + 24.0f, centerY + 8.0f, 7.0f, TFT_WHITE);
+  gavinFace.drawWideLine(right - 24.0f, centerY + 8.0f, right, centerY - 8.0f, 7.0f, TFT_WHITE);
+  gavinFace.drawWideLine(right, centerY - 8.0f, right + 24.0f, centerY + 8.0f, 7.0f, TFT_WHITE);
+}
+
+void drawGavinFace(uint32_t now) {
+  gavinFace.fillSprite(TFT_BLACK);
+  const int shiftX = gavinLookX;
+  const int shiftY = gavinLookY;
+
+  if (gavinMood == GavinMood::Happy) {
+    drawGavinHappyEyes(shiftX);
+    gavinFace.pushSprite(kGavinSpriteX, kGavinSpriteY);
+    return;
+  }
+
+  if (gavinMood == GavinMood::Idle && now < gavinBlinkUntil) {
+    drawGavinClosedEyes(shiftX, shiftY);
+    gavinFace.pushSprite(kGavinSpriteX, kGavinSpriteY);
+    return;
+  }
+
+  switch (gavinMood) {
+    case GavinMood::Listening:
+      drawGavinEye(kGavinLeftEyeX, kGavinEyeY - 3, 24, 0, 0);
+      drawGavinEye(kGavinRightEyeX, kGavinEyeY - 3, 24, 0, 0);
+      break;
+    case GavinMood::Thinking:
+      drawGavinEye(kGavinLeftEyeX, kGavinEyeY + 4, 10, 4, 0);
+      drawGavinEye(kGavinRightEyeX, kGavinEyeY, kGavinEyeHeight, 4, 0);
+      break;
+    case GavinMood::Speaking: {
+      const int pulse = static_cast<int>((now / 90) % 5);
+      const int height = 14 + pulse * 2;
+      const int eyeY = kGavinEyeY + (kGavinEyeHeight - height) / 2;
+      const int wobble = (static_cast<int>((now / 120) % 3) - 1) * 4;
+      drawGavinEye(kGavinLeftEyeX, eyeY, height, wobble, 0);
+      drawGavinEye(kGavinRightEyeX, eyeY, height, wobble, 0);
+      break;
+    }
+    case GavinMood::Sleepy:
+      drawGavinEye(kGavinLeftEyeX, kGavinEyeY + 5, 8, 0, 0);
+      drawGavinEye(kGavinRightEyeX, kGavinEyeY + 5, 8, 0, 0);
+      break;
+    case GavinMood::Surprised:
+      drawGavinEye(kGavinLeftEyeX, kGavinEyeY - 5, 28, 0, 0);
+      drawGavinEye(kGavinRightEyeX, kGavinEyeY - 5, 28, 0, 0);
+      break;
+    case GavinMood::Idle:
+      if (now < gavinVerticalUntil) {
+        drawGavinVerticalEyes(shiftX, shiftY);
+      } else {
+        drawGavinEye(kGavinLeftEyeX, kGavinEyeY, kGavinEyeHeight, shiftX, shiftY);
+        drawGavinEye(kGavinRightEyeX, kGavinEyeY, kGavinEyeHeight, shiftX, shiftY);
+      }
+      break;
+    case GavinMood::Happy:
+      break;
+  }
+
+  gavinFace.pushSprite(kGavinSpriteX, kGavinSpriteY);
+}
+
+void updateGavinIdle(uint32_t now) {
+  if (gavinNextBlinkAt == 0) gavinNextBlinkAt = now + gavinRandomBetween(1200, 7000);
+  if (gavinNextLookAt == 0) gavinNextLookAt = now + gavinRandomBetween(250, 3000);
+  if (gavinNextVerticalAt == 0) gavinNextVerticalAt = now + gavinRandomBetween(6000, 13000);
+
+  if (now >= gavinNextVerticalAt) {
+    gavinVerticalUntil = now + gavinRandomBetween(1400, 2600);
+    gavinNextVerticalAt = now + gavinRandomBetween(7000, 16000);
+  }
+
+  if (now >= gavinNextBlinkAt) {
+    gavinBlinkUntil = now + gavinRandomBetween(80, 180);
+    if (gavinRandomBetween(0, 99) < 28 && gavinDoubleBlinkAt == 0) {
+      gavinDoubleBlinkAt = gavinBlinkUntil + gavinRandomBetween(80, 240);
+    }
+    gavinNextBlinkAt = now + gavinRandomBetween(1100, 8000);
+  }
+
+  if (gavinDoubleBlinkAt != 0 && now >= gavinDoubleBlinkAt) {
+    gavinBlinkUntil = now + gavinRandomBetween(70, 150);
+    gavinDoubleBlinkAt = 0;
+  }
+
+  if (now >= gavinNextLookAt) {
+    const bool isMicroMove = gavinRandomBetween(0, 99) < 35;
+    const int rangeX = isMicroMove ? 8 : kGavinLookMaxX;
+    const int rangeY = isMicroMove ? 4 : kGavinLookMaxY;
+    gavinLookTargetX = gavinRandomBetween(-rangeX, rangeX);
+    gavinLookTargetY = gavinRandomBetween(-rangeY, rangeY);
+    gavinNextLookAt = now + gavinRandomBetween(200, 3000);
+  }
+
+  gavinLookX = gavinApproach(gavinLookX, gavinLookTargetX);
+  gavinLookY = gavinApproach(gavinLookY, gavinLookTargetY);
+}
+
+// Gavin is a face-only mode: no clock, weather, text, or image overlay.
+void runGavin() {
+  gavinFace.setColorDepth(16);
+  if (gavinFace.createSprite(kGavinSpriteW, kGavinSpriteH) == nullptr) {
+    Serial.println("[frame] Gavin sprite allocation failed");
+    delay(1000);
+    return;
+  }
+  display.fillScreen(TFT_BLACK);
+  gavinLastFrameAt = 0;
+  gavinNextBlinkAt = millis() + gavinRandomBetween(1200, 7000);
+  gavinNextLookAt = millis() + gavinRandomBetween(250, 3000);
+  gavinNextVerticalAt = millis() + gavinRandomBetween(6000, 13000);
+  gavinBlinkUntil = 0;
+  gavinVerticalUntil = 0;
+  gavinDoubleBlinkAt = 0;
+
+  while (true) {
+    esp_task_wdt_reset();
+    pollState();
+    if (mode != FrameMode::Gavin) break;
+    if (stateDirty) stateDirty = false;
+    if (WiFi.status() != WL_CONNECTED) break;
+    const uint32_t now = millis();
+    if (now - gavinLastFrameAt < kGavinFrameMs) {
+      delay(1);
+      continue;
+    }
+    gavinLastFrameAt = now;
+    if (gavinMood == GavinMood::Idle) updateGavinIdle(now);
+    drawGavinFace(now);
+    delay(1);
+  }
+
+  gavinFace.deleteSprite();
+  stateDirty = false;
+}
+
+
 }  // namespace
 
 void setup() {
@@ -717,6 +948,12 @@ void loop() {
   }
 
   setBacklight(true);
+
+  if (mode == FrameMode::Gavin) {
+    stateDirty = false;
+    runGavin();
+    return;
+  }
 
   if (mode == FrameMode::Video) {
     showMessage("Video mode");

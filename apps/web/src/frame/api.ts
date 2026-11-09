@@ -1,5 +1,6 @@
 import { HttpStatus } from "@tom/constants/http";
 import { FrameStateSchema, type FrameState, type FrameStateUpdate } from "@tom/schemas/frame-state";
+import { GavinReplySchema, type GavinMood, type GavinReply } from "@tom/schemas/gavin";
 import { HttpError } from "@tom/types/errors";
 import { Option, Schema } from "effect";
 import { getAdapterBaseUrl } from "~/data/adapter";
@@ -90,6 +91,30 @@ export const saveFrameState = (update: FrameStateUpdate): Promise<FrameState> =>
     },
     FrameStateSchema,
     "The adapter returned an invalid frame state",
+  );
+
+export const setGavinMood = (mood: GavinMood): Promise<FrameState> =>
+  fetchJson(
+    "/frame/gavin",
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mood }),
+    },
+    FrameStateSchema,
+    "The adapter returned an invalid frame state",
+  );
+
+export const askGavin = (transcript: string): Promise<GavinReply> =>
+  fetchJson(
+    "/gavin/respond",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript }),
+    },
+    GavinReplySchema,
+    "The adapter returned an invalid Gavin reply",
   );
 
 export const startSignIn = async (): Promise<void> => {

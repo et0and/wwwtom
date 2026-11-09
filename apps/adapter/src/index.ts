@@ -22,6 +22,7 @@ import { arenaIntegration } from "./arena";
 import { authIntegration } from "./auth";
 import { cmsIntegration } from "./cms";
 import { frameIntegration } from "./frame";
+import { gavinIntegration } from "./gavin";
 import { guestbookIntegration } from "./guestbook";
 import { guestbookUserFromCookie } from "./guestbook/shared";
 import { githubIntegration } from "./github";
@@ -145,6 +146,7 @@ export const app = new Elysia({
   .use(authIntegration)
   .use(cmsIntegration)
   .use(frameIntegration)
+  .use(gavinIntegration)
   .use(guestbookIntegration)
   .use(githubIntegration)
   .use(imageIntegration)
