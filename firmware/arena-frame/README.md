@@ -47,6 +47,8 @@ If it does not appear, install the WCH CH9102 driver.
 - Keeps WiFi on and polls the adapter's `/frame/state` every 15 seconds
   (750 ms while Gavin is active) from a background task, so the web UI can
   switch modes and moods without blocking the render loop.
+- Turns the backlight off from 21:00 to 05:00 local time (the `TIMEZONE`
+  rule in `config.h`) in every mode, then resumes on the current state.
 - The deck is 20 blocks per page. When the page is exhausted the firmware asks
   for the next page and wraps to page 1 after the last one.
 - **Tap GPIO0** cycles the face forward; **tap GPIO35** cycles it backward.
