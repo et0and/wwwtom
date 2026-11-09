@@ -1,3 +1,10 @@
+## [4.13.2](https://github.com/et0and/wwwtom/compare/v4.13.1...v4.13.2) (2026-11-09)
+
+
+### Bug Fixes
+
+* **frame:** sleep at night and settle Gavin's speech mood ([112a627](https://github.com/et0and/wwwtom/commit/112a627d78820f1d998eeab921a8dd27c1c9d25a))
+
 ## [4.13.1](https://github.com/et0and/wwwtom/compare/v4.13.0...v4.13.1) (2026-11-09)
 
 
