@@ -1,3 +1,10 @@
+## [4.13.1](https://github.com/et0and/wwwtom/compare/v4.13.0...v4.13.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **gavin:** redact the OpenCode key and centralize schemas ([f971461](https://github.com/et0and/wwwtom/commit/f971461666e87894207a5f71f0acd9974a064bec))
+
 # [4.13.0](https://github.com/et0and/wwwtom/compare/v4.12.3...v4.13.0) (2026-11-09)
 
 
