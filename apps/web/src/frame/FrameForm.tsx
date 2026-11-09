@@ -63,7 +63,7 @@ export function FrameForm(props: FrameFormProps) {
 
       <Show when={props.mode === "gavin"}>
         <Text variant="secondary" size="sm" style={styles.note}>
-          Apply to put Gavin on the frame. The talk controls appear below once it is active.
+          The talk controls appear below when Gavin is active.
         </Text>
       </Show>
 

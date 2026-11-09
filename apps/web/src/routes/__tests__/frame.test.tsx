@@ -72,7 +72,7 @@ describe("frame control page", () => {
     await user.click(screen.getByRole("radio", { name: /^Gavin/ }));
     await waitFor(() => expect(screen.queryByLabelText("MJPEG stream URL")).toBeNull());
     expect(screen.queryByLabelText("are.na channel")).toBeNull();
-    expect(screen.getByText(/Apply to put Gavin/)).toBeTruthy();
+    expect(screen.getByText(/talk controls appear below/)).toBeTruthy();
 
     await user.click(screen.getByRole("radio", { name: /^Screen off/ }));
     await waitFor(() => expect(screen.queryByLabelText("MJPEG stream URL")).toBeNull());
