@@ -130,6 +130,20 @@ describe("readCloudflareEnv tenant secrets", () => {
     expect(resolved.INTERNAL_API_TOKEN).toBe("token");
     expect(Object.hasOwn(resolved, "UNKNOWN_KEY")).toBe(false);
   });
+
+  it("never materializes OpenCode Go secrets into worker env", async () => {
+    const resolved = await readCloudflareEnv(
+      bundleEnv({
+        ...sharedBundle,
+        OPENCODE_GO_BASE_URL: "https://opencode.example/v1",
+        OPENCODE_GO_API_KEY: "opencode-key",
+        OPENCODE_GO_MODEL: "muse-spark-1.3-contributor",
+      }),
+    );
+    expect(resolved.OPENCODE_GO_BASE_URL).toBeUndefined();
+    expect(resolved.OPENCODE_GO_API_KEY).toBeUndefined();
+    expect(resolved.OPENCODE_GO_MODEL).toBeUndefined();
+  });
 });
 
 describe("makeAppConfigLayer", () => {

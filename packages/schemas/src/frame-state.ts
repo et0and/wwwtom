@@ -1,14 +1,16 @@
 import { Option, Schema } from "effect";
 import { ArenaSlug } from "./arena-content";
+import { GavinMoodSchema } from "./gavin";
 
 /**
  * What the desk frame should draw:
  * - `deck`: cycle the are.na channel, with the clock and weather overlay.
  * - `clock`: show the clock and weather only; the face buttons change the layout.
  * - `video`: play an MJPEG stream (the decoder is not on the board yet).
+ * - `gavin`: a small animated face that listens through the /frame page.
  * - `off`: blank the display and turn the backlight off; the board stays online.
  */
-export const FrameModeSchema = Schema.Literals(["deck", "clock", "video", "off"]);
+export const FrameModeSchema = Schema.Literals(["deck", "clock", "gavin", "video", "off"]);
 export type FrameMode = typeof FrameModeSchema.Type;
 
 const isHttpUrl = Schema.makeFilter((value: string) =>
@@ -30,6 +32,7 @@ export const FrameStateSchema = Schema.Struct({
   mode: FrameModeSchema,
   channel: Schema.NullOr(ArenaSlug),
   streamUrl: Schema.NullOr(FrameStreamUrlSchema),
+  gavinMood: Schema.optional(GavinMoodSchema),
   updatedAt: Schema.String,
 });
 export type FrameState = typeof FrameStateSchema.Type;
@@ -42,6 +45,7 @@ export const FrameStateUpdateSchema = Schema.Struct({
   mode: FrameModeSchema,
   channel: Schema.NullOr(ArenaSlug),
   streamUrl: Schema.NullOr(FrameStreamUrlSchema),
+  gavinMood: Schema.optional(GavinMoodSchema),
 });
 export type FrameStateUpdate = typeof FrameStateUpdateSchema.Type;
 
@@ -49,5 +53,6 @@ export const defaultFrameState = (updatedAt: string): FrameState => ({
   mode: "deck",
   channel: null,
   streamUrl: null,
+  gavinMood: "idle",
   updatedAt,
 });

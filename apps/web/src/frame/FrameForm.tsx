@@ -61,6 +61,12 @@ export function FrameForm(props: FrameFormProps) {
         </Text>
       </Show>
 
+      <Show when={props.mode === "gavin"}>
+        <Text variant="secondary" size="sm" style={styles.note}>
+          The talk controls appear below when Gavin is active.
+        </Text>
+      </Show>
+
       <Button type="submit" variant="primary" loading={props.busy} disabled={props.busy}>
         Apply
       </Button>

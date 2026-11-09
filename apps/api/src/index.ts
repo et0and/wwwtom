@@ -24,6 +24,7 @@ import { cmsRoutes, cmsWriteRoutes } from "./cms";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./og";
 import { oauthRoutes } from "./oauth";
+import { gavinRoutes } from "./gavin";
 import { queueHandler, type MessageBatch } from "./queue/consumer";
 
 export const app = new Elysia({
@@ -156,7 +157,7 @@ export const app = new Elysia({
   // iMessage) fetch the image URL without any auth headers.
   .use(ogRoutes)
   .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) =>
-    app.use(authRoutes).use(cmsWriteRoutes),
+    app.use(authRoutes).use(cmsWriteRoutes).use(gavinRoutes),
   )
   .compile();
 

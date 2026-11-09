@@ -108,6 +108,12 @@ export type CloudflareEnv = {
   // Shared secret the desk frame sends to read its mode state. Optional in
   // type so tests can omit it; the route fails closed when unset.
   FRAME_DEVICE_TOKEN?: string;
+  // OpenCode Go is called only by the API. The key is read directly from the
+  // TOM_SECRETS binding by the Gavin route, so it never materializes in the
+  // adapter or browser. The base URL includes the API version prefix.
+  OPENCODE_GO_BASE_URL?: string;
+  OPENCODE_GO_API_KEY?: string;
+  OPENCODE_GO_MODEL?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
@@ -176,7 +182,9 @@ export type CloudflareEnv = {
 // Keys seeded into the TOM_SECRETS bundle. AXIOM_TOKEN and the OTEL_*
 // overrides are deliberately absent: the ingest token is an IaC-minted
 // Secrets Store secret (see infra/shared.run.ts) and the OTLP endpoint +
-// dataset names default in otelConfigFromResolvedEnv.
+// dataset names default in otelConfigFromResolvedEnv. The OPENCODE_GO_* keys
+// are also absent: the API Gavin route reads them directly from the binding,
+// so they are never materialized into the adapter workers' env.
 const secretKeys = [
   "ARENA_TOKEN",
   "DATABASE_URL",

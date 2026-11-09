@@ -24,6 +24,11 @@ const FRAME_MODES: ReadonlyArray<{
     description: "MJPEG stream. The board cannot play video yet.",
   },
   {
+    value: "gavin",
+    label: "Gavin",
+    description: "A small white-eyed face that listens through this page.",
+  },
+  {
     value: "off",
     label: "Screen off",
     description: "Blank the display. The board stays online and keeps polling for changes.",

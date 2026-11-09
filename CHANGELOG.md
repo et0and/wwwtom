@@ -1,3 +1,32 @@
+## [4.13.1](https://github.com/et0and/wwwtom/compare/v4.13.0...v4.13.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **gavin:** redact the OpenCode key and centralize schemas ([f971461](https://github.com/et0and/wwwtom/commit/f971461666e87894207a5f71f0acd9974a064bec))
+
+# [4.13.0](https://github.com/et0and/wwwtom/compare/v4.12.3...v4.13.0) (2026-11-09)
+
+
+### Bug Fixes
+
+* **firmware:** allocate the poll TLS client after boot ([3d321ff](https://github.com/et0and/wwwtom/commit/3d321fffaf7586bfca5bd010b618f39940015261))
+* **frame:** clarify the Gavin activation note ([58cf964](https://github.com/et0and/wwwtom/commit/58cf964baa7f51bf3d5a4897251930e574ee99da))
+* **gavin:** address the PR review findings ([2c4eeff](https://github.com/et0and/wwwtom/commit/2c4eeff4c9597a0d0fa3b8d50342df42513e3277))
+* **gavin:** call the OpenCode Go responses endpoint ([345af39](https://github.com/et0and/wwwtom/commit/345af39fb510b7a6cf43495f68a6a5deb942ecb9))
+* **gavin:** isolate the OpenCode key from adapter env ([f6c602a](https://github.com/et0and/wwwtom/commit/f6c602a42fea793ef96e55eef2fc541e751821c8))
+* **ui:** center radio controls in card labels ([f6ebc51](https://github.com/et0and/wwwtom/commit/f6ebc51b6c4bc85432065956c92a4c4e050c1247))
+
+
+### Features
+
+* **gavin:** add the /frame face and secure OpenCode replies ([5d48600](https://github.com/et0and/wwwtom/commit/5d48600bb556bb77e82b33e2ef29a20ca244c39d))
+
+
+### Performance Improvements
+
+* **firmware:** poll frame state off the render loop ([0648fe3](https://github.com/et0and/wwwtom/commit/0648fe3e93a6b08dddedc090478cf4e3fec176e2))
+
 ## [4.12.3](https://github.com/et0and/wwwtom/compare/v4.12.2...v4.12.3) (2026-11-07)
 
 
