@@ -1,10 +1,10 @@
 import { Elysia } from "elysia";
-import { Option, Schema } from "effect";
+import { Effect, Option, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import type { GavinReply } from "@tom/schemas/gavin";
 import { GavinReplySchema, GavinRequestSchema } from "@tom/schemas/gavin";
 import { HttpError } from "@tom/types/errors";
-import { readCloudflareEnv } from "@tom/utils/config";
+import { readCloudflareEnv, tenantFromValue } from "@tom/utils/config";
 import { getRequestEnv } from "@tom/utils/worker";
 
 const GavinRequestBodySchema = Schema.toStandardSchemaV1(GavinRequestSchema);
@@ -46,6 +46,12 @@ export const respondRoute = new Elysia().post(
   "/gavin/respond",
   async ({ body, request }) => {
     const env = await readCloudflareEnv(getRequestEnv(request));
+    if (tenantFromValue(env.TENANT) === "sophie") {
+      throw new HttpError({
+        status: HttpStatus.NotFound,
+        message: "Not found",
+      });
+    }
     const baseUrl = env.OPENCODE_GO_BASE_URL?.replace(/\/+$/, "");
     const apiKey = env.OPENCODE_GO_API_KEY;
     const model = env.OPENCODE_GO_MODEL ?? "muse-spark-1.3-contributor";
@@ -56,23 +62,33 @@ export const respondRoute = new Elysia().post(
       });
     }
 
-    const response = await fetch(`${baseUrl}/responses`, {
-      method: "POST",
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        "content-type": "application/json",
-        "user-agent": "gavin-frame/1.0",
-        "x-opencode-session": "gavin-desk-frame",
-      },
-      body: JSON.stringify({
-        model,
-        instructions: SYSTEM_PROMPT,
-        input: body.transcript,
-        max_output_tokens: 600,
-        reasoning: { effort: "low" },
+    const response = await Effect.runPromise(
+      Effect.tryPromise({
+        try: () =>
+          fetch(`${baseUrl}/responses`, {
+            method: "POST",
+            headers: {
+              authorization: `Bearer ${apiKey}`,
+              "content-type": "application/json",
+              "user-agent": "gavin-frame/1.0",
+              "x-opencode-session": "gavin-desk-frame",
+            },
+            body: JSON.stringify({
+              model,
+              instructions: SYSTEM_PROMPT,
+              input: body.transcript,
+              max_output_tokens: 600,
+              reasoning: { effort: "low" },
+            }),
+            signal: AbortSignal.timeout(30000),
+          }),
+        catch: () =>
+          new HttpError({
+            status: HttpStatus.BadGateway,
+            message: "Gavin could not answer",
+          }),
       }),
-      signal: AbortSignal.timeout(30000),
-    });
+    );
 
     if (!response.ok) {
       throw new HttpError({
@@ -81,7 +97,16 @@ export const respondRoute = new Elysia().post(
       });
     }
 
-    const payload: unknown = await response.json();
+    const payload: unknown = await Effect.runPromise(
+      Effect.tryPromise({
+        try: () => response.json(),
+        catch: () =>
+          new HttpError({
+            status: HttpStatus.BadGateway,
+            message: "Gavin returned an invalid answer",
+          }),
+      }),
+    );
     const completion = Option.getOrNull(
       Schema.decodeUnknownOption(OpenCodeResponsesSchema)(payload),
     );

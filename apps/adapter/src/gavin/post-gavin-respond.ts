@@ -8,6 +8,7 @@ import { forwardHeaders, toProxiedResponse } from "../auth/forward";
 import { allowLocalOriginsForAdapter, tenantFromValue } from "../origins";
 import { AdapterError, runAdapter } from "../runtime";
 import { requireTrustedWriteOrigin } from "../write-origin-gate";
+import { requireArenaTenant } from "../arena/shared";
 import { requireAdminSession, readFrameEnv } from "../frame/shared";
 
 const GavinRequestBodySchema = Schema.toStandardSchemaV1(GavinRequestSchema);
@@ -15,6 +16,7 @@ const GavinRequestBodySchema = Schema.toStandardSchemaV1(GavinRequestSchema);
 export const respondRoute = new Elysia().post(
   "/gavin/respond",
   async ({ request, body }) => {
+    requireArenaTenant(request);
     return runAdapter(
       Effect.gen(function* () {
         const env = yield* readFrameEnv(request);
@@ -33,7 +35,7 @@ export const respondRoute = new Elysia().post(
               headers: forwardHeaders(request.headers, env.INTERNAL_API_TOKEN),
               body: JSON.stringify(body),
               redirect: "manual",
-              signal: AbortSignal.timeout(25000),
+              signal: AbortSignal.timeout(35000),
             }),
           catch: () =>
             new AdapterError({

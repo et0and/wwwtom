@@ -87,6 +87,20 @@ describe("POST /gavin/respond", () => {
     expect(response.status).toBe(503);
   });
 
+  it("rejects the Sophie tenant", async () => {
+    const response = await ask(testEnv({ TENANT: "sophie" }));
+
+    expect(response.status).toBe(404);
+  });
+
+  it("maps a network failure to 502", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("network down")));
+
+    const response = await ask();
+
+    expect(response.status).toBe(502);
+  });
+
   it("returns 502 when the model request fails", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 500 })));
 

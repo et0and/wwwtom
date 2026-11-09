@@ -135,6 +135,26 @@ describe("POST /gavin/respond", () => {
     expect(JSON.parse(init.body as string)).toEqual({ transcript: "Hello Gavin" });
   });
 
+  it("rejects the Sophie adapter before calling the API", async () => {
+    const response = await app.fetch(
+      requestWithEnv(
+        "https://adapter.tom.so/gavin/respond",
+        { ...envFor(createKv()), TENANT: "sophie" },
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            origin: "https://sophie.st",
+          },
+          body: JSON.stringify({ transcript: "Hello Gavin" }),
+        },
+      ),
+    );
+
+    expect(response.status).toBe(404);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("rejects an unauthenticated request", async () => {
     fetchMock.mockResolvedValueOnce(jsonResponse(null));
 
