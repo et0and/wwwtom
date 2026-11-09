@@ -79,11 +79,10 @@ const styles = stylex.create({
   disabled: { cursor: "not-allowed", opacity: 0.5 },
   enabled: { cursor: "pointer" },
   cardHover: { ":hover": { backgroundColor: colors["--color-tomui-tint"] } },
-  controlWrap: { position: "relative", display: "inline-flex", marginTop: "0.125rem" },
+  controlWrap: { position: "relative", display: "inline-flex", alignSelf: "center" },
   control: {
     height: "1rem",
     width: "1rem",
-    marginTop: "0.125rem",
     flexShrink: 0,
     appearance: "none",
     cursor: "pointer",
