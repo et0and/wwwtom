@@ -50,6 +50,10 @@ const TENANT_KEYS = ["BETTER_AUTH_SECRET", "INTERNAL_API_TOKEN", "CMS_ADMIN_EMAI
   (key) => [`TOM_${key}`, `SOPHIE_${key}`],
 );
 
+// OpenCode Go is Tom-only and read directly from the TOM_SECRETS binding by
+// the API route; Sophie's dev worker must never receive a copy.
+const OPENCODE_GO_KEYS = ["OPENCODE_GO_BASE_URL", "OPENCODE_GO_API_KEY", "OPENCODE_GO_MODEL"];
+
 /**
  * Dev workers get plain vars: the other tenant's provider keys and all
  * per-tenant names are stripped, and the tenant's own secrets resolve under
@@ -59,7 +63,7 @@ const tenantDevSecrets = (bundle: Record<string, string>, tenant: "TOM" | "SOPHI
   const foreign =
     tenant === "TOM"
       ? ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"]
-      : ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"];
+      : ["GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET", ...OPENCODE_GO_KEYS];
   const secrets = Object.fromEntries(
     Object.entries(bundle).filter(([key]) => !foreign.includes(key) && !TENANT_KEYS.includes(key)),
   );

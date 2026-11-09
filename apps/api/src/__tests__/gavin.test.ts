@@ -57,6 +57,41 @@ describe("POST /gavin/respond", () => {
     );
   });
 
+  it("reads the OpenCode Go credentials from the TOM_SECRETS binding", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          output_text: JSON.stringify({ reply: "Bundle hello.", mood: "happy" }),
+          output: [],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      ),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const response = await ask(
+      testEnv({
+        TOM_SECRETS: {
+          get: async () =>
+            JSON.stringify({
+              OPENCODE_GO_BASE_URL: "https://bundle.example/v1",
+              OPENCODE_GO_API_KEY: "bundle-key",
+            }),
+        },
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://bundle.example/v1/responses",
+      expect.objectContaining({
+        headers: expect.objectContaining({
+          authorization: "Bearer bundle-key",
+        }),
+      }),
+    );
+  });
+
   it("falls back to the text when the model does not return JSON", async () => {
     vi.stubGlobal(
       "fetch",

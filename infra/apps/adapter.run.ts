@@ -32,6 +32,19 @@ const TENANT_BUNDLE_KEYS = [
   "SOPHIE_CMS_ADMIN_EMAILS",
 ];
 
+// Neither adapter calls OpenCode Go or mints OAuth/session credentials.
+const ADAPTER_EXCLUDED_KEYS = [
+  "GITHUB_CLIENT_ID",
+  "GITHUB_CLIENT_SECRET",
+  "GOOGLE_CLIENT_ID",
+  "GOOGLE_CLIENT_SECRET",
+  "BETTER_AUTH_SECRET",
+  "OPENCODE_GO_BASE_URL",
+  "OPENCODE_GO_API_KEY",
+  "OPENCODE_GO_MODEL",
+  ...TENANT_BUNDLE_KEYS,
+];
+
 /** Drop keys from a secret record (per-tenant isolation). */
 const stripKeys = (
   secrets: Record<string, string>,
@@ -58,36 +71,22 @@ export const adapter = Effect.gen(function* () {
     if (Option.isSome(parsed)) Object.assign(deployBundle, parsed.value);
   }
 
-  // Per-tenant isolation for the dev split: neither adapter mints sessions
-  // or OAuth flows itself, so both drop the provider keys and
-  // BETTER_AUTH_SECRET entirely; each keeps only its own INTERNAL_API_TOKEN
-  // (per-tenant bundle key with fallback to the shared value, so existing
-  // deploys keep working). In production the shared bundle rides the
-  // TOM_SECRETS binding and TENANT selects the token at runtime
+  // Per-tenant isolation for the dev split: neither adapter mints sessions,
+  // runs OAuth flows, or calls OpenCode Go, so both drop those provider keys
+  // and BETTER_AUTH_SECRET entirely; each keeps only its own
+  // INTERNAL_API_TOKEN (per-tenant bundle key with fallback to the shared
+  // value, so existing deploys keep working). In production the shared bundle
+  // rides the TOM_SECRETS binding and TENANT selects the token at runtime
   // (readCloudflareEnv), so a stray token can never cross tenants.
   const adapterDevSecrets: Record<string, string> = isAlchemyDev
     ? {
-        ...stripKeys(deployBundle, [
-          "GITHUB_CLIENT_ID",
-          "GITHUB_CLIENT_SECRET",
-          "GOOGLE_CLIENT_ID",
-          "GOOGLE_CLIENT_SECRET",
-          "BETTER_AUTH_SECRET",
-          ...TENANT_BUNDLE_KEYS,
-        ]),
+        ...stripKeys(deployBundle, ADAPTER_EXCLUDED_KEYS),
         ...devSecretOverride("INTERNAL_API_TOKEN", deployBundle.TOM_INTERNAL_API_TOKEN),
       }
     : {};
   const sophieAdapterDevSecrets: Record<string, string> = isAlchemyDev
     ? {
-        ...stripKeys(deployBundle, [
-          "GITHUB_CLIENT_ID",
-          "GITHUB_CLIENT_SECRET",
-          "GOOGLE_CLIENT_ID",
-          "GOOGLE_CLIENT_SECRET",
-          "BETTER_AUTH_SECRET",
-          ...TENANT_BUNDLE_KEYS,
-        ]),
+        ...stripKeys(deployBundle, ADAPTER_EXCLUDED_KEYS),
         ...devSecretOverride("INTERNAL_API_TOKEN", deployBundle.SOPHIE_INTERNAL_API_TOKEN),
       }
     : {};
