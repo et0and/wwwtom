@@ -62,6 +62,8 @@ constexpr int kGavinLookMaxX = 32;
 constexpr int kGavinLookMaxY = 8;
 constexpr uint32_t kGavinFrameMs = 33;
 constexpr uint32_t kGavinStatePollMs = 750UL;
+constexpr int kNightStartHour = 21;
+constexpr int kNightEndHour = 5;
 
 enum class FrameMode : uint8_t { Deck, Clock, Gavin, Video, Off };
 enum class GavinMood : uint8_t {
@@ -108,6 +110,7 @@ char weatherCondition[64] = "";
 char weatherTemperature[16] = "";
 uint32_t weatherFetchedAt = 0;
 bool clockSynced = false;
+uint32_t lastClockAttempt = 0;
 int lastOverlayMinute = -1;
 uint32_t lastOverlayCheck = 0;
 uint8_t face = 0;
@@ -561,6 +564,35 @@ void syncClock() {
   Serial.printf("[frame] clock synced: %s\n", stamp);
 }
 
+void syncClockIfNeeded() {
+  if (clockSynced) return;
+  if (lastClockAttempt != 0 && millis() - lastClockAttempt < kMaintenanceMs) return;
+  lastClockAttempt = millis();
+  syncClock();
+}
+
+// Between 21:00 and 05:00 local time the panel should be dark. Only trust the
+// schedule once SNTP has produced a real time.
+bool isNightOff() {
+  if (!clockSynced) return false;
+  const time_t now = time(nullptr);
+  struct tm local = {};
+  localtime_r(&now, &local);
+  return local.tm_hour >= kNightStartHour || local.tm_hour < kNightEndHour;
+}
+
+// Stay dark while the schedule says night. Keep draining state so the board
+// wakes on the current mode, then let the caller return to the main loop.
+void sleepUntilMorning() {
+  setBacklight(false);
+  display.fillScreen(TFT_BLACK);
+  while (isNightOff()) {
+    esp_task_wdt_reset();
+    pollState();
+    delay(1000);
+  }
+}
+
 // Percent-encode a path segment so a multi-word location ("New York") is a
 // valid URL. Unreserved characters pass through; everything else becomes %XX.
 void encodePathSegment(const char *value, char *output, size_t capacity) {
@@ -620,7 +652,7 @@ void fetchWeather() {
 void maintainIfDue() {
   if (lastMaintenance != 0 && millis() - lastMaintenance < kMaintenanceMs) return;
   lastMaintenance = millis();
-  if (!clockSynced) syncClock();
+  syncClockIfNeeded();
   if (weatherFetchedAt == 0 || millis() - weatherFetchedAt > kWeatherRefreshMs) {
     if (weatherAttemptedAt == 0 || millis() - weatherAttemptedAt >= kWeatherRetryMs) {
       weatherAttemptedAt = millis();
@@ -744,6 +776,11 @@ void waitForNext() {
   while (millis() - start < kCycleMs) {
     esp_task_wdt_reset();
     pollState();
+    syncClockIfNeeded();
+    if (isNightOff()) {
+      sleepUntilMorning();
+      return;
+    }
     maintainIfDue();
     if (stateDirty) return;
     if (WiFi.status() != WL_CONNECTED) return;
@@ -788,6 +825,11 @@ void waitForModeChange() {
   while (true) {
     esp_task_wdt_reset();
     pollState();
+    syncClockIfNeeded();
+    if (isNightOff()) {
+      sleepUntilMorning();
+      return;
+    }
     if (stateDirty) return;
     if (WiFi.status() != WL_CONNECTED) return;
     if (mode == FrameMode::Clock) {
@@ -975,7 +1017,12 @@ void runGavin() {
     esp_task_wdt_reset();
     // Non-blocking: statePollTask owns the HTTP request.
     pollState();
+    syncClockIfNeeded();
     if (mode != FrameMode::Gavin) break;
+    if (isNightOff()) {
+      sleepUntilMorning();
+      break;
+    }
     if (stateDirty) stateDirty = false;
     if (WiFi.status() != WL_CONNECTED) break;
     const uint32_t now = millis();
@@ -1021,6 +1068,12 @@ void setup() {
 }
 
 void loop() {
+  // Keep a previously synced clock useful even if WiFi has dropped.
+  if (isNightOff()) {
+    sleepUntilMorning();
+    return;
+  }
+
   if (!connectWifi()) {
     showMessage("WiFi failed");
     waitMs(kRetryMs);
@@ -1036,6 +1089,15 @@ void loop() {
   } else {
     pollState();
   }
+
+  syncClockIfNeeded();
+
+  if (isNightOff()) {
+    sleepUntilMorning();
+    return;
+  }
+
+  maintainIfDue();
 
   if (mode == FrameMode::Off) {
     setBacklight(false);
@@ -1059,8 +1121,6 @@ void loop() {
     waitForModeChange();
     return;
   }
-
-  maintainIfDue();
 
   if (mode == FrameMode::Clock) {
     display.fillScreen(TFT_BLACK);

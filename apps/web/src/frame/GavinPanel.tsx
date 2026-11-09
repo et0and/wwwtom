@@ -81,15 +81,22 @@ export function GavinPanel(props: GavinPanelProps) {
     moodMutation.mutate(mood);
   };
 
+  // The reply mood is a settled face, not one of the page-owned transient
+  // states. Otherwise a model that answers "speaking" leaves Gavin pulsing
+  // forever after the utterance ends.
+  const settledMood = (mood: GavinMood): GavinMood =>
+    mood === "listening" || mood === "thinking" || mood === "speaking" ? "idle" : mood;
+
   const speak = (text: string, mood: GavinMood): void => {
+    const nextMood = settledMood(mood);
     if (isServer || !("speechSynthesis" in window)) {
-      syncMood(mood);
+      syncMood(nextMood);
       return;
     }
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.onend = () => syncMood(mood);
-    utterance.onerror = () => syncMood(mood);
+    utterance.onend = () => syncMood(nextMood);
+    utterance.onerror = () => syncMood(nextMood);
     syncMood("speaking");
     window.speechSynthesis.speak(utterance);
   };
@@ -160,6 +167,10 @@ export function GavinPanel(props: GavinPanelProps) {
 
   onSettled(() => {
     setSupportsSpeech(speechConstructor() !== null);
+    // A page opened after a closed tab can inherit a transient mood. No
+    // speech is running in this tab, so settle it back to idle.
+    const initialMood = untrack(() => status());
+    if (initialMood !== settledMood(initialMood)) syncMood("idle");
     return () => {
       recognition()?.stop();
       if (!isServer && "speechSynthesis" in window) {
