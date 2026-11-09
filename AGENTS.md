@@ -9,7 +9,7 @@ Improve existing code; avoid new abstractions.
 - `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`). Solid rules: `apps/web/AGENTS.md`.
 - `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
 - `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
-- `apps/yufu` — Foldkit SPA (Elm architecture on Effect). Framework rules: `FOLDKIT.md`; vendored reference: `repos/foldkit`.
+- `apps/yufu` — Foldkit SPA (Elm architecture on Effect). Reference: `repos/foldkit`.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).

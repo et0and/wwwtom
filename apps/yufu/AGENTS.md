@@ -1,8 +1,7 @@
 # yufu
 
-Client-rendered Foldkit SPA. The framework conventions and the vendored
-source map live in the repository-root [`FOLDKIT.md`](../../FOLDKIT.md);
-read it before changing this app.
+Client-rendered Foldkit SPA. Read the Foldkit source and examples in
+`repos/foldkit` when needed.
 
 ## Project Notes
 
@@ -14,9 +13,8 @@ read it before changing this app.
   `stylex.vite(stylexOptions)` from `@tom/ui/stylex.config`.
 - The DevTools MCP server is not wired into this monorepo. Run
   `npx @foldkit/devtools-mcp init` when you need live Model inspection.
-- `repos/foldkit` is a git submodule, not a subtree. `FOLDKIT.md` is the
-  upstream template, so its subtree commands are superseded. Initialize it
-  after a clone with `git submodule update --init repos/foldkit`. Re-pin the
+- `repos/foldkit` is a git submodule, not a subtree. Initialize it after a
+  clone with `git submodule update --init repos/foldkit`. Re-pin the
   submodule from the repository root:
 
   ```sh
