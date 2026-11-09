@@ -23,7 +23,7 @@
     "@tom/utils": "workspace:*",
     "effect": "catalog:",
     "elysia": "catalog:",
-    "megalodon": "10.2.0"
+    "megalodon": "10.3.1"
   },
   "devDependencies": {
     "@tom/ui": "workspace:*",
