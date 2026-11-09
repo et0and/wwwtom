@@ -1,31 +1,14 @@
 import { Elysia } from "elysia";
-import { Effect, Option, Schema } from "effect";
+import { Effect, Option, Redacted, Schema } from "effect";
 import { HttpStatus } from "@tom/constants/http";
 import type { GavinReply } from "@tom/schemas/gavin";
-import { GavinReplySchema, GavinRequestSchema } from "@tom/schemas/gavin";
+import { GavinReplySchema, GavinRequestSchema, OpenCodeResponsesSchema } from "@tom/schemas/gavin";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 import { HttpError } from "@tom/types/errors";
 import { tenantFromValue } from "@tom/utils/config";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/worker";
 
 const GavinRequestBodySchema = Schema.toStandardSchemaV1(GavinRequestSchema);
-
-const OpenCodeResponseItemSchema = Schema.Struct({
-  type: Schema.optional(Schema.String),
-  content: Schema.optional(
-    Schema.Array(
-      Schema.Struct({
-        type: Schema.optional(Schema.String),
-        text: Schema.optional(Schema.String),
-      }),
-    ),
-  ),
-});
-
-const OpenCodeResponsesSchema = Schema.Struct({
-  output_text: Schema.optional(Schema.String),
-  output: Schema.Array(OpenCodeResponseItemSchema),
-});
 
 const SYSTEM_PROMPT = `You are Gavin, a small desk companion. You have two narrow white eyes on a black screen.
 The user is speaking to you through a web page. You cannot see or hear; their words arrive as text.
@@ -37,7 +20,7 @@ const DEFAULT_MODEL = "muse-spark-1.3-contributor";
 
 type OpenCodeConfig = {
   readonly baseUrl: string;
-  readonly apiKey: string;
+  readonly apiKey: Redacted.Redacted<string>;
   readonly model: string;
 };
 
@@ -78,7 +61,7 @@ const readOpenCodeConfig = Effect.fn("Gavin.readConfig")(function* (request: Req
   if (explicitBaseUrl && explicitApiKey) {
     return {
       baseUrl: explicitBaseUrl.replace(/\/+$/, ""),
-      apiKey: explicitApiKey,
+      apiKey: Redacted.make(explicitApiKey),
       model: explicitModel || DEFAULT_MODEL,
     } satisfies OpenCodeConfig;
   }
@@ -112,7 +95,7 @@ const readOpenCodeConfig = Effect.fn("Gavin.readConfig")(function* (request: Req
 
   return {
     baseUrl: baseUrl.replace(/\/+$/, ""),
-    apiKey,
+    apiKey: Redacted.make(apiKey),
     model: model || DEFAULT_MODEL,
   } satisfies OpenCodeConfig;
 });
@@ -124,7 +107,7 @@ const respondToGavin = Effect.fn("Gavin.respond")(function* (request: Request, t
       fetch(`${config.baseUrl}/responses`, {
         method: "POST",
         headers: {
-          authorization: `Bearer ${config.apiKey}`,
+          authorization: `Bearer ${Redacted.value(config.apiKey)}`,
           "content-type": "application/json",
           "user-agent": "gavin-frame/1.0",
           "x-opencode-session": "gavin-desk-frame",

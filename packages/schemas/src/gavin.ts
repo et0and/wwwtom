@@ -24,3 +24,25 @@ export const GavinReplySchema = Schema.Struct({
   mood: GavinMoodSchema,
 });
 export type GavinReply = typeof GavinReplySchema.Type;
+
+/** Body for the admin-only PUT /frame/gavin mood update. */
+export const GavinMoodUpdateSchema = Schema.Struct({ mood: GavinMoodSchema });
+
+/** One output item from the OpenCode Go Responses API. */
+export const OpenCodeResponseItemSchema = Schema.Struct({
+  type: Schema.optional(Schema.String),
+  content: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        type: Schema.optional(Schema.String),
+        text: Schema.optional(Schema.String),
+      }),
+    ),
+  ),
+});
+
+/** The subset of the OpenCode Go Responses API payload Gavin reads. */
+export const OpenCodeResponsesSchema = Schema.Struct({
+  output_text: Schema.optional(Schema.String),
+  output: Schema.Array(OpenCodeResponseItemSchema),
+});
