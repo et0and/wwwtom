@@ -2,6 +2,7 @@
 #include <ArduinoJson.h>
 #include <cstdio>
 #include <cstring>
+#include <new>
 #include <HTTPClient.h>
 #include <TFT_eSPI.h>
 #include <WiFi.h>
@@ -78,8 +79,10 @@ TFT_eSprite gavinFace(&display);
 WiFiClientSecure secureClient;
 WiFiClient plainClient;
 // The state poll task gets its own clients so a poll can never borrow the
-// render loop's connection.
-WiFiClientSecure statePollSecureClient;
+// render loop's connection. The secure client is created after the FreeRTOS
+// scheduler is running: a second static WiFiClientSecure allocates mbedTLS
+// state during global construction and starves the timer task at boot.
+WiFiClientSecure *statePollSecureClient = nullptr;
 WiFiClient statePollPlainClient;
 
 struct StatePayload {
@@ -292,8 +295,17 @@ WiFiClient &clientFor(const char *url) {
 
 WiFiClient &statePollClientFor(const char *url) {
   if (strncmp(url, "https://", 8) == 0) {
-    statePollSecureClient.setInsecure();
-    return statePollSecureClient;
+    if (statePollSecureClient == nullptr) {
+      statePollSecureClient = new (std::nothrow) WiFiClientSecure();
+    }
+    if (statePollSecureClient != nullptr) {
+      statePollSecureClient->setInsecure();
+      return *statePollSecureClient;
+    }
+    // Allocation failed; the shared client keeps the frame reachable. The
+    // next poll retries the dedicated client allocation.
+    secureClient.setInsecure();
+    return secureClient;
   }
   return statePollPlainClient;
 }
