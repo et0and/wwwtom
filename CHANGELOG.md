@@ -1,3 +1,10 @@
+## [4.13.3](https://github.com/et0and/wwwtom/compare/v4.13.2...v4.13.3) (2026-11-09)
+
+
+### Bug Fixes
+
+* **storybook:** align Storybook packages on 10.6.6 ([0e3ced0](https://github.com/et0and/wwwtom/commit/0e3ced078304760844bd1be6e4a742bc305d306d)), closes [#249](https://github.com/et0and/wwwtom/issues/249)
+
 ## [4.13.2](https://github.com/et0and/wwwtom/compare/v4.13.1...v4.13.2) (2026-11-09)
 
 
