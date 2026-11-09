@@ -8,6 +8,7 @@ import { FrameStateUpdateSchema, type FrameMode, type FrameState } from "@tom/sc
 import { queryClient } from "~/data/query-client";
 import { FRAME_STATE_QUERY_KEY, errorMessage, saveFrameState } from "./api";
 import { FrameForm } from "./FrameForm";
+import { GavinPanel } from "./GavinPanel";
 import { styles } from "./frame.stylex";
 
 export interface FrameEditorProps {
@@ -97,6 +98,10 @@ export function FrameEditor(props: FrameEditorProps) {
         onStreamUrlChange={setStreamUrl}
         onSubmit={submit}
       />
+
+      <Show when={props.frame.mode === "gavin"}>
+        <GavinPanel frame={props.frame} />
+      </Show>
 
       <Text variant="secondary" size="sm">
         {updatedLabel()}
