@@ -41,6 +41,13 @@ export const createAuth = (options: CreateAuthOptions) => {
     secret: options.secret,
     trustedOrigins: [...options.trustedOrigins],
     database: options.database,
+    // The CMS migrations own the D1 schema (infra/cms/migrations). Better
+    // Auth's runtime schema check would add a D1 query to every /auth request
+    // because this instance is rebuilt per request. It would also make the
+    // /auth/ok health probe depend on the database.
+    advanced: {
+      database: { validateSchema: false },
+    },
     socialProviders: {
       ...(options.github && { github: options.github }),
       ...(options.google && { google: options.google }),
