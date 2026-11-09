@@ -3,7 +3,7 @@ import * as GitHub from "@alchemy.run/github";
 import { Effect, Layer } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { sophieWebHost, stageWebHost } from "./shared.run.ts";
+import { sophieWebHost, stageHost, stageWebHost } from "./shared.run.ts";
 import { previewComment } from "./utils/github/preview-comment.ts";
 
 /**
@@ -29,6 +29,7 @@ export default Stack(
       apps: [
         { name: "Web", url: `https://${stageWebHost(stage)}` },
         { name: "Sophie", url: `https://${sophieWebHost(stage)}` },
+        { name: "Yufu", url: `https://${stageHost(stage, "yufu")}` },
       ],
     });
   }),

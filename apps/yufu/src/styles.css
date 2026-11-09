@@ -1,0 +1,18 @@
+html {
+  background-color: #f7f7f8;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background-color: #151516;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+::selection {
+  background: #ffff00;
+  color: #000000;
+}

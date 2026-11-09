@@ -211,6 +211,7 @@ jobs:
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
+          pnpm deploy:yufu --yes &&
           pnpm deploy:storybook --yes
       - name: Deploy zone edge rules
         if: github.event_name == 'workflow_dispatch' && inputs.stage == 'production'
@@ -517,6 +518,7 @@ jobs:
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
+          pnpm deploy:yufu --yes &&
           pnpm deploy:preview --yes
   destroy:
     name: Destroy PR preview
@@ -537,7 +539,10 @@ jobs:
         with:
           ref: dev
       - uses: ./.github/actions/setup
+      - name: Destroy yufu preview stage
+        run: pnpm destroy:yufu --yes
       - name: Destroy web preview stage
+        if: always()
         run: pnpm destroy:web --yes
       - name: Destroy editor preview stage
         if: always()
@@ -668,6 +673,7 @@ jobs:
                 pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
             done
             pnpm destroy:storybook --yes || true
+            pnpm destroy:yufu --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
             pnpm destroy:sophie --yes || true

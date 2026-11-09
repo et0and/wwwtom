@@ -45,7 +45,8 @@
     "**/reports/**",
     "**/.turbo/**",
     "**/dist/**",
-    "**/.agents/**"
+    "**/.agents/**",
+    "**/repos/**"
   ],
   "overrides": [
     {

@@ -9,6 +9,7 @@ Improve existing code; avoid new abstractions.
 - `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`). Solid rules: `apps/web/AGENTS.md`.
 - `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
 - `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
+- `apps/yufu` — Foldkit SPA (Elm architecture on Effect). Reference: `repos/foldkit`.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
@@ -44,7 +45,7 @@ Improve existing code; avoid new abstractions.
 
 ## Commands (root)
 
-- `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
+- `pnpm dev` (all via Turbo) | `dev:web` | `dev:sophie` | `dev:editor` | `dev:yufu` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm test:mutation` — Stryker mutation run for `packages/utils` (config in
   `packages/utils/stryker.config.mjs`; HTML report in `coverage/mutation`)
@@ -171,13 +172,14 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web → sophie (then preview on a PR); `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → api → adapter → web → sophie → yufu (then preview on a PR); `ALCHEMY_STAGE` required
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed
 - `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker
 - Sophie binds no Hyperdrive (CMS is D1+R2; nothing reads `databaseUrl`)
 - web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
+- yufu deploys via `Cloudflare.Website.Foldkit` (client-only SPA; SPA fallback from the plugin's build metadata)
 
 ## Rule files
 
