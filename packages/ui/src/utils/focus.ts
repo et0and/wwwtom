@@ -1,4 +1,4 @@
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect } from "solid-js";
 
 const FOCUSABLE_SELECTOR = [
   "input:not([disabled]):not([type=hidden])",
@@ -120,7 +120,7 @@ export function createFocusScope(
 
       document.addEventListener("focusin", handleFocusIn);
 
-      onCleanup(() => {
+      return () => {
         document.removeEventListener("focusin", handleFocusIn);
 
         const unmountEvent = new CustomEvent("focusScope.autoFocusOnUnmount", {
@@ -142,7 +142,7 @@ export function createFocusScope(
             }
           }, 0);
         }
-      });
+      };
     },
   );
 }
@@ -188,12 +188,12 @@ export function createHideOutside(options: HideOutsideOptions): void {
         }
       }
 
-      onCleanup(() => {
+      return () => {
         for (const [el, prev] of hiddenElements) {
           if (prev === null) el.removeAttribute("aria-hidden");
           else el.setAttribute("aria-hidden", prev);
         }
-      });
+      };
     },
   );
 }
@@ -207,9 +207,9 @@ export function createPreventScroll(enabled: () => boolean): void {
       const prevOverflow = document.body.style.overflow;
       document.body.style.overflow = "hidden";
 
-      onCleanup(() => {
+      return () => {
         document.body.style.overflow = prevOverflow;
-      });
+      };
     },
   );
 }

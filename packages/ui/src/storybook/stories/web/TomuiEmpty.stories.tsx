@@ -46,7 +46,11 @@ export const WithContents = meta.story({
     <Empty
       title="No messages yet"
       description="When you receive messages they will show up here."
-      contents={<span class="text-sm text-tomui-subtle">Refresh to check again</span>}
+      contents={
+        <span style={{ "font-size": "13px", color: "var(--text-color-tomui-subtle)" }}>
+          Refresh to check again
+        </span>
+      }
     />
   ),
 });

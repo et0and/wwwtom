@@ -34,6 +34,14 @@ export const Underline = meta.story({
   },
 });
 
+export const Line = meta.story({
+  args: {
+    variant: "line",
+    tabs,
+    value: "overview",
+  },
+});
+
 export const Small = meta.story({
   args: {
     size: "sm",

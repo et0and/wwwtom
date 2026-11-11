@@ -11,9 +11,10 @@ import {
   useContext,
 } from "solid-js";
 import { CheckIcon } from "@tom/icons/Check";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 import { inputVariants, type TomuiInputSize } from "../input/input";
 
 export const TOMUI_AUTOCOMPLETE_DEFAULT_VARIANTS = {
@@ -27,18 +28,15 @@ export interface TomuiAutocompleteVariantsProps {
   size?: TomuiAutocompleteSize;
 }
 
-const lineColor = colors["--color-tomui-line"];
-const controlRing = "0 0 0 1px " + lineColor;
-
 const styles = stylex.create({
   root: { position: "relative" },
   label: {
     display: "block",
     marginBottom: "0.25rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
   },
-  message: { marginTop: "0.25rem", fontSize: "0.8125rem" },
+  message: { marginTop: "0.25rem", fontSize: fontSizeXs.fontSize },
   messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
   messageDanger: { color: textColors["--text-color-tomui-danger"] },
   content: {
@@ -50,11 +48,11 @@ const styles = stylex.create({
     minWidth: "100%",
     marginTop: "0.25rem",
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-control"],
-    paddingBlock: "0.375rem",
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-layer-01"],
+    padding: "2px",
     color: textColors["--text-color-tomui-default"],
-    boxShadow: controlRing + ", 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    boxShadow: elevation["--elevation-tomui-floating"],
   },
   list: {
     minHeight: 0,
@@ -67,20 +65,20 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: "1fr 16px",
     gap: "0.5rem",
-    margin: "0.375rem",
+    height: "1.75rem",
+    alignItems: "center",
     borderRadius: radius.sm,
-    padding: "0.375rem 0.5rem",
-    fontSize: "0.875rem",
+    paddingInline: "0.5rem",
+    fontSize: fontSizeSm.fontSize,
     cursor: "pointer",
-    ":is([data-selected])": { fontWeight: 500 },
-    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-overlay"] },
+    ":is([data-selected])": { fontWeight: 530 },
+    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-overlay-hover"] },
   },
   itemLabel: { gridColumnStart: "1" },
   itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
   empty: {
-    margin: "0.375rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.8125rem",
+    padding: "0.5rem 0.75rem",
+    fontSize: fontSizeXs.fontSize,
     color: textColors["--text-color-tomui-subtle"],
   },
 });

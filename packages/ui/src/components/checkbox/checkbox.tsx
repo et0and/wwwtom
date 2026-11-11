@@ -1,17 +1,15 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { createToggleState } from "../../utils/state";
 import { Label } from "../label/label";
 
 const hairline = colors["--color-tomui-hairline"];
+const line = colors["--color-tomui-line"];
+const strong = colors["--color-tomui-border-strong"];
 const focus = colors["--color-tomui-focus"];
-const brand = colors["--color-tomui-brand"];
-const contrast = colors["--color-tomui-contrast"];
 const base = colors["--color-tomui-base"];
-const inverse = textColors["--text-color-tomui-inverse"];
 const danger = textColors["--text-color-tomui-danger"];
 const subtle = textColors["--text-color-tomui-subtle"];
 const defaultText = textColors["--text-color-tomui-default"];
@@ -21,7 +19,6 @@ export const TOMUI_CHECKBOX_DEFAULT_VARIANTS = {
 } as const;
 
 export type TomuiCheckboxVariant = "default" | "error";
-export type CheckboxVariant = TomuiCheckboxVariant;
 
 const styles = stylex.create({
   wrap: { position: "relative", display: "inline-flex" },
@@ -33,20 +30,23 @@ const styles = stylex.create({
     appearance: "none",
     cursor: "pointer",
     borderWidth: 0,
-    borderRadius: "0.125rem",
+    borderRadius: "0.25rem",
     backgroundColor: base,
     outlineWidth: 0,
   },
-  controlDefault: { boxShadow: "0 0 0 1px " + hairline },
+  controlDefault: { boxShadow: "0 0 0 1px " + line },
   controlError: { boxShadow: "0 0 0 1px " + danger },
   /** Unconditional: a disabled, checked box still shows contrast, just dimmed. */
   controlChecked: {
-    ":checked": { backgroundColor: contrast, boxShadow: "0 0 0 1px " + contrast },
+    ":checked": {
+      backgroundColor: colors["--color-tomui-layer-03"],
+      boxShadow: "0 0 0 1px " + strong,
+    },
   },
   controlInteractive: {
     ":hover": { boxShadow: "0 0 0 1px " + hairline },
     ":focus": { boxShadow: "0 0 0 2px " + focus },
-    ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + focus },
   },
   controlDisabled: { cursor: "not-allowed", opacity: 0.5 },
   /** Display is toggled from tomui-binding.css, because StyleX has no sibling selector. */
@@ -57,7 +57,7 @@ const styles = stylex.create({
     pointerEvents: "none",
     alignItems: "center",
     justifyContent: "center",
-    color: inverse,
+    color: defaultText,
   },
   labelBase: {
     margin: 0,
@@ -65,7 +65,7 @@ const styles = stylex.create({
     minHeight: 0,
     alignItems: "flex-start",
     gap: "0.5rem",
-    fontSize: "0.875rem",
+    fontSize: "0.8125rem",
   },
   labelRow: { flexDirection: "row" },
   labelRowReversed: { flexDirection: "row-reverse", justifyContent: "flex-end" },
@@ -80,11 +80,11 @@ const styles = stylex.create({
   },
   itemLabelDisabled: { cursor: "not-allowed", opacity: 0.5 },
   itemLabelEnabled: { cursor: "pointer" },
-  itemText: { fontSize: "0.875rem", color: defaultText },
-  legend: { fontSize: "0.875rem", fontWeight: 500, color: defaultText },
+  itemText: { fontSize: "0.8125rem", color: defaultText },
+  legend: { fontSize: "0.8125rem", fontWeight: 530, color: defaultText },
   group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
   groupList: { display: "flex", flexDirection: "column", gap: "0.5rem" },
-  message: { fontSize: "0.8125rem" },
+  message: { fontSize: "0.75rem" },
   messageDanger: { color: danger },
   messageSubtle: { color: subtle },
 });
@@ -93,7 +93,7 @@ export type CheckboxProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
   "type" | "onChange" | "ref" | "checked" | "defaultChecked" | "class" | "style"
 > & {
-  variant?: CheckboxVariant | undefined;
+  variant?: TomuiCheckboxVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   controlFirst?: boolean | undefined;
@@ -115,7 +115,7 @@ export type CheckboxProps = Omit<
 function CheckboxControl(props: CheckboxProps): JSX.Element {
   const merged = merge(
     {
-      variant: "default" as CheckboxVariant,
+      variant: "default" as TomuiCheckboxVariant,
       indeterminate: false,
       value: "on",
     },

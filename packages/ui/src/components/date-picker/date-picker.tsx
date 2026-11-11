@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_DATE_PICKER_DEFAULT_VARIANTS = {
   size: "base",
@@ -14,20 +14,24 @@ export type TomuiDatePickerSize = "xs" | "sm" | "base" | "lg";
 const styles = stylex.create({
   base: {
     borderWidth: 0,
-    borderRadius: radius.xl,
-    backgroundColor: colors["--color-tomui-base"],
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-control"],
     color: textColors["--text-color-tomui-default"],
+    fontFamily: "inherit",
     userSelect: "none",
-    outlineWidth: 0,
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":focus": { outlineWidth: 0 },
-    ":focus-visible": { boxShadow: "0 0 0 2px " + colors["--color-tomui-brand"] },
+    outlineWidth: "1px",
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "-1px",
+    boxShadow: elevation["--elevation-tomui-input"],
+    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
+    ":focus": { outlineColor: colors["--color-tomui-focus"], boxShadow: "none" },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
-  sizeXs: { height: "1.25rem", paddingInline: "0.375rem", fontSize: "0.75rem" },
-  sizeSm: { height: "1.625rem", paddingInline: "0.5rem", fontSize: "0.75rem" },
-  sizeBase: { height: "2.25rem", paddingInline: "0.75rem", fontSize: "0.875rem" },
-  sizeLg: { height: "2.5rem", paddingInline: "1rem", fontSize: "0.875rem" },
+  sizeXs: { height: "1.5rem", paddingInline: "0.5rem", fontSize: "12px" },
+  sizeSm: { height: "1.5rem", paddingInline: "0.5625rem", fontSize: "13px" },
+  sizeBase: { height: "1.75rem", paddingInline: "0.6875rem", fontSize: "13px" },
+  sizeLg: { height: "2rem", paddingInline: "0.9375rem", fontSize: "13px" },
 });
 
 const sizeStyles = {

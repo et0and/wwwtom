@@ -1,7 +1,7 @@
 import { render } from "@solidjs/testing-library";
 import type { JSX } from "@solidjs/web";
 import { describe, expect, it } from "vitest";
-import { Code, CodeBlock } from "../code";
+import { Code } from "../code";
 
 const renderCode = (ui: JSX.Element) => render(() => ui);
 
@@ -51,9 +51,9 @@ describe("Code", () => {
   });
 });
 
-describe("CodeBlock", () => {
+describe("Code.Block", () => {
   it("wraps the code in a bordered container", () => {
-    const { container } = renderCode(<CodeBlock code="const x = 1;" />);
+    const { container } = renderCode(<Code.Block code="const x = 1;" />);
 
     expect(container.querySelector("pre")).not.toBeNull();
     expect((container.firstElementChild!.getAttribute("class") ?? "").length).toBeGreaterThan(0);
@@ -66,7 +66,7 @@ describe("CodeBlock", () => {
 
   it("indents the code inside the container", () => {
     const bare = render(() => <Code code="x" />).container.querySelector("pre")!;
-    const blocked = renderCode(<CodeBlock code="x" />).container.querySelector("pre")!;
+    const blocked = renderCode(<Code.Block code="x" />).container.querySelector("pre")!;
 
     // The block adds its own inset padding, so the two differ.
     expect(blocked.getAttribute("class")).not.toBe(bare.getAttribute("class"));

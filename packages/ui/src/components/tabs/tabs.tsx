@@ -1,12 +1,11 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, createUniqueId, For, merge, omit, Show, useContext } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { createControllableSignal } from "../../utils/state";
 
 export const TOMUI_TABS_VARIANTS = {
-  variant: ["segmented", "underline"],
+  variant: ["segmented", "underline", "line"],
   size: ["base", "sm"],
 } as const;
 
@@ -91,6 +90,18 @@ const styles = stylex.create({
   },
   listUnderlineSm: { height: "1.625rem" },
   listUnderlineBase: { height: "1.875rem" },
+  /** OpenCode's line strip: a 36px bar with a hairline underneath. */
+  listLine: {
+    gap: "0.25rem",
+    height: "2.25rem",
+    paddingInline: 0,
+    borderBottomWidth: "0.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: line,
+    overflowX: "auto",
+  },
+  listLineSm: { height: "2rem" },
+  listLineBase: { height: "2.25rem" },
   tabBase: {
     position: "relative",
     zIndex: 2,
@@ -106,7 +117,7 @@ const styles = stylex.create({
     ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
   },
   tabSm: { fontSize: "0.75rem", lineHeight: "1.333" },
-  tabBaseSize: { fontSize: "0.875rem", lineHeight: "1.5" },
+  tabBaseSize: { fontSize: "13px", lineHeight: 1.5 },
   tabSegmented: {
     marginBlock: "0.125rem",
     color: subtleText,
@@ -126,6 +137,24 @@ const styles = stylex.create({
   tabUnderlineSm: { paddingInline: "0.375rem", paddingBlock: "0.625rem" },
   tabUnderlineBase: { paddingInline: "0.5rem", paddingBlock: "0.75rem" },
   tabUnderlineSelected: { color: defaultTextColor },
+  tabLine: {
+    height: "100%",
+    paddingInline: "0.5rem",
+    paddingBlock: "0.375rem",
+    borderBottomWidth: "1.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: "transparent",
+    color: subtleText,
+    fontSize: "13px",
+    lineHeight: "20px",
+    fontWeight: 440,
+    ":hover": { color: defaultTextColor },
+  },
+  tabLineSelected: {
+    color: defaultTextColor,
+    fontWeight: 530,
+    borderBottomColor: defaultTextColor,
+  },
 });
 
 /**
@@ -139,13 +168,19 @@ const rootSegmentedSizeStyles = { sm: styles.rootSegmentedSm, base: styles.rootS
 const pillSizeStyles = { sm: styles.pillSm, base: styles.pillBase };
 const listSegmentedSizeStyles = { sm: styles.listSegmentedSm, base: styles.listSegmentedBase };
 const listUnderlineSizeStyles = { sm: styles.listUnderlineSm, base: styles.listUnderlineBase };
+const listLineSizeStyles = { sm: styles.listLineSm, base: styles.listLineBase };
 const tabFontSizeStyles = { sm: styles.tabSm, base: styles.tabBaseSize };
-const tabVariantStyles = { segmented: styles.tabSegmented, underline: styles.tabUnderline };
+const tabVariantStyles = {
+  segmented: styles.tabSegmented,
+  underline: styles.tabUnderline,
+  line: styles.tabLine,
+};
 const tabSegmentedSizeStyles = { sm: styles.tabSegmentedSm, base: styles.tabSegmentedBase };
 const tabUnderlineSizeStyles = { sm: styles.tabUnderlineSm, base: styles.tabUnderlineBase };
 const tabSelectedStyles = {
   segmented: styles.tabSegmentedSelected,
   underline: styles.tabUnderlineSelected,
+  line: styles.tabLineSelected,
 };
 
 export type TabsProps = TomuiTabsVariantsProps & {
@@ -248,6 +283,8 @@ export function Tabs(props: TabsProps): JSX.Element {
       merged.variant === "segmented" ? listSegmentedSizeStyles[merged.size] : undefined,
       merged.variant === "underline" ? styles.listUnderline : undefined,
       merged.variant === "underline" ? listUnderlineSizeStyles[merged.size] : undefined,
+      merged.variant === "line" ? styles.listLine : undefined,
+      merged.variant === "line" ? listLineSizeStyles[merged.size] : undefined,
     );
     return { ...generated, class: ["tomui-tabs-list", generated.class].filter(Boolean).join(" ") };
   };
@@ -292,10 +329,10 @@ export function Tabs(props: TabsProps): JSX.Element {
                     {...stylex.attrs(
                       styles.tabBase,
                       tabFontSizeStyles[merged.size],
-                      tabVariantStyles[merged.variant],
                       merged.variant === "segmented"
                         ? tabSegmentedSizeStyles[merged.size]
                         : tabUnderlineSizeStyles[merged.size],
+                      tabVariantStyles[merged.variant],
                       selected() ? tabSelectedStyles[merged.variant] : undefined,
                       tab.style,
                     )}

@@ -1,10 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import { createSignal, For, merge, omit, onCleanup, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { overflow, textAlign } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
+import { fontSize2xs, fontSizeSm } from "../../styles/typography.stylex";
 
 export const TOMUI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS = {
   state: "default",
@@ -29,18 +28,17 @@ export type TableOfContentsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "style"
 
 const styles = stylex.create({
   title: {
-    marginBottom: "0.75rem",
-    fontSize: fontSizeXs.fontSize,
-    fontWeight: 600,
-    letterSpacing: "0.025em",
+    marginBottom: "0.5rem",
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: 530,
     color: textColors["--text-color-tomui-subtle"],
     textTransform: "uppercase",
   },
   list: {
     display: "flex",
     flexDirection: "column",
-    gap: "0.5rem",
-    borderLeftWidth: 2,
+    gap: "0.25rem",
+    borderLeftWidth: "0.5px",
     borderLeftColor: colors["--color-tomui-hairline"],
   },
   listItem: { marginLeft: "-0.125rem" },
@@ -48,8 +46,8 @@ const styles = stylex.create({
     display: "block",
     width: "100%",
     paddingBlock: "0.125rem",
-    paddingLeft: "1rem",
-    borderLeftWidth: 2,
+    paddingLeft: "0.75rem",
+    borderLeftWidth: "1px",
     borderLeftColor: "transparent",
     fontSize: fontSizeSm.fontSize,
     textDecorationLine: "none",
@@ -59,12 +57,12 @@ const styles = stylex.create({
     ":hover": {
       borderLeftColor: colors["--color-tomui-line"],
       color: textColors["--text-color-tomui-default"],
-      fontWeight: 500,
+      fontWeight: 530,
     },
   },
   itemActive: {
     borderLeftColor: colors["--color-tomui-brand"],
-    fontWeight: 500,
+    fontWeight: 530,
     color: textColors["--text-color-tomui-default"],
   },
   itemLabel: { display: "block", minWidth: 0, lineHeight: "1.25rem" },

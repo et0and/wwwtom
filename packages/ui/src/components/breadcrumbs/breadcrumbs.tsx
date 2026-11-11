@@ -1,9 +1,9 @@
+import { textColors } from "../../styles/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { overflow } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
   nav: {
@@ -15,8 +15,18 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     marginInlineEnd: "1rem",
   },
-  sizeSm: { ...fontSizeSm, height: "2.5rem", gap: "0.125rem" },
-  sizeBase: { ...fontSizeBase, height: "3rem", gap: "0.25rem" },
+  sizeSm: {
+    fontSize: fontSizeXs.fontSize,
+    lineHeight: fontSizeXs.lineHeight,
+    height: "1.75rem",
+    gap: "0.125rem",
+  },
+  sizeBase: {
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: fontSizeSm.lineHeight,
+    height: "2rem",
+    gap: "0.25rem",
+  },
   separator: {
     display: "flex",
     flexShrink: 0,
@@ -29,7 +39,7 @@ const styles = stylex.create({
     minWidth: 0,
     alignItems: "center",
     gap: "0.25rem",
-    fontWeight: 500,
+    fontWeight: fontWeightControl.fontWeight,
   },
   link: {
     display: "flex",
@@ -93,7 +103,7 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
             <>
               <Show when={index() > 0}>
                 <span aria-hidden="true" {...stylex.attrs(styles.separator)}>
-                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
                     <path
                       stroke="currentColor"
                       stroke-linecap="round"

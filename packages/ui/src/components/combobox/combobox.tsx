@@ -14,9 +14,10 @@ import {
 import { CaretDownIcon } from "@tom/icons/CaretDown";
 import { CheckIcon } from "@tom/icons/Check";
 import { XIcon } from "@tom/icons/X";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
 export const TOMUI_COMBOBOX_DEFAULT_VARIANTS = {
   inputSide: "right",
@@ -24,22 +25,19 @@ export const TOMUI_COMBOBOX_DEFAULT_VARIANTS = {
 
 export type TomuiComboboxInputSide = "right" | "top";
 
-const lineColor = colors["--color-tomui-line"];
 const hairlineColor = colors["--color-tomui-hairline"];
 const focusColor = colors["--color-tomui-focus"];
-/** Matches Tailwind's `ring-<color>/50` alpha modifier. StyleX needs literals. */
-const focusRing = "0 0 0 1.5px color-mix(in srgb, " + focusColor + " 50%, transparent)";
-const controlRing = "0 0 0 1px " + lineColor;
+const controlRing = elevation["--elevation-tomui-input"];
 
 const styles = stylex.create({
   root: { position: "relative" },
   label: {
     display: "block",
     marginBottom: "0.25rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
   },
-  message: { marginTop: "0.25rem", fontSize: "0.8125rem" },
+  message: { marginTop: "0.25rem", fontSize: fontSizeXs.fontSize },
   messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
   messageDanger: { color: textColors["--text-color-tomui-danger"] },
   content: {
@@ -51,11 +49,11 @@ const styles = stylex.create({
     minWidth: "100%",
     marginTop: "0.25rem",
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-base"],
-    paddingBlock: "0.375rem",
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-layer-01"],
+    padding: "2px",
     color: textColors["--text-color-tomui-default"],
-    boxShadow: controlRing + ", 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    boxShadow: elevation["--elevation-tomui-floating"],
   },
   triggerWrap: {
     position: "relative",
@@ -63,18 +61,26 @@ const styles = stylex.create({
     width: "100%",
     ":has(:disabled)": { cursor: "not-allowed", opacity: 0.5 },
   },
-  triggerInput: {
+  triggerSurface: {
     width: "100%",
+    height: "1.75rem",
     borderWidth: 0,
+    borderRadius: radius.md,
     backgroundColor: colors["--color-tomui-control"],
-    paddingInlineEnd: "3rem",
+    paddingInline: "0.6875rem",
+    fontSize: fontSizeSm.fontSize,
     color: textColors["--text-color-tomui-default"],
-    outlineWidth: 0,
+    outlineWidth: "1px",
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "-1px",
     boxShadow: controlRing,
     "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
+    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
     ":disabled": { cursor: "not-allowed" },
-    ":focus": { outlineWidth: 0, boxShadow: focusRing },
+    ":focus": { outlineColor: focusColor, boxShadow: "none" },
   },
+  triggerInput: { paddingInlineEnd: "3rem" },
   iconButton: {
     position: "absolute",
     top: "50%",
@@ -92,16 +98,9 @@ const styles = stylex.create({
   triggerValue: {
     position: "relative",
     display: "flex",
-    width: "100%",
     alignItems: "center",
-    borderWidth: 0,
-    backgroundColor: colors["--color-tomui-control"],
     paddingInlineEnd: "2rem",
-    color: textColors["--text-color-tomui-default"],
-    outlineWidth: 0,
-    boxShadow: controlRing,
-    ":disabled": { cursor: "not-allowed", opacity: 0.5 },
-    ":focus": { outlineWidth: 0, boxShadow: focusRing },
+    ":disabled": { opacity: 0.5 },
   },
   caret: {
     position: "absolute",
@@ -115,12 +114,13 @@ const styles = stylex.create({
   multiple: {
     display: "flex",
     height: "auto",
-    minHeight: "2.25rem",
+    minHeight: "1.75rem",
     flexDirection: "column",
     gap: "0.25rem",
     borderWidth: 0,
+    borderRadius: radius.md,
     backgroundColor: colors["--color-tomui-control"],
-    padding: "0.375rem 0.625rem",
+    padding: "0.25rem 0.625rem",
     boxShadow: controlRing,
   },
   multipleInput: {
@@ -147,23 +147,23 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: "1fr 16px",
     gap: "0.5rem",
-    margin: "0.375rem",
+    height: "1.75rem",
+    alignItems: "center",
     borderRadius: radius.sm,
-    padding: "0.375rem 0.5rem",
-    fontSize: "0.875rem",
+    paddingInline: "0.5rem",
+    fontSize: fontSizeSm.fontSize,
     cursor: "pointer",
-    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-tint"] },
+    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-overlay-hover"] },
   },
   itemLabel: { gridColumnStart: "1" },
   itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
   empty: {
     flexShrink: 0,
-    margin: "0.375rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.925rem",
+    padding: "0.5rem 0.75rem",
+    fontSize: fontSizeXs.fontSize,
     lineHeight: "1rem",
     color: textColors["--text-color-tomui-subtle"],
-    ":empty": { margin: 0, padding: 0 },
+    ":empty": { padding: 0 },
   },
   list: {
     minHeight: 0,
@@ -418,7 +418,7 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         aria-expanded={ctx.isOpen() ? "true" : "false"}
         aria-controls={ctx.listId}
         aria-autocomplete="list"
-        {...stylex.attrs(styles.triggerInput, merged.style)}
+        {...stylex.attrs(styles.triggerSurface, styles.triggerInput, merged.style)}
         placeholder={merged.placeholder}
         value={ctx.query()}
         onInput={(event) => {
@@ -489,7 +489,7 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
       type="button"
       aria-haspopup="listbox"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
-      {...stylex.attrs(styles.triggerValue, merged.style)}
+      {...stylex.attrs(styles.triggerSurface, styles.triggerValue, merged.style)}
       onClick={(event) => {
         ctx.setOpen(!ctx.isOpen());
         merged.onClick?.(event);

@@ -1,26 +1,25 @@
+import { textColors } from "../../styles/colors.stylex";
 import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
-import { layout } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase } from "../../styles/typography.stylex";
+import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
   label: {
     margin: 0,
-    fontSize: fontSizeBase.fontSize,
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
     color: textColors["--text-color-tomui-default"],
     display: "inline-flex",
     flexDirection: "row",
     alignItems: "center",
-    gap: layout.gap1.gap,
+    gap: "0.25rem",
   },
   span: {
     display: "inline-flex",
     flexDirection: "row",
     alignItems: "center",
-    gap: layout.gap1.gap,
+    gap: "0.25rem",
   },
   optional: {
     fontWeight: 400,

@@ -2,9 +2,8 @@ import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { ArrowRightIcon } from "@tom/icons/ArrowRight";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import { datePickerVariants, type TomuiDatePickerSize } from "../date-picker/date-picker";
 
 export const TOMUI_DATE_RANGE_PICKER_DEFAULT_VARIANTS = {
@@ -20,14 +19,14 @@ const styles = stylex.create({
     display: "flex",
     width: "fit-content",
     flexDirection: "column",
-    borderRadius: radius.xl,
+    borderRadius: radius.lg,
     userSelect: "none",
   },
-  variantDefault: { backgroundColor: colors["--color-tomui-overlay"] },
+  variantDefault: { backgroundColor: colors["--color-tomui-layer-01"] },
   variantSubtle: { backgroundColor: colors["--color-tomui-base"] },
   sizeSm: { padding: "0.75rem", gap: "0.5rem" },
-  sizeBase: { padding: "1rem", gap: "0.625rem" },
-  sizeLg: { padding: "1.25rem", gap: "0.75rem" },
+  sizeBase: { padding: "0.75rem", gap: "0.5rem" },
+  sizeLg: { padding: "1rem", gap: "0.625rem" },
   row: { display: "flex", alignItems: "center", gap: "0.5rem" },
   alert: { fontSize: "0.75rem", color: textColors["--text-color-tomui-danger"] },
 });

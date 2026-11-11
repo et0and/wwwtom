@@ -1,9 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 
 // Simplified port: Tomui's descendants-tracking + measured layout replaced by DOM-order vertical stack with SVG lines via ResizeObserver.
 

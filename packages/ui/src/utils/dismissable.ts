@@ -1,4 +1,4 @@
-import { createEffect, onCleanup } from "solid-js";
+import { createEffect } from "solid-js";
 
 interface LayerRecord {
   node: HTMLElement;
@@ -139,7 +139,7 @@ export function createDismissableLayer(
         document.addEventListener("focusin", handleFocusIn, true);
       }, 0);
 
-      onCleanup(() => {
+      return () => {
         clearTimeout(timer);
         document.removeEventListener("keydown", handleKeyDown);
         document.removeEventListener("pointerdown", handlePointerDown, true);
@@ -147,7 +147,7 @@ export function createDismissableLayer(
         const index = layerStack.indexOf(record);
         if (index !== -1) layerStack.splice(index, 1);
         updateBodyPointerEvents();
-      });
+      };
     },
   );
 }

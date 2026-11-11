@@ -1,8 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createToggleState } from "../../utils/state";
 import { Field } from "../field/field";
 
@@ -13,108 +14,98 @@ export const TOMUI_SWITCH_DEFAULT_VARIANTS = {
 
 export type TomuiSwitchSize = "sm" | "base" | "lg";
 export type TomuiSwitchVariant = "default" | "neutral";
-export type SwitchVariant = TomuiSwitchVariant;
 
-const DARK = "@media (prefers-color-scheme: dark)";
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)";
 
-const neutral450 = colors["--color-tomui-neutral-450"];
-const neutral750 = colors["--color-tomui-neutral-750"];
-const neutral850 = colors["--color-tomui-neutral-850"];
-const blue400 = colors["--color-blue-400"];
-const blue800 = colors["--color-blue-800"];
-const base = colors["--color-tomui-base"];
-const hairline = colors["--color-tomui-hairline"];
-
-/** TomUI owns two blue steps, so the track and its ring share one colour. */
-const checkedBlue = blue800;
-
 /**
- * TomUI's neutral scale replaces Tailwind's. The mapping keeps the same
- * apparent lightness: 450 covers the old 200/300/400, 750 the old 500/600, and
- * 850 the old 700/850.
+ * OpenCode's compact switch: a 24x16 track with a 12x12 thumb, a 4px radius,
+ * and a painted sheen rather than a plain fill.
  */
 const styles = stylex.create({
-  wrapper: { position: "relative", display: "inline-flex" },
-  wrapperSm: { height: "1.375rem", width: "2.125rem" },
-  wrapperBase: { height: "1.625rem", width: "2.625rem" },
-  wrapperLg: { height: "1.875rem", width: "3.125rem" },
+  wrapper: { position: "relative", display: "inline-flex", flexShrink: 0 },
+  wrapperSm: { height: "0.875rem", width: "1.25rem" },
+  wrapperBase: { height: "1rem", width: "1.5rem" },
+  wrapperLg: { height: "1.125rem", width: "1.75rem" },
   track: {
     position: "relative",
     appearance: "none",
+    width: "100%",
+    height: "100%",
     padding: 0,
+    margin: 0,
     borderWidth: 0,
     cursor: "pointer",
+    borderRadius: "4px",
     outlineWidth: 0,
-    boxShadow: "0 0 0 1px " + hairline,
-    borderRadius: "5px",
-    transitionProperty: "color, background-color",
-    transitionDuration: "150ms",
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "1px",
+    backgroundColor: colors["--color-tomui-layer-04"],
+    backgroundImage:
+      "linear-gradient(180deg, " +
+      colors["--color-tomui-sheen-bottom"] +
+      " 0%, " +
+      colors["--color-tomui-sheen-top"] +
+      " 100%)",
+    boxShadow: elevation["--elevation-tomui-switch-off"],
+    transitionProperty: "background-color, opacity, outline-color",
+    transitionDuration: "90ms",
     transitionTimingFunction: "ease-out",
     [REDUCED_MOTION]: { transitionProperty: "none" },
-    ":focus": {
-      outlineWidth: 0,
-      boxShadow: "0 0 0 2px " + colors["--color-tomui-focus"],
-    },
     ":focus-visible": {
-      outlineWidth: 0,
-      boxShadow: "0 0 0 2px " + colors["--color-tomui-brand"],
+      outlineWidth: "2px",
+      outlineColor: colors["--color-tomui-focus"],
     },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
-    // The old [corner-shape:squircle] class never matched, because nothing set
-    // the property. The wider radius still applied through @supports alone.
-    "@supports (corner-shape: squircle)": { borderRadius: "10px" },
   },
-  trackSm: { height: "1rem", width: "2rem" },
-  trackBase: { height: "1.125rem", width: "2.25rem" },
-  trackLg: { height: "1.25rem", width: "2.5rem" },
-  trackOnDefault: { backgroundColor: checkedBlue, boxShadow: "0 0 0 1px " + checkedBlue },
+  trackOnDefault: {
+    backgroundColor: colors["--color-tomui-brand"],
+    boxShadow: elevation["--elevation-tomui-switch-on"],
+  },
   trackOnNeutral: {
-    backgroundColor: neutral750,
-    boxShadow: "0 0 0 1px " + neutral850,
-    [DARK]: { backgroundColor: base, boxShadow: "0 0 0 1px " + neutral850 },
-  },
-  trackOffDefault: {
-    backgroundColor: neutral450,
-    boxShadow: "0 0 0 1px " + neutral450,
-    [DARK]: { backgroundColor: neutral850, boxShadow: "0 0 0 1px " + neutral750 },
+    backgroundColor: colors["--color-tomui-contrast"],
+    boxShadow: elevation["--elevation-tomui-switch-on"],
   },
   trackOffNeutral: {
-    backgroundColor: neutral450,
-    boxShadow: "0 0 0 1px " + hairline,
-    [DARK]: { backgroundColor: base, boxShadow: "0 0 0 1px " + hairline },
+    backgroundColor: colors["--color-tomui-layer-03"],
+    boxShadow: elevation["--elevation-tomui-switch-off"],
   },
   thumb: {
     position: "absolute",
-    insetBlock: 0,
-    left: 0,
+    top: "2px",
+    insetInlineStart: "2px",
     pointerEvents: "none",
-    borderRadius: "5px",
-    backgroundColor: base,
-    boxShadow:
-      "0 0 1px 0.5px var(--color-tomui-shadow-edge), 0 1px 2px var(--color-tomui-shadow-drop)",
-    transitionProperty: "all",
-    transitionDuration: "150ms",
+    borderRadius: "2px",
+    backgroundImage:
+      "linear-gradient(180deg, " +
+      colors["--color-tomui-sheen-top"] +
+      " 0%, " +
+      colors["--color-tomui-sheen-bottom"] +
+      " 100%)",
+    backgroundColor: colors["--color-tomui-switch-thumb"],
+    boxShadow: elevation["--elevation-tomui-elements"],
+    transitionProperty: "inset-inline-start, background-color",
+    transitionDuration: "90ms",
     transitionTimingFunction: "ease-out",
     [REDUCED_MOTION]: { transitionProperty: "none" },
-    // The old [corner-shape:squircle] class never matched, because nothing set
-    // the property. The wider radius still applied through @supports alone.
-    "@supports (corner-shape: squircle)": { borderRadius: "10px" },
   },
-  thumbSm: { width: "1rem" },
-  thumbBase: { width: "1.125rem" },
-  thumbLg: { width: "1.25rem" },
-  thumbOnDefault: { backgroundColor: base, [DARK]: { backgroundColor: blue400 } },
-  thumbOnNeutral: { backgroundColor: base, [DARK]: { backgroundColor: neutral450 } },
-  thumbOff: { backgroundColor: base, [DARK]: { backgroundColor: neutral850 } },
+  thumbSm: { width: "0.625rem", height: "0.625rem" },
+  thumbBase: { width: "0.75rem", height: "0.75rem" },
+  thumbLg: { width: "0.875rem", height: "0.875rem" },
+  thumbOnSm: { insetInlineStart: "0.5rem" },
+  thumbOnBase: { insetInlineStart: "0.625rem" },
+  thumbOnLg: { insetInlineStart: "0.75rem" },
+  thumbOnDefault: {
+    backgroundColor: colors["--color-tomui-switch-thumb-on"],
+  },
   legend: {
-    fontSize: "0.875rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: 530,
     color: textColors["--text-color-tomui-default"],
   },
   group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
   groupRow: { display: "flex", flexDirection: "column", gap: "0.5rem" },
-  message: { fontSize: "0.8125rem" },
+  message: { fontSize: fontSizeXs.fontSize },
   messageDanger: { color: textColors["--text-color-tomui-danger"] },
   messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
   itemLabel: {
@@ -128,8 +119,8 @@ const styles = stylex.create({
   itemLabelDisabled: { cursor: "not-allowed", opacity: 0.5 },
   itemLabelEnabled: { cursor: "pointer" },
   itemText: {
-    fontSize: "0.875rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: 440,
     color: textColors["--text-color-tomui-default"],
   },
 });
@@ -139,15 +130,15 @@ const wrapperSizes = {
   base: styles.wrapperBase,
   lg: styles.wrapperLg,
 } as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
-const trackSizes = {
-  sm: styles.trackSm,
-  base: styles.trackBase,
-  lg: styles.trackLg,
-} as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
 const thumbSizes = {
   sm: styles.thumbSm,
   base: styles.thumbBase,
   lg: styles.thumbLg,
+} as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
+const thumbPositions = {
+  sm: styles.thumbOnSm,
+  base: styles.thumbOnBase,
+  lg: styles.thumbOnLg,
 } as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
 
 export interface TomuiSwitchVariantsProps {
@@ -156,26 +147,41 @@ export interface TomuiSwitchVariantsProps {
 }
 
 const trackStateStyles = {
-  default: { on: styles.trackOnDefault, off: styles.trackOffDefault },
+  default: { on: styles.trackOnDefault, off: undefined },
   neutral: { on: styles.trackOnNeutral, off: styles.trackOffNeutral },
-} as const satisfies Record<TomuiSwitchVariant, Record<string, stylex.StyleXStyles>>;
+} as const satisfies Record<TomuiSwitchVariant, Record<string, stylex.StyleXStyles | undefined>>;
 
 /** Both states are returned; the caller picks with `state.isSelected()`. */
 export function switchVariants(props: TomuiSwitchVariantsProps = {}) {
   const merged = merge(TOMUI_SWITCH_DEFAULT_VARIANTS, props);
   return {
     wrapper: [styles.wrapper, wrapperSizes[merged.size]],
-    track: [styles.track, trackSizes[merged.size]],
+    track: [styles.track],
     trackOn: trackStateStyles[merged.variant].on,
     trackOff: trackStateStyles[merged.variant].off,
   };
+}
+
+/** Thumb geometry for the current size and selection state. */
+export function switchThumbVariants(props: {
+  size?: TomuiSwitchSize | undefined;
+  checked?: boolean | undefined;
+  variant?: TomuiSwitchVariant | undefined;
+}): stylex.StyleXStyles[] {
+  const merged = merge({ size: TOMUI_SWITCH_DEFAULT_VARIANTS.size, checked: false }, props);
+  return [
+    styles.thumb,
+    thumbSizes[merged.size],
+    merged.checked ? thumbPositions[merged.size] : undefined,
+    merged.checked && merged.variant !== "neutral" ? styles.thumbOnDefault : undefined,
+  ].filter((style) => style !== undefined);
 }
 
 export type SwitchProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
   "type" | "size" | "onChange" | "checked" | "defaultChecked" | "style"
 > & {
-  variant?: SwitchVariant | undefined;
+  variant?: TomuiSwitchVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   required?: boolean | undefined;
@@ -310,13 +316,11 @@ function SwitchControl(props: SwitchProps): JSX.Element {
         aria-hidden="true"
         data-slot="switch-thumb"
         {...stylex.attrs(
-          styles.thumb,
-          thumbSizes[merged.size],
-          state.isSelected()
-            ? merged.variant === "neutral"
-              ? styles.thumbOnNeutral
-              : styles.thumbOnDefault
-            : styles.thumbOff,
+          ...switchThumbVariants({
+            size: merged.size,
+            checked: state.isSelected(),
+            variant: merged.variant,
+          }),
         )}
       />
     </span>

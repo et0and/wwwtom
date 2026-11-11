@@ -1,5 +1,5 @@
+import { textColors } from "../../styles/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import {
   fontSizeBase,
   fontSizeLg,

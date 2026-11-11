@@ -2,8 +2,7 @@ import { For, merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
 import { monoFont } from "../../styles/primitives.stylex";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { fontSizeSm } from "../../styles/typography.stylex";
 
 export const TOMUI_CODE_DEFAULT_VARIANTS = {
@@ -31,9 +30,10 @@ const styles = stylex.create({
   block: {
     minWidth: 0,
     borderRadius: "0.375rem",
-    borderWidth: 1,
-    borderColor: colors["--color-tomui-fill"],
-    backgroundColor: colors["--color-tomui-base"],
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
+    backgroundColor: colors["--color-tomui-layer-01"],
   },
   /** Inset for the code inside a block. Passed to the inner Code. */
   blockInset: { padding: "0.625rem" },
@@ -88,7 +88,7 @@ function renderCodeSegments(code: string, values: CodeValues | undefined): JSX.E
  * Simple code component without syntax highlighting.
  *
  * Renders code in a monospace font. For a bordered container version, use
- * `Code.Block` or `CodeBlock`.
+ * `Code.Block`.
  */
 function CodeComponent(props: CodeProps): JSX.Element {
   const merged = merge({ lang: TOMUI_CODE_DEFAULT_VARIANTS.lang }, props);
@@ -137,6 +137,3 @@ function CodeBlockComponent(props: CodeBlockProps): JSX.Element {
 export const Code = Object.assign(CodeComponent, {
   Block: CodeBlockComponent,
 });
-
-// Backward-compatible standalone export
-export const CodeBlock = CodeBlockComponent;

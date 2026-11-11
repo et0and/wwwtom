@@ -2,9 +2,11 @@ import * as stylex from "@stylexjs/stylex";
 import { createSignal, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { CaretDownIcon } from "@tom/icons/CaretDown";
-import { colors } from "../../styles/colors.stylex";
+import { SidebarSimpleIcon } from "@tom/icons/SidebarSimple";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSize2xs, fontSizeSm } from "../../styles/typography.stylex";
 
 const lineColor = colors["--color-tomui-line"];
 const baseColor = colors["--color-tomui-base"];
@@ -29,19 +31,19 @@ const styles = stylex.create({
   borderLeft: { borderInlineStartWidth: 1, borderColor: lineColor },
   floating: {
     margin: "0.5rem",
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: lineColor,
-    boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    borderRadius: radius.md,
+    borderWidth: "0.5px",
+    borderColor: colors["--color-tomui-hairline"],
+    boxShadow: elevation["--elevation-tomui-floating"],
   },
   collapsed: { width: "3.5rem", overflow: "hidden" },
   trigger: {
     margin: "0.5rem",
     display: "flex",
-    height: "2rem",
+    height: "1.75rem",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: radius.lg,
+    borderRadius: radius.sm,
     color: subtleText,
     ":hover": { backgroundColor: tintColor },
   },
@@ -61,10 +63,10 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingInline: "0.75rem",
-    paddingBlockStart: "1rem",
-    paddingBlockEnd: "0.5rem",
-    fontSize: "0.875rem",
-    fontWeight: 500,
+    paddingBlockStart: "0.75rem",
+    paddingBlockEnd: "0.375rem",
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: 530,
     color: subtleText,
   },
   groupLabelText: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
@@ -88,15 +90,15 @@ const styles = stylex.create({
     minWidth: 0,
     cursor: "pointer",
     alignItems: "center",
-    gap: "0.625rem",
-    borderRadius: radius.lg,
+    gap: "0.5rem",
+    borderRadius: radius.sm,
     outlineWidth: 0,
     paddingInline: "0.75rem",
     paddingBlock: 0,
-    fontSize: "0.875rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: 440,
     textDecoration: "none",
-    minHeight: "2.125rem",
+    minHeight: "1.75rem",
     color: defaultText,
     transitionProperty: "color, box-shadow, outline",
     ":hover": { backgroundColor: tintColor },
@@ -242,7 +244,7 @@ export function Sidebar(props: SidebarProps) {
           onClick={() => setIsOpen(!isOpen())}
           {...stylex.attrs(styles.trigger)}
         >
-          <span aria-hidden="true">{isOpen() ? "«" : "»"}</span>
+          <SidebarSimpleIcon size="sm" color="current" aria-hidden="true" />
         </button>
       </Show>
       <div {...stylex.attrs(styles.content)}>{merged.children}</div>

@@ -1,7 +1,7 @@
+import { textColors } from "../../styles/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { textColors } from "../../styles/tokens.stylex";
 import { radius } from "../../styles/primitives.stylex";
 
 /**

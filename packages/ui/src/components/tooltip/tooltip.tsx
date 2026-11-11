@@ -2,10 +2,10 @@ import type { JSX } from "@solidjs/web";
 import { createUniqueId, merge, omit, onCleanup, Show } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { createDisclosureState } from "../../utils/state";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeSm } from "../../styles/typography.stylex";
+import { fontSize2xs, fontWeightControl } from "../../styles/typography.stylex";
 
 export const TOMUI_TOOLTIP_DEFAULT_VARIANTS = {
   side: "top",
@@ -28,26 +28,29 @@ const styles = stylex.create({
   popup: {
     position: "absolute",
     zIndex: 50,
+    display: "inline-flex",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: "0.375rem",
     pointerEvents: "none",
     visibility: "visible",
     opacity: 1,
-    display: "flex",
-    flexDirection: "column",
     transformOrigin: "var(--transform-origin)",
-    borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-base"],
-    paddingInline: "0.625rem",
-    paddingBlock: "0.375rem",
-    fontSize: fontSizeSm.fontSize,
+    borderRadius: radius.sm,
+    backgroundColor: colors["--color-tomui-layer-01"],
+    paddingInline: "0.375rem",
+    paddingBlock: "0.3125rem",
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    lineHeight: "12px",
     color: textColors["--text-color-tomui-default"],
-    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-    outlineWidth: 1,
-    outlineStyle: "solid",
-    outlineColor: colors["--color-tomui-line"],
+    whiteSpace: "nowrap",
+    boxShadow: elevation["--elevation-tomui-floating"],
+    userSelect: "none",
     transitionProperty: "transform, scale, opacity",
-    transitionDuration: "150ms",
-    [STARTING]: { scale: 0.9, opacity: 0 },
-    [ENDING]: { scale: 0.9, opacity: 0 },
+    transitionDuration: "120ms",
+    [STARTING]: { scale: 0.96, opacity: 0 },
+    [ENDING]: { scale: 0.96, opacity: 0 },
     [INSTANT]: { transitionDuration: "0s" },
   },
 

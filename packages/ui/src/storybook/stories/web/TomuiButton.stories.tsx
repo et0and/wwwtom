@@ -26,10 +26,52 @@ export const Secondary = meta.story({
   },
 });
 
+export const Neutral = meta.story({
+  args: {
+    variant: "neutral",
+    children: "Change",
+  },
+});
+
+export const Contrast = meta.story({
+  args: {
+    variant: "contrast",
+    children: "Save changes",
+  },
+});
+
+export const Danger = meta.story({
+  args: {
+    variant: "danger",
+    children: "Remove",
+  },
+});
+
+export const Warning = meta.story({
+  args: {
+    variant: "warning",
+    children: "Review",
+  },
+});
+
 export const Ghost = meta.story({
   args: {
     variant: "ghost",
     children: "Skip",
+  },
+});
+
+export const GhostMuted = meta.story({
+  args: {
+    variant: "ghost-muted",
+    children: "Dismiss",
+  },
+});
+
+export const GhostFaint = meta.story({
+  args: {
+    variant: "ghost-faint",
+    children: "Later",
   },
 });
 

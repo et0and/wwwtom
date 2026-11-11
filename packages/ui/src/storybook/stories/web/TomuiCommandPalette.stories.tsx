@@ -19,7 +19,7 @@ const actions = [
 
 export const Open = meta.story({
   render: () => (
-    <div class="h-96 w-xl">
+    <div style={{ height: "24rem", width: "36rem" }}>
       <CommandPalette open items={actions} onOpenChange={() => undefined} />
     </div>
   ),
@@ -27,7 +27,7 @@ export const Open = meta.story({
 
 export const CustomPlaceholder = meta.story({
   render: () => (
-    <div class="h-96 w-xl">
+    <div style={{ height: "24rem", width: "36rem" }}>
       <CommandPalette
         open
         items={actions}
@@ -40,7 +40,7 @@ export const CustomPlaceholder = meta.story({
 
 export const WithSelection = meta.story({
   render: () => (
-    <div class="h-96 w-xl">
+    <div style={{ height: "24rem", width: "36rem" }}>
       <CommandPalette
         open
         items={actions}
@@ -53,7 +53,7 @@ export const WithSelection = meta.story({
 
 export const Empty = meta.story({
   render: () => (
-    <div class="h-96 w-xl">
+    <div style={{ height: "24rem", width: "36rem" }}>
       <CommandPalette open items={[]} onOpenChange={() => undefined} />
     </div>
   ),

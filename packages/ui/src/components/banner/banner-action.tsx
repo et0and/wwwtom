@@ -4,8 +4,7 @@ import * as stylex from "@stylexjs/stylex";
 import { Button } from "../button/button";
 import { customProperties } from "../../utils/stylex-vars";
 import { bannerAccentVars } from "./banner-vars.stylex";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import type { TomuiBannerVariant } from "./banner";
 
 /**

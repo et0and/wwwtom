@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { colors } from "@tom/ui/colors.stylex";
 
 export const styles = stylex.create({
   stack: {
@@ -27,7 +28,7 @@ export const styles = stylex.create({
     paddingTop: "1rem",
     borderTopWidth: 1,
     borderTopStyle: "solid",
-    borderTopColor: "var(--color-tomui-line)",
+    borderTopColor: colors["--color-tomui-line"],
   },
   gavinInputRow: {
     display: "flex",

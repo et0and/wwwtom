@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 
 const lineColor = colors["--color-tomui-line"];
@@ -11,19 +11,23 @@ const lineColor = colors["--color-tomui-line"];
 const styles = stylex.create({
   surface: {
     overflow: "hidden",
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
     backgroundColor: colors["--color-tomui-base"],
-    boxShadow: "0 0 0 1px " + lineColor + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    boxShadow: elevation["--elevation-tomui-raised"],
   },
   layeredRoot: {
     display: "flex",
     width: "100%",
     flexDirection: "column",
     overflow: "hidden",
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     backgroundColor: colors["--color-tomui-elevated"],
     boxShadow: "0 0 0 1px " + colors["--color-tomui-hairline"],
-    ...fontSizeBase,
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: fontSizeBase.lineHeight,
   },
   secondary: {
     marginBlock: "-0.5rem",
@@ -34,7 +38,8 @@ const styles = stylex.create({
     padding: "1rem",
     fontWeight: 500,
     color: textColors["--text-color-tomui-subtle"],
-    ...fontSizeBase,
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: fontSizeBase.lineHeight,
   },
   primary: {
     position: "relative",
@@ -42,13 +47,13 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: "0.5rem",
     overflow: "hidden",
-    borderRadius: radius.lg,
+    borderRadius: radius.card,
     backgroundColor: colors["--color-tomui-base"],
     padding: "1rem",
     paddingInlineEnd: "0.75rem",
     color: "inherit",
     textDecorationLine: "none",
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-fill"],
+    boxShadow: "0 0 0 1px " + lineColor,
   },
 });
 

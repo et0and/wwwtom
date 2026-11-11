@@ -3,7 +3,6 @@ import * as stylex from "@stylexjs/stylex";
 import { isServer } from "@solidjs/web";
 import { Title, Meta } from "@solidjs/meta";
 import numberToWords from "number-to-words";
-import { colors } from "@tom/ui/colors.stylex";
 import { textAlign } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { Loader } from "@tom/ui/loader";
@@ -22,7 +21,7 @@ const styles = stylex.create({
     alignItems: "center",
     height: "100vh",
   },
-  kawaraContainer: { backgroundColor: colors["--color-white"] },
+  kawaraContainer: { backgroundColor: "#fff" },
   // Tailwind's `container` utility: full width, capped at each breakpoint.
   kawaraMain: {
     width: "100%",

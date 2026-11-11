@@ -14,7 +14,7 @@ const frameworks = ["Solid", "React", "Svelte", "Vue"];
 
 export const Single = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Combobox label="Framework" defaultValue="Solid">
         <Combobox.TriggerValue placeholder="Select a framework" />
         <Combobox.Content>
@@ -29,7 +29,7 @@ export const Single = meta.story({
 
 export const WithSearchInput = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Combobox label="Framework">
         <Combobox.TriggerInput placeholder="Search frameworks" />
         <Combobox.Content>
@@ -44,7 +44,7 @@ export const WithSearchInput = meta.story({
 
 export const Multiple = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Combobox label="Frameworks" multiple defaultValue={["Solid", "Svelte"]}>
         <Combobox.TriggerMultipleWithInput placeholder="Pick frameworks" />
         <Combobox.Content>
@@ -59,7 +59,7 @@ export const Multiple = meta.story({
 
 export const MultipleTopInput = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Combobox label="Frameworks" multiple defaultValue={["Solid"]}>
         <Combobox.TriggerMultipleWithInput inputSide="top" placeholder="Search above" />
         <Combobox.Content>
@@ -74,7 +74,7 @@ export const MultipleTopInput = meta.story({
 
 export const WithError = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Combobox label="Framework" error="Select at least one framework">
         <Combobox.TriggerValue placeholder="Select a framework" />
       </Combobox>
@@ -84,7 +84,7 @@ export const WithError = meta.story({
 
 export const Empty = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Combobox label="Framework">
         <Combobox.TriggerValue placeholder="Select a framework" />
         <Combobox.Content>

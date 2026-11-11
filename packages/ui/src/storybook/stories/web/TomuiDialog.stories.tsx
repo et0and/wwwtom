@@ -1,8 +1,7 @@
 import preview from "#.storybook/preview";
-import * as stylex from "@stylexjs/stylex";
-import { buttonVariants } from "@tom/ui/button";
 import { Dialog } from "@tom/ui/dialog";
-import { storyStyles } from "../story.stylex";
+import { Input } from "@tom/ui/input";
+import { Field } from "@tom/ui/field";
 
 const meta = preview.meta({
   title: "web/Dialog",
@@ -16,15 +15,29 @@ const meta = preview.meta({
 export const Open = meta.story({
   render: () => (
     <Dialog.Root defaultOpen>
-      <Dialog style={storyStyles.panel}>
-        <Dialog.Title style={storyStyles.title}>Edit profile</Dialog.Title>
-        <Dialog.Description style={storyStyles.description}>
-          Make changes to your profile here. Click save when you are done.
-        </Dialog.Description>
-        <div {...stylex.attrs(storyStyles.actions)}>
-          <Dialog.Close style={buttonVariants({ variant: "secondary" })}>Cancel</Dialog.Close>
-          <Dialog.Close style={buttonVariants({ variant: "primary" })}>Save</Dialog.Close>
-        </div>
+      <Dialog>
+        <Dialog.Header>
+          <Dialog.TitleGroup
+            title="Edit profile"
+            description="Make changes to your profile here."
+          />
+        </Dialog.Header>
+        <Dialog.Body>
+          <div
+            style={{ display: "flex", width: "100%", "flex-direction": "column", gap: "0.75rem" }}
+          >
+            <Field label="Display name">
+              <Input value="Tom" />
+            </Field>
+            <Field label="Email">
+              <Input value="tom@example.com" type="email" />
+            </Field>
+          </div>
+        </Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close variant="neutral">Cancel</Dialog.Close>
+          <Dialog.Close variant="primary">Save changes</Dialog.Close>
+        </Dialog.Footer>
       </Dialog>
     </Dialog.Root>
   ),
@@ -34,14 +47,14 @@ export const WithTrigger = meta.story({
   render: () => (
     <Dialog.Root>
       <Dialog.Trigger style={buttonVariants({ variant: "secondary" })}>Open dialog</Dialog.Trigger>
-      <Dialog style={storyStyles.panel}>
-        <Dialog.Title style={storyStyles.title}>Notifications</Dialog.Title>
-        <Dialog.Description style={storyStyles.description}>
-          You have 3 unread messages.
-        </Dialog.Description>
-        <div {...stylex.attrs(storyStyles.actions)}>
-          <Dialog.Close style={buttonVariants({ variant: "primary" })}>Got it</Dialog.Close>
-        </div>
+      <Dialog>
+        <Dialog.Header>
+          <Dialog.TitleGroup title="Notifications" description="You have 3 unread messages." />
+        </Dialog.Header>
+        <Dialog.Body>Messages will appear here.</Dialog.Body>
+        <Dialog.Footer>
+          <Dialog.Close variant="primary">Got it</Dialog.Close>
+        </Dialog.Footer>
       </Dialog>
     </Dialog.Root>
   ),
@@ -50,11 +63,16 @@ export const WithTrigger = meta.story({
 export const Large = meta.story({
   render: () => (
     <Dialog.Root defaultOpen>
-      <Dialog size="lg" style={storyStyles.panel}>
-        <Dialog.Title style={storyStyles.title}>Large dialog</Dialog.Title>
-        <Dialog.Description style={storyStyles.description}>
-          Complex content goes here.
-        </Dialog.Description>
+      <Dialog size="lg">
+        <Dialog.Header>
+          <Dialog.TitleGroup title="Large dialog" description="Complex content goes here." />
+        </Dialog.Header>
+        <Dialog.Body>
+          <p style={{ margin: 0, "font-size": "13px", "line-height": "20px" }}>
+            The panel grows to 40rem and the body scrolls when the content is taller than the
+            viewport.
+          </p>
+        </Dialog.Body>
       </Dialog>
     </Dialog.Root>
   ),

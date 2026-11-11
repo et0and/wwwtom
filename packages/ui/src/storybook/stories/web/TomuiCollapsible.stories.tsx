@@ -35,7 +35,7 @@ export const Closed = meta.story({
     <Collapsible style={styles.framed}>
       <Collapsible.DefaultTrigger>Project details</Collapsible.DefaultTrigger>
       <Collapsible.DefaultPanel>
-        <p class="m-0 text-sm">Repository settings live here.</p>
+        <p style={{ margin: 0, "font-size": "13px" }}>Repository settings live here.</p>
       </Collapsible.DefaultPanel>
     </Collapsible>
   ),
@@ -46,7 +46,7 @@ export const Open = meta.story({
     <Collapsible defaultOpen style={styles.framed}>
       <Collapsible.DefaultTrigger>Project details</Collapsible.DefaultTrigger>
       <Collapsible.DefaultPanel>
-        <p class="m-0 text-sm">Repository settings live here.</p>
+        <p style={{ margin: 0, "font-size": "13px" }}>Repository settings live here.</p>
       </Collapsible.DefaultPanel>
     </Collapsible>
   ),

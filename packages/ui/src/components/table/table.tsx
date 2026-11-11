@@ -1,9 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase } from "../../styles/typography.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
 export const TOMUI_TABLE_DEFAULT_VARIANTS = {
   layout: "auto",
@@ -17,26 +16,36 @@ const styles = stylex.create({
   table: {
     isolation: "isolate",
     width: "100%",
+    borderCollapse: "collapse",
     textAlign: "left",
-    fontSize: fontSizeBase.fontSize,
+    fontSize: fontSizeSm.fontSize,
     color: textColors["--text-color-tomui-default"],
   },
   layoutFixed: { tableLayout: "fixed" },
   head: {
     position: "relative",
-    borderBottomWidth: 1,
-    borderBottomColor: colors["--color-tomui-fill"],
-    padding: "0.75rem",
-    fontWeight: 600,
-    backgroundColor: colors["--color-tomui-base"],
+    borderBottomWidth: "0.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: colors["--color-tomui-hairline"],
+    paddingBlock: "0.5rem",
+    paddingInline: "0.75rem",
+    fontSize: fontSizeXs.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    color: textColors["--text-color-tomui-subtle"],
+    backgroundColor: colors["--color-tomui-layer-01"],
   },
-  cell: { padding: "0.75rem" },
-  /** Zebra striping. Selected rows override this with a flat tint instead. */
+  cell: {
+    paddingBlock: "0.5rem",
+    paddingInline: "0.75rem",
+    borderBottomWidth: "0.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: colors["--color-tomui-hairline"],
+  },
   rowDefault: {
     backgroundColor: colors["--color-tomui-base"],
-    ":nth-child(even)": { backgroundColor: colors["--color-tomui-elevated"] },
+    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
   },
-  rowSelected: { backgroundColor: colors["--color-tomui-tint"] },
+  rowSelected: { backgroundColor: colors["--color-tomui-layer-02"] },
 });
 
 const rowVariantStyles = {

@@ -1,30 +1,4 @@
-@import "./theme-tomui.css";
 @import "./theme-fedramp.css";
-
-:root {
-  /* Primitive color definitions for Tomui theme */
-  --color-red-650: oklch(55% 0.238 27.4);
-  --color-red-750: oklch(46% 0.195 27.2);
-
-  --color-blue-400: oklch(70.7% 0.165 254.624);
-  --color-blue-800: oklch(42.4% 0.199 265.638);
-
-  --color-orange-650: oklch(81.5% 0.197 76);
-  --color-teal-650: oklch(54.9% 0.096 184.565);
-
-  --color-tomui-neutral-50: oklch(98.75% 0 0);
-  --color-tomui-neutral-75: oklch(98% 0 0);
-  --color-tomui-neutral-125: oklch(96.5% 0 0);
-  --color-tomui-neutral-450: oklch(89% 0 0);
-  --color-tomui-neutral-750: oklch(32% 0 0);
-  --color-tomui-neutral-850: oklch(24% 0 0);
-  --color-tomui-neutral-925: oklch(17% 0 0);
-  --color-tomui-neutral-950: oklch(15% 0 0);
-  --color-tomui-neutral-975: oklch(12% 0 0);
-  --color-tomui-neutral-1000: oklch(10% 0 0);
-}
-
-/* Typography is now generated in theme-tomui.css via codegen:themes */
 
 :root {
   /* Easings & transitions */
@@ -33,11 +7,7 @@
 }
 
 :root {
-  color-scheme: light;
-}
-
-[data-mode="dark"] {
-  color-scheme: dark;
+  color-scheme: light dark;
 }
 
 /* Three-step bounce used by the Empty state check mark. StyleX generates only
@@ -143,21 +113,6 @@ a:hover [data-tomui-component="Badge"] {
 [data-tomui-component="Badge"] [data-slot="badge-icon"] > svg {
   width: 0.75rem;
   height: 0.75rem;
-}
-
-/* The switch thumb slides to the far edge when checked. StyleX 0.19 supports no
-   sibling selector, so the three sizes stay here. The offset equals the thumb
-   width, so the thumb sits flush against the right edge. */
-[data-tomui-component="Switch"][data-size="sm"]:checked + [data-slot="switch-thumb"] {
-  left: 1rem;
-}
-
-[data-tomui-component="Switch"][data-size="base"]:checked + [data-slot="switch-thumb"] {
-  left: 1.125rem;
-}
-
-[data-tomui-component="Switch"][data-size="lg"]:checked + [data-slot="switch-thumb"] {
-  left: 1.25rem;
 }
 
 /* Radio indicator and hover ring. StyleX 0.19 supports no sibling selector, so

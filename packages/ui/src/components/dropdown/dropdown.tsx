@@ -2,9 +2,9 @@ import type { JSX } from "@solidjs/web";
 import { createContext, createSignal, merge, onSettled, Show, omit, useContext } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { CheckIcon } from "@tom/icons/Check";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { menuItem, radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 
 export const TOMUI_DROPDOWN_DEFAULT_VARIANTS = {
   variant: "default",
@@ -18,17 +18,17 @@ const styles = stylex.create({
     position: "absolute",
     zIndex: 50,
     maxWidth: "calc(100vw - 2rem)",
-    minWidth: "9rem",
+    minWidth: "10rem",
     maxHeight: "var(--available-height)",
     overflowY: "auto",
     overflowX: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-control"],
-    padding: "0.375rem",
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-layer-01"],
+    padding: "2px",
     color: textColors["--text-color-tomui-default"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"] + ", 0 10px 15px -3px rgb(0 0 0 / 0.1)",
+    boxShadow: elevation["--elevation-tomui-floating"],
     top: "100%",
-    marginTop: "0.5rem",
+    marginTop: "0.25rem",
   },
   alignStart: { right: "auto", left: 0 },
   alignEnd: { right: 0, left: "auto" },
@@ -37,9 +37,9 @@ const styles = stylex.create({
 });
 
 const variantStyles = {
-  default: menuItem.plain,
+  default: undefined,
   danger: menuItem.danger,
-} as const satisfies Record<TomuiDropdownVariant, stylex.StyleXStyles>;
+} as const satisfies Record<TomuiDropdownVariant, stylex.StyleXStyles | undefined>;
 
 interface DropdownContextValue {
   isOpen: () => boolean;
@@ -189,14 +189,14 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
     "disabled",
     "style",
   );
-  const itemStyles = () => [
-    menuItem.base,
-    menuItem.rounded,
-    menuItem.vertical,
-    merged.inset ? menuItem.checkable : menuItem.plain,
-    variantStyles[merged.variant],
-    merged.style,
-  ];
+  const itemStyles = () =>
+    [
+      menuItem.base,
+      menuItem.vertical,
+      merged.inset ? menuItem.checkable : menuItem.plain,
+      variantStyles[merged.variant],
+      merged.style,
+    ].filter((style): style is stylex.StyleXStyles => style !== undefined);
   const handleClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (event) => {
     ctx.close();
     merged.onClick?.(event);
@@ -268,13 +268,7 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
       role="menuitemcheckbox"
       aria-checked={isChecked() ? "true" : "false"}
       disabled={merged.disabled}
-      {...stylex.attrs(
-        menuItem.base,
-        menuItem.rounded,
-        menuItem.vertical,
-        menuItem.checkable,
-        merged.style,
-      )}
+      {...stylex.attrs(menuItem.base, menuItem.vertical, menuItem.checkable, merged.style)}
       onClick={() => {
         const next = !isChecked();
         if (props.checked === undefined) setUncontrolled(next);
@@ -342,13 +336,7 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
       data-tomui-part="radio-item"
       role="menuitemradio"
       aria-checked={isChecked() ? "true" : "false"}
-      {...stylex.attrs(
-        menuItem.base,
-        menuItem.rounded,
-        menuItem.vertical,
-        menuItem.plain,
-        merged.style,
-      )}
+      {...stylex.attrs(menuItem.base, menuItem.vertical, menuItem.plain, merged.style)}
       onClick={() => group.select(merged.value)}
       {...rest}
     >

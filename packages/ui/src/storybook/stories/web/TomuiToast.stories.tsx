@@ -23,8 +23,8 @@ const VARIANTS: ReadonlyArray<{ readonly variant: TomuiToastVariant; readonly la
 function LiveDemo(props: { duration?: number }) {
   const store = createToastStore();
   return (
-    <div class="flex flex-col gap-4">
-      <div class="flex flex-wrap gap-2">
+    <div style={{ display: "flex", "flex-direction": "column", gap: "1rem" }}>
+      <div style={{ display: "flex", "flex-wrap": "wrap", gap: "0.5rem" }}>
         <For each={VARIANTS}>
           {(item) => (
             <Button

@@ -1,3 +1,4 @@
+import { textColors } from "@tom/ui/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { For, Show, createMemo, createSignal, onSettled } from "solid-js";
 import { Effect, Option, Schema } from "effect";
@@ -13,7 +14,6 @@ import { Loader } from "@tom/ui/loader";
 import { Select } from "@tom/ui/select";
 import { Collapsible } from "@tom/ui/collapsible";
 import { layout } from "@tom/ui/primitives.stylex";
-import { textColors } from "@tom/ui/tokens.stylex";
 import { fontSizeSm } from "@tom/ui/typography.stylex";
 import { adapterUrl } from "../data/api";
 import { runClient } from "@tom/utils/http";
@@ -57,8 +57,12 @@ type SaveState =
 type Panel = "none" | InsertPanel | "code";
 
 const styles = stylex.create({
-  textSm: { ...fontSizeSm },
-  subtleSm: { ...fontSizeSm, color: textColors["--text-color-tomui-subtle"] },
+  textSm: { fontSize: fontSizeSm.fontSize, lineHeight: fontSizeSm.lineHeight },
+  subtleSm: {
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: fontSizeSm.lineHeight,
+    color: textColors["--text-color-tomui-subtle"],
+  },
 });
 
 const blankFields: ContentFields = {

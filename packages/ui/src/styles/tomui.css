@@ -6,7 +6,8 @@
  * Ported from Cloudflare Tomui (MIT) to Solid.
  *
  * preflight.css provides the baseline reset, then tomui-binding.css carries
- * the TomUI design tokens. Consumers import only this file.
+ * the CSS-only behaviour StyleX cannot express. Consumers import only this
+ * file.
  */
 
 /*

@@ -43,7 +43,7 @@ export const External = meta.story({
 
 export const InlineInText = meta.story({
   render: () => (
-    <p class="text-base">
+    <p style={{ "font-size": "14px" }}>
       Read the <Link href="/docs">getting started guide</Link> before deploying.
     </p>
   ),

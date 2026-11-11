@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSize2xs } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
   root: { display: "flex", width: "100%", flexDirection: "column", gap: "0.5rem" },
@@ -13,28 +13,27 @@ const styles = stylex.create({
     justifyContent: "space-between",
     gap: "1rem",
   },
-  label: { fontSize: "0.75rem", color: textColors["--text-color-tomui-subtle"] },
+  label: { fontSize: fontSize2xs.fontSize, color: textColors["--text-color-tomui-subtle"] },
   value: {
-    fontSize: "0.8125rem",
-    fontWeight: 500,
+    fontSize: "13px",
+    fontWeight: 530,
     color: textColors["--text-color-tomui-default"],
     fontVariantNumeric: "tabular-nums",
   },
   track: {
     position: "relative",
-    height: "0.5rem",
+    height: "0.375rem",
     width: "100%",
     overflow: "hidden",
     borderRadius: radius.full,
-    backgroundColor: colors["--color-tomui-fill"],
+    backgroundColor: colors["--color-tomui-layer-03"],
   },
   indicator: {
     position: "absolute",
     insetBlock: 0,
     left: 0,
     borderRadius: radius.full,
-    backgroundImage:
-      "linear-gradient(to right, var(--color-tomui-brand), var(--color-tomui-brand))",
+    backgroundColor: colors["--color-tomui-brand"],
     transitionProperty: "width",
     transitionDuration: "300ms",
     transitionTimingFunction: "ease-out",

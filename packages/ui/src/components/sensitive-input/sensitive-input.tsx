@@ -1,9 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createSignal, createUniqueId, merge, omit, Show } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import { copyReveal } from "./sensitive-input.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 import { inputVariants, type TomuiInputSize, type TomuiInputVariant } from "../input/input";

@@ -1,8 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, createUniqueId, merge, omit, Show, useContext } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 import { inputVariants, type TomuiInputSize } from "../input/input";
 
@@ -14,8 +13,7 @@ const focusColor = colors["--color-tomui-focus"];
 const dangerColor = textColors["--text-color-tomui-danger"];
 const subtleColor = textColors["--text-color-tomui-subtle"];
 
-/** Matches Tailwind's `ring-<color>/50` alpha modifier. StyleX needs literals. */
-const focusRing = "0 0 0 1.5px color-mix(in srgb, " + focusColor + " 50%, transparent)";
+const focusRing = "0 0 0 1px " + focusColor;
 
 const styles = stylex.create({
   root: {
@@ -35,7 +33,7 @@ const styles = stylex.create({
   rootFocus: { ":focus-within": { boxShadow: focusRing } },
   // More specific than :focus-within, so an invalid group stays danger-ringed.
   rootInvalid: {
-    ':has(input[aria-invalid="true"])': { boxShadow: "0 0 0 1.5px " + dangerColor },
+    ':has(input[aria-invalid="true"])': { boxShadow: "0 0 0 1px " + dangerColor },
   },
   input: {
     position: "relative",
@@ -99,22 +97,22 @@ const styles = stylex.create({
  * top-level `create` members where a StyleX value is expected.
  */
 const sizeStyles = stylex.create({
-  inputXs: { paddingInline: "0.375rem", fontSize: "0.75rem" },
-  inputSm: { paddingInline: "0.5rem", fontSize: "0.75rem" },
-  inputBase: { paddingInline: "0.75rem", fontSize: "0.875rem" },
-  inputLg: { paddingInline: "1rem", fontSize: "0.875rem" },
-  addonStartXs: { paddingInlineStart: "0.375rem", fontSize: "0.75rem" },
-  addonStartSm: { paddingInlineStart: "0.375rem", fontSize: "0.75rem" },
-  addonStartBase: { paddingInlineStart: "0.5rem", fontSize: "0.875rem" },
-  addonStartLg: { paddingInlineStart: "0.625rem", fontSize: "0.875rem" },
-  addonEndXs: { paddingInlineEnd: "0.375rem", fontSize: "0.75rem" },
-  addonEndSm: { paddingInlineEnd: "0.375rem", fontSize: "0.75rem" },
-  addonEndBase: { paddingInlineEnd: "0.5rem", fontSize: "0.875rem" },
-  addonEndLg: { paddingInlineEnd: "0.625rem", fontSize: "0.875rem" },
-  suffixXs: { paddingInlineEnd: "0.375rem", fontSize: "0.75rem" },
-  suffixSm: { paddingInlineEnd: "0.5rem", fontSize: "0.75rem" },
-  suffixBase: { paddingInlineEnd: "0.75rem", fontSize: "0.875rem" },
-  suffixLg: { paddingInlineEnd: "1rem", fontSize: "0.875rem" },
+  inputXs: { paddingInline: "0.5rem", fontSize: "12px" },
+  inputSm: { paddingInline: "0.5625rem", fontSize: "13px" },
+  inputBase: { paddingInline: "0.6875rem", fontSize: "13px" },
+  inputLg: { paddingInline: "0.9375rem", fontSize: "13px" },
+  addonStartXs: { paddingInlineStart: "0.5rem", fontSize: "12px" },
+  addonStartSm: { paddingInlineStart: "0.5rem", fontSize: "13px" },
+  addonStartBase: { paddingInlineStart: "0.5rem", fontSize: "13px" },
+  addonStartLg: { paddingInlineStart: "0.75rem", fontSize: "13px" },
+  addonEndXs: { paddingInlineEnd: "0.5rem", fontSize: "12px" },
+  addonEndSm: { paddingInlineEnd: "0.5rem", fontSize: "13px" },
+  addonEndBase: { paddingInlineEnd: "0.5rem", fontSize: "13px" },
+  addonEndLg: { paddingInlineEnd: "0.75rem", fontSize: "13px" },
+  suffixXs: { paddingInlineEnd: "0.5rem", fontSize: "12px" },
+  suffixSm: { paddingInlineEnd: "0.5rem", fontSize: "13px" },
+  suffixBase: { paddingInlineEnd: "0.75rem", fontSize: "13px" },
+  suffixLg: { paddingInlineEnd: "0.9375rem", fontSize: "13px" },
 });
 
 const inputSize = (size: TomuiInputSize): stylex.StyleXStyles =>

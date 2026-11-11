@@ -8,197 +8,472 @@ import * as stylex from "@stylexjs/stylex";
 const DARK = "@media (prefers-color-scheme: dark)";
 
 /**
- * TomUI's neutral-scale literals. tomui-binding.css's `@theme` block used to
- * be the source of truth for these; now that it's gone, these fallbacks are
- * the effective values, so every reference to a step must share one literal.
- * Steps 25, 150, and 800 have no prior `@theme` entry; 25 and 150 keep the
- * single value their call sites already agreed on, and 25's dark-mode call
- * site is corrected to match (see colors.stylex.ts task-1 notes in the PR).
+ * The OpenCode UI palette. It is a 12-step grey scale plus tinted scales and
+ * two alpha ramps, so surfaces, hairlines, and sheens can all come from one
+ * source instead of ad-hoc `rgba()` values.
  */
-const NEUTRAL = {
-  25: "oklch(98.75% 0 0)",
-  50: "oklch(98.75% 0 0)",
-  75: "oklch(98% 0 0)",
-  125: "oklch(96.5% 0 0)",
-  150: "oklch(93.5% 0 0)",
-  450: "oklch(89% 0 0)",
-  750: "oklch(32% 0 0)",
-  800: "oklch(26.9% 0 0)",
-  850: "oklch(24% 0 0)",
-  925: "oklch(17% 0 0)",
-  950: "oklch(15% 0 0)",
-  975: "oklch(12% 0 0)",
-  1000: "oklch(10% 0 0)",
+const GREY = {
+  50: "#ffffff",
+  100: "#fafafa",
+  200: "#f2f2f2",
+  300: "#eeeeee",
+  400: "#dbdbdb",
+  500: "#aeaeae",
+  600: "#808080",
+  700: "#5c5c5c",
+  800: "#3a3a3a",
+  900: "#2e2e2e",
+  1000: "#242424",
+  1100: "#161616",
+  1200: "#080808",
 } as const;
 
-/**
- * Surface, line, state, and badge colour tokens. Names keep the `--` prefix so
- * existing consumers that read `var(--color-tomui-*)` directly still resolve.
- */
+const ALPHA_DARK = {
+  0: "#00000000",
+  4: "#0000000a",
+  6: "#0000000f",
+  8: "#00000014",
+  10: "#0000001a",
+  12: "#0000001f",
+  14: "#00000024",
+  16: "#00000029",
+  20: "#00000033",
+  24: "#0000003d",
+  30: "#0000004d",
+  40: "#00000066",
+  50: "#00000080",
+  60: "#00000099",
+} as const;
+
+const ALPHA_LIGHT = {
+  0: "#ffffff00",
+  4: "#ffffff0a",
+  6: "#ffffff0f",
+  8: "#ffffff14",
+  10: "#ffffff1a",
+  12: "#ffffff1f",
+  14: "#ffffff24",
+  16: "#ffffff29",
+  20: "#ffffff33",
+  24: "#ffffff3d",
+  30: "#ffffff4d",
+  40: "#ffffff66",
+  50: "#ffffff80",
+  60: "#ffffff99",
+  100: "#ffffffff",
+} as const;
+
+const RED = {
+  100: "#fceceb",
+  200: "#f6d5d3",
+  300: "#f2bbb7",
+  400: "#f29b96",
+  500: "#f17471",
+  600: "#f1484f",
+  700: "#d92e3c",
+  800: "#b82d35",
+  900: "#97252b",
+  1000: "#7a1f23",
+  1100: "#5f1a1c",
+  1200: "#461516",
+} as const;
+
+const ORANGE = {
+  100: "#fdf2ed",
+  200: "#ffe7dc",
+  300: "#ffd8c6",
+  400: "#ffc1a4",
+  500: "#ffa478",
+  600: "#ff8648",
+  700: "#ee7330",
+  800: "#d16427",
+  900: "#b35624",
+  1000: "#954c27",
+  1100: "#723d22",
+  1200: "#5a2c14",
+} as const;
+
+const YELLOW = {
+  100: "#fefaec",
+  200: "#fcefd0",
+  300: "#f7e5b5",
+  400: "#f3da9b",
+  500: "#f2cf76",
+  600: "#f6c251",
+  700: "#e7af36",
+  800: "#cb9f34",
+  900: "#ac8833",
+  1000: "#8e7231",
+  1100: "#68552b",
+  1200: "#4b4025",
+} as const;
+
+const GREEN = {
+  100: "#e7f9ea",
+  200: "#d0f0d5",
+  300: "#b8e9c1",
+  400: "#96e3a6",
+  500: "#6bd586",
+  600: "#49c970",
+  700: "#2eaf5a",
+  800: "#198b43",
+  900: "#1d783c",
+  1000: "#196130",
+  1100: "#164c26",
+  1200: "#14361d",
+} as const;
+
+const CYAN = {
+  100: "#e2f7fb",
+  200: "#c4edf4",
+  300: "#a3e4ef",
+  400: "#65d9eb",
+  500: "#00c5df",
+  600: "#00abcf",
+  700: "#0096b8",
+  800: "#007d9b",
+  900: "#006c85",
+  1000: "#005a6e",
+  1100: "#004756",
+  1200: "#00353f",
+} as const;
+
+const BLUE = {
+  100: "#f5f8ff",
+  200: "#ecf1fe",
+  300: "#c3d4fd",
+  400: "#a2bcff",
+  500: "#7698fd",
+  600: "#3b5cf6",
+  700: "#0b34f4",
+  800: "#3250df",
+  900: "#2c47c8",
+  1000: "#263fa9",
+  1100: "#22388f",
+  1200: "#021945",
+} as const;
+
+const PURPLE = {
+  100: "#ebecfe",
+  200: "#d5d5fc",
+  300: "#b9b8f5",
+  400: "#9e99f7",
+  500: "#8271f8",
+  600: "#7152f4",
+  700: "#623be2",
+  800: "#5230c2",
+  900: "#442aa1",
+  1000: "#361f83",
+  1100: "#2b1b6a",
+  1200: "#221358",
+} as const;
+
+/** Semantic surface, line, state, and badge colour tokens. */
 export const colors = stylex.defineVars({
-  /** Tailwind's own text-white and text-black, which several badges relied on. */
-  "--color-white": "#fff",
-  "--color-black": "#000",
-  /**
-   * TomUI's own neutral and blue primitives. These were already declared in
-   * tomui-binding.css; they are TomUI values, not Tailwind's default palette.
-   * Only the steps the design system actually uses are carried over.
-   */
-  "--color-tomui-neutral-450": NEUTRAL[450],
-  "--color-tomui-neutral-750": NEUTRAL[750],
-  "--color-tomui-neutral-850": NEUTRAL[850],
-  "--color-blue-400": "oklch(70.7% 0.165 254.624)",
-  "--color-blue-800": "oklch(42.4% 0.199 265.638)",
+  /** Page, card, and recessed surfaces. */
   "--color-tomui-canvas": {
-    default: `var(--color-tomui-neutral-25, ${NEUTRAL[25]})`,
-    [DARK]: `var(--color-tomui-neutral-1000, ${NEUTRAL[1000]})`,
+    default: GREY[100],
+    [DARK]: GREY[1200],
   },
   "--color-tomui-elevated": {
-    default: `var(--color-tomui-neutral-75, ${NEUTRAL[75]})`,
-    [DARK]: `var(--color-tomui-neutral-975, ${NEUTRAL[975]})`,
+    default: GREY[50],
+    [DARK]: GREY[1000],
   },
   "--color-tomui-recessed": {
-    default: `var(--color-tomui-neutral-125, ${NEUTRAL[125]})`,
-    [DARK]: `var(--color-tomui-neutral-950, ${NEUTRAL[950]})`,
+    default: GREY[200],
+    [DARK]: GREY[900],
   },
   "--color-tomui-base": {
-    default: "var(--color-white, #fff)",
-    [DARK]: `var(--color-tomui-neutral-925, ${NEUTRAL[925]})`,
+    default: GREY[50],
+    [DARK]: GREY[1100],
+  },
+  "--color-tomui-layer-01": {
+    default: GREY[100],
+    [DARK]: GREY[1000],
+  },
+  "--color-tomui-layer-02": {
+    default: GREY[200],
+    [DARK]: GREY[900],
+  },
+  "--color-tomui-layer-03": {
+    default: GREY[300],
+    [DARK]: GREY[800],
+  },
+  "--color-tomui-layer-04": {
+    default: GREY[400],
+    [DARK]: GREY[700],
   },
   "--color-tomui-tint": {
-    default: "var(--color-neutral-100, oklch(97% 0 0))",
-    [DARK]: `var(--color-tomui-neutral-800, ${NEUTRAL[800]})`,
+    default: GREY[100],
+    [DARK]: GREY[800],
   },
   "--color-tomui-contrast": {
-    default: `var(--color-tomui-neutral-975, ${NEUTRAL[975]})`,
-    [DARK]: `var(--color-tomui-neutral-25, ${NEUTRAL[25]})`,
+    default: GREY[1000],
+    [DARK]: GREY[700],
   },
   "--color-tomui-overlay": {
-    default: `var(--color-tomui-neutral-50, ${NEUTRAL[50]})`,
-    [DARK]: "var(--color-neutral-800, oklch(26.9% 0 0))",
+    default: GREY[50],
+    [DARK]: GREY[1000],
   },
   "--color-tomui-control": {
-    default: "var(--color-white, #fff)",
-    [DARK]: "var(--color-neutral-900, oklch(21% 0.006 285.885))",
+    default: GREY[50],
+    [DARK]: GREY[1100],
   },
   "--color-tomui-interact": {
-    default: "var(--color-neutral-300, oklch(87% 0 0))",
-    [DARK]: "var(--color-neutral-700, oklch(37.1% 0 0))",
+    default: ALPHA_DARK[20],
+    [DARK]: ALPHA_LIGHT[20],
   },
   "--color-tomui-fill": {
-    default: "var(--color-neutral-200, oklch(92.2% 0 0))",
-    [DARK]: "var(--color-neutral-800, oklch(26.9% 0 0))",
+    default: GREY[200],
+    [DARK]: GREY[800],
   },
   "--color-tomui-fill-hover": {
-    default: `var(--color-tomui-neutral-125, ${NEUTRAL[125]})`,
-    [DARK]: "var(--color-neutral-800, oklch(37.1% 0 0))",
+    default: GREY[300],
+    [DARK]: GREY[700],
   },
+
+  /** Accent. OpenCode's blue is the only chromatic brand colour. */
   "--color-tomui-brand": {
-    default: "oklch(0.5772 0.2324 260)",
-    [DARK]: "color-mix(in oklch, oklch(0.5772 0.2324 260), black 10%)",
+    default: BLUE[600],
+    [DARK]: BLUE[600],
   },
   "--color-tomui-brand-hover": {
-    default: "var(--color-blue-700, oklch(48.8% 0.243 264.376))",
-    [DARK]: "var(--color-blue-700, oklch(48.8% 0.243 264.376))",
+    default: BLUE[700],
+    [DARK]: BLUE[700],
   },
+
+  /** Lines and focus. Hairlines are half-pixel borders over these. */
   "--color-tomui-line": {
-    default: "oklch(14.5% 0 0 / 0.1)",
-    [DARK]: `var(--color-tomui-neutral-750, ${NEUTRAL[750]})`,
+    default: ALPHA_DARK[10],
+    [DARK]: ALPHA_LIGHT[10],
   },
   "--color-tomui-hairline": {
-    default: `var(--color-tomui-neutral-150, ${NEUTRAL[150]})`,
-    [DARK]: "var(--color-neutral-800, oklch(26.9% 0 0))",
+    default: ALPHA_DARK[8],
+    [DARK]: ALPHA_LIGHT[8],
+  },
+  "--color-tomui-border-strong": {
+    default: ALPHA_DARK[20],
+    [DARK]: ALPHA_LIGHT[20],
   },
   "--color-tomui-focus": {
-    default: `var(--color-tomui-neutral-950, ${NEUTRAL[950]})`,
-    [DARK]: `var(--color-tomui-neutral-150, ${NEUTRAL[150]})`,
+    default: BLUE[500],
+    [DARK]: BLUE[500],
   },
+  "--color-tomui-focus-ring": {
+    default: ALPHA_DARK[40],
+    [DARK]: ALPHA_LIGHT[40],
+  },
+
+  /** Overlay fills for immediate hover and pressed states. */
+  "--color-tomui-overlay-hover": {
+    default: ALPHA_DARK[4],
+    [DARK]: ALPHA_LIGHT[6],
+  },
+  "--color-tomui-overlay-pressed": {
+    default: ALPHA_DARK[8],
+    [DARK]: ALPHA_LIGHT[10],
+  },
+  "--color-tomui-overlay-contrast-hover": {
+    default: ALPHA_LIGHT[12],
+    [DARK]: ALPHA_DARK[24],
+  },
+  "--color-tomui-overlay-contrast-pressed": {
+    default: ALPHA_LIGHT[24],
+    [DARK]: ALPHA_DARK[40],
+  },
+  "--color-tomui-overlay-scrim": {
+    default: ALPHA_DARK[40],
+    [DARK]: ALPHA_DARK[60],
+  },
+  "--color-tomui-sheen-top": {
+    default: ALPHA_LIGHT[16],
+    [DARK]: ALPHA_LIGHT[16],
+  },
+  "--color-tomui-sheen-bottom": {
+    default: ALPHA_LIGHT[0],
+    [DARK]: ALPHA_LIGHT[0],
+  },
+  "--color-tomui-button-neutral": {
+    default: GREY[50],
+    [DARK]: ALPHA_LIGHT[6],
+  },
+  "--color-tomui-button-contrast": {
+    default: GREY[1000],
+    [DARK]: GREY[700],
+  },
+
+  /** Switch. */
+  "--color-tomui-switch-thumb": {
+    default: GREY[200],
+    [DARK]: GREY[200],
+  },
+  "--color-tomui-switch-thumb-on": {
+    default: GREY[300],
+    [DARK]: GREY[300],
+  },
+
+  /** Elevation. */
   "--color-tomui-shadow-edge": {
-    default: "oklch(0% 0 0 / 0.12)",
-    [DARK]: "oklch(100% 0 0 / 0.1)",
+    default: ALPHA_DARK[12],
+    [DARK]: ALPHA_LIGHT[16],
   },
   "--color-tomui-shadow-drop": {
-    default: "oklch(0% 0 0 / 0.08)",
-    [DARK]: "oklch(0% 0 0 / 0.3)",
+    default: ALPHA_DARK[8],
+    [DARK]: ALPHA_DARK[40],
   },
   "--color-tomui-arrow-edge": {
-    default: "oklch(14.5% 0 0 / 0.1)",
+    default: ALPHA_DARK[10],
     [DARK]: "transparent",
   },
   "--color-tomui-arrow-stroke": {
     default: "transparent",
-    [DARK]: `var(--color-tomui-neutral-750, ${NEUTRAL[750]})`,
+    [DARK]: GREY[700],
   },
+
+  /** State surfaces and text. */
   "--color-tomui-info-tint": {
-    default: "oklch(93.2% 0.032 255.6 / 0.45)",
-    [DARK]: "oklch(38% 0.145 265.5 / 0.22)",
+    default: BLUE[200],
+    [DARK]: BLUE[1200],
   },
   "--color-tomui-info": {
-    default: "var(--color-blue-500, oklch(68.5% 0.169 237.323))",
-    [DARK]: "var(--color-blue-500, oklch(68.5% 0.169 237.323))",
+    default: BLUE[800],
+    [DARK]: BLUE[500],
   },
   "--color-tomui-warning-tint": {
-    default: "oklch(93.1% 0.107 94.6 / 0.2)",
-    [DARK]: "oklch(35.3% 0.079 65 / 0.37)",
+    default: YELLOW[100],
+    [DARK]: YELLOW[1200],
   },
   "--color-tomui-warning": {
-    default: "oklch(73.9% 0.177 58.2)",
-    [DARK]: "oklch(64.5% 0.168 50)",
+    default: YELLOW[800],
+    [DARK]: YELLOW[500],
   },
   "--color-tomui-danger-tint": {
-    default: "oklch(93.6% 0.032 17.7 / 0.42)",
-    [DARK]: "oklch(42.9% 0.176 28.7 / 0.17)",
+    default: RED[100],
+    [DARK]: RED[1200],
   },
   "--color-tomui-danger": {
-    default: "var(--color-red-500, oklch(63.7% 0.237 25.331))",
-    [DARK]: "var(--color-red-600, oklch(57.7% 0.245 27.325))",
+    default: RED[800],
+    [DARK]: RED[500],
   },
   "--color-tomui-success-tint": {
-    default: "oklch(96.2% 0.043 156.7 / 0.57)",
-    [DARK]: "oklch(39.3% 0.096 152.3 / 0.2)",
+    default: GREEN[100],
+    [DARK]: GREEN[1200],
   },
   "--color-tomui-success": {
-    default: "var(--color-emerald-600, oklch(59.6% 0.145 163.225))",
-    [DARK]: "var(--color-emerald-400, oklch(76.5% 0.177 163.223))",
+    default: GREEN[800],
+    [DARK]: GREEN[500],
   },
   "--color-tomui-banner-info": {
-    default: "oklch(93.2% 0.032 255.585 / 0.7)",
-    [DARK]: "oklch(37.9% 0.146 265.522 / 0.5)",
+    default: "color-mix(in srgb, " + BLUE[200] + " 70%, transparent)",
+    [DARK]: "color-mix(in srgb, " + BLUE[1200] + " 70%, transparent)",
   },
   "--color-tomui-banner-warning": {
-    default: "var(--color-yellow-100, oklch(97.3% 0.071 103.193))",
-    [DARK]: "oklch(55.4% 0.135 66.442 / 0.5)",
+    default: YELLOW[100],
+    [DARK]: "color-mix(in srgb, " + YELLOW[1200] + " 70%, transparent)",
   },
+
+  /** Badge fills. Filled badges keep a saturated step; subtle ones use tints. */
   "--color-tomui-badge-red": {
-    default: "var(--color-red-600, oklch(57.7% 0.245 27.325))",
-    [DARK]: "var(--color-red-700, oklch(50.5% 0.213 27.518))",
+    default: RED[700],
+    [DARK]: RED[500],
   },
   "--color-tomui-badge-green": {
-    default: "var(--color-emerald-600, oklch(59.6% 0.145 163.225))",
-    [DARK]: "var(--color-emerald-700, oklch(50.8% 0.118 165.612))",
+    default: GREEN[700],
+    [DARK]: GREEN[500],
   },
   "--color-tomui-badge-orange": {
-    default: "var(--color-orange-650, oklch(81.5% 0.197 76))",
-    [DARK]: "var(--color-orange-650, oklch(81.5% 0.197 76))",
+    default: ORANGE[700],
+    [DARK]: ORANGE[500],
   },
   "--color-tomui-badge-purple": {
-    default: "var(--color-purple-600, oklch(55.8% 0.288 302.321))",
-    [DARK]: "var(--color-purple-700, oklch(49.6% 0.265 301.924))",
+    default: PURPLE[700],
+    [DARK]: PURPLE[400],
   },
   "--color-tomui-badge-teal": {
-    default: "var(--color-teal-650, oklch(54.9% 0.096 184.565))",
-    [DARK]: "var(--color-teal-700, oklch(51.1% 0.096 186.391))",
+    default: CYAN[700],
+    [DARK]: CYAN[500],
   },
   "--color-tomui-badge-blue": {
-    default: "var(--color-blue-600, oklch(54.6% 0.245 262.881))",
-    [DARK]: "var(--color-blue-700, oklch(48.8% 0.243 264.376))",
+    default: BLUE[700],
+    [DARK]: BLUE[400],
   },
   "--color-tomui-badge-neutral": {
-    default: "var(--color-neutral-500, oklch(55.6% 0 0))",
-    [DARK]: "var(--color-neutral-600, oklch(43.9% 0 0))",
+    default: GREY[600],
+    [DARK]: GREY[500],
   },
   "--color-tomui-badge-inverted": {
-    default: "var(--color-neutral-950, oklch(14.5% 0 0))",
-    [DARK]: "var(--color-white, #fff)",
+    default: GREY[1000],
+    [DARK]: GREY[50],
+  },
+});
+
+/**
+ * Text colour tokens. Names keep the `--` prefix because icons and inline
+ * styles read `var(--text-color-tomui-*)` directly.
+ */
+export const textColors = stylex.defineVars({
+  "--text-color-tomui-default": {
+    default: GREY[1100],
+    [DARK]: GREY[100],
+  },
+  "--text-color-tomui-inverse": {
+    default: GREY[100],
+    [DARK]: GREY[1100],
+  },
+  "--text-color-tomui-strong": {
+    default: GREY[1200],
+    [DARK]: GREY[50],
+  },
+  "--text-color-tomui-subtle": {
+    default: GREY[700],
+    [DARK]: GREY[500],
+  },
+  "--text-color-tomui-inactive": {
+    default: GREY[500],
+    [DARK]: GREY[600],
+  },
+  "--text-color-tomui-placeholder": {
+    default: GREY[600],
+    [DARK]: GREY[600],
+  },
+  "--text-color-tomui-brand": {
+    default: BLUE[600],
+    [DARK]: BLUE[600],
+  },
+  "--text-color-tomui-link": {
+    default: BLUE[600],
+    [DARK]: BLUE[400],
+  },
+  "--text-color-tomui-info": {
+    default: BLUE[800],
+    [DARK]: BLUE[500],
+  },
+  "--text-color-tomui-success": {
+    default: GREEN[800],
+    [DARK]: GREEN[500],
+  },
+  "--text-color-tomui-danger": {
+    default: RED[800],
+    [DARK]: RED[500],
+  },
+  "--text-color-tomui-warning": {
+    default: YELLOW[800],
+    [DARK]: YELLOW[500],
+  },
+  "--text-color-tomui-badge-orange-subtle": {
+    default: ORANGE[800],
+    [DARK]: ORANGE[400],
+  },
+  "--text-color-tomui-badge-teal-subtle": {
+    default: CYAN[800],
+    [DARK]: CYAN[300],
+  },
+  "--text-color-tomui-badge-neutral-subtle": {
+    default: GREY[800],
+    [DARK]: GREY[300],
+  },
+  "--text-color-tomui-badge-inverted": {
+    default: GREY[50],
+    [DARK]: GREY[1000],
   },
 });

@@ -5,13 +5,14 @@ Design rules. Follow always when building or reviewing TomUI.
 ## Components
 
 - no escape-hatch props. No `DANGEROUS_*`, no "merge last, bypasses the
-  cascade" variants. A caller that needs a one-off class uses `class` or
-  `style`, which go through `cn()` like every other override. Zero callers
+  cascade" variants. A caller that needs a one-off style passes a compiled
+  `style` from `stylex.create`; every component merges it last. Zero callers
   means delete the prop outright
 
 ## Text
 
-- content text 14px. 16px+ headings only.
+- content text 14px. 16px+ headings only. Controls (buttons, inputs, tabs,
+  labels) use 13px, matching OpenCode's compact density.
 - sizes come from `styles/typography.stylex.ts`. body Text inherits line height
   from its block, so set spacing on the parent rather than on the Text itself
 - headings sentence case. product names title case.
@@ -28,7 +29,9 @@ Design rules. Follow always when building or reviewing TomUI.
 ## Hover, borders, radius
 
 - no color transitions on hover. hover change immediate.
-- no `border` + shadow. use `ring ring-tomui-line`.
+- controls never use `border` + shadow; they use one or the other.
+- cards use a 0.5px hairline plus the raised elevation, which is OpenCode's
+  layering. `LayerCard` already encodes this, so callers do not restate it.
 - concentric radii: outer = inner + padding.
 - never nest `LayerCard` in `LayerCard`.
 

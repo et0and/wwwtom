@@ -18,7 +18,7 @@ const styles = stylex.create({
   buttonActive: { backgroundColor: colors["--color-tomui-fill"], fontWeight: 500 },
   glyphBold: { fontWeight: 700 },
   glyphItalic: { fontStyle: "italic" },
-  selectLabelText: { ...fontSizeXs },
+  selectLabelText: { fontSize: fontSizeXs.fontSize, lineHeight: fontSizeXs.lineHeight },
 });
 
 const BannerAttrsSchema = Schema.Struct({ style: Schema.optional(CmsBannerStyleSchema) });

@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSize2xs, fontWeightControl } from "../../styles/typography.stylex";
 
 export const TOMUI_BADGE_DEFAULT_VARIANTS = {
   variant: "primary",
@@ -14,6 +14,8 @@ export const TOMUI_BADGE_DEFAULT_VARIANTS = {
 export type TomuiBadgeVariant =
   | "primary"
   | "secondary"
+  | "subtle"
+  | "accent"
   | "error"
   | "warning"
   | "success"
@@ -31,8 +33,6 @@ export type TomuiBadgeVariant =
 export type TomuiBadgeAppearance = "filled" | "dot";
 
 const hairlineColor = colors["--color-tomui-hairline"];
-const white = colors["--color-white"];
-const black = colors["--color-black"];
 
 const styles = stylex.create({
   base: {
@@ -41,64 +41,113 @@ const styles = stylex.create({
     flexShrink: 0,
     alignItems: "center",
     justifySelf: "start",
+    justifyContent: "center",
     gap: "0.25rem",
-    borderRadius: radius.full,
-    padding: "0.125rem 0.5rem",
-    fontSize: "0.75rem",
-    fontWeight: 500,
+    height: "1rem",
+    borderRadius: radius.xs,
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
+    backgroundColor: colors["--color-tomui-layer-02"],
+    paddingInline: "0.25rem",
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    lineHeight: 1,
+    fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
+    userSelect: "none",
   },
   /** An icon needs a little more room than a text-only badge. */
-  withIcon: { paddingInlineStart: "0.375rem" },
+  withIcon: { paddingInlineStart: "0.1875rem" },
   primary: {
-    backgroundColor: colors["--color-tomui-badge-inverted"],
-    color: textColors["--text-color-tomui-badge-inverted"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-brand"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
+  subtle: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-layer-03"],
+    color: textColors["--text-color-tomui-subtle"],
   },
   secondary: {
-    backgroundColor: colors["--color-tomui-fill"],
-    color: textColors["--text-color-tomui-badge-neutral-subtle"],
+    borderColor: colors["--color-tomui-hairline"],
+    backgroundColor: colors["--color-tomui-layer-02"],
+    color: textColors["--text-color-tomui-subtle"],
   },
   error: {
+    borderWidth: 0,
     backgroundColor: colors["--color-tomui-danger-tint"],
     color: textColors["--text-color-tomui-danger"],
   },
   warning: {
+    borderWidth: 0,
     backgroundColor: colors["--color-tomui-warning-tint"],
     color: textColors["--text-color-tomui-warning"],
   },
   success: {
+    borderWidth: 0,
     backgroundColor: colors["--color-tomui-success-tint"],
     color: textColors["--text-color-tomui-success"],
   },
   info: {
+    borderWidth: 0,
     backgroundColor: colors["--color-tomui-info-tint"],
     color: textColors["--text-color-tomui-info"],
   },
   beta: {
-    borderWidth: 1,
+    borderWidth: "0.5px",
     borderStyle: "dashed",
     borderColor: colors["--color-tomui-brand"],
     backgroundColor: "transparent",
     color: textColors["--text-color-tomui-link"],
   },
   outline: {
-    borderWidth: 1,
-    borderColor: colors["--color-tomui-fill"],
-    backgroundColor: colors["--color-tomui-base"],
+    borderColor: colors["--color-tomui-border-strong"],
+    backgroundColor: "transparent",
     color: textColors["--text-color-tomui-default"],
   },
-  red: { backgroundColor: colors["--color-tomui-badge-red"], color: white },
-  green: { backgroundColor: colors["--color-tomui-badge-green"], color: white },
-  neutral: { backgroundColor: colors["--color-tomui-badge-neutral"], color: white },
-  orange: { backgroundColor: colors["--color-tomui-badge-orange"], color: black },
-  purple: { backgroundColor: colors["--color-tomui-badge-purple"], color: white },
-  teal: { backgroundColor: colors["--color-tomui-badge-teal"], color: white },
+  red: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-red"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
+  green: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-green"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
+  neutral: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-neutral"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
+  orange: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-orange"],
+    color: "#080808",
+  },
+  purple: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-purple"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
+  teal: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-teal"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
   tealSubtle: {
+    borderWidth: 0,
     backgroundColor: colors["--color-tomui-fill"],
     color: textColors["--text-color-tomui-badge-teal-subtle"],
   },
-  blue: { backgroundColor: colors["--color-tomui-badge-blue"], color: white },
+  blue: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-tomui-badge-blue"],
+    color: textColors["--text-color-tomui-inverse"],
+  },
   dot: {
+    height: "1.125rem",
     gap: "0.375rem",
     backgroundColor: "transparent",
     color: textColors["--text-color-tomui-default"],
@@ -126,6 +175,8 @@ const styles = stylex.create({
 const variantStyles = {
   primary: styles.primary,
   secondary: styles.secondary,
+  subtle: styles.subtle,
+  accent: styles.primary,
   error: styles.error,
   warning: styles.warning,
   success: styles.success,

@@ -28,11 +28,11 @@ const styles = stylex.create({
     // label controls its own inset.
     paddingInline: 0,
     backgroundColor: colors["--color-tomui-base"],
-    ...monoFont,
+    fontFamily: monoFont.fontFamily,
   },
-  sizeSm: { fontSize: "0.75rem" },
-  sizeBase: { fontSize: "0.8125rem" },
-  sizeLg: { fontSize: "0.8125rem" },
+  sizeSm: { fontSize: "12px" },
+  sizeBase: { fontSize: "13px" },
+  sizeLg: { fontSize: "13px" },
   copyButton: {
     position: "relative",
     isolation: "isolate",
@@ -41,19 +41,17 @@ const styles = stylex.create({
     borderBottomLeftRadius: 0,
     borderTopRightRadius: "inherit",
     borderBottomRightRadius: "inherit",
-    borderLeftWidth: "1px",
+    borderLeftWidth: "0.5px",
     borderLeftColor: colors["--color-tomui-line"],
     paddingInline: "0.75rem",
     transitionProperty: "all",
     transitionDuration: "200ms",
     ":focus": {
-      boxShadow:
-        "inset 0 0 0 1.5px color-mix(in srgb, " +
-        colors["--color-tomui-focus"] +
-        " 50%, transparent)",
-    },
-    ":focus-visible": {
-      boxShadow: "inset 0 0 0 2px " + colors["--color-tomui-brand"],
+      outlineWidth: "1px",
+      outlineStyle: "solid",
+      outlineColor: colors["--color-tomui-focus"],
+      outlineOffset: "-1px",
+      boxShadow: "none",
     },
   },
   /** The two marks cross-fade by sliding vertically past each other. */
@@ -90,7 +88,7 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    paddingInlineStart: "1rem",
+    paddingInlineStart: "0.75rem",
     paddingInlineEnd: "0.5rem",
   },
 });

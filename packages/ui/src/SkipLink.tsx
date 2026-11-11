@@ -1,5 +1,5 @@
+import { textColors } from "./styles/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "./styles/colors.stylex";
 
 const styles = stylex.create({
   link: {
@@ -25,8 +25,8 @@ const styles = stylex.create({
       zIndex: 50,
       paddingInline: "1rem",
       paddingBlock: "0.5rem",
-      backgroundColor: colors["--color-black"],
-      color: colors["--color-white"],
+      backgroundColor: textColors["--text-color-tomui-strong"],
+      color: textColors["--text-color-tomui-inverse"],
       textDecorationLine: "underline",
       outlineWidth: 0,
     },

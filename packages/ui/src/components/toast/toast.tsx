@@ -2,19 +2,13 @@ import * as stylex from "@stylexjs/stylex";
 import { createSignal, For, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { XIcon } from "@tom/icons/X";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
+import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 /** Tailwind's `sm:` breakpoint, used by the toaster's responsive placement. */
 const SM = "@media (min-width: 640px)";
 
-/** Matches Tailwind's default `shadow-lg` utility. */
-const SHADOW_LG = "0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)";
-
-const lineColor = colors["--color-tomui-line"];
-const fillColor = colors["--color-tomui-fill"];
-const baseColor = colors["--color-tomui-base"];
-const controlColor = colors["--color-tomui-control"];
 const successColor = colors["--color-tomui-success"];
 const dangerColor = colors["--color-tomui-danger"];
 const warningColor = colors["--color-tomui-warning"];
@@ -41,32 +35,19 @@ const styles = stylex.create({
   },
   toastShell: {
     position: "relative",
-    borderRadius: "0.75rem",
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
+    borderRadius: "0.5rem",
+    backgroundColor: colors["--color-tomui-layer-01"],
+    boxShadow: elevation["--elevation-tomui-floating"],
     backgroundClip: "padding-box",
-    padding: "1rem",
+    padding: "0.75rem",
   },
-  toastDefault: {
-    borderWidth: 1,
-    borderColor: fillColor,
-    backgroundColor: baseColor,
-    boxShadow: "0 0 0 1px " + lineColor + ", " + SHADOW_LG,
-  },
-  toastSuccess: {
-    backgroundColor: baseColor,
-    boxShadow: "0 0 0 0.3px " + successColor + ", " + SHADOW_LG,
-  },
-  toastError: {
-    backgroundColor: baseColor,
-    boxShadow: "0 0 0 0.3px " + dangerColor + ", " + SHADOW_LG,
-  },
-  toastWarning: {
-    backgroundColor: baseColor,
-    boxShadow: "0 0 0 0.3px " + warningColor + ", " + SHADOW_LG,
-  },
-  toastInfo: {
-    backgroundColor: controlColor,
-    boxShadow: "0 0 0 0.3px " + infoColor + ", " + SHADOW_LG,
-  },
+  toastSuccess: { borderColor: successColor },
+  toastError: { borderColor: dangerColor },
+  toastWarning: { borderColor: warningColor },
+  toastInfo: { borderColor: infoColor },
   body: { display: "flex", alignItems: "flex-start", gap: "0.5rem" },
   textColumn: {
     display: "flex",
@@ -75,28 +56,39 @@ const styles = stylex.create({
     gap: "0.25rem",
     overflow: "hidden",
   },
-  title: { fontSize: "0.975rem", lineHeight: "1.25rem", fontWeight: 500, color: defaultText },
+  title: {
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
+    fontWeight: fontWeightControl.fontWeight,
+    color: defaultText,
+  },
   titleSuccess: { color: successText },
   titleError: { color: dangerText },
   titleWarning: { color: warningText },
   titleInfo: { color: infoText },
   description: {
-    fontSize: "0.925rem",
-    lineHeight: "1.25rem",
-    color: "color-mix(in oklch, " + defaultText + " 70%, transparent)",
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
+    fontWeight: 440,
+    color: subtleText,
   },
   close: {
     position: "absolute",
     top: "0.5rem",
-    right: "0.5rem",
+    insetInlineEnd: "0.5rem",
     display: "flex",
     height: "1.25rem",
     width: "1.25rem",
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 0,
     borderRadius: "0.25rem",
+    backgroundColor: "transparent",
     color: subtleText,
-    ":hover": { backgroundColor: "color-mix(in srgb, currentColor 15%, transparent)" },
+    ":hover": {
+      backgroundColor: colors["--color-tomui-overlay-hover"],
+      color: defaultText,
+    },
   },
   closeSuccess: { color: successText },
   closeError: { color: dangerText },
@@ -111,12 +103,12 @@ export const TOMUI_TOAST_DEFAULT_VARIANTS = {
 export type TomuiToastVariant = "default" | "success" | "error" | "warning" | "info";
 
 const toastVariantStyles = {
-  default: styles.toastDefault,
+  default: undefined,
   success: styles.toastSuccess,
   error: styles.toastError,
   warning: styles.toastWarning,
   info: styles.toastInfo,
-} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles>;
+} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles | undefined>;
 
 const titleVariantStyles = {
   default: undefined,
@@ -138,7 +130,8 @@ export function toastVariants(
   props: { variant?: TomuiToastVariant } = {},
 ): Array<stylex.StyleXStyles> {
   const merged = merge(TOMUI_TOAST_DEFAULT_VARIANTS, props);
-  return [styles.toastShell, toastVariantStyles[merged.variant]];
+  const variant = toastVariantStyles[merged.variant];
+  return variant === undefined ? [styles.toastShell] : [styles.toastShell, variant];
 }
 
 export type ToastItem = {

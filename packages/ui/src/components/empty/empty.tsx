@@ -2,9 +2,9 @@ import * as stylex from "@stylexjs/stylex";
 import { createSignal, merge, omit, onCleanup, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { Button } from "../button/button";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { monoFont, radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeMd } from "../../styles/typography.stylex";
 
 export const TOMUI_EMPTY_DEFAULT_VARIANTS = {
   size: "base",
@@ -18,45 +18,51 @@ const styles = stylex.create({
     width: "100%",
     flexDirection: "column",
     alignItems: "center",
-    borderWidth: 1,
-    borderColor: colors["--color-tomui-fill"],
-    borderRadius: radius.xl,
-    backgroundColor: colors["--color-tomui-control"],
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
+    borderRadius: radius.card,
+    backgroundColor: colors["--color-tomui-layer-01"],
     color: textColors["--text-color-tomui-default"],
   },
-  sizeSm: { padding: "2rem 1.5rem", gap: "1rem" },
-  sizeBase: { padding: "4rem 2.5rem", gap: "1.5rem" },
-  sizeLg: { padding: "5rem 3rem", gap: "2rem" },
-  body: { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.625rem" },
-  title: { fontSize: "1.5rem", fontWeight: 600 },
+  sizeSm: { padding: "1.5rem 1.25rem", gap: "0.75rem" },
+  sizeBase: { padding: "2.5rem 2rem", gap: "1rem" },
+  sizeLg: { padding: "3rem 2.5rem", gap: "1.25rem" },
+  body: { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" },
+  title: {
+    fontSize: fontSizeMd.fontSize,
+    lineHeight: fontSizeMd.lineHeight,
+    fontWeight: 530,
+  },
   description: {
     maxWidth: "35rem",
     textAlign: "center",
     textWrap: "balance",
-    lineHeight: "1.5",
+    fontSize: "14px",
+    lineHeight: "20px",
     color: textColors["--text-color-tomui-subtle"],
   },
   command: {
     position: "relative",
     display: "inline-flex",
-    height: "2.5rem",
+    height: "1.75rem",
     maxWidth: "80%",
     alignItems: "center",
     gap: "0.5rem",
     paddingInlineStart: "0.75rem",
     paddingInlineEnd: "0.5rem",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-overlay"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"] + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-layer-02"],
+    boxShadow: "inset 0 0 0 0.5px " + colors["--color-tomui-line"],
     willChange: "transform",
-    ...monoFont,
+    fontFamily: monoFont.fontFamily,
   },
   commandRow: { display: "inline-flex", minWidth: 0, alignItems: "baseline", gap: "0.5rem" },
   commandPrompt: { color: textColors["--text-color-tomui-subtle"], userSelect: "none" },
   /** The command scrolls rather than wraps, so its scrollbar is hidden. */
   commandText: {
     overflowX: "scroll",
-    fontSize: "0.875rem",
+    fontSize: "13px",
     whiteSpace: "nowrap",
     scrollbarWidth: "none",
     msOverflowStyle: "none",

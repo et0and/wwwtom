@@ -1,9 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 import { BannerAction, BannerActionContext, type BannerActionSize } from "./banner-action";
 
@@ -34,7 +33,8 @@ const styles = stylex.create({
     borderRadius: radius.lg,
     paddingInline: "1rem",
     paddingBlock: "0.75rem",
-    ...fontSizeBase,
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: fontSizeBase.lineHeight,
   },
   sizeSm: {
     alignItems: "center",
@@ -42,7 +42,8 @@ const styles = stylex.create({
     borderRadius: radius.md,
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",
-    ...fontSizeSm,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: fontSizeSm.lineHeight,
   },
   iconWrap: { display: "flex", flexShrink: 0, alignItems: "center" },
   iconBase: { height: "1.375em" },
@@ -63,7 +64,7 @@ const styles = stylex.create({
   noTitlePad: { paddingTop: "1px" },
   stack: { display: "flex", flexDirection: "column", gap: "0.125rem" },
   title: { lineHeight: "1.375", fontWeight: 500 },
-  description: { ...fontSizeSm, lineHeight: "1.375" },
+  description: { fontSize: fontSizeSm.fontSize, lineHeight: "1.375" },
   compactWrap: {
     display: "flex",
     minWidth: 0,

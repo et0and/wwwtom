@@ -2,18 +2,21 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { merge, omit } from "solid-js";
 import { colors } from "../../styles/colors.stylex";
-import { layout, radius, spacing } from "../../styles/primitives.stylex";
-import { fontSizeBase } from "../../styles/typography.stylex";
+import { elevation } from "../../styles/elevation.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
   root: {
     display: "inline-flex",
     width: "fit-content",
     alignItems: "stretch",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-control"],
-    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
-    fontSize: fontSizeBase.fontSize,
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-button-neutral"],
+    boxShadow: elevation["--elevation-tomui-button-neutral"],
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    lineHeight: "20px",
   },
   /** Shared chrome for every control hosted in the toolbar. */
   control: {
@@ -30,25 +33,28 @@ const styles = stylex.create({
   },
   button: {
     display: "inline-flex",
+    height: "1.75rem",
     cursor: "pointer",
     alignItems: "center",
-    gap: layout.gap1.gap,
-    paddingInline: spacing.px2.paddingInline,
-    paddingBlock: spacing.py1.paddingBlock,
+    gap: "0.25rem",
+    paddingInline: "0.5rem",
+    paddingBlock: 0,
     color: "inherit",
   },
   link: {
     display: "inline-flex",
+    height: "1.75rem",
     alignItems: "center",
-    gap: layout.gap1.gap,
-    paddingInline: spacing.px2.paddingInline,
-    paddingBlock: spacing.py1.paddingBlock,
+    gap: "0.25rem",
+    paddingInline: "0.5rem",
+    paddingBlock: 0,
     color: "inherit",
     textDecorationLine: "none",
   },
   input: {
-    paddingInline: spacing.px2.paddingInline,
-    paddingBlock: spacing.py1.paddingBlock,
+    height: "1.75rem",
+    paddingInline: "0.5rem",
+    paddingBlock: 0,
     color: "inherit",
     ":focus": { borderRadius: "inherit" },
   },

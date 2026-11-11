@@ -57,9 +57,9 @@ describe("Button", () => {
 
     expect(primary).not.toBe("");
     expect(destructive).not.toBe("");
-    // Brand blue versus danger red.
+    // Contrast charcoal versus danger red.
     expect(primary).not.toBe(destructive);
-    expect(primary).toContain("--color-tomui-brand");
+    expect(primary).toContain("--color-tomui-contrast");
     expect(destructive).toContain("--color-tomui-danger");
   });
 

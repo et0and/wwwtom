@@ -14,7 +14,7 @@ const fruits = ["Apple", "Banana", "Cherry", "Grape", "Orange"];
 
 export const Default = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Autocomplete items={fruits} label="Fruit">
         <Autocomplete.InputGroup placeholder="Search fruit" />
       </Autocomplete>
@@ -24,7 +24,7 @@ export const Default = meta.story({
 
 export const Open = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Autocomplete items={fruits} label="Fruit" open>
         <Autocomplete.InputGroup placeholder="Search fruit" />
         <Autocomplete.Content>
@@ -39,7 +39,7 @@ export const Open = meta.story({
 
 export const Small = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Autocomplete items={fruits} label="Fruit" open>
         <Autocomplete.InputGroup size="sm" placeholder="Small input" />
         <Autocomplete.Content>
@@ -54,7 +54,7 @@ export const Small = meta.story({
 
 export const Large = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Autocomplete items={fruits} label="Fruit" open>
         <Autocomplete.InputGroup size="lg" placeholder="Large input" />
         <Autocomplete.Content>
@@ -69,7 +69,7 @@ export const Large = meta.story({
 
 export const WithError = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Autocomplete items={fruits} label="Fruit" error="Select a fruit to continue">
         <Autocomplete.InputGroup placeholder="Search fruit" />
       </Autocomplete>
@@ -79,7 +79,7 @@ export const WithError = meta.story({
 
 export const Empty = meta.story({
   render: () => (
-    <div class="w-xs">
+    <div style={{ width: "20rem" }}>
       <Autocomplete items={[]} label="Fruit" open>
         <Autocomplete.InputGroup placeholder="Search fruit" />
         <Autocomplete.Content>

@@ -1,8 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
+import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 export const TOMUI_PAGINATION_DEFAULT_VARIANTS = {
   controls: "full",
@@ -11,7 +12,7 @@ export const TOMUI_PAGINATION_DEFAULT_VARIANTS = {
 export type TomuiPaginationControls = "full" | "simple";
 
 const line = colors["--color-tomui-line"];
-const base = colors["--color-tomui-base"];
+const base = colors["--color-tomui-button-neutral"];
 const tint = colors["--color-tomui-tint"];
 const defaultText = textColors["--text-color-tomui-default"];
 
@@ -21,22 +22,34 @@ const styles = stylex.create({
   button: {
     position: "relative",
     display: "flex",
-    height: "2.25rem",
-    minWidth: "2.25rem",
+    height: "1.75rem",
+    minWidth: "1.75rem",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: "0.5rem",
+    borderRadius: "4px",
     borderWidth: 0,
     paddingInline: "0.5rem",
-    fontSize: "0.875rem",
-    boxShadow: "0 0 0 1px " + line,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    lineHeight: "20px",
+    boxShadow: elevation["--elevation-tomui-button-neutral"],
     backgroundColor: base,
     color: defaultText,
     cursor: "pointer",
     ":not(:disabled):hover": { backgroundColor: tint },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
+    ":focus-visible": {
+      outlineWidth: "2px",
+      outlineStyle: "solid",
+      outlineColor: colors["--color-tomui-focus"],
+      outlineOffset: "2px",
+    },
   },
-  buttonActive: { backgroundColor: tint, fontWeight: 500 },
+  buttonActive: {
+    backgroundColor: colors["--color-tomui-layer-02"],
+    boxShadow: "inset 0 0 0 0.5px " + line,
+    fontWeight: 530,
+  },
 });
 
 function pageWindow(page: number, pageCount: number): Array<number> {

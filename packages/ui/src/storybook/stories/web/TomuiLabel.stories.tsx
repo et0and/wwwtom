@@ -39,7 +39,7 @@ export const ForInput = meta.story({
 
 export const AsContent = meta.story({
   render: () => (
-    <label class="inline-flex items-center gap-2">
+    <label style={{ display: "inline-flex", "align-items": "center", gap: "0.5rem" }}>
       <input type="checkbox" />
       <Label asContent>Accept terms</Label>
     </label>

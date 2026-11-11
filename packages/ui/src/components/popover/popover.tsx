@@ -12,10 +12,10 @@ import * as stylex from "@stylexjs/stylex";
 import { createDismissableLayer } from "../../utils/dismissable";
 import { createFocusScope, focusWithoutScrolling } from "../../utils/focus";
 import { createDisclosureState } from "../../utils/state";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
+import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 export const TOMUI_POPOVER_DEFAULT_VARIANTS = {
   side: "bottom",
@@ -35,21 +35,22 @@ const styles = stylex.create({
     position: "absolute",
     zIndex: 50,
     display: "flex",
+    minWidth: "12.5rem",
+    maxWidth: "20rem",
     flexDirection: "column",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-base"],
-    paddingInline: "1rem",
-    paddingBlock: "0.75rem",
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-layer-01"],
+    padding: "0.75rem",
     fontSize: fontSizeSm.fontSize,
     color: textColors["--text-color-tomui-default"],
-    boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)",
-    outlineWidth: 1,
-    outlineStyle: "solid",
-    outlineColor: colors["--color-tomui-line"],
-    transitionProperty: "opacity",
-    transitionDuration: "150ms",
-    [STARTING]: { opacity: 0 },
-    [ENDING]: { opacity: 0 },
+    boxShadow: elevation["--elevation-tomui-floating"],
+    transitionProperty: "opacity, scale",
+    transitionDuration: "120ms",
+    [STARTING]: { opacity: 0, scale: 0.96 },
+    [ENDING]: { opacity: 0, scale: 0.96 },
     [INSTANT]: { transitionDuration: "0s" },
   },
 
@@ -61,14 +62,14 @@ const styles = stylex.create({
 
   title: {
     margin: 0,
-    fontSize: fontSizeBase.fontSize,
-    lineHeight: "1.5rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
+    fontWeight: fontWeightControl.fontWeight,
   },
   description: {
     margin: 0,
-    fontSize: fontSizeBase.fontSize,
-    lineHeight: "1.5rem",
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
     color: textColors["--text-color-tomui-subtle"],
   },
 

@@ -1,10 +1,8 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, merge, omit, Show, useContext } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { layout } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase } from "../../styles/typography.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 import { createDisclosureState } from "../../utils/state";
 
 interface CollapsibleContextValue {
@@ -23,18 +21,32 @@ const styles = stylex.create({
   trigger: { cursor: "pointer" },
   defaultTrigger: {
     margin: 0,
-    borderStyle: "none",
-    backgroundColor: "transparent",
-    padding: 0,
-    boxShadow: "none",
     display: "flex",
-    cursor: "pointer",
+    width: "100%",
+    height: "2rem",
     alignItems: "center",
-    gap: layout.gap1.gap,
-    fontSize: fontSizeBase.fontSize,
-    fontWeight: 500,
+    justifyContent: "space-between",
+    gap: "0.5rem",
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-line"],
+    borderRadius: "0.5rem",
+    backgroundColor: colors["--color-tomui-base"],
+    paddingInline: "0.75rem",
+    paddingBlock: "0.5rem",
+    cursor: "pointer",
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    lineHeight: "16px",
     color: textColors["--text-color-tomui-default"],
     userSelect: "none",
+    ":hover": { backgroundColor: colors["--color-tomui-overlay-hover"] },
+    ":focus-visible": {
+      outlineWidth: "2px",
+      outlineStyle: "solid",
+      outlineColor: colors["--color-tomui-focus"],
+      outlineOffset: "1px",
+    },
   },
   defaultTriggerIconWrap: {
     display: "inline-grid",
@@ -77,15 +89,17 @@ const styles = stylex.create({
     ":is([hidden])": { display: "none" },
   },
   defaultPanelInner: {
-    marginBlock: "0.5rem",
     display: "flex",
     flexDirection: "column",
-    gap: layout.gap4.gap,
-    borderLeftWidth: 2,
-    borderLeftColor: colors["--color-tomui-fill"],
-    paddingBlock: "0.25rem",
-    paddingInlineEnd: "0.25rem",
-    paddingInlineStart: "1rem",
+    gap: "0.75rem",
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-line"],
+    borderTopWidth: 0,
+    borderBottomLeftRadius: "0.5rem",
+    borderBottomRightRadius: "0.5rem",
+    backgroundColor: colors["--color-tomui-layer-01"],
+    padding: "0.75rem",
   },
 });
 

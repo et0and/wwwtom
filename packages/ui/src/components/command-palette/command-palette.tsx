@@ -1,9 +1,10 @@
 import * as stylex from "@stylexjs/stylex";
 import { createMemo, createSignal, For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createDismissableLayer } from "../../utils/dismissable";
 import {
   createFocusScope,
@@ -16,64 +17,73 @@ const styles = stylex.create({
   overlay: {
     position: "fixed",
     inset: 0,
-    backgroundColor: colors["--color-tomui-overlay"],
-    opacity: 0.8,
-    transitionProperty: "all",
+    backgroundColor: colors["--color-tomui-overlay-scrim"],
+    transitionProperty: "opacity",
     transitionDuration: "150ms",
     ":is([data-ending-style])": { opacity: 0 },
     ":is([data-starting-style])": { opacity: 0 },
   },
   root: {
     position: "fixed",
-    top: "10vh",
+    top: "12vh",
     left: "50%",
-    width: "100%",
-    maxWidth: "42rem",
+    width: "calc(100% - 2rem)",
+    maxWidth: "40rem",
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-elevated"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-tomui-hairline"],
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-tomui-layer-01"],
+    boxShadow: elevation["--elevation-tomui-overlay"],
     transform: "translateX(-50%)",
   },
   input: {
     width: "100%",
     borderWidth: 0,
+    borderBottomWidth: "0.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: colors["--color-tomui-hairline"],
     backgroundColor: "transparent",
-    padding: "0.75rem 1rem",
-    fontSize: "0.875rem",
+    paddingBlock: "0.625rem",
+    paddingInline: "0.75rem",
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: 440,
     color: textColors["--text-color-tomui-default"],
     outlineWidth: 0,
-    "::placeholder": { color: textColors["--text-color-tomui-subtle"] },
+    outlineStyle: "none",
+    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
   },
   list: {
     maxHeight: "20rem",
     overflowY: "auto",
-    padding: "0.375rem",
+    padding: "2px",
   },
   empty: {
     padding: "1.5rem 0.5rem",
     textAlign: "center",
-    fontSize: "0.8125rem",
+    fontSize: fontSizeXs.fontSize,
     color: textColors["--text-color-tomui-subtle"],
   },
   item: {
     display: "flex",
     width: "100%",
+    height: "1.75rem",
     alignItems: "center",
-    gap: "0.75rem",
-    borderRadius: radius.lg,
-    padding: "0.375rem 0.5rem",
+    gap: "0.5rem",
+    borderRadius: radius.sm,
+    paddingInline: "0.5rem",
     textAlign: "left",
-    fontSize: "0.875rem",
+    fontSize: fontSizeSm.fontSize,
     color: textColors["--text-color-tomui-default"],
-    ":is([data-active])": { backgroundColor: colors["--color-tomui-tint"] },
+    ":is([data-active])": { backgroundColor: colors["--color-tomui-overlay-hover"] },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
   itemLabel: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
   itemHint: {
     marginInlineStart: "auto",
     flexShrink: 0,
-    fontSize: "0.75rem",
+    fontSize: fontSizeXs.fontSize,
     color: textColors["--text-color-tomui-subtle"],
   },
 });

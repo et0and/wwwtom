@@ -24,6 +24,20 @@ export const Secondary = meta.story({
   },
 });
 
+export const Subtle = meta.story({
+  args: {
+    variant: "subtle",
+    children: "QC",
+  },
+});
+
+export const Accent = meta.story({
+  args: {
+    variant: "accent",
+    children: "New",
+  },
+});
+
 export const Success = meta.story({
   args: {
     variant: "success",

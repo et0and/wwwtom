@@ -3,9 +3,9 @@ import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
 import { createControllableSignal } from "../../utils/state";
 import { colors } from "../../styles/colors.stylex";
-import { cursor, radius, select } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
+import { elevation } from "../../styles/elevation.stylex";
+import { radius } from "../../styles/primitives.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
 export const TOMUI_SELECT_DEFAULT_VARIANTS = {
   size: "base",
@@ -20,54 +20,55 @@ const styles = stylex.create({
     flexShrink: 0,
     alignItems: "center",
     justifyContent: "space-between",
-    userSelect: select.none.userSelect,
+    userSelect: "none",
     borderWidth: 0,
-    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05), 0 0 0 1px " + colors["--color-tomui-line"],
-    fontWeight: 400,
-    cursor: cursor.pointer.cursor,
+    borderRadius: radius.md,
+    boxShadow: elevation["--elevation-tomui-input"],
+    fontWeight: 440,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
+    cursor: "pointer",
     backgroundColor: colors["--color-tomui-control"],
-    outlineWidth: 0,
-    ":focus": {
-      outlineWidth: 0,
-      boxShadow:
-        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 50%, transparent)",
-    },
-    ":focus-visible": { boxShadow: "0 0 0 2px " + colors["--color-tomui-brand"] },
+    outlineWidth: "1px",
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "-1px",
+    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
+    ":focus": { outlineColor: colors["--color-tomui-focus"], boxShadow: "none" },
     ":disabled": {
-      cursor: cursor.notAllowed.cursor,
-      color: textColors["--text-color-tomui-subtle"],
-      backgroundColor:
-        "color-mix(in srgb, " + colors["--color-tomui-control"] + " 50%, transparent)",
+      cursor: "not-allowed",
+      opacity: 0.5,
     },
   },
 
   sizeXs: {
-    height: "1.25rem",
+    height: "1.5rem",
     gap: "0.25rem",
     borderRadius: radius.sm,
-    paddingInline: "0.375rem",
-    fontSize: fontSizeXs.fontSize,
-  },
-  sizeSm: {
-    height: "1.625rem",
-    gap: "0.25rem",
-    borderRadius: radius.md,
     paddingInline: "0.5rem",
     fontSize: fontSizeXs.fontSize,
+    lineHeight: "16px",
+  },
+  sizeSm: {
+    height: "1.5rem",
+    gap: "0.25rem",
+    borderRadius: radius.sm,
+    paddingInline: "0.5625rem",
+    fontSize: fontSizeSm.fontSize,
   },
   sizeBase: {
-    height: "2.25rem",
+    height: "1.75rem",
     gap: "0.375rem",
-    borderRadius: radius.lg,
-    paddingInline: "0.75rem",
-    fontSize: fontSizeBase.fontSize,
+    borderRadius: radius.md,
+    paddingInline: "0.6875rem",
+    fontSize: fontSizeSm.fontSize,
   },
   sizeLg: {
-    height: "2.5rem",
-    gap: "0.5rem",
-    borderRadius: radius.lg,
-    paddingInline: "1rem",
-    fontSize: fontSizeBase.fontSize,
+    height: "2rem",
+    gap: "0.375rem",
+    borderRadius: radius.md,
+    paddingInline: "0.9375rem",
+    fontSize: fontSizeSm.fontSize,
   },
 });
 

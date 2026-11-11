@@ -1,17 +1,14 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createUniqueId, merge, omit, Show } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 
 const focusColor = colors["--color-tomui-focus"];
 const dangerColor = textColors["--text-color-tomui-danger"];
-/** Matches Tailwind's `ring-<color>/50` alpha modifier. StyleX needs literals. */
-const focusRing = "0 0 0 1.5px color-mix(in srgb, " + focusColor + " 50%, transparent)";
-const dangerRing = "0 0 0 1.5px color-mix(in srgb, " + dangerColor + " 50%, transparent)";
 
 export const TOMUI_INPUT_DEFAULT_VARIANTS = {
   size: "base",
@@ -30,45 +27,77 @@ export interface TomuiInputVariantsProps {
 
 const styles = stylex.create({
   base: {
+    width: "100%",
     borderWidth: 0,
+    borderRadius: radius.md,
     backgroundColor: colors["--color-tomui-control"],
     color: textColors["--text-color-tomui-default"],
+    fontFamily: "inherit",
+    fontWeight: 440,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
     outlineWidth: 0,
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "-1px",
+    boxShadow: elevation["--elevation-tomui-input"],
+    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
+    ":disabled": { opacity: 0.5, cursor: "not-allowed" },
     // StyleX compiles this to a real ::placeholder rule, which replaces the old
     // vanilla .tomui-input-placeholder class.
     "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
   },
   sizeXs: {
-    height: "1.25rem",
-    paddingInline: "0.375rem",
+    height: "1.5rem",
+    paddingInline: "0.5rem",
     borderRadius: radius.sm,
     fontSize: fontSizeXs.fontSize,
+    lineHeight: "16px",
   },
   sizeSm: {
-    height: "1.625rem",
-    paddingInline: "0.5rem",
-    borderRadius: radius.md,
-    fontSize: fontSizeXs.fontSize,
+    height: "1.5rem",
+    paddingInline: "0.5625rem",
+    borderRadius: radius.sm,
+    fontSize: fontSizeSm.fontSize,
   },
   sizeBase: {
-    height: "2.25rem",
-    paddingInline: "0.75rem",
-    borderRadius: radius.lg,
-    fontSize: fontSizeBase.fontSize,
+    height: "1.75rem",
+    paddingInline: "0.6875rem",
+    borderRadius: radius.md,
+    fontSize: fontSizeSm.fontSize,
   },
   sizeLg: {
-    height: "2.5rem",
-    paddingInline: "1rem",
-    borderRadius: radius.lg,
-    fontSize: fontSizeBase.fontSize,
+    height: "2rem",
+    paddingInline: "0.9375rem",
+    borderRadius: radius.md,
+    fontSize: fontSizeSm.fontSize,
   },
-  /** At rest the error ring replaces the line ring, as the old !ring override did. */
-  variantError: { boxShadow: "0 0 0 1px " + dangerColor },
-  focus: { ":focus": { boxShadow: focusRing } },
-  focusError: { ":focus": { boxShadow: dangerRing } },
-  parentFocus: { ":focus-within": { boxShadow: focusRing } },
-  parentFocusError: { ":focus-within": { boxShadow: dangerRing } },
+  /** At rest the error ring replaces the input elevation, as OpenCode does. */
+  variantError: { outlineWidth: "1px", outlineColor: dangerColor, boxShadow: "none" },
+  focus: {
+    outlineWidth: "1px",
+    outlineColor: focusColor,
+    boxShadow: "none",
+  },
+  focusError: {
+    outlineWidth: "1px",
+    outlineColor: dangerColor,
+    boxShadow: "none",
+  },
+  parentFocus: {
+    ":focus-within": {
+      outlineWidth: "1px",
+      outlineColor: focusColor,
+      boxShadow: "none",
+    },
+  },
+  parentFocusError: {
+    ":focus-within": {
+      outlineWidth: "1px",
+      outlineColor: dangerColor,
+      boxShadow: "none",
+    },
+  },
 });
 
 const sizeStyles = {

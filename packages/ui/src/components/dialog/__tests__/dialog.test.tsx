@@ -93,6 +93,27 @@ describe("Dialog", () => {
     });
   });
 
+  it("restores aria-hidden on content outside the dialog when closed", async () => {
+    const { container } = render(() => (
+      <>
+        <button type="button">Outside</button>
+        <Dialog.Root defaultOpen>
+          <Dialog>
+            <Dialog.Close>Close</Dialog.Close>
+          </Dialog>
+        </Dialog.Root>
+      </>
+    ));
+    const outside = container.querySelector("button")!;
+    expect(outside.getAttribute("aria-hidden")).toBe("true");
+
+    fireEvent.click(container.querySelector("[data-tomui-part=close]")!);
+
+    await vi.waitFor(() => {
+      expect(outside.hasAttribute("aria-hidden")).toBe(false);
+    });
+  });
+
   it("notifies onOpenChange when toggled", async () => {
     const onOpenChange = vi.fn();
     const { container } = render(() => (
@@ -179,6 +200,52 @@ describe("Dialog", () => {
     );
 
     expect(overridden.filter((token) => !plain.includes(token)).length).toBeGreaterThan(0);
+  });
+});
+
+describe("Dialog compound parts", () => {
+  it("renders the header, body, and footer slots", () => {
+    const { container } = render(() => (
+      <Dialog.Root defaultOpen>
+        <Dialog>
+          <Dialog.Header>
+            <Dialog.TitleGroup title="Edit profile" description="Make changes here." />
+          </Dialog.Header>
+          <Dialog.Body>Body content</Dialog.Body>
+          <Dialog.Footer>
+            <Dialog.Close variant="primary">Save</Dialog.Close>
+          </Dialog.Footer>
+        </Dialog>
+      </Dialog.Root>
+    ));
+
+    expect(container.querySelector("[data-tomui-part=header]")).not.toBeNull();
+    expect(container.querySelector("[data-tomui-part=body]")?.textContent).toContain(
+      "Body content",
+    );
+    expect(container.querySelector("[data-tomui-part=footer]")).not.toBeNull();
+    expect(container.querySelector("[data-tomui-part=title]")?.textContent).toBe("Edit profile");
+  });
+
+  it("adds a header close control and renders a full button when a variant is given", () => {
+    const { container } = render(() => (
+      <Dialog.Root defaultOpen>
+        <Dialog>
+          <Dialog.Header>
+            <Dialog.TitleGroup title="Title" />
+          </Dialog.Header>
+          <Dialog.Footer>
+            <Dialog.Close variant="primary">Save</Dialog.Close>
+          </Dialog.Footer>
+        </Dialog>
+      </Dialog.Root>
+    ));
+
+    const closes = Array.from(container.querySelectorAll("[data-tomui-part=close]"));
+    expect(closes.some((element) => element.getAttribute("aria-label") === "Close")).toBe(true);
+    const save = closes.find((element) => element.textContent === "Save");
+    expect(save).not.toBeUndefined();
+    expect(save!.getAttribute("data-tomui-component")).toBe("Dialog");
   });
 });
 
