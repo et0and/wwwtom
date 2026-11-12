@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { colors, textColors } from "./colors.stylex";
 
 /**
- * Layout primitives shared across TomUI components.
+ * Layout primitives shared across Midori components.
  *
  * StyleX cannot merge a runtime class string, so the recurring utility
  * combinations that Tailwind components used to repeat inline live here as
@@ -138,10 +138,10 @@ export const select = stylex.create({
   text: { userSelect: "text" },
 });
 
-const brandColor = colors["--color-tomui-brand"];
-const tintColor = colors["--color-tomui-tint"];
-const hairlineColor = colors["--color-tomui-hairline"];
-const dangerText = textColors["--text-color-tomui-danger"];
+const brandColor = colors["--color-midori-brand"];
+const tintColor = colors["--color-midori-tint"];
+const hairlineColor = colors["--color-midori-hairline"];
+const dangerText = textColors["--text-color-midori-danger"];
 
 /** Monospace stack, matching the old Tailwind `font-mono`. */
 export const monoFont = stylex.defineConsts({

@@ -30,7 +30,7 @@ describe("Avatar", () => {
 
   it("exposes size and kind as data attributes", () => {
     const { container } = render(() => <Avatar fallback="Acme" size="normal" kind="org" />);
-    const avatar = container.querySelector("[data-tomui-component=Avatar]")!;
+    const avatar = container.querySelector("[data-midori-component=Avatar]")!;
     expect(avatar.getAttribute("data-size")).toBe("normal");
     expect(avatar.getAttribute("data-kind")).toBe("org");
   });
@@ -40,7 +40,7 @@ describe("Avatar", () => {
       <Avatar fallback="A" background="#ff0000" foreground="#ffffff" />
     ));
     const style =
-      container.querySelector("[data-tomui-component=Avatar]")!.getAttribute("style") ?? "";
+      container.querySelector("[data-midori-component=Avatar]")!.getAttribute("style") ?? "";
     expect(style).toContain("--avatar-bg");
     expect(style).toContain("--avatar-fg");
   });

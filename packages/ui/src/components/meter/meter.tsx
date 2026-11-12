@@ -13,11 +13,11 @@ const styles = stylex.create({
     justifyContent: "space-between",
     gap: "1rem",
   },
-  label: { fontSize: fontSize2xs.fontSize, color: textColors["--text-color-tomui-subtle"] },
+  label: { fontSize: fontSize2xs.fontSize, color: textColors["--text-color-midori-subtle"] },
   value: {
     fontSize: "13px",
     fontWeight: 530,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     fontVariantNumeric: "tabular-nums",
   },
   track: {
@@ -26,14 +26,14 @@ const styles = stylex.create({
     width: "100%",
     overflow: "hidden",
     borderRadius: radius.full,
-    backgroundColor: colors["--color-tomui-layer-03"],
+    backgroundColor: colors["--color-midori-layer-03"],
   },
   indicator: {
     position: "absolute",
     insetBlock: 0,
     left: 0,
     borderRadius: radius.full,
-    backgroundColor: colors["--color-tomui-brand"],
+    backgroundColor: colors["--color-midori-brand"],
     transitionProperty: "width",
     transitionDuration: "300ms",
     transitionTimingFunction: "ease-out",
@@ -65,7 +65,7 @@ export function Meter(props: MeterProps): JSX.Element {
   };
   return (
     <div
-      data-tomui-component="Meter"
+      data-midori-component="Meter"
       role="meter"
       aria-valuenow={merged.value}
       aria-valuemin={merged.min}

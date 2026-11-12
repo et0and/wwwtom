@@ -21,7 +21,7 @@ export const Default = meta.story({
 export const Checked = meta.story({
   args: {
     label: "Subscribed",
-    checked: true,
+    defaultChecked: true,
   },
 });
 
@@ -49,7 +49,7 @@ export const Disabled = meta.story({
 export const DisabledChecked = meta.story({
   args: {
     label: "Disabled checked",
-    checked: true,
+    defaultChecked: true,
     disabled: true,
   },
 });

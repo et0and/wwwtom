@@ -23,7 +23,7 @@ describe("Sidebar", () => {
   it("starts expanded by default", () => {
     const { container } = render(() => <Sidebar>Content</Sidebar>);
     expect(
-      container.querySelector("[data-tomui-component=Sidebar]")?.getAttribute("data-state"),
+      container.querySelector("[data-midori-component=Sidebar]")?.getAttribute("data-state"),
     ).toBe("expanded");
   });
 
@@ -33,7 +33,7 @@ describe("Sidebar", () => {
     fireEvent.click(trigger);
     await vi.waitFor(() => {
       expect(
-        container.querySelector("[data-tomui-component=Sidebar]")?.getAttribute("data-state"),
+        container.querySelector("[data-midori-component=Sidebar]")?.getAttribute("data-state"),
       ).toBe("collapsed");
     });
   });
@@ -45,10 +45,10 @@ describe("Sidebar", () => {
 
   it("gives a collapsed sidebar a different class list", async () => {
     const { container } = render(() => <Sidebar>Content</Sidebar>);
-    const before = classList(container.querySelector("[data-tomui-component=Sidebar]")!);
+    const before = classList(container.querySelector("[data-midori-component=Sidebar]")!);
     fireEvent.click(container.querySelector("button")!);
     await vi.waitFor(() => {
-      const after = classList(container.querySelector("[data-tomui-component=Sidebar]")!);
+      const after = classList(container.querySelector("[data-midori-component=Sidebar]")!);
       expect(after).not.toEqual(before);
     });
   });

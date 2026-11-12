@@ -1,6 +1,6 @@
-# TomUI
+# Midori
 
-Design rules. Follow always when building or reviewing TomUI.
+Design rules. Follow always when building or reviewing Midori.
 
 ## Components
 
@@ -24,7 +24,7 @@ Design rules. Follow always when building or reviewing TomUI.
 
 - related text tight (`gap-1.5` in `gap-6` group).
 - vertical padding smaller than horizontal (`px-5 py-4`, not `p-5`).
-- sticky elements get `border-b border-tomui-line`.
+- sticky elements get `border-b border-midori-line`.
 
 ## Hover, borders, radius
 

@@ -5,13 +5,13 @@ import type { JSX } from "@solidjs/web";
 import { controlSurface } from "../../styles/control-surface.stylex";
 import { fontSizeSm } from "../../styles/typography.stylex";
 
-const dangerColor = textColors["--text-color-tomui-danger"];
+const dangerColor = textColors["--text-color-midori-danger"];
 
-export const TOMUI_TEXTAREA_DEFAULT_VARIANTS = {
+export const MIDORI_TEXTAREA_DEFAULT_VARIANTS = {
   surface: "base",
 } as const;
 
-export type TomuiTextareaSurface = "base" | "layer-1";
+export type MidoriTextareaSurface = "base" | "layer-1";
 
 const styles = stylex.create({
   root: {
@@ -34,8 +34,8 @@ const styles = stylex.create({
     fontWeight: 440,
     fontSize: fontSizeSm.fontSize,
     lineHeight: 1.35,
-    color: textColors["--text-color-tomui-default"],
-    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
+    color: textColors["--text-color-midori-default"],
+    "::placeholder": { color: textColors["--text-color-midori-placeholder"] },
   },
   invalidTextarea: {
     color: dangerColor,
@@ -52,17 +52,17 @@ const surfaceStyles = {
 export type TextareaProps = Omit<JSX.TextareaHTMLAttributes<HTMLTextAreaElement>, "style"> & {
   /** Error styling for the field and value text. */
   invalid?: boolean;
-  surface?: TomuiTextareaSurface;
+  surface?: MidoriTextareaSurface;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function Textarea(props: TextareaProps): JSX.Element {
-  const merged = merge(TOMUI_TEXTAREA_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_TEXTAREA_DEFAULT_VARIANTS, props);
   const rest = omit(merged, "invalid", "surface", "style", "disabled", "rows");
   return (
     <div
-      data-tomui-component="Textarea"
+      data-midori-component="Textarea"
       data-surface={merged.surface}
       data-disabled={merged.disabled ? "" : undefined}
       data-invalid={merged.invalid ? "" : undefined}

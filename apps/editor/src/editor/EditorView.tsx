@@ -61,7 +61,7 @@ const styles = stylex.create({
   subtleSm: {
     fontSize: fontSizeSm.fontSize,
     lineHeight: fontSizeSm.lineHeight,
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
 });
 

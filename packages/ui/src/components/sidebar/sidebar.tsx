@@ -8,12 +8,12 @@ import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSize2xs, fontSizeSm } from "../../styles/typography.stylex";
 
-const lineColor = colors["--color-tomui-line"];
-const baseColor = colors["--color-tomui-base"];
-const tintColor = colors["--color-tomui-tint"];
-const defaultText = textColors["--text-color-tomui-default"];
-const subtleText = textColors["--text-color-tomui-subtle"];
-const strongText = textColors["--text-color-tomui-strong"];
+const lineColor = colors["--color-midori-line"];
+const baseColor = colors["--color-midori-base"];
+const tintColor = colors["--color-midori-tint"];
+const defaultText = textColors["--text-color-midori-default"];
+const subtleText = textColors["--text-color-midori-subtle"];
+const strongText = textColors["--text-color-midori-strong"];
 
 const styles = stylex.create({
   root: {
@@ -33,8 +33,8 @@ const styles = stylex.create({
     margin: "0.5rem",
     borderRadius: radius.md,
     borderWidth: "0.5px",
-    borderColor: colors["--color-tomui-hairline"],
-    boxShadow: elevation["--elevation-tomui-floating"],
+    borderColor: colors["--color-midori-hairline"],
+    boxShadow: elevation["--elevation-midori-floating"],
   },
   collapsed: { width: "3.5rem", overflow: "hidden" },
   trigger: {
@@ -137,22 +137,22 @@ const styles = stylex.create({
   itemLinkActive: { backgroundColor: tintColor },
 });
 
-export const TOMUI_SIDEBAR_DEFAULT_VARIANTS = {
+export const MIDORI_SIDEBAR_DEFAULT_VARIANTS = {
   collapsible: "icon",
   side: "left",
   variant: "sidebar",
 } as const;
 
-export type TomuiSidebarVariant = "sidebar" | "floating" | "inset";
-export type TomuiSidebarCollapsible = "icon" | "offcanvas" | "none";
-export type TomuiSidebarSide = "left" | "right";
+export type MidoriSidebarVariant = "sidebar" | "floating" | "inset";
+export type MidoriSidebarCollapsible = "icon" | "offcanvas" | "none";
+export type MidoriSidebarSide = "left" | "right";
 
 export type SidebarProps = Omit<JSX.HTMLAttributes<HTMLElement>, "style"> & {
   children?: JSX.Element;
-  collapsible?: TomuiSidebarCollapsible;
+  collapsible?: MidoriSidebarCollapsible;
   defaultOpen?: boolean;
-  side?: TomuiSidebarSide;
-  variant?: TomuiSidebarVariant;
+  side?: MidoriSidebarSide;
+  variant?: MidoriSidebarVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
@@ -184,9 +184,9 @@ const SidebarContext = createContext<SidebarContextValue>({
 });
 
 export function sidebarVariants(
-  props: { variant?: TomuiSidebarVariant; side?: TomuiSidebarSide } = {},
+  props: { variant?: MidoriSidebarVariant; side?: MidoriSidebarSide } = {},
 ): Array<stylex.StyleXStyles> {
-  const merged = merge(TOMUI_SIDEBAR_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_SIDEBAR_DEFAULT_VARIANTS, props);
   return [
     styles.root,
     merged.variant === "sidebar"
@@ -205,7 +205,7 @@ export function SidebarSection(props: SidebarSectionProps) {
   const ctx = useContext(SidebarContext);
   return (
     <div
-      data-tomui-component="SidebarSection"
+      data-midori-component="SidebarSection"
       data-state={isOpen() ? "expanded" : "collapsed"}
       {...stylex.attrs(styles.group, merged.style)}
       {...rest}
@@ -236,7 +236,7 @@ export function SidebarItem(props: SidebarItemProps) {
   const rest = omit(merged, "active", "children", "icon", "style");
   const ctx = useContext(SidebarContext);
   return (
-    <li data-tomui-component="SidebarItem" {...stylex.attrs(styles.itemRoot)}>
+    <li data-midori-component="SidebarItem" {...stylex.attrs(styles.itemRoot)}>
       <a
         data-active={merged.active || undefined}
         aria-current={merged.active ? "page" : undefined}
@@ -271,10 +271,10 @@ export function SidebarItem(props: SidebarItemProps) {
 export function Sidebar(props: SidebarProps) {
   const merged = merge(
     {
-      collapsible: TOMUI_SIDEBAR_DEFAULT_VARIANTS.collapsible,
+      collapsible: MIDORI_SIDEBAR_DEFAULT_VARIANTS.collapsible,
       defaultOpen: true,
-      side: TOMUI_SIDEBAR_DEFAULT_VARIANTS.side,
-      variant: TOMUI_SIDEBAR_DEFAULT_VARIANTS.variant,
+      side: MIDORI_SIDEBAR_DEFAULT_VARIANTS.side,
+      variant: MIDORI_SIDEBAR_DEFAULT_VARIANTS.variant,
     },
     props,
   );
@@ -282,7 +282,7 @@ export function Sidebar(props: SidebarProps) {
   const [isOpen, setIsOpen] = createSignal(merged.defaultOpen);
   return (
     <nav
-      data-tomui-component="Sidebar"
+      data-midori-component="Sidebar"
       aria-label="Navigation"
       data-state={isOpen() ? "expanded" : "collapsed"}
       data-side={merged.side}

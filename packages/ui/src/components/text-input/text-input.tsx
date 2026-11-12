@@ -6,15 +6,15 @@ import { controlSurface } from "../../styles/control-surface.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
-export const TOMUI_TEXT_INPUT_DEFAULT_VARIANTS = {
+export const MIDORI_TEXT_INPUT_DEFAULT_VARIANTS = {
   appearance: "base",
   surface: "base",
 } as const;
 
-export type TomuiTextInputAppearance = "small" | "base" | "large";
-export type TomuiTextInputSurface = "base" | "layer-1" | "invisible";
+export type MidoriTextInputAppearance = "small" | "base" | "large";
+export type MidoriTextInputSurface = "base" | "layer-1" | "invisible";
 
-const dangerColor = textColors["--text-color-tomui-danger"];
+const dangerColor = textColors["--text-color-midori-danger"];
 
 const styles = stylex.create({
   root: {
@@ -33,7 +33,7 @@ const styles = stylex.create({
   surfaceInvisible: {
     backgroundColor: "transparent",
     boxShadow: "none",
-    ":hover": { backgroundColor: colors["--color-tomui-overlay-hover"] },
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
   },
   value: {
     display: "flex",
@@ -52,7 +52,7 @@ const styles = stylex.create({
     alignItems: "center",
     justifyContent: "center",
     paddingInlineStart: "0.5rem",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
   input: {
     display: "block",
@@ -69,9 +69,9 @@ const styles = stylex.create({
     fontWeight: 440,
     fontSize: fontSizeSm.fontSize,
     lineHeight: "20px",
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     "::placeholder": {
-      color: textColors["--text-color-tomui-placeholder"],
+      color: textColors["--text-color-midori-placeholder"],
       userSelect: "none",
     },
   },
@@ -116,15 +116,15 @@ export type TextInputProps = Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "si
   /** Error styling for the field and value text. */
   invalid?: boolean;
   /** `small` is 24px tall; `base` is 28px tall; `large` is 32px tall. */
-  appearance?: TomuiTextInputAppearance;
+  appearance?: MidoriTextInputAppearance;
   /** Background surface; invisible gains a fill on hover. */
-  surface?: TomuiTextInputSurface;
+  surface?: MidoriTextInputSurface;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function TextInput(props: TextInputProps): JSX.Element {
-  const merged = merge(TOMUI_TEXT_INPUT_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_TEXT_INPUT_DEFAULT_VARIANTS, props);
   const rest = omit(
     merged,
     "style",
@@ -139,7 +139,7 @@ export function TextInput(props: TextInputProps): JSX.Element {
   const isSmall = (): boolean => merged.appearance === "small";
   return (
     <div
-      data-tomui-component="TextInput"
+      data-midori-component="TextInput"
       data-appearance={merged.appearance}
       data-surface={merged.surface}
       data-numeric={merged.numeric ? "" : undefined}

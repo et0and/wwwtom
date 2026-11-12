@@ -3,15 +3,15 @@ import type { JSX } from "@solidjs/web";
 import { createContext, createUniqueId, merge, omit, Show, useContext } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
-import { inputVariants, type TomuiInputSize } from "../input/input";
+import { inputVariants, type MidoriInputSize } from "../input/input";
 
-export const TOMUI_INPUT_GROUP_DEFAULT_VARIANTS = {
+export const MIDORI_INPUT_GROUP_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-const focusColor = colors["--color-tomui-focus"];
-const dangerColor = textColors["--text-color-tomui-danger"];
-const subtleColor = textColors["--text-color-tomui-subtle"];
+const focusColor = colors["--color-midori-focus"];
+const dangerColor = textColors["--text-color-midori-danger"];
+const subtleColor = textColors["--text-color-midori-subtle"];
 
 const focusRing = "0 0 0 1px " + focusColor;
 
@@ -76,7 +76,7 @@ const styles = stylex.create({
     boxShadow: "none",
     pointerEvents: "auto",
     color: subtleColor,
-    ":hover": { color: textColors["--text-color-tomui-default"] },
+    ":hover": { color: textColors["--text-color-midori-default"] },
     ":focus": { boxShadow: "none" },
     ":focus-visible": { boxShadow: focusRing },
   },
@@ -115,7 +115,7 @@ const sizeStyles = stylex.create({
   suffixLg: { paddingInlineEnd: "0.9375rem", fontSize: "13px" },
 });
 
-const inputSize = (size: TomuiInputSize): stylex.StyleXStyles =>
+const inputSize = (size: MidoriInputSize): stylex.StyleXStyles =>
   size === "xs"
     ? sizeStyles.inputXs
     : size === "sm"
@@ -124,7 +124,7 @@ const inputSize = (size: TomuiInputSize): stylex.StyleXStyles =>
         ? sizeStyles.inputLg
         : sizeStyles.inputBase;
 
-const addonStartSize = (size: TomuiInputSize): stylex.StyleXStyles =>
+const addonStartSize = (size: MidoriInputSize): stylex.StyleXStyles =>
   size === "xs"
     ? sizeStyles.addonStartXs
     : size === "sm"
@@ -133,7 +133,7 @@ const addonStartSize = (size: TomuiInputSize): stylex.StyleXStyles =>
         ? sizeStyles.addonStartLg
         : sizeStyles.addonStartBase;
 
-const addonEndSize = (size: TomuiInputSize): stylex.StyleXStyles =>
+const addonEndSize = (size: MidoriInputSize): stylex.StyleXStyles =>
   size === "xs"
     ? sizeStyles.addonEndXs
     : size === "sm"
@@ -142,7 +142,7 @@ const addonEndSize = (size: TomuiInputSize): stylex.StyleXStyles =>
         ? sizeStyles.addonEndLg
         : sizeStyles.addonEndBase;
 
-const suffixSize = (size: TomuiInputSize): stylex.StyleXStyles =>
+const suffixSize = (size: MidoriInputSize): stylex.StyleXStyles =>
   size === "xs"
     ? sizeStyles.suffixXs
     : size === "sm"
@@ -156,7 +156,7 @@ function isStringValue(value: JSX.Element | undefined): value is string {
 }
 
 export interface InputGroupContextValue {
-  size: TomuiInputSize;
+  size: MidoriInputSize;
   disabled: boolean;
   error?: string | { message: JSX.Element; match: FieldErrorMatch } | undefined;
   inputId: string;
@@ -174,7 +174,7 @@ export function useInputGroupContext(): InputGroupContextValue {
 
 export type InputGroupRootProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   children?: JSX.Element | undefined;
-  size?: TomuiInputSize | undefined;
+  size?: MidoriInputSize | undefined;
   disabled?: boolean | undefined;
   label?: JSX.Element | undefined;
   description?: JSX.Element | undefined;
@@ -199,7 +199,7 @@ export function InputGroupInput(props: InputGroupInputProps): JSX.Element {
   const rest = omit(merged, "style", "id", "aria-invalid");
   return (
     <input
-      data-tomui-component="InputGroup"
+      data-midori-component="InputGroup"
       data-slot="input-group-input"
       id={merged.id ?? context.inputId}
       disabled={context.disabled}
@@ -223,7 +223,7 @@ export function InputGroupAddon(props: InputGroupAddonProps): JSX.Element {
   const isStart = merged.align === "start";
   return (
     <div
-      data-tomui-component="InputGroup"
+      data-midori-component="InputGroup"
       data-slot={isStart ? "input-group-addon-start" : "input-group-addon-end"}
       {...stylex.attrs(
         styles.addon,
@@ -270,7 +270,7 @@ export function InputGroupButton(props: InputGroupButtonProps): JSX.Element {
     isStringValue(merged.tooltip) ? undefined : merged.tooltip;
   return (
     <button
-      data-tomui-component="InputGroup"
+      data-midori-component="InputGroup"
       data-slot="input-group-button"
       type="button"
       disabled={merged.disabled ?? context.disabled}
@@ -296,7 +296,7 @@ export function InputGroupSuffix(props: InputGroupSuffixProps): JSX.Element {
   const context = useInputGroupContext();
   return (
     <div
-      data-tomui-component="InputGroup"
+      data-midori-component="InputGroup"
       data-slot="input-group-suffix"
       {...stylex.attrs(styles.suffix, suffixSize(context.size), props.style)}
     >
@@ -306,7 +306,7 @@ export function InputGroupSuffix(props: InputGroupSuffixProps): JSX.Element {
 }
 
 function InputGroupRoot(props: InputGroupRootProps): JSX.Element {
-  const merged = merge({ size: TOMUI_INPUT_GROUP_DEFAULT_VARIANTS.size, disabled: false }, props);
+  const merged = merge({ size: MIDORI_INPUT_GROUP_DEFAULT_VARIANTS.size, disabled: false }, props);
   const rest = omit(
     merged,
     "children",
@@ -329,7 +329,7 @@ function InputGroupRoot(props: InputGroupRootProps): JSX.Element {
   const container = (): JSX.Element => (
     <InputGroupContext value={contextValue()}>
       <div
-        data-tomui-component="InputGroup"
+        data-midori-component="InputGroup"
         data-slot="input-group"
         data-size={merged.size}
         data-disabled={merged.disabled ? "" : undefined}

@@ -21,6 +21,11 @@ describe("DatePicker", () => {
     expect((container.querySelector("input") as HTMLInputElement).value).toBe("2026-03-04");
   });
 
+  it("accepts an uncontrolled default value", () => {
+    const { container } = render(() => <DatePicker defaultValue="2026-05-06" />);
+    expect((container.querySelector("input") as HTMLInputElement).value).toBe("2026-05-06");
+  });
+
   it("forwards native attributes and keeps its own size prop off the element", () => {
     const { container } = render(() => <DatePicker size="lg" min="2026-01-01" name="due" />);
     const input = container.querySelector("input");

@@ -15,7 +15,7 @@ const meta = preview.meta({
 const styles = stylex.create({
   card: {
     borderRadius: "0.5rem",
-    backgroundColor: colors["--color-tomui-tint"],
+    backgroundColor: colors["--color-midori-tint"],
     padding: "1rem",
     fontSize: "0.875rem",
   },

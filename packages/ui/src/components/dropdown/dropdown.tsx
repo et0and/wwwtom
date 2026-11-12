@@ -6,11 +6,11 @@ import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { menuItem, radius } from "../../styles/primitives.stylex";
 
-export const TOMUI_DROPDOWN_DEFAULT_VARIANTS = {
+export const MIDORI_DROPDOWN_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-export type TomuiDropdownVariant = "default" | "danger";
+export type MidoriDropdownVariant = "default" | "danger";
 
 const styles = stylex.create({
   root: { position: "relative", display: "inline-block" },
@@ -23,10 +23,10 @@ const styles = stylex.create({
     overflowY: "auto",
     overflowX: "hidden",
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-layer-01"],
+    backgroundColor: colors["--color-midori-layer-01"],
     padding: "2px",
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: elevation["--elevation-tomui-floating"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-floating"],
     top: "100%",
     marginTop: "0.25rem",
   },
@@ -39,7 +39,7 @@ const styles = stylex.create({
 const variantStyles = {
   default: undefined,
   danger: menuItem.danger,
-} as const satisfies Record<TomuiDropdownVariant, stylex.StyleXStyles | undefined>;
+} as const satisfies Record<MidoriDropdownVariant, stylex.StyleXStyles | undefined>;
 
 interface DropdownContextValue {
   isOpen: () => boolean;
@@ -73,7 +73,7 @@ function DropdownMenuRoot(props: DropdownMenuRootProps): JSX.Element {
     toggle: () => setOpen(!isOpen()),
   };
   return (
-    <div data-tomui-component="DropdownMenu" {...stylex.attrs(styles.root)}>
+    <div data-midori-component="DropdownMenu" {...stylex.attrs(styles.root)}>
       <DropdownContext value={value}>{props.children}</DropdownContext>
     </div>
   );
@@ -95,8 +95,8 @@ function DropdownMenuTrigger(props: DropdownMenuTriggerProps): JSX.Element {
   const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
-      data-tomui-component="DropdownMenu"
-      data-tomui-part="trigger"
+      data-midori-component="DropdownMenu"
+      data-midori-part="trigger"
       aria-haspopup="menu"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       onClick={(event) => {
@@ -144,8 +144,8 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
         ref={(el) => {
           element = el;
         }}
-        data-tomui-component="DropdownMenu"
-        data-tomui-part="content"
+        data-midori-component="DropdownMenu"
+        data-midori-part="content"
         role="menu"
         {...stylex.attrs(
           styles.content,
@@ -168,7 +168,7 @@ export type DropdownMenuItemProps = Omit<
   inset?: boolean;
   selected?: boolean;
   href?: string;
-  variant?: TomuiDropdownVariant;
+  variant?: MidoriDropdownVariant;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
@@ -176,7 +176,7 @@ export type DropdownMenuItemProps = Omit<
 
 function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
   const ctx = useContext(DropdownContext);
-  const merged = merge({ variant: TOMUI_DROPDOWN_DEFAULT_VARIANTS.variant }, props);
+  const merged = merge({ variant: MIDORI_DROPDOWN_DEFAULT_VARIANTS.variant }, props);
   const rest = omit(
     merged,
     "children",
@@ -206,8 +206,8 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
       when={merged.href === undefined}
       fallback={
         <a
-          data-tomui-component="DropdownMenu"
-          data-tomui-part="item"
+          data-midori-component="DropdownMenu"
+          data-midori-part="item"
           role="menuitem"
           href={merged.href}
           {...stylex.attrs(...itemStyles(), styles.link)}
@@ -218,8 +218,8 @@ function DropdownMenuItem(props: DropdownMenuItemProps): JSX.Element {
       }
     >
       <button
-        data-tomui-component="DropdownMenu"
-        data-tomui-part="item"
+        data-midori-component="DropdownMenu"
+        data-midori-part="item"
         role="menuitem"
         disabled={merged.disabled}
         {...stylex.attrs(...itemStyles())}
@@ -263,8 +263,8 @@ function DropdownMenuCheckboxItem(props: DropdownMenuCheckboxItemProps): JSX.Ele
   );
   return (
     <button
-      data-tomui-component="DropdownMenu"
-      data-tomui-part="checkbox-item"
+      data-midori-component="DropdownMenu"
+      data-midori-part="checkbox-item"
       role="menuitemcheckbox"
       aria-checked={isChecked() ? "true" : "false"}
       disabled={merged.disabled}
@@ -332,8 +332,8 @@ function DropdownMenuRadioItem(props: DropdownMenuRadioItemProps): JSX.Element {
   const isChecked = (): boolean => group.value() === merged.value;
   return (
     <button
-      data-tomui-component="DropdownMenu"
-      data-tomui-part="radio-item"
+      data-midori-component="DropdownMenu"
+      data-midori-part="radio-item"
       role="menuitemradio"
       aria-checked={isChecked() ? "true" : "false"}
       {...stylex.attrs(menuItem.base, menuItem.vertical, menuItem.plain, merged.style)}

@@ -1,12 +1,12 @@
 import { Meta, Canvas, Controls } from "@storybook/addon-docs/blocks";
-import * as ButtonStories from "./web/TomuiButton.stories";
+import * as ButtonStories from "./web/MidoriButton.stories";
 
 <Meta title="web" />
 
-# TomUI
+# Midori
 
-TomUI is this monorepo's design system: accessible Solid v2 components built on
-TomUI design tokens. Interactive behaviour — focus, keyboard, dismissal — is
+Midori is this monorepo's design system: accessible Solid v2 components built on
+Midori design tokens. Interactive behaviour — focus, keyboard, dismissal — is
 hand-rolled on Solid 2 primitives, with no third-party headless dependency.
 
 ## Install
@@ -25,7 +25,7 @@ StyleX sheet is ordered before the token layers.
 
 ```css
 @stylex;
-@import "@tom/ui/tomui.css";
+@import "@tom/ui/midori.css";
 ```
 
 ## Examples
@@ -35,9 +35,13 @@ StyleX sheet is ordered before the token layers.
 
 ## Colour mode
 
-TomUI follows the operating system. Call `useColorMode()` once in a root
-component: it writes `data-mode` on `<html>` and keeps it in step with
+Midori follows the operating system by default. Call `useColorMode()` once in
+a root component: it writes `data-mode` on `<html>` and keeps it in step with
 `prefers-color-scheme`.
+
+To force a mode, call `applyColorMode("light")` or `applyColorMode("dark")`.
+The tokens use `light-dark()`, so they follow `color-scheme` on the root.
+Storybook exposes the same switch in its Color mode toolbar.
 
 ```tsx
 import { useColorMode } from "@tom/ui/color-mode";
@@ -55,7 +59,7 @@ Every token is declared for both modes, so components need no `dark:` classes.
 Every component ships a machine-readable variant table.
 
 ```tsx
-import { TOMUI_BUTTON_VARIANTS, TOMUI_BUTTON_DEFAULT_VARIANTS } from "@tom/ui/button";
+import { MIDORI_BUTTON_VARIANTS, MIDORI_BUTTON_DEFAULT_VARIANTS } from "@tom/ui/button";
 ```
 
 Prop names match the table keys. Defaults come from the matching defaults

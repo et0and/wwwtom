@@ -1,7 +1,7 @@
 import * as stylex from "@stylexjs/stylex";
 
 /**
- * One-off layout styles for editor call sites. TomUI components take a `style`
+ * One-off layout styles for editor call sites. Midori components take a `style`
  * prop of StyleX styles, so a caller needing a single tweak passes one of these
  * instead of a Tailwind class.
  */

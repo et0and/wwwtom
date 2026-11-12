@@ -4,10 +4,10 @@ import type { JSX } from "@solidjs/web";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
 
-// Simplified port: Tomui's descendants-tracking + measured layout replaced by DOM-order vertical stack with SVG lines via ResizeObserver.
+// Simplified port: Midori's descendants-tracking + measured layout replaced by DOM-order vertical stack with SVG lines via ResizeObserver.
 
-const lineColor = colors["--color-tomui-line"];
-const placeholder = textColors["--text-color-tomui-placeholder"];
+const lineColor = colors["--color-midori-line"];
+const placeholder = textColors["--text-color-midori-placeholder"];
 
 const styles = stylex.create({
   root: { position: "relative", display: "flex", gap: "1.5rem" },
@@ -18,7 +18,7 @@ const styles = stylex.create({
   node: {
     position: "relative",
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",
     boxShadow:
@@ -45,18 +45,18 @@ const styles = stylex.create({
   },
 });
 
-export const TOMUI_FLOW_DEFAULT_VARIANTS = {
+export const MIDORI_FLOW_DEFAULT_VARIANTS = {
   align: "start",
   orientation: "vertical",
 } as const;
 
-export type TomuiFlowOrientation = "horizontal" | "vertical";
-export type TomuiFlowAlign = "start" | "center";
+export type MidoriFlowOrientation = "horizontal" | "vertical";
+export type MidoriFlowAlign = "start" | "center";
 
 export type FlowProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
-  align?: TomuiFlowAlign;
+  align?: MidoriFlowAlign;
   children?: JSX.Element;
-  orientation?: TomuiFlowOrientation;
+  orientation?: MidoriFlowOrientation;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
@@ -97,9 +97,9 @@ function connectorPath(line: ConnectorLine): string {
 }
 
 export function flowVariants(
-  props: { orientation?: TomuiFlowOrientation; align?: TomuiFlowAlign } = {},
+  props: { orientation?: MidoriFlowOrientation; align?: MidoriFlowAlign } = {},
 ): Array<stylex.StyleXStyles> {
-  const merged = merge(TOMUI_FLOW_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_FLOW_DEFAULT_VARIANTS, props);
   return [
     styles.root,
     merged.orientation === "horizontal" ? styles.orientationHorizontal : styles.orientationVertical,
@@ -112,7 +112,7 @@ export function FlowNode(props: FlowNodeProps) {
   const rest = omit(merged, "children", "style", "disabled", "nodeId");
   return (
     <li
-      data-tomui-component="FlowNode"
+      data-midori-component="FlowNode"
       data-flow-node={merged.nodeId ?? ""}
       data-disabled={merged.disabled || undefined}
       {...stylex.attrs(styles.node, merged.style)}
@@ -127,7 +127,7 @@ export function FlowParallel(props: FlowParallelProps) {
   const rest = omit(props, "align", "children", "style");
   return (
     <li
-      data-tomui-component="FlowParallel"
+      data-midori-component="FlowParallel"
       data-flow-parallel={props.align ?? ""}
       {...stylex.attrs(styles.parallel, props.style)}
       {...rest}
@@ -140,8 +140,8 @@ export function FlowParallel(props: FlowParallelProps) {
 export function Flow(props: FlowProps) {
   const merged = merge(
     {
-      align: TOMUI_FLOW_DEFAULT_VARIANTS.align,
-      orientation: TOMUI_FLOW_DEFAULT_VARIANTS.orientation,
+      align: MIDORI_FLOW_DEFAULT_VARIANTS.align,
+      orientation: MIDORI_FLOW_DEFAULT_VARIANTS.orientation,
     },
     props,
   );
@@ -187,7 +187,7 @@ export function Flow(props: FlowProps) {
     const listObserver = new ResizeObserver(collect);
     listObserver.observe(list);
     const rootObserver = new ResizeObserver(() => {
-      root.dispatchEvent(new CustomEvent("tomui-flow-resize"));
+      root.dispatchEvent(new CustomEvent("midori-flow-resize"));
     });
     rootObserver.observe(root);
     return () => {
@@ -201,7 +201,7 @@ export function Flow(props: FlowProps) {
   return (
     <div
       ref={setRoot}
-      data-tomui-component="Flow"
+      data-midori-component="Flow"
       data-orientation={merged.orientation}
       {...stylex.attrs(
         ...flowVariants({ align: merged.align, orientation: merged.orientation }),

@@ -9,7 +9,7 @@ const styles = stylex.create({
     margin: 0,
     fontSize: fontSizeSm.fontSize,
     fontWeight: fontWeightControl.fontWeight,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     display: "inline-flex",
     flexDirection: "row",
     alignItems: "center",
@@ -23,7 +23,7 @@ const styles = stylex.create({
   },
   optional: {
     fontWeight: 400,
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
   /** Visually hidden, still announced by screen readers. */
   srOnly: {
@@ -84,7 +84,7 @@ export function Label(props: LabelProps): JSX.Element {
       fallback={<span {...stylex.attrs(styles.label, merged.style)}>{content()}</span>}
     >
       <label
-        data-tomui-component="Label"
+        data-midori-component="Label"
         {...rest}
         for={merged.htmlFor ?? rest.for}
         {...stylex.attrs(styles.label, merged.style)}

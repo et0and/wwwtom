@@ -11,7 +11,7 @@ describe("Label", () => {
     const label = container.querySelector("label")!;
 
     expect(label.getAttribute("for")).toBe("email");
-    expect(label.dataset.tomuiComponent).toBe("Label");
+    expect(label.dataset.midoriComponent).toBe("Label");
     expect(label.textContent).toBe("Email");
   });
 

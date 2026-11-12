@@ -1,10 +1,10 @@
 import preview from "#.storybook/preview";
-import { Select } from "@tom/ui/select";
+import { DatePicker } from "@tom/ui/date-picker";
 import { fn } from "storybook/test";
 
 const meta = preview.meta({
-  title: "web/Select",
-  component: Select,
+  title: "web/DatePicker",
+  component: DatePicker,
   parameters: {
     layout: "centered",
   },
@@ -12,46 +12,42 @@ const meta = preview.meta({
   args: { onChange: fn() },
 });
 
-const options = [
-  { label: "Apple", value: "apple" },
-  { label: "Banana", value: "banana" },
-  { label: "Cherry", value: "cherry" },
-];
-
 export const Default = meta.story({
   args: {
-    options,
-    value: "banana",
+    defaultValue: "2026-09-06",
   },
 });
 
 export const WithPlaceholder = meta.story({
   args: {
-    options,
-    placeholder: "Pick a fruit…",
+    placeholder: "Select a date",
+  },
+});
+
+export const ExtraSmall = meta.story({
+  args: {
+    size: "xs",
+    defaultValue: "2026-09-06",
   },
 });
 
 export const Small = meta.story({
   args: {
-    options,
     size: "sm",
-    placeholder: "Small select",
+    defaultValue: "2026-09-06",
   },
 });
 
 export const Large = meta.story({
   args: {
-    options,
     size: "lg",
-    placeholder: "Large select",
+    defaultValue: "2026-09-06",
   },
 });
 
 export const Disabled = meta.story({
   args: {
-    options,
     disabled: true,
-    placeholder: "Disabled select",
+    defaultValue: "2026-09-06",
   },
 });

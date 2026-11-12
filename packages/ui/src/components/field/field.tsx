@@ -88,7 +88,7 @@ const styles = stylex.create({
     fontSize: fontSizeSm.fontSize,
     fontWeight: fontWeightControl.fontWeight,
     lineHeight: "1rem",
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     cursor: "default",
     userSelect: "none",
   },
@@ -98,8 +98,8 @@ const styles = stylex.create({
     fontSize: fontSizeXs.fontSize,
     lineHeight: 1.375,
   },
-  description: { color: textColors["--text-color-tomui-subtle"] },
-  error: { color: textColors["--text-color-tomui-danger"] },
+  description: { color: textColors["--text-color-midori-subtle"] },
+  error: { color: textColors["--text-color-midori-danger"] },
   prefix: {
     alignSelf: "stretch",
     width: "100%",
@@ -107,7 +107,7 @@ const styles = stylex.create({
     fontSize: fontSize2xs.fontSize,
     fontWeight: 440,
     lineHeight: 1,
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     userSelect: "none",
   },
   control: {
@@ -119,7 +119,7 @@ const styles = stylex.create({
   },
 });
 
-export interface TomuiFieldVariantsProps {
+export interface MidoriFieldVariantsProps {
   controlFirst?: boolean | undefined;
 }
 
@@ -193,7 +193,7 @@ export function FieldRoot(props: FieldProps): JSX.Element {
   return (
     <FieldContext value={contextValue}>
       <div
-        data-tomui-component="Field"
+        data-midori-component="Field"
         data-invalid={merged.invalid ? "" : undefined}
         ref={(element) => {
           setRootElement(element);

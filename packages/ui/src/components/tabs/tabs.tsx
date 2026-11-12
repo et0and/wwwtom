@@ -4,19 +4,19 @@ import { createContext, createUniqueId, For, merge, omit, Show, useContext } fro
 import { colors, textColors } from "../../styles/colors.stylex";
 import { createControllableSignal } from "../../utils/state";
 
-export const TOMUI_TABS_VARIANTS = {
+export const MIDORI_TABS_VARIANTS = {
   variant: ["segmented", "underline", "line"],
   size: ["base", "sm"],
 } as const;
 
-export const TOMUI_TABS_DEFAULT_VARIANTS = {
+export const MIDORI_TABS_DEFAULT_VARIANTS = {
   variant: "segmented",
   size: "base",
 } as const;
 
-export interface TomuiTabsVariantsProps {
-  variant?: (typeof TOMUI_TABS_VARIANTS.variant)[number];
-  size?: (typeof TOMUI_TABS_VARIANTS.size)[number];
+export interface MidoriTabsVariantsProps {
+  variant?: (typeof MIDORI_TABS_VARIANTS.variant)[number];
+  size?: (typeof MIDORI_TABS_VARIANTS.size)[number];
 }
 
 export type TabsItem = {
@@ -39,17 +39,17 @@ const TabsContext = createContext<TabsContextValue>({
   baseId: "",
 });
 
-const hairline = colors["--color-tomui-hairline"];
+const hairline = colors["--color-midori-hairline"];
 const hairline70 = "color-mix(in srgb, " + hairline + " 70%, transparent)";
-const recessed = colors["--color-tomui-recessed"];
-const subtleText = textColors["--text-color-tomui-subtle"];
-const defaultTextColor = textColors["--text-color-tomui-default"];
-const tint = colors["--color-tomui-tint"];
-const base = colors["--color-tomui-base"];
-const line = colors["--color-tomui-line"];
-const focus = colors["--color-tomui-focus"];
+const recessed = colors["--color-midori-recessed"];
+const subtleText = textColors["--text-color-midori-subtle"];
+const defaultTextColor = textColors["--text-color-midori-default"];
+const tint = colors["--color-midori-tint"];
+const base = colors["--color-midori-base"];
+const line = colors["--color-midori-line"];
+const focus = colors["--color-midori-focus"];
 const focus50 = "color-mix(in srgb, " + focus + " 50%, transparent)";
-const brand = colors["--color-tomui-brand"];
+const brand = colors["--color-midori-brand"];
 
 const styles = stylex.create({
   root: { position: "relative", isolation: "isolate", minWidth: 0, fontWeight: 500 },
@@ -183,7 +183,7 @@ const tabSelectedStyles = {
   line: styles.tabLineSelected,
 };
 
-export type TabsProps = TomuiTabsVariantsProps & {
+export type TabsProps = MidoriTabsVariantsProps & {
   tabs?: Array<TabsItem>;
   value?: string;
   defaultValue?: string;
@@ -198,8 +198,8 @@ export type TabsProps = TomuiTabsVariantsProps & {
 export function Tabs(props: TabsProps): JSX.Element {
   const merged = merge(
     {
-      variant: TOMUI_TABS_DEFAULT_VARIANTS.variant,
-      size: TOMUI_TABS_DEFAULT_VARIANTS.size,
+      variant: MIDORI_TABS_DEFAULT_VARIANTS.variant,
+      size: MIDORI_TABS_DEFAULT_VARIANTS.size,
       activateOnFocus: false,
       orientation: "horizontal" as const,
     },
@@ -286,14 +286,14 @@ export function Tabs(props: TabsProps): JSX.Element {
       merged.variant === "line" ? styles.listLine : undefined,
       merged.variant === "line" ? listLineSizeStyles[merged.size] : undefined,
     );
-    return { ...generated, class: ["tomui-tabs-list", generated.class].filter(Boolean).join(" ") };
+    return { ...generated, class: ["midori-tabs-list", generated.class].filter(Boolean).join(" ") };
   };
 
   return (
     <TabsContext value={contextValue}>
       <Show when={items().length > 0}>
         <div
-          data-tomui-component="Tabs"
+          data-midori-component="Tabs"
           {...stylex.attrs(
             styles.root,
             merged.variant === "segmented" ? styles.rootSegmented : undefined,
@@ -316,8 +316,8 @@ export function Tabs(props: TabsProps): JSX.Element {
                 const selected = (): boolean => activeValue() === tab.value;
                 return (
                   <button
-                    data-tomui-component="Tabs"
-                    data-tomui-part="tab"
+                    data-midori-component="Tabs"
+                    data-midori-part="tab"
                     data-value={tab.value}
                     type="button"
                     role="tab"
@@ -368,8 +368,8 @@ export function TabsContent(props: TabsContentProps): JSX.Element {
   return (
     <Show when={merged.forceMount || selected()}>
       <div
-        data-tomui-component="Tabs"
-        data-tomui-part="panel"
+        data-midori-component="Tabs"
+        data-midori-part="panel"
         id={`${ctx.baseId}-panel-${merged.value}`}
         role="tabpanel"
         aria-labelledby={`${ctx.baseId}-tab-${merged.value}`}

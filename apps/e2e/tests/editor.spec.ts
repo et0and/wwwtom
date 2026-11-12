@@ -370,7 +370,7 @@ test.describe("editor mobile", () => {
     await expect(toolbarButton("Arena")).toBeVisible();
     expect(await xOverflow(page)).toBeLessThanOrEqual(0);
 
-    const toolbar = page.locator('.editor-toolbar [data-tomui-component="Toolbar"]');
+    const toolbar = page.locator('.editor-toolbar [data-midori-component="Toolbar"]');
     const wrapped = await toolbar.evaluate((element) => ({
       scrollWidth: element.scrollWidth,
       clientWidth: element.clientWidth,

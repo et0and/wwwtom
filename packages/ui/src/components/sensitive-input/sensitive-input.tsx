@@ -5,9 +5,9 @@ import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { copyReveal } from "./sensitive-input.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
-import { inputVariants, type TomuiInputSize, type TomuiInputVariant } from "../input/input";
+import { inputVariants, type MidoriInputSize, type MidoriInputVariant } from "../input/input";
 
-export const TOMUI_SENSITIVE_INPUT_DEFAULT_VARIANTS = {
+export const MIDORI_SENSITIVE_INPUT_DEFAULT_VARIANTS = {
   size: "base",
   variant: "default",
 } as const;
@@ -23,8 +23,8 @@ export type SensitiveInputProps = Omit<
   onChange?: JSX.ChangeEventHandler<HTMLInputElement, Event> | undefined;
   onBlur?: JSX.FocusEventHandler<HTMLInputElement, FocusEvent> | undefined;
   onKeyDown?: JSX.EventHandler<HTMLInputElement, KeyboardEvent> | undefined;
-  size?: TomuiInputSize | undefined;
-  variant?: TomuiInputVariant | undefined;
+  size?: MidoriInputSize | undefined;
+  variant?: MidoriInputVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   description?: JSX.Element | undefined;
@@ -49,7 +49,7 @@ const containerStyles = stylex.create({
     ":focus-within": {
       outlineStyle: "solid",
       outlineWidth: 2,
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
       [copyReveal.opacity]: "1",
     },
     ":hover": { [copyReveal.opacity]: "1" },
@@ -66,9 +66,9 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     boxShadow: "none",
     outlineWidth: 0,
-    color: textColors["--text-color-tomui-default"],
-    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
-    ":disabled": { cursor: "not-allowed", color: textColors["--text-color-tomui-subtle"] },
+    color: textColors["--text-color-midori-default"],
+    "::placeholder": { color: textColors["--text-color-midori-placeholder"] },
+    ":disabled": { cursor: "not-allowed", color: textColors["--text-color-midori-subtle"] },
   },
   inputMasked: { pointerEvents: "none", color: "transparent" },
   mask: {
@@ -80,7 +80,7 @@ const styles = stylex.create({
     overflow: "hidden",
     userSelect: "none",
     pointerEvents: "none",
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
   toggle: {
     position: "absolute",
@@ -96,10 +96,10 @@ const styles = stylex.create({
     borderWidth: 0,
     backgroundColor: "transparent",
     boxShadow: "none",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     transform: "translateY(-50%)",
-    ":hover": { color: textColors["--text-color-tomui-default"] },
-    ":focus": { color: textColors["--text-color-tomui-default"] },
+    ":hover": { color: textColors["--text-color-midori-default"] },
+    ":focus": { color: textColors["--text-color-midori-default"] },
   },
   copy: {
     position: "absolute",
@@ -116,7 +116,7 @@ const styles = stylex.create({
     borderTopRightRadius: radius.md,
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 0,
-    backgroundColor: colors["--color-tomui-brand"],
+    backgroundColor: colors["--color-midori-brand"],
     boxShadow: "none",
     color: "#fff",
     fontSize: "0.75rem",
@@ -149,24 +149,24 @@ const inputPad = {
   sm: styles.inputPadSm,
   base: styles.inputPadBase,
   lg: styles.inputPadLg,
-} satisfies Record<TomuiInputSize, stylex.StyleXStyles>;
+} satisfies Record<MidoriInputSize, stylex.StyleXStyles>;
 
 const maskInset = {
   xs: styles.maskInsetXs,
   sm: styles.maskInsetSm,
   base: styles.maskInsetBase,
   lg: styles.maskInsetLg,
-} satisfies Record<TomuiInputSize, stylex.StyleXStyles>;
+} satisfies Record<MidoriInputSize, stylex.StyleXStyles>;
 
 const toggleOffset = {
   xs: styles.toggleOffsetXs,
   sm: styles.toggleOffsetSm,
   base: styles.toggleOffsetBase,
   lg: styles.toggleOffsetLg,
-} satisfies Record<TomuiInputSize, stylex.StyleXStyles>;
+} satisfies Record<MidoriInputSize, stylex.StyleXStyles>;
 
 interface SensitiveMaskProps {
-  size: TomuiInputSize;
+  size: MidoriInputSize;
 }
 
 function SensitiveMask(props: SensitiveMaskProps): JSX.Element {
@@ -179,7 +179,7 @@ function SensitiveMask(props: SensitiveMaskProps): JSX.Element {
 
 interface SensitiveVisibilityToggleProps {
   revealed: boolean;
-  size: TomuiInputSize;
+  size: MidoriInputSize;
   icon: JSX.Element | undefined;
   onToggle: () => void;
 }
@@ -188,8 +188,8 @@ function SensitiveVisibilityToggle(props: SensitiveVisibilityToggleProps): JSX.E
   return (
     <button
       type="button"
-      data-tomui-component="SensitiveInput"
-      data-tomui-part="toggle-visibility"
+      data-midori-component="SensitiveInput"
+      data-midori-part="toggle-visibility"
       aria-label={props.revealed ? "Hide value" : "Reveal value"}
       {...stylex.attrs(styles.toggle, toggleOffset[props.size])}
       onClick={(event) => {
@@ -216,8 +216,8 @@ function SensitiveCopyControl(props: SensitiveCopyControlProps): JSX.Element {
   return (
     <button
       type="button"
-      data-tomui-component="SensitiveInput"
-      data-tomui-part="copy"
+      data-midori-component="SensitiveInput"
+      data-midori-part="copy"
       aria-label={props.copied ? "Copied" : "Copy to clipboard"}
       {...stylex.attrs(styles.copy)}
       onClick={(event) => {
@@ -257,7 +257,7 @@ export function SensitiveInput(props: SensitiveInputProps): JSX.Element {
   const merged = merge(
     {
       defaultValue: "",
-      size: TOMUI_SENSITIVE_INPUT_DEFAULT_VARIANTS.size,
+      size: MIDORI_SENSITIVE_INPUT_DEFAULT_VARIANTS.size,
       disabled: false,
       readOnly: false,
       autoComplete: "off",
@@ -287,7 +287,7 @@ export function SensitiveInput(props: SensitiveInputProps): JSX.Element {
     "onBlur",
     "onKeyDown",
   );
-  const variant = (): TomuiInputVariant => merged.variant ?? (merged.error ? "error" : "default");
+  const variant = (): MidoriInputVariant => merged.variant ?? (merged.error ? "error" : "default");
   const ariaLabelFallback = (): string => {
     const label = merged.label;
     return isStringValue(label) ? label : "Sensitive value";
@@ -358,7 +358,7 @@ export function SensitiveInput(props: SensitiveInputProps): JSX.Element {
   const input = (): JSX.Element => (
     <div>
       <div
-        data-tomui-component="SensitiveInput"
+        data-midori-component="SensitiveInput"
         role={isMasked() ? "button" : undefined}
         tabindex={isMasked() && !merged.disabled ? 0 : undefined}
         aria-label={isMasked() ? `${ariaLabelFallback()}, masked.` : undefined}

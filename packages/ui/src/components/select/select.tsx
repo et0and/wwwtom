@@ -7,11 +7,11 @@ import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
-export const TOMUI_SELECT_DEFAULT_VARIANTS = {
+export const MIDORI_SELECT_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiSelectSize = "xs" | "sm" | "base" | "lg";
+export type MidoriSelectSize = "xs" | "sm" | "base" | "lg";
 
 const styles = stylex.create({
   select: {
@@ -23,18 +23,18 @@ const styles = stylex.create({
     userSelect: "none",
     borderWidth: 0,
     borderRadius: radius.md,
-    boxShadow: elevation["--elevation-tomui-input"],
+    boxShadow: elevation["--elevation-midori-input"],
     fontWeight: 440,
     fontSize: fontSizeSm.fontSize,
     lineHeight: "20px",
     cursor: "pointer",
-    backgroundColor: colors["--color-tomui-control"],
+    backgroundColor: colors["--color-midori-control"],
     outlineWidth: "1px",
     outlineStyle: "solid",
     outlineColor: "transparent",
     outlineOffset: "-1px",
-    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
-    ":focus": { outlineColor: colors["--color-tomui-focus"], boxShadow: "none" },
+    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
+    ":focus": { outlineColor: colors["--color-midori-focus"], boxShadow: "none" },
     ":disabled": {
       cursor: "not-allowed",
       opacity: 0.5,
@@ -77,7 +77,7 @@ const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiSelectSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriSelectSize, stylex.StyleXStyles>;
 
 export type SelectOption = {
   label: string;
@@ -89,7 +89,7 @@ export type SelectProps = Omit<
   JSX.SelectHTMLAttributes<HTMLSelectElement>,
   "onChange" | "value" | "defaultValue" | "style"
 > & {
-  size?: TomuiSelectSize;
+  size?: MidoriSelectSize;
   placeholder?: string;
   options?: ReadonlyArray<SelectOption> | Record<string, string>;
   value?: string;
@@ -109,7 +109,7 @@ function normalizeOptions(options: SelectProps["options"]): Array<SelectOption> 
 }
 
 export function Select(props: SelectProps) {
-  const merged = merge({ size: TOMUI_SELECT_DEFAULT_VARIANTS.size }, props);
+  const merged = merge({ size: MIDORI_SELECT_DEFAULT_VARIANTS.size }, props);
   const rest = omit(
     merged,
     "children",
@@ -146,7 +146,7 @@ export function Select(props: SelectProps) {
 
   return (
     <select
-      data-tomui-component="Select"
+      data-midori-component="Select"
       id={inputId}
       {...stylex.attrs(styles.select, sizeStyles[merged.size], merged.style)}
       value={signal.value() ?? ""}

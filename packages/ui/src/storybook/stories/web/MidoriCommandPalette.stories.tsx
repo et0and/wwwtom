@@ -20,7 +20,7 @@ const actions = [
 export const Open = meta.story({
   render: () => (
     <div style={{ height: "24rem", width: "36rem" }}>
-      <CommandPalette open items={actions} onOpenChange={() => undefined} />
+      <CommandPalette defaultOpen items={actions} />
     </div>
   ),
 });
@@ -28,12 +28,7 @@ export const Open = meta.story({
 export const CustomPlaceholder = meta.story({
   render: () => (
     <div style={{ height: "24rem", width: "36rem" }}>
-      <CommandPalette
-        open
-        items={actions}
-        placeholder="Type a command…"
-        onOpenChange={() => undefined}
-      />
+      <CommandPalette defaultOpen items={actions} placeholder="Type a command…" />
     </div>
   ),
 });
@@ -41,12 +36,7 @@ export const CustomPlaceholder = meta.story({
 export const WithSelection = meta.story({
   render: () => (
     <div style={{ height: "24rem", width: "36rem" }}>
-      <CommandPalette
-        open
-        items={actions}
-        onSelect={() => undefined}
-        onOpenChange={() => undefined}
-      />
+      <CommandPalette defaultOpen items={actions} onSelect={() => undefined} />
     </div>
   ),
 });
@@ -54,7 +44,7 @@ export const WithSelection = meta.story({
 export const Empty = meta.story({
   render: () => (
     <div style={{ height: "24rem", width: "36rem" }}>
-      <CommandPalette open items={[]} onOpenChange={() => undefined} />
+      <CommandPalette defaultOpen items={[]} />
     </div>
   ),
 });

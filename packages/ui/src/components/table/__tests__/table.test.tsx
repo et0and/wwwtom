@@ -29,7 +29,7 @@ describe("tableRowVariants", () => {
 });
 
 describe("Table", () => {
-  it("renders a table with its data-tomui-component attribute", () => {
+  it("renders a table with its data-midori-component attribute", () => {
     const { container } = render(() => (
       <Table>
         <TableBody>
@@ -39,7 +39,7 @@ describe("Table", () => {
         </TableBody>
       </Table>
     ));
-    expect(container.querySelector("[data-tomui-component=Table]")?.tagName).toBe("TABLE");
+    expect(container.querySelector("[data-midori-component=Table]")?.tagName).toBe("TABLE");
     expect(container.textContent).toBe("Ada Lovelace");
   });
 
@@ -66,11 +66,11 @@ describe("Table", () => {
         </TableBody>
       </Table>
     ));
-    expect(container.querySelector("[data-tomui-component=TableHeader]")?.tagName).toBe("THEAD");
-    expect(container.querySelector("[data-tomui-component=TableBody]")?.tagName).toBe("TBODY");
-    expect(container.querySelector("[data-tomui-component=TableRow]")?.tagName).toBe("TR");
-    expect(container.querySelector("[data-tomui-component=TableHead]")?.tagName).toBe("TH");
-    expect(container.querySelector("[data-tomui-component=TableCell]")?.tagName).toBe("TD");
+    expect(container.querySelector("[data-midori-component=TableHeader]")?.tagName).toBe("THEAD");
+    expect(container.querySelector("[data-midori-component=TableBody]")?.tagName).toBe("TBODY");
+    expect(container.querySelector("[data-midori-component=TableRow]")?.tagName).toBe("TR");
+    expect(container.querySelector("[data-midori-component=TableHead]")?.tagName).toBe("TH");
+    expect(container.querySelector("[data-midori-component=TableCell]")?.tagName).toBe("TD");
   });
 
   it("gives a selected row a different class list than the default row", () => {
@@ -86,7 +86,7 @@ describe("Table", () => {
         </TableBody>
       </Table>
     ));
-    const rows = container.querySelectorAll("[data-tomui-component=TableRow]");
+    const rows = container.querySelectorAll("[data-midori-component=TableRow]");
     expect(classList(rows[0]!)).not.toEqual(classList(rows[1]!));
   });
 

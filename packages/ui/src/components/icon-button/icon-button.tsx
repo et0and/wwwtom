@@ -5,13 +5,13 @@ import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 
-export const TOMUI_ICON_BUTTON_DEFAULT_VARIANTS = {
+export const MIDORI_ICON_BUTTON_DEFAULT_VARIANTS = {
   size: "normal",
   variant: "neutral",
 } as const;
 
-export type TomuiIconButtonSize = "small" | "normal" | "large";
-export type TomuiIconButtonVariant = "neutral" | "contrast" | "submit" | "ghost" | "ghost-muted";
+export type MidoriIconButtonSize = "small" | "normal" | "large";
+export type MidoriIconButtonVariant = "neutral" | "contrast" | "submit" | "ghost" | "ghost-muted";
 
 const styles = stylex.create({
   base: {
@@ -21,7 +21,7 @@ const styles = stylex.create({
     borderWidth: 0,
     borderRadius: radius.md,
     padding: 0,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     userSelect: "none",
     cursor: "pointer",
     outlineWidth: 0,
@@ -31,7 +31,7 @@ const styles = stylex.create({
     transitionProperty: "none",
     ":focus-visible": {
       outlineWidth: "2px",
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
     },
     ":disabled": { opacity: 0.5, cursor: "not-allowed" },
   },
@@ -39,36 +39,36 @@ const styles = stylex.create({
   sizeNormal: { width: "1.5rem", height: "1.5rem" },
   sizeLarge: { width: "1.75rem", height: "1.75rem" },
   neutral: {
-    backgroundColor: colors["--color-tomui-button-neutral"],
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
   },
   contrast: {
     backgroundImage:
       "linear-gradient(180deg, " +
-      colors["--color-tomui-sheen-top"] +
+      colors["--color-midori-sheen-top"] +
       " 0%, " +
-      colors["--color-tomui-sheen-bottom"] +
+      colors["--color-midori-sheen-bottom"] +
       " 100%)",
-    backgroundColor: colors["--color-tomui-button-contrast"],
-    color: textColors["--text-color-tomui-inverse"],
-    boxShadow: elevation["--elevation-tomui-button-contrast"],
+    backgroundColor: colors["--color-midori-button-contrast"],
+    color: textColors["--text-color-midori-inverse"],
+    boxShadow: elevation["--elevation-midori-button-contrast"],
     ":hover": { opacity: 0.9 },
     ":disabled": { opacity: 0.4 },
   },
   ghost: {
     backgroundColor: "transparent",
-    ":hover": { backgroundColor: colors["--color-tomui-overlay-hover"] },
-    ":active": { backgroundColor: colors["--color-tomui-overlay-pressed"] },
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
   },
   ghostMuted: {
     backgroundColor: "transparent",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     ":hover": {
-      backgroundColor: colors["--color-tomui-overlay-hover"],
-      color: textColors["--text-color-tomui-default"],
+      backgroundColor: colors["--color-midori-overlay-hover"],
+      color: textColors["--text-color-midori-default"],
     },
-    ":active": { backgroundColor: colors["--color-tomui-overlay-pressed"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
   },
 });
 
@@ -76,7 +76,7 @@ const sizeStyles = {
   small: styles.sizeSmall,
   normal: styles.sizeNormal,
   large: styles.sizeLarge,
-} as const satisfies Record<TomuiIconButtonSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriIconButtonSize, stylex.StyleXStyles>;
 
 const variantStyles = {
   neutral: styles.neutral,
@@ -84,7 +84,7 @@ const variantStyles = {
   submit: styles.contrast,
   ghost: styles.ghost,
   "ghost-muted": styles.ghostMuted,
-} as const satisfies Record<TomuiIconButtonVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriIconButtonVariant, stylex.StyleXStyles>;
 
 export type IconButtonProps = Omit<
   JSX.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -94,21 +94,21 @@ export type IconButtonProps = Omit<
   icon: JSX.Element;
   /** Accessible name. Icon-only controls must have one. */
   label: string;
-  size?: TomuiIconButtonSize;
-  variant?: TomuiIconButtonVariant;
+  size?: MidoriIconButtonSize;
+  variant?: MidoriIconButtonVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function IconButton(props: IconButtonProps): JSX.Element {
-  const merged = merge(TOMUI_ICON_BUTTON_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_ICON_BUTTON_DEFAULT_VARIANTS, props);
   const rest = omit(merged, "icon", "label", "size", "variant", "style", "type");
   return (
     <button
       {...rest}
       type={merged.type ?? "button"}
       aria-label={merged.label}
-      data-tomui-component="IconButton"
+      data-midori-component="IconButton"
       {...stylex.attrs(
         styles.base,
         sizeStyles[merged.size],

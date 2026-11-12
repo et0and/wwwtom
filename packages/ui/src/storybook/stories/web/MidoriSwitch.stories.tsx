@@ -21,7 +21,7 @@ export const Default = meta.story({
 export const Checked = meta.story({
   args: {
     label: "Email notifications",
-    checked: true,
+    defaultChecked: true,
   },
 });
 
@@ -29,7 +29,7 @@ export const Neutral = meta.story({
   args: {
     label: "Dark mode",
     variant: "neutral",
-    checked: true,
+    defaultChecked: true,
   },
 });
 
@@ -44,7 +44,7 @@ export const Large = meta.story({
   args: {
     label: "Prominent toggle",
     size: "lg",
-    checked: true,
+    defaultChecked: true,
   },
 });
 
@@ -59,7 +59,7 @@ export const Group = meta.story({
   render: () => (
     <Switch.Group legend="Notifications">
       <Switch.Item label="Email" />
-      <Switch.Item label="SMS" checked />
+      <Switch.Item label="SMS" defaultChecked />
     </Switch.Group>
   ),
 });

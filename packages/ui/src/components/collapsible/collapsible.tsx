@@ -29,22 +29,22 @@ const styles = stylex.create({
     gap: "0.5rem",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-line"],
+    borderColor: colors["--color-midori-line"],
     borderRadius: "0.5rem",
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",
     cursor: "pointer",
     fontSize: fontSizeSm.fontSize,
     fontWeight: fontWeightControl.fontWeight,
     lineHeight: "16px",
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     userSelect: "none",
-    ":hover": { backgroundColor: colors["--color-tomui-overlay-hover"] },
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
     ":focus-visible": {
       outlineWidth: "2px",
       outlineStyle: "solid",
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
       outlineOffset: "1px",
     },
   },
@@ -94,11 +94,11 @@ const styles = stylex.create({
     gap: "0.75rem",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-line"],
+    borderColor: colors["--color-midori-line"],
     borderTopWidth: 0,
     borderBottomLeftRadius: "0.5rem",
     borderBottomRightRadius: "0.5rem",
-    backgroundColor: colors["--color-tomui-layer-01"],
+    backgroundColor: colors["--color-midori-layer-01"],
     padding: "0.75rem",
   },
 });
@@ -126,7 +126,7 @@ function CollapsibleRoot(props: CollapsibleRootProps): JSX.Element {
     setOpen: state.setIsOpen,
   };
   return (
-    <div data-tomui-component="Collapsible" {...stylex.attrs(merged.style)} {...rest}>
+    <div data-midori-component="Collapsible" {...stylex.attrs(merged.style)} {...rest}>
       <CollapsibleContext value={value}>{merged.children}</CollapsibleContext>
     </div>
   );
@@ -148,8 +148,8 @@ function CollapsibleTrigger(props: CollapsibleTriggerProps): JSX.Element {
   const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
-      data-tomui-component="Collapsible"
-      data-tomui-part="trigger"
+      data-midori-component="Collapsible"
+      data-midori-part="trigger"
       type="button"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       {...stylex.attrs(styles.trigger, merged.style)}
@@ -178,8 +178,8 @@ function CollapsiblePanel(props: CollapsiblePanelProps): JSX.Element {
   return (
     <Show when={merged.keepMounted === true || ctx.isOpen()}>
       <div
-        data-tomui-component="Collapsible"
-        data-tomui-part="panel"
+        data-midori-component="Collapsible"
+        data-midori-part="panel"
         hidden={merged.keepMounted === true && !ctx.isOpen()}
         {...stylex.attrs(merged.style)}
         {...rest}
@@ -202,8 +202,8 @@ function CollapsibleDefaultTrigger(props: CollapsibleDefaultTriggerProps): JSX.E
   const rest = omit(merged, "children", "style");
   return (
     <button
-      data-tomui-component="Collapsible"
-      data-tomui-part="default-trigger"
+      data-midori-component="Collapsible"
+      data-midori-part="default-trigger"
       data-panel-open={ctx.isOpen() ? "" : undefined}
       type="button"
       aria-expanded={ctx.isOpen() ? "true" : "false"}

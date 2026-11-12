@@ -10,7 +10,7 @@ import {
 } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { XIcon } from "@tom/icons/X";
-import { Button, type TomuiButtonSize, type TomuiButtonVariant } from "../button/button";
+import { Button, type MidoriButtonSize, type MidoriButtonVariant } from "../button/button";
 import { createDismissableLayer } from "../../utils/dismissable";
 import { createFocusScope, createHideOutside, createPreventScroll } from "../../utils/focus";
 import { createDisclosureState } from "../../utils/state";
@@ -19,13 +19,13 @@ import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSizeMd, fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_DIALOG_DEFAULT_VARIANTS = {
+export const MIDORI_DIALOG_DEFAULT_VARIANTS = {
   size: "base",
   role: "dialog",
 } as const;
 
-export type TomuiDialogSize = "sm" | "base" | "lg" | "xl";
-export type TomuiDialogRole = "dialog" | "alertdialog";
+export type MidoriDialogSize = "sm" | "base" | "lg" | "xl";
+export type MidoriDialogRole = "dialog" | "alertdialog";
 
 /**
  * Which layout the panel uses.
@@ -33,7 +33,7 @@ export type TomuiDialogRole = "dialog" | "alertdialog";
  * - `"full"` — full-viewport, square corners. For embedded viewers such as a
  *   PDF that need the whole screen.
  */
-export type TomuiDialogSurface = "panel" | "full";
+export type MidoriDialogSurface = "panel" | "full";
 
 /** Open/close transition states, driven by the dismissable layer utilities. */
 const OPEN = ":is([data-starting-style])";
@@ -52,7 +52,7 @@ const styles = stylex.create({
   backdrop: {
     position: "fixed",
     inset: 0,
-    backgroundColor: colors["--color-tomui-overlay-scrim"],
+    backgroundColor: colors["--color-midori-overlay-scrim"],
     transitionDuration: "150ms",
     transitionProperty: "opacity",
     [OPEN]: { opacity: 0 },
@@ -68,9 +68,9 @@ const styles = stylex.create({
     flexDirection: "column",
     overflow: "hidden",
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-layer-01"],
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: elevation["--elevation-tomui-overlay"],
+    backgroundColor: colors["--color-midori-layer-01"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-overlay"],
     outlineWidth: 0,
     outlineStyle: "none",
     transitionDuration: "120ms",
@@ -111,14 +111,14 @@ const styles = stylex.create({
     fontSize: fontSizeMd.fontSize,
     lineHeight: fontSizeMd.lineHeight,
     fontWeight: fontWeightControl.fontWeight,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
   description: {
     margin: 0,
     fontSize: fontSizeSm.fontSize,
     fontWeight: 440,
     lineHeight: "20px",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
   close: {
     display: "flex",
@@ -133,16 +133,16 @@ const styles = stylex.create({
     borderWidth: 0,
     borderRadius: radius.sm,
     backgroundColor: "transparent",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     cursor: "pointer",
     ":hover": {
-      backgroundColor: colors["--color-tomui-overlay-hover"],
-      color: textColors["--text-color-tomui-default"],
+      backgroundColor: colors["--color-midori-overlay-hover"],
+      color: textColors["--text-color-midori-default"],
     },
     ":focus-visible": {
       outlineWidth: "2px",
       outlineStyle: "solid",
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
       outlineOffset: "1px",
     },
   },
@@ -176,7 +176,7 @@ interface DialogContextValue {
   open: () => void;
   close: () => void;
   toggle: () => void;
-  role: () => TomuiDialogRole;
+  role: () => MidoriDialogRole;
   titleId: string;
   descriptionId: string;
   contentId: string;
@@ -206,11 +206,11 @@ export type DialogRootProps = {
   open?: boolean;
   defaultOpen?: boolean;
   onOpenChange?: (open: boolean) => void;
-  role?: TomuiDialogRole;
+  role?: MidoriDialogRole;
 };
 
 export function DialogRoot(props: DialogRootProps): JSX.Element {
-  const merged = merge({ role: TOMUI_DIALOG_DEFAULT_VARIANTS.role }, props);
+  const merged = merge({ role: MIDORI_DIALOG_DEFAULT_VARIANTS.role }, props);
   const state = createDisclosureState({
     open: () => merged.open,
     defaultOpen: merged.defaultOpen,
@@ -255,8 +255,8 @@ export function DialogTrigger(props: DialogTriggerProps): JSX.Element {
   const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
-      data-tomui-component="Dialog"
-      data-tomui-part="trigger"
+      data-midori-component="Dialog"
+      data-midori-part="trigger"
       aria-haspopup="dialog"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       aria-controls={ctx.isOpen() ? ctx.contentId : undefined}
@@ -274,16 +274,16 @@ export function DialogTrigger(props: DialogTriggerProps): JSX.Element {
 
 export type DialogProps = {
   children?: JSX.Element;
-  size?: TomuiDialogSize;
+  size?: MidoriDialogSize;
   /** Responsive layout. Defaults to the centred panel. */
-  surface?: TomuiDialogSurface;
+  surface?: MidoriDialogSurface;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 function DialogContent(props: DialogProps): JSX.Element {
   const ctx = useContext(DialogContext);
-  const merged = merge({ size: TOMUI_DIALOG_DEFAULT_VARIANTS.size }, props);
+  const merged = merge({ size: MIDORI_DIALOG_DEFAULT_VARIANTS.size }, props);
   const rest = omit(merged, "children", "style", "size", "surface");
   const closeOnBackdrop = (): boolean => ctx.role() === "dialog";
 
@@ -319,15 +319,15 @@ function DialogContent(props: DialogProps): JSX.Element {
     <Show when={ctx.isOpen()}>
       <div {...stylex.attrs(styles.overlay)}>
         <div
-          data-tomui-component="Dialog"
-          data-tomui-part="backdrop"
+          data-midori-component="Dialog"
+          data-midori-part="backdrop"
           {...stylex.attrs(styles.backdrop)}
           onClick={() => {
             if (closeOnBackdrop()) ctx.close();
           }}
         />
         <div
-          data-tomui-component="Dialog"
+          data-midori-component="Dialog"
           id={ctx.contentId}
           role={ctx.role()}
           aria-modal="true"
@@ -361,8 +361,8 @@ export function DialogTitle(props: DialogTitleProps): JSX.Element {
   const rest = omit(merged, "children", "style");
   return (
     <h2
-      data-tomui-component="Dialog"
-      data-tomui-part="title"
+      data-midori-component="Dialog"
+      data-midori-part="title"
       id={ctx.titleId}
       {...stylex.attrs(styles.title, merged.style)}
       {...rest}
@@ -384,8 +384,8 @@ export function DialogDescription(props: DialogDescriptionProps): JSX.Element {
   const rest = omit(merged, "children", "style");
   return (
     <p
-      data-tomui-component="Dialog"
-      data-tomui-part="description"
+      data-midori-component="Dialog"
+      data-midori-part="description"
       id={ctx.descriptionId}
       {...stylex.attrs(styles.description, merged.style)}
       {...rest}
@@ -402,8 +402,8 @@ export type DialogCloseProps = Omit<
   children?: JSX.Element;
   onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent> | undefined;
   /** Render a full button instead of the header's icon-sized close control. */
-  variant?: TomuiButtonVariant | undefined;
-  size?: TomuiButtonSize | undefined;
+  variant?: MidoriButtonVariant | undefined;
+  size?: MidoriButtonSize | undefined;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
@@ -431,8 +431,8 @@ export function DialogClose(props: DialogCloseProps): JSX.Element {
       when={merged.variant}
       fallback={
         <button
-          data-tomui-component="Dialog"
-          data-tomui-part="close"
+          data-midori-component="Dialog"
+          data-midori-part="close"
           {...stylex.attrs(styles.close, merged.style)}
           onClick={handleClick}
           {...rest}
@@ -446,8 +446,8 @@ export function DialogClose(props: DialogCloseProps): JSX.Element {
     >
       {(variant) => (
         <Button
-          data-tomui-component="Dialog"
-          data-tomui-part="close"
+          data-midori-component="Dialog"
+          data-midori-part="close"
           variant={variant()}
           size={merged.size ?? "base"}
           style={merged.style}
@@ -472,7 +472,7 @@ export type DialogHeaderProps = {
 function DialogHeader(props: DialogHeaderProps): JSX.Element {
   const merged = merge({ hideClose: false }, props);
   return (
-    <div data-tomui-part="header" {...stylex.attrs(styles.header, merged.style)}>
+    <div data-midori-part="header" {...stylex.attrs(styles.header, merged.style)}>
       {merged.children}
       <Show when={!merged.hideClose}>
         <DialogClose aria-label={merged.closeLabel} />
@@ -488,7 +488,7 @@ export type DialogTitleGroupProps = {
 
 function DialogTitleGroup(props: DialogTitleGroupProps): JSX.Element {
   return (
-    <div data-tomui-part="title-group" {...stylex.attrs(styles.titleGroup)}>
+    <div data-midori-part="title-group" {...stylex.attrs(styles.titleGroup)}>
       <Show when={props.title}>{(title) => <DialogTitle>{title()}</DialogTitle>}</Show>
       <Show when={props.description}>
         {(description) => <DialogDescription>{description()}</DialogDescription>}
@@ -505,7 +505,7 @@ export type DialogSectionProps = {
 
 function DialogBody(props: DialogSectionProps): JSX.Element {
   return (
-    <div data-tomui-part="body" {...stylex.attrs(styles.body, props.style)}>
+    <div data-midori-part="body" {...stylex.attrs(styles.body, props.style)}>
       {props.children}
     </div>
   );
@@ -513,7 +513,7 @@ function DialogBody(props: DialogSectionProps): JSX.Element {
 
 function DialogFooter(props: DialogSectionProps): JSX.Element {
   return (
-    <div data-tomui-part="footer" {...stylex.attrs(styles.footer, props.style)}>
+    <div data-midori-part="footer" {...stylex.attrs(styles.footer, props.style)}>
       {props.children}
     </div>
   );

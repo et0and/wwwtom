@@ -53,7 +53,7 @@ describe("icon tokens", () => {
     expect(iconColorValue("current")).toBe("currentColor");
     expect(iconColorValue("white")).toBe("#ffffff");
     expect(iconColorValue("black")).toBe("#000000");
-    expect(iconColorValue("brand")).toContain("tomui");
+    expect(iconColorValue("brand")).toContain("midori");
   });
 
   it("uses sensible defaults", () => {

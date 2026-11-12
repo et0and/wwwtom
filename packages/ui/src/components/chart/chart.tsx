@@ -11,13 +11,13 @@ const styles = stylex.create({
   host: { display: "contents" },
 });
 
-export const TOMUI_CHART_DEFAULT_VARIANTS = {
+export const MIDORI_CHART_DEFAULT_VARIANTS = {
   type: "line",
   size: "base",
 } as const;
 
-export type TomuiChartType = "line" | "bar" | "sparkline" | "timeseries";
-export type TomuiChartSize = "sm" | "base" | "lg";
+export type MidoriChartType = "line" | "bar" | "sparkline" | "timeseries";
+export type MidoriChartSize = "sm" | "base" | "lg";
 
 export interface ChartDatum {
   label: string;
@@ -29,8 +29,8 @@ export type ChartProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style"> & {
   data?: Array<ChartDatum>;
   height?: number;
   renderChart?: (el: HTMLDivElement) => void;
-  size?: TomuiChartSize;
-  type?: TomuiChartType;
+  size?: MidoriChartSize;
+  type?: MidoriChartType;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
@@ -39,12 +39,12 @@ const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiChartSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriChartSize, stylex.StyleXStyles>;
 
 export function chartVariants(
-  props: { type?: TomuiChartType; size?: TomuiChartSize } = {},
+  props: { type?: MidoriChartType; size?: MidoriChartSize } = {},
 ): Array<stylex.StyleXStyles> {
-  const merged = merge(TOMUI_CHART_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_CHART_DEFAULT_VARIANTS, props);
   return [styles.root, sizeStyles[merged.size]];
 }
 
@@ -67,7 +67,7 @@ interface ChartHostRef {
   current?: HTMLDivElement | undefined;
 }
 
-function Sparkline(props: { data: Array<ChartDatum>; type: TomuiChartType }): JSX.Element {
+function Sparkline(props: { data: Array<ChartDatum>; type: MidoriChartType }): JSX.Element {
   const width = 300;
   const height = 80;
   const points = () => toPoints(props.data, width, height);
@@ -105,7 +105,7 @@ function Sparkline(props: { data: Array<ChartDatum>; type: TomuiChartType }): JS
 
 export function Chart(props: ChartProps) {
   const merged = merge(
-    { size: TOMUI_CHART_DEFAULT_VARIANTS.size, type: TOMUI_CHART_DEFAULT_VARIANTS.type },
+    { size: MIDORI_CHART_DEFAULT_VARIANTS.size, type: MIDORI_CHART_DEFAULT_VARIANTS.type },
     props,
   );
   const rest = omit(merged, "children", "style", "data", "height", "renderChart", "size", "type");
@@ -122,7 +122,7 @@ export function Chart(props: ChartProps) {
   });
   return (
     <div
-      data-tomui-component="Chart"
+      data-midori-component="Chart"
       {...stylex.attrs(...chartVariants({ size: merged.size, type: merged.type }), merged.style)}
       style={inlineStyle()}
       {...rest}

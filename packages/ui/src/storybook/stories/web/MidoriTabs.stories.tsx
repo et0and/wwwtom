@@ -22,7 +22,7 @@ export const Segmented = meta.story({
   args: {
     variant: "segmented",
     tabs,
-    value: "overview",
+    defaultValue: "overview",
   },
 });
 
@@ -30,7 +30,7 @@ export const Underline = meta.story({
   args: {
     variant: "underline",
     tabs,
-    value: "posts",
+    defaultValue: "posts",
   },
 });
 
@@ -38,7 +38,7 @@ export const Line = meta.story({
   args: {
     variant: "line",
     tabs,
-    value: "overview",
+    defaultValue: "overview",
   },
 });
 
@@ -46,13 +46,13 @@ export const Small = meta.story({
   args: {
     size: "sm",
     tabs,
-    value: "overview",
+    defaultValue: "overview",
   },
 });
 
 export const WithDisabled = meta.story({
   args: {
     tabs: [...tabs, { value: "archived", label: "Archived", disabled: true }],
-    value: "overview",
+    defaultValue: "overview",
   },
 });

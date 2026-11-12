@@ -11,7 +11,7 @@ describe("Code", () => {
     const pre = container.querySelector("pre")!;
 
     expect(pre.textContent).toBe("const x = 1;");
-    expect(pre.dataset.tomuiComponent).toBe("Code");
+    expect(pre.dataset.midoriComponent).toBe("Code");
   });
 
   it("applies styles", () => {

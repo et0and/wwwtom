@@ -6,11 +6,11 @@ import { colors, textColors } from "../../styles/colors.stylex";
 import { monoFont, radius } from "../../styles/primitives.stylex";
 import { fontSizeMd } from "../../styles/typography.stylex";
 
-export const TOMUI_EMPTY_DEFAULT_VARIANTS = {
+export const MIDORI_EMPTY_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiEmptySize = "sm" | "base" | "lg";
+export type MidoriEmptySize = "sm" | "base" | "lg";
 
 const styles = stylex.create({
   root: {
@@ -20,10 +20,10 @@ const styles = stylex.create({
     alignItems: "center",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-hairline"],
+    borderColor: colors["--color-midori-hairline"],
     borderRadius: radius.card,
-    backgroundColor: colors["--color-tomui-layer-01"],
-    color: textColors["--text-color-tomui-default"],
+    backgroundColor: colors["--color-midori-layer-01"],
+    color: textColors["--text-color-midori-default"],
   },
   sizeSm: { padding: "1.5rem 1.25rem", gap: "0.75rem" },
   sizeBase: { padding: "2.5rem 2rem", gap: "1rem" },
@@ -40,7 +40,7 @@ const styles = stylex.create({
     textWrap: "balance",
     fontSize: "14px",
     lineHeight: "20px",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
   command: {
     position: "relative",
@@ -52,13 +52,13 @@ const styles = stylex.create({
     paddingInlineStart: "0.75rem",
     paddingInlineEnd: "0.5rem",
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-layer-02"],
-    boxShadow: "inset 0 0 0 0.5px " + colors["--color-tomui-line"],
+    backgroundColor: colors["--color-midori-layer-02"],
+    boxShadow: "inset 0 0 0 0.5px " + colors["--color-midori-line"],
     willChange: "transform",
     fontFamily: monoFont.fontFamily,
   },
   commandRow: { display: "inline-flex", minWidth: 0, alignItems: "baseline", gap: "0.5rem" },
-  commandPrompt: { color: textColors["--text-color-tomui-subtle"], userSelect: "none" },
+  commandPrompt: { color: textColors["--text-color-midori-subtle"], userSelect: "none" },
   /** The command scrolls rather than wraps, so its scrollbar is hidden. */
   commandText: {
     overflowX: "scroll",
@@ -70,15 +70,15 @@ const styles = stylex.create({
   },
   checkMark: {
     // StyleX only accepts from/to frames, so the three-step bounce is defined
-    // in tomui-binding.css and referenced by name.
+    // in midori-binding.css and referenced by name.
     animationName: "bounce-in",
     animationDuration: "0.4s",
     animationTimingFunction: "ease-out",
-    color: textColors["--text-color-tomui-success"],
+    color: textColors["--text-color-midori-success"],
   },
 });
 
-export interface TomuiEmptyVariantsProps {
+export interface MidoriEmptyVariantsProps {
   /**
    * Size of the empty state container.
    * - `"sm"` — Compact empty state for smaller containers
@@ -86,17 +86,17 @@ export interface TomuiEmptyVariantsProps {
    * - `"lg"` — Large empty state for prominent placement
    * @default "base"
    */
-  size?: TomuiEmptySize;
+  size?: MidoriEmptySize;
 }
 
 const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiEmptySize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriEmptySize, stylex.StyleXStyles>;
 
-export function emptyVariants(props: TomuiEmptyVariantsProps = {}) {
-  const merged = merge(TOMUI_EMPTY_DEFAULT_VARIANTS, props);
+export function emptyVariants(props: MidoriEmptyVariantsProps = {}) {
+  const merged = merge(MIDORI_EMPTY_DEFAULT_VARIANTS, props);
   return [styles.root, sizeStyles[merged.size]];
 }
 
@@ -113,7 +113,7 @@ export function emptyVariants(props: TomuiEmptyVariantsProps = {}) {
  * />
  * ```
  */
-export interface EmptyProps extends TomuiEmptyVariantsProps {
+export interface EmptyProps extends MidoriEmptyVariantsProps {
   /** Decorative icon displayed above the title. */
   icon?: JSX.Element;
   /** Primary heading text for the empty state. */
@@ -176,7 +176,7 @@ function CopyMarkIcon(): JSX.Element {
  * ```
  */
 export function Empty(props: EmptyProps): JSX.Element {
-  const merged = merge({ size: TOMUI_EMPTY_DEFAULT_VARIANTS.size }, props);
+  const merged = merge({ size: MIDORI_EMPTY_DEFAULT_VARIANTS.size }, props);
   const rest = omit(
     merged,
     "style",
@@ -208,7 +208,7 @@ export function Empty(props: EmptyProps): JSX.Element {
 
   return (
     <div
-      data-tomui-component="Empty"
+      data-midori-component="Empty"
       {...stylex.attrs(...emptyVariants({ size: merged.size }), merged.style)}
       ref={merged.ref}
       {...rest}

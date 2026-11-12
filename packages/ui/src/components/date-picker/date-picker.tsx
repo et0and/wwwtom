@@ -1,31 +1,31 @@
 import * as stylex from "@stylexjs/stylex";
-import { merge, omit } from "solid-js";
+import { createSignal, merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 
-export const TOMUI_DATE_PICKER_DEFAULT_VARIANTS = {
+export const MIDORI_DATE_PICKER_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
-export type TomuiDatePickerSize = "xs" | "sm" | "base" | "lg";
+export type MidoriDatePickerSize = "xs" | "sm" | "base" | "lg";
 
 const styles = stylex.create({
   base: {
     borderWidth: 0,
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-control"],
-    color: textColors["--text-color-tomui-default"],
+    backgroundColor: colors["--color-midori-control"],
+    color: textColors["--text-color-midori-default"],
     fontFamily: "inherit",
     userSelect: "none",
     outlineWidth: "1px",
     outlineStyle: "solid",
     outlineColor: "transparent",
     outlineOffset: "-1px",
-    boxShadow: elevation["--elevation-tomui-input"],
-    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
-    ":focus": { outlineColor: colors["--color-tomui-focus"], boxShadow: "none" },
+    boxShadow: elevation["--elevation-midori-input"],
+    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
+    ":focus": { outlineColor: colors["--color-midori-focus"], boxShadow: "none" },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
   sizeXs: { height: "1.5rem", paddingInline: "0.5rem", fontSize: "12px" },
@@ -39,12 +39,12 @@ const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiDatePickerSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriDatePickerSize, stylex.StyleXStyles>;
 
 /** The return type is inferred because StyleX types a pseudo-only member as a
     pseudo map, which `stylex.StyleXStyles` does not cover. */
-export function datePickerVariants(props: { size?: TomuiDatePickerSize } = {}) {
-  const merged = merge(TOMUI_DATE_PICKER_DEFAULT_VARIANTS, props);
+export function datePickerVariants(props: { size?: MidoriDatePickerSize } = {}) {
+  const merged = merge(MIDORI_DATE_PICKER_DEFAULT_VARIANTS, props);
   return [styles.base, sizeStyles[merged.size]];
 }
 
@@ -52,25 +52,30 @@ export type DatePickerProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
   "type" | "onChange" | "value" | "style"
 > & {
-  size?: TomuiDatePickerSize;
+  size?: MidoriDatePickerSize;
   value?: string;
+  defaultValue?: string;
   onChange?: (value: string) => void;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function DatePicker(props: DatePickerProps) {
-  const merged = merge({ size: TOMUI_DATE_PICKER_DEFAULT_VARIANTS.size }, props);
-  const rest = omit(merged, "style", "size", "value", "onChange");
+  const merged = merge({ size: MIDORI_DATE_PICKER_DEFAULT_VARIANTS.size }, props);
+  const rest = omit(merged, "style", "size", "value", "defaultValue", "onChange");
+  const [uncontrolledValue, setUncontrolledValue] = createSignal(merged.defaultValue ?? "");
+  const value = (): string => merged.value ?? uncontrolledValue();
   const handleChange: JSX.EventHandler<HTMLInputElement, Event> = (event) => {
-    merged.onChange?.(event.currentTarget.value);
+    const next = event.currentTarget.value;
+    if (merged.value === undefined) setUncontrolledValue(next);
+    merged.onChange?.(next);
   };
   return (
     <input
-      data-tomui-component="DatePicker"
+      data-midori-component="DatePicker"
       type="date"
       {...stylex.attrs(...datePickerVariants({ size: merged.size }), merged.style)}
-      value={merged.value ?? ""}
+      value={value()}
       onChange={handleChange}
       {...rest}
     />

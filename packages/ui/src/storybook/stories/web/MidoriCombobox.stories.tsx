@@ -36,6 +36,7 @@ export const WithSearchInput = meta.story({
           <Combobox.List items={frameworks}>
             {(item) => <Combobox.Item value={item}>{item}</Combobox.Item>}
           </Combobox.List>
+          <Combobox.Empty>No frameworks found.</Combobox.Empty>
         </Combobox.Content>
       </Combobox>
     </div>
@@ -51,6 +52,7 @@ export const Multiple = meta.story({
           <Combobox.List items={frameworks}>
             {(item) => <Combobox.Item value={item}>{item}</Combobox.Item>}
           </Combobox.List>
+          <Combobox.Empty>No frameworks found.</Combobox.Empty>
         </Combobox.Content>
       </Combobox>
     </div>

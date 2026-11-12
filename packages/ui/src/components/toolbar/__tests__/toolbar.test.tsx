@@ -13,7 +13,7 @@ describe("Toolbar", () => {
         <Toolbar.Button>Bold</Toolbar.Button>
       </Toolbar>
     ));
-    const root = container.querySelector("[data-tomui-component=Toolbar]");
+    const root = container.querySelector("[data-midori-component=Toolbar]");
     expect(root?.getAttribute("role")).toBe("toolbar");
     expect(root?.textContent).toBe("Bold");
   });
@@ -21,7 +21,7 @@ describe("Toolbar", () => {
   it("applies caller style last so it can override the root", () => {
     const override = stylex.create({ wide: { width: "100%" } });
     const { container } = render(() => <Toolbar style={override.wide} />);
-    const root = container.querySelector("[data-tomui-component=Toolbar]")!;
+    const root = container.querySelector("[data-midori-component=Toolbar]")!;
     expect(classList(root).length).toBeGreaterThan(0);
   });
 
@@ -31,7 +31,7 @@ describe("Toolbar", () => {
         <Toolbar.Button icon={<span aria-hidden="true">B</span>}>Bold</Toolbar.Button>
       </Toolbar>
     ));
-    const button = container.querySelector("[data-tomui-component='Toolbar.Button']")!;
+    const button = container.querySelector("[data-midori-component='Toolbar.Button']")!;
     expect(button.textContent).toBe("BBold");
   });
 
@@ -41,7 +41,7 @@ describe("Toolbar", () => {
         <Toolbar.Button loading>Saving</Toolbar.Button>
       </Toolbar>
     ));
-    const button = container.querySelector("[data-tomui-component='Toolbar.Button']")!;
+    const button = container.querySelector("[data-midori-component='Toolbar.Button']")!;
     expect(button.getAttribute("aria-busy")).toBe("true");
     expect(button.hasAttribute("disabled")).toBe(true);
   });
@@ -52,7 +52,7 @@ describe("Toolbar", () => {
         <Toolbar.Link href="#overview">Overview</Toolbar.Link>
       </Toolbar>
     ));
-    const link = container.querySelector("[data-tomui-component='Toolbar.Link']")!;
+    const link = container.querySelector("[data-midori-component='Toolbar.Link']")!;
     expect(link.getAttribute("href")).toBe("#overview");
   });
 
@@ -64,8 +64,8 @@ describe("Toolbar", () => {
         </Toolbar.InputGroup>
       </Toolbar>
     ));
-    const input = container.querySelector("[data-tomui-component='Toolbar.Input']")!;
-    expect(input.getAttribute("data-tomui-toolbar-input")).toBe("");
+    const input = container.querySelector("[data-midori-component='Toolbar.Input']")!;
+    expect(input.getAttribute("data-midori-toolbar-input")).toBe("");
     expect(input.getAttribute("placeholder")).toBe("Search docs");
   });
 });

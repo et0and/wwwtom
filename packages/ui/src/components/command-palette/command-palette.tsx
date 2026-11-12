@@ -17,7 +17,7 @@ const styles = stylex.create({
   overlay: {
     position: "fixed",
     inset: 0,
-    backgroundColor: colors["--color-tomui-overlay-scrim"],
+    backgroundColor: colors["--color-midori-overlay-scrim"],
     transitionProperty: "opacity",
     transitionDuration: "150ms",
     ":is([data-ending-style])": { opacity: 0 },
@@ -32,10 +32,10 @@ const styles = stylex.create({
     overflow: "hidden",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-hairline"],
+    borderColor: colors["--color-midori-hairline"],
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-layer-01"],
-    boxShadow: elevation["--elevation-tomui-overlay"],
+    backgroundColor: colors["--color-midori-layer-01"],
+    boxShadow: elevation["--elevation-midori-overlay"],
     transform: "translateX(-50%)",
   },
   input: {
@@ -43,16 +43,16 @@ const styles = stylex.create({
     borderWidth: 0,
     borderBottomWidth: "0.5px",
     borderBottomStyle: "solid",
-    borderBottomColor: colors["--color-tomui-hairline"],
+    borderBottomColor: colors["--color-midori-hairline"],
     backgroundColor: "transparent",
     paddingBlock: "0.625rem",
     paddingInline: "0.75rem",
     fontSize: fontSizeSm.fontSize,
     fontWeight: 440,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     outlineWidth: 0,
     outlineStyle: "none",
-    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
+    "::placeholder": { color: textColors["--text-color-midori-placeholder"] },
   },
   list: {
     maxHeight: "20rem",
@@ -63,7 +63,7 @@ const styles = stylex.create({
     padding: "1.5rem 0.5rem",
     textAlign: "center",
     fontSize: fontSizeXs.fontSize,
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
   item: {
     display: "flex",
@@ -75,8 +75,8 @@ const styles = stylex.create({
     paddingInline: "0.5rem",
     textAlign: "left",
     fontSize: fontSizeSm.fontSize,
-    color: textColors["--text-color-tomui-default"],
-    ":is([data-active])": { backgroundColor: colors["--color-tomui-overlay-hover"] },
+    color: textColors["--text-color-midori-default"],
+    ":is([data-active])": { backgroundColor: colors["--color-midori-overlay-hover"] },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
   itemLabel: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
@@ -84,7 +84,7 @@ const styles = stylex.create({
     marginInlineStart: "auto",
     flexShrink: 0,
     fontSize: fontSizeXs.fontSize,
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
 });
 
@@ -99,6 +99,7 @@ export type CommandPaletteProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "onSe
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
   open?: boolean;
+  defaultOpen?: boolean;
   items?: ReadonlyArray<CommandPaletteItem>;
   placeholder?: string;
   emptyMessage?: string;
@@ -109,7 +110,7 @@ export type CommandPaletteProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "onSe
 export function CommandPalette(props: CommandPaletteProps) {
   const merged = merge(
     {
-      open: false,
+      defaultOpen: false,
       items: [] as ReadonlyArray<CommandPaletteItem>,
       placeholder: "Search...",
       emptyMessage: "No results found",
@@ -121,6 +122,7 @@ export function CommandPalette(props: CommandPaletteProps) {
     "children",
     "style",
     "open",
+    "defaultOpen",
     "items",
     "placeholder",
     "emptyMessage",
@@ -130,7 +132,9 @@ export function CommandPalette(props: CommandPaletteProps) {
 
   const [query, setQuery] = createSignal("");
   const [activeIndex, setActiveIndex] = createSignal(0);
+  const [uncontrolledOpen, setUncontrolledOpen] = createSignal(merged.defaultOpen);
   const [contentEl, setContentEl] = createSignal<HTMLElement>();
+  const isOpen = (): boolean => merged.open ?? uncontrolledOpen();
 
   const filtered = createMemo(() => {
     const needle = query().trim().toLowerCase();
@@ -140,7 +144,10 @@ export function CommandPalette(props: CommandPaletteProps) {
   });
   const selectable = createMemo(() => filtered().filter((item) => !item.disabled));
 
-  const close = () => merged.onOpenChange?.(false);
+  const close = () => {
+    if (merged.open === undefined) setUncontrolledOpen(false);
+    merged.onOpenChange?.(false);
+  };
 
   const choose = (item: CommandPaletteItem | undefined) => {
     if (!item || item.disabled) return;
@@ -174,12 +181,12 @@ export function CommandPalette(props: CommandPaletteProps) {
   };
 
   createDismissableLayer(contentEl, {
-    enabled: () => merged.open,
+    enabled: isOpen,
     onDismiss: () => close(),
   });
 
   createFocusScope(contentEl, {
-    enabled: () => merged.open,
+    enabled: isOpen,
     trapFocus: true,
     onMountAutoFocus: (e) => {
       e.preventDefault();
@@ -189,22 +196,22 @@ export function CommandPalette(props: CommandPaletteProps) {
   });
 
   createHideOutside({
-    enabled: () => merged.open,
+    enabled: isOpen,
     targets: () => [contentEl()],
   });
 
-  createPreventScroll(() => merged.open);
+  createPreventScroll(isOpen);
 
   return (
-    <Show when={merged.open}>
+    <Show when={isOpen()}>
       <div
         {...stylex.attrs(styles.overlay)}
-        data-tomui-component="CommandPaletteBackdrop"
+        data-midori-component="CommandPaletteBackdrop"
         onClick={close}
         aria-hidden="true"
       />
       <div
-        data-tomui-component="CommandPalette"
+        data-midori-component="CommandPalette"
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
@@ -217,7 +224,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           type="text"
           role="combobox"
           aria-expanded="true"
-          aria-controls="tomui-command-palette-list"
+          aria-controls="midori-command-palette-list"
           aria-activedescendant={selectable()[activeIndex()]?.id}
           placeholder={merged.placeholder}
           value={query()}
@@ -225,7 +232,7 @@ export function CommandPalette(props: CommandPaletteProps) {
           onKeyDown={handleKeyDown}
           {...stylex.attrs(styles.input)}
         />
-        <div id="tomui-command-palette-list" role="listbox" {...stylex.attrs(styles.list)}>
+        <div id="midori-command-palette-list" role="listbox" {...stylex.attrs(styles.list)}>
           <Show
             when={filtered().length > 0}
             fallback={<p {...stylex.attrs(styles.empty)}>{merged.emptyMessage}</p>}

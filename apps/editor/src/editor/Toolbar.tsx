@@ -15,7 +15,7 @@ const BANNER_STYLES = CmsBannerStyleSchema.literals;
 const styles = stylex.create({
   toolbar: { minWidth: 0, maxWidth: "100%", overflowX: "auto" },
   button: { minHeight: "2.5rem", flexShrink: 0 },
-  buttonActive: { backgroundColor: colors["--color-tomui-fill"], fontWeight: 500 },
+  buttonActive: { backgroundColor: colors["--color-midori-fill"], fontWeight: 500 },
   glyphBold: { fontWeight: 700 },
   glyphItalic: { fontStyle: "italic" },
   selectLabelText: { fontSize: fontSizeXs.fontSize, lineHeight: fontSizeXs.lineHeight },

@@ -1,20 +1,20 @@
 import * as stylex from "@stylexjs/stylex";
-import { For, merge, omit, Show } from "solid-js";
+import { createSignal, For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_PAGINATION_DEFAULT_VARIANTS = {
+export const MIDORI_PAGINATION_DEFAULT_VARIANTS = {
   controls: "full",
 } as const;
 
-export type TomuiPaginationControls = "full" | "simple";
+export type MidoriPaginationControls = "full" | "simple";
 
-const line = colors["--color-tomui-line"];
-const base = colors["--color-tomui-button-neutral"];
-const tint = colors["--color-tomui-tint"];
-const defaultText = textColors["--text-color-tomui-default"];
+const line = colors["--color-midori-line"];
+const base = colors["--color-midori-button-neutral"];
+const tint = colors["--color-midori-tint"];
+const defaultText = textColors["--text-color-midori-default"];
 
 const styles = stylex.create({
   root: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" },
@@ -32,7 +32,7 @@ const styles = stylex.create({
     fontSize: fontSizeSm.fontSize,
     fontWeight: fontWeightControl.fontWeight,
     lineHeight: "20px",
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
     backgroundColor: base,
     color: defaultText,
     cursor: "pointer",
@@ -41,12 +41,12 @@ const styles = stylex.create({
     ":focus-visible": {
       outlineWidth: "2px",
       outlineStyle: "solid",
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
       outlineOffset: "2px",
     },
   },
   buttonActive: {
-    backgroundColor: colors["--color-tomui-layer-02"],
+    backgroundColor: colors["--color-midori-layer-02"],
     boxShadow: "inset 0 0 0 0.5px " + line,
     fontWeight: 530,
   },
@@ -60,8 +60,9 @@ function pageWindow(page: number, pageCount: number): Array<number> {
 }
 
 export type PaginationProps = Omit<JSX.HTMLAttributes<HTMLElement>, "onChange" | "style"> & {
-  controls?: TomuiPaginationControls;
+  controls?: MidoriPaginationControls;
   page?: number;
+  defaultPage?: number;
   pageCount?: number;
   onChange?: (page: number) => void;
   /** Caller styles, merged last so they win. */
@@ -70,7 +71,11 @@ export type PaginationProps = Omit<JSX.HTMLAttributes<HTMLElement>, "onChange" |
 
 export function Pagination(props: PaginationProps) {
   const merged = merge(
-    { controls: TOMUI_PAGINATION_DEFAULT_VARIANTS.controls, page: 1, pageCount: 1 },
+    {
+      controls: MIDORI_PAGINATION_DEFAULT_VARIANTS.controls,
+      defaultPage: 1,
+      pageCount: 1,
+    },
     props,
   );
   const rest = omit(
@@ -80,19 +85,23 @@ export function Pagination(props: PaginationProps) {
     "style",
     "controls",
     "page",
+    "defaultPage",
     "pageCount",
     "onChange",
   );
+  const [uncontrolledPage, setUncontrolledPage] = createSignal(merged.defaultPage);
   const safeCount = () => Math.max(1, merged.pageCount);
-  const current = () => Math.min(Math.max(merged.page, 1), safeCount());
+  const current = () => Math.min(Math.max(merged.page ?? uncontrolledPage(), 1), safeCount());
   const go = (page: number) => {
     const next = Math.min(Math.max(page, 1), safeCount());
-    if (next !== current()) merged.onChange?.(next);
+    if (next === current()) return;
+    if (merged.page === undefined) setUncontrolledPage(next);
+    merged.onChange?.(next);
   };
   const pages = () => pageWindow(current(), safeCount());
   return (
     <nav
-      data-tomui-component="Pagination"
+      data-midori-component="Pagination"
       aria-label="Pagination"
       {...stylex.attrs(styles.root, merged.style)}
       {...rest}

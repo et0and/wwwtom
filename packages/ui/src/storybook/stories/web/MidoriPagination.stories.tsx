@@ -12,21 +12,21 @@ const meta = preview.meta({
 
 export const FirstPage = meta.story({
   args: {
-    page: 1,
+    defaultPage: 1,
     pageCount: 10,
   },
 });
 
 export const MiddlePage = meta.story({
   args: {
-    page: 5,
+    defaultPage: 5,
     pageCount: 10,
   },
 });
 
 export const LastPage = meta.story({
   args: {
-    page: 10,
+    defaultPage: 10,
     pageCount: 10,
   },
 });
@@ -34,14 +34,14 @@ export const LastPage = meta.story({
 export const Simple = meta.story({
   args: {
     controls: "simple",
-    page: 3,
+    defaultPage: 3,
     pageCount: 8,
   },
 });
 
 export const SinglePage = meta.story({
   args: {
-    page: 1,
+    defaultPage: 1,
     pageCount: 1,
   },
 });

@@ -14,17 +14,17 @@ const isButtonLiteral = (attribute: ESTree.JSXAttribute): boolean => {
 	);
 };
 
-/** Disallow redundant type="button" on the TomUI Button. */
+/** Disallow redundant type="button" on the Midori Button. */
 export const noRedundantButtonTypeRule = defineRule({
 	meta: {
 		type: "problem",
 		docs: {
 			description:
-				'Disallow redundant type="button" on the TomUI Button; the component already defaults to button.',
+				'Disallow redundant type="button" on the Midori Button; the component already defaults to button.',
 		},
 		messages: {
 			redundantButtonType:
-				'TomUI Button already defaults to type="button". Remove the redundant attribute.',
+				'Midori Button already defaults to type="button". Remove the redundant attribute.',
 		},
 	},
 	create(context) {

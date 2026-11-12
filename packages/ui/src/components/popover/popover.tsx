@@ -17,12 +17,12 @@ import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_POPOVER_DEFAULT_VARIANTS = {
+export const MIDORI_POPOVER_DEFAULT_VARIANTS = {
   side: "bottom",
 } as const;
 
-export type TomuiPopoverSide = "top" | "bottom" | "left" | "right";
-export type TomuiPopoverAlign = "start" | "center" | "end";
+export type MidoriPopoverSide = "top" | "bottom" | "left" | "right";
+export type MidoriPopoverAlign = "start" | "center" | "end";
 
 /** Open/close transition states, driven by the dismissable layer utilities. */
 const STARTING = ":is([data-starting-style])";
@@ -40,13 +40,13 @@ const styles = stylex.create({
     flexDirection: "column",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-hairline"],
+    borderColor: colors["--color-midori-hairline"],
     borderRadius: radius.md,
-    backgroundColor: colors["--color-tomui-layer-01"],
+    backgroundColor: colors["--color-midori-layer-01"],
     padding: "0.75rem",
     fontSize: fontSizeSm.fontSize,
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: elevation["--elevation-tomui-floating"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-floating"],
     transitionProperty: "opacity, scale",
     transitionDuration: "120ms",
     [STARTING]: { opacity: 0, scale: 0.96 },
@@ -70,15 +70,15 @@ const styles = stylex.create({
     margin: 0,
     fontSize: fontSizeSm.fontSize,
     lineHeight: "20px",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
 
   // In dark mode the offset goes inward, to line up with the inner arrow stroke.
   darkOutline: { "@media (prefers-color-scheme: dark)": { outlineOffset: "-1px" } },
 
-  arrowFill: { fill: colors["--color-tomui-base"] },
-  arrowEdge: { fill: colors["--color-tomui-arrow-edge"] },
-  arrowStroke: { fill: colors["--color-tomui-arrow-stroke"] },
+  arrowFill: { fill: colors["--color-midori-base"] },
+  arrowEdge: { fill: colors["--color-midori-arrow-edge"] },
+  arrowStroke: { fill: colors["--color-midori-arrow-stroke"] },
 });
 
 const sideStyles = {
@@ -86,7 +86,7 @@ const sideStyles = {
   bottom: styles.sideBottom,
   left: styles.sideLeft,
   right: styles.sideRight,
-} as const satisfies Record<TomuiPopoverSide, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriPopoverSide, stylex.StyleXStyles>;
 
 interface PopoverContextValue {
   isOpen: () => boolean;
@@ -159,8 +159,8 @@ export function PopoverTrigger(props: PopoverTriggerProps): JSX.Element {
   const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
-      data-tomui-component="Popover"
-      data-tomui-part="trigger"
+      data-midori-component="Popover"
+      data-midori-part="trigger"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
       aria-controls={ctx.isOpen() ? ctx.contentId : undefined}
       ref={(el: HTMLButtonElement) => ctx.setTriggerRef(el)}
@@ -177,8 +177,8 @@ export function PopoverTrigger(props: PopoverTriggerProps): JSX.Element {
 
 export type PopoverContentProps = {
   children?: JSX.Element;
-  side?: TomuiPopoverSide;
-  align?: TomuiPopoverAlign;
+  side?: MidoriPopoverSide;
+  align?: MidoriPopoverAlign;
   sideOffset?: number;
   alignOffset?: number;
   /** Caller styles, merged last so they win. */
@@ -189,7 +189,7 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
   const ctx = useContext(PopoverContext);
   const merged = merge(
     {
-      side: TOMUI_POPOVER_DEFAULT_VARIANTS.side,
+      side: MIDORI_POPOVER_DEFAULT_VARIANTS.side,
       align: "center" as const,
     },
     props,
@@ -221,8 +221,8 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
     <Show when={ctx.isOpen()}>
       <div {...stylex.attrs(styles.wrapper)}>
         <div
-          data-tomui-component="Popover"
-          data-tomui-part="content"
+          data-midori-component="Popover"
+          data-midori-part="content"
           data-side={merged.side}
           data-align={merged.align}
           id={ctx.contentId}
@@ -255,8 +255,8 @@ export function PopoverTitle(props: PopoverTitleProps): JSX.Element {
   const rest = omit(merged, "children", "style");
   return (
     <h3
-      data-tomui-component="Popover"
-      data-tomui-part="title"
+      data-midori-component="Popover"
+      data-midori-part="title"
       {...stylex.attrs(styles.title, merged.style)}
       {...rest}
     >
@@ -276,8 +276,8 @@ export function PopoverDescription(props: PopoverDescriptionProps): JSX.Element 
   const rest = omit(merged, "children", "style");
   return (
     <p
-      data-tomui-component="Popover"
-      data-tomui-part="description"
+      data-midori-component="Popover"
+      data-midori-part="description"
       {...stylex.attrs(styles.description, merged.style)}
       {...rest}
     >
@@ -302,8 +302,8 @@ export function PopoverClose(props: PopoverCloseProps): JSX.Element {
   const rest = omit(merged, "children", "onClick", "style");
   return (
     <button
-      data-tomui-component="Popover"
-      data-tomui-part="close"
+      data-midori-component="Popover"
+      data-midori-part="close"
       aria-label="Close"
       onClick={(event) => {
         ctx.close();

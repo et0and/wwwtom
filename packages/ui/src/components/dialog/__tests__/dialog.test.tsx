@@ -48,8 +48,8 @@ describe("Dialog", () => {
     expect(titleId).toBeTruthy();
     expect(descriptionId).toBeTruthy();
     // The title and description carry the ids the panel points at.
-    expect(container.querySelector("[data-tomui-part=title]")!.id).toBe(titleId);
-    expect(container.querySelector("[data-tomui-part=description]")!.id).toBe(descriptionId);
+    expect(container.querySelector("[data-midori-part=title]")!.id).toBe(titleId);
+    expect(container.querySelector("[data-midori-part=description]")!.id).toBe(descriptionId);
   });
 
   it("uses the alertdialog role when asked", () => {
@@ -69,7 +69,7 @@ describe("Dialog", () => {
         <Dialog>body</Dialog>
       </Dialog.Root>
     ));
-    const trigger = container.querySelector("[data-tomui-part=trigger]")!;
+    const trigger = container.querySelector("[data-midori-part=trigger]")!;
 
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     expect(container.querySelector("[role=dialog]")).toBeNull();
@@ -86,7 +86,7 @@ describe("Dialog", () => {
   it("closes from the close button", async () => {
     const { container } = openDialog();
 
-    fireEvent.click(container.querySelector("[data-tomui-part=close]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=close]")!);
 
     await vi.waitFor(() => {
       expect(container.querySelector("[role=dialog]")).toBeNull();
@@ -107,7 +107,7 @@ describe("Dialog", () => {
     const outside = container.querySelector("button")!;
     expect(outside.getAttribute("aria-hidden")).toBe("true");
 
-    fireEvent.click(container.querySelector("[data-tomui-part=close]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=close]")!);
 
     await vi.waitFor(() => {
       expect(outside.hasAttribute("aria-hidden")).toBe(false);
@@ -125,7 +125,7 @@ describe("Dialog", () => {
       </Dialog.Root>
     ));
 
-    fireEvent.click(container.querySelector("[data-tomui-part=close]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=close]")!);
 
     await vi.waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -169,7 +169,7 @@ describe("Dialog", () => {
 
   it("closes on backdrop click for a dialog but not an alertdialog", async () => {
     const dialog = openDialog();
-    fireEvent.click(dialog.container.querySelector("[data-tomui-part=backdrop]")!);
+    fireEvent.click(dialog.container.querySelector("[data-midori-part=backdrop]")!);
     await vi.waitFor(() => {
       expect(dialog.container.querySelector("[role=dialog]")).toBeNull();
     });
@@ -179,7 +179,7 @@ describe("Dialog", () => {
         <Dialog>body</Dialog>
       </Dialog.Root>
     ));
-    fireEvent.click(alert.container.querySelector("[data-tomui-part=backdrop]")!);
+    fireEvent.click(alert.container.querySelector("[data-midori-part=backdrop]")!);
     expect(alert.container.querySelector("[role=alertdialog]")).not.toBeNull();
   });
 
@@ -219,12 +219,12 @@ describe("Dialog compound parts", () => {
       </Dialog.Root>
     ));
 
-    expect(container.querySelector("[data-tomui-part=header]")).not.toBeNull();
-    expect(container.querySelector("[data-tomui-part=body]")?.textContent).toContain(
+    expect(container.querySelector("[data-midori-part=header]")).not.toBeNull();
+    expect(container.querySelector("[data-midori-part=body]")?.textContent).toContain(
       "Body content",
     );
-    expect(container.querySelector("[data-tomui-part=footer]")).not.toBeNull();
-    expect(container.querySelector("[data-tomui-part=title]")?.textContent).toBe("Edit profile");
+    expect(container.querySelector("[data-midori-part=footer]")).not.toBeNull();
+    expect(container.querySelector("[data-midori-part=title]")?.textContent).toBe("Edit profile");
   });
 
   it("adds a header close control and renders a full button when a variant is given", () => {
@@ -241,11 +241,11 @@ describe("Dialog compound parts", () => {
       </Dialog.Root>
     ));
 
-    const closes = Array.from(container.querySelectorAll("[data-tomui-part=close]"));
+    const closes = Array.from(container.querySelectorAll("[data-midori-part=close]"));
     expect(closes.some((element) => element.getAttribute("aria-label") === "Close")).toBe(true);
     const save = closes.find((element) => element.textContent === "Save");
     expect(save).not.toBeUndefined();
-    expect(save!.getAttribute("data-tomui-component")).toBe("Dialog");
+    expect(save!.getAttribute("data-midori-component")).toBe("Dialog");
   });
 });
 

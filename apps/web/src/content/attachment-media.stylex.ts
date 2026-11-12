@@ -41,7 +41,7 @@ export const attachmentMediaStyles = stylex.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors["--color-tomui-tint"],
+    backgroundColor: colors["--color-midori-tint"],
   },
   figure: { margin: 0 },
 });

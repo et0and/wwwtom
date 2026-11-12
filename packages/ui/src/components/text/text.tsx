@@ -5,12 +5,12 @@ import * as stylex from "@stylexjs/stylex";
 import {
   BOLDABLE_VARIANTS,
   DEFAULT_ELEMENT_BY_VARIANT,
-  TOMUI_TEXT_DEFAULT_VARIANTS,
+  MIDORI_TEXT_DEFAULT_VARIANTS,
   resolveTextSizeStyle,
   textStyles,
   type TextElement,
-  type TomuiTextSize,
-  type TomuiTextVariant,
+  type MidoriTextSize,
+  type MidoriTextVariant,
 } from "./variants";
 
 /**
@@ -38,7 +38,7 @@ export interface TextProps {
    * - `"mono-secondary"` — Muted monospace text
    * @default "body"
    */
-  variant?: TomuiTextVariant;
+  variant?: MidoriTextVariant;
   /**
    * Text size. Supported values depend on the variant:
    * - `"heading"` — 16px when omitted, or 20px with `"lg"`
@@ -47,7 +47,7 @@ export interface TextProps {
    * - Monospace variants — 13px when omitted, or 14px with `"lg"`
    * @default "base"
    */
-  size?: TomuiTextSize;
+  size?: MidoriTextSize;
   /** Whether to use bold font weight (only applies to body variants). */
   bold?: boolean;
   /** Whether to truncate overflowing text with an ellipsis. */
@@ -90,9 +90,9 @@ export interface TextProps {
 export function Text(props: TextProps): JSX.Element {
   const merged = merge(
     {
-      variant: TOMUI_TEXT_DEFAULT_VARIANTS.variant,
+      variant: MIDORI_TEXT_DEFAULT_VARIANTS.variant,
       bold: false,
-      size: TOMUI_TEXT_DEFAULT_VARIANTS.size,
+      size: MIDORI_TEXT_DEFAULT_VARIANTS.size,
       truncate: false,
     },
     props,
@@ -121,7 +121,7 @@ export function Text(props: TextProps): JSX.Element {
   return (
     <Dynamic
       component={merged.as ?? DEFAULT_ELEMENT_BY_VARIANT[merged.variant]}
-      data-tomui-component="Text"
+      data-midori-component="Text"
       {...attrs()}
       id={merged.id}
       title={merged.title}

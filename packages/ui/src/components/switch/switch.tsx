@@ -7,13 +7,13 @@ import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createToggleState } from "../../utils/state";
 import { Field } from "../field/field";
 
-export const TOMUI_SWITCH_DEFAULT_VARIANTS = {
+export const MIDORI_SWITCH_DEFAULT_VARIANTS = {
   size: "base",
   variant: "default",
 } as const;
 
-export type TomuiSwitchSize = "sm" | "base" | "lg";
-export type TomuiSwitchVariant = "default" | "neutral";
+export type MidoriSwitchSize = "sm" | "base" | "lg";
+export type MidoriSwitchVariant = "default" | "neutral";
 
 const REDUCED_MOTION = "@media (prefers-reduced-motion: reduce)";
 
@@ -40,35 +40,35 @@ const styles = stylex.create({
     outlineStyle: "solid",
     outlineColor: "transparent",
     outlineOffset: "1px",
-    backgroundColor: colors["--color-tomui-layer-04"],
+    backgroundColor: colors["--color-midori-layer-04"],
     backgroundImage:
       "linear-gradient(180deg, " +
-      colors["--color-tomui-sheen-bottom"] +
+      colors["--color-midori-sheen-bottom"] +
       " 0%, " +
-      colors["--color-tomui-sheen-top"] +
+      colors["--color-midori-sheen-top"] +
       " 100%)",
-    boxShadow: elevation["--elevation-tomui-switch-off"],
+    boxShadow: elevation["--elevation-midori-switch-off"],
     transitionProperty: "background-color, opacity, outline-color",
     transitionDuration: "90ms",
     transitionTimingFunction: "ease-out",
     [REDUCED_MOTION]: { transitionProperty: "none" },
     ":focus-visible": {
       outlineWidth: "2px",
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
     },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
   trackOnDefault: {
-    backgroundColor: colors["--color-tomui-brand"],
-    boxShadow: elevation["--elevation-tomui-switch-on"],
+    backgroundColor: colors["--color-midori-brand"],
+    boxShadow: elevation["--elevation-midori-switch-on"],
   },
   trackOnNeutral: {
-    backgroundColor: colors["--color-tomui-contrast"],
-    boxShadow: elevation["--elevation-tomui-switch-on"],
+    backgroundColor: colors["--color-midori-contrast"],
+    boxShadow: elevation["--elevation-midori-switch-on"],
   },
   trackOffNeutral: {
-    backgroundColor: colors["--color-tomui-layer-03"],
-    boxShadow: elevation["--elevation-tomui-switch-off"],
+    backgroundColor: colors["--color-midori-layer-03"],
+    boxShadow: elevation["--elevation-midori-switch-off"],
   },
   thumb: {
     position: "absolute",
@@ -78,12 +78,12 @@ const styles = stylex.create({
     borderRadius: "2px",
     backgroundImage:
       "linear-gradient(180deg, " +
-      colors["--color-tomui-sheen-top"] +
+      colors["--color-midori-sheen-top"] +
       " 0%, " +
-      colors["--color-tomui-sheen-bottom"] +
+      colors["--color-midori-sheen-bottom"] +
       " 100%)",
-    backgroundColor: colors["--color-tomui-switch-thumb"],
-    boxShadow: elevation["--elevation-tomui-elements"],
+    backgroundColor: colors["--color-midori-switch-thumb"],
+    boxShadow: elevation["--elevation-midori-elements"],
     transitionProperty: "inset-inline-start, background-color",
     transitionDuration: "90ms",
     transitionTimingFunction: "ease-out",
@@ -96,18 +96,18 @@ const styles = stylex.create({
   thumbOnBase: { insetInlineStart: "0.625rem" },
   thumbOnLg: { insetInlineStart: "0.75rem" },
   thumbOnDefault: {
-    backgroundColor: colors["--color-tomui-switch-thumb-on"],
+    backgroundColor: colors["--color-midori-switch-thumb-on"],
   },
   legend: {
     fontSize: fontSizeSm.fontSize,
     fontWeight: 530,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
   group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
   groupRow: { display: "flex", flexDirection: "column", gap: "0.5rem" },
   message: { fontSize: fontSizeXs.fontSize },
-  messageDanger: { color: textColors["--text-color-tomui-danger"] },
-  messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
+  messageDanger: { color: textColors["--text-color-midori-danger"] },
+  messageSubtle: { color: textColors["--text-color-midori-subtle"] },
   itemLabel: {
     position: "relative",
     margin: 0,
@@ -121,7 +121,7 @@ const styles = stylex.create({
   itemText: {
     fontSize: fontSizeSm.fontSize,
     fontWeight: 440,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
 });
 
@@ -129,31 +129,31 @@ const wrapperSizes = {
   sm: styles.wrapperSm,
   base: styles.wrapperBase,
   lg: styles.wrapperLg,
-} as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriSwitchSize, stylex.StyleXStyles>;
 const thumbSizes = {
   sm: styles.thumbSm,
   base: styles.thumbBase,
   lg: styles.thumbLg,
-} as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriSwitchSize, stylex.StyleXStyles>;
 const thumbPositions = {
   sm: styles.thumbOnSm,
   base: styles.thumbOnBase,
   lg: styles.thumbOnLg,
-} as const satisfies Record<TomuiSwitchSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriSwitchSize, stylex.StyleXStyles>;
 
-export interface TomuiSwitchVariantsProps {
-  size?: TomuiSwitchSize | undefined;
-  variant?: TomuiSwitchVariant | undefined;
+export interface MidoriSwitchVariantsProps {
+  size?: MidoriSwitchSize | undefined;
+  variant?: MidoriSwitchVariant | undefined;
 }
 
 const trackStateStyles = {
   default: { on: styles.trackOnDefault, off: undefined },
   neutral: { on: styles.trackOnNeutral, off: styles.trackOffNeutral },
-} as const satisfies Record<TomuiSwitchVariant, Record<string, stylex.StyleXStyles | undefined>>;
+} as const satisfies Record<MidoriSwitchVariant, Record<string, stylex.StyleXStyles | undefined>>;
 
 /** Both states are returned; the caller picks with `state.isSelected()`. */
-export function switchVariants(props: TomuiSwitchVariantsProps = {}) {
-  const merged = merge(TOMUI_SWITCH_DEFAULT_VARIANTS, props);
+export function switchVariants(props: MidoriSwitchVariantsProps = {}) {
+  const merged = merge(MIDORI_SWITCH_DEFAULT_VARIANTS, props);
   return {
     wrapper: [styles.wrapper, wrapperSizes[merged.size]],
     track: [styles.track],
@@ -164,11 +164,11 @@ export function switchVariants(props: TomuiSwitchVariantsProps = {}) {
 
 /** Thumb geometry for the current size and selection state. */
 export function switchThumbVariants(props: {
-  size?: TomuiSwitchSize | undefined;
+  size?: MidoriSwitchSize | undefined;
   checked?: boolean | undefined;
-  variant?: TomuiSwitchVariant | undefined;
+  variant?: MidoriSwitchVariant | undefined;
 }): stylex.StyleXStyles[] {
-  const merged = merge({ size: TOMUI_SWITCH_DEFAULT_VARIANTS.size, checked: false }, props);
+  const merged = merge({ size: MIDORI_SWITCH_DEFAULT_VARIANTS.size, checked: false }, props);
   return [
     styles.thumb,
     thumbSizes[merged.size],
@@ -181,12 +181,12 @@ export type SwitchProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
   "type" | "size" | "onChange" | "checked" | "defaultChecked" | "style"
 > & {
-  variant?: TomuiSwitchVariant | undefined;
+  variant?: MidoriSwitchVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   required?: boolean | undefined;
   controlFirst?: boolean | undefined;
-  size?: TomuiSwitchSize | undefined;
+  size?: MidoriSwitchSize | undefined;
   checked?: boolean | undefined;
   defaultChecked?: boolean | undefined;
   disabled?: boolean | undefined;
@@ -201,8 +201,8 @@ export type SwitchProps = Omit<
 function SwitchControl(props: SwitchProps): JSX.Element {
   const merged = merge(
     {
-      size: TOMUI_SWITCH_DEFAULT_VARIANTS.size,
-      variant: TOMUI_SWITCH_DEFAULT_VARIANTS.variant,
+      size: MIDORI_SWITCH_DEFAULT_VARIANTS.size,
+      variant: MIDORI_SWITCH_DEFAULT_VARIANTS.variant,
     },
     props,
   );
@@ -269,7 +269,7 @@ function SwitchControl(props: SwitchProps): JSX.Element {
       }}
     >
       <input
-        data-tomui-component="Switch"
+        data-midori-component="Switch"
         type="checkbox"
         role="switch"
         id={merged.id ?? inputId}
@@ -311,7 +311,7 @@ function SwitchControl(props: SwitchProps): JSX.Element {
         {...rest}
       />
       {/* The checked offset slides the thumb across the track. StyleX has no
-          sibling selector, so those three rules live in tomui-binding.css. */}
+          sibling selector, so those three rules live in midori-binding.css. */}
       <span
         aria-hidden="true"
         data-slot="switch-thumb"
@@ -356,7 +356,7 @@ export interface SwitchLegendProps {
 
 export function SwitchLegend(props: SwitchLegendProps): JSX.Element {
   return (
-    <legend data-tomui-component="Switch" {...stylex.attrs(styles.legend, props.style)}>
+    <legend data-midori-component="Switch" {...stylex.attrs(styles.legend, props.style)}>
       {props.children}
     </legend>
   );
@@ -377,7 +377,7 @@ export function SwitchGroup(props: SwitchGroupProps): JSX.Element {
   const merged = merge({ controlFirst: true }, props);
   return (
     <fieldset
-      data-tomui-component="Switch"
+      data-midori-component="Switch"
       disabled={merged.disabled}
       {...stylex.attrs(styles.group, merged.style)}
     >
@@ -404,8 +404,8 @@ export function SwitchItem(props: SwitchItemProps): JSX.Element {
   const rest = omit(merged, "label", "disabled", "style");
   return (
     <label
-      data-tomui-component="Switch"
-      data-tomui-part="item-label"
+      data-midori-component="Switch"
+      data-midori-part="item-label"
       {...stylex.attrs(
         styles.itemLabel,
         merged.controlFirst ? undefined : styles.itemLabelReversed,

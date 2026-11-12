@@ -20,14 +20,14 @@ export const textStyles = stylex.create({
     lineHeight: "inherit",
     fontWeight: 600,
   },
-  body: { color: textColors["--text-color-tomui-default"] },
-  secondary: { color: textColors["--text-color-tomui-subtle"] },
-  success: { color: textColors["--text-color-tomui-link"] },
-  error: { color: textColors["--text-color-tomui-danger"] },
+  body: { color: textColors["--text-color-midori-default"] },
+  secondary: { color: textColors["--text-color-midori-subtle"] },
+  success: { color: textColors["--text-color-midori-link"] },
+  error: { color: textColors["--text-color-midori-danger"] },
   mono: { fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace" },
   "mono-secondary": {
     fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
 
   // Sizes. `lineHeight: "inherit"` replaces the old `text-*/[inherit]`
@@ -46,12 +46,12 @@ export const textStyles = stylex.create({
   none: {},
 });
 
-export const TOMUI_TEXT_DEFAULT_VARIANTS = {
+export const MIDORI_TEXT_DEFAULT_VARIANTS = {
   variant: "body",
   size: "base",
 } as const;
 
-export type TomuiTextVariant =
+export type MidoriTextVariant =
   | "heading"
   | "body"
   | "secondary"
@@ -59,7 +59,7 @@ export type TomuiTextVariant =
   | "error"
   | "mono"
   | "mono-secondary";
-export type TomuiTextSize = "xs" | "sm" | "base" | "lg";
+export type MidoriTextSize = "xs" | "sm" | "base" | "lg";
 
 /** Valid HTML elements for the Text component's `as` prop. */
 export type TextElement =
@@ -100,17 +100,17 @@ export const DEFAULT_ELEMENT_BY_VARIANT = {
   error: "p",
   mono: "span",
   "mono-secondary": "span",
-} as const satisfies Record<TomuiTextVariant, TextElement>;
+} as const satisfies Record<MidoriTextVariant, TextElement>;
 
 /** Variants that `bold` applies to. Headings and monospace ignore it. */
-export const BOLDABLE_VARIANTS: ReadonlySet<TomuiTextVariant> = new Set([
+export const BOLDABLE_VARIANTS: ReadonlySet<MidoriTextVariant> = new Set([
   "body",
   "secondary",
   "success",
   "error",
 ]);
 
-const MONO_VARIANTS: ReadonlySet<TomuiTextVariant> = new Set(["mono", "mono-secondary"]);
+const MONO_VARIANTS: ReadonlySet<MidoriTextVariant> = new Set(["mono", "mono-secondary"]);
 
 /**
  * Resolve the size style for a variant/size pair.
@@ -120,8 +120,8 @@ const MONO_VARIANTS: ReadonlySet<TomuiTextVariant> = new Set(["mono", "mono-seco
  * below body so the glyphs optically match.
  */
 export function resolveTextSizeStyle(
-  variant: TomuiTextVariant,
-  size: TomuiTextSize,
+  variant: MidoriTextVariant,
+  size: MidoriTextSize,
 ): stylex.StyleXStyles {
   if (variant === "heading") {
     return size === "lg" ? textStyles.sizeXl : textStyles.none;

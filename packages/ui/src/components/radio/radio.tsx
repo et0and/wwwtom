@@ -13,16 +13,16 @@ import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { createControllableSignal } from "../../utils/state";
 
-const hairline = colors["--color-tomui-hairline"];
-const line = colors["--color-tomui-line"];
-const focus = colors["--color-tomui-focus"];
-const danger = textColors["--text-color-tomui-danger"];
+const hairline = colors["--color-midori-hairline"];
+const line = colors["--color-midori-line"];
+const focus = colors["--color-midori-focus"];
+const danger = textColors["--text-color-midori-danger"];
 
 const styles = stylex.create({
   legend: {
     fontSize: "0.8125rem",
     fontWeight: 530,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
   group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
   groupListDefault: { display: "flex", flexDirection: "column", gap: "0.5rem" },
@@ -40,7 +40,7 @@ const styles = stylex.create({
   },
   message: { fontSize: "0.75rem" },
   messageDanger: { color: danger },
-  messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
+  messageSubtle: { color: textColors["--text-color-midori-subtle"] },
   itemLabelDefault: {
     position: "relative",
     display: "inline-flex",
@@ -59,24 +59,24 @@ const styles = stylex.create({
     borderWidth: 1,
     borderColor: hairline,
     borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
     transitionProperty: "background-color",
     ":has([data-checked])": {
-      borderColor: colors["--color-tomui-interact"],
-      backgroundColor: colors["--color-tomui-tint"],
+      borderColor: colors["--color-midori-interact"],
+      backgroundColor: colors["--color-midori-tint"],
     },
   },
   itemLabelCardError: {
     borderColor: danger,
     ":has([data-checked])": {
       borderColor: danger,
-      backgroundColor: colors["--color-tomui-base"],
+      backgroundColor: colors["--color-midori-base"],
     },
   },
   itemLabelCardStart: { flexDirection: "row-reverse" },
   disabled: { cursor: "not-allowed", opacity: 0.5 },
   enabled: { cursor: "pointer" },
-  cardHover: { ":hover": { backgroundColor: colors["--color-tomui-tint"] } },
+  cardHover: { ":hover": { backgroundColor: colors["--color-midori-tint"] } },
   controlWrap: { position: "relative", display: "inline-flex", alignSelf: "center" },
   control: {
     height: "1rem",
@@ -86,9 +86,9 @@ const styles = stylex.create({
     cursor: "pointer",
     borderWidth: 0,
     borderRadius: radius.full,
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
     outlineWidth: 0,
-    ":checked": { backgroundColor: colors["--color-tomui-brand"] },
+    ":checked": { backgroundColor: colors["--color-midori-brand"] },
   },
   controlRingDefault: {
     boxShadow: "inset 0 0 0 1px " + line,
@@ -107,7 +107,7 @@ const styles = stylex.create({
     ":focus": { boxShadow: "0 0 0 2px " + focus },
     ":focus-visible": { boxShadow: "0 0 0 2px " + focus, outlineOffset: "0.75rem" },
   },
-  /** Display is toggled from tomui-binding.css, because StyleX has no sibling selector. */
+  /** Display is toggled from midori-binding.css, because StyleX has no sibling selector. */
   indicator: {
     position: "absolute",
     inset: 0,
@@ -120,9 +120,9 @@ const styles = stylex.create({
     height: "0.5rem",
     width: "0.5rem",
     borderRadius: radius.full,
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
   },
-  labelText: { fontSize: "0.8125rem", color: textColors["--text-color-tomui-default"] },
+  labelText: { fontSize: "0.8125rem", color: textColors["--text-color-midori-default"] },
   cardTextWrap: {
     display: "flex",
     minWidth: 0,
@@ -133,13 +133,13 @@ const styles = stylex.create({
   cardLabel: {
     fontSize: "0.8125rem",
     fontWeight: 530,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
-  cardDescription: { fontSize: "0.75rem", color: textColors["--text-color-tomui-subtle"] },
+  cardDescription: { fontSize: "0.75rem", color: textColors["--text-color-midori-subtle"] },
 });
 
-export type TomuiRadioVariant = "default" | "error";
-export type TomuiRadioAppearance = "default" | "card";
+export type MidoriRadioVariant = "default" | "error";
+export type MidoriRadioAppearance = "default" | "card";
 
 export type RadioControlPosition = "start" | "end";
 
@@ -147,7 +147,7 @@ interface RadioGroupContextValue {
   name: string;
   current: () => string | undefined;
   disabled: boolean;
-  appearance: TomuiRadioAppearance;
+  appearance: MidoriRadioAppearance;
   controlPosition: RadioControlPosition | undefined;
   select: (value: string) => void;
   registerInput: (el: HTMLInputElement) => void;
@@ -171,7 +171,7 @@ export interface RadioLegendProps {
 
 export function RadioLegend(props: RadioLegendProps): JSX.Element {
   return (
-    <legend data-tomui-component="Radio" {...stylex.attrs(styles.legend, props.style)}>
+    <legend data-midori-component="Radio" {...stylex.attrs(styles.legend, props.style)}>
       {props.children}
     </legend>
   );
@@ -181,7 +181,7 @@ export interface RadioGroupProps {
   legend?: string | undefined;
   children?: JSX.Element | undefined;
   orientation?: "vertical" | "horizontal" | undefined;
-  appearance?: TomuiRadioAppearance | undefined;
+  appearance?: MidoriRadioAppearance | undefined;
   error?: string | undefined;
   description?: JSX.Element | undefined;
   defaultValue?: string | undefined;
@@ -199,7 +199,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
   const merged = merge(
     {
       orientation: "vertical" as const,
-      appearance: "default" as TomuiRadioAppearance,
+      appearance: "default" as MidoriRadioAppearance,
     },
     props,
   );
@@ -248,7 +248,7 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
   return (
     <RadioGroupContext value={contextValue}>
       <fieldset
-        data-tomui-component="Radio"
+        data-midori-component="Radio"
         disabled={merged.disabled}
         {...stylex.attrs(styles.group, merged.style)}
       >
@@ -284,8 +284,8 @@ export function RadioGroup(props: RadioGroupProps): JSX.Element {
 }
 
 export type RadioItemProps = {
-  variant?: TomuiRadioVariant | undefined;
-  appearance?: TomuiRadioAppearance | undefined;
+  variant?: MidoriRadioVariant | undefined;
+  appearance?: MidoriRadioAppearance | undefined;
   label: JSX.Element;
   description?: JSX.Element | undefined;
   value: string;
@@ -296,9 +296,9 @@ export type RadioItemProps = {
 };
 
 export function RadioItem(props: RadioItemProps): JSX.Element {
-  const merged = merge({ variant: "default" as TomuiRadioVariant }, props);
+  const merged = merge({ variant: "default" as MidoriRadioVariant }, props);
   const context = useContext(RadioGroupContext);
-  const appearance = (): TomuiRadioAppearance => merged.appearance ?? context.appearance;
+  const appearance = (): MidoriRadioAppearance => merged.appearance ?? context.appearance;
   const isCard = (): boolean => appearance() === "card";
   const position = (): RadioControlPosition =>
     context.controlPosition ?? (isCard() ? "end" : "start");
@@ -313,8 +313,8 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
       when={isCard()}
       fallback={
         <label
-          data-tomui-component="Radio"
-          data-tomui-part="item-label"
+          data-midori-component="Radio"
+          data-midori-part="item-label"
           data-variant="default"
           {...stylex.attrs(
             styles.itemLabelDefault,
@@ -328,8 +328,8 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
         >
           <span {...stylex.attrs(styles.controlWrap)}>
             <input
-              data-tomui-component="Radio"
-              data-tomui-part="item"
+              data-midori-component="Radio"
+              data-midori-part="item"
               type="radio"
               name={name()}
               value={merged.value}
@@ -354,7 +354,7 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
             />
             <span
               aria-hidden="true"
-              data-tomui-part="indicator"
+              data-midori-part="indicator"
               {...stylex.attrs(styles.indicator)}
             >
               <span {...stylex.attrs(styles.indicatorDot)} />
@@ -365,8 +365,8 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
       }
     >
       <label
-        data-tomui-component="Radio"
-        data-tomui-part="item-label"
+        data-midori-component="Radio"
+        data-midori-part="item-label"
         data-variant={merged.variant}
         {...stylex.attrs(
           styles.itemLabelCard,
@@ -388,8 +388,8 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
         </div>
         <span {...stylex.attrs(styles.controlWrap)}>
           <input
-            data-tomui-component="Radio"
-            data-tomui-part="item"
+            data-midori-component="Radio"
+            data-midori-part="item"
             type="radio"
             name={name()}
             value={merged.value}
@@ -413,7 +413,7 @@ export function RadioItem(props: RadioItemProps): JSX.Element {
               merged.variant === "error" ? styles.controlRingError : undefined,
             )}
           />
-          <span aria-hidden="true" data-tomui-part="indicator" {...stylex.attrs(styles.indicator)}>
+          <span aria-hidden="true" data-midori-part="indicator" {...stylex.attrs(styles.indicator)}>
             <span {...stylex.attrs(styles.indicatorDot)} />
           </span>
         </span>

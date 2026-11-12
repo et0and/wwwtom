@@ -7,9 +7,9 @@ const classList = (element: Element): string[] =>
 
 /** Combobox keeps its open state internally, so tests open it through the UI. */
 const openPanel = async (container: HTMLElement): Promise<void> => {
-  fireEvent.click(container.querySelector("[data-tomui-part=trigger]")!);
+  fireEvent.click(container.querySelector("[data-midori-part=trigger]")!);
   await vi.waitFor(() =>
-    expect(container.querySelector("[data-tomui-part=content]")).not.toBeNull(),
+    expect(container.querySelector("[data-midori-part=content]")).not.toBeNull(),
   );
 };
 
@@ -42,7 +42,7 @@ describe("Combobox", () => {
         </Combobox.Content>
       </Combobox>
     ));
-    expect(container.querySelector("[data-tomui-part=content]")).toBeNull();
+    expect(container.querySelector("[data-midori-part=content]")).toBeNull();
   });
 
   it("opens and closes the content through the trigger value", async () => {
@@ -55,13 +55,15 @@ describe("Combobox", () => {
       </Combobox>
     ));
 
-    const trigger = container.querySelector("[data-tomui-part=trigger]")!;
+    const trigger = container.querySelector("[data-midori-part=trigger]")!;
     expect(trigger.getAttribute("aria-expanded")).toBe("false");
     await openPanel(container);
     expect(trigger.getAttribute("aria-expanded")).toBe("true");
 
     fireEvent.click(trigger);
-    await vi.waitFor(() => expect(container.querySelector("[data-tomui-part=content]")).toBeNull());
+    await vi.waitFor(() =>
+      expect(container.querySelector("[data-midori-part=content]")).toBeNull(),
+    );
   });
 
   it("reports the selection through onValueChange for a single value", async () => {
@@ -78,7 +80,7 @@ describe("Combobox", () => {
     ));
 
     await openPanel(container);
-    fireEvent.click(container.querySelector("[data-tomui-part=item]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=item]")!);
     expect(onValueChange).toHaveBeenCalledWith("alpha");
   });
 
@@ -95,7 +97,7 @@ describe("Combobox", () => {
     ));
 
     await openPanel(container);
-    const items = container.querySelectorAll("[data-tomui-part=item]");
+    const items = container.querySelectorAll("[data-midori-part=item]");
     expect(items[0]?.getAttribute("aria-selected")).toBe("true");
     expect(items[1]?.getAttribute("aria-selected")).toBe("false");
   });
@@ -122,12 +124,12 @@ describe("Combobox", () => {
     ));
 
     await vi.waitFor(() =>
-      expect(container.querySelectorAll("[data-tomui-part=chip-remove]")).toHaveLength(1),
+      expect(container.querySelectorAll("[data-midori-part=chip-remove]")).toHaveLength(1),
     );
 
-    fireEvent.click(container.querySelector("[data-tomui-part=chip-remove]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=chip-remove]")!);
     await vi.waitFor(() =>
-      expect(container.querySelectorAll("[data-tomui-part=chip-remove]")).toHaveLength(0),
+      expect(container.querySelectorAll("[data-midori-part=chip-remove]")).toHaveLength(0),
     );
   });
 
@@ -139,7 +141,7 @@ describe("Combobox", () => {
     ));
 
     const input = container.querySelector("[role=combobox]")!;
-    const chips = container.querySelector("[data-tomui-part=chip-remove]");
+    const chips = container.querySelector("[data-midori-part=chip-remove]");
     if (chips !== null) {
       // With inputSide top the input is the first child of the wrapper.
       expect(input.compareDocumentPosition(chips) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -163,14 +165,14 @@ describe("Combobox", () => {
     fireEvent.keyDown(document, { key: "ArrowDown" });
 
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
+      const items = container.querySelectorAll("[data-midori-part=item]");
       expect(items[0]?.getAttribute("data-highlighted")).toBe("");
       expect(items[1]?.hasAttribute("data-highlighted")).toBe(false);
     });
 
     fireEvent.keyDown(document, { key: "ArrowDown" });
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
+      const items = container.querySelectorAll("[data-midori-part=item]");
       expect(items[0]?.hasAttribute("data-highlighted")).toBe(false);
       expect(items[1]?.getAttribute("data-highlighted")).toBe("");
     });
@@ -192,7 +194,7 @@ describe("Combobox", () => {
     fireEvent.keyDown(document, { key: "ArrowUp" });
 
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
+      const items = container.querySelectorAll("[data-midori-part=item]");
       expect(items[1]?.getAttribute("data-highlighted")).toBe("");
     });
   });
@@ -210,12 +212,109 @@ describe("Combobox", () => {
     ));
 
     await openPanel(container);
-    const items = container.querySelectorAll("[data-tomui-part=item]");
+    const items = container.querySelectorAll("[data-midori-part=item]");
     fireEvent.mouseEnter(items[1]!);
 
     await vi.waitFor(() => {
       expect(items[1]?.getAttribute("data-highlighted")).toBe("");
     });
+  });
+
+  it("filters the list from the search input", async () => {
+    const { container } = render(() => (
+      <Combobox>
+        <Combobox.TriggerInput />
+        <Combobox.Content>
+          <Combobox.List items={["alpha", "beta", "gamma"]}>
+            {(item) => <Combobox.Item value={item} />}
+          </Combobox.List>
+          <Combobox.Empty />
+        </Combobox.Content>
+      </Combobox>
+    ));
+
+    const input = container.querySelector("[role=combobox]")!;
+    fireEvent.focus(input);
+    fireEvent.input(input, { target: { value: "be" } });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-midori-part=item]");
+      expect(Array.from(items, (item) => item.textContent)).toEqual(["beta"]);
+    });
+
+    fireEvent.input(input, { target: { value: "zzz" } });
+    await vi.waitFor(() => {
+      expect(container.querySelectorAll("[data-midori-part=item]")).toHaveLength(0);
+      expect(container.textContent).toContain("No labels found.");
+    });
+  });
+
+  it("selects the active option with Enter", async () => {
+    const onValueChange = vi.fn();
+    const { container } = render(() => (
+      <Combobox onValueChange={onValueChange}>
+        <Combobox.TriggerValue />
+        <Combobox.Content>
+          <Combobox.List items={["alpha", "beta"]}>
+            {(item) => <Combobox.Item value={item} />}
+          </Combobox.List>
+        </Combobox.Content>
+      </Combobox>
+    ));
+
+    await openPanel(container);
+    fireEvent.keyDown(document, { key: "ArrowDown" });
+
+    await vi.waitFor(() => {
+      expect(
+        container.querySelector("[data-midori-part=item]")?.getAttribute("data-highlighted"),
+      ).toBe("");
+    });
+
+    fireEvent.keyDown(document, { key: "Enter" });
+
+    await vi.waitFor(() => {
+      expect(onValueChange).toHaveBeenCalledWith("alpha");
+      expect(container.querySelector("[data-midori-part=content]")).toBeNull();
+    });
+  });
+
+  it("shows the selected value in the search input", async () => {
+    const { container } = render(() => (
+      <Combobox>
+        <Combobox.TriggerInput />
+        <Combobox.Content>
+          <Combobox.List items={["alpha", "beta"]}>
+            {(item) => <Combobox.Item value={item} />}
+          </Combobox.List>
+        </Combobox.Content>
+      </Combobox>
+    ));
+
+    const input = container.querySelector("[role=combobox]") as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.input(input, { target: { value: "be" } });
+
+    await vi.waitFor(() => {
+      expect(container.querySelectorAll("[data-midori-part=item]")).toHaveLength(1);
+    });
+
+    fireEvent.click(container.querySelector("[data-midori-part=item]")!);
+
+    await vi.waitFor(() => {
+      expect(input.value).toBe("beta");
+    });
+  });
+
+  it("associates its label with the trigger", () => {
+    const { container } = render(() => (
+      <Combobox label="Framework">
+        <Combobox.TriggerValue />
+      </Combobox>
+    ));
+    const label = container.querySelector("label")!;
+    const trigger = container.querySelector("[data-midori-part=trigger]")!;
+    expect(trigger.getAttribute("aria-labelledby")).toBe(label.id);
   });
 
   it("applies a compiled style to each item", async () => {
@@ -231,6 +330,8 @@ describe("Combobox", () => {
     ));
 
     await openPanel(container);
-    expect(classList(container.querySelector("[data-tomui-part=item]")!).length).toBeGreaterThan(0);
+    expect(classList(container.querySelector("[data-midori-part=item]")!).length).toBeGreaterThan(
+      0,
+    );
   });
 });

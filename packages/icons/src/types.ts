@@ -21,19 +21,19 @@ export type IconSize = keyof typeof ICON_SIZES;
 
 export const DEFAULT_ICON_SIZE: IconSize = "md";
 
-/** Icon color tokens. Tomui tokens adapt to light and dark mode. */
+/** Icon color tokens. Midori tokens adapt to light and dark mode. */
 export const ICON_COLORS = {
   current: "currentColor",
-  default: "var(--text-color-tomui-default)",
-  strong: "var(--text-color-tomui-strong)",
-  subtle: "var(--text-color-tomui-subtle)",
-  inverse: "var(--text-color-tomui-inverse)",
-  brand: "var(--text-color-tomui-brand)",
-  link: "var(--text-color-tomui-link)",
-  info: "var(--text-color-tomui-info)",
-  success: "var(--text-color-tomui-success)",
-  warning: "var(--text-color-tomui-warning)",
-  danger: "var(--text-color-tomui-danger)",
+  default: "var(--text-color-midori-default)",
+  strong: "var(--text-color-midori-strong)",
+  subtle: "var(--text-color-midori-subtle)",
+  inverse: "var(--text-color-midori-inverse)",
+  brand: "var(--text-color-midori-brand)",
+  link: "var(--text-color-midori-link)",
+  info: "var(--text-color-midori-info)",
+  success: "var(--text-color-midori-success)",
+  warning: "var(--text-color-midori-warning)",
+  danger: "var(--text-color-midori-danger)",
   white: "#ffffff",
   black: "#000000",
 } as const;

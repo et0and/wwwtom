@@ -10,6 +10,53 @@
   color-scheme: light dark;
 }
 
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+/* Explicit light/dark elevation. Colors use `light-dark()`, but shadows are not
+   colors, so the two ramps need a direct switch. Keep in sync with
+   elevation.stylex.ts. */
+:root[data-mode="light"] {
+  --elevation-midori-raised: 0 2px 4px 0 #0000000a, 0 1px 2px -1px #00000014, 0 0 0 0.5px #0000001f;
+  --elevation-midori-floating: 0 8px 16px 0 #0000000a, 0 4px 8px 0 #00000014, 0 0 0 0.5px #0000001f;
+  --elevation-midori-overlay:
+    0 16px 32px 0 #0000000a, 0 8px 16px 0 #00000014, 0 0 0 0.5px #0000001f;
+  --elevation-midori-input: 0 1px 1.5px 0 #0000001a, 0 0 0 0.5px #00000024;
+  --elevation-midori-button-neutral: 0 1px 1.5px 0 #0000001a, 0 0 0 0.5px #00000024;
+  --elevation-midori-button-contrast:
+    0 1px 1.5px 0 #00000033, 0 0 0 0.5px #3a3a3a, inset 0 1px 2px 0 #ffffff24,
+    inset 0 -1px 2px 0 #0000000f;
+  --elevation-midori-elements: 0 0.5px 0.5px 0 #00000066;
+  --elevation-midori-switch-off:
+    inset 0 1px 1px 0 #00000014, inset 0 0.5px 0.5px 0 #00000014, inset 0 0 0 0.5px #0000001a;
+  --elevation-midori-switch-on:
+    inset 0 2px 2px 0 #0000001a, inset 0 1px 1px 0 #0000001a, inset 0 0 0 0.5px #00000033;
+}
+
+:root[data-mode="dark"] {
+  --elevation-midori-raised:
+    0 2px 4px 0 #0000004d, 0 1px 2px 0 #0000004d, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-floating:
+    0 8px 16px 0 #0000004d, 0 4px 8px 0 #0000004d, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-overlay:
+    0 16px 32px 0 #0000004d, 0 8px 16px 0 #0000004d, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-input: 0 1px 2px 0 #00000000, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-button-neutral:
+    0 1px 2px 0 #00000066, 0 0 0 0.5px #ffffff33, 0 -0.5px 0 0 #ffffff1a;
+  --elevation-midori-button-contrast:
+    0 1px 2px 0 #00000066, 0 0 0 0.5px #ffffff66, 0 -0.5px 0 0 #ffffff4d;
+  --elevation-midori-elements: 0 0.5px 0.5px 0 #00000066;
+  --elevation-midori-switch-off:
+    inset 0 -0.5px 0 0 #ffffff1a, inset 0 0 0 0 #ffffff00, inset 0 0 0 0.5px #ffffff29;
+  --elevation-midori-switch-on:
+    inset 0 -0.5px 0 0 #ffffff1a, inset 0 0 0 0 #ffffff00, inset 0 0 0 0.5px #ffffff29;
+}
+
 /* Three-step bounce used by the Empty state check mark. StyleX generates only
    from/to frames, so the midpoint frame has to live here. */
 @keyframes bounce-in {
@@ -31,17 +78,17 @@
 
 /* Tab list scroll behavior. The scrollbar is hidden when scroll-driven
    animations are supported; unsupported browsers keep the native scrollbar. */
-.tomui-tabs-list {
+.midori-tabs-list {
   overscroll-behavior-x: contain;
 }
 
 @supports (animation-timeline: scroll()) {
-  .tomui-tabs-list {
+  .midori-tabs-list {
     scrollbar-width: none;
     -ms-overflow-style: none;
   }
 
-  .tomui-tabs-list::-webkit-scrollbar {
+  .midori-tabs-list::-webkit-scrollbar {
     display: none;
   }
 }
@@ -106,11 +153,11 @@
 /* A badge inside a link picks up a ring on hover, and its icon is pinned to
    12px. StyleX 0.19 supports no ancestor or descendant selectors, so these two
    rules stay here. See badge.tsx for the variant values. */
-a:hover [data-tomui-component="Badge"] {
+a:hover [data-midori-component="Badge"] {
   box-shadow: 0 0 0 1px currentColor;
 }
 
-[data-tomui-component="Badge"] [data-slot="badge-icon"] > svg {
+[data-midori-component="Badge"] [data-slot="badge-icon"] > svg {
   width: 0.75rem;
   height: 0.75rem;
 }
@@ -118,25 +165,25 @@ a:hover [data-tomui-component="Badge"] {
 /* Radio indicator and hover ring. StyleX 0.19 supports no sibling selector, so
    the checked indicator is toggled here. The hover ring only applies to a
    non-error, enabled radio, which is what the old group-hover rule did. */
-[data-tomui-part="item"]:checked + [data-tomui-part="indicator"] {
+[data-midori-part="item"]:checked + [data-midori-part="indicator"] {
   display: flex;
 }
 
-[data-tomui-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
-  [data-tomui-part="item"] {
-  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+[data-midori-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
+  [data-midori-part="item"] {
+  box-shadow: 0 0 0 1px var(--color-midori-hairline);
 }
 
 /* Toolbar rounds only its outer corners and dividers its children. StyleX 0.19
    supports no child or sibling combinator, so these stay here. */
-[data-tomui-component="Toolbar"] > *:first-child {
+[data-midori-component="Toolbar"] > *:first-child {
   border-top-left-radius: 0.5rem;
   border-bottom-left-radius: 0.5rem;
 }
 
 /* The last visible child gets the right corners, skipping trailing
    aria-hidden and hidden inputs. */
-[data-tomui-component="Toolbar"]
+[data-midori-component="Toolbar"]
   > *:not([aria-hidden="true"]):not([type="hidden"]):not(
     :has(~ :not([aria-hidden="true"]):not([type="hidden"]))
   ) {
@@ -144,13 +191,13 @@ a:hover [data-tomui-component="Badge"] {
   border-bottom-right-radius: 0.5rem;
 }
 
-[data-tomui-component="Toolbar"] > *:not([aria-hidden="true"]):not(:first-child) {
-  border-left: 1px solid var(--color-tomui-line);
+[data-midori-component="Toolbar"] > *:not([aria-hidden="true"]):not(:first-child) {
+  border-left: 1px solid var(--color-midori-line);
 }
 
 /* A compact Banner inlines its action's Link so it flows with the title text
    instead of breaking onto its own line. */
-[data-slot="banner-action-inline"] [data-tomui-component="Link"] {
+[data-slot="banner-action-inline"] [data-midori-component="Link"] {
   display: inline;
 }
 
@@ -158,19 +205,19 @@ a:hover [data-tomui-component="Badge"] {
    [&:focus-within>span] rules painted onto the indicator overlay. StyleX 0.19
    supports no sibling or descendant selector, so these stay here. The overlay
    only paints when checked, so the ring usually matches the input's own. */
-[data-tomui-component="Checkbox"]:checked + [data-tomui-part="indicator"],
-[data-tomui-component="Checkbox"]:indeterminate + [data-tomui-part="indicator"] {
+[data-midori-component="Checkbox"]:checked + [data-midori-part="indicator"],
+[data-midori-component="Checkbox"]:indeterminate + [data-midori-part="indicator"] {
   display: flex;
 }
 
-[data-tomui-part="control"][data-variant="default"]:hover [data-tomui-part="indicator"] {
-  box-shadow: 0 0 0 1px var(--color-tomui-hairline);
+[data-midori-part="control"][data-variant="default"]:hover [data-midori-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-midori-hairline);
 }
 
-[data-tomui-part="control"][data-variant="default"]:focus-within [data-tomui-part="indicator"] {
-  box-shadow: 0 0 0 1px var(--color-tomui-focus);
+[data-midori-part="control"][data-variant="default"]:focus-within [data-midori-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-midori-focus);
 }
 
-[data-tomui-part="control"][data-variant="error"] [data-tomui-part="indicator"] {
-  box-shadow: 0 0 0 1px var(--color-tomui-danger);
+[data-midori-part="control"][data-variant="error"] [data-midori-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-midori-danger);
 }

@@ -5,14 +5,14 @@ import { monoFont } from "../../styles/primitives.stylex";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { fontSizeSm } from "../../styles/typography.stylex";
 
-export const TOMUI_CODE_DEFAULT_VARIANTS = {
+export const MIDORI_CODE_DEFAULT_VARIANTS = {
   lang: "ts",
 } as const;
 
 /** Languages the component documents. All share one visual treatment. */
-export const TOMUI_CODE_LANGS = ["ts", "tsx", "jsonc", "bash", "css"] as const;
+export const MIDORI_CODE_LANGS = ["ts", "tsx", "jsonc", "bash", "css"] as const;
 
-export type TomuiCodeLang = (typeof TOMUI_CODE_LANGS)[number];
+export type MidoriCodeLang = (typeof MIDORI_CODE_LANGS)[number];
 
 const styles = stylex.create({
   pre: {
@@ -25,19 +25,19 @@ const styles = stylex.create({
     fontFamily: monoFont.fontFamily,
     fontSize: fontSizeSm.fontSize,
     lineHeight: "20px",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
   },
   block: {
     minWidth: 0,
     borderRadius: "0.375rem",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-hairline"],
-    backgroundColor: colors["--color-tomui-layer-01"],
+    borderColor: colors["--color-midori-hairline"],
+    backgroundColor: colors["--color-midori-layer-01"],
   },
   /** Inset for the code inside a block. Passed to the inner Code. */
   blockInset: { padding: "0.625rem" },
-  highlighted: { color: textColors["--text-color-tomui-brand"] },
+  highlighted: { color: textColors["--text-color-midori-brand"] },
 });
 
 /** Template values for `{{key}}` interpolation in `code`. */
@@ -58,7 +58,7 @@ export interface CodeProps {
   /** The code string to display. */
   code: string;
   /** Language hint for the code content. All languages share one treatment. */
-  lang?: TomuiCodeLang;
+  lang?: MidoriCodeLang;
   /** Template values for `{{key}}` interpolation. Values with `highlight: true` are visually emphasized. */
   values?: CodeValues;
   /** Caller styles, merged last so they win. */
@@ -91,10 +91,10 @@ function renderCodeSegments(code: string, values: CodeValues | undefined): JSX.E
  * `Code.Block`.
  */
 function CodeComponent(props: CodeProps): JSX.Element {
-  const merged = merge({ lang: TOMUI_CODE_DEFAULT_VARIANTS.lang }, props);
+  const merged = merge({ lang: MIDORI_CODE_DEFAULT_VARIANTS.lang }, props);
   const rest = omit(merged, "code", "lang", "style", "values");
   return (
-    <pre data-tomui-component="Code" {...stylex.attrs(styles.pre, merged.style)} {...rest}>
+    <pre data-midori-component="Code" {...stylex.attrs(styles.pre, merged.style)} {...rest}>
       {renderCodeSegments(merged.code, merged.values)}
     </pre>
   );
@@ -112,7 +112,7 @@ export interface CodeBlockProps {
   /** The code string to display. */
   code: string;
   /** Language hint for the code content. */
-  lang?: TomuiCodeLang;
+  lang?: MidoriCodeLang;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 }
@@ -125,7 +125,7 @@ export interface CodeBlockProps {
  * surrounding text.
  */
 function CodeBlockComponent(props: CodeBlockProps): JSX.Element {
-  const merged = merge({ lang: TOMUI_CODE_DEFAULT_VARIANTS.lang }, props);
+  const merged = merge({ lang: MIDORI_CODE_DEFAULT_VARIANTS.lang }, props);
   return (
     <div {...stylex.attrs(styles.block, merged.style)}>
       <CodeComponent lang={merged.lang} code={merged.code} style={styles.blockInset} />

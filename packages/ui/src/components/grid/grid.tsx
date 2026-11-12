@@ -63,13 +63,13 @@ const styles = stylex.create({
   /** Stacks items with a divider on narrow screens; the 4up grid alone collapses to one column. */
   mobileDivider: {
     borderBottomWidth: "1px",
-    borderBottomColor: colors["--color-tomui-hairline"],
+    borderBottomColor: colors["--color-midori-hairline"],
     paddingBottom: "2rem",
     [MD]: { borderBottomWidth: 0, paddingBottom: 0 },
   },
 });
 
-export type TomuiGridVariant =
+export type MidoriGridVariant =
   | "2up"
   | "side-by-side"
   | "2-1"
@@ -79,9 +79,9 @@ export type TomuiGridVariant =
   | "4up"
   | "6up"
   | "1-2-4up";
-export type TomuiGridGap = "none" | "sm" | "base" | "lg";
+export type MidoriGridGap = "none" | "sm" | "base" | "lg";
 
-export const TOMUI_GRID_DEFAULT_VARIANTS = {
+export const MIDORI_GRID_DEFAULT_VARIANTS = {
   gap: "base",
 } as const;
 
@@ -95,19 +95,19 @@ const variantStyles = {
   "4up": styles.fourUp,
   "6up": styles.sixUp,
   "1-2-4up": styles.oneTwoFourUp,
-} as const satisfies Record<TomuiGridVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriGridVariant, stylex.StyleXStyles>;
 
 const gapStyles = {
   none: styles.gapNone,
   sm: styles.gapSm,
   base: styles.gapBase,
   lg: styles.gapLg,
-} as const satisfies Record<TomuiGridGap, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriGridGap, stylex.StyleXStyles>;
 
 export function gridVariants(
-  props: { variant?: TomuiGridVariant | undefined; gap?: TomuiGridGap | undefined } = {},
+  props: { variant?: MidoriGridVariant | undefined; gap?: MidoriGridGap | undefined } = {},
 ): stylex.StyleXStyles[] {
-  const merged = merge(TOMUI_GRID_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_GRID_DEFAULT_VARIANTS, props);
   return [
     styles.grid,
     merged.variant ? variantStyles[merged.variant] : undefined,
@@ -116,7 +116,7 @@ export function gridVariants(
 }
 
 export function gridItemVariants(
-  props: { variant?: TomuiGridVariant | undefined; mobileDivider?: boolean | undefined } = {},
+  props: { variant?: MidoriGridVariant | undefined; mobileDivider?: boolean | undefined } = {},
 ): stylex.StyleXStyles | undefined {
   const merged = merge({}, props);
   return merged.mobileDivider && merged.variant === "4up" ? styles.mobileDivider : undefined;
@@ -125,8 +125,8 @@ export function gridItemVariants(
 export type GridProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "class" | "style"> & {
   children?: JSX.Element;
   columns?: number;
-  gap?: TomuiGridGap;
-  variant?: TomuiGridVariant;
+  gap?: MidoriGridGap;
+  variant?: MidoriGridVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
@@ -134,13 +134,13 @@ export type GridProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "class" | "styl
 export type GridItemProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "class" | "style"> & {
   children?: JSX.Element;
   mobileDivider?: boolean;
-  variant?: TomuiGridVariant;
+  variant?: MidoriGridVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function Grid(props: GridProps) {
-  const merged = merge({ gap: TOMUI_GRID_DEFAULT_VARIANTS.gap }, props);
+  const merged = merge({ gap: MIDORI_GRID_DEFAULT_VARIANTS.gap }, props);
   const rest = omit(merged, "children", "columns", "gap", "style", "variant");
   // The column count is an arbitrary runtime number, so it cannot compile to a
   // static StyleX rule; it stays a native inline style, like `columns` always was.
@@ -150,7 +150,7 @@ export function Grid(props: GridProps) {
       : { "grid-template-columns": `repeat(${merged.columns}, minmax(0, 1fr))` };
   return (
     <div
-      data-tomui-component="Grid"
+      data-midori-component="Grid"
       data-variant={merged.variant ?? ""}
       {...stylex.attrs(...gridVariants({ gap: merged.gap, variant: merged.variant }), merged.style)}
       style={columnsStyle()}
@@ -165,7 +165,7 @@ export function GridItem(props: GridItemProps) {
   const rest = omit(props, "children", "mobileDivider", "style", "variant");
   return (
     <div
-      data-tomui-component="GridItem"
+      data-midori-component="GridItem"
       {...stylex.attrs(
         gridItemVariants({ variant: props.variant, mobileDivider: props.mobileDivider }),
         props.style,

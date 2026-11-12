@@ -1,4 +1,4 @@
-@import "@tom/ui/tomui.css";
+@import "@tom/ui/midori.css";
 
 @stylex;
 
@@ -285,19 +285,19 @@
       }
     }
 
-    .editor-toolbar [data-tomui-component="Toolbar"] {
+    .editor-toolbar [data-midori-component="Toolbar"] {
       display: flex;
       width: 100%;
       flex-wrap: wrap;
     }
 
-    .editor-toolbar [data-tomui-component="Toolbar"] > * {
+    .editor-toolbar [data-midori-component="Toolbar"] > * {
       min-height: 2.5rem;
     }
 
     /* Row separators only read in a single row. */
     .editor-toolbar
-      [data-tomui-component="Toolbar"]
+      [data-midori-component="Toolbar"]
       > *:not([aria-hidden="true"]):not(:first-child) {
       border-left-width: 0;
     }
@@ -333,13 +333,13 @@
       min-height: 60vh;
     }
 
-    .editor-toolbar [data-tomui-component="Toolbar"] {
+    .editor-toolbar [data-midori-component="Toolbar"] {
       display: flex;
       width: 100%;
       max-width: none;
     }
 
-    .editor-toolbar [data-tomui-component="Toolbar.Button"] {
+    .editor-toolbar [data-midori-component="Toolbar.Button"] {
       flex: 1 1 auto;
       justify-content: center;
     }

@@ -61,7 +61,7 @@
     "./text-variants": "./src/components/text/variants.ts",
     "./textarea": "./src/components/textarea/textarea.tsx",
     "./toast": "./src/components/toast/toast.tsx",
-    "./tomui.css": "./src/styles/tomui.css",
+    "./midori.css": "./src/styles/midori.css",
     "./toolbar": "./src/components/toolbar/toolbar.tsx",
     "./tooltip": "./src/components/tooltip/tooltip.tsx",
     "./typography.stylex": "./src/styles/typography.stylex.ts"

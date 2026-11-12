@@ -28,7 +28,7 @@ describe("Button", () => {
     const button = container.querySelector("button")!;
 
     expect(button.getAttribute("type")).toBe("button");
-    expect(button.dataset.tomuiComponent).toBe("Button");
+    expect(button.dataset.midoriComponent).toBe("Button");
     expect(button.textContent).toBe("Save");
   });
 
@@ -59,8 +59,8 @@ describe("Button", () => {
     expect(destructive).not.toBe("");
     // Contrast charcoal versus danger red.
     expect(primary).not.toBe(destructive);
-    expect(primary).toContain("--color-tomui-contrast");
-    expect(destructive).toContain("--color-tomui-danger");
+    expect(primary).toContain("--color-midori-button-contrast");
+    expect(destructive).toContain("--color-midori-danger");
   });
 
   it("applies distinct styles per size", () => {

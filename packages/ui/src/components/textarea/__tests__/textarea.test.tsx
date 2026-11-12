@@ -23,14 +23,14 @@ describe("Textarea", () => {
     const { container } = render(() => <Textarea invalid />);
     expect(container.querySelector("textarea")!.getAttribute("aria-invalid")).toBe("true");
     expect(
-      container.querySelector("[data-tomui-component=Textarea]")!.hasAttribute("data-invalid"),
+      container.querySelector("[data-midori-component=Textarea]")!.hasAttribute("data-invalid"),
     ).toBe(true);
   });
 
   it("exposes the surface as a data attribute", () => {
     const { container } = render(() => <Textarea surface="layer-1" />);
     expect(
-      container.querySelector("[data-tomui-component=Textarea]")!.getAttribute("data-surface"),
+      container.querySelector("[data-midori-component=Textarea]")!.getAttribute("data-surface"),
     ).toBe("layer-1");
   });
 

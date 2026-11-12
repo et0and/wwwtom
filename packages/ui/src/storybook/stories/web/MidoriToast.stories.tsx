@@ -1,7 +1,7 @@
 import preview from "#.storybook/preview";
 import { For } from "solid-js";
 import { Button } from "@tom/ui/button";
-import { Toaster, createToastStore, type TomuiToastVariant } from "@tom/ui/toast";
+import { Toaster, createToastStore, type MidoriToastVariant } from "@tom/ui/toast";
 
 const meta = preview.meta({
   title: "web/Toast",
@@ -12,7 +12,7 @@ const meta = preview.meta({
   tags: ["autodocs"],
 });
 
-const VARIANTS: ReadonlyArray<{ readonly variant: TomuiToastVariant; readonly label: string }> = [
+const VARIANTS: ReadonlyArray<{ readonly variant: MidoriToastVariant; readonly label: string }> = [
   { variant: "default", label: "Default" },
   { variant: "success", label: "Success" },
   { variant: "error", label: "Error" },

@@ -12,7 +12,7 @@ const meta = preview.meta({
 
 export const Default = meta.story({
   args: {
-    children: "Get started with TomUI",
+    children: "Get started with Midori",
     class: "p-4",
   },
 });
@@ -21,7 +21,7 @@ export const Layered = meta.story({
   render: () => (
     <LayerCard layered>
       <LayerCard.Secondary>Next steps</LayerCard.Secondary>
-      <LayerCard.Primary>Get started with TomUI</LayerCard.Primary>
+      <LayerCard.Primary>Get started with Midori</LayerCard.Primary>
     </LayerCard>
   ),
 });

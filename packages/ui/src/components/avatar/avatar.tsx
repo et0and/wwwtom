@@ -5,13 +5,13 @@ import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSize2xs, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_AVATAR_DEFAULT_VARIANTS = {
+export const MIDORI_AVATAR_DEFAULT_VARIANTS = {
   size: "large",
   kind: "user",
 } as const;
 
-export type TomuiAvatarSize = "small" | "normal" | "large";
-export type TomuiAvatarKind = "user" | "org";
+export type MidoriAvatarSize = "small" | "normal" | "large";
+export type MidoriAvatarKind = "user" | "org";
 
 const segmenter = new Intl.Segmenter(undefined, { granularity: "grapheme" });
 
@@ -36,10 +36,10 @@ const styles = stylex.create({
     height: "1.75rem",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-hairline"],
+    borderColor: colors["--color-midori-hairline"],
     borderRadius: radius.full,
-    backgroundColor: "var(--avatar-bg, " + colors["--color-tomui-layer-02"] + ")",
-    color: "var(--avatar-fg, " + textColors["--text-color-tomui-subtle"] + ")",
+    backgroundColor: "var(--avatar-bg, " + colors["--color-midori-layer-02"] + ")",
+    color: "var(--avatar-fg, " + textColors["--text-color-midori-subtle"] + ")",
     fontSize: fontSize2xs.fontSize,
     fontWeight: fontWeightControl.fontWeight,
     lineHeight: 1,
@@ -55,9 +55,9 @@ const styles = stylex.create({
     inset: 0,
     backgroundImage:
       "linear-gradient(180deg, " +
-      colors["--color-tomui-sheen-top"] +
+      colors["--color-midori-sheen-top"] +
       " 0%, " +
-      colors["--color-tomui-sheen-bottom"] +
+      colors["--color-midori-sheen-bottom"] +
       " 100%)",
     pointerEvents: "none",
   },
@@ -89,14 +89,14 @@ export type AvatarProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "style" | "ch
   background?: string | undefined;
   /** Fixed foreground for the fallback. */
   foreground?: string | undefined;
-  size?: TomuiAvatarSize;
-  kind?: TomuiAvatarKind;
+  size?: MidoriAvatarSize;
+  kind?: MidoriAvatarKind;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function Avatar(props: AvatarProps): JSX.Element {
-  const merged = merge(TOMUI_AVATAR_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_AVATAR_DEFAULT_VARIANTS, props);
   const rest = omit(
     merged,
     "fallback",
@@ -119,7 +119,7 @@ export function Avatar(props: AvatarProps): JSX.Element {
   return (
     <div
       {...rest}
-      data-tomui-component="Avatar"
+      data-midori-component="Avatar"
       data-size={merged.size}
       data-kind={merged.kind}
       data-has-image={merged.src ? "" : undefined}

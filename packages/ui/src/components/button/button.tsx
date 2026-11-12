@@ -9,15 +9,15 @@ import { customProperties } from "../../utils/stylex-vars";
 import { buttonEmphasisVars } from "./button-vars.stylex";
 import { Loader } from "../loader/loader";
 
-export const TOMUI_BUTTON_DEFAULT_VARIANTS = {
+export const MIDORI_BUTTON_DEFAULT_VARIANTS = {
   form: "base",
   size: "base",
   variant: "secondary",
 } as const;
 
-export type TomuiButtonForm = "base" | "square" | "circle";
-export type TomuiButtonSize = "xs" | "sm" | "base" | "lg";
-export type TomuiButtonVariant =
+export type MidoriButtonForm = "base" | "square" | "circle";
+export type MidoriButtonSize = "xs" | "sm" | "base" | "lg";
+export type MidoriButtonVariant =
   | "primary"
   | "secondary"
   | "ghost"
@@ -118,78 +118,78 @@ const styles = stylex.create({
     position: "relative",
     overflow: "hidden",
     backgroundColor: buttonEmphasisVars.bg,
-    color: textColors["--text-color-tomui-inverse"],
+    color: textColors["--text-color-midori-inverse"],
     textShadow: "0 0.5px 0.5px rgb(0 0 0 / 0.3)",
-    boxShadow: elevation["--elevation-tomui-button-contrast"],
+    boxShadow: elevation["--elevation-midori-button-contrast"],
     ":disabled": disabledContrast,
   },
   neutral: {
-    backgroundColor: colors["--color-tomui-button-neutral"],
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
     ":disabled": disabledBase,
   },
   secondary: {
-    backgroundColor: colors["--color-tomui-button-neutral"],
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
     ":disabled": disabledBase,
   },
   "secondary-destructive": {
-    backgroundColor: colors["--color-tomui-button-neutral"],
-    color: textColors["--text-color-tomui-danger"],
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-danger"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
     ":disabled": disabledBase,
   },
   danger: {
-    backgroundColor: colors["--color-tomui-button-neutral"],
-    color: textColors["--text-color-tomui-danger"],
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-danger"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
     ":disabled": disabledBase,
   },
   warning: {
-    backgroundColor: colors["--color-tomui-button-neutral"],
-    color: textColors["--text-color-tomui-warning"],
-    boxShadow: elevation["--elevation-tomui-button-neutral"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-warning"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
     ":disabled": disabledBase,
   },
   ghost: {
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     backgroundColor: "transparent",
-    ":hover": { backgroundColor: colors["--color-tomui-overlay-hover"] },
-    ":active": { backgroundColor: colors["--color-tomui-overlay-pressed"] },
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
     ":disabled": disabledBase,
   },
   "ghost-muted": {
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     backgroundColor: "transparent",
     ":hover": {
-      backgroundColor: colors["--color-tomui-overlay-hover"],
-      color: textColors["--text-color-tomui-default"],
+      backgroundColor: colors["--color-midori-overlay-hover"],
+      color: textColors["--text-color-midori-default"],
     },
-    ":active": { backgroundColor: colors["--color-tomui-overlay-pressed"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
     ":disabled": disabledBase,
   },
   "ghost-faint": {
-    color: textColors["--text-color-tomui-inactive"],
+    color: textColors["--text-color-midori-inactive"],
     backgroundColor: "transparent",
     ":hover": {
-      backgroundColor: colors["--color-tomui-overlay-hover"],
-      color: textColors["--text-color-tomui-subtle"],
+      backgroundColor: colors["--color-midori-overlay-hover"],
+      color: textColors["--text-color-midori-subtle"],
     },
     ":disabled": disabledBase,
   },
   outline: {
     backgroundColor: "transparent",
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: "inset 0 0 0 1px " + colors["--color-tomui-hairline"],
-    ":hover": { backgroundColor: colors["--color-tomui-overlay-hover"] },
-    ":active": { backgroundColor: colors["--color-tomui-overlay-pressed"] },
+    color: textColors["--text-color-midori-default"],
+    boxShadow: "inset 0 0 0 1px " + colors["--color-midori-hairline"],
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
     ":disabled": disabledBase,
   },
 
@@ -201,7 +201,7 @@ const styles = stylex.create({
     outlineWidth: "2px",
     outlineColor: {
       default: "transparent",
-      ":focus-visible": colors["--color-tomui-focus"],
+      ":focus-visible": colors["--color-midori-focus"],
     },
   },
 
@@ -229,21 +229,21 @@ const formStyles = {
   base: styles.formBase,
   square: styles.formSquare,
   circle: styles.formCircle,
-} as const satisfies Record<TomuiButtonForm, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonForm, stylex.StyleXStyles>;
 
 const sizeStyles = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiButtonSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonSize, stylex.StyleXStyles>;
 
 const compactStyles = {
   xs: styles.compactXs,
   sm: styles.compactSm,
   base: styles.compactBase,
   lg: styles.compactLg,
-} as const satisfies Record<TomuiButtonSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonSize, stylex.StyleXStyles>;
 
 const variantStyles = {
   primary: styles.emphasis,
@@ -258,20 +258,20 @@ const variantStyles = {
   "ghost-faint": styles["ghost-faint"],
   "secondary-destructive": styles["secondary-destructive"],
   outline: styles.outline,
-} as const satisfies Record<TomuiButtonVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonVariant, stylex.StyleXStyles>;
 
-const isCompactForm = (form: TomuiButtonForm): boolean => form === "square" || form === "circle";
+const isCompactForm = (form: MidoriButtonForm): boolean => form === "square" || form === "circle";
 
-const hasEmphasis = (variant: TomuiButtonVariant): boolean =>
+const hasEmphasis = (variant: MidoriButtonVariant): boolean =>
   variant === "primary" || variant === "contrast" || variant === "destructive";
 
 /** Colour-mix vars for emphasis variants. Undefined for the others. */
-function emphasisStyle(variant: TomuiButtonVariant): Record<string, string> | undefined {
+function emphasisStyle(variant: MidoriButtonVariant): Record<string, string> | undefined {
   const isContrast = variant === "primary" || variant === "contrast";
   const token = isContrast
-    ? colors["--color-tomui-contrast"]
+    ? colors["--color-midori-button-contrast"]
     : variant === "destructive"
-      ? colors["--color-tomui-danger"]
+      ? colors["--color-midori-danger"]
       : undefined;
   if (token === undefined) return undefined;
   if (isContrast) {
@@ -295,11 +295,11 @@ function emphasisStyle(variant: TomuiButtonVariant): Record<string, string> | un
  * can adopt button appearance without rendering a Button.
  */
 export function buttonVariants(props: {
-  variant?: TomuiButtonVariant;
-  size?: TomuiButtonSize;
-  form?: TomuiButtonForm;
+  variant?: MidoriButtonVariant;
+  size?: MidoriButtonSize;
+  form?: MidoriButtonForm;
 }): stylex.StyleXStyles[] {
-  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BUTTON_DEFAULT_VARIANTS, props);
   return [
     styles.base,
     // Size before form: the form rules set border-radius for `circle`, and
@@ -316,9 +316,9 @@ export type ButtonProps = Omit<
   "style" | "title" | "type"
 > & {
   children?: JSX.Element;
-  form?: TomuiButtonForm;
-  size?: TomuiButtonSize;
-  variant?: TomuiButtonVariant;
+  form?: MidoriButtonForm;
+  size?: MidoriButtonSize;
+  variant?: MidoriButtonVariant;
   icon?: JSX.Element;
   loading?: boolean;
   title?: string | undefined;
@@ -334,7 +334,7 @@ export type ButtonProps = Omit<
 };
 
 export function Button(props: ButtonProps) {
-  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BUTTON_DEFAULT_VARIANTS, props);
   const rest = omit(
     merged,
     "children",
@@ -367,7 +367,7 @@ export function Button(props: ButtonProps) {
   };
   return (
     <button
-      data-tomui-component="Button"
+      data-midori-component="Button"
       {...attrs()}
       style={inlineVars()}
       disabled={isDisabled()}
@@ -403,9 +403,9 @@ export type LinkButtonProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, 
   disabled?: boolean;
   icon?: JSX.Element;
   external?: boolean;
-  form?: TomuiButtonForm;
-  size?: TomuiButtonSize;
-  variant?: TomuiButtonVariant;
+  form?: MidoriButtonForm;
+  size?: MidoriButtonSize;
+  variant?: MidoriButtonVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
   /** Extra custom properties set on the element. */
@@ -415,9 +415,9 @@ export type LinkButtonProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, 
 export function LinkButton(props: LinkButtonProps) {
   const merged = merge(
     {
-      form: "base" as TomuiButtonForm,
-      size: "base" as TomuiButtonSize,
-      variant: "ghost" as TomuiButtonVariant,
+      form: "base" as MidoriButtonForm,
+      size: "base" as MidoriButtonSize,
+      variant: "ghost" as MidoriButtonVariant,
     },
     props,
   );
@@ -442,7 +442,7 @@ export function LinkButton(props: LinkButtonProps) {
       when={merged.disabled}
       fallback={
         <a
-          data-tomui-component="LinkButton"
+          data-midori-component="LinkButton"
           {...stylex.attrs(
             ...buttonVariants(merged),
             styles.noUnderline,
@@ -460,7 +460,7 @@ export function LinkButton(props: LinkButtonProps) {
       }
     >
       <button
-        data-tomui-component="LinkButton"
+        data-midori-component="LinkButton"
         {...stylex.attrs(...buttonVariants(merged), select.text, merged.style)}
         disabled
       >

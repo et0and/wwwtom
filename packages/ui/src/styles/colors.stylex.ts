@@ -1,13 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 
 /**
- * OS dark-mode query. Matches `initColorMode()` in ../../utils/color-mode.ts,
- * which follows the OS setting and offers no user override, so this replaces
- * the old `light-dark()` pairs without changing behaviour.
- */
-const DARK = "@media (prefers-color-scheme: dark)";
-
-/**
  * The OpenCode UI palette. It is a 12-step grey scale plus tinted scales and
  * two alpha ramps, so surfaces, hairlines, and sheens can all come from one
  * source instead of ad-hoc `rgba()` values.
@@ -171,309 +164,96 @@ const PURPLE = {
 /** Semantic surface, line, state, and badge colour tokens. */
 export const colors = stylex.defineVars({
   /** Page, card, and recessed surfaces. */
-  "--color-tomui-canvas": {
-    default: GREY[100],
-    [DARK]: GREY[1200],
-  },
-  "--color-tomui-elevated": {
-    default: GREY[50],
-    [DARK]: GREY[1000],
-  },
-  "--color-tomui-recessed": {
-    default: GREY[200],
-    [DARK]: GREY[900],
-  },
-  "--color-tomui-base": {
-    default: GREY[50],
-    [DARK]: GREY[1100],
-  },
-  "--color-tomui-layer-01": {
-    default: GREY[100],
-    [DARK]: GREY[1000],
-  },
-  "--color-tomui-layer-02": {
-    default: GREY[200],
-    [DARK]: GREY[900],
-  },
-  "--color-tomui-layer-03": {
-    default: GREY[300],
-    [DARK]: GREY[800],
-  },
-  "--color-tomui-layer-04": {
-    default: GREY[400],
-    [DARK]: GREY[700],
-  },
-  "--color-tomui-tint": {
-    default: GREY[100],
-    [DARK]: GREY[800],
-  },
-  "--color-tomui-contrast": {
-    default: GREY[1000],
-    [DARK]: GREY[700],
-  },
-  "--color-tomui-overlay": {
-    default: GREY[50],
-    [DARK]: GREY[1000],
-  },
-  "--color-tomui-control": {
-    default: GREY[50],
-    [DARK]: GREY[1100],
-  },
-  "--color-tomui-interact": {
-    default: ALPHA_DARK[20],
-    [DARK]: ALPHA_LIGHT[20],
-  },
-  "--color-tomui-fill": {
-    default: GREY[200],
-    [DARK]: GREY[800],
-  },
-  "--color-tomui-fill-hover": {
-    default: GREY[300],
-    [DARK]: GREY[700],
-  },
+  "--color-midori-canvas": `light-dark(${GREY[100]}, ${GREY[1200]})`,
+  "--color-midori-elevated": `light-dark(${GREY[50]}, ${GREY[1000]})`,
+  "--color-midori-recessed": `light-dark(${GREY[200]}, ${GREY[900]})`,
+  "--color-midori-base": `light-dark(${GREY[50]}, ${GREY[1100]})`,
+  "--color-midori-layer-01": `light-dark(${GREY[100]}, ${GREY[1000]})`,
+  "--color-midori-layer-02": `light-dark(${GREY[200]}, ${GREY[900]})`,
+  "--color-midori-layer-03": `light-dark(${GREY[300]}, ${GREY[800]})`,
+  "--color-midori-layer-04": `light-dark(${GREY[400]}, ${GREY[700]})`,
+  "--color-midori-tint": `light-dark(${GREY[100]}, ${GREY[800]})`,
+  "--color-midori-contrast": `light-dark(${GREY[1000]}, ${GREY[700]})`,
+  "--color-midori-overlay": `light-dark(${GREY[50]}, ${GREY[1000]})`,
+  "--color-midori-control": `light-dark(${GREY[50]}, ${GREY[1100]})`,
+  "--color-midori-interact": `light-dark(${ALPHA_DARK[20]}, ${ALPHA_LIGHT[20]})`,
+  "--color-midori-fill": `light-dark(${GREY[200]}, ${GREY[800]})`,
+  "--color-midori-fill-hover": `light-dark(${GREY[300]}, ${GREY[700]})`,
 
   /** Accent. OpenCode's blue is the only chromatic brand colour. */
-  "--color-tomui-brand": {
-    default: BLUE[600],
-    [DARK]: BLUE[600],
-  },
-  "--color-tomui-brand-hover": {
-    default: BLUE[700],
-    [DARK]: BLUE[700],
-  },
+  "--color-midori-brand": `light-dark(${BLUE[600]}, ${BLUE[600]})`,
+  "--color-midori-brand-hover": `light-dark(${BLUE[700]}, ${BLUE[700]})`,
 
   /** Lines and focus. Hairlines are half-pixel borders over these. */
-  "--color-tomui-line": {
-    default: ALPHA_DARK[10],
-    [DARK]: ALPHA_LIGHT[10],
-  },
-  "--color-tomui-hairline": {
-    default: ALPHA_DARK[8],
-    [DARK]: ALPHA_LIGHT[8],
-  },
-  "--color-tomui-border-strong": {
-    default: ALPHA_DARK[20],
-    [DARK]: ALPHA_LIGHT[20],
-  },
-  "--color-tomui-focus": {
-    default: BLUE[500],
-    [DARK]: BLUE[500],
-  },
-  "--color-tomui-focus-ring": {
-    default: ALPHA_DARK[40],
-    [DARK]: ALPHA_LIGHT[40],
-  },
+  "--color-midori-line": `light-dark(${ALPHA_DARK[10]}, ${ALPHA_LIGHT[10]})`,
+  "--color-midori-hairline": `light-dark(${ALPHA_DARK[8]}, ${ALPHA_LIGHT[8]})`,
+  "--color-midori-border-strong": `light-dark(${ALPHA_DARK[20]}, ${ALPHA_LIGHT[20]})`,
+  "--color-midori-focus": `light-dark(${BLUE[500]}, ${BLUE[500]})`,
+  "--color-midori-focus-ring": `light-dark(${ALPHA_DARK[40]}, ${ALPHA_LIGHT[40]})`,
 
   /** Overlay fills for immediate hover and pressed states. */
-  "--color-tomui-overlay-hover": {
-    default: ALPHA_DARK[4],
-    [DARK]: ALPHA_LIGHT[6],
-  },
-  "--color-tomui-overlay-pressed": {
-    default: ALPHA_DARK[8],
-    [DARK]: ALPHA_LIGHT[10],
-  },
-  "--color-tomui-overlay-contrast-hover": {
-    default: ALPHA_LIGHT[12],
-    [DARK]: ALPHA_DARK[24],
-  },
-  "--color-tomui-overlay-contrast-pressed": {
-    default: ALPHA_LIGHT[24],
-    [DARK]: ALPHA_DARK[40],
-  },
-  "--color-tomui-overlay-scrim": {
-    default: ALPHA_DARK[40],
-    [DARK]: ALPHA_DARK[60],
-  },
-  "--color-tomui-sheen-top": {
-    default: ALPHA_LIGHT[16],
-    [DARK]: ALPHA_LIGHT[16],
-  },
-  "--color-tomui-sheen-bottom": {
-    default: ALPHA_LIGHT[0],
-    [DARK]: ALPHA_LIGHT[0],
-  },
-  "--color-tomui-button-neutral": {
-    default: GREY[50],
-    [DARK]: ALPHA_LIGHT[6],
-  },
-  "--color-tomui-button-contrast": {
-    default: GREY[1000],
-    [DARK]: GREY[700],
-  },
+  "--color-midori-overlay-hover": `light-dark(${ALPHA_DARK[4]}, ${ALPHA_LIGHT[6]})`,
+  "--color-midori-overlay-pressed": `light-dark(${ALPHA_DARK[8]}, ${ALPHA_LIGHT[10]})`,
+  "--color-midori-overlay-contrast-hover": `light-dark(${ALPHA_LIGHT[12]}, ${ALPHA_DARK[24]})`,
+  "--color-midori-overlay-contrast-pressed": `light-dark(${ALPHA_LIGHT[24]}, ${ALPHA_DARK[40]})`,
+  "--color-midori-overlay-scrim": `light-dark(${ALPHA_DARK[40]}, ${ALPHA_DARK[60]})`,
+  "--color-midori-sheen-top": `light-dark(${ALPHA_LIGHT[16]}, ${ALPHA_LIGHT[16]})`,
+  "--color-midori-sheen-bottom": `light-dark(${ALPHA_LIGHT[0]}, ${ALPHA_LIGHT[0]})`,
+  "--color-midori-button-neutral": `light-dark(${GREY[50]}, ${ALPHA_LIGHT[6]})`,
+  "--color-midori-button-contrast": `light-dark(${GREY[1000]}, ${GREY[50]})`,
 
   /** Switch. */
-  "--color-tomui-switch-thumb": {
-    default: GREY[200],
-    [DARK]: GREY[200],
-  },
-  "--color-tomui-switch-thumb-on": {
-    default: GREY[300],
-    [DARK]: GREY[300],
-  },
+  "--color-midori-switch-thumb": `light-dark(${GREY[200]}, ${GREY[200]})`,
+  "--color-midori-switch-thumb-on": `light-dark(${GREY[300]}, ${GREY[300]})`,
 
   /** Elevation. */
-  "--color-tomui-shadow-edge": {
-    default: ALPHA_DARK[12],
-    [DARK]: ALPHA_LIGHT[16],
-  },
-  "--color-tomui-shadow-drop": {
-    default: ALPHA_DARK[8],
-    [DARK]: ALPHA_DARK[40],
-  },
-  "--color-tomui-arrow-edge": {
-    default: ALPHA_DARK[10],
-    [DARK]: "transparent",
-  },
-  "--color-tomui-arrow-stroke": {
-    default: "transparent",
-    [DARK]: GREY[700],
-  },
+  "--color-midori-shadow-edge": `light-dark(${ALPHA_DARK[12]}, ${ALPHA_LIGHT[16]})`,
+  "--color-midori-shadow-drop": `light-dark(${ALPHA_DARK[8]}, ${ALPHA_DARK[40]})`,
+  "--color-midori-arrow-edge": `light-dark(${ALPHA_DARK[10]}, ${"transparent"})`,
+  "--color-midori-arrow-stroke": `light-dark(${"transparent"}, ${GREY[700]})`,
 
   /** State surfaces and text. */
-  "--color-tomui-info-tint": {
-    default: BLUE[200],
-    [DARK]: BLUE[1200],
-  },
-  "--color-tomui-info": {
-    default: BLUE[800],
-    [DARK]: BLUE[500],
-  },
-  "--color-tomui-warning-tint": {
-    default: YELLOW[100],
-    [DARK]: YELLOW[1200],
-  },
-  "--color-tomui-warning": {
-    default: YELLOW[800],
-    [DARK]: YELLOW[500],
-  },
-  "--color-tomui-danger-tint": {
-    default: RED[100],
-    [DARK]: RED[1200],
-  },
-  "--color-tomui-danger": {
-    default: RED[800],
-    [DARK]: RED[500],
-  },
-  "--color-tomui-success-tint": {
-    default: GREEN[100],
-    [DARK]: GREEN[1200],
-  },
-  "--color-tomui-success": {
-    default: GREEN[800],
-    [DARK]: GREEN[500],
-  },
-  "--color-tomui-banner-info": {
-    default: "color-mix(in srgb, " + BLUE[200] + " 70%, transparent)",
-    [DARK]: "color-mix(in srgb, " + BLUE[1200] + " 70%, transparent)",
-  },
-  "--color-tomui-banner-warning": {
-    default: YELLOW[100],
-    [DARK]: "color-mix(in srgb, " + YELLOW[1200] + " 70%, transparent)",
-  },
+  "--color-midori-info-tint": `light-dark(${BLUE[200]}, ${BLUE[1200]})`,
+  "--color-midori-info": `light-dark(${BLUE[800]}, ${BLUE[500]})`,
+  "--color-midori-warning-tint": `light-dark(${YELLOW[100]}, ${YELLOW[1200]})`,
+  "--color-midori-warning": `light-dark(${YELLOW[800]}, ${YELLOW[500]})`,
+  "--color-midori-danger-tint": `light-dark(${RED[100]}, ${RED[1200]})`,
+  "--color-midori-danger": `light-dark(${RED[800]}, ${RED[500]})`,
+  "--color-midori-success-tint": `light-dark(${GREEN[100]}, ${GREEN[1200]})`,
+  "--color-midori-success": `light-dark(${GREEN[800]}, ${GREEN[500]})`,
+  "--color-midori-banner-info": `light-dark(${"color-mix(in srgb, " + BLUE[200] + " 70%, transparent)"}, ${"color-mix(in srgb, " + BLUE[1200] + " 70%, transparent)"})`,
+  "--color-midori-banner-warning": `light-dark(${YELLOW[100]}, ${"color-mix(in srgb, " + YELLOW[1200] + " 70%, transparent)"})`,
 
   /** Badge fills. Filled badges keep a saturated step; subtle ones use tints. */
-  "--color-tomui-badge-red": {
-    default: RED[700],
-    [DARK]: RED[500],
-  },
-  "--color-tomui-badge-green": {
-    default: GREEN[700],
-    [DARK]: GREEN[500],
-  },
-  "--color-tomui-badge-orange": {
-    default: ORANGE[700],
-    [DARK]: ORANGE[500],
-  },
-  "--color-tomui-badge-purple": {
-    default: PURPLE[700],
-    [DARK]: PURPLE[400],
-  },
-  "--color-tomui-badge-teal": {
-    default: CYAN[700],
-    [DARK]: CYAN[500],
-  },
-  "--color-tomui-badge-blue": {
-    default: BLUE[700],
-    [DARK]: BLUE[400],
-  },
-  "--color-tomui-badge-neutral": {
-    default: GREY[600],
-    [DARK]: GREY[500],
-  },
-  "--color-tomui-badge-inverted": {
-    default: GREY[1000],
-    [DARK]: GREY[50],
-  },
+  "--color-midori-badge-red": `light-dark(${RED[700]}, ${RED[500]})`,
+  "--color-midori-badge-green": `light-dark(${GREEN[700]}, ${GREEN[500]})`,
+  "--color-midori-badge-orange": `light-dark(${ORANGE[700]}, ${ORANGE[500]})`,
+  "--color-midori-badge-purple": `light-dark(${PURPLE[700]}, ${PURPLE[400]})`,
+  "--color-midori-badge-teal": `light-dark(${CYAN[700]}, ${CYAN[500]})`,
+  "--color-midori-badge-blue": `light-dark(${BLUE[700]}, ${BLUE[400]})`,
+  "--color-midori-badge-neutral": `light-dark(${GREY[600]}, ${GREY[500]})`,
+  "--color-midori-badge-inverted": `light-dark(${GREY[1000]}, ${GREY[50]})`,
 });
 
 /**
  * Text colour tokens. Names keep the `--` prefix because icons and inline
- * styles read `var(--text-color-tomui-*)` directly.
+ * styles read `var(--text-color-midori-*)` directly.
  */
 export const textColors = stylex.defineVars({
-  "--text-color-tomui-default": {
-    default: GREY[1100],
-    [DARK]: GREY[100],
-  },
-  "--text-color-tomui-inverse": {
-    default: GREY[100],
-    [DARK]: GREY[1100],
-  },
-  "--text-color-tomui-strong": {
-    default: GREY[1200],
-    [DARK]: GREY[50],
-  },
-  "--text-color-tomui-subtle": {
-    default: GREY[700],
-    [DARK]: GREY[500],
-  },
-  "--text-color-tomui-inactive": {
-    default: GREY[500],
-    [DARK]: GREY[600],
-  },
-  "--text-color-tomui-placeholder": {
-    default: GREY[600],
-    [DARK]: GREY[600],
-  },
-  "--text-color-tomui-brand": {
-    default: BLUE[600],
-    [DARK]: BLUE[600],
-  },
-  "--text-color-tomui-link": {
-    default: BLUE[600],
-    [DARK]: BLUE[400],
-  },
-  "--text-color-tomui-info": {
-    default: BLUE[800],
-    [DARK]: BLUE[500],
-  },
-  "--text-color-tomui-success": {
-    default: GREEN[800],
-    [DARK]: GREEN[500],
-  },
-  "--text-color-tomui-danger": {
-    default: RED[800],
-    [DARK]: RED[500],
-  },
-  "--text-color-tomui-warning": {
-    default: YELLOW[800],
-    [DARK]: YELLOW[500],
-  },
-  "--text-color-tomui-badge-orange-subtle": {
-    default: ORANGE[800],
-    [DARK]: ORANGE[400],
-  },
-  "--text-color-tomui-badge-teal-subtle": {
-    default: CYAN[800],
-    [DARK]: CYAN[300],
-  },
-  "--text-color-tomui-badge-neutral-subtle": {
-    default: GREY[800],
-    [DARK]: GREY[300],
-  },
-  "--text-color-tomui-badge-inverted": {
-    default: GREY[50],
-    [DARK]: GREY[1000],
-  },
+  "--text-color-midori-default": `light-dark(${GREY[1100]}, ${GREY[100]})`,
+  "--text-color-midori-inverse": `light-dark(${GREY[100]}, ${GREY[1100]})`,
+  "--text-color-midori-strong": `light-dark(${GREY[1200]}, ${GREY[50]})`,
+  "--text-color-midori-subtle": `light-dark(${GREY[700]}, ${GREY[500]})`,
+  "--text-color-midori-inactive": `light-dark(${GREY[500]}, ${GREY[600]})`,
+  "--text-color-midori-placeholder": `light-dark(${GREY[600]}, ${GREY[600]})`,
+  "--text-color-midori-brand": `light-dark(${BLUE[600]}, ${BLUE[600]})`,
+  "--text-color-midori-link": `light-dark(${BLUE[600]}, ${BLUE[400]})`,
+  "--text-color-midori-info": `light-dark(${BLUE[800]}, ${BLUE[500]})`,
+  "--text-color-midori-success": `light-dark(${GREEN[800]}, ${GREEN[500]})`,
+  "--text-color-midori-danger": `light-dark(${RED[800]}, ${RED[500]})`,
+  "--text-color-midori-warning": `light-dark(${YELLOW[800]}, ${YELLOW[500]})`,
+  "--text-color-midori-badge-orange-subtle": `light-dark(${ORANGE[800]}, ${ORANGE[400]})`,
+  "--text-color-midori-badge-teal-subtle": `light-dark(${CYAN[800]}, ${CYAN[300]})`,
+  "--text-color-midori-badge-neutral-subtle": `light-dark(${GREY[800]}, ${GREY[300]})`,
+  "--text-color-midori-badge-inverted": `light-dark(${GREY[50]}, ${GREY[1000]})`,
 });

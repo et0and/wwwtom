@@ -31,14 +31,14 @@ describe("TextInput", () => {
     const { container } = render(() => <TextInput invalid />);
     expect(container.querySelector("input")!.getAttribute("aria-invalid")).toBe("true");
     expect(
-      container.querySelector("[data-tomui-component=TextInput]")!.hasAttribute("data-invalid"),
+      container.querySelector("[data-midori-component=TextInput]")!.hasAttribute("data-invalid"),
     ).toBe(true);
   });
 
   it("marks numeric fields", () => {
     const { container } = render(() => <TextInput numeric />);
     expect(
-      container.querySelector("[data-tomui-component=TextInput]")!.hasAttribute("data-numeric"),
+      container.querySelector("[data-midori-component=TextInput]")!.hasAttribute("data-numeric"),
     ).toBe(true);
   });
 
@@ -46,7 +46,7 @@ describe("TextInput", () => {
     const appearance = (value: "small" | "base" | "large") =>
       classList(
         render(() => <TextInput appearance={value} />).container.querySelector(
-          "[data-tomui-component=TextInput]",
+          "[data-midori-component=TextInput]",
         )!,
       ).join(" ");
 

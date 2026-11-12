@@ -7,7 +7,7 @@ describe("Divider", () => {
     const { container } = render(() => <Divider />);
     const divider = container.querySelector("[role=separator]")!;
     expect(divider.getAttribute("aria-orientation")).toBe("horizontal");
-    expect(divider.getAttribute("data-tomui-component")).toBe("Divider");
+    expect(divider.getAttribute("data-midori-component")).toBe("Divider");
   });
 
   it("supports a vertical orientation", () => {

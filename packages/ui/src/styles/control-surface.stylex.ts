@@ -3,7 +3,7 @@ import { colors, textColors } from "./colors.stylex";
 import { elevation } from "./elevation.stylex";
 import { radius } from "./primitives.stylex";
 
-const dangerColor = textColors["--text-color-tomui-danger"];
+const dangerColor = textColors["--text-color-midori-danger"];
 
 /**
  * The shared shell for text-like controls. TextInput and Textarea differ only
@@ -22,18 +22,18 @@ export const controlSurface = stylex.create({
     outlineStyle: "solid",
     outlineColor: "transparent",
     outlineOffset: "-1px",
-    backgroundColor: colors["--color-tomui-base"],
-    boxShadow: elevation["--elevation-tomui-input"],
+    backgroundColor: colors["--color-midori-base"],
+    boxShadow: elevation["--elevation-midori-input"],
     flex: "none",
     alignSelf: "stretch",
-    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
+    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
     ":focus-within": {
-      outlineColor: colors["--color-tomui-focus"],
+      outlineColor: colors["--color-midori-focus"],
       boxShadow: "none",
     },
     ":disabled": { opacity: 0.5, cursor: "not-allowed" },
   },
-  layer1: { backgroundColor: colors["--color-tomui-layer-01"] },
+  layer1: { backgroundColor: colors["--color-midori-layer-01"] },
   invalid: {
     ":not(:disabled)": {
       outlineColor: dangerColor,

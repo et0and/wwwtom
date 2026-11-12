@@ -9,17 +9,17 @@ import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 /** Tailwind's `sm:` breakpoint, used by the toaster's responsive placement. */
 const SM = "@media (min-width: 640px)";
 
-const successColor = colors["--color-tomui-success"];
-const dangerColor = colors["--color-tomui-danger"];
-const warningColor = colors["--color-tomui-warning"];
-const infoColor = colors["--color-tomui-info"];
+const successColor = colors["--color-midori-success"];
+const dangerColor = colors["--color-midori-danger"];
+const warningColor = colors["--color-midori-warning"];
+const infoColor = colors["--color-midori-info"];
 
-const defaultText = textColors["--text-color-tomui-default"];
-const subtleText = textColors["--text-color-tomui-subtle"];
-const successText = textColors["--text-color-tomui-success"];
-const dangerText = textColors["--text-color-tomui-danger"];
-const warningText = textColors["--text-color-tomui-warning"];
-const infoText = textColors["--text-color-tomui-info"];
+const defaultText = textColors["--text-color-midori-default"];
+const subtleText = textColors["--text-color-midori-subtle"];
+const successText = textColors["--text-color-midori-success"];
+const dangerText = textColors["--text-color-midori-danger"];
+const warningText = textColors["--text-color-midori-warning"];
+const infoText = textColors["--text-color-midori-info"];
 
 const styles = stylex.create({
   toasterRoot: {
@@ -37,10 +37,10 @@ const styles = stylex.create({
     position: "relative",
     borderWidth: "0.5px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-hairline"],
+    borderColor: colors["--color-midori-hairline"],
     borderRadius: "0.5rem",
-    backgroundColor: colors["--color-tomui-layer-01"],
-    boxShadow: elevation["--elevation-tomui-floating"],
+    backgroundColor: colors["--color-midori-layer-01"],
+    boxShadow: elevation["--elevation-midori-floating"],
     backgroundClip: "padding-box",
     padding: "0.75rem",
   },
@@ -86,7 +86,7 @@ const styles = stylex.create({
     backgroundColor: "transparent",
     color: subtleText,
     ":hover": {
-      backgroundColor: colors["--color-tomui-overlay-hover"],
+      backgroundColor: colors["--color-midori-overlay-hover"],
       color: defaultText,
     },
   },
@@ -96,11 +96,11 @@ const styles = stylex.create({
   closeInfo: { color: infoText },
 });
 
-export const TOMUI_TOAST_DEFAULT_VARIANTS = {
+export const MIDORI_TOAST_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-export type TomuiToastVariant = "default" | "success" | "error" | "warning" | "info";
+export type MidoriToastVariant = "default" | "success" | "error" | "warning" | "info";
 
 const toastVariantStyles = {
   default: undefined,
@@ -108,7 +108,7 @@ const toastVariantStyles = {
   error: styles.toastError,
   warning: styles.toastWarning,
   info: styles.toastInfo,
-} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles | undefined>;
+} as const satisfies Record<MidoriToastVariant, stylex.StyleXStyles | undefined>;
 
 const titleVariantStyles = {
   default: undefined,
@@ -116,7 +116,7 @@ const titleVariantStyles = {
   error: styles.titleError,
   warning: styles.titleWarning,
   info: styles.titleInfo,
-} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles | undefined>;
+} as const satisfies Record<MidoriToastVariant, stylex.StyleXStyles | undefined>;
 
 const closeVariantStyles = {
   default: undefined,
@@ -124,12 +124,12 @@ const closeVariantStyles = {
   error: styles.closeError,
   warning: styles.closeWarning,
   info: styles.closeInfo,
-} as const satisfies Record<TomuiToastVariant, stylex.StyleXStyles | undefined>;
+} as const satisfies Record<MidoriToastVariant, stylex.StyleXStyles | undefined>;
 
 export function toastVariants(
-  props: { variant?: TomuiToastVariant } = {},
+  props: { variant?: MidoriToastVariant } = {},
 ): Array<stylex.StyleXStyles> {
-  const merged = merge(TOMUI_TOAST_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_TOAST_DEFAULT_VARIANTS, props);
   const variant = toastVariantStyles[merged.variant];
   return variant === undefined ? [styles.toastShell] : [styles.toastShell, variant];
 }
@@ -138,7 +138,7 @@ export type ToastItem = {
   id: string;
   title: string;
   description?: string;
-  variant?: TomuiToastVariant;
+  variant?: MidoriToastVariant;
   duration?: number;
 };
 
@@ -199,15 +199,15 @@ export function Toaster(props: ToasterProps) {
   const items = () => merged.toasts ?? [];
   return (
     <div
-      data-tomui-component="Toaster"
-      data-tomui-top-layer
+      data-midori-component="Toaster"
+      data-midori-top-layer
       aria-live="polite"
       {...stylex.attrs(styles.toasterRoot, merged.style)}
       {...rest}
     >
       <For each={items()}>
         {(toast) => {
-          const variant = toast.variant ?? TOMUI_TOAST_DEFAULT_VARIANTS.variant;
+          const variant = toast.variant ?? MIDORI_TOAST_DEFAULT_VARIANTS.variant;
           return (
             <div role="status" {...stylex.attrs(...toastVariants({ variant }))}>
               <div {...stylex.attrs(styles.body)}>

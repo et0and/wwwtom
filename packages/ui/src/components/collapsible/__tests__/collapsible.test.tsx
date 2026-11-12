@@ -11,9 +11,9 @@ describe("Collapsible", () => {
       </Collapsible>
     ));
     expect(
-      container.querySelector("[data-tomui-part=trigger]")?.getAttribute("aria-expanded"),
+      container.querySelector("[data-midori-part=trigger]")?.getAttribute("aria-expanded"),
     ).toBe("false");
-    expect(container.querySelector("[data-tomui-part=panel]")).toBeNull();
+    expect(container.querySelector("[data-midori-part=panel]")).toBeNull();
   });
 
   it("shows the panel once opened", async () => {
@@ -24,7 +24,7 @@ describe("Collapsible", () => {
       </Collapsible>
     ));
     await vi.waitFor(() => {
-      expect(container.querySelector("[data-tomui-part=panel]")?.textContent).toBe("Details");
+      expect(container.querySelector("[data-midori-part=panel]")?.textContent).toBe("Details");
     });
   });
 
@@ -35,12 +35,12 @@ describe("Collapsible", () => {
         <Collapsible.Panel>Details</Collapsible.Panel>
       </Collapsible>
     ));
-    const trigger = container.querySelector("[data-tomui-part=trigger]")!;
+    const trigger = container.querySelector("[data-midori-part=trigger]")!;
     fireEvent.click(trigger);
 
     await vi.waitFor(() => {
       expect(trigger.getAttribute("aria-expanded")).toBe("true");
-      expect(container.querySelector("[data-tomui-part=panel]")).not.toBeNull();
+      expect(container.querySelector("[data-midori-part=panel]")).not.toBeNull();
     });
   });
 
@@ -51,10 +51,10 @@ describe("Collapsible", () => {
         <Collapsible.Panel keepMounted>Details</Collapsible.Panel>
       </Collapsible>
     ));
-    const panel = container.querySelector("[data-tomui-part=panel]")!;
+    const panel = container.querySelector("[data-midori-part=panel]")!;
     expect(panel.hasAttribute("hidden")).toBe(true);
 
-    fireEvent.click(container.querySelector("[data-tomui-part=trigger]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=trigger]")!);
 
     await vi.waitFor(() => {
       expect(panel.hasAttribute("hidden")).toBe(false);
@@ -69,7 +69,7 @@ describe("Collapsible", () => {
         <Collapsible.Panel>Details</Collapsible.Panel>
       </Collapsible>
     ));
-    fireEvent.click(container.querySelector("[data-tomui-part=trigger]")!);
+    fireEvent.click(container.querySelector("[data-midori-part=trigger]")!);
 
     await vi.waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(true);
@@ -83,7 +83,7 @@ describe("Collapsible", () => {
         <Collapsible.DefaultPanel>Repository settings live here.</Collapsible.DefaultPanel>
       </Collapsible>
     ));
-    const trigger = container.querySelector("[data-tomui-part=default-trigger]")!;
+    const trigger = container.querySelector("[data-midori-part=default-trigger]")!;
     const icon = trigger.querySelector("svg")!;
     const closedClass = icon.getAttribute("class");
     expect(container.textContent).not.toContain("Repository settings live here.");

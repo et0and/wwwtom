@@ -7,11 +7,11 @@ import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
 import { fontSize2xs, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_TOOLTIP_DEFAULT_VARIANTS = {
+export const MIDORI_TOOLTIP_DEFAULT_VARIANTS = {
   side: "top",
 } as const;
 
-export type TomuiTooltipSide = "top" | "bottom" | "left" | "right";
+export type MidoriTooltipSide = "top" | "bottom" | "left" | "right";
 export type TooltipAlign = "start" | "center" | "end";
 
 /** Open/close transition states, driven by the disclosure state utilities. */
@@ -37,15 +37,15 @@ const styles = stylex.create({
     opacity: 1,
     transformOrigin: "var(--transform-origin)",
     borderRadius: radius.sm,
-    backgroundColor: colors["--color-tomui-layer-01"],
+    backgroundColor: colors["--color-midori-layer-01"],
     paddingInline: "0.375rem",
     paddingBlock: "0.3125rem",
     fontSize: fontSize2xs.fontSize,
     fontWeight: fontWeightControl.fontWeight,
     lineHeight: "12px",
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     whiteSpace: "nowrap",
-    boxShadow: elevation["--elevation-tomui-floating"],
+    boxShadow: elevation["--elevation-midori-floating"],
     userSelect: "none",
     transitionProperty: "transform, scale, opacity",
     transitionDuration: "120ms",
@@ -66,7 +66,7 @@ const sideStyles = {
   bottom: styles.sideBottom,
   left: styles.sideLeft,
   right: styles.sideRight,
-} as const satisfies Record<TomuiTooltipSide, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriTooltipSide, stylex.StyleXStyles>;
 
 let globalWarmedUp = false;
 let globalCoolDownTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -78,7 +78,7 @@ export type TooltipProps = {
   children?: JSX.Element;
   content: JSX.Element;
   ref?: HTMLSpanElement | ((element: HTMLSpanElement) => void) | undefined;
-  side?: TomuiTooltipSide;
+  side?: MidoriTooltipSide;
   openDelay?: number;
   closeDelay?: number;
   skipDelayDuration?: number;
@@ -91,7 +91,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
   const merged = merge(
     {
       align: "center" as TooltipAlign,
-      side: TOMUI_TOOLTIP_DEFAULT_VARIANTS.side,
+      side: MIDORI_TOOLTIP_DEFAULT_VARIANTS.side,
       openDelay: 700,
       closeDelay: 300,
       skipDelayDuration: 300,
@@ -220,7 +220,7 @@ export function Tooltip(props: TooltipProps): JSX.Element {
 
   return (
     <span
-      data-tomui-component="Tooltip"
+      data-midori-component="Tooltip"
       data-side={merged.side}
       {...stylex.attrs(styles.wrapper, merged.style)}
       tabindex={0}

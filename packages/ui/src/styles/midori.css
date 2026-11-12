@@ -1,11 +1,11 @@
 @import "./preflight.css";
-@import "./tomui-binding.css";
+@import "./midori-binding.css";
 
 /*
- * TomUI Component Library Styles.
- * Ported from Cloudflare Tomui (MIT) to Solid.
+ * Midori Component Library Styles.
+ * Ported from Cloudflare Midori (MIT) to Solid.
  *
- * preflight.css provides the baseline reset, then tomui-binding.css carries
+ * preflight.css provides the baseline reset, then midori-binding.css carries
  * the CSS-only behaviour StyleX cannot express. Consumers import only this
  * file.
  */
@@ -13,8 +13,8 @@
 /*
  * Base clickable affordances.
  *
- * Scoped to Tomui-rendered elements via the [data-tomui-component] and
- * [data-tomui-part] data attributes. Components opt in by setting these
+ * Scoped to Midori-rendered elements via the [data-midori-component] and
+ * [data-midori-part] data attributes. Components opt in by setting these
  * attributes on their interactive roots/parts, which gives us a stable,
  * library-owned scoping primitive that doesn't couple to class names.
  */
@@ -39,7 +39,7 @@
     [role="checkbox"],
     [role="radio"],
     [role="switch"]
-  ):where([data-tomui-component], [data-tomui-part]):where(:not(:disabled)):where(
+  ):where([data-midori-component], [data-midori-part]):where(:not(:disabled)):where(
     :not([disabled])
   ):where(:not([aria-disabled="true"])):where(:not([data-disabled])) {
   cursor: pointer;

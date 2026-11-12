@@ -6,7 +6,7 @@ const classList = (element: Element): string[] =>
   (element.getAttribute("class") ?? "").split(" ").filter(Boolean);
 
 const inputOf = (container: HTMLElement): HTMLInputElement =>
-  container.querySelector("[data-tomui-component=Switch][type=checkbox]")!;
+  container.querySelector("[data-midori-component=Switch][type=checkbox]")!;
 
 describe("switchVariants", () => {
   it("gives each size a different thumb style", () => {

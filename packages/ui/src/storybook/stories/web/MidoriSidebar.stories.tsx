@@ -23,15 +23,15 @@ const frameStyle = {
   width: "48rem",
   maxWidth: "100%",
   overflow: "hidden",
-  border: "1px solid var(--color-tomui-line)",
+  border: "1px solid var(--color-midori-line)",
   borderRadius: "0.5rem",
-  backgroundColor: "var(--color-tomui-canvas)",
+  backgroundColor: "var(--color-midori-canvas)",
 };
 
 const contentStyle = {
   flex: 1,
   padding: "1.5rem",
-  color: "var(--text-color-tomui-subtle)",
+  color: "var(--text-color-midori-subtle)",
 };
 
 export const Default = meta.story({

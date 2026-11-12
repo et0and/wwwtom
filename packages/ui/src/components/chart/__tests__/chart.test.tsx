@@ -58,15 +58,15 @@ describe("Chart", () => {
 
   it("applies an explicit height as an inline style", () => {
     const { container } = render(() => <Chart height={120} />);
-    const root = container.querySelector("[data-tomui-component=Chart]") as HTMLElement;
+    const root = container.querySelector("[data-midori-component=Chart]") as HTMLElement;
     expect(root.style.height).toBe("120px");
   });
 
   it("gives each size a different class list", () => {
     const { container: sm } = render(() => <Chart size="sm" />);
     const { container: lg } = render(() => <Chart size="lg" />);
-    expect(classList(sm.querySelector("[data-tomui-component=Chart]")!)).not.toEqual(
-      classList(lg.querySelector("[data-tomui-component=Chart]")!),
+    expect(classList(sm.querySelector("[data-midori-component=Chart]")!)).not.toEqual(
+      classList(lg.querySelector("[data-midori-component=Chart]")!),
     );
   });
 

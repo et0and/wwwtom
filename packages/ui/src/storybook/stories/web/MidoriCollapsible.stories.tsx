@@ -8,13 +8,13 @@ const styles = stylex.create({
   framed: {
     width: "24rem",
     borderRadius: "0.5rem",
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    boxShadow: "0 0 0 1px " + colors["--color-midori-line"],
   },
   panel: {
     margin: 0,
     padding: "0.75rem",
     borderRadius: "0.5rem",
-    backgroundColor: colors["--color-tomui-recessed"],
+    backgroundColor: colors["--color-midori-recessed"],
     fontSize: "0.875rem",
   },
   text: { marginTop: "0.5rem", fontSize: "0.875rem" },

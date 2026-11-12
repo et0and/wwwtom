@@ -28,7 +28,7 @@ export const styles = stylex.create({
     paddingTop: "1rem",
     borderTopWidth: 1,
     borderTopStyle: "solid",
-    borderTopColor: colors["--color-tomui-line"],
+    borderTopColor: colors["--color-midori-line"],
   },
   gavinInputRow: {
     display: "flex",

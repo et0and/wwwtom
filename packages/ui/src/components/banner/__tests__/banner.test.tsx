@@ -23,7 +23,7 @@ describe("bannerVariants", () => {
 describe("Banner", () => {
   it("renders the title and description", () => {
     const { container } = render(() => <Banner title="Update available" description="Details" />);
-    expect(container.querySelector("[data-tomui-component=Banner]")?.textContent).toContain(
+    expect(container.querySelector("[data-midori-component=Banner]")?.textContent).toContain(
       "Update available",
     );
     expect(container.textContent).toContain("Details");
@@ -32,10 +32,10 @@ describe("Banner", () => {
   it("sets role=alert only for the error variant", () => {
     const { container: error } = render(() => <Banner variant="error" title="Oops" />);
     const { container: info } = render(() => <Banner title="Hi" />);
-    expect(error.querySelector("[data-tomui-component=Banner]")?.getAttribute("role")).toBe(
+    expect(error.querySelector("[data-midori-component=Banner]")?.getAttribute("role")).toBe(
       "alert",
     );
-    expect(info.querySelector("[data-tomui-component=Banner]")?.getAttribute("role")).toBeNull();
+    expect(info.querySelector("[data-midori-component=Banner]")?.getAttribute("role")).toBeNull();
   });
 
   it("renders the icon wrapper only when an icon is given", () => {
@@ -64,7 +64,7 @@ describe("Banner", () => {
   it("gives each variant a different class", () => {
     const classesFor = (variant: "default" | "alert" | "error" | "secondary") =>
       render(() => <Banner variant={variant} title="Hi" />).container.querySelector(
-        "[data-tomui-component=Banner]",
+        "[data-midori-component=Banner]",
       )!;
 
     const classes = (["default", "alert", "error", "secondary"] as const).map((variant) =>
@@ -76,9 +76,9 @@ describe("Banner", () => {
   it("merges caller styles last", () => {
     const { container } = render(() => <Banner title="Hi" style={callerStyle} />);
     const base = render(() => <Banner title="Hi" />).container.querySelector(
-      "[data-tomui-component=Banner]",
+      "[data-midori-component=Banner]",
     )!;
-    const overridden = container.querySelector("[data-tomui-component=Banner]")!;
+    const overridden = container.querySelector("[data-midori-component=Banner]")!;
     expect(classList(overridden)).not.toEqual(classList(base));
   });
 });

@@ -72,7 +72,7 @@ export function GardenMatrix(props: GardenMatrixProps) {
               cx={cell.cx}
               cy={cell.cy}
               r={radius()}
-              fill={value() > 0.01 ? "currentColor" : colors["--color-tomui-tint"]}
+              fill={value() > 0.01 ? "currentColor" : colors["--color-midori-tint"]}
               opacity={value() > 0.01 ? value() : 1}
             />
           );

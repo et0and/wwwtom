@@ -41,8 +41,8 @@ describe("Empty", () => {
   it("gives each size a different style", () => {
     const { container: sm } = render(() => <Empty title="T" size="sm" />);
     const { container: lg } = render(() => <Empty title="T" size="lg" />);
-    expect(classList(sm.querySelector("[data-tomui-component=Empty]")!)).not.toEqual(
-      classList(lg.querySelector("[data-tomui-component=Empty]")!),
+    expect(classList(sm.querySelector("[data-midori-component=Empty]")!)).not.toEqual(
+      classList(lg.querySelector("[data-midori-component=Empty]")!),
     );
   });
 

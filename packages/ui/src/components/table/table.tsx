@@ -4,13 +4,13 @@ import type { JSX } from "@solidjs/web";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_TABLE_DEFAULT_VARIANTS = {
+export const MIDORI_TABLE_DEFAULT_VARIANTS = {
   layout: "auto",
   variant: "default",
 } as const;
 
-export type TomuiTableLayout = "auto" | "fixed";
-export type TomuiTableRowVariant = "default" | "selected";
+export type MidoriTableLayout = "auto" | "fixed";
+export type MidoriTableRowVariant = "default" | "selected";
 
 const styles = stylex.create({
   table: {
@@ -19,58 +19,58 @@ const styles = stylex.create({
     borderCollapse: "collapse",
     textAlign: "left",
     fontSize: fontSizeSm.fontSize,
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
   },
   layoutFixed: { tableLayout: "fixed" },
   head: {
     position: "relative",
     borderBottomWidth: "0.5px",
     borderBottomStyle: "solid",
-    borderBottomColor: colors["--color-tomui-hairline"],
+    borderBottomColor: colors["--color-midori-hairline"],
     paddingBlock: "0.5rem",
     paddingInline: "0.75rem",
     fontSize: fontSizeXs.fontSize,
     fontWeight: fontWeightControl.fontWeight,
-    color: textColors["--text-color-tomui-subtle"],
-    backgroundColor: colors["--color-tomui-layer-01"],
+    color: textColors["--text-color-midori-subtle"],
+    backgroundColor: colors["--color-midori-layer-01"],
   },
   cell: {
     paddingBlock: "0.5rem",
     paddingInline: "0.75rem",
     borderBottomWidth: "0.5px",
     borderBottomStyle: "solid",
-    borderBottomColor: colors["--color-tomui-hairline"],
+    borderBottomColor: colors["--color-midori-hairline"],
   },
   rowDefault: {
-    backgroundColor: colors["--color-tomui-base"],
-    ":hover": { backgroundColor: colors["--color-tomui-layer-01"] },
+    backgroundColor: colors["--color-midori-base"],
+    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
   },
-  rowSelected: { backgroundColor: colors["--color-tomui-layer-02"] },
+  rowSelected: { backgroundColor: colors["--color-midori-layer-02"] },
 });
 
 const rowVariantStyles = {
   default: styles.rowDefault,
   selected: styles.rowSelected,
-} as const satisfies Record<TomuiTableRowVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriTableRowVariant, stylex.StyleXStyles>;
 
-export function tableRowVariants(props: { variant?: TomuiTableRowVariant } = {}) {
-  const merged = merge({ variant: TOMUI_TABLE_DEFAULT_VARIANTS.variant }, props);
+export function tableRowVariants(props: { variant?: MidoriTableRowVariant } = {}) {
+  const merged = merge({ variant: MIDORI_TABLE_DEFAULT_VARIANTS.variant }, props);
   return [rowVariantStyles[merged.variant]];
 }
 
 export type TableProps = Omit<JSX.HTMLAttributes<HTMLTableElement>, "style"> & {
   children?: JSX.Element;
-  layout?: TomuiTableLayout;
+  layout?: MidoriTableLayout;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function Table(props: TableProps) {
-  const merged = merge({ layout: TOMUI_TABLE_DEFAULT_VARIANTS.layout }, props);
+  const merged = merge({ layout: MIDORI_TABLE_DEFAULT_VARIANTS.layout }, props);
   const rest = omit(merged, "children", "layout", "style");
   return (
     <table
-      data-tomui-component="Table"
+      data-midori-component="Table"
       {...stylex.attrs(
         styles.table,
         merged.layout === "fixed" ? styles.layoutFixed : undefined,
@@ -93,7 +93,7 @@ export function TableHeader(props: TableHeaderProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "style");
   return (
-    <thead data-tomui-component="TableHeader" {...stylex.attrs(merged.style)} {...rest}>
+    <thead data-midori-component="TableHeader" {...stylex.attrs(merged.style)} {...rest}>
       {merged.children}
     </thead>
   );
@@ -109,7 +109,7 @@ export function TableBody(props: TableBodyProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "style");
   return (
-    <tbody data-tomui-component="TableBody" {...stylex.attrs(merged.style)} {...rest}>
+    <tbody data-midori-component="TableBody" {...stylex.attrs(merged.style)} {...rest}>
       {merged.children}
     </tbody>
   );
@@ -117,17 +117,17 @@ export function TableBody(props: TableBodyProps) {
 
 export type TableRowProps = Omit<JSX.HTMLAttributes<HTMLTableRowElement>, "style"> & {
   children?: JSX.Element;
-  variant?: TomuiTableRowVariant;
+  variant?: MidoriTableRowVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
 
 export function TableRow(props: TableRowProps) {
-  const merged = merge({ variant: TOMUI_TABLE_DEFAULT_VARIANTS.variant }, props);
+  const merged = merge({ variant: MIDORI_TABLE_DEFAULT_VARIANTS.variant }, props);
   const rest = omit(merged, "children", "variant", "style");
   return (
     <tr
-      data-tomui-component="TableRow"
+      data-midori-component="TableRow"
       {...stylex.attrs(...tableRowVariants({ variant: merged.variant }), merged.style)}
       {...rest}
     >
@@ -146,7 +146,7 @@ export function TableHead(props: TableHeadProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "style");
   return (
-    <th data-tomui-component="TableHead" {...stylex.attrs(styles.head, merged.style)} {...rest}>
+    <th data-midori-component="TableHead" {...stylex.attrs(styles.head, merged.style)} {...rest}>
       {merged.children}
     </th>
   );
@@ -162,7 +162,7 @@ export function TableCell(props: TableCellProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "style");
   return (
-    <td data-tomui-component="TableCell" {...stylex.attrs(styles.cell, merged.style)} {...rest}>
+    <td data-midori-component="TableCell" {...stylex.attrs(styles.cell, merged.style)} {...rest}>
       {merged.children}
     </td>
   );

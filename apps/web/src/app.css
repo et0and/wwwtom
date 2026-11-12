@@ -1,4 +1,4 @@
-@import "@tom/ui/tomui.css";
+@import "@tom/ui/midori.css";
 
 /* Layer order, pinned in one place because the preflight lives in another
    file and the imports have to stay above this statement.

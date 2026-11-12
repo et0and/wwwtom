@@ -41,7 +41,7 @@ describe("Loader", () => {
 
     expect(svg.getAttribute("role")).toBe("status");
     expect(svg.getAttribute("aria-label")).toBe("Loading");
-    expect(svg.dataset.tomuiComponent).toBe("Loader");
+    expect(svg.dataset.midoriComponent).toBe("Loader");
   });
 
   it("accepts a custom aria-label", () => {

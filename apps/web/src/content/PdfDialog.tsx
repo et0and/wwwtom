@@ -20,7 +20,7 @@ const styles = stylex.create({
     gap: { default: "0.5rem", [SM]: "1.5rem" },
     borderBottomWidth: "1px",
     borderBottomStyle: "solid",
-    borderBottomColor: colors["--color-tomui-line"],
+    borderBottomColor: colors["--color-midori-line"],
     paddingInline: { default: "1rem", [SM]: "1.25rem" },
   },
   actions: {

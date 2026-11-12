@@ -47,7 +47,7 @@ export const WithContents = meta.story({
       title="No messages yet"
       description="When you receive messages they will show up here."
       contents={
-        <span style={{ "font-size": "13px", color: "var(--text-color-tomui-subtle)" }}>
+        <span style={{ "font-size": "13px", color: "var(--text-color-midori-subtle)" }}>
           Refresh to check again
         </span>
       }
