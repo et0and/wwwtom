@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { createSignal, merge, omit, Show } from "solid-js";
+import { createContext, createSignal, merge, omit, Show, useContext } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { CaretDownIcon } from "@tom/icons/CaretDown";
 import { SidebarSimpleIcon } from "@tom/icons/SidebarSimple";
@@ -56,6 +56,7 @@ const styles = stylex.create({
     paddingInline: "0.5rem",
     paddingBlock: "0.25rem",
   },
+  contentCollapsed: { paddingInline: "0.25rem" },
   group: { display: "flex", minWidth: 0, flexDirection: "column" },
   groupLabel: {
     display: "flex",
@@ -105,6 +106,30 @@ const styles = stylex.create({
     ":focus": { outlineWidth: 0 },
     ":focus-visible": { backgroundColor: tintColor, color: strongText },
   },
+  itemLinkCollapsed: { justifyContent: "center", paddingInline: 0 },
+  itemIcon: {
+    display: "inline-flex",
+    flexShrink: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  itemText: {
+    minWidth: 0,
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
+  },
+  srOnly: {
+    position: "absolute",
+    width: "1px",
+    height: "1px",
+    padding: 0,
+    margin: "-1px",
+    overflow: "hidden",
+    clip: "rect(0, 0, 0, 0)",
+    whiteSpace: "nowrap",
+    borderWidth: 0,
+  },
   itemLinkActive: { backgroundColor: tintColor },
 });
 
@@ -140,9 +165,19 @@ export type SidebarItemProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>,
   active?: boolean;
   children?: JSX.Element;
   href?: string;
+  /** Shown alone in the collapsed rail. */
+  icon?: JSX.Element;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
+
+interface SidebarContextValue {
+  isCollapsed: () => boolean;
+}
+
+const SidebarContext = createContext<SidebarContextValue>({
+  isCollapsed: () => false,
+});
 
 export function sidebarVariants(
   props: { variant?: TomuiSidebarVariant; side?: TomuiSidebarSide } = {},
@@ -163,6 +198,7 @@ export function SidebarSection(props: SidebarSectionProps) {
   const merged = merge({ defaultOpen: true }, props);
   const rest = omit(merged, "children", "style", "defaultOpen", "label");
   const [isOpen, setIsOpen] = createSignal(merged.defaultOpen);
+  const ctx = useContext(SidebarContext);
   return (
     <div
       data-tomui-component="SidebarSection"
@@ -170,17 +206,20 @@ export function SidebarSection(props: SidebarSectionProps) {
       {...stylex.attrs(styles.group, merged.style)}
       {...rest}
     >
-      <button
-        type="button"
-        aria-expanded={isOpen() ? "true" : "false"}
-        onClick={() => setIsOpen(!isOpen())}
-        {...stylex.attrs(styles.groupLabel)}
-      >
-        <span {...stylex.attrs(styles.groupLabelText)}>{merged.label}</span>
-        <span {...stylex.attrs(styles.chevron, !isOpen() ? styles.chevronCollapsed : undefined)}>
-          <CaretDownIcon size="sm" />
-        </span>
-      </button>
+      <Show when={!ctx.isCollapsed()}>
+        <button
+          type="button"
+          data-slot="sidebar-section-label"
+          aria-expanded={isOpen() ? "true" : "false"}
+          onClick={() => setIsOpen(!isOpen())}
+          {...stylex.attrs(styles.groupLabel)}
+        >
+          <span {...stylex.attrs(styles.groupLabelText)}>{merged.label}</span>
+          <span {...stylex.attrs(styles.chevron, !isOpen() ? styles.chevronCollapsed : undefined)}>
+            <CaretDownIcon size="sm" />
+          </span>
+        </button>
+      </Show>
       <Show when={isOpen()}>
         <ul {...stylex.attrs(styles.menu)}>{merged.children}</ul>
       </Show>
@@ -190,7 +229,8 @@ export function SidebarSection(props: SidebarSectionProps) {
 
 export function SidebarItem(props: SidebarItemProps) {
   const merged = merge({ active: false }, props);
-  const rest = omit(merged, "active", "children", "style");
+  const rest = omit(merged, "active", "children", "icon", "style");
+  const ctx = useContext(SidebarContext);
   return (
     <li data-tomui-component="SidebarItem" {...stylex.attrs(styles.itemRoot)}>
       <a
@@ -198,12 +238,27 @@ export function SidebarItem(props: SidebarItemProps) {
         aria-current={merged.active ? "page" : undefined}
         {...stylex.attrs(
           styles.itemLink,
+          ctx.isCollapsed() ? styles.itemLinkCollapsed : undefined,
           merged.active ? styles.itemLinkActive : undefined,
           merged.style,
         )}
         {...rest}
       >
-        {merged.children}
+        <Show when={merged.icon}>
+          <span data-slot="sidebar-item-icon" aria-hidden="true" {...stylex.attrs(styles.itemIcon)}>
+            {merged.icon}
+          </span>
+        </Show>
+        <Show when={!ctx.isCollapsed()}>
+          <span data-slot="sidebar-item-label" {...stylex.attrs(styles.itemText)}>
+            {merged.children}
+          </span>
+        </Show>
+        <Show when={ctx.isCollapsed()}>
+          <span data-slot="sidebar-item-sr-label" {...stylex.attrs(styles.srOnly)}>
+            {merged.children}
+          </span>
+        </Show>
       </a>
     </li>
   );
@@ -247,7 +302,11 @@ export function Sidebar(props: SidebarProps) {
           <SidebarSimpleIcon size="sm" color="current" aria-hidden="true" />
         </button>
       </Show>
-      <div {...stylex.attrs(styles.content)}>{merged.children}</div>
+      <SidebarContext value={{ isCollapsed: () => !isOpen() }}>
+        <div {...stylex.attrs(styles.content, !isOpen() ? styles.contentCollapsed : undefined)}>
+          {merged.children}
+        </div>
+      </SidebarContext>
     </nav>
   );
 }

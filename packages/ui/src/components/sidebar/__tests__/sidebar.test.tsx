@@ -54,6 +54,33 @@ describe("Sidebar", () => {
   });
 });
 
+describe("Sidebar icon collapse", () => {
+  it("shows only icons and keeps the label for assistive tech", async () => {
+    const { container } = render(() => (
+      <Sidebar>
+        <SidebarSection label="Group">
+          <SidebarItem href="#" icon={<span>icon</span>}>
+            Overview
+          </SidebarItem>
+        </SidebarSection>
+      </Sidebar>
+    ));
+    expect(container.querySelector("[data-slot=sidebar-item-icon]")).not.toBeNull();
+    expect(container.querySelector("[data-slot=sidebar-item-label]")).not.toBeNull();
+
+    fireEvent.click(container.querySelector("button")!);
+
+    await vi.waitFor(() => {
+      expect(container.querySelector("[data-slot=sidebar-item-icon]")).not.toBeNull();
+      expect(container.querySelector("[data-slot=sidebar-item-label]")).toBeNull();
+      expect(container.querySelector("[data-slot=sidebar-item-sr-label]")?.textContent).toBe(
+        "Overview",
+      );
+      expect(container.querySelector("[data-slot=sidebar-section-label]")).toBeNull();
+    });
+  });
+});
+
 describe("SidebarSection", () => {
   it("renders its items while expanded", () => {
     const { container } = render(() => (
