@@ -40,13 +40,17 @@ const styles = stylex.create({
   trigger: {
     margin: "0.5rem",
     display: "flex",
+    width: "1.75rem",
     height: "1.75rem",
+    flexShrink: 0,
+    alignSelf: "flex-end",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: radius.sm,
     color: subtleText,
     ":hover": { backgroundColor: tintColor },
   },
+  triggerCollapsed: { alignSelf: "center" },
   content: {
     display: "flex",
     minWidth: 0,
@@ -297,7 +301,7 @@ export function Sidebar(props: SidebarProps) {
           aria-expanded={isOpen() ? "true" : "false"}
           aria-label={isOpen() ? "Collapse sidebar" : "Expand sidebar"}
           onClick={() => setIsOpen(!isOpen())}
-          {...stylex.attrs(styles.trigger)}
+          {...stylex.attrs(styles.trigger, !isOpen() ? styles.triggerCollapsed : undefined)}
         >
           <SidebarSimpleIcon size="sm" color="current" aria-hidden="true" />
         </button>
