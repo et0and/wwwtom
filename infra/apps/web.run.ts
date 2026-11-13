@@ -3,9 +3,6 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { retain } from "alchemy/RemovalPolicy";
-import { webKv } from "../kv/web.kv.ts";
-import { tomQueue } from "../queues/tom.queue.ts";
 import { stageHost, stageWebHost, tomSecrets, workerObservability } from "../shared.run.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
@@ -39,8 +36,6 @@ export const web = Effect.gen(function* () {
       NODE_ENV: "production",
       TOM_SECRETS: tomSecrets,
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
-      TOM_RATE_LIMIT_KV: webKv,
-      WORK_QUEUE: tomQueue.pipe(retain()),
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
       // Inlined into the client bundle at build time (Alchemy VITE_ prefix).
       ...(isAlchemyDev ? undefined : { VITE_ADAPTER_URL: `https://${adapterHost}` }),

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Effect, Result, Schema } from "effect";
 import { parse } from "yaml";
 import type { Definition } from "../builders";
+import { deployChain, deployStacks } from "../catalog/alchemy";
 import { ocGate } from "../definitions/actions/oc-gate";
 import { setup } from "../definitions/actions/setup";
 import { ci } from "../definitions/ci";
@@ -72,16 +73,7 @@ describe("renderDefinition", () => {
     const [deployStep] = stepsOf(await render(deploy), "deploy").filter(
       (step) => step.name === "Deploy infrastructure",
     );
-    expect(deployStep?.run).toBe(
-      [
-        "pnpm deploy:shared --yes",
-        "pnpm deploy:api --yes",
-        "pnpm deploy:adapter --yes",
-        "pnpm deploy:web --yes",
-        "pnpm deploy:sophie --yes",
-        "pnpm deploy:storybook --yes",
-      ].join(" &&\n"),
-    );
+    expect(deployStep?.run).toBe(deployChain(deployStacks));
   });
 
   it("emits the bash array expansion unescaped in the gate script", async () => {

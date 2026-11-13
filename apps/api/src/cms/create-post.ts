@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { CmsPostInputSchema } from "@tom/schemas/cms";
-import { createPost } from "./operations";
+import { createPost } from "./commands";
 import { decodeBoundary, runWrite, withAuthor } from "./shared";
 
 export const createPostRoute = new Elysia().post("/posts", ({ body, request }) =>

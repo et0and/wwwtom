@@ -1,92 +1,70 @@
 import { describe, expect, it } from "vitest";
 import { app } from "../index";
-import { requestWithEnv, testEnv, userCookie } from "../test/helpers";
+import { requestWithEnv, testEnv } from "../test/helpers";
 
 const env = testEnv();
 
+/** A complete, well-formed identity the old flow would have trusted. */
+const forgedIdentity = encodeURIComponent(
+  JSON.stringify({
+    username: "tom",
+    instance: "mastodon.social",
+    display_name: "Tom",
+    avatar_url: "https://mastodon.social/avatar.png",
+  }),
+);
+
 describe("guestbook cookie handling", () => {
   describe("GET /guestbook/me", () => {
-    it("returns the user from the guestbook_user cookie", async () => {
+    it("does not trust a forgeable guestbook_user cookie", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/guestbook/me", env, {
-          headers: { Cookie: `guestbook_user=${userCookie}` },
+          headers: { Cookie: `guestbook_user=${forgedIdentity}` },
         }),
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({
-        username: "tom",
-        instance: "mastodon.social",
-        display_name: "Tom",
-        avatar_url: "https://mastodon.social/avatar.png",
-        access_token: "token",
-      });
+      await expect(response.json()).resolves.toBeNull();
     });
 
-    it("returns the user from a raw (unencoded) JSON cookie", async () => {
-      const rawUser = JSON.stringify({
+    it("does not trust a guestbook_user cookie that carries an access token", async () => {
+      const withToken = {
         username: "tom",
         instance: "mastodon.social",
         display_name: "Tom",
         avatar_url: "https://mastodon.social/avatar.png",
-        access_token: "token",
-      });
+        access_token: "stolen",
+      };
       const response = await app.fetch(
         requestWithEnv("http://localhost/guestbook/me", env, {
-          headers: { Cookie: `guestbook_user=${rawUser}` },
+          headers: { Cookie: `guestbook_user=${encodeURIComponent(JSON.stringify(withToken))}` },
         }),
       );
       expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({
-        username: "tom",
-        instance: "mastodon.social",
-        display_name: "Tom",
-        avatar_url: "https://mastodon.social/avatar.png",
-        access_token: "token",
-      });
+      await expect(response.json()).resolves.toBeNull();
     });
 
-    it("returns JSON null when no guestbook_user cookie is present", async () => {
+    it("returns JSON null when no session cookie is present", async () => {
       const response = await app.fetch(requestWithEnv("http://localhost/guestbook/me", env));
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toBeNull();
     });
 
-    it("returns JSON null when the cookie is not valid user JSON", async () => {
+    it("returns JSON null when the session cookie is empty", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/guestbook/me", env, {
-          headers: { Cookie: "guestbook_user=not-json" },
+          headers: { Cookie: "guestbook_session=" },
         }),
       );
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toBeNull();
     });
 
-    it("returns JSON null if guestbook_user holds an array", async () => {
+    it("serves a signed-out read without a configured database", async () => {
+      // The public page asks /me on every load. With no session there is
+      // nothing to look up, so a missing DATABASE_URL must not turn the
+      // signed-out read into a 500.
       const response = await app.fetch(
-        requestWithEnv("http://localhost/guestbook/me", env, {
-          headers: { Cookie: "guestbook_user=%5B%5D" },
-        }),
-      );
-      expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toBeNull();
-    });
-
-    it("returns JSON null if guestbook_user misses fields", async () => {
-      const partial = encodeURIComponent(JSON.stringify({ username: "tom" }));
-      const response = await app.fetch(
-        requestWithEnv("http://localhost/guestbook/me", env, {
-          headers: { Cookie: `guestbook_user=${partial}` },
-        }),
-      );
-      expect(response.status).toBe(200);
-      await expect(response.json()).resolves.toBeNull();
-    });
-
-    it("returns JSON null if guestbook_user holds a number", async () => {
-      const response = await app.fetch(
-        requestWithEnv("http://localhost/guestbook/me", env, {
-          headers: { Cookie: "guestbook_user=42" },
-        }),
+        requestWithEnv("http://localhost/guestbook/me", testEnv({ DATABASE_URL: "" })),
       );
       expect(response.status).toBe(200);
       await expect(response.json()).resolves.toBeNull();
@@ -94,11 +72,11 @@ describe("guestbook cookie handling", () => {
   });
 
   describe("POST /guestbook/logout", () => {
-    it("clears the guestbook cookies", async () => {
+    it("clears both guestbook cookies", async () => {
       const response = await app.fetch(
         requestWithEnv("http://localhost/guestbook/logout", env, {
           method: "POST",
-          headers: { Cookie: `guestbook_user=${userCookie}; guestbook_session=sess` },
+          headers: { Cookie: `guestbook_user=${forgedIdentity}; guestbook_session=` },
         }),
       );
       expect(response.status).toBe(200);

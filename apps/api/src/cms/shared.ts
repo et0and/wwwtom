@@ -12,7 +12,7 @@ import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/work
 import { toOpenApiSchema } from "../openapi";
 import { isAdminEmail, parseAdminEmails } from "@tom/utils/auth";
 import { createAuthFromEnv, requireSession } from "../auth/operations";
-import type { MediaUpload } from "./operations";
+import type { MediaUpload } from "./commands";
 
 export const cmsListQuerySchema = toOpenApiSchema(CmsPagingSchema);
 
@@ -136,6 +136,10 @@ export const putFileCache = (url: string, response: Response): Effect.Effect<voi
  * session credential (see hasSessionCredential) there is no session to
  * load, so skip the store read, auth init and the D1 lookup entirely —
  * public reads stay at 2-3 D1 queries instead of 3-4.
+ *
+ * A session alone is not enough: the allowlist can change after sign-in
+ * (and another tenant's provider may issue sessions), so membership is
+ * re-checked on every read, exactly as `requireAuthor` does for writes.
  */
 export const optionalSession = (
   request: Request,
@@ -143,28 +147,30 @@ export const optionalSession = (
 ): Effect.Effect<boolean, never> => {
   if (!hasSessionCredential(request)) return Effect.succeed(false);
   return Effect.gen(function* () {
-    const auth = yield* Effect.gen(function* () {
-      const resolved = yield* Effect.tryPromise({
-        try: () => readCloudflareEnv(env),
-        catch: (cause) =>
-          new CmsError({
-            message: "Failed to read Cloudflare env for CMS read auth",
-            status: HttpStatus.InternalServerError,
-            operation: "optional_session",
-            cause,
-          }),
-      });
-      return yield* createAuthFromEnv(resolved);
-    }).pipe(
-      Effect.tapError((cause) =>
-        Effect.logWarning("CMS read auth unavailable; serving published-only", {
-          cause: String(cause),
+    const resolved = yield* Effect.tryPromise({
+      try: () => readCloudflareEnv(env),
+      catch: (cause) =>
+        new CmsError({
+          message: "Failed to read Cloudflare env for CMS read auth",
+          status: HttpStatus.InternalServerError,
+          operation: "optional_session",
+          cause,
         }),
-      ),
+    });
+    const auth = yield* createAuthFromEnv(resolved);
+    const author = yield* requireSession(auth, request.headers);
+    const email = Option.filter(Option.fromNullishOr(author.user.email), Schema.is(Schema.String));
+    return (
+      Option.isSome(email) && isAdminEmail(email.value, parseAdminEmails(resolved.CMS_ADMIN_EMAILS))
     );
-    yield* requireSession(auth, request.headers);
-    return true;
-  }).pipe(Effect.orElseSucceed(() => false));
+  }).pipe(
+    Effect.tapError((cause) =>
+      Effect.logWarning("CMS read auth unavailable; serving published-only", {
+        cause: String(cause),
+      }),
+    ),
+    Effect.orElseSucceed(() => false),
+  );
 };
 
 /** Run a CMS effect with request logging. CmsError failures reject and the

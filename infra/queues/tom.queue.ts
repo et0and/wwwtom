@@ -3,9 +3,10 @@ import { Effect } from "effect";
 import { Stage } from "alchemy/Stage";
 
 /**
- * The single generic tom work queue. Any app worker (web, api, adapter) binds
- * it as `WORK_QUEUE` in its env and enqueues work at runtime; the api worker
- * hosts the single worker consumer (at most one per queue) that drains it.
+ * The single tom work queue. The adapter binds it as `WORK_QUEUE` and
+ * enqueues a `guestbook-sign` job after a signature is stored; the api worker
+ * hosts the single worker consumer (at most one per queue) that drains it and
+ * alerts the site owner.
  *
  * The shared stack (`infra/shared.run.ts`) owns the queue's lifecycle — it is
  * destroyed last in every teardown, by which point every worker that binds it
@@ -20,31 +21,15 @@ import { Stage } from "alchemy/Stage";
  * queue (Alchemy's auto-naming would give each stack its own queue, since the
  * generated name is prefixed with the stack name).
  *
- * @example Enqueue work from an api route (producer)
+ * @example Enqueue work from the adapter guestbook route (producer)
  * ```ts
- * // infra/apps/api.run.ts binds WORK_QUEUE: tomQueue into the api worker env.
- * import { Effect } from "effect";
- * import {
- *   makeTomQueueLayer,
- *   TomQueueService,
- * } from "@tom/utils/queue";
- * import {
- *   getRequestEnv,
- *   logContextFromRequest,
- *   runEffect,
- * } from "@tom/utils/worker";
+ * // infra/apps/adapter.run.ts binds WORK_QUEUE: tomQueue into the adapter env.
+ * import { makeTomQueueLayer, TomQueueService } from "@tom/utils/queue";
  *
- * const env = getRequestEnv(request);
- * await runEffect(
- *   Effect.gen(function* () {
- *     const queue = yield* TomQueueService;
- *     yield* queue.send({ kind: "publish-post", postId, publishAt: Date.now() });
- *   }).pipe(Effect.provide(makeTomQueueLayer(env))),
- *   logContextFromRequest(request, "tom-api"),
- * );
+ * const queue = yield* TomQueueService;
+ * yield* queue.send({ kind: "guestbook-sign", entryId, ... });
  * ```
- * Message bodies are `TomWorkMessage` (@tom/schemas/queue) — a tagged union
- * keyed on `kind`; `sendBatch` exists for several at once.
+ * Message bodies are `TomWorkMessage` (@tom/schemas/queue).
  *
  * @example Drain the queue from the api worker (consumer)
  * ```ts
@@ -58,25 +43,6 @@ import { Stage } from "alchemy/Stage";
  *   deadLetterQueue: dlq.queueName,
  *   settings: { batchSize: 10, maxRetries: 3, maxWaitTimeMs: 5000 },
  * });
- * ```
- * ```ts
- * // apps/api/src/queue/consumer.ts — bodies arrive as unknown JSON;
- * // parse at the boundary with the TomWorkMessage schema, then switch on kind.
- * import { Schema } from "effect";
- * import { TomWorkMessage } from "@tom/schemas/queue";
- *
- * const job = Schema.decodeUnknownSync(TomWorkMessage)(message.body);
- * switch (job.kind) {
- *   case "guestbook-sign":
- *     await sendOwnerAlert(job);
- *     break;
- *   case "publish-post":
- *     await publishPost(job.postId);
- *     break;
- *   case "render-og":
- *     await renderOg(job.url);
- *     break;
- * }
  * ```
  * `maxRetries` + `retryDelay` give delivery guarantees; messages that still
  * fail land in the dead letter queue (see {@link tomQueueDlq}).

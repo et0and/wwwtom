@@ -15,7 +15,6 @@ import {
 import { frameKv } from "../kv/frame.kv.ts";
 import { webHyperdrive } from "../hyperdrive/web.hyperdrive.ts";
 import { tomQueue } from "../queues/tom.queue.ts";
-import { sophieQueue } from "../queues/sophie.queue.ts";
 import { TomSecretsSchema } from "@tom/schemas/secrets";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -149,8 +148,8 @@ export const adapter = Effect.gen(function* () {
 
   // Sophie adapter reuses the same worker code with Sophie URLs. One deploy
   // ships both adapters; no separate stack or duplicated setup lives here.
-  // The Sophie worker binds the Sophie queue and Hyperdrive (never the Tom
-  // ones), so guestbook jobs and database traffic stay tenant-scoped.
+  // Only the Tom adapter binds a queue (the guestbook producer). Sophie has
+  // no producer and no database, so neither binding exists on its worker.
   const sophieWorker = yield* Cloudflare.Worker("sophie-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
@@ -168,9 +167,6 @@ export const adapter = Effect.gen(function* () {
       TOM_STAGE: stage,
       TENANT: "sophie",
       ...sophieAdapterDevSecrets,
-      // Retained copy of the Sophie queue: the api stack owns its
-      // lifecycle (see api.run.ts), so this destroy skips the delete.
-      WORK_QUEUE: sophieQueue.pipe(retain()),
       ...(isAlchemyDev
         ? undefined
         : {

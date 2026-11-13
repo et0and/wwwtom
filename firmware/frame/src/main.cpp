@@ -23,6 +23,14 @@
 #define FRAME_DEVICE_TOKEN ""
 #endif
 
+// useBuiltinCACertBundle() (the esp_crt_bundle maintained with the Arduino
+// core) is the 3.x API. On 2.x the only options are a hand-pinned root CA or
+// no validation at all, so refuse to build rather than ship an unverified TLS
+// client.
+#if ESP_ARDUINO_VERSION_MAJOR < 3
+#error "arena-frame requires arduino-esp32 3.x for the built-in CA bundle"
+#endif
+
 namespace {
 
 constexpr int kWidth = 240;
@@ -65,7 +73,7 @@ constexpr uint32_t kGavinStatePollMs = 750UL;
 constexpr int kNightStartHour = 21;
 constexpr int kNightEndHour = 5;
 
-enum class FrameMode : uint8_t { Deck, Clock, Gavin, Video, Off };
+enum class FrameMode : uint8_t { Deck, Clock, Gavin, Off };
 enum class GavinMood : uint8_t {
   Idle,
   Listening,
@@ -117,7 +125,6 @@ uint8_t face = 0;
 const char *const kFaceNames[kFaceCount] = {"bar", "minimal", "big", "line"};
 
 char stateChannel[kChannelBytes] = CHANNEL_SLUG;
-char stateStreamUrl[kUrlBytes] = "";
 // The poll task reads mode to choose its interval; the render task writes it.
 volatile FrameMode mode = FrameMode::Deck;
 GavinMood gavinMood = GavinMood::Idle;
@@ -288,9 +295,18 @@ bool connectWifi() {
 
 // The adapter serves HTTPS in production and plain HTTP on a laptop. One
 // client covers both, so local testing does not need a tunnel.
+//
+// HTTPS is verified against the CA bundle that ships with the Arduino core
+// (esp_crt_bundle), not a hand-pinned root: Cloudflare rotates the issuer in
+// front of adapter.tom.so, and a pinned intermediate would fail closed at the
+// next rotation. Updating the bundle is a PlatformIO/Arduino core update.
+void useVerifiedTls(WiFiClientSecure &client) {
+  client.useBuiltinCACertBundle();
+}
+
 WiFiClient &clientFor(const char *url) {
   if (strncmp(url, "https://", 8) == 0) {
-    secureClient.setInsecure();
+    useVerifiedTls(secureClient);
     return secureClient;
   }
   return plainClient;
@@ -302,12 +318,12 @@ WiFiClient &statePollClientFor(const char *url) {
       statePollSecureClient = new (std::nothrow) WiFiClientSecure();
     }
     if (statePollSecureClient != nullptr) {
-      statePollSecureClient->setInsecure();
+      useVerifiedTls(*statePollSecureClient);
       return *statePollSecureClient;
     }
     // Allocation failed; the shared client keeps the frame reachable. The
     // next poll retries the dedicated client allocation.
-    secureClient.setInsecure();
+    useVerifiedTls(secureClient);
     return secureClient;
   }
   return statePollPlainClient;
@@ -333,22 +349,59 @@ int httpGet(HTTPClient &http, const char *url) {
   return status;
 }
 
-FrameMode modeFromString(const char *value) {
-  if (strcmp(value, "clock") == 0) return FrameMode::Clock;
-  if (strcmp(value, "gavin") == 0) return FrameMode::Gavin;
-  if (strcmp(value, "video") == 0) return FrameMode::Video;
-  if (strcmp(value, "off") == 0) return FrameMode::Off;
-  return FrameMode::Deck;
+// Unknown modes and moods reject the payload instead of silently falling back
+// to deck/idle: a typo in the control UI would otherwise look like a working
+// state change and quietly override what the frame is showing.
+bool modeFromString(const char *value, FrameMode &modeOut) {
+  if (strcmp(value, "deck") == 0) {
+    modeOut = FrameMode::Deck;
+    return true;
+  }
+  if (strcmp(value, "clock") == 0) {
+    modeOut = FrameMode::Clock;
+    return true;
+  }
+  if (strcmp(value, "gavin") == 0) {
+    modeOut = FrameMode::Gavin;
+    return true;
+  }
+  if (strcmp(value, "off") == 0) {
+    modeOut = FrameMode::Off;
+    return true;
+  }
+  return false;
 }
 
-GavinMood gavinMoodFromString(const char *value) {
-  if (strcmp(value, "listening") == 0) return GavinMood::Listening;
-  if (strcmp(value, "thinking") == 0) return GavinMood::Thinking;
-  if (strcmp(value, "speaking") == 0) return GavinMood::Speaking;
-  if (strcmp(value, "happy") == 0) return GavinMood::Happy;
-  if (strcmp(value, "sleepy") == 0) return GavinMood::Sleepy;
-  if (strcmp(value, "surprised") == 0) return GavinMood::Surprised;
-  return GavinMood::Idle;
+bool gavinMoodFromString(const char *value, GavinMood &moodOut) {
+  if (strcmp(value, "idle") == 0) {
+    moodOut = GavinMood::Idle;
+    return true;
+  }
+  if (strcmp(value, "listening") == 0) {
+    moodOut = GavinMood::Listening;
+    return true;
+  }
+  if (strcmp(value, "thinking") == 0) {
+    moodOut = GavinMood::Thinking;
+    return true;
+  }
+  if (strcmp(value, "speaking") == 0) {
+    moodOut = GavinMood::Speaking;
+    return true;
+  }
+  if (strcmp(value, "happy") == 0) {
+    moodOut = GavinMood::Happy;
+    return true;
+  }
+  if (strcmp(value, "sleepy") == 0) {
+    moodOut = GavinMood::Sleepy;
+    return true;
+  }
+  if (strcmp(value, "surprised") == 0) {
+    moodOut = GavinMood::Surprised;
+    return true;
+  }
+  return false;
 }
 
 // The network poll runs in its own task so a slow TLS request never blocks
@@ -388,9 +441,11 @@ bool applyStatePayload(const char *payload) {
     return false;
   }
 
-  const char *nextMode = doc["mode"] | "deck";
+  // `mode` is required by the wire schema; a missing or unknown value is a
+  // rejected payload, not a silent switch to deck.
+  const char *nextMode = doc["mode"] | "";
   const char *nextChannel = doc["channel"] | "";
-  const char *nextStream = doc["streamUrl"] | "";
+  // gavinMood is optional on the wire; absent still means idle.
   const char *nextGavin = doc["gavinMood"] | "idle";
   const bool hasChannel = nextChannel[0] != '\0';
   if (hasChannel && strlen(nextChannel) >= sizeof(stateChannel)) {
@@ -398,7 +453,17 @@ bool applyStatePayload(const char *payload) {
     return false;
   }
 
-  const FrameMode nextModeValue = modeFromString(nextMode);
+  FrameMode nextModeValue = FrameMode::Deck;
+  if (!modeFromString(nextMode, nextModeValue)) {
+    Serial.printf("[frame] unknown state mode: %s\n", nextMode);
+    return false;
+  }
+  GavinMood nextMoodValue = GavinMood::Idle;
+  if (!gavinMoodFromString(nextGavin, nextMoodValue)) {
+    Serial.printf("[frame] unknown gavin mood: %s\n", nextGavin);
+    return false;
+  }
+
   const bool channelChanged = hasChannel && strcmp(nextChannel, stateChannel) != 0;
   const bool modeChanged = nextModeValue != mode;
   const bool enteredGavin = modeChanged && nextModeValue == FrameMode::Gavin;
@@ -407,8 +472,7 @@ bool applyStatePayload(const char *payload) {
     cursor = 0;
     page = 1;
   }
-  snprintf(stateStreamUrl, sizeof(stateStreamUrl), "%s", nextStream);
-  gavinMood = gavinMoodFromString(nextGavin);
+  gavinMood = nextMoodValue;
   mode = nextModeValue;
   if (modeChanged || channelChanged) stateDirty = true;
   if (enteredGavin && statePollTaskHandle != nullptr) {
@@ -819,8 +883,8 @@ void waitForNext() {
   advanceFrame();
 }
 
-// Off, clock, and video modes have no playlist to advance. Stay here until
-// the adapter reports another mode or channel.
+// Off and clock modes have no playlist to advance. Stay here until the
+// adapter reports another mode or channel.
 void waitForModeChange() {
   while (true) {
     esp_task_wdt_reset();
@@ -1112,13 +1176,6 @@ void loop() {
   if (mode == FrameMode::Gavin) {
     stateDirty = false;
     runGavin();
-    return;
-  }
-
-  if (mode == FrameMode::Video) {
-    showMessage("Video mode");
-    stateDirty = false;
-    waitForModeChange();
     return;
   }
 

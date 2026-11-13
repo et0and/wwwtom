@@ -9,7 +9,7 @@ import {
 } from "@tom/schemas/arena-frame";
 import { logContextFromRequest } from "@tom/utils/worker";
 import { setPublicContentCache } from "../content-cache";
-import { ChannelSlugParamsSchema, requireArenaTenant, runArena } from "./shared";
+import { ChannelSlugParamsSchema, runArena } from "./shared";
 
 /** One are.na page of images per deck; the firmware asks for the next page. */
 const FRAME_BLOCK_LIMIT = 20;
@@ -25,7 +25,6 @@ const FrameQuerySchema = Schema.toStandardSchemaV1(
 export const getArenaFrameRoute = new Elysia().get(
   "/arena/frame/:slug",
   async ({ params, query, request, set }) => {
-    requireArenaTenant(request);
     const result = await runArena(
       request,
       (client) =>

@@ -16,8 +16,7 @@ import {
   workerObservability,
 } from "../shared.run.ts";
 import { tomQueue, tomQueueDlq } from "../queues/tom.queue.ts";
-import { sophieQueue, sophieQueueDlq } from "../queues/sophie.queue.ts";
-import { cmsD1, cmsMediaBucket, previewCmsD1, previewCmsMedia } from "../cms/cms.storage.ts";
+import { cmsD1 } from "../cms/cms.storage.ts";
 import { sophieD1, sophieMediaBucket } from "../cms/sophie.storage.ts";
 
 const rootDir = `${import.meta.dirname}/../..`;
@@ -57,22 +56,13 @@ export const api = Effect.gen(function* () {
   const queue = yield* tomQueue.pipe(retain());
   const dlq = yield* tomQueueDlq.pipe(retain());
 
-  // Tom's CMS is retired: the site reads are.na and the editor is gone. The
-  // storage stays declared — production retains it — so the content can be
-  // migrated by hand. The API still binds the D1 database because the frame
-  // control page authenticates through the shared Better Auth session store.
-  // PR previews keep the retained handles to the dev database and bucket (see
-  // cms.storage.ts).
-  const tomD1 = yield* stage === "production"
-    ? cmsD1.pipe(retain())
-    : stage.startsWith("pr-")
-      ? previewCmsD1
-      : cmsD1;
-  yield* stage === "production"
-    ? cmsMediaBucket.pipe(retain())
-    : stage.startsWith("pr-")
-      ? previewCmsMedia
-      : cmsMediaBucket;
+  // Tom's CMS is retired: the site reads are.na and the editor is gone. No CMS
+  // route is mounted on the Tom worker, and Tom R2 is dead, so no media bucket
+  // is declared. The D1 database stays bound because the frame control page
+  // authenticates through the shared Better Auth session store. Production
+  // retains the database and every stage, a PR preview included, gets its own
+  // (see cms.storage.ts); teardown deletes the preview database with the stage.
+  const tomD1 = yield* stage === "production" ? cmsD1.pipe(retain()) : cmsD1;
 
   const worker = yield* Cloudflare.Worker("wwwtom-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
@@ -101,7 +91,6 @@ export const api = Effect.gen(function* () {
       ...tomDevSecrets,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
-      WORK_QUEUE: queue,
       // Admin allowlist as explicit stage config (deploy-time env or
       // bundle, never code): it wins over the opaque shared bundle value.
       CMS_ADMIN_EMAILS: tomAdminEmails,
@@ -127,23 +116,16 @@ export const api = Effect.gen(function* () {
     settings: { batchSize: 10, maxRetries: 3, maxWaitTimeMs: 5000 },
   });
 
-  // Sophie CMS reuses the same API code with isolated storage (D1, media,
-  // queue). Production retains Sophie data; preview stages stay ephemeral.
-  // Google is the only OAuth provider: the dev split strips GITHUB_* keys
-  // and CMS_AUTH_PROVIDERS enforces google-only at runtime. The allowlist
+  // Sophie CMS reuses the same API code with isolated storage (D1 + media).
+  // Production retains Sophie data; preview stages stay ephemeral. Google is
+  // the only OAuth provider: the dev split strips GITHUB_* keys and
+  // CMS_AUTH_PROVIDERS enforces google-only at runtime. The allowlist
   // resolves from deploy-time env or the SOPHIE_CMS_ADMIN_EMAILS bundle
   // key; /works/* writes are rejected for this tenant (cms-writes).
   const sophieDb = yield* stage === "production" ? sophieD1.pipe(retain()) : sophieD1;
   const sophieMedia = yield* stage === "production"
     ? sophieMediaBucket.pipe(retain())
     : sophieMediaBucket;
-
-  // The Sophie queue is owned by this stack and retained by the adapter
-  // stack (see adapter.run.ts): destroy runs adapter before api (see the
-  // root destroy chain), so the queue is deletable by the time this stack
-  // tears down. Tenant-scoped names keep Tom jobs out of it.
-  const sophieWorkQueue = yield* sophieQueue;
-  const sophieDlq = yield* sophieQueueDlq;
 
   const sophieWorker = yield* Cloudflare.Worker("sophie-api", {
     main: `${rootDir}/apps/api/src/index.ts`,
@@ -167,7 +149,6 @@ export const api = Effect.gen(function* () {
       ...sophieDevSecrets,
       ...(isAlchemyDev ? undefined : { TOM_SECRETS: tomSecrets }),
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
-      WORK_QUEUE: sophieWorkQueue,
       CMS_D1: sophieDb,
       CMS_MEDIA: sophieMedia,
       // Admin allowlist as explicit stage config (deploy-time env or
@@ -184,16 +165,6 @@ export const api = Effect.gen(function* () {
         : `https://${sophieStageHost(stage, "cms")}`,
       WEB_URL: stageWebUrl(stage, isAlchemyDev, "http://localhost:3001", sophieWebHost),
     },
-  });
-
-  // The Sophie worker drains its own queue; exhausted messages route to
-  // the Sophie DLQ. The consumer runs under the Sophie worker env
-  // (TENANT=sophie), so tenant jobs never cross into the Tom consumer.
-  yield* Cloudflare.Queues.Consumer("sophie-work-consumer", {
-    queueId: sophieWorkQueue.queueId,
-    scriptName: sophieWorker.workerName,
-    deadLetterQueue: sophieDlq.queueName,
-    settings: { batchSize: 10, maxRetries: 3, maxWaitTimeMs: 5000 },
   });
 
   return { worker, sophieWorker };

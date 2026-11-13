@@ -16,10 +16,18 @@ export const stageLabel = `Deploy ${stageExpression}`;
 export const stageConcurrencyGroup = `deploy-${stageExpression}`;
 
 /**
- * The application pipeline, in dependency order: later stacks depend on
- * earlier ones.
+ * The stage pipeline, in dependency order: later stacks depend on earlier
+ * ones. `turbo` is the shared Turborepo remote cache; it reads the shared
+ * secret bundle but no application stack depends on it, so it stays directly
+ * after `shared`.
  */
-const appStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
+const pipelineStacks = ["shared", "turbo", "api", "adapter", "web", "sophie"] as const;
+
+/**
+ * Static Storybook site. A full stage ships it; PR previews leave it to
+ * `preview-storybook.yml`, so two runs never share one stage.
+ */
+const storybookStacks = ["storybook"] as const;
 
 /**
  * Zone-level stacks. They own resources shared by every stage (WAF rules live
@@ -30,10 +38,23 @@ const appStacks = ["shared", "api", "adapter", "web", "sophie"] as const;
 const zoneStacks = ["edge"] as const;
 
 /**
- * Alchemy stacks a staging or production deploy provisions: the application
- * pipeline plus the static Storybook site.
+ * On-demand stacks. `runner` starts from a control request, not a deploy
+ * chain, and nothing in the pipeline depends on it.
  */
-export const deployStacks = [...appStacks, "storybook"] as const;
+const onDemandStacks = ["runner"] as const;
+
+/**
+ * Stacks that never run in an automatic stage chain. Every one has an
+ * explicit `deploy:<stack>` root script; none may leak into `deploy` or
+ * `preview`.
+ */
+export const auxiliaryStacks = [...zoneStacks, ...onDemandStacks] as const;
+
+/**
+ * A staging or production deploy provisions the full stage pipeline followed
+ * by the static Storybook site.
+ */
+export const deployStacks = [...pipelineStacks, ...storybookStacks] as const;
 
 /**
  * Zone-level stacks, deployed on their own so they can be gated to the
@@ -42,17 +63,26 @@ export const deployStacks = [...appStacks, "storybook"] as const;
 export const edgeStacks = zoneStacks;
 
 /**
- * Alchemy stacks a PR preview provisions. The `preview` stack owns the
- * consolidated PR comment and runs last, so its links are live when it posts.
- * Storybook has its own preview workflow, so it is left out here to keep two
- * runs off one stage. Zone-level stacks are left out too: they are shared by
- * every stage and would collide across concurrent previews.
+ * A PR preview provisions the stage pipeline without the turbo remote cache
+ * (CI uses the production cache, not a per-PR one) and finishes with the
+ * consolidated comment stack, so every link is live when it posts.
  */
-export const previewStacks = [...appStacks, "preview"] as const;
+export const previewStacks = [
+  ...pipelineStacks.filter((stack) => stack !== "turbo"),
+  "preview",
+] as const;
+
+/**
+ * Stacks with no deploy command that still belong in teardown. Tom's editor
+ * is retired, but an existing stage can own its old Worker and domain.
+ */
+const destroyOnlyStacks = ["editor"] as const;
 
 export type DeployStack = (typeof deployStacks)[number];
 export type PreviewStack = (typeof previewStacks)[number];
 export type EdgeStack = (typeof edgeStacks)[number];
+export type AuxiliaryStack = (typeof auxiliaryStacks)[number];
+export type DestroyStack = DeployStack | PreviewStack | (typeof destroyOnlyStacks)[number];
 
 /**
  * Chain the per-stack Alchemy deploy scripts. Later stacks depend on earlier
@@ -63,11 +93,39 @@ export const deployChain = (
 ): string => stacks.map((stack) => `pnpm deploy:${stack} --yes`).join(" &&\n");
 
 /**
- * Teardown order: the reverse of the deploy stack order.
+ * Teardown order: reverse dependency order. The retired Tom editor is
+ * destroy-only (`deploy:editor` no longer exists), so it is inserted directly
+ * after `web`, the last stack whose adapter origin it was built against.
  */
-export const destroyStacks = ["web", "editor", "sophie", "adapter", "api", "shared"] as const;
+const teardownOrder = (
+  stacks: ReadonlyArray<DeployStack | PreviewStack>,
+): ReadonlyArray<DestroyStack> =>
+  [...stacks]
+    .reverse()
+    .flatMap((stack) => (stack === "web" ? [stack, ...destroyOnlyStacks] : [stack]));
 
-export type DestroyStack = (typeof destroyStacks)[number];
+/**
+ * Teardown of a full stage. `preview` is not part of this chain: it owns only
+ * the consolidated GitHub comment and no Cloudflare resource, and a regular
+ * stage never deploys it.
+ */
+export const destroyStacks = teardownOrder(deployStacks);
+
+/**
+ * Teardown of a PR preview stage. The comment stack is left out of the
+ * destroy chain: comments are discussion history, the provider never deletes
+ * them, and the nightly sweep drops its residual state row for closed PRs.
+ */
+export const previewDestroyStacks = teardownOrder(
+  previewStacks.filter((stack) => stack !== "preview"),
+);
+
+/**
+ * The nightly sweep is the backstop for every preview-owned stack, including
+ * Storybook previews, whose own workflow destroy job can be skipped on a
+ * plain PR close.
+ */
+export const sweepDestroyStacks = ["storybook", ...previewDestroyStacks] as const;
 
 /**
  * One step per stack, every step after the first marked `if: always()` so a

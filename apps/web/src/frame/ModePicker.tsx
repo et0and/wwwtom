@@ -19,11 +19,6 @@ const FRAME_MODES: ReadonlyArray<{
     description: "Clock and weather only. The two face buttons cycle the layout.",
   },
   {
-    value: "video",
-    label: "Video",
-    description: "MJPEG stream. The board cannot play video yet.",
-  },
-  {
     value: "gavin",
     label: "Gavin",
     description: "A small white-eyed face that listens through this page.",

@@ -1,5 +1,5 @@
 import { Elysia } from "elysia";
-import { Effect } from "effect";
+import { Duration, Effect } from "effect";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/worker";
 import {
@@ -27,7 +27,7 @@ export const initiateAuthRoute = new Elysia().post(
           yield* Effect.sync(() => {
             cookie.guestbook_session.value = authResult.sessionToken;
             cookie.guestbook_session.update({
-              maxAge: 15 * 60,
+              maxAge: Duration.toSeconds(auth.OAUTH_SESSION_TTL),
               httpOnly: true,
               secure: env.NODE_ENV === "production",
               sameSite: "lax",

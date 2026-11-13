@@ -19,10 +19,13 @@ import { adapterUrl } from "../data/api";
 import { runClient } from "@tom/utils/http";
 import { toSlug } from "@tom/utils/slug";
 import {
+  blankPreserved,
   getPost,
   getWork,
   listCategories,
   mediaFileUrl,
+  sameCategoryIds,
+  sameContentFields,
   savePost,
   saveWork,
   deletePost,
@@ -31,7 +34,7 @@ import {
   toWorkInput,
   uploadMedia,
 } from "../posts/content";
-import type { ContentFields, ContentKind } from "../posts/content";
+import type { ContentFields, ContentKind, ContentPreserved } from "../posts/content";
 import { applyLink, insertArena, insertMedia, setCodeOptions } from "./inserts";
 import { createTiptap } from "./tiptap";
 import { HistoryPanel } from "../posts/HistoryPanel";
@@ -45,6 +48,7 @@ type InitialData = {
   readonly fields: ContentFields;
   readonly doc: TiptapDoc | undefined;
   readonly categoryIds: ReadonlyArray<string>;
+  readonly preserved: ContentPreserved;
   readonly slug: string | null;
 };
 
@@ -69,6 +73,14 @@ const blankFields: ContentFields = {
   publishedAt: "",
 };
 
+const blankInitial: InitialData = {
+  fields: blankFields,
+  doc: undefined,
+  categoryIds: [],
+  preserved: blankPreserved,
+  slug: null,
+};
+
 const toInitial = (item: CmsPost | CmsWork, slug: string): InitialData => ({
   fields: {
     slug: item.slug,
@@ -79,6 +91,7 @@ const toInitial = (item: CmsPost | CmsWork, slug: string): InitialData => ({
   },
   doc: item.content,
   categoryIds: "categories" in item ? item.categories.map((category) => category.id) : [],
+  preserved: { heroMediaId: item.heroMediaId, meta: item.meta },
   slug,
 });
 
@@ -96,7 +109,7 @@ export const EditorView = (props: {
 
   onSettled(() => {
     if (props.slug === null) {
-      setInitial({ fields: blankFields, doc: undefined, categoryIds: [], slug: null });
+      setInitial(blankInitial);
       return;
     }
     const slug = props.slug;
@@ -143,9 +156,14 @@ const CodeAttrsSchema = Schema.Struct({
 
 const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: () => void }) => {
   const [fields, setFields] = createSignal<ContentFields>(props.initial.fields);
+  const [cleanFields, setCleanFields] = createSignal<ContentFields>(props.initial.fields);
   const [selectedCategories, setSelected] = createSignal<ReadonlyArray<string>>(
     props.initial.categoryIds,
   );
+  const [cleanCategoryIds, setCleanCategoryIds] = createSignal<ReadonlyArray<string>>(
+    props.initial.categoryIds,
+  );
+  const [preserved, setPreserved] = createSignal<ContentPreserved>(props.initial.preserved);
   const [allCategories, setAllCategories] = createSignal<
     ReadonlyArray<{ readonly id: string; readonly title: string }>
   >([]);
@@ -198,15 +216,27 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
     setField("status", value === "published" ? "published" : "draft");
   };
 
+  /**
+   * Dirty includes every form field and the body. `handle.dirty()` only
+   * tracks Tiptap transactions, so a title or category edit would otherwise
+   * let Back discard it without a warning.
+   */
+  const dirty = createMemo(
+    () =>
+      handle.dirty() ||
+      !sameContentFields(fields(), cleanFields()) ||
+      !sameCategoryIds(selectedCategories(), cleanCategoryIds()),
+  );
+
   const persist = (
     slug: string | null,
     doc: TiptapDoc,
   ): Effect.Effect<CmsPost | CmsWork, CmsError> =>
     props.kind === "posts"
-      ? Effect.flatMap(toPostInput(fields(), doc, selectedCategories()), (input) =>
+      ? Effect.flatMap(toPostInput(fields(), doc, selectedCategories(), preserved()), (input) =>
           savePost(slug, input),
         )
-      : Effect.flatMap(toWorkInput(fields(), doc), (input) => saveWork(slug, input));
+      : Effect.flatMap(toWorkInput(fields(), doc, preserved()), (input) => saveWork(slug, input));
 
   const onSave = (): void => {
     const doc: TiptapDoc = handle.doc() ?? { type: "doc", content: [] };
@@ -216,6 +246,8 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
         Effect.tap((saved) =>
           Effect.sync(() => {
             handle.markClean();
+            setCleanFields(fields());
+            setCleanCategoryIds(selectedCategories());
             setSavedSlug(saved.slug);
             setSaveState({ status: "saved" });
             historyReload.current();
@@ -244,7 +276,10 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
   const onRestored = (saved: CmsPost | CmsWork): void => {
     const data = toInitial(saved, saved.slug);
     setFields(data.fields);
+    setCleanFields(data.fields);
     if (props.kind === "posts") setSelected(data.categoryIds);
+    setCleanCategoryIds(data.categoryIds);
+    setPreserved(data.preserved);
     if (data.doc) handle.reset(data.doc);
     handle.markClean();
     setSavedSlug(saved.slug);
@@ -253,7 +288,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
   };
 
   const onBack = (): void => {
-    if (!handle.dirty() || window.confirm("Discard unsaved changes?")) props.onExit();
+    if (!dirty() || window.confirm("Discard unsaved changes?")) props.onExit();
   };
 
   const openPanel = (next: Panel): void => {
@@ -358,7 +393,7 @@ const EditorBody = (props: { kind: ContentKind; initial: InitialData; onExit: ()
             layout.gap2,
           )}
         >
-          <Show when={handle.dirty()}>
+          <Show when={dirty()}>
             <Badge variant="warning">Unsaved changes</Badge>
           </Show>
           <Show when={saveState().status === "saving"}>

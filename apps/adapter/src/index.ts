@@ -24,13 +24,25 @@ import { cmsIntegration } from "./cms";
 import { frameIntegration } from "./frame";
 import { gavinIntegration } from "./gavin";
 import { guestbookIntegration } from "./guestbook";
-import { guestbookUserFromCookie } from "./guestbook/shared";
 import { githubIntegration } from "./github";
 import { imageIntegration } from "./image";
 import { ogIntegration } from "./og";
 import { weatherIntegration } from "./weather";
 
 const VISITOR_SESSION_MAX_AGE = 60 * 60 * 24 * 90;
+
+/**
+ * Route gate for tenant-specific surfaces. Unset `TENANT` keeps the legacy
+ * shared app (local dev, tests); a named tenant sees only its own routes.
+ */
+const requireTenantBeforeHandle =
+  (tenant: "tom" | "sophie") =>
+  ({ request }: { request: Request }): void => {
+    const current = tenantFromValue(getRequestEnv(request).TENANT);
+    if (current !== undefined && current !== tenant) {
+      throw new AdapterError({ status: HttpStatus.NotFound, message: "Not found" });
+    }
+  };
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -82,11 +94,6 @@ export const app = new Elysia({
     );
 
     const guestbookSession = cookie.guestbook_session?.value;
-    const guestbookUser = guestbookUserFromCookie(
-      Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Json)(cookie.guestbook_user?.value)),
-    );
-    const userId =
-      guestbookUser === null ? undefined : `${guestbookUser.username}@${guestbookUser.instance}`;
     const otel = await otelConfigFromEnv(env);
     attachRequestContext(request, {
       requestId,
@@ -94,7 +101,6 @@ export const app = new Elysia({
         Schema.decodeUnknownOption(Schema.String)(guestbookSession),
         () => visitorId,
       ),
-      ...(userId && { userId }),
       logLevel: logLevelFromEnv(env),
       ...(otel && { otel }),
     });
@@ -142,16 +148,21 @@ export const app = new Elysia({
     );
     return toProblemResponse(HttpStatus.InternalServerError, "Internal server error");
   })
-  .use(arenaIntegration)
   .use(authIntegration)
-  .use(cmsIntegration)
   .use(frameIntegration)
   .use(gavinIntegration)
-  .use(guestbookIntegration)
   .use(githubIntegration)
   .use(imageIntegration)
   .use(ogIntegration)
   .use(weatherIntegration)
+  // are.na content and the guestbook are Tom-only: Sophie's blog reads its
+  // CMS and its adapter binds no database to hold guestbook entries.
+  .guard({ beforeHandle: requireTenantBeforeHandle("tom") }, (app) =>
+    app.use(arenaIntegration).use(guestbookIntegration),
+  )
+  // The CMS is Sophie-only. Tom's editor is retired and its site reads
+  // are.na, so no CMS read or write route exists on the Tom adapter.
+  .guard({ beforeHandle: requireTenantBeforeHandle("sophie") }, (app) => app.use(cmsIntegration))
   .compile();
 
 export type AdapterApp = typeof app;

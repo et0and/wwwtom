@@ -29,6 +29,17 @@ export interface GuestbookEntries {
   updated_at: Generated<Timestamp>;
 }
 
+export interface GuestbookSessions {
+  avatar_url: string | null;
+  created_at: Generated<Timestamp>;
+  display_name: string | null;
+  expires_at: Timestamp;
+  fediverse_instance: string;
+  fediverse_username: string;
+  id: Generated<number>;
+  session_token: string;
+}
+
 export interface OauthSessions {
   client_id: string;
   client_secret: string;
@@ -43,6 +54,7 @@ export interface OauthSessions {
 
 export interface DB {
   guestbook_entries: GuestbookEntries;
+  guestbook_sessions: GuestbookSessions;
   oauth_sessions: OauthSessions;
 }
 

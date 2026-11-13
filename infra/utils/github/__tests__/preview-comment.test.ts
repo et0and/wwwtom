@@ -41,7 +41,18 @@ describe("previewCommentBody", () => {
     { name: "Sophie", url: "https://pr-175-sophie.sophie.st" },
   ];
 
-  it("links every app", () => {
+  const withSha = (run: () => void) => {
+    const original = process.env.GITHUB_SHA;
+    try {
+      process.env.GITHUB_SHA = "3bacc5f0e0a1b2c3d4e5f60718293a4b5c6d7e8";
+      run();
+    } finally {
+      if (original === undefined) delete process.env.GITHUB_SHA;
+      else process.env.GITHUB_SHA = original;
+    }
+  };
+
+  it("links every app on success", () => {
     const body = previewCommentBody(apps);
     expect(body).toContain("## Preview deployed");
     expect(body).toContain("- [Web](https://pr-175-web.tom.so)");
@@ -49,17 +60,34 @@ describe("previewCommentBody", () => {
   });
 
   it("names the built commit", () => {
-    const original = process.env.GITHUB_SHA;
-    try {
-      process.env.GITHUB_SHA = "3bacc5f0e0a1b2c3d4e5f60718293a4b5c6d7e8";
-      expect(previewCommentBody(apps)).toContain("3bacc5f");
-    } finally {
-      if (original === undefined) delete process.env.GITHUB_SHA;
-      else process.env.GITHUB_SHA = original;
-    }
+    withSha(() => expect(previewCommentBody(apps)).toContain("3bacc5f"));
   });
 
   it("renders a body with no apps rather than throwing", () => {
     expect(previewCommentBody([])).toContain("## Preview deployed");
+  });
+
+  it("never claims success on a failed redeploy", () => {
+    const body = previewCommentBody(
+      apps,
+      "failure",
+      "https://github.com/et0and/wwwtom/actions/runs/1",
+    );
+    expect(body).toContain("## Preview deploy failed");
+    expect(body).not.toContain("## Preview deployed");
+    expect(body).toContain("may be unavailable or still point at an older commit");
+    expect(body).toContain("- [Web](https://pr-175-web.tom.so)");
+    expect(body).toContain("- [Sophie](https://pr-175-sophie.sophie.st)");
+    expect(body).toContain("[Workflow run](https://github.com/et0and/wwwtom/actions/runs/1)");
+  });
+
+  it("names the failed commit", () => {
+    withSha(() =>
+      expect(previewCommentBody(apps, "failure")).toContain("Failed on commit 3bacc5f."),
+    );
+  });
+
+  it("omits the run link when CI did not supply one", () => {
+    expect(previewCommentBody(apps, "failure")).not.toContain("[Workflow run]");
   });
 });

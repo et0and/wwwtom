@@ -6,6 +6,7 @@ export default defineConfig({
     include: [
       "apps/__tests__/**/*.test.ts",
       "hyperdrive/__tests__/**/*.test.ts",
+      "runner/src/__tests__/**/*.test.ts",
       "turbo/src/__tests__/**/*.test.ts",
       "utils/github/__tests__/**/*.test.ts",
     ],

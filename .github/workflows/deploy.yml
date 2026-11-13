@@ -43,6 +43,7 @@ jobs:
       - name: Deploy infrastructure
         run: |-
           pnpm deploy:shared --yes &&
+          pnpm deploy:turbo --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&

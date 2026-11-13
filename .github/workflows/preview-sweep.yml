@@ -41,14 +41,14 @@ jobs:
           for pr in $prs; do
             echo "Sweeping preview stage pr-$pr"
             export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"
-            for row in "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do
+            for row in "wwwtom-preview/pr-$pr/wwwtom-preview" "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do
               pnpm --filter @tom/infra exec alchemy state list --backend cloudflare "$row" >/dev/null 2>&1 &&
                 pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
             done
             pnpm destroy:storybook --yes || true
+            pnpm destroy:sophie --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
-            pnpm destroy:sophie --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true
             pnpm destroy:shared --yes || true

@@ -10,11 +10,9 @@ import { styles } from "./frame.stylex";
 export interface FrameFormProps {
   readonly mode: FrameMode;
   readonly channel: string;
-  readonly streamUrl: string;
   readonly busy: boolean;
   readonly onModeChange: (mode: FrameMode) => void;
   readonly onChannelChange: (channel: string) => void;
-  readonly onStreamUrlChange: (url: string) => void;
   readonly onSubmit: () => void;
 }
 
@@ -42,22 +40,6 @@ export function FrameForm(props: FrameFormProps) {
         />
         <Text variant="secondary" size="sm" style={styles.note}>
           Leave blank to use the channel stored on the board.
-        </Text>
-      </Show>
-
-      <Show when={props.mode === "video"}>
-        <Input
-          label="MJPEG stream URL"
-          type="url"
-          name="streamUrl"
-          placeholder="http://192.168.1.20:8080/stream.mjpg"
-          value={props.streamUrl}
-          onInput={(event) => props.onStreamUrlChange(event.currentTarget.value)}
-          disabled={props.busy}
-          style={styles.field}
-        />
-        <Text variant="secondary" size="sm" style={styles.note}>
-          MJPEG only. Video playback is not on the board yet.
         </Text>
       </Show>
 

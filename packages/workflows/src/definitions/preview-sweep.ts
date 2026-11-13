@@ -1,5 +1,6 @@
 import { run, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
+import { sweepDestroyStacks } from "../catalog/alchemy";
 import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 import { ex } from "../expressions";
@@ -11,12 +12,14 @@ import { ex } from "../expressions";
  * Destroying an already-gone stage is a no-op, and each stack runs even when
  * the previous one fails.
  *
- * Stages created before the consolidated preview comment moved to
- * `preview.run.ts` still have a `GitHub.Comment` row in the web or sophie
- * state. Those stacks no longer register the provider, so their destroy plan
- * aborts before deleting the Worker, and the surviving Worker then blocks the
- * shared queue deletion. Drop those rows first; the comments live on closed
- * PRs, so forgetting the state entry is enough.
+ * The consolidated preview stack owns a comment-only state row, so its
+ * destroy plan has nothing to tear down on GitHub; drop the row instead.
+ * Stages created before the consolidated comment moved to `preview.run.ts`
+ * still have a `GitHub.Comment` row in the web or sophie state. Those stacks
+ * no longer register the provider, so their destroy plan aborts before
+ * deleting the Worker, and the surviving Worker then blocks the shared queue
+ * deletion. Drop the state rows first; the comments live on closed PRs, so
+ * forgetting the state entry is enough.
  *
  * The lookback is wider than one night on purpose: a destroy that fails must
  * be retried, and a stage that falls out of the window is never swept again.
@@ -57,17 +60,11 @@ export const previewSweep = workflow("preview-sweep", {
           "for pr in $prs; do",
           '  echo "Sweeping preview stage pr-$pr"',
           '  export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"',
-          '  for row in "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do',
+          '  for row in "wwwtom-preview/pr-$pr/wwwtom-preview" "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do',
           '    pnpm --filter @tom/infra exec alchemy state list --backend cloudflare "$row" >/dev/null 2>&1 &&',
           '      pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true',
           "  done",
-          "  pnpm destroy:storybook --yes || true",
-          "  pnpm destroy:web --yes || true",
-          "  pnpm destroy:editor --yes || true",
-          "  pnpm destroy:sophie --yes || true",
-          "  pnpm destroy:adapter --yes || true",
-          "  pnpm destroy:api --yes || true",
-          "  pnpm destroy:shared --yes || true",
+          ...sweepDestroyStacks.map((stack) => `  pnpm destroy:${stack} --yes || true`),
           "done",
         ]),
       ],

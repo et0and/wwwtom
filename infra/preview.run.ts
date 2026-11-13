@@ -5,6 +5,7 @@ import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
 import { sophieWebHost, stageWebHost } from "./shared.run.ts";
 import { previewComment } from "./utils/github/preview-comment.ts";
+import type { PreviewStatus } from "./utils/github/preview-comment.ts";
 
 /**
  * The PR preview comment, and nothing else. No Cloudflare resource lives
@@ -14,6 +15,10 @@ import { previewComment } from "./utils/github/preview-comment.ts";
  * time it posts, and it owns the single consolidated comment rather than
  * each app stack commenting for itself. Every preview host derives from the
  * stage name, so the URLs are known without reading a deployed resource.
+ *
+ * When an earlier stack fails, the workflow re-runs this stack with
+ * `PREVIEW_STATUS=failure` and the same comment id, so the old success text
+ * cannot survive a failed redeploy. A later success overwrites it in place.
  */
 export default Stack(
   "wwwtom-preview",
@@ -23,6 +28,8 @@ export default Stack(
   },
   Effect.gen(function* () {
     const stage = yield* Stage;
+    const status: PreviewStatus = process.env.PREVIEW_STATUS === "failure" ? "failure" : "success";
+    const runUrl = process.env.PREVIEW_RUN_URL;
 
     yield* previewComment({
       id: "wwwtom-preview",
@@ -30,6 +37,8 @@ export default Stack(
         { name: "Web", url: `https://${stageWebHost(stage)}` },
         { name: "Sophie", url: `https://${sophieWebHost(stage)}` },
       ],
+      status,
+      ...(runUrl && { runUrl }),
     });
   }),
 );

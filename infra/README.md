@@ -7,10 +7,11 @@ Effect V4.
 
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/sophie`: Sophie SSR blog, built by `Cloudflare.Website.Vite`
-- `apps/editor`: Camus CMS SPA, built by `Cloudflare.Website.Vite` (Tom instance + Sophie instance via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`)
-- `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated D1+R2 per tenant)
-- `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; same tenant split)
+- `apps/editor`: Camus CMS SPA for Sophie, built by `Cloudflare.Website.Vite` (Tom's instance is retired)
+- `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated per stage: Tom D1 for Better Auth sessions, Sophie D1+R2 for CMS; CMS routes are Sophie-only)
+- `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; arena + guestbook are Tom-only, cms is Sophie-only)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
+- `storybook`: static TomUI component catalog, built from `packages/ui`
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 - `edge`: zone-level WAF and rate limiting rules for `tom.so` and `sophie.st` (`edge.run.ts`)
 
@@ -19,7 +20,6 @@ them:
 
 - `wwwtom` on `tom.so`
 - `apitom` on `api.tom.so`
-- `TOM_RATE_LIMIT_KV`
 - `guestbook-hyperdrive`
 
 Other explicit stages create isolated resources automatically.
@@ -36,20 +36,26 @@ ALCHEMY_STAGE=production pnpm deploy
 ALCHEMY_STAGE=dev pnpm deploy
 ALCHEMY_STAGE=staging pnpm deploy
 
-# Deploy one component
+# Deploy one stack
 pnpm deploy:shared
-pnpm deploy:edge
+pnpm deploy:turbo
 pnpm deploy:api
 pnpm deploy:adapter
 pnpm deploy:web
 pnpm deploy:sophie
+pnpm deploy:storybook
+
+# Auxiliary stacks, never part of the `deploy` chain
+pnpm deploy:edge
 pnpm deploy:runner
-pnpm deploy:turbo
+pnpm deploy:preview
 ```
 
-Deployment order is `shared -> turbo -> api -> adapter -> web -> sophie`.
-The zone-level `edge` stack deploys separately, from a production dispatch
-only (see Edge protection).
+Deployment order is
+`shared -> turbo -> api -> adapter -> web -> sophie -> storybook`; `pnpm deploy`
+runs exactly that chain. The zone-level `edge` stack deploys separately, from
+a production dispatch only (see Edge protection). Storybook previews use the
+same `deploy:storybook` script from their own workflow.
 
 The `runner` stack is on-demand infrastructure, not part of the default
 `deploy` chain. `POST /runners` starts one ephemeral GitHub Actions runner:
@@ -66,7 +72,9 @@ registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
-(`sophie -> editor -> web -> adapter -> api -> turbo -> shared`).
+(`storybook -> sophie -> web -> editor -> adapter -> api -> turbo -> shared`).
+`editor` is destroy-only: Tom's editor stack is retired, but a stage may still
+own its old Worker, so teardown removes it after `web`.
 
 Local dev for the adapter (workerd + real bindings from `alchemy dev`):
 
@@ -220,7 +228,8 @@ tokens). `CONTROL_TOKEN` guards the runner control endpoints; generate a long
 random value of at least 32 characters.
 
 `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` are the GitHub OAuth app
-credentials for Tom CMS sign-in (distinct from the runner `GITHUB_TOKEN`).
+credentials for Tom sign-in (frame control and guestbook; distinct from the
+runner `GITHUB_TOKEN`).
 `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are the Google OAuth
 credentials for Sophie CMS sign-in. `GOOGLE_OAUTH_CLIENTS` is an optional JSON
 object mapping public Google OAuth client IDs to client secrets for the generic
@@ -252,14 +261,30 @@ web code prefers the `HYPERDRIVE` binding’s connection string.
 
 ## Previews
 
-When `PULL_REQUEST` is set, the web, editor, and sophie stacks post or
-update GitHub preview comments (Web, Tom CMS, Sophie Web, Sophie CMS).
-Preview stages should use `ALCHEMY_STAGE=pr-<number>`.
+When `PULL_REQUEST` is set, the `preview` stack posts or updates the single
+consolidated GitHub comment (Web, Sophie). It runs last in the preview chain,
+so every link is live when it posts, and `ALCHEMY_STAGE=pr-<number>` names the
+stage.
+
+If an earlier preview stack fails, the deploy chain never reaches the comment
+stack, so the workflow re-runs `deploy:preview` with `PREVIEW_STATUS=failure`.
+That updates the same comment id to a failed-deploy body and marks the links
+as possibly unavailable or stale; a later success overwrites it in place.
+There is still exactly one consolidated comment per PR.
+
+Preview stages own their Tom database. `wwwtom-cms-d1-pr-<n>` is created and
+migrated with the stage and deleted by `destroy:api` when the PR closes; it
+never reads or writes the shared dev database. It binds only Better Auth: Tom
+CMS is retired, Tom R2 is dead, and no media bucket is declared. Dev and staging
+keep Alchemy's generated names, and production keeps `tom-cms-v2`. The
+`preview` stack itself owns only the GitHub comment and no Cloudflare resource;
+the nightly sweep drops its comment-only state row for closed PRs.
 
 Preview editors authenticate through the dev adapters: OAuth redirect
 URIs are exact-match at Google/GitHub, so per-PR hosts can never be
 registered. The dev APIs trust each PR's editor origin
-(`pr-<n>-cms.tom.so`, `pr-<n>-cms.sophie.st`).
+(`pr-<n>-cms.tom.so`, `pr-<n>-cms.sophie.st`). Isolating the per-stage
+database does not change those origins or the OAuth callbacks.
 
 ## Retired hosts
 

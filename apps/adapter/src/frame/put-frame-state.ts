@@ -1,13 +1,14 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
-import { FrameStateUpdateSchema, type FrameState } from "@tom/schemas/frame-state";
+import { FrameStateUpdateSchema } from "@tom/schemas/frame-state";
 import { logContextFromRequest } from "@tom/utils/worker";
 import { requireArenaTenant } from "../arena/shared";
 import { allowLocalOriginsForAdapter, tenantFromValue } from "../origins";
 import { runAdapter } from "../runtime";
 import { requireTrustedWriteOrigin } from "../write-origin-gate";
-import { readFrameEnv, readFrameState, requireAdminSession, writeFrameState } from "./shared";
+import { readFrameEnv, requireAdminSession } from "./shared";
+import { saveFrameUpdate } from "./state";
 
 const FrameStateUpdateBodySchema = Schema.toStandardSchemaV1(FrameStateUpdateSchema);
 
@@ -26,17 +27,7 @@ export const putFrameStateRoute = new Elysia().put(
           message: "Untrusted frame control origin",
         });
         yield* requireAdminSession(request, env);
-        const current = yield* readFrameState(env);
-        const next: FrameState = {
-          mode: body.mode,
-          channel: body.channel,
-          streamUrl: body.streamUrl,
-          gavinMood:
-            body.mode === "gavin" ? (body.gavinMood ?? current.gavinMood ?? "idle") : "idle",
-          updatedAt: new Date().toISOString(),
-        };
-        yield* writeFrameState(env, next);
-        return next;
+        return yield* saveFrameUpdate(env, body);
       }),
       (error) => error,
       logContextFromRequest(request, "tom-adapter"),

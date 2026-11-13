@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { CmsWorkInputSchema } from "@tom/schemas/cms";
-import { createWork } from "./operations";
+import { createWork } from "./commands";
 import { decodeBoundary, runWrite, withWorksAuthor } from "./shared";
 
 export const createWorkRoute = new Elysia().post("/works", ({ body, request }) =>

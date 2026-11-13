@@ -113,12 +113,16 @@ const authEnv = (seed: Seed) =>
     BETTER_AUTH_SECRET: AUTH_SECRET,
     GITHUB_CLIENT_ID: "test-client-id",
     GITHUB_CLIENT_SECRET: "test-client-secret",
+    // Draft reads are gated on current membership; without the allowlist the
+    // session is just a signed-in reader (fail closed, same as writes).
+    CMS_ADMIN_EMAILS: "gh@tomhackshaw.com",
   });
 
 /** Production shape: auth secrets ride the TOM_SECRETS store binding. */
 const bundleEnv = (seed: Seed) =>
   testEnv({
     CMS_D1: fakeDb(seed),
+    CMS_ADMIN_EMAILS: "gh@tomhackshaw.com",
     TOM_SECRETS: {
       get: async () =>
         JSON.stringify({
@@ -198,6 +202,17 @@ describe("cms admin reads", () => {
       expect(response.status).toBe(200);
       const body = (await response.json()) as { docs: Array<{ slug: string }> };
       expect(body.docs.map((doc) => doc.slug)).toEqual(["draft-post"]);
+    });
+
+    it("hides drafts when the signed-in user left the allowlist", async () => {
+      // The session is real and unexpired, but membership is re-checked on
+      // every read: a removed admin must lose draft access immediately.
+      const env = { ...authEnv(seed), CMS_ADMIN_EMAILS: "someone-else@example.com" };
+      const list = await app.fetch(await adminRequest("http://localhost/posts?status=all", env));
+      expect(list.status).toBe(HttpStatus.Unauthorized);
+
+      const single = await app.fetch(await adminRequest("http://localhost/posts/draft-post", env));
+      expect(single.status).toBe(HttpStatus.NotFound);
     });
   });
 

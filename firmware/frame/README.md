@@ -73,7 +73,7 @@ If it does not appear, install the WCH CH9102 driver.
 
 ## Modes
 
-The adapter stores one state document (`mode`, `channel`, `streamUrl`) in KV.
+The adapter stores one state document (`mode`, `channel`) in KV.
 `https://tom.so/frame` edits it after GitHub sign-in with the existing admin
 allowlist. The board reads it with `FRAME_DEVICE_TOKEN`.
 
@@ -83,19 +83,11 @@ keeps using its configured `CHANNEL_SLUG`; a saved channel overrides it.
 - `deck` — the are.na frame (default).
 - `clock` — the current face on a black background, still ticking. Clock and
   weather keep refreshing, and the face buttons keep working.
-- `video` — reserved for the MJPEG stream. The current firmware shows a
-  placeholder and keeps polling; the decoder lands next.
 - `off` — black screen and backlight off.
 
-## Video
-
-The board only decodes MJPEG. A transcoder must produce 240×135 JPEG frames
-from the source video; the firmware will parse a `multipart/x-mixed-replace`
-response. MediaBunny (`@mediabunny/server`) can demux and decode H.264/HEVC in
-Node/Bun/Deno through NodeAV's native FFmpeg bindings, but it does not run in
-Cloudflare Workers and does not emit MJPEG directly. Pair it with a JPEG
-encoder (Canvas in the browser, `sharp`/NodeAV on a server), or use ffmpeg.
-No audio: the T-Display has no speaker.
+An unknown `mode` or `gavinMood` string rejects the whole state payload, and the
+board keeps its last good state. Missing `gavinMood` still means idle; a
+missing `mode` is invalid because the wire schema requires it.
 
 ## Flash and partitions
 
@@ -124,12 +116,38 @@ the way the frame sits. Both give 240×135.
 
 ## Trust and limits
 
-- TLS uses `setInsecure()`. That is fine for public are.na images, but it does
-  not verify the adapter. Pin the Cloudflare CA before this leaves your desk.
+- HTTPS is verified. The sketch attaches the CA bundle that ships with the
+  Arduino core (`WiFiClientSecure::useBuiltinCACertBundle()`), so the chain in
+  front of `adapter.tom.so` is checked against the same roots a browser uses.
+  There is no `setInsecure()` path and no hand-pinned intermediate, which
+  would break on Cloudflare's next certificate rotation.
+- Plain `http://` stays available for local testing on a laptop. It is the only
+  unverified transport, and it is opt-in through `ADAPTER_BASE_URL`.
 - The deck reads 20 blocks per page. Large channels are traversed page by page.
 - No OTA yet: flashing means a cable.
 - No on-device cache: every cycle is two HTTPS requests. A 16MB flash has room
   for a frame cache later.
+
+## Updating the certificate trust
+
+The CA bundle is part of the ESP32 Arduino core, not of this sketch, so the
+update path is a PlatformIO update:
+
+```bash
+cd firmware/frame
+pio pkg update          # refreshes the espressif32 platform/Arduino core
+pio run --target upload
+```
+
+`platformio.ini` tracks `platform = espressif32`, so the build picks up the
+current bundle. Updating the core refreshes every trusted root at once; a new
+root that Cloudflare starts using needs no sketch change.
+
+If a deployment must trust exactly one root instead, replace
+`useVerifiedTls()` with `setCACert()` and the root PEM as a string. That pins
+the chain and must be re-flashed whenever the issuer changes, which is why the
+bundle is the default. Never restore `setInsecure()`. The build fails on
+arduino-esp32 2.x because `useBuiltinCACertBundle()` does not exist there.
 
 ## Local testing
 

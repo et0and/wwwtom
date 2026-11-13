@@ -1,58 +1,58 @@
-import { Option, Schema } from "effect";
-import { ArenaSlug } from "./arena-content";
+import { Schema } from "effect";
 import { GavinMoodSchema } from "./gavin";
 
 /**
  * What the desk frame should draw:
  * - `deck`: cycle the are.na channel, with the clock and weather overlay.
  * - `clock`: show the clock and weather only; the face buttons change the layout.
- * - `video`: play an MJPEG stream (the decoder is not on the board yet).
  * - `gavin`: a small animated face that listens through the /frame page.
  * - `off`: blank the display and turn the backlight off; the board stays online.
  */
-export const FrameModeSchema = Schema.Literals(["deck", "clock", "gavin", "video", "off"]);
+export const FrameModeSchema = Schema.Literals(["deck", "clock", "gavin", "off"]);
 export type FrameMode = typeof FrameModeSchema.Type;
 
-const isHttpUrl = Schema.makeFilter((value: string) =>
-  Option.match(Schema.decodeOption(Schema.URLFromString)(value), {
-    onNone: () => "must be an http(s) URL",
-    onSome: (url) =>
-      url.protocol === "http:" || url.protocol === "https:" ? true : "must be an http(s) URL",
-  }),
-);
+/**
+ * The are.na channel the deck draws. Null leaves the channel stored on the
+ * board in place, so switching modes never needs to resend one.
+ */
+const FrameChannelSchema = Schema.NullOr(Schema.NonEmptyString);
+
+const frameStateFields = {
+  channel: FrameChannelSchema,
+  updatedAt: Schema.String,
+};
+
+/** Gavin's state carries the mood the face draws while the mode is active. */
+export const GavinFrameStateSchema = Schema.Struct({
+  ...frameStateFields,
+  mode: Schema.Literal("gavin"),
+  gavinMood: GavinMoodSchema,
+});
+export type GavinFrameState = typeof GavinFrameStateSchema.Type;
 
 /**
- * A browser can only preview an MJPEG stream, and the board only decodes
- * MJPEG, so the wire contract is an http(s) URL rather than an arbitrary
- * protocol. Null means "no stream yet".
+ * One document for every state the adapter returns. The mode discriminates it,
+ * so `gavinMood` cannot appear outside Gavin mode; the firmware reads a missing
+ * mood as idle.
  */
-export const FrameStreamUrlSchema = Schema.String.pipe(Schema.check(isHttpUrl));
-
-export const FrameStateSchema = Schema.Struct({
-  mode: FrameModeSchema,
-  channel: Schema.NullOr(ArenaSlug),
-  streamUrl: Schema.NullOr(FrameStreamUrlSchema),
-  gavinMood: Schema.optional(GavinMoodSchema),
-  updatedAt: Schema.String,
-});
+export const FrameStateSchema = Schema.Union([
+  GavinFrameStateSchema,
+  Schema.Struct({
+    ...frameStateFields,
+    mode: Schema.Literals(["deck", "clock", "off"]),
+  }),
+]);
 export type FrameState = typeof FrameStateSchema.Type;
 
-/**
- * Fields the control UI may change; the adapter stamps `updatedAt`.
- * A null channel leaves the board's current channel in place.
- */
+/** Fields the control UI may change; the adapter stamps `updatedAt`. */
 export const FrameStateUpdateSchema = Schema.Struct({
   mode: FrameModeSchema,
-  channel: Schema.NullOr(ArenaSlug),
-  streamUrl: Schema.NullOr(FrameStreamUrlSchema),
-  gavinMood: Schema.optional(GavinMoodSchema),
+  channel: FrameChannelSchema,
 });
 export type FrameStateUpdate = typeof FrameStateUpdateSchema.Type;
 
 export const defaultFrameState = (updatedAt: string): FrameState => ({
   mode: "deck",
   channel: null,
-  streamUrl: null,
-  gavinMood: "idle",
   updatedAt,
 });

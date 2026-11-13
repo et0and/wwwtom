@@ -10,18 +10,22 @@ import {
 } from "@tom/utils/logging";
 import { TelegramService } from "@tom/utils/telegram";
 
-type GuestbookSignMessage = Extract<TomWorkMessage, { kind: "guestbook-sign" }>;
-
 // Structural subset of the queue event the runtime delivers; the Worker
-// entry needs no full @cloudflare/workers-types dependency.
-type QueueMessage = { readonly id: string; readonly body: unknown };
+// entry needs no full @cloudflare/workers-types dependency. `ack`/`retry`
+// settle one message so a failure never re-runs its batch neighbours.
+type QueueMessage = {
+  readonly id: string;
+  readonly body: unknown;
+  readonly ack: () => void;
+  readonly retry: () => void;
+};
 export type MessageBatch = { readonly messages: readonly QueueMessage[] };
 
 /**
  * Markdown alert for the site owner, sent off the sign request path so the
  * response never waits on Telegram.
  */
-export const buildGuestbookSignAlert = (message: GuestbookSignMessage): string =>
+export const buildGuestbookSignAlert = (message: TomWorkMessage): string =>
   [
     "*New guestbook signature*",
     "",
@@ -29,7 +33,7 @@ export const buildGuestbookSignAlert = (message: GuestbookSignMessage): string =
     `*Message:* ${message.message}`,
   ].join("\n");
 
-const handleGuestbookSign = Effect.fn("api.queue.guestbook-sign")((message: GuestbookSignMessage) =>
+const handleGuestbookSign = Effect.fn("api.queue.guestbook-sign")((message: TomWorkMessage) =>
   Effect.gen(function* () {
     const telegram = yield* TelegramService;
     yield* telegram.sendAlert(buildGuestbookSignAlert(message));
@@ -37,20 +41,14 @@ const handleGuestbookSign = Effect.fn("api.queue.guestbook-sign")((message: Gues
 );
 
 /**
- * Dispatch one decoded queue message. Handler errors propagate so Cloudflare
- * Queues retries the batch and exhausted messages land in the DLQ.
+ * Dispatch one decoded queue message. Handler errors propagate to the batch
+ * loop, which retries only that message; exhausted messages land in the DLQ.
  */
 export const processMessage = (
   message: TomWorkMessage,
 ): Effect.Effect<void, TelegramError, TelegramService> =>
   Effect.gen(function* () {
     yield* Effect.logInfo("api:queue:process", { kind: message.kind });
-    if (message.kind !== "guestbook-sign") {
-      // publish-post / render-og are not produced yet; ack with a warning
-      // rather than poisoning the queue.
-      yield* Effect.logWarning("api:queue:unhandled-kind", { kind: message.kind });
-      return;
-    }
     yield* handleGuestbookSign(message);
   });
 
@@ -65,9 +63,11 @@ const telegramLayer = (env: CloudflareEnv) => {
 /**
  * The tom work queue consumer, hosted by the api worker (the script serves
  * HTTP and drains the queue; both handlers coexist). Each body arrives as
- * unknown JSON — decode at the boundary with TomWorkMessage, then let
- * processMessage fail loudly on any handler error so Cloudflare retries the
- * batch and exhausted messages land in the DLQ (tom-work-queue-dlq).
+ * unknown JSON — decode at the boundary with TomWorkMessage. A message that
+ * decodes and succeeds is acked; one that fails is retried on its own, so an
+ * earlier message's Telegram alert never repeats because a later job in the
+ * same batch failed. Exhausted messages land in the DLQ
+ * (tom-work-queue-dlq).
  */
 export const queueHandler = async (batch: MessageBatch, env: CloudflareEnv): Promise<void> => {
   const resolved = await readCloudflareEnv(env);
@@ -81,8 +81,19 @@ export const queueHandler = async (batch: MessageBatch, env: CloudflareEnv): Pro
     withLogging(
       Effect.gen(function* () {
         for (const message of batch.messages) {
-          const job = yield* Schema.decodeUnknownEffect(TomWorkMessage)(message.body);
-          yield* processMessage(job);
+          yield* Schema.decodeUnknownEffect(TomWorkMessage)(message.body).pipe(
+            Effect.flatMap(processMessage),
+            Effect.tap(() => Effect.sync(() => message.ack())),
+            Effect.catch((cause) =>
+              Effect.gen(function* () {
+                yield* Effect.logError("api:queue:message-failed", {
+                  messageId: message.id,
+                  cause: String(cause),
+                });
+                yield* Effect.sync(() => message.retry());
+              }),
+            ),
+          );
         }
       }).pipe(Effect.provide(telegramLayer(resolved))),
       context,

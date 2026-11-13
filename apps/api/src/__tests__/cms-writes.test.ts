@@ -175,6 +175,18 @@ const writeRevision = (
     });
     return true;
   }
+  if (sql.startsWith("DELETE FROM revisions") && values.length === 1) {
+    // Delete-with-document: `entity_type` is a SQL literal, the id is bound.
+    const entity = sql.includes("entity_type = 'post'") ? "post" : "work";
+    store.revisions.splice(
+      0,
+      store.revisions.length,
+      ...store.revisions.filter(
+        (row) => !(row["entity_type"] === entity && row["entity_id"] === values[0]),
+      ),
+    );
+    return true;
+  }
   if (sql.startsWith("DELETE FROM revisions")) {
     const keep = new Set(
       revisionOrder(
@@ -210,10 +222,13 @@ const deleteRow = (
   store: Store,
 ): boolean => {
   if (sql.startsWith("DELETE FROM post_categories")) {
+    const isCategoryDelete = sql.includes("category_id");
     store.links.splice(
       0,
       store.links.length,
-      ...store.links.filter((link) => link.postId !== values[0]),
+      ...store.links.filter((link) =>
+        isCategoryDelete ? link.categoryId !== values[0] : link.postId !== values[0],
+      ),
     );
     return true;
   }
@@ -305,31 +320,61 @@ const write = (sql: string, values: ReadonlyArray<string | number | null>, store
   deleteRow(sql, values, store);
 };
 
-/** Stateful in-memory CmsD1Binding executing the exact writes CmsService issues. */
-const fakeDb = (store: Store): CmsD1Binding => ({
-  prepare: (sql: string): CmsD1Statement => {
-    const statement: CmsD1Statement = {
-      bind: (...values: ReadonlyArray<string | number | null>): CmsD1Statement => ({
-        bind: statement.bind,
-        first: async <T>() => (read(sql, values, store)[0] as T | undefined) ?? null,
-        all: async <T>() => ({ results: read(sql, values, store) as Array<T> }),
-        run: async () => {
+type Executable = CmsD1Statement & {
+  readonly sql: string;
+  readonly values: ReadonlyArray<string | number | null>;
+};
+
+type FakeDbOptions = {
+  /** Fail a batch when a statement matches, after applying earlier ones. */
+  readonly failOn?: (sql: string) => boolean;
+  /** Throw a specific D1-shaped error for a matching statement. */
+  readonly failMessage?: (sql: string) => string | undefined;
+};
+
+/**
+ * Stateful in-memory CmsD1Binding executing the exact writes CmsService
+ * issues. `batch` mirrors D1: statements apply in order inside a transaction,
+ * so a mid-batch failure rolls the whole write set back.
+ */
+const fakeDb = (store: Store, options: FakeDbOptions = {}): CmsD1Binding => {
+  const executable = (sql: string, values: ReadonlyArray<string | number | null>): Executable => ({
+    sql,
+    values,
+    bind: (...next: ReadonlyArray<string | number | null>) => executable(sql, next),
+    first: async <T>() => (read(sql, values, store)[0] as T | undefined) ?? null,
+    all: async <T>() => ({ results: read(sql, values, store) as Array<T> }),
+    run: async () => {
+      write(sql, values, store);
+      return { success: true };
+    },
+  });
+
+  return {
+    prepare: (sql: string) => executable(sql, []),
+    batch: async (statements: ReadonlyArray<CmsD1Statement>) => {
+      const snapshot = structuredClone(store);
+      const applied: Array<{ success: boolean }> = [];
+      try {
+        for (const item of statements) {
+          const { sql, values } = item as Executable;
+          if (options.failOn?.(sql) === true) {
+            throw new Error(`injected batch failure: ${sql}`);
+          }
+          const failure = options.failMessage?.(sql);
+          if (failure !== undefined) throw new Error(failure);
           write(sql, values, store);
-          return { success: true };
-        },
-      }),
-      first: async <T>() => (read(sql, [], store)[0] as T | undefined) ?? null,
-      all: async <T>() => ({ results: read(sql, [], store) as Array<T> }),
-      run: async () => {
-        write(sql, [], store);
-        return { success: true };
-      },
-    };
-    return statement;
-  },
-  batch: () => Promise.resolve([]),
-  exec: () => Promise.resolve({}),
-});
+          applied.push({ success: true });
+        }
+      } catch (cause) {
+        Object.assign(store, snapshot);
+        throw cause;
+      }
+      return applied;
+    },
+    exec: () => Promise.resolve({}),
+  };
+};
 
 const toBytes = (value: ArrayBuffer | Uint8Array | string): ArrayBuffer => {
   if (value instanceof Uint8Array) return Uint8Array.from(value).buffer;
@@ -337,11 +382,19 @@ const toBytes = (value: ArrayBuffer | Uint8Array | string): ArrayBuffer => {
   return new TextEncoder().encode(value).buffer;
 };
 
-const fakeR2 = (files: Map<string, { bytes: ArrayBuffer; mime: string }>): CmsR2Binding => ({
-  put: async (key, value, options) => {
+type FakeR2Options = {
+  /** Fail the object purge for a key, leaving the bytes orphaned. */
+  readonly failDelete?: (key: string) => boolean;
+};
+
+const fakeR2 = (
+  files: Map<string, { bytes: ArrayBuffer; mime: string }>,
+  options: FakeR2Options = {},
+): CmsR2Binding => ({
+  put: async (key, value, putOptions) => {
     files.set(key, {
       bytes: toBytes(value),
-      mime: options?.httpMetadata?.contentType ?? "application/octet-stream",
+      mime: putOptions?.httpMetadata?.contentType ?? "application/octet-stream",
     });
     return { key };
   },
@@ -351,6 +404,7 @@ const fakeR2 = (files: Map<string, { bytes: ArrayBuffer; mime: string }>): CmsR2
     return { key, size: file.bytes.byteLength, arrayBuffer: async () => file.bytes };
   },
   delete: async (key) => {
+    if (options.failDelete?.(key) === true) throw new Error("injected R2 delete failure");
     files.delete(key);
   },
 });
@@ -404,13 +458,13 @@ const workInput = (overrides: Partial<CmsWorkInput> = {}): CmsWorkInput => ({
   ...overrides,
 });
 
-const setup = () => {
+const setup = (options: { db?: FakeDbOptions; r2?: FakeR2Options } = {}) => {
   const store = emptyStore();
   store.categories.push({ id: "cat-1", slug: "essays", title: "Essays" });
   const files = new Map<string, { bytes: ArrayBuffer; mime: string }>();
   const env = testEnv({
-    CMS_D1: fakeDb(store),
-    CMS_MEDIA: fakeR2(files),
+    CMS_D1: fakeDb(store, options.db),
+    CMS_MEDIA: fakeR2(files, options.r2),
     BETTER_AUTH_SECRET: AUTH_SECRET,
     GITHUB_CLIENT_ID: "test-client-id",
     GITHUB_CLIENT_SECRET: "test-client-secret",
@@ -509,6 +563,36 @@ describe("cms write routes", () => {
       expect(response.status).toBe(HttpStatus.Conflict);
     });
 
+    it("maps a lost post slug race to 409", async () => {
+      const { store, env } = setup({
+        db: {
+          failMessage: (sql) =>
+            sql.startsWith("INSERT INTO posts")
+              ? "D1_ERROR: UNIQUE constraint failed: posts.slug: SQLITE_CONSTRAINT"
+              : undefined,
+        },
+      });
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", postInput()),
+      );
+      expect(response.status).toBe(HttpStatus.Conflict);
+      expect(store.posts).toHaveLength(0);
+      expect(store.revisions).toHaveLength(0);
+    });
+
+    it("keeps other D1 write failures a 500", async () => {
+      const { env } = setup({
+        db: {
+          failMessage: (sql) =>
+            sql.startsWith("INSERT INTO posts") ? "D1_ERROR: disk I/O error" : undefined,
+        },
+      });
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", postInput()),
+      );
+      expect(response.status).toBe(HttpStatus.InternalServerError);
+    });
+
     it("rejects an invalid body with 400", async () => {
       const { store, env } = setup();
       const response = await app.fetch(
@@ -529,8 +613,11 @@ describe("cms write routes", () => {
         ),
       );
       expect(response.status).toBe(HttpStatus.BadRequest);
-      expect(store.posts).toHaveLength(1);
+      // Validation runs before the batch, so a rejected category leaves no
+      // half-created post behind. (The old test expected one.)
+      expect(store.posts).toHaveLength(0);
       expect(store.links).toHaveLength(0);
+      expect(store.revisions).toHaveLength(0);
     });
   });
 
@@ -628,6 +715,22 @@ describe("cms write routes", () => {
       expect(deleted.status).toBe(200);
     });
 
+    it("maps a lost work slug race to 409", async () => {
+      const { store, env } = setup({
+        db: {
+          failMessage: (sql) =>
+            sql.startsWith("INSERT INTO works")
+              ? "D1_ERROR: UNIQUE constraint failed: works.slug: SQLITE_CONSTRAINT"
+              : undefined,
+        },
+      });
+      const response = await app.fetch(
+        authedJson("http://localhost/works", env, "POST", workInput()),
+      );
+      expect(response.status).toBe(HttpStatus.Conflict);
+      expect(store.works).toHaveLength(0);
+    });
+
     it("returns 404 when deleting an unknown work", async () => {
       const { env } = setup();
       const response = await app.fetch(authedJson("http://localhost/works/missing", env, "DELETE"));
@@ -652,6 +755,22 @@ describe("cms write routes", () => {
         authedJson("http://localhost/categories/notes", env, "DELETE"),
       );
       expect(deleted.status).toBe(200);
+      expect(store.categories).toHaveLength(1);
+    });
+
+    it("maps a lost category slug race to 409", async () => {
+      const { store, env } = setup({
+        db: {
+          failMessage: (sql) =>
+            sql.startsWith("INSERT INTO categories")
+              ? "D1_ERROR: UNIQUE constraint failed: categories.slug: SQLITE_CONSTRAINT"
+              : undefined,
+        },
+      });
+      const response = await app.fetch(
+        authedJson("http://localhost/categories", env, "POST", { slug: "notes", title: "Notes" }),
+      );
+      expect(response.status).toBe(HttpStatus.Conflict);
       expect(store.categories).toHaveLength(1);
     });
 
@@ -1042,6 +1161,268 @@ describe("cms write routes", () => {
         authedJson("http://localhost/posts", env, "POST", postInput()),
       );
       expect(response.status).toBe(HttpStatus.Forbidden);
+    });
+  });
+
+  describe("write atomicity", () => {
+    it("rolls back a failed create: no post, no links, no revision", async () => {
+      const { store, env } = setup({
+        db: { failOn: (sql) => sql.startsWith("INSERT INTO revisions") },
+      });
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", postInput()),
+      );
+
+      expect(response.status).toBe(HttpStatus.InternalServerError);
+      expect(store.posts).toHaveLength(0);
+      expect(store.links).toHaveLength(0);
+      expect(store.revisions).toHaveLength(0);
+    });
+
+    it("rolls back a failed update: the stored document and links are untouched", async () => {
+      // Fail only the update's batch; the seed create must land first.
+      const shouldFail = { enabled: false };
+      const { store, env } = setup({
+        db: { failOn: (sql) => shouldFail.enabled && sql.startsWith("INSERT INTO revisions") },
+      });
+      await app.fetch(authedJson("http://localhost/posts", env, "POST", postInput()));
+      const before = structuredClone(store.posts[0]);
+      shouldFail.enabled = true;
+
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/posts/hello-world",
+          env,
+          "PUT",
+          postInput({ title: "Changed", categoryIds: [] }),
+        ),
+      );
+
+      expect(response.status).toBe(HttpStatus.InternalServerError);
+      expect(store.posts[0]).toEqual(before);
+      expect(store.links).toEqual([{ postId: before?.["id"], categoryId: "cat-1" }]);
+    });
+
+    it("rolls back a category delete with its links", async () => {
+      const { store, env } = setup({
+        db: { failOn: (sql) => sql.startsWith("DELETE FROM categories") },
+      });
+      await app.fetch(authedJson("http://localhost/posts", env, "POST", postInput()));
+
+      const response = await app.fetch(
+        authedJson("http://localhost/categories/essays", env, "DELETE"),
+      );
+
+      expect(response.status).toBe(HttpStatus.InternalServerError);
+      expect(store.categories).toHaveLength(1);
+      expect(store.links).toHaveLength(1);
+    });
+
+    it("cascades revisions when the document is deleted", async () => {
+      const { store, env } = setup();
+      await app.fetch(authedJson("http://localhost/posts", env, "POST", postInput()));
+      await app.fetch(
+        authedJson("http://localhost/posts/hello-world", env, "PUT", postInput({ title: "Two" })),
+      );
+      expect(store.revisions).toHaveLength(2);
+
+      const deleted = await app.fetch(
+        authedJson("http://localhost/posts/hello-world", env, "DELETE"),
+      );
+
+      expect(deleted.status).toBe(200);
+      expect(store.posts).toHaveLength(0);
+      expect(store.revisions).toHaveLength(0);
+    });
+
+    it("cascades work revisions on delete", async () => {
+      const { store, env } = setup();
+      await app.fetch(authedJson("http://localhost/works", env, "POST", workInput()));
+      expect(store.revisions).toHaveLength(1);
+
+      await app.fetch(authedJson("http://localhost/works/hyperjam", env, "DELETE"));
+
+      expect(store.works).toHaveLength(0);
+      expect(store.revisions).toHaveLength(0);
+    });
+  });
+
+  describe("publish invariants", () => {
+    it("publishes a null date as the transition instant", async () => {
+      const { store, env } = setup();
+      const response = await app.fetch(
+        authedJson("http://localhost/posts", env, "POST", postInput({ status: "published" })),
+      );
+
+      expect(response.status).toBe(200);
+      const publishedAt = String(store.posts[0]?.["published_at"]);
+      expect(publishedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+      expect(new Date(publishedAt).getTime()).toBeLessThanOrEqual(Date.now());
+    });
+
+    it("refuses a future date on a published document", async () => {
+      const { store, env } = setup();
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/posts",
+          env,
+          "POST",
+          postInput({ status: "published", publishedAt: utc("2099-01-01T00:00:00.000Z") }),
+        ),
+      );
+
+      expect(response.status).toBe(HttpStatus.BadRequest);
+      expect(store.posts).toHaveLength(0);
+    });
+
+    it("keeps a future date on a deliberate draft", async () => {
+      const { store, env } = setup();
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/posts",
+          env,
+          "POST",
+          postInput({ status: "draft", publishedAt: utc("2099-01-01T00:00:00.000Z") }),
+        ),
+      );
+
+      expect(response.status).toBe(200);
+      expect(store.posts[0]?.["published_at"]).toBe("2099-01-01T00:00:00.000Z");
+    });
+
+    it("preserves an existing published date when a later update omits it", async () => {
+      const { store, env } = setup();
+      await app.fetch(
+        authedJson(
+          "http://localhost/posts",
+          env,
+          "POST",
+          postInput({ status: "published", publishedAt: utc("2026-09-05T00:00:00.000Z") }),
+        ),
+      );
+      expect(store.posts[0]?.["published_at"]).toBe("2026-09-05T00:00:00.000Z");
+
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/posts/hello-world",
+          env,
+          "PUT",
+          postInput({ status: "published", publishedAt: null, title: "Still published" }),
+        ),
+      );
+
+      expect(response.status).toBe(200);
+      expect(store.posts[0]?.["published_at"]).toBe("2026-09-05T00:00:00.000Z");
+    });
+
+    it("stamps the transition instead of publishing a scheduled draft date", async () => {
+      const { store, env } = setup();
+      await app.fetch(
+        authedJson(
+          "http://localhost/posts",
+          env,
+          "POST",
+          postInput({ status: "draft", publishedAt: utc("2099-01-01T00:00:00.000Z") }),
+        ),
+      );
+      expect(store.posts[0]?.["published_at"]).toBe("2099-01-01T00:00:00.000Z");
+
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/posts/hello-world",
+          env,
+          "PUT",
+          postInput({ status: "published", publishedAt: null, title: "Published early" }),
+        ),
+      );
+
+      expect(response.status).toBe(200);
+      const publishedAt = String(store.posts[0]?.["published_at"]);
+      expect(publishedAt).not.toBe("2099-01-01T00:00:00.000Z");
+      expect(new Date(publishedAt).getTime()).toBeLessThanOrEqual(Date.now());
+    });
+
+    it("refuses to move an update into the future without a draft", async () => {
+      const { store, env } = setup();
+      await app.fetch(authedJson("http://localhost/posts", env, "POST", postInput()));
+      const before = structuredClone(store.posts[0]);
+
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/posts/hello-world",
+          env,
+          "PUT",
+          postInput({
+            status: "published",
+            publishedAt: utc("2099-01-01T00:00:00.000Z"),
+          }),
+        ),
+      );
+
+      expect(response.status).toBe(HttpStatus.BadRequest);
+      expect(store.posts[0]).toEqual(before);
+    });
+
+    it("applies the same invariant to works", async () => {
+      const { store, env } = setup();
+      const response = await app.fetch(
+        authedJson(
+          "http://localhost/works",
+          env,
+          "POST",
+          workInput({ status: "published", publishedAt: utc("2099-01-01T00:00:00.000Z") }),
+        ),
+      );
+
+      expect(response.status).toBe(HttpStatus.BadRequest);
+      expect(store.works).toHaveLength(0);
+    });
+  });
+
+  describe("media failure recovery", () => {
+    const uploadRequest = (env: ReturnType<typeof testEnv>, file: File): Request =>
+      requestWithEnv("http://localhost/media", env, {
+        method: "POST",
+        headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token", cookie: adminCookie },
+        body: (() => {
+          const form = new FormData();
+          form.append("file", file);
+          return form;
+        })(),
+      });
+
+    it("purges the R2 object when the D1 row cannot be written", async () => {
+      const { store, files, env } = setup({
+        db: { failOn: (sql) => sql.startsWith("INSERT INTO media") },
+      });
+
+      const response = await app.fetch(
+        uploadRequest(env, new File([pngBytes()], "a.png", { type: "image/png" })),
+      );
+
+      expect(response.status).toBe(HttpStatus.InternalServerError);
+      expect(store.media).toHaveLength(0);
+      // The compensating delete removed the now-unreachable bytes.
+      expect(files.size).toBe(0);
+    });
+
+    it("keeps the row delete successful when the R2 purge fails", async () => {
+      const { store, files, env } = setup({
+        r2: { failDelete: (key) => key.startsWith("media/") },
+      });
+      const upload = (await (
+        await app.fetch(uploadRequest(env, new File([pngBytes()], "a.png", { type: "image/png" })))
+      ).json()) as { id: string; key: string };
+
+      const deleted = await app.fetch(
+        authedJson(`http://localhost/media/${upload.id}`, env, "DELETE"),
+      );
+
+      expect(deleted.status).toBe(200);
+      expect(await deleted.json()).toEqual({ id: upload.id });
+      expect(store.media).toHaveLength(0);
+      // The object remains as an orphan, but the authoritative row is gone.
+      expect(files.has(upload.key)).toBe(true);
     });
   });
 });

@@ -3,12 +3,13 @@ import { actionPins, checkout, setupStep } from "../catalog/actions";
 import { nodeHeapEnv } from "../catalog/node";
 
 /**
- * Runs the Playwright suite daily and on every PR against dev. No `push`
- * trigger: the merged dev commit already ran green as the last PR state, so
- * post-merge re-runs would be wasted.
+ * Runs both Playwright projects (tom.so fixture stack and the Camus editor)
+ * daily and on every PR against dev. No `push` trigger: the merged dev
+ * commit already ran green as the last PR state, so post-merge re-runs would
+ * be wasted.
  */
 export const e2e = workflow("e2e", {
-  name: "E2E (fixture store)",
+  name: "E2E",
   on: {
     schedule: [{ cron: "17 2 * * *" }],
     workflow_dispatch: null,
@@ -24,14 +25,16 @@ export const e2e = workflow("e2e", {
   env: nodeHeapEnv(),
   jobs: {
     playwright: {
-      name: "Playwright (tom.so fixture store)",
+      name: "Playwright (tom.so + Camus editor)",
       "runs-on": "ubuntu-latest",
       "timeout-minutes": 30,
       steps: [
         checkout(),
         setupStep({ "install-playwright": "true" }),
-        // The web server under test is `vite dev` (not preview — see
+        // The servers under test are `vite dev` (not preview — see
         // apps/e2e/playwright.config.ts), so no production build is needed.
+        // `test:e2e` runs both the fixture and editor projects; the config's
+        // webServer boots simulator, adapter, web and editor.
         step({
           name: "Run e2e suite",
           run: "pnpm --filter @tom/e2e test:e2e",

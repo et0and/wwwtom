@@ -3,6 +3,7 @@ import { retryPolicy } from "@tom/utils/retry";
 import { AppConfig } from "@tom/utils/config";
 import {
   DatabaseConnectionError,
+  GuestbookConflictError,
   GuestbookValidationError,
   OAuthSessionError,
 } from "@tom/types/errors";
@@ -28,13 +29,28 @@ export type OAuthSessionParams = {
   expires_at: Date;
 };
 
+export type GuestbookSessionParams = {
+  session_token: string;
+  fediverse_username: string;
+  fediverse_instance: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  expires_at: Date;
+};
+
 export type GuestbookEntry = Selectable<Database["guestbook_entries"]>;
+export type GuestbookSession = Selectable<Database["guestbook_sessions"]>;
 export type OAuthSession = Selectable<Database["oauth_sessions"]>;
 
 export interface DatabaseServiceContract {
+  /**
+   * Insert a signature. The unique constraint on `fediverse_username` is the
+   * authority: a second signature for the same identity fails with
+   * `GuestbookConflictError`, even when two requests race.
+   */
   readonly createGuestbookEntry: (
     params: GuestbookEntryParams,
-  ) => Effect.Effect<GuestbookEntry, GuestbookValidationError>;
+  ) => Effect.Effect<GuestbookEntry, GuestbookValidationError | GuestbookConflictError>;
 
   readonly getGuestbookEntries: (params: { page?: number; page_size?: number }) => Effect.Effect<
     {
@@ -46,9 +62,17 @@ export interface DatabaseServiceContract {
     GuestbookValidationError
   >;
 
-  readonly hasUserSigned: (
-    fediverse_username: string,
-  ) => Effect.Effect<boolean, GuestbookValidationError>;
+  readonly createGuestbookSession: (
+    params: GuestbookSessionParams,
+  ) => Effect.Effect<GuestbookSession, OAuthSessionError>;
+
+  readonly getGuestbookSession: (
+    session_token: string,
+  ) => Effect.Effect<GuestbookSession | null, OAuthSessionError>;
+
+  readonly deleteGuestbookSession: (
+    session_token: string,
+  ) => Effect.Effect<number, OAuthSessionError>;
 
   readonly createOAuthSession: (
     params: OAuthSessionParams,
@@ -186,25 +210,36 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           });
 
       return {
-        createGuestbookEntry: Effect.fn("DatabaseService.createGuestbookEntry")(
-          (params: GuestbookEntryParams) =>
-            run(
-              "createGuestbookEntry",
-              (db) =>
-                db
-                  .insertInto("guestbook_entries")
-                  .values({
-                    fediverse_username: params.fediverse_username,
-                    fediverse_instance: params.fediverse_instance,
-                    display_name: params.display_name,
-                    avatar_url: params.avatar_url,
-                    message: params.message,
-                  })
-                  .returningAll()
-                  .executeTakeFirstOrThrow(),
-              guestbookFailure("create guestbook entry"),
-            ),
-        ),
+        createGuestbookEntry: Effect.fn("DatabaseService.createGuestbookEntry")(function* (
+          params: GuestbookEntryParams,
+        ) {
+          // Let the database arbitrate: ON CONFLICT makes a second signature
+          // for the same handle a no-op insert instead of a race between two
+          // readers that both saw no row. No driver error shape to parse.
+          const entry = yield* run(
+            "createGuestbookEntry",
+            (db) =>
+              db
+                .insertInto("guestbook_entries")
+                .values({
+                  fediverse_username: params.fediverse_username,
+                  fediverse_instance: params.fediverse_instance,
+                  display_name: params.display_name,
+                  avatar_url: params.avatar_url,
+                  message: params.message,
+                })
+                .onConflict((conflict) => conflict.column("fediverse_username").doNothing())
+                .returningAll()
+                .executeTakeFirst(),
+            guestbookFailure("create guestbook entry"),
+          );
+          if (!entry) {
+            return yield* new GuestbookConflictError({
+              message: "You have already signed the guestbook",
+            });
+          }
+          return entry;
+        }),
 
         getGuestbookEntries: Effect.fn("DatabaseService.getGuestbookEntries")(function* (params: {
           page?: number;
@@ -246,25 +281,86 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
           };
         }),
 
-        hasUserSigned: Effect.fn("DatabaseService.hasUserSigned")(function* (
-          fediverse_username: string,
+        createGuestbookSession: Effect.fn("DatabaseService.createGuestbookSession")(function* (
+          params: GuestbookSessionParams,
         ) {
-          const result = yield* run(
-            "hasUserSigned",
+          // Sweep on login: the table stays bounded without a scheduled job,
+          // and the read path still filters on expiry for correctness.
+          yield* run(
+            "cleanupExpiredGuestbookSessions",
             (db) =>
               db
-                .selectFrom("guestbook_entries")
-                .select(({ fn }) => [fn.count("id").as("count")])
-                .where("fediverse_username", "=", fediverse_username)
-                .executeTakeFirstOrThrow(),
-            guestbookFailure("check if user signed"),
+                .deleteFrom("guestbook_sessions")
+                .where("expires_at", "<", new Date())
+                .executeTakeFirst(),
+            oauthFailure("cleanup expired guestbook sessions"),
           );
-          return Number(result.count) > 0;
+          return yield* run(
+            "createGuestbookSession",
+            (db) =>
+              db
+                .insertInto("guestbook_sessions")
+                .values({
+                  session_token: params.session_token,
+                  fediverse_username: params.fediverse_username,
+                  fediverse_instance: params.fediverse_instance,
+                  display_name: params.display_name,
+                  avatar_url: params.avatar_url,
+                  expires_at: params.expires_at.toISOString(),
+                })
+                .returningAll()
+                .executeTakeFirstOrThrow(),
+            oauthFailure("create guestbook session", params.session_token),
+          );
+        }),
+
+        getGuestbookSession: Effect.fn("DatabaseService.getGuestbookSession")(function* (
+          session_token: string,
+        ) {
+          const session = yield* run(
+            "getGuestbookSession",
+            (db) =>
+              db
+                .selectFrom("guestbook_sessions")
+                .selectAll()
+                .where("session_token", "=", session_token)
+                .where("expires_at", ">", new Date())
+                .limit(1)
+                .executeTakeFirst(),
+            oauthFailure("get guestbook session", session_token),
+          );
+          return session ?? null;
+        }),
+
+        deleteGuestbookSession: Effect.fn("DatabaseService.deleteGuestbookSession")(function* (
+          session_token: string,
+        ) {
+          const result = yield* run(
+            "deleteGuestbookSession",
+            (db) =>
+              db
+                .deleteFrom("guestbook_sessions")
+                .where("session_token", "=", session_token)
+                .executeTakeFirst(),
+            oauthFailure("delete guestbook session", session_token),
+          );
+          return Number(result.numDeletedRows);
         }),
 
         createOAuthSession: Effect.fn("DatabaseService.createOAuthSession")(function* (
           params: OAuthSessionParams,
         ) {
+          // Same sweep as guestbook sessions: pending rows are short-lived and
+          // abandoned flows would otherwise accumulate with no scheduled job.
+          yield* run(
+            "cleanupExpiredOAuthSessions",
+            (db) =>
+              db
+                .deleteFrom("oauth_sessions")
+                .where("expires_at", "<", new Date())
+                .executeTakeFirst(),
+            oauthFailure("cleanup expired OAuth sessions"),
+          );
           return yield* run(
             "createOAuthSession",
             (db) =>
@@ -321,16 +417,27 @@ export class DatabaseService extends Context.Service<DatabaseService, DatabaseSe
         // Plain Effect value (not Effect.fn): the contract types this field
         // as Effect rather than a callable, so the span attaches via pipe.
         cleanupExpiredSessions: Effect.gen(function* () {
-          const result = yield* run(
-            "cleanupExpiredSessions",
-            (db) =>
-              db
-                .deleteFrom("oauth_sessions")
-                .where("expires_at", "<", new Date())
-                .executeTakeFirst(),
-            oauthFailure("cleanup expired sessions"),
-          );
-          return Number(result.numDeletedRows);
+          const [oauth, guestbook] = yield* Effect.all([
+            run(
+              "cleanupExpiredOAuthSessions",
+              (db) =>
+                db
+                  .deleteFrom("oauth_sessions")
+                  .where("expires_at", "<", new Date())
+                  .executeTakeFirst(),
+              oauthFailure("cleanup expired OAuth sessions"),
+            ),
+            run(
+              "cleanupExpiredGuestbookSessions",
+              (db) =>
+                db
+                  .deleteFrom("guestbook_sessions")
+                  .where("expires_at", "<", new Date())
+                  .executeTakeFirst(),
+              oauthFailure("cleanup expired guestbook sessions"),
+            ),
+          ]);
+          return Number(oauth.numDeletedRows) + Number(guestbook.numDeletedRows);
         }).pipe(Effect.withSpan("DatabaseService.cleanupExpiredSessions")),
       };
     }),

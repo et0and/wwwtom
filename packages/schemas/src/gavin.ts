@@ -12,6 +12,21 @@ export const GavinMoodSchema = Schema.Literals([
 ]);
 export type GavinMood = typeof GavinMoodSchema.Type;
 
+/**
+ * Moods the /frame page owns while speech is in progress. They are transient:
+ * once the utterance ends the face settles, so a model that answers "speaking"
+ * does not leave Gavin pulsing forever.
+ */
+const TRANSIENT_GAVIN_MOODS: ReadonlySet<GavinMood> = new Set([
+  "listening",
+  "thinking",
+  "speaking",
+]);
+
+/** The mood Gavin should hold after the current utterance finishes. */
+export const settledGavinMood = (mood: GavinMood): GavinMood =>
+  TRANSIENT_GAVIN_MOODS.has(mood) ? "idle" : mood;
+
 /** Text the /frame page sends after browser speech-to-text. */
 export const GavinRequestSchema = Schema.Struct({
   transcript: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(2000)),

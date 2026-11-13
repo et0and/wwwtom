@@ -44,3 +44,43 @@ jobs:
         run: pnpm turbo run test
         env:
           ARENA_TOKEN: ${{ secrets.ARENA_TOKEN }}
+  firmware:
+    name: Firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Cache PlatformIO
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-platformio-6.2.0-8.0.0-${{ hashFiles('firmware/frame/platformio.ini') }}
+      - name: Install PlatformIO
+        run: |-
+          python3 -m venv "$RUNNER_TEMP/platformio-venv"
+          "$RUNNER_TEMP/platformio-venv/bin/pip" install --disable-pip-version-check platformio==6.2.0
+          echo "$RUNNER_TEMP/platformio-venv/bin" >> "$GITHUB_PATH"
+      - name: Install the pinned ESP32 platform
+        run: |-
+          cd firmware/frame
+          pio pkg install --global --platform espressif32@8.0.0
+      - name: Write the CI firmware configuration
+        run: |-
+          cd firmware/frame
+          cat > include/config.h <<'EOF'
+          // Generated in CI: placeholder values only.
+          #define WIFI_SSID ""
+          #define WIFI_PASSWORD ""
+          #define ADAPTER_BASE_URL "https://adapter.invalid"
+          #define CHANNEL_SLUG "ci"
+          #define FRAME_DEVICE_TOKEN ""
+          #define FRAME_ROTATION 1
+          #define FRAME_CYCLE_SECONDS 600
+          #define TIMEZONE "UTC0"
+          #define WEATHER_LOCATION "London"
+          EOF
+      - name: Compile the frame firmware
+        run: |-
+          cd firmware/frame
+          pio run --environment tdisplay
