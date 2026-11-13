@@ -122,6 +122,8 @@ on:
   pull_request:
     branches:
       - dev
+permissions:
+  contents: read
 env:
   NODE_OPTIONS: --max-old-space-size=4096
 jobs:
@@ -248,8 +250,8 @@ jobs:
         run: |-
           pnpm deploy:shared --yes &&
           pnpm deploy:turbo --yes &&
-          pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
+          pnpm deploy:api --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
           pnpm deploy:storybook --yes
@@ -554,8 +556,8 @@ jobs:
       - name: Deploy preview stage
         run: |-
           pnpm deploy:shared --yes &&
-          pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
+          pnpm deploy:api --yes &&
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
           pnpm deploy:preview --yes
@@ -586,14 +588,14 @@ jobs:
         with:
           ref: dev
       - uses: ./.github/actions/setup
-      - name: Destroy sophie preview stage
-        run: pnpm destroy:sophie --yes
       - name: Destroy web preview stage
-        if: always()
         run: pnpm destroy:web --yes
       - name: Destroy editor preview stage
         if: always()
         run: pnpm destroy:editor --yes
+      - name: Destroy sophie preview stage
+        if: always()
+        run: pnpm destroy:sophie --yes
       - name: Destroy adapter preview stage
         if: always()
         run: pnpm destroy:adapter --yes
@@ -717,9 +719,9 @@ jobs:
                 pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
             done
             pnpm destroy:storybook --yes || true
-            pnpm destroy:sophie --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
+            pnpm destroy:sophie --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true
             pnpm destroy:shared --yes || true

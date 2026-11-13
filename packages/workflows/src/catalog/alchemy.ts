@@ -21,7 +21,7 @@ export const stageConcurrencyGroup = `deploy-${stageExpression}`;
  * secret bundle but no application stack depends on it, so it stays directly
  * after `shared`.
  */
-const pipelineStacks = ["shared", "turbo", "api", "adapter", "web", "sophie"] as const;
+const pipelineStacks = ["shared", "turbo", "adapter", "api", "web", "sophie"] as const;
 
 /**
  * Static Storybook site. A full stage ships it; PR previews leave it to
@@ -97,28 +97,40 @@ export const deployChain = (
  * destroy-only (`deploy:editor` no longer exists), so it is inserted directly
  * after `web`, the last stack whose adapter origin it was built against.
  */
-const teardownOrder = (
-  stacks: ReadonlyArray<DeployStack | PreviewStack>,
-): ReadonlyArray<DestroyStack> =>
-  [...stacks]
-    .reverse()
-    .flatMap((stack) => (stack === "web" ? [stack, ...destroyOnlyStacks] : [stack]));
 
 /**
  * Teardown of a full stage. `preview` is not part of this chain: it owns only
  * the consolidated GitHub comment and no Cloudflare resource, and a regular
  * stage never deploys it.
  */
-export const destroyStacks = teardownOrder(deployStacks);
+/**
+ * Teardown of a full stage. Deploying the adapter before the API lets it unbind
+ * a queue before the API deletes it, so the order is not the reverse of deploy.
+ */
+export const destroyStacks = [
+  "storybook",
+  "sophie",
+  "web",
+  "editor",
+  "adapter",
+  "api",
+  "turbo",
+  "shared",
+] as const;
 
 /**
  * Teardown of a PR preview stage. The comment stack is left out of the
  * destroy chain: comments are discussion history, the provider never deletes
  * them, and the nightly sweep drops its residual state row for closed PRs.
  */
-export const previewDestroyStacks = teardownOrder(
-  previewStacks.filter((stack) => stack !== "preview"),
-);
+export const previewDestroyStacks = [
+  "web",
+  "editor",
+  "sophie",
+  "adapter",
+  "api",
+  "shared",
+] as const;
 
 /**
  * The nightly sweep is the backstop for every preview-owned stack, including
