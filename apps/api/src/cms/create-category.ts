@@ -1,7 +1,7 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
 import { CmsCategoryInputSchema } from "@tom/schemas/cms";
-import { createCategory } from "./operations";
+import { createCategory } from "./commands";
 import { decodeBoundary, runWrite, withAuthor } from "./shared";
 
 export const createCategoryRoute = new Elysia().post("/categories", ({ body, request }) =>

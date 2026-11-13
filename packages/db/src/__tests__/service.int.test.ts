@@ -13,6 +13,7 @@ import {
   closeDb,
   type DatabaseServiceContract,
   type GuestbookEntryParams,
+  type GuestbookSessionParams,
   type OAuthSessionParams,
 } from "../service";
 import { makeAppConfigLayer } from "@tom/utils/config";
@@ -63,7 +64,7 @@ describe("DatabaseService", () => {
     });
     const result = await migrator.migrateToLatest();
     expect(result.error).toBeUndefined();
-    expect(result.results?.map((migration) => migration.status)).toEqual(["Success"]);
+    expect(result.results?.map((migration) => migration.status)).toEqual(["Success", "Success"]);
   }, 60_000);
 
   afterAll(async () => {
@@ -77,6 +78,7 @@ describe("DatabaseService", () => {
 
   beforeEach(async () => {
     await db.deleteFrom("oauth_sessions").execute();
+    await db.deleteFrom("guestbook_sessions").execute();
     await db.deleteFrom("guestbook_entries").execute();
   });
 
@@ -95,8 +97,11 @@ describe("DatabaseService", () => {
       ),
     );
 
-  const entryParams = (message: string): GuestbookEntryParams => ({
-    fediverse_username: "tom@mastodon.social",
+  const entryParams = (
+    message: string,
+    username = "tom@mastodon.social",
+  ): GuestbookEntryParams => ({
+    fediverse_username: username,
     fediverse_instance: "mastodon.social",
     display_name: "Tom",
     avatar_url: "https://mastodon.social/avatar.png",
@@ -113,12 +118,29 @@ describe("DatabaseService", () => {
     expires_at: expiresAt,
   });
 
+  const sessionParamsFor = (
+    sessionToken: string,
+    expiresAt: Date,
+    username = "tom@mastodon.social",
+  ): GuestbookSessionParams => ({
+    session_token: sessionToken,
+    fediverse_username: username,
+    fediverse_instance: "mastodon.social",
+    display_name: "Tom",
+    avatar_url: "https://mastodon.social/avatar.png",
+    expires_at: expiresAt,
+  });
+
   const createEntry = (params: GuestbookEntryParams) => (db: DatabaseServiceContract) =>
     db.createGuestbookEntry(params);
   const listEntries = (page: number, pageSize: number) => (db: DatabaseServiceContract) =>
     db.getGuestbookEntries({ page, page_size: pageSize });
-  const hasSigned = (username: string) => (db: DatabaseServiceContract) =>
-    db.hasUserSigned(username);
+  const createGuestSession = (params: GuestbookSessionParams) => (db: DatabaseServiceContract) =>
+    db.createGuestbookSession(params);
+  const getGuestSession = (token: string) => (db: DatabaseServiceContract) =>
+    db.getGuestbookSession(token);
+  const deleteGuestSession = (token: string) => (db: DatabaseServiceContract) =>
+    db.deleteGuestbookSession(token);
   const createSession = (params: OAuthSessionParams) => (db: DatabaseServiceContract) =>
     db.createOAuthSession(params);
   const getSession = (token: string) => (db: DatabaseServiceContract) => db.getOAuthSession(token);
@@ -137,11 +159,11 @@ describe("DatabaseService", () => {
     });
 
     it("lists entries newest first with pagination and totals", async () => {
-      await run(createEntry(entryParams("first")));
+      await run(createEntry(entryParams("first", "one@mastodon.social")));
       await new Promise((resolve) => setTimeout(resolve, 2));
-      await run(createEntry(entryParams("second")));
+      await run(createEntry(entryParams("second", "two@mastodon.social")));
       await new Promise((resolve) => setTimeout(resolve, 2));
-      await run(createEntry(entryParams("third")));
+      await run(createEntry(entryParams("third", "three@mastodon.social")));
 
       const page1 = await run(listEntries(1, 2));
       expect(page1.total_count).toBe(3);
@@ -152,11 +174,76 @@ describe("DatabaseService", () => {
       expect(page2.results.map((entry) => entry.message)).toEqual(["first"]);
     });
 
-    it("reports whether a user has signed", async () => {
-      await run(createEntry(entryParams("signed")));
+    it("rejects a second signature for the same identity with a conflict", async () => {
+      await run(createEntry(entryParams("first")));
 
-      expect(await run(hasSigned("tom@mastodon.social"))).toBe(true);
-      expect(await run(hasSigned("someone@elsewhere.social"))).toBe(false);
+      // The run helper rejects on a typed failure, so fold the conflict into
+      // a value before asserting on the tag.
+      const outcome = await run((db) =>
+        Effect.match(db.createGuestbookEntry(entryParams("second")), {
+          onFailure: (error) => error,
+          onSuccess: () => null,
+        }),
+      );
+      expect(outcome).toMatchObject({
+        _tag: "GuestbookConflictError",
+        message: "You have already signed the guestbook",
+      });
+
+      const listed = await run(listEntries(1, 10));
+      expect(listed.results.map((entry) => entry.message)).toEqual(["first"]);
+    });
+
+    it("enforces uniqueness at the database, not in a pre-read", async () => {
+      await run(createEntry(entryParams("first")));
+
+      const write = () =>
+        db.insertInto("guestbook_entries").values({
+          fediverse_username: "tom@mastodon.social",
+          fediverse_instance: "mastodon.social",
+          display_name: null,
+          avatar_url: null,
+          message: "direct",
+        });
+
+      await expect(write().execute()).rejects.toThrow(/duplicate key/);
+    });
+  });
+
+  describe("guestbook sessions", () => {
+    it("creates a session and reads it back by token", async () => {
+      const created = await run(
+        createGuestSession(sessionParamsFor("session-1", new Date(Date.now() + 60_000))),
+      );
+
+      expect(created.session_token).toBe("session-1");
+      expect(created.fediverse_username).toBe("tom@mastodon.social");
+
+      const fetched = await run(getGuestSession("session-1"));
+      expect(fetched?.display_name).toBe("Tom");
+      expect(fetched?.expires_at).toBeInstanceOf(Date);
+    });
+
+    it("treats expired and unknown tokens as signed out", async () => {
+      await run(createGuestSession(sessionParamsFor("expired", new Date(Date.now() - 60_000))));
+
+      expect(await run(getGuestSession("expired"))).toBeNull();
+      expect(await run(getGuestSession("missing"))).toBeNull();
+    });
+
+    it("revokes a session by token", async () => {
+      await run(createGuestSession(sessionParamsFor("session-1", new Date(Date.now() + 60_000))));
+
+      expect(await run(deleteGuestSession("session-1"))).toBe(1);
+      expect(await run(getGuestSession("session-1"))).toBeNull();
+    });
+
+    it("sweeps expired sessions when a new one is created", async () => {
+      await run(createGuestSession(sessionParamsFor("stale", new Date(Date.now() - 60_000))));
+      await run(createGuestSession(sessionParamsFor("fresh", new Date(Date.now() + 60_000))));
+
+      const rows = await db.selectFrom("guestbook_sessions").select("session_token").execute();
+      expect(rows.map((row) => row.session_token)).toEqual(["fresh"]);
     });
   });
 
@@ -189,9 +276,21 @@ describe("DatabaseService", () => {
       expect(await run(getSession("token-1"))).toBeNull();
     });
 
-    it("cleans up expired sessions only", async () => {
-      await run(createSession(sessionParams("expired", new Date(Date.now() - 60_000))));
+    it("sweeps expired pending sessions when a new attempt starts", async () => {
+      // No scheduled cleanup job: abandoned flows must not accumulate, so
+      // issuing a new pending row also removes the expired ones.
+      await run(createSession(sessionParams("stale", new Date(Date.now() - 60_000))));
       await run(createSession(sessionParams("fresh", new Date(Date.now() + 60_000))));
+
+      const rows = await db.selectFrom("oauth_sessions").select("session_token").execute();
+      expect(rows.map((row) => row.session_token)).toEqual(["fresh"]);
+    });
+
+    it("cleans up expired sessions only", async () => {
+      await run(createSession(sessionParams("fresh", new Date(Date.now() + 60_000))));
+      // Write the expired row last: creating it sweeps anything already
+      // expired, so this is the row the explicit cleanup must find.
+      await run(createSession(sessionParams("expired", new Date(Date.now() - 60_000))));
 
       expect(await run(cleanupSessions())).toBe(1);
       expect(await run(getSession("fresh"))).not.toBeNull();

@@ -16,7 +16,7 @@ This is still a work in progress and has some rough edges. I use it to explore d
 - `apps/simulator` — fixture upstreams for the e2e suite.
 - `apps/e2e` — Playwright suites.
 - `packages/*` — shared `ui`, `schemas`, `utils`, `arena`, `db`, `icons`, `constants`, `types`, and `workflows`.
-- `infra` — Alchemy stacks: shared, turbo, api, adapter, web, sophie, and preview.
+- `infra` — Alchemy stacks: shared, turbo, api, adapter, web, sophie, storybook, and preview.
 
 External packages and dependencies have been deliberately kept small in order to keep the project lean.
 
@@ -45,7 +45,7 @@ pnpm write # Format files with oxfmt
 
 ## Previews
 
-Every PR against `dev` gets preview deploys for tom.so and sophie.st. The preview stack posts one PR comment with both links. Preview stages use `ALCHEMY_STAGE=pr-<number>`.
+Every PR against `dev` gets preview deploys for tom.so and sophie.st. The `preview` stack runs last and keeps one comment per PR with both links. If a redeploy fails before it reaches that stack, the workflow updates the same comment as a failed deploy, so stale success text cannot survive. Preview stages use `ALCHEMY_STAGE=pr-<number>` and own their Tom D1 (the Better Auth session store), which is deleted when the PR closes. Tom R2 is dead, so no media bucket exists to isolate.
 
 Sophie's editor preview authenticates through the dev adapter. OAuth redirect URIs are exact-match, so per-PR hosts cannot be registered.
 
@@ -53,7 +53,7 @@ Sophie's editor preview authenticates through the dev adapter. OAuth redirect UR
 
 The main site is cheap and bare bones. It uses [Cloudflare Workers](https://workers.cloudflare.com) and [Alchemy](https://alchemy.run) to build and deploy. Static media assets such as images live on a separate CDN to keep the site light and fast.
 
-Alchemy deploys in dependency order: shared, turbo, api, adapter, web, then sophie. `pnpm deploy` runs the chain plus the zone edge rules, and `ALCHEMY_STAGE` is required. Production deploys are manual. Every push to `dev` deploys the `staging` stage.
+Alchemy deploys in dependency order: shared, turbo, api, adapter, web, sophie, then storybook. `pnpm deploy` runs exactly that chain, and `ALCHEMY_STAGE` is required. The zone edge rules are a separate production-only dispatch step, and the runner is on-demand, so neither is part of `pnpm deploy`. `pnpm destroy` reverses the deploy order and also tears down the retired Tom editor stage. Production deploys are manual. Every push to `dev` deploys the `staging` stage.
 
 This project uses many Cloudflare services: Workers, Wrangler, KV, D1, R2, and Hyperdrive. That makes it less portable than it could be. Alchemy keeps the provider surface in `infra`, so a move to another provider such as AWS should stay contained.
 

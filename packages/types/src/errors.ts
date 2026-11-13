@@ -55,6 +55,16 @@ export class GuestbookValidationError extends Schema.TaggedError<GuestbookValida
   },
 ) {}
 
+/**
+ * A guestbook identity that already signed. The unique constraint on
+ * `guestbook_entries.fediverse_username` is the source of truth, so this is a
+ * 409 rather than a 400: the request was well-formed, the state conflicts.
+ */
+export class GuestbookConflictError extends Schema.TaggedError<GuestbookConflictError>()(
+  "GuestbookConflictError",
+  messageFields,
+) {}
+
 export class OAuthSessionError extends Schema.TaggedError<OAuthSessionError>()(
   "OAuthSessionError",
   {

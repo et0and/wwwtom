@@ -15,6 +15,7 @@ beforeEach(stubFetch);
 afterEach(unstubFetch);
 
 const env = testEnv({
+  TENANT: "sophie",
   API_URL: "http://localhost:8787",
   ADAPTER_URL: "http://localhost:8788",
   INTERNAL_API_TOKEN: "adapter-token",
@@ -91,15 +92,15 @@ describe("cms write proxy", () => {
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
-    it("rejects unknown tom.so subdomains with 403 without touching the API", async () => {
-      const response = await app.fetch(originRequest("https://evil.tom.so"));
+    it("rejects unknown sophie.st subdomains with 403 without touching the API", async () => {
+      const response = await app.fetch(originRequest("https://evil.sophie.st"));
       expect(response.status).toBe(403);
       expect(fetchMock).not.toHaveBeenCalled();
     });
 
     it("allows the deployed editor origin", async () => {
       fetchMock.mockResolvedValueOnce(jsonResponse({ id: "post-1" }));
-      const response = await app.fetch(originRequest("https://dev-cms.tom.so"));
+      const response = await app.fetch(originRequest("https://dev-cms.sophie.st"));
       expect(response.status).toBe(200);
       expect(fetchMock).toHaveBeenCalledTimes(1);
     });

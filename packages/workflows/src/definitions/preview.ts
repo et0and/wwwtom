@@ -1,12 +1,14 @@
-import { run, workflow } from "../builders";
+import { step, workflow } from "../builders";
 import { checkout, setupStep } from "../catalog/actions";
-import { deployChain, previewStacks, destroyStacks, destroySteps } from "../catalog/alchemy";
+import { deployChain, destroySteps, previewDestroyStacks, previewStacks } from "../catalog/alchemy";
 import { nodeHeapEnv } from "../catalog/node";
 import {
   closedAction,
   notClosedAction,
   previewConcurrencyGroup,
   previewEnv,
+  previewFailureEnv,
+  previewSuccessEnv,
   prStage,
 } from "../catalog/preview";
 
@@ -43,7 +45,20 @@ export const preview = workflow("preview", {
         // into the web build.
         checkout("Checkout", { "fetch-depth": 0 }),
         setupStep(),
-        run("Deploy preview stage", deployChain(previewStacks)),
+        step({
+          name: "Deploy preview stage",
+          run: deployChain(previewStacks),
+          env: previewSuccessEnv,
+        }),
+        // A failed redeploy stops the chain before the comment stack runs, so
+        // the previous success comment would survive untouched. Rewrite it
+        // through the same stack and logical id: still one comment, now honest.
+        step({
+          name: "Mark preview comment failed",
+          if: "failure()",
+          run: "pnpm deploy:preview --yes",
+          env: previewFailureEnv,
+        }),
       ],
     },
     destroy: {
@@ -56,7 +71,7 @@ export const preview = workflow("preview", {
         // may already be deleted on close).
         checkout("Checkout", { ref: "dev" }),
         setupStep(),
-        ...destroySteps(destroyStacks),
+        ...destroySteps(previewDestroyStacks),
       ],
     },
   },

@@ -1,15 +1,23 @@
 import { describe, expect, it } from "vitest";
+import { GuestbookConflictError } from "@tom/types/errors";
 import { app } from "../index";
-import { requestWithEnv, testEnv, userCookie } from "../test/helpers";
+import { guestbookMessage, guestbookStatus } from "../guestbook/shared";
+import { requestWithEnv, testEnv } from "../test/helpers";
 
 const env = testEnv();
 
+/**
+ * A non-empty session token is enough to reach message validation: the
+ * profanity check runs before the session row is read, so these cases never
+ * touch the database. A clean message still needs a real row and is covered
+ * by the session tests.
+ */
 const signedInRequest = (url: string, init: RequestInit = {}) =>
   requestWithEnv(url, env, {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      Cookie: `guestbook_user=${userCookie}`,
+      Cookie: "guestbook_session=test-session",
       ...init.headers,
     },
   });
@@ -77,5 +85,13 @@ describe("guestbook flow error mapping", () => {
       title: "Not authenticated",
       instance: "http://localhost/guestbook/sign",
     });
+  });
+
+  it("maps a duplicate signature to 409, not 400", () => {
+    const conflict = new GuestbookConflictError({
+      message: "You have already signed the guestbook",
+    });
+    expect(guestbookStatus(conflict)).toBe(409);
+    expect(guestbookMessage(conflict)).toBe("You have already signed the guestbook");
   });
 });

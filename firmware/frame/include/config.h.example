@@ -4,6 +4,8 @@
 
 // Adapter that serves /arena/frame. Production: https://adapter.tom.so
 // Local: http://<your-computer>.local:8788 (the sketch handles plain HTTP)
+// HTTPS is verified against the Arduino core's CA bundle; see the README's
+// "Updating the certificate trust" before changing this to another host.
 #define ADAPTER_BASE_URL "https://adapter.tom.so"
 
 // Any are.na channel: a worktable, a work, a moodboard.

@@ -29,16 +29,6 @@ export const testEnv = (overrides: Partial<CloudflareEnv> = {}): CloudflareEnv =
   ...overrides,
 });
 
-export const userCookie = encodeURIComponent(
-  JSON.stringify({
-    username: "tom",
-    instance: "mastodon.social",
-    display_name: "Tom",
-    avatar_url: "https://mastodon.social/avatar.png",
-    access_token: "token",
-  }),
-);
-
 export const jsonResponse = <T>(body: T, status = 200): Response =>
   new Response(JSON.stringify(body), {
     status,

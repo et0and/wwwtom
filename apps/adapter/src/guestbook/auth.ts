@@ -1,6 +1,7 @@
 import { SecureRandom } from "effect/crypto";
 import { DateTime, Duration, Effect, Option, Schema, SchemaGetter, SchemaIssue } from "effect";
 import { DatabaseService } from "@tom/db/service";
+import { GuestbookUserSchema, type GuestbookUser } from "@tom/schemas/guestbook";
 import { toErrorMessage } from "@tom/utils/worker";
 import { detector } from "./detector";
 import {
@@ -11,15 +12,11 @@ import {
 } from "@tom/types/errors";
 import { HttpStatus } from "@tom/constants/http";
 
-export const fediverseUserSchema = Schema.Struct({
-  username: Schema.String,
-  instance: Schema.String,
-  display_name: Schema.String,
-  avatar_url: Schema.String,
-  access_token: Schema.String,
-});
+/** The pending OAuth row expires quickly; it only spans one provider redirect. */
+export const OAUTH_SESSION_TTL = Duration.minutes(15);
 
-export type FediverseUser = Schema.Schema.Type<typeof fediverseUserSchema>;
+/** A signed-in guestbook session: long-lived, server-revoked on logout. */
+export const GUESTBOOK_SESSION_TTL = Duration.days(30);
 
 /** Cryptographically secure hex token of `byteLength` random bytes. */
 const secureHex = (byteLength: number): Effect.Effect<string, never, SecureRandom.SecureRandom> =>
@@ -27,6 +24,24 @@ const secureHex = (byteLength: number): Effect.Effect<string, never, SecureRando
     const random = yield* SecureRandom.SecureRandom;
     const bytes = yield* random.randomBytes(byteLength);
     return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+  });
+
+/** A token plus the instant it stops being valid, read from one clock. */
+const issueToken = (
+  ttl: Duration.Duration,
+): Effect.Effect<
+  { readonly token: string; readonly expiresAt: Date },
+  never,
+  SecureRandom.SecureRandom
+> =>
+  Effect.gen(function* () {
+    const [token, now] = yield* Effect.all([secureHex(32), DateTime.now], {
+      concurrency: "unbounded",
+    });
+    return {
+      token,
+      expiresAt: DateTime.toDateUtc(DateTime.addDuration(now, ttl)),
+    };
   });
 
 /**
@@ -73,6 +88,11 @@ const readErrorCode = (cause: unknown): string | undefined =>
     () => undefined,
   );
 
+/**
+ * Start the provider leg: resolve the instance, register the app, and store a
+ * pending OAuth row. The row carries the `state` the callback must see again,
+ * so a callback minted for another browser cannot sign this one in.
+ */
 export const initiateAuth = Effect.fn("initiateAuth")(function* (
   fediverseHandle: string,
   redirectUri: string,
@@ -163,7 +183,7 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
     [
       secureHex(32),
       DateTime.now.pipe(
-        Effect.map((now) => DateTime.toDateUtc(DateTime.addDuration(now, Duration.minutes(15)))),
+        Effect.map((now) => DateTime.toDateUtc(DateTime.addDuration(now, OAUTH_SESSION_TTL))),
       ),
     ],
     { concurrency: "unbounded" },
@@ -179,13 +199,30 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
     expires_at: expiresAt,
   });
 
-  const authUrl = appData.url ?? "";
-  if (!authUrl) {
+  const providerUrl = appData.url ?? "";
+  if (!providerUrl) {
     return yield* new OAuthSessionError({
       message: `Failed to generate authorization URL for ${instance}. The instance may not support OAuth.`,
       sessionToken,
     });
   }
+
+  // Megalodon builds the authorize URL without our state (some versions add
+  // their own random one), so set the stored value explicitly: the callback
+  // can only match a state this browser asked for.
+  const authUrl = yield* Effect.try({
+    try: () => {
+      const url = new URL(providerUrl);
+      url.searchParams.set("state", state);
+      return url.toString();
+    },
+    catch: (cause) =>
+      new OAuthSessionError({
+        message: `Failed to build authorization URL for ${instance}`,
+        sessionToken,
+        cause,
+      }),
+  });
 
   return {
     authUrl,
@@ -194,22 +231,45 @@ export const initiateAuth = Effect.fn("initiateAuth")(function* (
   };
 });
 
-export const handleCallback = Effect.fn("handleCallback")(function* (params: {
+export type CompletedAuth = {
+  readonly user: GuestbookUser;
+  readonly sessionToken: string;
+};
+
+/**
+ * Finish the provider leg and open a server-side guestbook session.
+ *
+ * Both credentials must line up with the pending row: the cookie token names
+ * the row, and the callback's `state` must equal the `state` stored when this
+ * browser started the flow. A mismatch is a login-CSRF attempt, so the pending
+ * row is deleted and the callback is rejected.
+ */
+export const completeAuth = Effect.fn("completeAuth")(function* (params: {
   code: string;
+  state: string;
   session_token: string;
   redirectUri: string;
 }) {
   const db = yield* DatabaseService;
-  const session = yield* db.getOAuthSession(params.session_token);
+  const pending = yield* db.getOAuthSession(params.session_token);
 
-  if (!session) {
+  if (!pending) {
     return yield* new OAuthSessionError({
       message: "Invalid or expired session",
       sessionToken: params.session_token,
     });
   }
 
-  const instanceUrl = `https://${session.fediverse_instance}`;
+  if (params.state === "" || pending.state !== params.state) {
+    yield* db.deleteOAuthSession(params.session_token);
+    yield* Effect.logWarning("guestbook:auth:callback:state-mismatch");
+    return yield* new OAuthSessionError({
+      message: "Invalid OAuth state",
+      sessionToken: params.session_token,
+    });
+  }
+
+  const instanceUrl = `https://${pending.fediverse_instance}`;
 
   const [snsType, generator] = yield* Effect.all(
     [detector(instanceUrl).pipe(Effect.orElseSucceed(() => "mastodon" as const)), loadGenerator()],
@@ -220,8 +280,8 @@ export const handleCallback = Effect.fn("handleCallback")(function* (params: {
   const tokenData = yield* Effect.tryPromise({
     try: async () =>
       client.fetchAccessToken(
-        session.client_id,
-        session.client_secret,
+        pending.client_id,
+        pending.client_secret,
         params.code,
         params.redirectUri,
       ),
@@ -241,39 +301,27 @@ export const handleCallback = Effect.fn("handleCallback")(function* (params: {
       }),
   });
 
+  // The pending provider row is single-use. Its token is never stored again.
   yield* db.deleteOAuthSession(params.session_token);
 
-  const user: FediverseUser = {
+  const user: GuestbookUser = {
     username: account.data.acct,
-    instance: session.fediverse_instance,
+    instance: pending.fediverse_instance,
     display_name: account.data.display_name,
     avatar_url: account.data.avatar,
-    access_token: tokenData.access_token,
   };
 
-  return user;
-});
-
-export const signGuestbook = Effect.fn("signGuestbook")(function* (params: {
-  user: FediverseUser;
-  message: string;
-}) {
-  const db = yield* DatabaseService;
-  const hasSigned = yield* db.hasUserSigned(`${params.user.username}@${params.user.instance}`);
-
-  if (hasSigned) {
-    return yield* new GuestbookValidationError({
-      message: "You have already signed the guestbook",
-    });
-  }
-
-  const entry = yield* db.createGuestbookEntry({
-    fediverse_username: `${params.user.username}@${params.user.instance}`,
-    fediverse_instance: params.user.instance,
-    display_name: params.user.display_name,
-    avatar_url: params.user.avatar_url,
-    message: params.message,
+  const session = yield* issueToken(GUESTBOOK_SESSION_TTL);
+  yield* db.createGuestbookSession({
+    session_token: session.token,
+    fediverse_username: `${user.username}@${user.instance}`,
+    fediverse_instance: user.instance,
+    display_name: user.display_name,
+    avatar_url: user.avatar_url,
+    expires_at: session.expiresAt,
   });
 
-  return entry;
+  return { user, sessionToken: session.token } satisfies CompletedAuth;
 });
+
+export { GuestbookUserSchema };

@@ -1,5 +1,11 @@
 import { HttpStatus } from "@tom/constants/http";
-import { FrameStateSchema, type FrameState, type FrameStateUpdate } from "@tom/schemas/frame-state";
+import {
+  FrameStateSchema,
+  GavinFrameStateSchema,
+  type FrameState,
+  type FrameStateUpdate,
+  type GavinFrameState,
+} from "@tom/schemas/frame-state";
 import { GavinReplySchema, type GavinMood, type GavinReply } from "@tom/schemas/gavin";
 import { HttpError } from "@tom/types/errors";
 import { Option, Schema } from "effect";
@@ -93,7 +99,7 @@ export const saveFrameState = (update: FrameStateUpdate): Promise<FrameState> =>
     "The adapter returned an invalid frame state",
   );
 
-export const setGavinMood = (mood: GavinMood): Promise<FrameState> =>
+export const setGavinMood = (mood: GavinMood): Promise<GavinFrameState> =>
   fetchJson(
     "/frame/gavin",
     {
@@ -101,8 +107,8 @@ export const setGavinMood = (mood: GavinMood): Promise<FrameState> =>
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ mood }),
     },
-    FrameStateSchema,
-    "The adapter returned an invalid frame state",
+    GavinFrameStateSchema,
+    "The adapter returned an invalid Gavin state",
   );
 
 export const askGavin = (transcript: string): Promise<GavinReply> =>

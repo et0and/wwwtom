@@ -10,7 +10,7 @@ import {
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { logContextFromRequest } from "@tom/utils/worker";
-import { requireArenaTenant, runArena } from "./shared";
+import { runArena } from "./shared";
 
 type PhotonModule = typeof import("@cf-wasm/photon");
 
@@ -136,7 +136,6 @@ const renderFrame = (bytes: Uint8Array): Effect.Effect<Uint8Array<ArrayBuffer>, 
 export const getArenaFrameImageRoute = new Elysia().get(
   "/arena/frame/:slug/image/:id",
   async ({ params, request }) => {
-    requireArenaTenant(request);
     const frame = await runArena(
       request,
       (client) =>

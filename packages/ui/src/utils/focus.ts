@@ -188,12 +188,12 @@ export function createHideOutside(options: HideOutsideOptions): void {
         }
       }
 
-      onCleanup(() => {
+      return () => {
         for (const [el, prev] of hiddenElements) {
           if (prev === null) el.removeAttribute("aria-hidden");
           else el.setAttribute("aria-hidden", prev);
         }
-      });
+      };
     },
   );
 }

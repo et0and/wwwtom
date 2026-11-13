@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
-import { deleteMedia } from "./operations";
+import { deleteMedia } from "./commands";
 import { decodeMediaParams, runWrite, withAuthor } from "./shared";
 
 export const deleteMediaRoute = new Elysia().delete("/media/:id", ({ params, request }) =>

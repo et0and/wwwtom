@@ -76,7 +76,7 @@ test.describe("editor sign-in", () => {
     await expect.poll(() => posted, { timeout: 8000 }).not.toBeNull();
     const signInRequest = Schema.decodeUnknownSync(SignInRequestSchema)(posted);
     expect(signInRequest.provider).toBe("github");
-    expect(signInRequest.callbackURL).toContain("127.0.0.1:5174");
+    expect(signInRequest.callbackURL).toContain("localhost:5174");
     await page.waitForURL("https://github.com/**");
   });
 });
@@ -180,6 +180,25 @@ test.describe("editor content", () => {
     await page.getByRole("button", { name: "Create" }).click();
     await expect(page.getByText("Invalid post data")).toBeVisible();
     expect(saves).toBe(0);
+  });
+});
+
+test.describe("editor CMS integration", () => {
+  /**
+   * The only stub is the session. Everything else crosses the adapter into
+   * the simulator CMS, so this proves the editor speaks the real read API
+   * (list + detail) rather than a mocked client. The same open also loads
+   * categories and media, but the assertions below stay on the document.
+   */
+  test("lists and opens a fixture post through the adapter", async ({ page }) => {
+    await stubSession(page, sessionBody);
+    const target = fixtureCmsPosts[0];
+    await page.goto("/");
+    await expect(page.getByRole("button", { name: target.title })).toBeVisible();
+    await page.getByRole("button", { name: target.title }).click();
+    await expect(page.getByLabel("Title", { exact: true })).toHaveValue(target.title);
+    await expect(page.getByLabel("Summary")).toHaveValue(target.summary ?? "");
+    await expect(page.locator(".tiptap-editor")).toContainText("Every web project is a grail war");
   });
 });
 

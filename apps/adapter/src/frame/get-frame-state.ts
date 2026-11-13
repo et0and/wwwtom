@@ -3,7 +3,8 @@ import { Effect } from "effect";
 import { logContextFromRequest } from "@tom/utils/worker";
 import { requireArenaTenant } from "../arena/shared";
 import { runAdapter } from "../runtime";
-import { readFrameEnv, readFrameState, requireAdminSession, requireDeviceToken } from "./shared";
+import { readFrameEnv, requireAdminSession, requireDeviceToken } from "./shared";
+import { readFrameState } from "./state";
 
 export const getFrameStateRoute = new Elysia().get(
   "/frame/state",

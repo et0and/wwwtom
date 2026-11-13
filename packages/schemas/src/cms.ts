@@ -185,13 +185,6 @@ export type TiptapInline = Schema.Schema.Type<typeof TiptapInlineSchema>;
 export type TiptapBlock = Schema.Schema.Type<typeof TiptapBlockSchema>;
 export type TiptapDoc = Schema.Schema.Type<typeof TiptapDocSchema>;
 
-/** Arena channel reference embedded in a Tiptap document, in order. */
-export const ArenaRefSchema = Schema.Struct({
-  slug: Schema.String,
-  title: Schema.optional(Schema.String),
-});
-export type ArenaRef = typeof ArenaRefSchema.Type;
-
 export const CmsMetaSchema = Schema.Struct({
   title: Schema.NullOr(Schema.String),
   description: Schema.NullOr(Schema.String),

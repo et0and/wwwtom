@@ -10,13 +10,14 @@ One config (`playwright.config.ts`) with two projects, plus the staging config:
   headers — so they stay service-agnostic and break only when the site
   actually changes.
 - **Editor project** (`tests/editor.spec.ts`): the Camus
-  editor SPA under `vite dev` (:5174) with every adapter call intercepted per
-  test. GitHub OAuth cannot run headless, so `/auth/get-session` yields a
-  fixture session (or null) and `/content/*` yields fixture posts/works;
-  there is no backend. Unlike the fixture project, these specs **do** assert
-  write request bodies — with no server, the client→API contract is the
+  editor SPA under `vite dev` (:5174) with reads flowing through the real
+  adapter into the simulator CMS. GitHub OAuth cannot run headless, so
+  `/auth/get-session` yields a fixture session (or null); writes are
+  intercepted per test because the simulator CMS is read-only. Those tests
+  **do** assert write request bodies — the client→API contract is the
   product, and the bodies are the same shapes `apps/api` validates.
-  `pnpm --filter @tom/e2e test:e2e:editor`.
+  `pnpm --filter @tom/e2e test:e2e:editor` runs only this project.
+  `test:e2e` runs both projects.
 - **Staging suite** (`tests-staging/,
 `playwright.staging.config.ts`): content-agnostic smoke + real-data checks
 against the deployed `staging` Alchemy stage (`staging-web.tom.so`) — no
@@ -117,6 +118,8 @@ compiles on demand — no production build needed.
 pnpm --filter @tom/e2e test:e2e
 ```
 
+This runs both projects. Use `test:e2e:editor` for the editor only.
+
 For a headed run while services are already up (`pnpm dev:web` etc. in other
 terminals), pass `-- --headed` or set `reuseExistingServer` in
 `playwright.config.ts` (already the local default).
@@ -144,7 +147,7 @@ Solid 2 scopes each SSR request with `node:async_hooks`
 CI sets `CI=true` so `webServer` entries **fail fast** if a port isn't up, and
 retries once on failure.
 
-## The fixture-suite GitHub workflow
+## The e2e GitHub workflow
 
 `.github/workflows/e2e.yml` runs on pushes to PRs against `dev` (concurrent
 runs are cancelled per PR number so only the latest passes), on a cron
@@ -152,9 +155,9 @@ runs are cancelled per PR number so only the latest passes), on a cron
 trigger — a merged dev commit already ran green as the last PR state. It:
 
 1. checks out and installs;
-2. starts simulator → adapter harness → `vite dev` (Playwright
-   `webServer`);
-3. runs the suite with `npx playwright install --with-deps chromium`;
+2. starts simulator → adapter harness → `vite dev` for web and editor
+   (Playwright `webServer`);
+3. runs both Playwright projects (`test:e2e`);
 4. uploads `playwright-report/` + `test-results/` (traces) as artifacts on
    failure.
 
@@ -217,6 +220,10 @@ hides real failures, doubles the wait, and is rejected by the lint rule
 
 ## Known gaps / next steps
 
+- **Editor CMS writes** — the simulator CMS is read-only, so editor write
+  bodies are still asserted against intercepted routes. A fully real write
+  flow needs create/update/restore routes in `apps/simulator/src/cms` (and a
+  D1-equivalent store there); reads already go through the adapter.
 - **Guestbook sign-in** — Fediverse OAuth is an external integration; the
   suite asserts the read path + sign-in affordances. Simulating auth would
   need the adapter's auth branch to also talk to the simulator.

@@ -158,6 +158,46 @@ jobs:
         run: pnpm turbo run test
         env:
           ARENA_TOKEN: \${{ secrets.ARENA_TOKEN }}
+  firmware:
+    name: Firmware
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Cache PlatformIO
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: ~/.platformio
+          key: \${{ runner.os }}-platformio-6.2.0-8.0.0-\${{ hashFiles('firmware/frame/platformio.ini') }}
+      - name: Install PlatformIO
+        run: |-
+          python3 -m venv "$RUNNER_TEMP/platformio-venv"
+          "$RUNNER_TEMP/platformio-venv/bin/pip" install --disable-pip-version-check platformio==6.2.0
+          echo "$RUNNER_TEMP/platformio-venv/bin" >> "$GITHUB_PATH"
+      - name: Install the pinned ESP32 platform
+        run: |-
+          cd firmware/frame
+          pio pkg install --global --platform espressif32@8.0.0
+      - name: Write the CI firmware configuration
+        run: |-
+          cd firmware/frame
+          cat > include/config.h <<'EOF'
+          // Generated in CI: placeholder values only.
+          #define WIFI_SSID ""
+          #define WIFI_PASSWORD ""
+          #define ADAPTER_BASE_URL "https://adapter.invalid"
+          #define CHANNEL_SLUG "ci"
+          #define FRAME_DEVICE_TOKEN ""
+          #define FRAME_ROTATION 1
+          #define FRAME_CYCLE_SECONDS 600
+          #define TIMEZONE "UTC0"
+          #define WEATHER_LOCATION "London"
+          EOF
+      - name: Compile the frame firmware
+        run: |-
+          cd firmware/frame
+          pio run --environment tdisplay
 "
 `;
 
@@ -207,6 +247,7 @@ jobs:
       - name: Deploy infrastructure
         run: |-
           pnpm deploy:shared --yes &&
+          pnpm deploy:turbo --yes &&
           pnpm deploy:api --yes &&
           pnpm deploy:adapter --yes &&
           pnpm deploy:web --yes &&
@@ -221,7 +262,7 @@ jobs:
 exports[`renderDefinition > renders '.github/workflows/e2e.yml' > .github/workflows/e2e.yml 1`] = `
 "# GENERATED FILE - DO NOT EDIT.
 # Regenerate with: pnpm workflows
-name: E2E (fixture store)
+name: E2E
 on:
   pull_request:
     branches:
@@ -239,7 +280,7 @@ env:
   NODE_OPTIONS: --max-old-space-size=4096
 jobs:
   playwright:
-    name: Playwright (tom.so fixture store)
+    name: Playwright (tom.so + Camus editor)
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -518,6 +559,14 @@ jobs:
           pnpm deploy:web --yes &&
           pnpm deploy:sophie --yes &&
           pnpm deploy:preview --yes
+        env:
+          PREVIEW_STATUS: success
+      - name: Mark preview comment failed
+        if: failure()
+        run: pnpm deploy:preview --yes
+        env:
+          PREVIEW_STATUS: failure
+          PREVIEW_RUN_URL: \${{ format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
   destroy:
     name: Destroy PR preview
     runs-on: ubuntu-latest
@@ -537,14 +586,14 @@ jobs:
         with:
           ref: dev
       - uses: ./.github/actions/setup
+      - name: Destroy sophie preview stage
+        run: pnpm destroy:sophie --yes
       - name: Destroy web preview stage
+        if: always()
         run: pnpm destroy:web --yes
       - name: Destroy editor preview stage
         if: always()
         run: pnpm destroy:editor --yes
-      - name: Destroy sophie preview stage
-        if: always()
-        run: pnpm destroy:sophie --yes
       - name: Destroy adapter preview stage
         if: always()
         run: pnpm destroy:adapter --yes
@@ -663,14 +712,14 @@ jobs:
           for pr in $prs; do
             echo "Sweeping preview stage pr-$pr"
             export ALCHEMY_STAGE="pr-$pr" PULL_REQUEST="$pr"
-            for row in "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do
+            for row in "wwwtom-preview/pr-$pr/wwwtom-preview" "wwwtom-web/pr-$pr/preview-comment" "sophie/pr-$pr/sophie-cms-preview" "sophie/pr-$pr/sophie-web-preview"; do
               pnpm --filter @tom/infra exec alchemy state list --backend cloudflare "$row" >/dev/null 2>&1 &&
                 pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
             done
             pnpm destroy:storybook --yes || true
+            pnpm destroy:sophie --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
-            pnpm destroy:sophie --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true
             pnpm destroy:shared --yes || true

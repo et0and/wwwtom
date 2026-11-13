@@ -14,7 +14,7 @@ import {
   toProblemResponse,
   toValidationProblems,
 } from "@tom/utils/worker";
-import type { CloudflareEnv } from "@tom/utils/config";
+import { tenantFromValue, type CloudflareEnv } from "@tom/utils/config";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
 import { healthRoutes } from "./health";
@@ -26,6 +26,19 @@ import { ogRoutes } from "./og";
 import { oauthRoutes } from "./oauth";
 import { gavinRoutes } from "./gavin";
 import { queueHandler, type MessageBatch } from "./queue/consumer";
+
+/**
+ * Route gate for tenant-specific surfaces. Unset `TENANT` keeps the legacy
+ * shared app (local dev, tests); a named tenant sees only its own routes.
+ */
+const requireTenantBeforeHandle =
+  (tenant: "tom" | "sophie") =>
+  ({ request }: { request: Request }): void => {
+    const current = tenantFromValue(getRequestEnv(request).TENANT);
+    if (current !== undefined && current !== tenant) {
+      throw new HttpError({ message: "Not found", status: HttpStatus.NotFound });
+    }
+  };
 
 export const app = new Elysia({
   adapter: CloudflareAdapter,
@@ -152,12 +165,20 @@ export const app = new Elysia({
   })
   .use(healthRoutes)
   .use(oauthRoutes)
-  .use(cmsRoutes)
   // OG image generation is a public route: social crawlers (Twitter, Slack,
   // iMessage) fetch the image URL without any auth headers.
   .use(ogRoutes)
+  // The CMS is Sophie's only. Tom's editor is retired and its site reads
+  // are.na, so no CMS read or write route exists on the Tom worker.
+  .guard({ beforeHandle: requireTenantBeforeHandle("sophie") }, (app) =>
+    app
+      .use(cmsRoutes)
+      .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (cmsWrites) =>
+        cmsWrites.use(cmsWriteRoutes),
+      ),
+  )
   .guard({ beforeHandle: requireInternalTokenBeforeHandle }, (app) =>
-    app.use(authRoutes).use(cmsWriteRoutes).use(gavinRoutes),
+    app.use(authRoutes).use(gavinRoutes),
   )
   .compile();
 

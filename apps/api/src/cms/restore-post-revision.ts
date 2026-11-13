@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
-import { restoreRevision } from "./operations";
+import { restoreRevision } from "./commands";
 import { decodeRestoreInput, decodeSlugParams, runWrite, withAuthor } from "./shared";
 
 export const restorePostRevisionRoute = new Elysia().post(

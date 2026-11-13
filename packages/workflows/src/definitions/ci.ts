@@ -1,8 +1,12 @@
 import { run, step, workflow } from "../builders";
-import { checkout, setupStep } from "../catalog/actions";
+import { actionPins, checkout, setupStep } from "../catalog/actions";
 import { nodeHeapEnv } from "../catalog/node";
 import { secret } from "../catalog/secrets";
 import { turboEnv, turboTask } from "../catalog/turbo";
+
+/** Pinned toolchain for the firmware job; both are cached by exact key. */
+const PLATFORMIO_VERSION = "6.2.0";
+const ESPRESSIF32_PLATFORM_VERSION = "8.0.0";
 
 /**
  * CI is the hard merge gate for every push to dev and every PR against dev:
@@ -59,6 +63,63 @@ export const ci = workflow("ci", {
           run: turboTask("test"),
           env: { ARENA_TOKEN: secret("ARENA_TOKEN") },
         }),
+      ],
+    },
+    firmware: {
+      name: "Firmware",
+      "runs-on": "ubuntu-latest",
+      "timeout-minutes": 30,
+      steps: [
+        checkout(),
+        // Exact key, no restore-keys: a stale core dir must never supply a
+        // newer platform than the one this run pins.
+        step({
+          name: "Cache PlatformIO",
+          uses: actionPins.cache,
+          with: {
+            path: "~/.platformio",
+            key: `\${{ runner.os }}-platformio-${PLATFORMIO_VERSION}-${ESPRESSIF32_PLATFORM_VERSION}-\${{ hashFiles('firmware/frame/platformio.ini') }}`,
+          },
+        }),
+        run("Install PlatformIO", [
+          'python3 -m venv "$RUNNER_TEMP/platformio-venv"',
+          '"$RUNNER_TEMP/platformio-venv/bin/pip" install --disable-pip-version-check platformio==' +
+            PLATFORMIO_VERSION,
+          'echo "$RUNNER_TEMP/platformio-venv/bin" >> "$GITHUB_PATH"',
+        ]),
+        // `platformio.ini` leaves the platform floating so a developer can
+        // follow Arduino core releases. CI installs the pinned version into
+        // the global core dir (`~/.platformio`, the cached path) and `pio run`
+        // then resolves `platform = espressif32` to that installed version
+        // instead of downloading the latest. Without `--global` the package
+        // lands in the project's `.pio` store and dodges the cache entirely.
+        run("Install the pinned ESP32 platform", [
+          "cd firmware/frame",
+          `pio pkg install --global --platform espressif32@${ESPRESSIF32_PLATFORM_VERSION}`,
+        ]),
+        // The sketch requires config.h, which is gitignored because it holds
+        // a developer's network. CI writes a build-only placeholder instead:
+        // no secrets, no network access, and the compile still exercises every
+        // firmware translation unit.
+        run("Write the CI firmware configuration", [
+          "cd firmware/frame",
+          "cat > include/config.h <<'EOF'",
+          "// Generated in CI: placeholder values only.",
+          '#define WIFI_SSID ""',
+          '#define WIFI_PASSWORD ""',
+          '#define ADAPTER_BASE_URL "https://adapter.invalid"',
+          '#define CHANNEL_SLUG "ci"',
+          '#define FRAME_DEVICE_TOKEN ""',
+          "#define FRAME_ROTATION 1",
+          "#define FRAME_CYCLE_SECONDS 600",
+          '#define TIMEZONE "UTC0"',
+          '#define WEATHER_LOCATION "London"',
+          "EOF",
+        ]),
+        run("Compile the frame firmware", [
+          "cd firmware/frame",
+          "pio run --environment tdisplay",
+        ]),
       ],
     },
   },

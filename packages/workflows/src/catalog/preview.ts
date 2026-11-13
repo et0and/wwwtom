@@ -15,6 +15,24 @@ export const notClosedAction = "github.event.action != 'closed'";
 export const closedAction = "github.event.action == 'closed'";
 
 /**
+ * The consolidated preview comment reads this to decide its heading. A failed
+ * redeploy rewrites the same comment as failed instead of leaving the old
+ * success text in place.
+ */
+export const previewSuccessEnv: Env = { PREVIEW_STATUS: "success" };
+
+/**
+ * Failure reporting runs after a failed deploy chain. The run URL makes the
+ * comment actionable without opening the Actions tab.
+ */
+export const previewFailureEnv: Env = {
+  PREVIEW_STATUS: "failure",
+  PREVIEW_RUN_URL: ex(
+    "format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id)",
+  ),
+};
+
+/**
  * Storybook preview credentials. Alchemy's GitHub provider (the
  * preview-comment resource) needs a token to post or update the comment.
  */

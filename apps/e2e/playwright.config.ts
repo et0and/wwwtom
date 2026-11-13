@@ -16,17 +16,20 @@ import { defineConfig, devices } from "@playwright/test";
  *   browser→adapter calls (guestbook) and SSR web→adapter calls (posts,
  *   work, arena) hit the fixture data. Production never sets
  *   SIMULATOR_URL, so the header is inert there.
- * - editor: the Camus SPA with every adapter call intercepted per test
- *   (VITE_ADAPTER_URL falls back to localhost:8788, which never needs to
- *   exist). GitHub OAuth cannot run headless, so `/auth/get-session`
- *   yields a fixture session (or null); write bodies are asserted, pinning
- *   the exact API contract the editor speaks.
+ * - editor: the Camus SPA with the same header, so reads flow through the
+ *   real adapter into the simulator CMS (list, detail, categories, media
+ *   files). GitHub OAuth cannot run headless, so `/auth/get-session` yields
+ *   a fixture session (or null). Writes are intercepted per test because the
+ *   simulator CMS is read-only; their bodies are asserted, pinning the exact
+ *   API contract the editor speaks.
  */
 
 const SIMULATOR_URL = "http://127.0.0.1:8789";
 const ADAPTER_URL = "http://127.0.0.1:8788";
 const WEB_URL = "http://127.0.0.1:3000";
-const EDITOR_URL = "http://127.0.0.1:5174";
+// `localhost` matches the adapter's local write/CORS allowlist; 127.0.0.1
+// does not (apps/adapter/src/origins.ts).
+const EDITOR_URL = "http://localhost:5174";
 const IS_CI = process.env.CI === "true" || process.env.CI === "1";
 
 export default defineConfig({
@@ -64,6 +67,9 @@ export default defineConfig({
       use: {
         ...devices["Desktop Chrome"],
         baseURL: EDITOR_URL,
+        // Reads are real: the adapter swaps upstream URLs to the simulator,
+        // so the editor lists and opens the fixture CMS documents.
+        extraHTTPHeaders: { "x-use-simulator": "1" },
         trace: "on-first-retry",
         screenshot: "only-on-failure",
         video: "off",
@@ -96,7 +102,7 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: "pnpm --filter @tom/editor exec vite dev --host 127.0.0.1 --port 5174 --strictPort",
+      command: "pnpm --filter @tom/editor exec vite dev --host localhost --port 5174 --strictPort",
       url: `${EDITOR_URL}/`,
       reuseExistingServer: !IS_CI,
       timeout: 60_000,

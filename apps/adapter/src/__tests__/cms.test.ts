@@ -13,7 +13,7 @@ beforeEach(stubFetch);
 
 afterEach(unstubFetch);
 
-const env = testEnv({ API_URL: "http://localhost:8787" });
+const env = testEnv({ TENANT: "sophie", API_URL: "http://localhost:8787" });
 
 const post = {
   id: "post-1",
@@ -97,7 +97,7 @@ describe("cms integration", () => {
   });
 
   describe("GET /content/posts/:slug", () => {
-    it("returns the post from the API with arena refs", async () => {
+    it("returns the post from the API", async () => {
       fetchMock.mockResolvedValue(jsonResponse(post));
       const response = await app.fetch(
         requestWithEnv("http://localhost/content/posts/hello-world", env),
@@ -107,10 +107,7 @@ describe("cms integration", () => {
         "http://localhost:8787/posts/hello-world",
         expect.anything(),
       );
-      expect(await response.json()).toEqual({
-        ...post,
-        arenaBlocks: [{ slug: "toms-place", title: "Tom's Place" }],
-      });
+      expect(await response.json()).toEqual(post);
     });
 
     it("maps an API 404 to an RFC 9457 problem", async () => {

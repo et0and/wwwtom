@@ -3,7 +3,7 @@ import { Effect, Schema } from "effect";
 import type { CmsD1Binding, CmsD1Statement } from "@tom/utils/config";
 import { CmsSlug } from "@tom/schemas/cms";
 import type { CmsPostInput, CmsWorkInput, TiptapDoc } from "@tom/schemas/cms";
-import { createPost, createWork, updatePost, updateWork } from "../cms/operations";
+import { createPost, createWork, updatePost, updateWork } from "../cms/commands";
 
 /**
  * The guard fires before any database touch, so the binding only needs to

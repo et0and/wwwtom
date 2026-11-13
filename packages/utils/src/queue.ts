@@ -5,9 +5,6 @@ import type { CloudflareEnv } from "./config";
 
 export interface TomQueueServiceContract {
   readonly send: (message: TomWorkMessageEncoded) => Effect.Effect<void, QueueError>;
-  readonly sendBatch: (
-    messages: ReadonlyArray<TomWorkMessageEncoded>,
-  ) => Effect.Effect<void, QueueError>;
 }
 
 export class TomQueueService extends Context.Service<TomQueueService, TomQueueServiceContract>()(
@@ -38,9 +35,5 @@ export const makeTomQueueLayer = (env: CloudflareEnv): Layer.Layer<TomQueueServi
   Layer.succeed(TomQueueService, {
     send: Effect.fn("TomQueueService.send")((message: TomWorkMessageEncoded) =>
       sendToQueue(env, (queue) => queue.send(message)),
-    ),
-    sendBatch: Effect.fn("TomQueueService.sendBatch")(
-      (messages: ReadonlyArray<TomWorkMessageEncoded>) =>
-        sendToQueue(env, (queue) => queue.sendBatch(messages.map((body) => ({ body })))),
     ),
   });

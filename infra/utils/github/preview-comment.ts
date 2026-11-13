@@ -12,6 +12,13 @@ const PullRequestNumber = Schema.FiniteFromString.check(Schema.isInt(), Schema.i
 export const previewPullRequestNumber = (value: string | undefined): Option.Option<number> =>
   Option.fromNullishOr(Option.getOrUndefined(Schema.decodeUnknownOption(PullRequestNumber)(value)));
 
+/**
+ * The outcome a comment describes. A failure run reuses the same comment and
+ * logical id, so a failed redeploy replaces the previous success text instead
+ * of leaving stale links behind.
+ */
+export type PreviewStatus = "success" | "failure";
+
 type PreviewApp = {
   readonly name: string;
   /** Absolute URL. Every preview host derives from the stage name. */
@@ -25,24 +32,50 @@ type PreviewCommentProps = {
    */
   readonly id: string;
   readonly apps: ReadonlyArray<PreviewApp>;
+  /** Defaults to success for stacks that never report a failure state. */
+  readonly status?: PreviewStatus;
+  /** CI run that failed, linked only for a failure comment. */
+  readonly runUrl?: string;
 };
 
-export const previewCommentBody = (apps: ReadonlyArray<PreviewApp>): string =>
-  [
-    "## Preview deployed",
-    "",
-    ...apps.map((app) => `- [${app.name}](${app.url})`),
-    "",
-    `Built from commit ${process.env.GITHUB_SHA?.slice(0, 7) ?? "unknown"}.`,
-    "",
-    "_This comment updates on each push._",
-  ].join("\n");
+const builtCommit = (): string => process.env.GITHUB_SHA?.slice(0, 7) ?? "unknown";
+
+const appLinks = (apps: ReadonlyArray<PreviewApp>): ReadonlyArray<string> =>
+  apps.map((app) => `- [${app.name}](${app.url})`);
+
+export const previewCommentBody = (
+  apps: ReadonlyArray<PreviewApp>,
+  status: PreviewStatus = "success",
+  runUrl?: string,
+): string =>
+  status === "failure"
+    ? [
+        "## Preview deploy failed",
+        "",
+        "The preview deploy did not update these links; they may be unavailable or still point at an older commit.",
+        "",
+        ...appLinks(apps),
+        "",
+        `Failed on commit ${builtCommit()}.`,
+        ...(runUrl === undefined ? [] : ["", `[Workflow run](${runUrl})`]),
+        "",
+        "_This comment updates on each push._",
+      ].join("\n")
+    : [
+        "## Preview deployed",
+        "",
+        ...appLinks(apps),
+        "",
+        `Built from commit ${builtCommit()}.`,
+        "",
+        "_This comment updates on each push._",
+      ].join("\n");
 
 /**
  * Post one comment with the preview URLs, updating it in place on every push.
  * A no-op outside a PR deploy.
  */
-export const previewComment = ({ id, apps }: PreviewCommentProps) =>
+export const previewComment = ({ id, apps, status = "success", runUrl }: PreviewCommentProps) =>
   Effect.gen(function* () {
     const issueNumber = previewPullRequestNumber(process.env.PULL_REQUEST);
     if (Option.isNone(issueNumber)) return;
@@ -51,6 +84,6 @@ export const previewComment = ({ id, apps }: PreviewCommentProps) =>
       owner: "et0and",
       repository: "wwwtom",
       issueNumber: issueNumber.value,
-      body: previewCommentBody(apps),
+      body: previewCommentBody(apps, status, runUrl),
     });
   });

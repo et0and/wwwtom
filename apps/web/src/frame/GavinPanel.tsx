@@ -6,8 +6,8 @@ import { Banner } from "@tom/ui/banner";
 import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Text } from "@tom/ui/text";
-import type { FrameState } from "@tom/schemas/frame-state";
-import type { GavinMood } from "@tom/schemas/gavin";
+import type { GavinFrameState } from "@tom/schemas/frame-state";
+import { settledGavinMood, type GavinMood } from "@tom/schemas/gavin";
 import { askGavin, errorMessage, setGavinMood } from "./api";
 import { styles } from "./frame.stylex";
 
@@ -56,13 +56,11 @@ const STATUS_LABELS = {
 } satisfies Record<GavinMood, string>;
 
 export interface GavinPanelProps {
-  readonly frame: FrameState;
+  readonly frame: GavinFrameState;
 }
 
 export function GavinPanel(props: GavinPanelProps) {
-  const [status, setStatus] = createSignal<GavinMood>(
-    untrack(() => props.frame.gavinMood ?? "idle"),
-  );
+  const [status, setStatus] = createSignal<GavinMood>(untrack(() => props.frame.gavinMood));
   const [reply, setReply] = createSignal<string | null>(null);
   const [transcript, setTranscript] = createSignal("");
   const [error, setError] = createSignal<string | null>(null);
@@ -81,14 +79,8 @@ export function GavinPanel(props: GavinPanelProps) {
     moodMutation.mutate(mood);
   };
 
-  // The reply mood is a settled face, not one of the page-owned transient
-  // states. Otherwise a model that answers "speaking" leaves Gavin pulsing
-  // forever after the utterance ends.
-  const settledMood = (mood: GavinMood): GavinMood =>
-    mood === "listening" || mood === "thinking" || mood === "speaking" ? "idle" : mood;
-
   const speak = (text: string, mood: GavinMood): void => {
-    const nextMood = settledMood(mood);
+    const nextMood = settledGavinMood(mood);
     if (isServer || !("speechSynthesis" in window)) {
       syncMood(nextMood);
       return;
@@ -170,7 +162,7 @@ export function GavinPanel(props: GavinPanelProps) {
     // A page opened after a closed tab can inherit a transient mood. No
     // speech is running in this tab, so settle it back to idle.
     const initialMood = untrack(() => status());
-    if (initialMood !== settledMood(initialMood)) syncMood("idle");
+    if (initialMood !== settledGavinMood(initialMood)) syncMood("idle");
     return () => {
       recognition()?.stop();
       if (!isServer && "speechSynthesis" in window) {

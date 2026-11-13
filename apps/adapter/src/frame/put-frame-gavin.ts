@@ -1,15 +1,14 @@
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
-import { HttpStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
-import { type FrameState } from "@tom/schemas/frame-state";
 import { GavinMoodUpdateSchema } from "@tom/schemas/gavin";
 import { logContextFromRequest } from "@tom/utils/worker";
 import { requireArenaTenant } from "../arena/shared";
 import { allowLocalOriginsForAdapter, tenantFromValue } from "../origins";
-import { AdapterError, runAdapter } from "../runtime";
+import { runAdapter } from "../runtime";
 import { requireTrustedWriteOrigin } from "../write-origin-gate";
-import { readFrameEnv, readFrameState, requireAdminSession, writeFrameState } from "./shared";
+import { readFrameEnv, requireAdminSession } from "./shared";
+import { saveGavinMood } from "./state";
 
 const GavinMoodUpdateBodySchema = Schema.toStandardSchemaV1(GavinMoodUpdateSchema);
 
@@ -28,20 +27,7 @@ export const putFrameGavinRoute = new Elysia().put(
           message: "Untrusted frame control origin",
         });
         yield* requireAdminSession(request, env);
-        const current = yield* readFrameState(env);
-        if (current.mode !== "gavin") {
-          return yield* new AdapterError({
-            status: HttpStatus.Conflict,
-            message: "Gavin mode is not active",
-          });
-        }
-        const next: FrameState = {
-          ...current,
-          gavinMood: body.mood,
-          updatedAt: new Date().toISOString(),
-        };
-        yield* writeFrameState(env, next);
-        return next;
+        return yield* saveGavinMood(env, body.mood);
       }),
       (error) => error,
       logContextFromRequest(request, "tom-adapter"),

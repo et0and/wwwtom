@@ -12,8 +12,8 @@ Improve existing code; avoid new abstractions.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
-- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, email, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
-- `infra` — Alchemy 2.0.0-beta.85 + Effect 4.1.2 stacks: shared, turbo, api, adapter, web, sophie. `preview` owns the consolidated PR comment and deploys last, after every host it links is live. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
+- `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
+- `infra` — Alchemy 2.0.0-beta.85 + Effect 4.1.2 stacks: shared, turbo, api, adapter, web, sophie, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
@@ -56,9 +56,10 @@ Improve existing code; avoid new abstractions.
 - `pnpm test:all` = `test` then `test:e2e`. A pre-push hook runs `test` always and
   `test:e2e` when `apps/{e2e,simulator,adapter,web,api}` or
   `packages/{schemas,utils,arena,ui}` changed — the surfaces the fixture stack serves
-- `pnpm deploy` = shared → api → adapter → web → sophie (Alchemy; `ALCHEMY_STAGE` required)
-- `pnpm deploy:shared|deploy:api|deploy:adapter|deploy:web|deploy:sophie`
-- `pnpm destroy` — destroy current Alchemy stage
+- `pnpm deploy` = shared → turbo → api → adapter → web → sophie → storybook (Alchemy; `ALCHEMY_STAGE` required)
+- `pnpm deploy:shared|deploy:turbo|deploy:api|deploy:adapter|deploy:web|deploy:sophie|deploy:storybook`
+- `pnpm deploy:edge` — zone rules, production dispatch only; `pnpm deploy:runner` — on-demand runner; `pnpm deploy:preview` — PR comment stack
+- `pnpm destroy` — reverse deploy order plus the retired `editor` teardown
 
 For any file search or grep in the current git-indexed directory, use fff tools.
 Include the known directory or module in the first search. Use definitions_only
@@ -171,8 +172,9 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → api → adapter → web → sophie (then preview on a PR); `ALCHEMY_STAGE` required
-- production adopts existing `wwwtom`/`apitom` Workers, custom domains, `TOM_RATE_LIMIT_KV`, `guestbook-hyperdrive`
+- Alchemy deploy order shared → turbo → api → adapter → web → sophie → storybook (then `preview` on a PR); `ALCHEMY_STAGE` required
+- PR previews skip turbo and storybook; Tom's only remaining storage is the Better Auth D1 database, isolated per stage (`wwwtom-cms-d1-pr-<n>`) and destroyed with the stage; Tom R2 is dead and no media bucket is declared; `preview` owns the single success/failure comment and no Cloudflare resource
+- production adopts existing `wwwtom`/`apitom` Workers, custom domains, `guestbook-hyperdrive`, `TOM_FRAME_KV`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
 - per-tenant bundle keys (`TOM_*`/`SOPHIE_*`) resolve under shared names with shared-value fallback; explicit worker env wins over the bundle; Sophie allowlist + Google keys are fail-closed
 - `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker

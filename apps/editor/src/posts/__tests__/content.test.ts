@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Effect } from "effect";
 import {
+  blankPreserved,
   createCategory,
   deleteCategory,
   deletePost,
@@ -10,6 +11,8 @@ import {
   listWorks,
   mediaFileUrl,
   savePost,
+  sameCategoryIds,
+  sameContentFields,
   toPostInput,
   toWorkInput,
   uploadMedia,
@@ -95,7 +98,7 @@ describe("editor content client", () => {
   });
 
   it("creates posts with POST", async () => {
-    const input = await runClient(toPostInput(fields, doc, []));
+    const input = await runClient(toPostInput(fields, doc, [], blankPreserved));
     fetchMock.mockResolvedValueOnce(jsonResponse(post));
     await runClient(savePost(null, input));
     expect(lastCall().url).toBe("http://localhost:8788/content/posts");
@@ -104,21 +107,33 @@ describe("editor content client", () => {
   });
 
   it("updates posts with PUT", async () => {
-    const input = await runClient(toPostInput(fields, doc, []));
+    const input = await runClient(toPostInput(fields, doc, [], blankPreserved));
     fetchMock.mockResolvedValueOnce(jsonResponse(post));
     await runClient(savePost("hello-world", input));
     expect(lastCall().url).toBe("http://localhost:8788/content/posts/hello-world");
     expect(lastCall().init.method).toBe("PUT");
   });
 
+  it("keeps the loaded hero image and meta tags on save", async () => {
+    const preserved = {
+      heroMediaId: "media-1",
+      meta: { title: "Meta title", description: "Meta description", image: "media-2" },
+    };
+    const input = await runClient(toPostInput(fields, doc, [], preserved));
+    expect(input.heroMediaId).toBe("media-1");
+    expect(input.meta).toEqual(preserved.meta);
+  });
+
   it("rejects empty slugs before any network call", async () => {
-    const error = await runClient(toPostInput({ ...fields, slug: "" }, doc, []).pipe(Effect.flip));
+    const error = await runClient(
+      toPostInput({ ...fields, slug: "" }, doc, [], blankPreserved).pipe(Effect.flip),
+    );
     expect(error.status).toBe(500);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("builds work inputs without categories", async () => {
-    const input = await runClient(toWorkInput(fields, doc));
+    const input = await runClient(toWorkInput(fields, doc, blankPreserved));
     expect(input.slug).toBe("hello-world");
     expect("categoryIds" in input).toBe(false);
   });
@@ -170,5 +185,23 @@ describe("editor content client", () => {
     expect(mediaFileUrl("http://localhost:8788", "m1")).toBe(
       "http://localhost:8788/content/media/m1/file",
     );
+  });
+});
+
+describe("editor dirty checks", () => {
+  it("compares every editable field against the last save", () => {
+    expect(sameContentFields(fields, { ...fields })).toBe(true);
+    expect(sameContentFields(fields, { ...fields, slug: "other" })).toBe(false);
+    expect(sameContentFields(fields, { ...fields, title: "Other" })).toBe(false);
+    expect(sameContentFields(fields, { ...fields, summary: "Notes" })).toBe(false);
+    expect(sameContentFields(fields, { ...fields, status: "published" })).toBe(false);
+    expect(sameContentFields(fields, { ...fields, publishedAt: "2026-09-02T10:00" })).toBe(false);
+  });
+
+  it("compares category ids as an ordered selection", () => {
+    expect(sameCategoryIds(["cat-1", "cat-2"], ["cat-1", "cat-2"])).toBe(true);
+    expect(sameCategoryIds(["cat-1"], ["cat-1", "cat-2"])).toBe(false);
+    expect(sameCategoryIds(["cat-2", "cat-1"], ["cat-1", "cat-2"])).toBe(false);
+    expect(sameCategoryIds([], [])).toBe(true);
   });
 });

@@ -1,12 +1,5 @@
 import { Effect, Schema } from "effect";
-import {
-  CmsPagingSchema,
-  type ArenaRef,
-  type CmsSlug,
-  type CmsStatusFilter,
-  type TiptapBlock,
-  type TiptapDoc,
-} from "@tom/schemas/cms";
+import { CmsPagingSchema, type CmsSlug, type CmsStatusFilter } from "@tom/schemas/cms";
 import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv } from "@tom/utils/config";
@@ -236,25 +229,6 @@ export const authoredGetRoute = async ({ request }: { request: Request }) => {
 export const mediaFileRoute = async ({ request }: { request: Request }) => {
   const { apiUrl, token, context } = await cmsApi(request);
   return proxyFile(request, apiUrl, token, context);
-};
-
-/** Arena channel references embedded in a Tiptap document, in order. */
-export const extractArenaRefs = (doc: TiptapDoc): Array<ArenaRef> => {
-  const refs: Array<ArenaRef> = [];
-  const walk = (blocks: ReadonlyArray<TiptapBlock>): void => {
-    for (const block of blocks) {
-      if (block.type === "arena") {
-        refs.push(
-          block.attrs.title === undefined
-            ? { slug: block.attrs.slug }
-            : { slug: block.attrs.slug, title: block.attrs.title },
-        );
-      }
-      if (block.type === "banner" || block.type === "blockquote") walk(block.content);
-    }
-  };
-  walk(doc.content);
-  return refs;
 };
 
 export type PostQuery = typeof CmsPagingSchema.Type;

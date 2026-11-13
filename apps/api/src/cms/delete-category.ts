@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
-import { deleteCategory } from "./operations";
+import { deleteCategory } from "./commands";
 import { decodeSlugParams, runWrite, withAuthor } from "./shared";
 
 export const deleteCategoryRoute = new Elysia().delete("/categories/:slug", ({ params, request }) =>

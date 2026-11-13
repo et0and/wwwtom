@@ -1,5 +1,5 @@
 import type { SecureRandom } from "effect/crypto";
-import { Effect, Layer, Match, Option, Schema } from "effect";
+import { Effect, Layer, Match, Schema } from "effect";
 import { DatabaseService, type GuestbookEntry } from "@tom/db/service";
 import { makeTomQueueLayer, TomQueueService } from "@tom/utils/queue";
 import { HttpStatus } from "@tom/constants/http";
@@ -10,13 +10,12 @@ import {
   MissingFieldError,
   ProfanityError,
   type AuthenticationError,
+  type GuestbookConflictError,
   type GuestbookValidationError,
   type OAuthSessionError,
   HttpError,
 } from "@tom/types/errors";
-import * as auth from "./auth";
 import { AdapterError, createDbLayer, cryptoLayer, runAdapter } from "../runtime";
-import { isSimulatorRequest } from "../simulator";
 import { GuestbookEntrySchema } from "../schemas";
 
 export type GuestbookError =
@@ -24,6 +23,7 @@ export type GuestbookError =
   | ProfanityError
   | AuthenticationError
   | GuestbookValidationError
+  | GuestbookConflictError
   | OAuthSessionError
   | HttpError
   // The DB layer can fail to connect. That is a 500 and it belongs in the
@@ -44,6 +44,8 @@ export const guestbookStatus = Match.typeTags<GuestbookError, number>()({
   MissingFieldError: () => HttpStatus.BadRequest,
   ProfanityError: () => HttpStatus.BadRequest,
   GuestbookValidationError: () => HttpStatus.BadRequest,
+  // A duplicate signature is a state conflict, not a malformed request.
+  GuestbookConflictError: () => HttpStatus.Conflict,
   OAuthSessionError: () => HttpStatus.BadRequest,
   DatabaseConnectionError: () => HttpStatus.InternalServerError,
 });
@@ -60,6 +62,7 @@ export const guestbookMessage = Match.typeTags<GuestbookError, string>()({
   AuthenticationError: (error) => error.message,
   ProfanityError: (error) => error.message,
   GuestbookValidationError: (error) => error.message,
+  GuestbookConflictError: (error) => error.message,
   OAuthSessionError: (error) => error.message,
   DatabaseConnectionError: (error) => error.message,
 });
@@ -218,20 +221,3 @@ export const dbEntries: Effect.Effect<
   yield* Effect.logInfo("guestbook:entries:success");
   return data.results.map((entry) => encodeEntry(entry));
 });
-
-const userCookieSchema = Schema.fromJsonString(auth.fediverseUserSchema);
-
-/**
- * Decode the guestbook_user cookie: Elysia hands back the parsed object when
- * possible, otherwise the encoded string. Null when absent or invalid.
- */
-export const guestbookUserFromCookie = (
-  value: Schema.Json | undefined,
-): auth.FediverseUser | null => {
-  if (value === undefined) return null;
-  // oxlint-disable-next-line anti-slop/no-runtime-typeof -- cookie arrives as string or parsed object
-  const json = typeof value === "string" ? value : JSON.stringify(value);
-  return Option.getOrElse(Schema.decodeOption(userCookieSchema)(json), () => null);
-};
-
-export { isSimulatorRequest, userCookieSchema };

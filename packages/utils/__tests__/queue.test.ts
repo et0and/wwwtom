@@ -4,43 +4,19 @@ import { TomWorkMessage } from "@tom/schemas/queue";
 import { makeTomQueueLayer, TomQueueService } from "../src/queue";
 import type { CloudflareEnv } from "../src/config";
 
+const guestbookSignBody = {
+  kind: "guestbook-sign",
+  entryId: 7,
+  fediverseUsername: "tom@mastodon.social",
+  displayName: "Tom",
+  message: "hi!",
+} as const;
+
 describe("TomWorkMessage", () => {
-  it("decodes a publish-post message", () => {
-    const message = Schema.decodeUnknownSync(TomWorkMessage)({
-      kind: "publish-post",
-      postId: 42,
-      publishAt: 1_700_000_000_000,
-    });
-    if (message.kind !== "publish-post") {
-      throw new Error("expected publish-post");
-    }
-    expect(message.postId).toBe(42);
-  });
-
-  it("decodes a render-og message with a URL", () => {
-    const message = Schema.decodeUnknownSync(TomWorkMessage)({
-      kind: "render-og",
-      url: "https://tom.so",
-    });
-    if (message.kind !== "render-og") {
-      throw new Error("expected render-og");
-    }
-    expect(message.url).toBeInstanceOf(URL);
-    expect(message.url.href).toBe("https://tom.so/");
-  });
-
   it("decodes a guestbook-sign message", () => {
-    const message = Schema.decodeUnknownSync(TomWorkMessage)({
-      kind: "guestbook-sign",
-      entryId: 7,
-      fediverseUsername: "tom@mastodon.social",
-      displayName: "Tom",
-      message: "hi!",
-    });
-    if (message.kind !== "guestbook-sign") {
-      throw new Error("expected guestbook-sign");
-    }
+    const message = Schema.decodeUnknownSync(TomWorkMessage)(guestbookSignBody);
     expect(message.entryId).toBe(7);
+    expect(message.fediverseUsername).toBe("tom@mastodon.social");
   });
 
   it("rejects an unknown kind", () => {
@@ -48,22 +24,12 @@ describe("TomWorkMessage", () => {
   });
 
   it("rejects a message missing required fields", () => {
-    expect(() => Schema.decodeUnknownSync(TomWorkMessage)({ kind: "publish-post" })).toThrow();
+    expect(() => Schema.decodeUnknownSync(TomWorkMessage)({ kind: "guestbook-sign" })).toThrow();
   });
 
-  it("rejects publish-post with string postId", () => {
+  it("rejects guestbook-sign with a string entryId", () => {
     expect(() =>
-      Schema.decodeUnknownSync(TomWorkMessage)({
-        kind: "publish-post",
-        postId: "42",
-        publishAt: 1_700_000_000_000,
-      }),
-    ).toThrow();
-  });
-
-  it("rejects render-og with a bad URL", () => {
-    expect(() =>
-      Schema.decodeUnknownSync(TomWorkMessage)({ kind: "render-og", url: "not-a-url" }),
+      Schema.decodeUnknownSync(TomWorkMessage)({ ...guestbookSignBody, entryId: "7" }),
     ).toThrow();
   });
 
@@ -86,42 +52,20 @@ const testEnv = (queue: CloudflareEnv["WORK_QUEUE"]): CloudflareEnv => ({
 describe("TomQueueService", () => {
   it("sends a message through the WORK_QUEUE binding", async () => {
     const send = vi.fn().mockResolvedValue(undefined);
-    const env = testEnv({
-      send,
-      sendBatch: vi.fn().mockResolvedValue(undefined),
-    });
+    const env = testEnv({ send });
 
     await Effect.runPromise(
       Effect.gen(function* () {
         const queue = yield* TomQueueService;
-        yield* queue.send({ kind: "publish-post", postId: 1, publishAt: Date.now() });
+        yield* queue.send(guestbookSignBody);
       }).pipe(Effect.provide(makeTomQueueLayer(env))),
     );
 
     expect(send).toHaveBeenCalledOnce();
-    expect(send.mock.calls[0]?.[0]).toMatchObject({ kind: "publish-post", postId: 1 });
-  });
-
-  it("sends a batch through the WORK_QUEUE binding", async () => {
-    const sendBatch = vi.fn().mockResolvedValue(undefined);
-    const env = testEnv({ send: vi.fn(), sendBatch });
-
-    await Effect.runPromise(
-      Effect.gen(function* () {
-        const queue = yield* TomQueueService;
-        yield* queue.sendBatch([
-          { kind: "publish-post", postId: 1, publishAt: Date.now() },
-          { kind: "render-og", url: "https://tom.so" },
-        ]);
-      }).pipe(Effect.provide(makeTomQueueLayer(env))),
-    );
-
-    expect(sendBatch).toHaveBeenCalledOnce();
-    const messages = sendBatch.mock.calls[0]?.[0] as Array<{ body: unknown }>;
-    expect(messages.map((m) => m.body)).toEqual([
-      { kind: "publish-post", postId: 1, publishAt: expect.any(Number) },
-      { kind: "render-og", url: "https://tom.so" },
-    ]);
+    expect(send.mock.calls[0]?.[0]).toMatchObject({
+      kind: "guestbook-sign",
+      entryId: 7,
+    });
   });
 
   it("fails with a missing WORK_QUEUE binding", async () => {
@@ -129,11 +73,7 @@ describe("TomQueueService", () => {
       Effect.match(
         Effect.gen(function* () {
           const queue = yield* TomQueueService;
-          yield* queue.send({
-            kind: "publish-post",
-            postId: 1,
-            publishAt: Date.now(),
-          });
+          yield* queue.send(guestbookSignBody);
         }).pipe(Effect.provide(makeTomQueueLayer({}))),
         {
           onFailure: (error) => ({ tag: "error" as const, error }),
@@ -153,36 +93,12 @@ describe("TomQueueService", () => {
 
   it("fails with QueueError if send throws", async () => {
     const send = vi.fn().mockRejectedValue(new Error("queue down"));
-    const env = testEnv({ send, sendBatch: vi.fn().mockResolvedValue(undefined) });
+    const env = testEnv({ send });
     const result = await Effect.runPromise(
       Effect.match(
         Effect.gen(function* () {
           const queue = yield* TomQueueService;
-          yield* queue.send({ kind: "publish-post", postId: 1, publishAt: Date.now() });
-        }).pipe(Effect.provide(makeTomQueueLayer(env))),
-        {
-          onFailure: (error) => ({ tag: "error" as const, error }),
-          onSuccess: (value) => ({ tag: "success" as const, value }),
-        },
-      ),
-    );
-    expect(result.tag).toBe("error");
-    if (result.tag === "error") {
-      expect(result.error).toMatchObject({
-        _tag: "QueueError",
-        message: "Failed to send to tom work queue",
-      });
-    }
-  });
-
-  it("fails with QueueError if sendBatch throws", async () => {
-    const sendBatch = vi.fn().mockRejectedValue(new Error("queue down"));
-    const env = testEnv({ send: vi.fn(), sendBatch });
-    const result = await Effect.runPromise(
-      Effect.match(
-        Effect.gen(function* () {
-          const queue = yield* TomQueueService;
-          yield* queue.sendBatch([{ kind: "render-og", url: "https://tom.so" }]);
+          yield* queue.send(guestbookSignBody);
         }).pipe(Effect.provide(makeTomQueueLayer(env))),
         {
           onFailure: (error) => ({ tag: "error" as const, error }),

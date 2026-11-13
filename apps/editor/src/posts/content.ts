@@ -8,6 +8,7 @@ import {
   CmsListResponseSchema,
   CmsMediaSchema,
   CmsMediaUsageSchema,
+  CmsMetaSchema,
   CmsPostInputSchema,
   CmsPostSchema,
   CmsRestoreInputSchema,
@@ -286,8 +287,31 @@ export type ContentFields = {
   readonly publishedAt: string;
 };
 
-/** Meta tags derive from the post itself; the editor sends nulls. */
-const emptyMeta = { title: null, description: null, image: null };
+/**
+ * Values the form does not expose but a save must not clobber. They come
+ * from the loaded document (or a restored revision) and are sent back as-is.
+ */
+export type ContentPreserved = {
+  readonly heroMediaId: string | null;
+  readonly meta: typeof CmsMetaSchema.Type;
+};
+
+/** Meta tags derive from the post itself for new content; edits preserve them. */
+const emptyMeta: ContentPreserved["meta"] = { title: null, description: null, image: null };
+
+export const blankPreserved: ContentPreserved = { heroMediaId: null, meta: emptyMeta };
+
+/** Every form field participates in dirty tracking against the last save. */
+export const sameContentFields = (a: ContentFields, b: ContentFields): boolean =>
+  a.slug === b.slug &&
+  a.title === b.title &&
+  a.summary === b.summary &&
+  a.status === b.status &&
+  a.publishedAt === b.publishedAt;
+
+/** Category selection is an ordered list; any add, remove, or reorder is dirty. */
+export const sameCategoryIds = (a: ReadonlyArray<string>, b: ReadonlyArray<string>): boolean =>
+  a.length === b.length && a.every((id, index) => id === b[index]);
 
 const nullIfEmpty = (value: string): string | null => (value === "" ? null : value);
 
@@ -296,6 +320,7 @@ export const toPostInput = (
   fields: ContentFields,
   doc: TiptapDoc,
   categoryIds: ReadonlyArray<string>,
+  preserved: ContentPreserved,
 ): Effect.Effect<CmsPostInput, CmsError> =>
   decodeResponse(
     CmsPostInputSchema,
@@ -306,9 +331,9 @@ export const toPostInput = (
       content: doc,
       status: fields.status,
       publishedAt: nullIfEmpty(fields.publishedAt),
-      heroMediaId: null,
+      heroMediaId: preserved.heroMediaId,
       categoryIds,
-      meta: emptyMeta,
+      meta: preserved.meta,
     },
     "save_post",
     "Invalid post data",
@@ -318,6 +343,7 @@ export const toPostInput = (
 export const toWorkInput = (
   fields: ContentFields,
   doc: TiptapDoc,
+  preserved: ContentPreserved,
 ): Effect.Effect<CmsWorkInput, CmsError> =>
   decodeResponse(
     CmsWorkInputSchema,
@@ -328,8 +354,8 @@ export const toWorkInput = (
       content: doc,
       status: fields.status,
       publishedAt: nullIfEmpty(fields.publishedAt),
-      heroMediaId: null,
-      meta: emptyMeta,
+      heroMediaId: preserved.heroMediaId,
+      meta: preserved.meta,
     },
     "save_work",
     "Invalid work data",

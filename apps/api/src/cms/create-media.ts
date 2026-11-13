@@ -1,6 +1,6 @@
 import { Elysia } from "elysia";
 import { Effect } from "effect";
-import { createMedia } from "./operations";
+import { createMedia } from "./commands";
 import { decodeUploadBody, runWrite, withAuthor } from "./shared";
 
 export const createMediaRoute = new Elysia().post("/media", ({ body, request }) =>

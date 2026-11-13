@@ -1,5 +1,5 @@
-import { getSandbox, type Sandbox } from "@cloudflare/sandbox";
-import { Effect, Layer, Schema } from "effect";
+import { Sandbox as SandboxBase, getSandbox } from "@cloudflare/sandbox";
+import { Effect, Layer, Option, Schema } from "effect";
 import { FetchHttpClient, Headers, HttpClient, HttpClientResponse } from "effect/http";
 import { HttpStatus } from "@tom/constants/http";
 import { ProblemType } from "@tom/constants/problem";
@@ -15,9 +15,14 @@ import {
   toProblemResponse,
 } from "@tom/utils/worker";
 
-// The container-backed DO class this Worker hosts. The stack binds it via
-// `Cloudflare.Container("Sandbox", …)`; className defaults to the binding
-// name, so the exported class must be named Sandbox.
+/**
+ * GitHub cancels a job after 6 hours by default. A runner older than that is
+ * orphaned (the EXIT callback was lost, or the job never arrived), so the
+ * durable object alarms and destroys itself at the cap.
+ */
+export const RUNNER_MAX_LIFETIME_MS = 6 * 60 * 60 * 1000;
+const RUNNER_DEADLINE_KEY = "runnerDeadline";
+const REAPER_CALLBACK = "reapExpiredRunner";
 
 export type RunnerEnv = CloudflareEnv & {
   readonly Sandbox: DurableObjectNamespace<Sandbox>;
@@ -28,6 +33,50 @@ export type RunnerEnv = CloudflareEnv & {
   readonly GITHUB_TOKEN?: string;
   readonly CONTROL_TOKEN?: string;
 };
+
+/**
+ * The container-backed DO class this Worker hosts. The stack binds it via
+ * `Cloudflare.Container("Sandbox", …)`; className defaults to the binding
+ * name, so the exported class must be named Sandbox.
+ *
+ * Extending the SDK class adds one thing: a Durable Object alarm that caps the
+ * runner lifetime. The image's EXIT callback is the normal cleanup path, but a
+ * callback that never arrives (container killed, network lost) would leave a
+ * keepAlive sandbox running forever. `schedule` is the Container base's
+ * SQLite-backed DO alarm API, so the deadline survives eviction and needs no
+ * in-worker timer.
+ */
+export class Sandbox extends SandboxBase<RunnerEnv> {
+  override async onStart(): Promise<void> {
+    await super.onStart();
+    const deadline = await this.runnerDeadline();
+    this.deleteSchedules(REAPER_CALLBACK);
+    await this.schedule(new Date(deadline), REAPER_CALLBACK);
+  }
+
+  /** DO alarm callback: destroy the sandbox once its hard deadline passes. */
+  async reapExpiredRunner(): Promise<void> {
+    const deadline = await this.runnerDeadline();
+    if (Date.now() < deadline) {
+      await this.schedule(new Date(deadline), REAPER_CALLBACK);
+      return;
+    }
+    await this.ctx.storage.delete(RUNNER_DEADLINE_KEY);
+    this.deleteSchedules(REAPER_CALLBACK);
+    await this.destroy();
+  }
+
+  /** Fixed per sandbox: a container restart must not extend the deadline. */
+  private async runnerDeadline(): Promise<number> {
+    const stored = Option.getOrUndefined(
+      Schema.decodeUnknownOption(Schema.Finite)(await this.ctx.storage.get(RUNNER_DEADLINE_KEY)),
+    );
+    if (stored !== undefined) return stored;
+    const deadline = Date.now() + RUNNER_MAX_LIFETIME_MS;
+    await this.ctx.storage.put(RUNNER_DEADLINE_KEY, deadline);
+    return deadline;
+  }
+}
 
 /**
  * The runner's secret contract, parsed once per request at the env boundary.
