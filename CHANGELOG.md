@@ -1,3 +1,18 @@
+# [5.0.0](https://github.com/et0and/wwwtom/compare/v4.13.3...v5.0.0) (2026-11-13)
+
+
+* refactor(monorepo)!: tighten domain invariants and delete dead surfaces ([9a75395](https://github.com/et0and/wwwtom/commit/9a75395523af7354ce20651ae4faa5de1c76be11))
+
+
+### Bug Fixes
+
+* **workflows:** remove unused helpers after deploy order update ([70631f9](https://github.com/et0and/wwwtom/commit/70631f965d1de99c167923f088c5ffb450f9d24f))
+
+
+### BREAKING CHANGES
+
+* removes retired CMS surfaces, unsupported tenant routes, unused queue kinds, and dead storage resources; guestbook identity is now server-side.
+
 ## [4.13.3](https://github.com/et0and/wwwtom/compare/v4.13.2...v4.13.3) (2026-11-09)
 
 
