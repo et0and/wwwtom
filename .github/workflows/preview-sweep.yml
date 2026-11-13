@@ -46,9 +46,9 @@ jobs:
                 pnpm --filter @tom/infra exec alchemy state delete --backend cloudflare "$row" || true
             done
             pnpm destroy:storybook --yes || true
-            pnpm destroy:sophie --yes || true
             pnpm destroy:web --yes || true
             pnpm destroy:editor --yes || true
+            pnpm destroy:sophie --yes || true
             pnpm destroy:adapter --yes || true
             pnpm destroy:api --yes || true
             pnpm destroy:shared --yes || true

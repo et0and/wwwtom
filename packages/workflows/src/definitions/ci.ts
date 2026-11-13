@@ -19,6 +19,7 @@ export const ci = workflow("ci", {
     push: { branches: ["dev"] },
     pull_request: { branches: ["dev"] },
   },
+  permissions: { contents: "read" },
   env: nodeHeapEnv(),
   jobs: {
     test: {
@@ -116,10 +117,7 @@ export const ci = workflow("ci", {
           '#define WEATHER_LOCATION "London"',
           "EOF",
         ]),
-        run("Compile the frame firmware", [
-          "cd firmware/frame",
-          "pio run --environment tdisplay",
-        ]),
+        run("Compile the frame firmware", ["cd firmware/frame", "pio run --environment tdisplay"]),
       ],
     },
   },

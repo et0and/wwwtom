@@ -83,20 +83,24 @@ const chainStacks = (verb: "deploy" | "destroy", chain: string): ReadonlyArray<s
     return stack;
   });
 
-const reverseWithEditor = (stacks: ReadonlyArray<string>): ReadonlyArray<string> =>
-  [...stacks].reverse().flatMap((stack) => (stack === "web" ? [stack, "editor"] : [stack]));
-
 describe("deploy catalog", () => {
   it("runs the root deploy and destroy scripts in catalog order", () => {
     expect(chainStacks("deploy", rootScript("deploy"))).toEqual([...deployStacks]);
     expect(chainStacks("destroy", rootScript("destroy"))).toEqual([...destroyStacks]);
   });
 
-  it("derives teardown from the reverse deploy order", () => {
-    expect(destroyStacks).toEqual(reverseWithEditor(deployStacks));
-    expect(previewDestroyStacks).toEqual(
-      reverseWithEditor(previewStacks.filter((stack) => stack !== "preview")),
-    );
+  it("keeps teardown in dependency-safe order", () => {
+    expect(destroyStacks).toEqual([
+      "storybook",
+      "sophie",
+      "web",
+      "editor",
+      "adapter",
+      "api",
+      "turbo",
+      "shared",
+    ]);
+    expect(previewDestroyStacks).toEqual(["web", "editor", "sophie", "adapter", "api", "shared"]);
     expect(sweepDestroyStacks).toEqual(["storybook", ...previewDestroyStacks]);
   });
 
