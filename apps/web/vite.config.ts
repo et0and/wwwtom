@@ -24,7 +24,11 @@ const readGit = (args: string[], fallback: string): string => {
 const commitHash =
   process.env.GITHUB_SHA?.slice(0, 7) ?? readGit(["rev-parse", "--short", "HEAD"], "");
 // Semantic-release tags `dev`, so the nearest tag is the last released version.
-const appVersion = readGit(["describe", "--tags", "--abbrev=0"], "v0.0.0").replace(/^v/, "");
+// The deploy passes it as VITE_APP_VERSION so the version is part of the web
+// build inputs; the git read covers local builds.
+const appVersion =
+  process.env.VITE_APP_VERSION ??
+  readGit(["describe", "--tags", "--abbrev=0"], "v0.0.0").replace(/^v/, "");
 
 export default defineConfig(({ command }) => {
   if (command === "serve" && existsSync(".dev.vars")) {
