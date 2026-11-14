@@ -3,6 +3,9 @@ import { Readable } from "node:stream";
 import { Elysia } from "elysia";
 import { Effect, Schema } from "effect";
 import { PortNumber } from "@tom/schemas/env";
+import type { CloudflareEnv } from "@tom/utils/config";
+import { attachRequestEnv } from "@tom/utils/worker";
+import { internalArenaRoutes } from "@tom/api/arena";
 import { arenaSimulator } from "./arena";
 import { cmsSimulator } from "./cms";
 import { guestbookSimulator } from "./guestbook";
@@ -24,10 +27,29 @@ const PORT = (() => {
   return decoded.value;
 })();
 
+/**
+ * Bindings the api arena routes read. The adapter reaches this server as its
+ * api (see apps/e2e/server/adapter.ts); the routes in turn call are.na here,
+ * with ARENA_API_URL pointing back at the simulator's own /v3 fixtures.
+ */
+const SIMULATOR_ORIGIN = `http://127.0.0.1:${PORT}`;
+const SIMULATOR_ADAPTER_ORIGIN = "http://127.0.0.1:8788";
+
+const env: CloudflareEnv = {
+  NODE_ENV: "production",
+  TENANT: "tom",
+  ARENA_API_URL: SIMULATOR_ORIGIN,
+  ADAPTER_URL: SIMULATOR_ADAPTER_ORIGIN,
+  INTERNAL_API_TOKEN: "e2e",
+};
+
 const app = new Elysia({ name: "tom-simulator" })
   .use(arenaSimulator)
   .use(cmsSimulator)
-  .use(guestbookSimulator);
+  .use(guestbookSimulator)
+  // The api's internal are.na routes, mounted here so the adapter talks to a
+  // single upstream in tests and the fixture data still comes from /v3.
+  .use(internalArenaRoutes);
 
 const server = createServer((req, res) => {
   const url = new URL(req.url ?? "/", `http://localhost:${PORT}`);
@@ -38,7 +60,7 @@ const server = createServer((req, res) => {
       req.method === "GET" || req.method === "HEAD" ? undefined : (Readable.toWeb(req) as BodyInit),
     duplex: "half",
   };
-  const request = new Request(url, requestInit);
+  const request = attachRequestEnv(new Request(url, requestInit), env);
 
   const sendResponse = (response: Response) =>
     Effect.tryPromise(() => response.arrayBuffer()).pipe(
@@ -72,6 +94,7 @@ const server = createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`Tom simulator listening on http://localhost:${PORT}`);
   console.log("  Are.na: /v3/*");
+  console.log("  API arena: /internal/*");
   console.log("  CMS: /posts, /works, /categories, /media/:id");
   console.log("  Guestbook: /guestbook/entries");
 });

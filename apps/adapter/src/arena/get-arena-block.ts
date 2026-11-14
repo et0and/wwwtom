@@ -1,15 +1,11 @@
 import { Elysia } from "elysia";
-import { logContextFromRequest } from "@tom/utils/worker";
-import { BlockIdParamsSchema, runArena } from "./shared";
+import { arenaApi, BlockIdParamsSchema, proxyArena } from "./shared";
 
 export const getBlockRoute = new Elysia().get(
   "/arena/blocks/:id",
-  ({ params, request }) => {
-    return runArena(
-      request,
-      (client) => client.block(params.id).get,
-      logContextFromRequest(request, "tom-adapter"),
-    );
+  async ({ params, request, set }) => {
+    const api = await arenaApi(request);
+    return proxyArena(api.internal.arena.blocks({ id: params.id }).get(), set, "block");
   },
   {
     params: BlockIdParamsSchema,

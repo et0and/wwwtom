@@ -1,22 +1,17 @@
 import { Elysia } from "elysia";
-import { logContextFromRequest } from "@tom/utils/worker";
-import { runArena, searchQuerySchema, toPaginationAttributes } from "./shared";
+import { searchQuerySchema } from "../schemas";
+import { arenaApi, proxyArena, toPaginationAttributes } from "./shared";
 
 export const searchRoute = new Elysia().get(
   "/arena/search",
-  ({ query, request }) => {
-    return runArena(
-      request,
-      (client) => {
-        const searchers = {
-          everything: client.search.everything,
-          channels: client.search.channels,
-          blocks: client.search.blocks,
-          users: client.search.users,
-        };
-        return searchers[query.type ?? "everything"](query.query, toPaginationAttributes(query));
-      },
-      logContextFromRequest(request, "tom-adapter"),
+  async ({ query, request, set }) => {
+    const api = await arenaApi(request);
+    return proxyArena(
+      api.internal.arena.search.get({
+        query: { query: query.query, type: query.type, ...toPaginationAttributes(query) },
+      }),
+      set,
+      "search",
     );
   },
   {

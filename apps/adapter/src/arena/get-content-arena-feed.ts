@@ -1,13 +1,15 @@
 import { Elysia } from "elysia";
-import { setPublicContentCache } from "../content-cache";
-import { arenaFeed, feedQuerySchema } from "./shared";
+import { arenaApi, feedQuerySchema, proxyArena } from "./shared";
 
 export const contentFeedRoute = new Elysia().get(
   "/content/arena/feed",
   async ({ query, request, set }) => {
-    const feed = await arenaFeed(request, query.limit ?? 20);
-    setPublicContentCache(request, set);
-    return feed;
+    const api = await arenaApi(request);
+    return proxyArena(
+      api.internal.content.arena.feed.get({ query: { limit: query.limit } }),
+      set,
+      "feed",
+    );
   },
   {
     query: feedQuerySchema,

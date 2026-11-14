@@ -19,9 +19,10 @@ export const stageConcurrencyGroup = `deploy-${stageExpression}`;
  * The stage pipeline, in dependency order: later stacks depend on earlier
  * ones. `turbo` is the shared Turborepo remote cache; it reads the shared
  * secret bundle but no application stack depends on it, so it stays directly
- * after `shared`.
+ * after `shared`. `api` precedes `adapter` because the adapter binds the api
+ * Worker as a service.
  */
-const pipelineStacks = ["shared", "turbo", "adapter", "api", "web", "sophie"] as const;
+const pipelineStacks = ["shared", "turbo", "api", "adapter", "web", "sophie"] as const;
 
 /**
  * Static Storybook site. A full stage ships it; PR previews leave it to

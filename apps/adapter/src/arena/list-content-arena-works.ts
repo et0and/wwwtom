@@ -1,17 +1,17 @@
 import { Elysia } from "elysia";
-import { ARENA_WORK_CHANNEL_SLUG } from "@tom/constants/arena";
-import { setPublicContentCache } from "../content-cache";
-import { arenaListQuerySchema, listArenaContent } from "./shared";
+import { arenaApi, arenaListQuerySchema, proxyArena } from "./shared";
 
 export const contentWorksRoute = new Elysia().get(
   "/content/arena/works",
   async ({ query, request, set }) => {
-    const entries = await listArenaContent(request, ARENA_WORK_CHANNEL_SLUG, {
-      page: query.page,
-      per: query.pageSize,
-    });
-    setPublicContentCache(request, set);
-    return entries;
+    const api = await arenaApi(request);
+    return proxyArena(
+      api.internal.content.arena.works.get({
+        query: { page: query.page, pageSize: query.pageSize },
+      }),
+      set,
+      "works",
+    );
   },
   {
     query: arenaListQuerySchema,

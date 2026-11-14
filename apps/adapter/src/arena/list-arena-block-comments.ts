@@ -1,19 +1,15 @@
 import { Elysia } from "elysia";
-import { logContextFromRequest } from "@tom/utils/worker";
-import {
-  BlockIdParamsSchema,
-  paginationQuerySchema,
-  runArena,
-  toPaginationAttributes,
-} from "./shared";
+import { paginationQuerySchema } from "../schemas";
+import { arenaApi, BlockIdParamsSchema, proxyArena, pagingParams } from "./shared";
 
 export const getBlockCommentsRoute = new Elysia().get(
   "/arena/blocks/:id/comments",
-  ({ params, query, request }) => {
-    return runArena(
-      request,
-      (client) => client.block(params.id).comments(toPaginationAttributes(query)),
-      logContextFromRequest(request, "tom-adapter"),
+  async ({ params, query, request, set }) => {
+    const api = await arenaApi(request);
+    return proxyArena(
+      api.internal.arena.blocks({ id: params.id }).comments.get(pagingParams(query)),
+      set,
+      "block comments",
     );
   },
   {

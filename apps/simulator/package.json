@@ -10,8 +10,10 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@tom/api": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
+    "@tom/utils": "workspace:*",
     "effect": "catalog:",
     "elysia": "catalog:",
     "tsx": "4.20.3"

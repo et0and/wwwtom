@@ -1,15 +1,11 @@
 import { Elysia } from "elysia";
-import { logContextFromRequest } from "@tom/utils/worker";
-import { IdOrSlugParamsSchema, runArena } from "./shared";
+import { arenaApi, IdOrSlugParamsSchema, proxyArena } from "./shared";
 
 export const getUserRoute = new Elysia().get(
   "/arena/users/:id",
-  ({ params, request }) => {
-    return runArena(
-      request,
-      (client) => client.user(params.id).get,
-      logContextFromRequest(request, "tom-adapter"),
-    );
+  async ({ params, request, set }) => {
+    const api = await arenaApi(request);
+    return proxyArena(api.internal.arena.users({ id: params.id }).get(), set, "user");
   },
   {
     params: IdOrSlugParamsSchema,
