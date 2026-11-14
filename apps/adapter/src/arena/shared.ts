@@ -1,108 +1,19 @@
-import { Effect, Schema } from "effect";
-import {
-  getEntry,
-  listEntries,
-  type ArenaContentClient,
-  type ArenaContentPaging,
-} from "@tom/arena/content";
-import { ArenaService } from "@tom/arena/service";
-import type { ArenaApi } from "@tom/arena/client";
-import type { PaginationAttributes } from "@tom/schemas/arena";
-import type { ArenaEntry, ArenaEntryList, ArenaEntrySummary } from "@tom/schemas/arena-content";
-import { ARENA_POSTS_CHANNEL_SLUG } from "@tom/constants/arena";
-import { HttpStatus } from "@tom/constants/http";
-import { HttpError } from "@tom/types/errors";
-import { retryPolicy } from "@tom/utils/retry";
-import { readCloudflareEnv } from "@tom/utils/config";
-import { getRequestEnv, logContextFromRequest } from "@tom/utils/worker";
-import type { LogContext } from "@tom/utils/logging";
-import { AdapterError, createArenaLayer, runAdapter } from "../runtime";
-import { tenantFromValue } from "../origins";
-import { simulatorEnv } from "../simulator";
-import { paginationQuerySchema, searchQuerySchema, type PaginationQuery } from "../schemas";
+import { treaty } from "@elysiajs/eden";
+import { Schema } from "effect";
+import type { ApiApp } from "@tom/api";
+import { HttpStatus, isErrorStatus } from "@tom/constants/http";
+import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
+import { readCloudflareEnv, tenantFromValue } from "@tom/utils/config";
+import { getRequestEnv } from "@tom/utils/worker";
+import { callApi } from "../callApi";
+import { AdapterError } from "../runtime";
+import type { PaginationQuery } from "../schemas";
 
-export { paginationQuerySchema, searchQuerySchema };
-export type { PaginationQuery };
-
-export const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(
-  Schema.Struct({ slug: Schema.String }),
-);
-
-export const IdOrSlugParamsSchema = Schema.toStandardSchemaV1(
-  Schema.Struct({
-    id: Schema.Union([Schema.FiniteFromString, Schema.String]),
-  }),
-);
-
-export const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite }));
+export type ArenaApi = ReturnType<typeof treaty<ApiApp>>;
 
 /**
- * The pagination fields the caller set, or `undefined` when none were. Keys
- * without a value are omitted rather than passed as `undefined`: the Arena
- * client spreads these over its defaults, so an explicit `per: undefined`
- * would clobber the default page size.
- */
-export const toPaginationAttributes = (
-  query: PaginationQuery,
-): PaginationAttributes | undefined => {
-  const { page, per, sort, direction } = query;
-  if ([page, per, sort, direction].every((value) => value === undefined)) return undefined;
-  return {
-    ...(page !== undefined && { page }),
-    ...(per !== undefined && { per }),
-    ...(sort !== undefined && { sort }),
-    ...(direction !== undefined && { direction }),
-  };
-};
-
-const arenaOperation = <T>(
-  operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
-  mode: "auth" | "public" = "auth",
-) =>
-  Effect.gen(function* () {
-    const arena = yield* ArenaService;
-    const client = mode === "public" ? arena.publicClient : arena.client;
-    // Retry only upstream failures: 404s are answers, and retrying 429s
-    // ignores are.na's Retry-After and extends the rate-limit window.
-    return yield* operation(client).pipe(
-      Effect.retry({
-        schedule: retryPolicy,
-        while: (error) => error.status >= HttpStatus.InternalServerError,
-      }),
-    );
-  });
-
-export const runArena = <T>(
-  request: Request,
-  operation: (client: ArenaApi) => Effect.Effect<T, HttpError>,
-  context: LogContext,
-  mode: "auth" | "public" = "auth",
-): Promise<T> =>
-  runAdapter(
-    Effect.tryPromise(() => readCloudflareEnv(getRequestEnv(request))).pipe(
-      Effect.flatMap((resolved) =>
-        arenaOperation(operation, mode).pipe(
-          Effect.provide(createArenaLayer(simulatorEnv(resolved, request))),
-        ),
-      ),
-      Effect.mapError((error) =>
-        Schema.is(HttpError)(error)
-          ? error
-          : new HttpError({
-              message: error.message,
-              status: HttpStatus.InternalServerError,
-              cause: error,
-            }),
-      ),
-    ),
-    (error) => new AdapterError({ status: error.status, message: error.message }),
-    context,
-  );
-
-/**
- * are.na-backed content for Tom. These routes serve every tenant except
- * Sophie — local dev and tests run without TENANT. Sophie keeps the D1 CMS
- * on /content/*.
+ * are.na-backed content serves every tenant except Sophie — local dev and
+ * tests run without TENANT. Sophie keeps the D1 CMS on /content/*.
  */
 export const requireArenaTenant = (request: Request): void => {
   if (tenantFromValue(getRequestEnv(request).TENANT) === "sophie") {
@@ -111,64 +22,68 @@ export const requireArenaTenant = (request: Request): void => {
 };
 
 /**
- * Content reads use the public client: the master channels and their entries
- * are closed, which are.na serves to anonymous readers. The account token is
- * never needed here, so responses stay honestly cacheable.
+ * Typed client to the internal are.na routes. Deployed stages reach api over
+ * the service binding (same colo, no public hostname); local dev and the e2e
+ * harness fall back to API_URL. The internal token is attached here, never by
+ * the browser.
  */
-const runContent = <T>(
-  request: Request,
-  operation: (client: ArenaContentClient) => Effect.Effect<T, HttpError>,
-): Promise<T> =>
-  runArena(request, operation, logContextFromRequest(request, "tom-adapter"), "public");
-
-export const listArenaContent = (
-  request: Request,
-  indexSlug: string,
-  paging?: ArenaContentPaging,
-): Promise<ArenaEntryList> =>
-  runContent(request, (client) => listEntries(client, indexSlug, paging));
-
-export const getArenaContent = async (
-  request: Request,
-  indexSlug: string,
-  entrySlug: string,
-  resource: "Post" | "Work",
-): Promise<ArenaEntry> => {
-  const entry = await runContent(request, (client) => getEntry(client, indexSlug, entrySlug));
-  if (entry === null) {
-    throw new AdapterError({ status: HttpStatus.NotFound, message: `${resource} not found` });
-  }
-  return entry;
-};
-
-interface ArenaFeedDoc {
-  readonly id: number;
-  readonly title: string;
-  readonly summary: string;
-  readonly slug: string;
-  readonly publishedAt: string;
-  readonly content: string;
-}
-
-const feedDoc = (entry: ArenaEntrySummary): ArenaFeedDoc => ({
-  id: entry.id,
-  title: entry.title,
-  summary: entry.summary ?? "",
-  slug: entry.slug,
-  publishedAt: entry.publishedAt,
-  content: entry.summary ?? "",
-});
-
-export const arenaFeed = async (
-  request: Request,
-  limit: number,
-): Promise<{ docs: ArenaFeedDoc[] }> => {
-  const entries = await listArenaContent(request, ARENA_POSTS_CHANNEL_SLUG, {
-    page: 1,
-    per: limit,
+export const arenaApi = async (request: Request): Promise<ArenaApi> => {
+  const env = await readCloudflareEnv(getRequestEnv(request));
+  const cookie = request.headers.get("cookie");
+  return callApi(env.API_URL ?? LOCAL_SERVICE_URLS.api, {
+    token: env.INTERNAL_API_TOKEN,
+    fetcher: env.API?.fetch.bind(env.API),
+    // The api decides cache policy from the session credential, so a
+    // signed-in read must arrive with the browser's cookie.
+    ...(cookie !== null && { headers: { cookie } }),
   });
-  return { docs: entries.docs.map(feedDoc) };
 };
+
+/**
+ * Unwrap an internal are.na read and forward its cache policy. The api owns
+ * `Cache-Control` (it knows which reads are public and session-free), so the
+ * adapter copies the headers onto the public response instead of deciding
+ * again. Failures become AdapterErrors for the global onError hook.
+ */
+type ArenaResponse = {
+  readonly data: unknown;
+  readonly error: unknown;
+  readonly status: number;
+  readonly headers: HeadersInit | undefined;
+};
+
+export const proxyArena = async <R extends ArenaResponse>(
+  call: Promise<R>,
+  set: { headers: Record<string, string | number> },
+  resource: string,
+): Promise<NonNullable<R["data"]>> => {
+  const result = await call;
+  if (result.error !== null || result.data === null) {
+    throw new AdapterError({
+      status: isErrorStatus(result.status) ? result.status : HttpStatus.InternalServerError,
+      message:
+        result.status === HttpStatus.NotFound
+          ? `Arena ${resource} not found`
+          : `Arena ${resource} request failed`,
+    });
+  }
+  const headers = new Headers(result.headers);
+  const cacheControl = headers.get("cache-control");
+  const cdnCacheControl = headers.get("cdn-cache-control");
+  if (cacheControl !== null) set.headers["Cache-Control"] = cacheControl;
+  if (cdnCacheControl !== null) set.headers["CDN-Cache-Control"] = cdnCacheControl;
+  return result.data as NonNullable<R["data"]>;
+};
+
+export const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ slug: Schema.String }),
+);
+
+export const IdOrSlugParamsSchema = Schema.toStandardSchemaV1(
+  Schema.Struct({ id: Schema.Union([Schema.FiniteFromString, Schema.String]) }),
+);
+
+export const BlockIdParamsSchema = Schema.toStandardSchemaV1(Schema.Struct({ id: Schema.Finite }));
 
 export const arenaListQuerySchema = Schema.toStandardSchemaV1(
   Schema.Struct({
@@ -184,3 +99,25 @@ export const arenaSlugParamsSchema = Schema.toStandardSchemaV1(
 export const feedQuerySchema = Schema.toStandardSchemaV1(
   Schema.Struct({ limit: Schema.optional(Schema.FiniteFromString) }),
 );
+
+/**
+ * The pagination fields the caller set, or `undefined` when none were. Keys
+ * without a value are omitted rather than passed as `undefined`: the Arena
+ * client spreads these over its defaults, so an explicit `per: undefined`
+ * would clobber the default page size.
+ */
+export const pagingParams = (query: PaginationQuery) => {
+  const paging = toPaginationAttributes(query);
+  return paging === undefined ? undefined : { query: paging };
+};
+
+export const toPaginationAttributes = (query: PaginationQuery) => {
+  const { page, per, sort, direction } = query;
+  if ([page, per, sort, direction].every((value) => value === undefined)) return undefined;
+  return {
+    ...(page !== undefined && { page }),
+    ...(per !== undefined && { per }),
+    ...(sort !== undefined && { sort }),
+    ...(direction !== undefined && { direction }),
+  };
+};

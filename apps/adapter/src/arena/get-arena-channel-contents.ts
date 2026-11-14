@@ -1,20 +1,15 @@
 import { Elysia } from "elysia";
-import { logContextFromRequest } from "@tom/utils/worker";
-import {
-  ChannelSlugParamsSchema,
-  paginationQuerySchema,
-  runArena,
-  toPaginationAttributes,
-} from "./shared";
+import { paginationQuerySchema } from "../schemas";
+import { arenaApi, ChannelSlugParamsSchema, proxyArena, pagingParams } from "./shared";
 
 export const getChannelContentsRoute = new Elysia().get(
   "/arena/channels/:slug/contents",
-  ({ params, query, request }) => {
-    return runArena(
-      request,
-      (client) => client.channel(params.slug).contents(toPaginationAttributes(query)),
-      logContextFromRequest(request, "tom-adapter"),
-      "public",
+  async ({ params, query, request, set }) => {
+    const api = await arenaApi(request);
+    return proxyArena(
+      api.internal.arena.channels({ slug: params.slug }).contents.get(pagingParams(query)),
+      set,
+      "channel contents",
     );
   },
   {

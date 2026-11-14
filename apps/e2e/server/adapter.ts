@@ -22,6 +22,9 @@ const env: CloudflareEnv = {
   ADAPTER_URL: `http://127.0.0.1:${PORT}`,
   GUESTBOOK_RETURN_URL: "http://127.0.0.1:3000/guestbook",
   API_URL: SIMULATOR_URL,
+  // The simulator mounts the api's internal are.na routes and checks this
+  // token exactly as the deployed api does.
+  INTERNAL_API_TOKEN: "e2e",
   ARENA_API_URL: SIMULATOR_URL,
   SIMULATOR_URL,
   // Telegram error alerts must no-op (no real credentials in CI); failures

@@ -21,6 +21,7 @@ import { healthRoutes } from "./health";
 import { requireInternalTokenBeforeHandle } from "./internal";
 import { authRoutes } from "./auth";
 import { cmsRoutes, cmsWriteRoutes } from "./cms";
+import { internalArenaRoutes } from "./arena";
 import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { ogRoutes } from "./og";
 import { oauthRoutes } from "./oauth";
@@ -168,6 +169,9 @@ export const app = new Elysia({
   // OG image generation is a public route: social crawlers (Twitter, Slack,
   // iMessage) fetch the image URL without any auth headers.
   .use(ogRoutes)
+  // are.na content is Tom-only and internal: only the adapter calls it, with
+  // the shared internal token. Sophie's blog reads its D1 CMS instead.
+  .use(internalArenaRoutes)
   // The CMS is Sophie's only. Tom's editor is retired and its site reads
   // are.na, so no CMS read or write route exists on the Tom worker.
   .guard({ beforeHandle: requireTenantBeforeHandle("sophie") }, (app) =>

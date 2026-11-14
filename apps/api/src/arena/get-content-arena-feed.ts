@@ -1,0 +1,16 @@
+import { Elysia } from "elysia";
+import { setPublicContentCache } from "./content-cache";
+import { arenaFeed, feedQuerySchema } from "./shared";
+
+export const contentFeedRoute = new Elysia().get(
+  "/internal/content/arena/feed",
+  async ({ query, request, set }) => {
+    const feed = await arenaFeed(request, query.limit ?? 20);
+    setPublicContentCache(request, set);
+    return feed;
+  },
+  {
+    query: feedQuerySchema,
+    detail: { description: "Recent are.na posts for feeds", tags: ["arena-content"] },
+  },
+);

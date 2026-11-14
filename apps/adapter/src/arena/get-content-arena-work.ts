@@ -1,14 +1,11 @@
 import { Elysia } from "elysia";
-import { ARENA_WORK_CHANNEL_SLUG } from "@tom/constants/arena";
-import { setPublicContentCache } from "../content-cache";
-import { arenaSlugParamsSchema, getArenaContent } from "./shared";
+import { arenaApi, arenaSlugParamsSchema, proxyArena } from "./shared";
 
 export const contentWorkRoute = new Elysia().get(
   "/content/arena/works/:slug",
   async ({ params, request, set }) => {
-    const entry = await getArenaContent(request, ARENA_WORK_CHANNEL_SLUG, params.slug, "Work");
-    setPublicContentCache(request, set);
-    return entry;
+    const api = await arenaApi(request);
+    return proxyArena(api.internal.content.arena.works({ slug: params.slug }).get(), set, "work");
   },
   {
     params: arenaSlugParamsSchema,
