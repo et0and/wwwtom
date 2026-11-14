@@ -6,6 +6,7 @@ import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv, tenantFromValue } from "@tom/utils/config";
 import { getRequestEnv } from "@tom/utils/worker";
 import { callApi } from "../callApi";
+import { simulatorEnv } from "../simulator";
 import { AdapterError } from "../runtime";
 import type { PaginationQuery } from "../schemas";
 
@@ -28,7 +29,7 @@ export const requireArenaTenant = (request: Request): void => {
  * the browser.
  */
 export const arenaApi = async (request: Request): Promise<ArenaApi> => {
-  const env = await readCloudflareEnv(getRequestEnv(request));
+  const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
   const cookie = request.headers.get("cookie");
   return callApi(env.API_URL ?? LOCAL_SERVICE_URLS.api, {
     token: env.INTERNAL_API_TOKEN,

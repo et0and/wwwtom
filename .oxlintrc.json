@@ -63,7 +63,7 @@
     },
     {
       "files": [
-        "apps/adapter/src/arena/get-arena-frame-image.ts",
+        "apps/api/src/arena/get-arena-frame-image.ts",
         "apps/api/src/cms/shared.ts",
         "apps/editor/src/editor/EditorView.tsx",
         "apps/web/src/content/AttachmentMedia.tsx",

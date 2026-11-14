@@ -38,7 +38,7 @@ const isFrameImageHost = (url: URL): boolean =>
 const toRgb565 = (rgba: Uint8Array): Uint8Array<ArrayBuffer> => {
   const pixelCount = ARENA_FRAME_WIDTH * ARENA_FRAME_HEIGHT;
   const frame = new Uint8Array(pixelCount * 2);
-  for (const index of Array.from({ length: pixelCount }, (_, offset) => offset)) {
+  for (let index = 0; index < pixelCount; index++) {
     const offset = index * 4;
     const red = rgba[offset] ?? 0;
     const green = rgba[offset + 1] ?? 0;

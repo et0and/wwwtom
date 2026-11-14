@@ -57,6 +57,22 @@ describe("arena proxy", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("routes to the simulator when the request opts in", async () => {
+    fetchMock.mockResolvedValue(jsonResponse({ docs: [] }));
+
+    await app.fetch(
+      requestWithEnv(
+        "http://localhost/content/arena/posts",
+        tomEnv({ SIMULATOR_URL: "http://127.0.0.1:8789" }),
+        { headers: { "x-use-simulator": "1" } },
+      ),
+    );
+
+    const [input] = fetchMock.mock.calls[0] as [Request, RequestInit];
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    expect(url.origin + url.pathname).toBe("http://127.0.0.1:8789/internal/content/arena/posts");
+  });
+
   it("forwards the api cache policy", async () => {
     fetchMock.mockResolvedValue(
       new Response(JSON.stringify({ docs: [] }), {
