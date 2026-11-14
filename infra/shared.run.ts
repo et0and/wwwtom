@@ -1,3 +1,4 @@
+import { spawnSync } from "node:child_process";
 import { adopt } from "alchemy/AdoptPolicy";
 import * as Axiom from "@alchemy.run/axiom";
 import * as Cloudflare from "@alchemy.run/cloudflare";
@@ -38,6 +39,23 @@ export const requireJsonSecret = (name: string): Effect.Effect<string, Infrastru
   Effect.map(readSecretBundle(name), () => process.env[name]!);
 
 export const secretsStore = Cloudflare.SecretsStore.Store("wwwtom-secrets");
+
+/**
+ * Release version from the nearest tag. Deploy checkouts carry full history
+ * (`fetch-depth: 0`), so the tag is present.
+ *
+ * The release commit only touches CHANGELOG.md, which the web build hash
+ * cannot see. Stamping this into the web env puts the version into the Worker
+ * props, so a release always rebuilds the bundle and refreshes the footer.
+ */
+export const releaseVersion = (): Effect.Effect<string> =>
+  Effect.sync(() => {
+    const result = spawnSync("git", ["describe", "--tags", "--abbrev=0"], {
+      encoding: "utf8",
+    });
+    if (result.status !== 0) return "0.0.0";
+    return result.stdout.trim().replace(/^v/, "");
+  });
 
 /** Observability settings shared by the stack's Workers. */
 export const workerObservability = {
