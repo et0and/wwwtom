@@ -3,7 +3,13 @@ import { ALCHEMY_DEV } from "alchemy";
 import { Effect } from "effect";
 import { Stack } from "alchemy/Stack";
 import { Stage } from "alchemy/Stage";
-import { stageHost, stageWebHost, tomSecrets, workerObservability } from "../shared.run.ts";
+import {
+  releaseVersion,
+  stageHost,
+  stageWebHost,
+  tomSecrets,
+  workerObservability,
+} from "../shared.run.ts";
 
 const rootDir = `${import.meta.dirname}/../../apps/web`;
 
@@ -11,6 +17,7 @@ export const web = Effect.gen(function* () {
   const stage = yield* Stage;
   const isAlchemyDev = yield* ALCHEMY_DEV;
   const adapterHost = stageHost(stage, "adapter");
+  const appVersion = yield* releaseVersion();
 
   // The Axiom ingest token is minted by the shared stack (production only);
   // reference it there instead of re-registering, which would fight over
@@ -34,6 +41,10 @@ export const web = Effect.gen(function* () {
       : { name: `wwwtom-${stage}`, domain: stageWebHost(stage) }),
     env: {
       NODE_ENV: "production",
+      // Part of the build inputs: a release tag only touches CHANGELOG.md, so
+      // without this the web bundle is a noop and the footer keeps the old
+      // version stamp. Also inlined into the client bundle (VITE_ prefix).
+      VITE_APP_VERSION: appVersion,
       TOM_SECRETS: tomSecrets,
       ...(axiomToken && { AXIOM_TOKEN: axiomToken }),
       ADAPTER_URL: isAlchemyDev ? "http://localhost:8788" : `https://${adapterHost}`,
