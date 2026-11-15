@@ -1,3 +1,10 @@
+## [5.0.1](https://github.com/et0and/wwwtom/compare/v5.0.0...v5.0.1) (2026-11-14)
+
+
+### Bug Fixes
+
+* **web:** restamp footer version on every release ([1dc9d36](https://github.com/et0and/wwwtom/commit/1dc9d366185e5a5444ce08938ab6d19fab91e00a))
+
 # [5.0.0](https://github.com/et0and/wwwtom/compare/v4.13.3...v5.0.0) (2026-11-13)
 
 
