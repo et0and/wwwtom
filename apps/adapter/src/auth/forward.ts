@@ -24,3 +24,16 @@ export const toProxiedResponse = (upstream: Response): Response =>
       Array.from(upstream.headers).filter(([key]) => !STRIPPED_HEADERS.has(key.toLowerCase())),
     ),
   });
+
+/**
+ * Session credentials a proxied read must carry. `hasSessionCredential`
+ * treats a session cookie and a Bearer token as private reads, so both reach
+ * the api and its cache policy stays honest.
+ */
+export const sessionHeaders = (request: Request) =>
+  Object.fromEntries(
+    ["cookie", "authorization"].flatMap((name) => {
+      const value = request.headers.get(name);
+      return value === null ? [] : [[name, value] as const];
+    }),
+  );

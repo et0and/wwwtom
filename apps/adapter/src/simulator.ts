@@ -19,8 +19,8 @@ export const isSimulatorRequest = (request: Request): boolean => {
 export const simulatorEnv = (env: CloudflareEnv, request: Request): CloudflareEnv => {
   const simulatorUrl = env.SIMULATOR_URL;
   if (!isSimulatorRequest(request) || !simulatorUrl) return env;
-  return {
-    ...env,
-    API_URL: simulatorUrl,
-  };
+  // Drop the deployed api binding: the rewrite must win, not just the URL.
+  const rest = { ...env };
+  delete rest.API;
+  return { ...rest, API_URL: simulatorUrl };
 };

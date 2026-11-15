@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, Layer, Schema } from "effect";
 import {
   getEntry,
   listEntries,
@@ -13,10 +13,34 @@ import { ARENA_POSTS_CHANNEL_SLUG } from "@tom/constants/arena";
 import { HttpStatus } from "@tom/constants/http";
 import { HttpError } from "@tom/types/errors";
 import { retryPolicy } from "@tom/utils/retry";
-import { readCloudflareEnv, tenantFromValue } from "@tom/utils/config";
+import {
+  type AppConfig,
+  type CloudflareEnv,
+  makeAppConfigLayer,
+  readCloudflareEnv,
+  tenantFromValue,
+} from "@tom/utils/config";
 import { getRequestEnv, logContextFromRequest, runEffect } from "@tom/utils/worker";
 import type { LogContext } from "@tom/utils/logging";
-import { createArenaLayer } from "./runtime";
+/**
+ * Build the are.na client layer for one request. Services are constructed
+ * lazily so an unconfigured integration never breaks the others.
+ */
+const createServiceLayer = <S, E, R>(
+  env: CloudflareEnv,
+  service: Layer.Layer<S, E, R>,
+): Layer.Layer<AppConfig | S, E, never> => {
+  const configLayer = makeAppConfigLayer(env);
+  // `Layer.provide` cannot reduce `Exclude<R, AppConfig>` while `R` is generic,
+  // but at every call site `R` is exactly `AppConfig`.
+  return Layer.merge(configLayer, Layer.provide(service, configLayer)) as Layer.Layer<
+    AppConfig | S,
+    E,
+    never
+  >;
+};
+
+const createArenaLayer = (env: CloudflareEnv) => createServiceLayer(env, ArenaService.Default);
 
 export const ChannelSlugParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({ slug: Schema.String }),

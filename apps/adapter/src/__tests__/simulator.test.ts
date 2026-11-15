@@ -32,6 +32,13 @@ describe("simulatorEnv", () => {
     expect(env.API_URL).toBe(SIMULATOR_URL);
   });
 
+  it("drops the api binding so the simulator rewrite wins", () => {
+    const binding = { fetch: async () => new Response("live") };
+    const env = simulatorEnv({ ...production, SIMULATOR_URL, API: binding }, withHeader("1"));
+    expect(env.API).toBeUndefined();
+    expect(env.API_URL).toBe(SIMULATOR_URL);
+  });
+
   it("leaves the env alone without the header", () => {
     const env = simulatorEnv({ ...production, SIMULATOR_URL }, withHeader());
     expect(env.API_URL).toBe("https://api.tom.so");

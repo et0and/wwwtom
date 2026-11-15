@@ -5,6 +5,7 @@ import { HttpStatus, isErrorStatus } from "@tom/constants/http";
 import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv, tenantFromValue } from "@tom/utils/config";
 import { getRequestEnv } from "@tom/utils/worker";
+import { sessionHeaders } from "../auth/forward";
 import { callApi } from "../callApi";
 import { simulatorEnv } from "../simulator";
 import { AdapterError } from "../runtime";
@@ -30,13 +31,13 @@ export const requireArenaTenant = (request: Request): void => {
  */
 export const arenaApi = async (request: Request): Promise<ArenaApi> => {
   const env = simulatorEnv(await readCloudflareEnv(getRequestEnv(request)), request);
-  const cookie = request.headers.get("cookie");
+  const session = sessionHeaders(request);
   return callApi(env.API_URL ?? LOCAL_SERVICE_URLS.api, {
     token: env.INTERNAL_API_TOKEN,
     fetcher: env.API?.fetch.bind(env.API),
     // The api decides cache policy from the session credential, so a
-    // signed-in read must arrive with the browser's cookie.
-    ...(cookie !== null && { headers: { cookie } }),
+    // signed-in read must arrive with the browser's cookie or bearer token.
+    ...(Object.keys(session).length > 0 && { headers: session }),
   });
 };
 

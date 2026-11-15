@@ -29,7 +29,10 @@ describe("arena proxy", () => {
 
     const response = await app.fetch(
       requestWithEnv("http://localhost/content/arena/posts", tomEnv(), {
-        headers: { cookie: "better-auth.session_token=abc" },
+        headers: {
+          cookie: "better-auth.session_token=abc",
+          authorization: "Bearer fixture-token",
+        },
       }),
     );
 
@@ -41,6 +44,7 @@ describe("arena proxy", () => {
     for (const [key, value] of new Headers(init?.headers as HeadersInit)) headers.set(key, value);
     expect(headers.get(INTERNAL_TOKEN_HEADER)).toBe("test-internal-token");
     expect(headers.get("cookie")).toBe("better-auth.session_token=abc");
+    expect(headers.get("authorization")).toBe("Bearer fixture-token");
   });
 
   it("prefers the api service binding over the public URL", async () => {
@@ -71,6 +75,31 @@ describe("arena proxy", () => {
     const [input] = fetchMock.mock.calls[0] as [Request, RequestInit];
     const url = new URL(input instanceof Request ? input.url : String(input));
     expect(url.origin + url.pathname).toBe("http://127.0.0.1:8789/internal/content/arena/posts");
+  });
+
+  it("routes the frame image to the simulator when the request opts in", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(new Uint8Array([0xf8, 0x00]), {
+        headers: { "Content-Type": "application/octet-stream" },
+      }),
+    );
+
+    await app.fetch(
+      requestWithEnv(
+        "http://localhost/arena/frame/desk/image/12",
+        tomEnv({
+          SIMULATOR_URL: "http://127.0.0.1:8789",
+          API: { fetch: async () => new Response("live") },
+        }),
+        { headers: { "x-use-simulator": "1" } },
+      ),
+    );
+
+    const [input] = fetchMock.mock.calls[0] as [Request, RequestInit];
+    const url = new URL(input instanceof Request ? input.url : String(input));
+    expect(url.origin + url.pathname).toBe(
+      "http://127.0.0.1:8789/internal/arena/frame/desk/image/12",
+    );
   });
 
   it("forwards the api cache policy", async () => {

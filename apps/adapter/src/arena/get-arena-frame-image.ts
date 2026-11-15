@@ -6,6 +6,7 @@ import { LOCAL_SERVICE_URLS } from "@tom/constants/service-urls";
 import { readCloudflareEnv } from "@tom/utils/config";
 import { getRequestEnv, logContextFromRequest } from "@tom/utils/worker";
 import { AdapterError, runAdapter } from "../runtime";
+import { simulatorEnv } from "../simulator";
 
 const FrameImageParamsSchema = Schema.toStandardSchemaV1(
   Schema.Struct({ slug: Schema.String, id: Schema.FiniteFromString }),
@@ -33,11 +34,14 @@ const fetchFrame = (
       try: () => readCloudflareEnv(getRequestEnv(request)),
       catch: unavailable,
     });
-    const base = env.API_URL ?? LOCAL_SERVICE_URLS.api;
+    const resolved = simulatorEnv(env, request);
+    const base = resolved.API_URL ?? LOCAL_SERVICE_URLS.api;
     const headers = new Headers();
-    if (env.INTERNAL_API_TOKEN) headers.set(INTERNAL_TOKEN_HEADER, env.INTERNAL_API_TOKEN);
+    if (resolved.INTERNAL_API_TOKEN) {
+      headers.set(INTERNAL_TOKEN_HEADER, resolved.INTERNAL_API_TOKEN);
+    }
 
-    const send = env.API?.fetch.bind(env.API) ?? fetch;
+    const send = resolved.API?.fetch.bind(resolved.API) ?? fetch;
     const path = `/internal/arena/frame/${encodeURIComponent(slug)}/image/${id}`;
     const response = yield* Effect.tryPromise({
       try: () => send(new Request(new URL(path, base), { headers })),

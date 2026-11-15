@@ -3,10 +3,10 @@ import {
   postQuerySchema,
   proxyCachedCms,
   rejectWorkCategory,
-  sessionHeaders,
   toUpstreamQuery,
   WORKS_PAGE_SIZE,
 } from "./shared";
+import { sessionHeaders } from "../auth/forward";
 
 export const listWorksRoute = new Elysia().get(
   "/content/works",
