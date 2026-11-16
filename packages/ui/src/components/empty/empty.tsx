@@ -4,7 +4,7 @@ import type { JSX } from "@solidjs/web";
 import { Button } from "../button/button";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { monoFont, radius } from "../../styles/primitives.stylex";
-import { fontSizeBase, fontSizeMd, fontSizeSm } from "../../styles/typography.stylex";
+import { fontSizeBase, fontSizeSm, fontSizeXl } from "../../styles/typography.stylex";
 
 export const MIDORI_EMPTY_DEFAULT_VARIANTS = {
   size: "base",
@@ -30,8 +30,8 @@ const styles = stylex.create({
   sizeLg: { padding: "3rem 2.5rem", gap: "1.25rem" },
   body: { display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" },
   title: {
-    fontSize: fontSizeMd.fontSize,
-    lineHeight: fontSizeMd.lineHeight,
+    fontSize: fontSizeXl.fontSize,
+    lineHeight: fontSizeXl.lineHeight,
     fontWeight: 530,
   },
   description: {

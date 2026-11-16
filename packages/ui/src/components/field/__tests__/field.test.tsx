@@ -42,6 +42,18 @@ describe("Field", () => {
     expect(container.querySelector("label")).toBeNull();
   });
 
+  it("does not point aria-labelledby at a label that hideLabel keeps out of the DOM", () => {
+    const { container } = render(() => (
+      <Field label="Email" hideLabel>
+        <input aria-label="Email" />
+      </Field>
+    ));
+
+    const control = container.querySelector("input");
+    expect(control?.hasAttribute("aria-labelledby")).toBe(false);
+    expect(control?.getAttribute("aria-label")).toBe("Email");
+  });
+
   it("shows the description when there is no error", () => {
     const { container } = render(() => (
       <Field label="Email" description="We never share it.">

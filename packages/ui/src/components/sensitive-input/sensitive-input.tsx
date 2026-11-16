@@ -3,6 +3,7 @@ import type { JSX } from "@solidjs/web";
 import { createSignal, createUniqueId, merge, omit, Show } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
+import { fontSizeXs } from "../../styles/typography.stylex";
 import { copyReveal } from "./sensitive-input.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 import { inputVariants, type MidoriInputSize, type MidoriInputVariant } from "../input/input";
@@ -119,7 +120,7 @@ const styles = stylex.create({
     backgroundColor: colors["--color-midori-brand"],
     boxShadow: "none",
     color: "#fff",
-    fontSize: "0.75rem",
+    fontSize: fontSizeXs.fontSize,
     opacity: copyReveal.opacity,
     transitionProperty: "opacity",
     transform: "translateY(-100%)",

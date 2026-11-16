@@ -29,12 +29,6 @@ export const fontWeightControl = stylex.defineConsts({
   fontWeight: 530,
 });
 
-/** Dialog and empty-state titles. */
-export const fontSizeMd = stylex.defineConsts({
-  fontSize: "15px",
-  lineHeight: "20px",
-});
-
 export const fontSizeBase = stylex.defineConsts({
   fontSize: "14px",
   lineHeight: "1.5",

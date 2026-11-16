@@ -15,7 +15,7 @@ import { createDisclosureState } from "../../utils/state";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
+import { fontSizeLg, fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 export const MIDORI_POPOVER_DEFAULT_VARIANTS = {
   side: "bottom",
@@ -47,6 +47,7 @@ const styles = stylex.create({
     fontSize: fontSizeSm.fontSize,
     color: textColors["--text-color-midori-default"],
     boxShadow: elevation["--elevation-midori-floating"],
+    outlineOffset: "var(--midori-popover-outline-offset)",
     transitionProperty: "opacity, scale",
     transitionDuration: "120ms",
     [STARTING]: { opacity: 0, scale: 0.96 },
@@ -62,7 +63,7 @@ const styles = stylex.create({
 
   title: {
     margin: 0,
-    fontSize: fontSizeSm.fontSize,
+    fontSize: fontSizeLg.fontSize,
     lineHeight: "20px",
     fontWeight: fontWeightControl.fontWeight,
   },
@@ -72,9 +73,6 @@ const styles = stylex.create({
     lineHeight: "20px",
     color: textColors["--text-color-midori-subtle"],
   },
-
-  // In dark mode the offset goes inward, to line up with the inner arrow stroke.
-  darkOutline: { "@media (prefers-color-scheme: dark)": { outlineOffset: "-1px" } },
 
   arrowFill: { fill: colors["--color-midori-base"] },
   arrowEdge: { fill: colors["--color-midori-arrow-edge"] },
@@ -229,12 +227,7 @@ export function PopoverContent(props: PopoverContentProps): JSX.Element {
           role="dialog"
           tabindex={-1}
           ref={(el: HTMLDivElement) => ctx.setContentRef(el)}
-          {...stylex.attrs(
-            styles.content,
-            styles.darkOutline,
-            sideStyles[merged.side],
-            merged.style,
-          )}
+          {...stylex.attrs(styles.content, sideStyles[merged.side], merged.style)}
           {...rest}
         >
           {merged.children}

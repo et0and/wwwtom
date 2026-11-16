@@ -18,6 +18,18 @@
   color-scheme: dark;
 }
 
+/* Non-colour dark-mode values switch on `data-mode`; `light-dark()` only
+   accepts colours. The :root defaults cover the pre-hydration state. */
+:root {
+  --midori-link-external-stroke: 1.75;
+  --midori-popover-outline-offset: 0;
+}
+
+:root[data-mode="dark"] {
+  --midori-link-external-stroke: 2;
+  --midori-popover-outline-offset: -1px;
+}
+
 /* Explicit light/dark elevation. Colors use `light-dark()`, but shadows are not
    colors, so the two ramps need a direct switch. Keep in sync with
    elevation.stylex.ts. */

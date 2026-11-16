@@ -17,7 +17,7 @@ import { createDisclosureState } from "../../utils/state";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { fontSizeMd, fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
+import { fontSizeLg, fontSizeSm, fontWeightControl } from "../../styles/typography.stylex";
 
 export const MIDORI_DIALOG_DEFAULT_VARIANTS = {
   size: "base",
@@ -108,8 +108,8 @@ const styles = stylex.create({
   },
   title: {
     margin: 0,
-    fontSize: fontSizeMd.fontSize,
-    lineHeight: fontSizeMd.lineHeight,
+    fontSize: fontSizeLg.fontSize,
+    lineHeight: fontSizeLg.lineHeight,
     fontWeight: fontWeightControl.fontWeight,
     color: textColors["--text-color-midori-default"],
   },

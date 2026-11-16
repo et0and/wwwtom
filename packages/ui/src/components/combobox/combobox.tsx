@@ -182,7 +182,7 @@ const styles = stylex.create({
     backgroundColor: colors["--color-midori-overlay"],
     paddingInlineStart: "0.5rem",
     paddingInlineEnd: "3px",
-    fontSize: "0.8125rem",
+    fontSize: fontSizeSm.fontSize,
     boxShadow: "0 0 0 1px " + hairlineColor,
   },
   chipRemove: {

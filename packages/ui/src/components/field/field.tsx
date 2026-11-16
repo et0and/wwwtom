@@ -170,7 +170,8 @@ export function FieldRoot(props: FieldProps): JSX.Element {
     if (!control) return;
     if (!control.id) control.id = controlId();
     const hasLabel =
-      Boolean(merged.label) || Boolean(rootElement()?.querySelector("[data-slot=field-label]"));
+      Boolean(merged.label && !merged.hideLabel) ||
+      Boolean(rootElement()?.querySelector("[data-slot=field-label]"));
     if (hasLabel && !control.hasAttribute("aria-labelledby")) {
       control.setAttribute("aria-labelledby", labelId);
     }

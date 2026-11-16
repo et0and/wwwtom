@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { colors, textColors } from "../../styles/colors.stylex";
-import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
+import { fontSizeBase, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
 export const MIDORI_TABLE_DEFAULT_VARIANTS = {
   layout: "auto",
@@ -18,7 +18,7 @@ const styles = stylex.create({
     width: "100%",
     borderCollapse: "collapse",
     textAlign: "left",
-    fontSize: fontSizeSm.fontSize,
+    fontSize: fontSizeBase.fontSize,
     color: textColors["--text-color-midori-default"],
   },
   layoutFixed: { tableLayout: "fixed" },

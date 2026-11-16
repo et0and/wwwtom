@@ -4,15 +4,11 @@ import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { radius } from "../../styles/primitives.stylex";
 
-/**
- * OS dark-mode query. Matches initColorMode() in ../../utils/color-mode.ts,
- * which follows the OS setting and offers no user override. The old rules keyed
- * off the data-mode attribute, so this is equivalent and also applies before
- * hydration, when the attribute is not set yet.
- */
-const DARK = "@media (prefers-color-scheme: dark)";
-
 const linkColor = textColors["--text-color-midori-link"];
+
+/** Softer underline at rest; the stroked icon needs more weight on dark. */
+const underlineColor = (percent: number): string =>
+  `color-mix(in oklch, currentColor ${percent}%, transparent)`;
 
 const styles = stylex.create({
   root: {
@@ -34,15 +30,13 @@ const styles = stylex.create({
     textDecorationLine: "underline",
     textUnderlineOffset: "0.15em",
     textDecorationThickness: "0.0625em",
-    textDecorationColor: "color-mix(in oklch, currentColor 35%, transparent)",
+    textDecorationColor: `light-dark(${underlineColor(35)}, ${underlineColor(65)})`,
     transitionProperty: "color, text-decoration-color",
-    [DARK]: { textDecorationColor: "color-mix(in oklch, currentColor 65%, transparent)" },
     ":hover": { textDecorationColor: "currentColor" },
   },
   /** A thicker stroke keeps the external-link icon visible on dark backgrounds. */
   externalIcon: {
-    strokeWidth: 1.75,
-    [DARK]: { strokeWidth: 2 },
+    strokeWidth: "var(--midori-link-external-stroke)",
   },
 });
 

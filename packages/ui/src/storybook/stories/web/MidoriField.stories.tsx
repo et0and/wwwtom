@@ -47,7 +47,7 @@ export const Optional = meta.story({
 export const HiddenLabel = meta.story({
   render: () => (
     <Field label="Search" hideLabel>
-      <Input placeholder="Search…" type="search" />
+      <Input placeholder="Search…" type="search" aria-label="Search" />
     </Field>
   ),
 });
