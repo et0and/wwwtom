@@ -146,6 +146,26 @@ describe("Autocomplete", () => {
     });
   });
 
+  it("points aria-activedescendant at the highlighted option", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["alpha", "beta"]}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const input = container.querySelector("[data-midori-part=input]")!;
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-midori-part=item]");
+      expect(input.getAttribute("aria-activedescendant")).toBe(items[0]?.getAttribute("id"));
+    });
+  });
+
   it("wraps to the last option when ArrowUp is pressed with nothing active", async () => {
     const { container } = render(() => (
       <Autocomplete items={["alpha", "beta"]}>

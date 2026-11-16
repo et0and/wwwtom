@@ -9,27 +9,34 @@ import { customProperties } from "../../utils/stylex-vars";
 import { buttonEmphasisVars } from "./button-vars.stylex";
 import { Loader } from "../loader/loader";
 
+export const MIDORI_BUTTON_VARIANTS = {
+  form: ["base", "square", "circle"],
+  size: ["xs", "sm", "base", "lg"],
+  variant: [
+    "primary",
+    "secondary",
+    "ghost",
+    "destructive",
+    "secondary-destructive",
+    "outline",
+    "neutral",
+    "contrast",
+    "danger",
+    "warning",
+    "ghost-muted",
+    "ghost-faint",
+  ],
+} as const;
+
 export const MIDORI_BUTTON_DEFAULT_VARIANTS = {
   form: "base",
   size: "base",
   variant: "secondary",
 } as const;
 
-export type MidoriButtonForm = "base" | "square" | "circle";
-export type MidoriButtonSize = "xs" | "sm" | "base" | "lg";
-export type MidoriButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "destructive"
-  | "secondary-destructive"
-  | "outline"
-  | "neutral"
-  | "contrast"
-  | "danger"
-  | "warning"
-  | "ghost-muted"
-  | "ghost-faint";
+export type MidoriButtonForm = (typeof MIDORI_BUTTON_VARIANTS.form)[number];
+export type MidoriButtonSize = (typeof MIDORI_BUTTON_VARIANTS.size)[number];
+export type MidoriButtonVariant = (typeof MIDORI_BUTTON_VARIANTS.variant)[number];
 
 const disabledBase = {
   opacity: 0.5,

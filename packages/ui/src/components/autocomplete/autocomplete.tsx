@@ -353,8 +353,13 @@ function Item(props: AutocompleteItemProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({}, props);
   const isHighlighted = (): boolean => ctx.activeValue() === merged.value;
+  /** Matches the `aria-activedescendant` id built by the input. */
+  const optionIndex = (): number => ctx.items().indexOf(String(merged.value));
+  const optionId = (): string | undefined =>
+    optionIndex() === -1 ? undefined : `${ctx.listId}-option-${optionIndex()}`;
   return (
     <button
+      id={optionId()}
       data-midori-component="Autocomplete"
       data-midori-part="item"
       type="button"
