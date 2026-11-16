@@ -53,13 +53,27 @@ const initialColorMode = (context: DocsContextProps): ColorMode =>
 
 type GlobalsPayload = { globals?: { readonly colorMode?: string } };
 
+/**
+ * Storybook remounts the docs container on every global change, so component
+ * state cannot carry the mode across renders. Keep the latest value at module
+ * scope and seed every new mount from it.
+ */
+type DocsModeStore = { current: ColorMode | undefined };
+
+const docsMode: DocsModeStore = { current: undefined };
+
 const MidoriDocsContainer = (props: DocsContainerProps) => {
-  const [mode, setMode] = useState<ColorMode>(() => initialColorMode(props.context));
+  const [mode, setMode] = useState<ColorMode>(
+    () => docsMode.current ?? initialColorMode(props.context),
+  );
+  docsMode.current = mode;
 
   useEffect(() => {
     const { channel } = props.context;
     const handleGlobals = (payload: GlobalsPayload): void => {
-      setMode(colorModeOf(payload.globals?.colorMode));
+      const next = colorModeOf(payload.globals?.colorMode);
+      docsMode.current = next;
+      setMode(next);
     };
     channel.on(SET_GLOBALS, handleGlobals);
     channel.on(GLOBALS_UPDATED, handleGlobals);
