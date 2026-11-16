@@ -1,0 +1,53 @@
+import preview from "#.storybook/preview";
+import { DatePicker } from "@tom/ui/date-picker";
+import { fn } from "storybook/test";
+
+const meta = preview.meta({
+  title: "web/DatePicker",
+  component: DatePicker,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+  args: { onChange: fn() },
+});
+
+export const Default = meta.story({
+  args: {
+    defaultValue: "2026-09-06",
+  },
+});
+
+export const WithPlaceholder = meta.story({
+  args: {
+    placeholder: "Select a date",
+  },
+});
+
+export const ExtraSmall = meta.story({
+  args: {
+    size: "xs",
+    defaultValue: "2026-09-06",
+  },
+});
+
+export const Small = meta.story({
+  args: {
+    size: "sm",
+    defaultValue: "2026-09-06",
+  },
+});
+
+export const Large = meta.story({
+  args: {
+    size: "lg",
+    defaultValue: "2026-09-06",
+  },
+});
+
+export const Disabled = meta.story({
+  args: {
+    disabled: true,
+    defaultValue: "2026-09-06",
+  },
+});

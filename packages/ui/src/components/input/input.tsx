@@ -1,74 +1,103 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createUniqueId, merge, omit, Show } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 
-const focusColor = colors["--color-tomui-focus"];
-const dangerColor = textColors["--text-color-tomui-danger"];
-/** Matches Tailwind's `ring-<color>/50` alpha modifier. StyleX needs literals. */
-const focusRing = "0 0 0 1.5px color-mix(in srgb, " + focusColor + " 50%, transparent)";
-const dangerRing = "0 0 0 1.5px color-mix(in srgb, " + dangerColor + " 50%, transparent)";
+const focusColor = colors["--color-midori-focus"];
+const dangerColor = textColors["--text-color-midori-danger"];
 
-export const TOMUI_INPUT_DEFAULT_VARIANTS = {
+export const MIDORI_INPUT_DEFAULT_VARIANTS = {
   size: "base",
   variant: "default",
 } as const;
 
-export type TomuiInputSize = "xs" | "sm" | "base" | "lg";
-export type TomuiInputVariant = "default" | "error";
+export type MidoriInputSize = "xs" | "sm" | "base" | "lg";
+export type MidoriInputVariant = "default" | "error";
 
-export interface TomuiInputVariantsProps {
-  size?: TomuiInputSize | undefined;
-  variant?: TomuiInputVariant | undefined;
+export interface MidoriInputVariantsProps {
+  size?: MidoriInputSize | undefined;
+  variant?: MidoriInputVariant | undefined;
   parentFocusIndicator?: boolean | undefined;
   focusIndicator?: boolean | undefined;
 }
 
 const styles = stylex.create({
   base: {
+    width: "100%",
     borderWidth: 0,
-    backgroundColor: colors["--color-tomui-control"],
-    color: textColors["--text-color-tomui-default"],
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-midori-control"],
+    color: textColors["--text-color-midori-default"],
+    fontFamily: "inherit",
+    fontWeight: 440,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
     outlineWidth: 0,
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "-1px",
+    boxShadow: elevation["--elevation-midori-input"],
+    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
+    ":disabled": { opacity: 0.5, cursor: "not-allowed" },
     // StyleX compiles this to a real ::placeholder rule, which replaces the old
-    // vanilla .tomui-input-placeholder class.
-    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
+    // vanilla .midori-input-placeholder class.
+    "::placeholder": { color: textColors["--text-color-midori-placeholder"] },
   },
   sizeXs: {
-    height: "1.25rem",
-    paddingInline: "0.375rem",
+    height: "1.5rem",
+    paddingInline: "0.5rem",
     borderRadius: radius.sm,
     fontSize: fontSizeXs.fontSize,
+    lineHeight: "16px",
   },
   sizeSm: {
-    height: "1.625rem",
-    paddingInline: "0.5rem",
-    borderRadius: radius.md,
-    fontSize: fontSizeXs.fontSize,
+    height: "1.5rem",
+    paddingInline: "0.5625rem",
+    borderRadius: radius.sm,
+    fontSize: fontSizeSm.fontSize,
   },
   sizeBase: {
-    height: "2.25rem",
-    paddingInline: "0.75rem",
-    borderRadius: radius.lg,
-    fontSize: fontSizeBase.fontSize,
+    height: "1.75rem",
+    paddingInline: "0.6875rem",
+    borderRadius: radius.md,
+    fontSize: fontSizeSm.fontSize,
   },
   sizeLg: {
-    height: "2.5rem",
-    paddingInline: "1rem",
-    borderRadius: radius.lg,
-    fontSize: fontSizeBase.fontSize,
+    height: "2rem",
+    paddingInline: "0.9375rem",
+    borderRadius: radius.md,
+    fontSize: fontSizeSm.fontSize,
   },
-  /** At rest the error ring replaces the line ring, as the old !ring override did. */
-  variantError: { boxShadow: "0 0 0 1px " + dangerColor },
-  focus: { ":focus": { boxShadow: focusRing } },
-  focusError: { ":focus": { boxShadow: dangerRing } },
-  parentFocus: { ":focus-within": { boxShadow: focusRing } },
-  parentFocusError: { ":focus-within": { boxShadow: dangerRing } },
+  /** At rest the error ring replaces the input elevation. */
+  variantError: { outlineWidth: "1px", outlineColor: dangerColor, boxShadow: "none" },
+  focus: {
+    outlineWidth: "1px",
+    outlineColor: focusColor,
+    boxShadow: "none",
+  },
+  focusError: {
+    outlineWidth: "1px",
+    outlineColor: dangerColor,
+    boxShadow: "none",
+  },
+  parentFocus: {
+    ":focus-within": {
+      outlineWidth: "1px",
+      outlineColor: focusColor,
+      boxShadow: "none",
+    },
+  },
+  parentFocusError: {
+    ":focus-within": {
+      outlineWidth: "1px",
+      outlineColor: dangerColor,
+      boxShadow: "none",
+    },
+  },
 });
 
 const sizeStyles = {
@@ -76,15 +105,15 @@ const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiInputSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriInputSize, stylex.StyleXStyles>;
 
 /**
  * The return type is inferred on purpose: StyleX types a `create` member that
  * holds only pseudo keys as a pseudo map, which `stylex.StyleXStyles` does not
  * cover. Spreading the result into `stylex.attrs()` works regardless.
  */
-export function inputVariants(props: TomuiInputVariantsProps = {}) {
-  const merged = merge(TOMUI_INPUT_DEFAULT_VARIANTS, props);
+export function inputVariants(props: MidoriInputVariantsProps = {}) {
+  const merged = merge(MIDORI_INPUT_DEFAULT_VARIANTS, props);
   const isError = merged.variant === "error";
   const focusStyle = () => {
     if (merged.parentFocusIndicator) return isError ? styles.parentFocusError : styles.parentFocus;
@@ -101,8 +130,8 @@ export function inputVariants(props: TomuiInputVariantsProps = {}) {
 }
 
 export type InputProps = Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "size" | "style"> & {
-  size?: TomuiInputSize | undefined;
-  variant?: TomuiInputVariant | undefined;
+  size?: MidoriInputSize | undefined;
+  variant?: MidoriInputVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   description?: JSX.Element | undefined;
@@ -114,7 +143,7 @@ export type InputProps = Omit<JSX.InputHTMLAttributes<HTMLInputElement>, "size" 
 
 export function Input(props: InputProps): JSX.Element {
   const merged = merge(
-    { size: TOMUI_INPUT_DEFAULT_VARIANTS.size, passwordManagerIgnore: false },
+    { size: MIDORI_INPUT_DEFAULT_VARIANTS.size, passwordManagerIgnore: false },
     props,
   );
   const rest = omit(
@@ -128,7 +157,7 @@ export function Input(props: InputProps): JSX.Element {
     "passwordManagerIgnore",
     "style",
   );
-  const variant = (): TomuiInputVariant => merged.variant ?? (merged.error ? "error" : "default");
+  const variant = (): MidoriInputVariant => merged.variant ?? (merged.error ? "error" : "default");
   const required = (): boolean | undefined => {
     if (rest.required === undefined || rest.required === false) return rest.required;
     return true;
@@ -138,7 +167,7 @@ export function Input(props: InputProps): JSX.Element {
     merged.id === undefined || merged.id === false ? generatedId : merged.id;
   const input = (): JSX.Element => (
     <input
-      data-tomui-component="Input"
+      data-midori-component="Input"
       {...stylex.attrs(
         ...inputVariants({
           size: merged.size,

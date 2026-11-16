@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { Meter } from "../meter";
 
 const indicatorWidth = (container: HTMLElement): string =>
-  (container.querySelector("[data-tomui-component=Meter] > div > div") as HTMLElement).style.width;
+  (container.querySelector("[data-midori-component=Meter] > div > div") as HTMLElement).style.width;
 
 describe("Meter", () => {
   it("exposes the value through meter ARIA attributes", () => {

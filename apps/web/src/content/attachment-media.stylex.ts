@@ -19,8 +19,8 @@ export const attachmentMediaStyles = stylex.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: "9999px",
-    backgroundColor: `color-mix(in srgb, ${colors["--color-black"]} 60%, transparent)`,
-    color: colors["--color-white"],
+    backgroundColor: `color-mix(in srgb, "#000" 60%, transparent)`,
+    color: "#fff",
   },
   playIcon: {
     height: "1.5rem",
@@ -41,7 +41,7 @@ export const attachmentMediaStyles = stylex.create({
     width: "100%",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors["--color-tomui-tint"],
+    backgroundColor: colors["--color-midori-tint"],
   },
   figure: { margin: 0 },
 });

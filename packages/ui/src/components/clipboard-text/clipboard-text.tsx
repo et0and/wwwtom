@@ -13,11 +13,11 @@ interface CopyResetTimer {
   current: ReturnType<typeof setTimeout> | undefined;
 }
 
-export const TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS = {
+export const MIDORI_CLIPBOARD_TEXT_DEFAULT_VARIANTS = {
   size: "lg",
 } as const;
 
-export type TomuiClipboardTextSize = "sm" | "base" | "lg";
+export type MidoriClipboardTextSize = "sm" | "base" | "lg";
 
 const styles = stylex.create({
   root: {
@@ -27,12 +27,12 @@ const styles = stylex.create({
     // Overrides the horizontal padding that inputVariants sets, so the text
     // label controls its own inset.
     paddingInline: 0,
-    backgroundColor: colors["--color-tomui-base"],
-    ...monoFont,
+    backgroundColor: colors["--color-midori-base"],
+    fontFamily: monoFont.fontFamily,
   },
-  sizeSm: { fontSize: "0.75rem" },
-  sizeBase: { fontSize: "0.8125rem" },
-  sizeLg: { fontSize: "0.8125rem" },
+  sizeSm: { fontSize: "12px" },
+  sizeBase: { fontSize: "13px" },
+  sizeLg: { fontSize: "13px" },
   copyButton: {
     position: "relative",
     isolation: "isolate",
@@ -41,19 +41,17 @@ const styles = stylex.create({
     borderBottomLeftRadius: 0,
     borderTopRightRadius: "inherit",
     borderBottomRightRadius: "inherit",
-    borderLeftWidth: "1px",
-    borderLeftColor: colors["--color-tomui-line"],
+    borderLeftWidth: "0.5px",
+    borderLeftColor: colors["--color-midori-line"],
     paddingInline: "0.75rem",
     transitionProperty: "all",
     transitionDuration: "200ms",
     ":focus": {
-      boxShadow:
-        "inset 0 0 0 1.5px color-mix(in srgb, " +
-        colors["--color-tomui-focus"] +
-        " 50%, transparent)",
-    },
-    ":focus-visible": {
-      boxShadow: "inset 0 0 0 2px " + colors["--color-tomui-brand"],
+      outlineWidth: "1px",
+      outlineStyle: "solid",
+      outlineColor: colors["--color-midori-focus"],
+      outlineOffset: "-1px",
+      boxShadow: "none",
     },
   },
   /** The two marks cross-fade by sliding vertically past each other. */
@@ -90,7 +88,7 @@ const styles = stylex.create({
     overflow: "hidden",
     textOverflow: "ellipsis",
     whiteSpace: "nowrap",
-    paddingInlineStart: "1rem",
+    paddingInlineStart: "0.75rem",
     paddingInlineEnd: "0.5rem",
   },
 });
@@ -99,16 +97,16 @@ const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} satisfies Record<TomuiClipboardTextSize, stylex.StyleXStyles>;
+} satisfies Record<MidoriClipboardTextSize, stylex.StyleXStyles>;
 
 /** ClipboardText sizes map one to one onto Button sizes. */
 const buttonSize = {
   sm: "sm",
   base: "base",
   lg: "lg",
-} as const satisfies Record<TomuiClipboardTextSize, "sm" | "base" | "lg">;
+} as const satisfies Record<MidoriClipboardTextSize, "sm" | "base" | "lg">;
 
-export interface TomuiClipboardTextVariantsProps {
+export interface MidoriClipboardTextVariantsProps {
   /**
    * Size of the clipboard text field.
    * - `"sm"` — Small clipboard text for compact UIs
@@ -116,13 +114,13 @@ export interface TomuiClipboardTextVariantsProps {
    * - `"lg"` — Large clipboard text for prominent display
    * @default "lg"
    */
-  size?: TomuiClipboardTextSize;
+  size?: MidoriClipboardTextSize;
 }
 
 export function clipboardTextVariants(
-  props: TomuiClipboardTextVariantsProps = {},
+  props: MidoriClipboardTextVariantsProps = {},
 ): stylex.StyleXStyles[] {
-  const merged = merge(TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_CLIPBOARD_TEXT_DEFAULT_VARIANTS, props);
   return [styles.root, sizeStyles[merged.size]];
 }
 
@@ -145,7 +143,7 @@ export interface ClipboardTextTooltip {
  * <ClipboardText text="npm install @tom/ui" size="sm" />
  * ```
  */
-export interface ClipboardTextProps extends TomuiClipboardTextVariantsProps {
+export interface ClipboardTextProps extends MidoriClipboardTextVariantsProps {
   /** The text to display and copy to clipboard. */
   text: string;
   /** If provided, this text will be copied to clipboard instead of the `text` prop. */
@@ -209,7 +207,7 @@ function CopyMarkIcon(): JSX.Element {
  * ```
  */
 export function ClipboardText(props: ClipboardTextProps): JSX.Element {
-  const merged = merge({ size: TOMUI_CLIPBOARD_TEXT_DEFAULT_VARIANTS.size }, props);
+  const merged = merge({ size: MIDORI_CLIPBOARD_TEXT_DEFAULT_VARIANTS.size }, props);
   const rest = omit(
     merged,
     "style",
@@ -283,7 +281,7 @@ export function ClipboardText(props: ClipboardTextProps): JSX.Element {
 
   return (
     <div
-      data-tomui-component="ClipboardText"
+      data-midori-component="ClipboardText"
       {...stylex.attrs(
         ...inputVariants({ size: sizeConfig() }),
         ...clipboardTextVariants({ size: merged.size }),

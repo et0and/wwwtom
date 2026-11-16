@@ -6,15 +6,15 @@ const classList = (element: Element): string[] =>
   (element.getAttribute("class") ?? "").split(" ").filter(Boolean);
 
 const inputOf = (container: HTMLElement): HTMLInputElement =>
-  container.querySelector("[data-tomui-component=Switch][type=checkbox]")!;
+  container.querySelector("[data-midori-component=Switch][type=checkbox]")!;
 
 describe("switchVariants", () => {
-  it("gives each size a different track style", () => {
-    const sm = classList(document.createElement("input"));
-    expect(sm).toHaveLength(0);
+  it("gives each size a different thumb style", () => {
+    const thumbOf = (container: HTMLElement): Element =>
+      container.querySelector("[data-slot=switch-thumb]")!;
     const { container: small } = render(() => <Switch size="sm" />);
     const { container: large } = render(() => <Switch size="lg" />);
-    expect(classList(inputOf(small))).not.toEqual(classList(inputOf(large)));
+    expect(classList(thumbOf(small))).not.toEqual(classList(thumbOf(large)));
   });
 
   it("returns different styles for the checked and unchecked states", () => {

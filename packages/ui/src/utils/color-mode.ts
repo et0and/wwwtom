@@ -1,10 +1,10 @@
 import { onSettled } from "solid-js";
 
-export type TomuiColorMode = "light" | "dark";
+export type MidoriColorMode = "light" | "dark";
 
 const COLOR_MODE_QUERY = "(prefers-color-scheme: dark)";
 
-export function applyColorMode(mode: TomuiColorMode): void {
+export function applyColorMode(mode: MidoriColorMode): void {
   document.documentElement.dataset.mode = mode;
   document.documentElement.style.colorScheme = mode;
 }

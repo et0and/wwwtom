@@ -3,14 +3,14 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
   BOLDABLE_VARIANTS,
   DEFAULT_ELEMENT_BY_VARIANT,
-  TOMUI_TEXT_DEFAULT_VARIANTS,
+  MIDORI_TEXT_DEFAULT_VARIANTS,
   textStyles,
-  type TomuiTextSize,
-  type TomuiTextVariant,
+  type MidoriTextSize,
+  type MidoriTextVariant,
 } from "../variants";
 import { Text } from "../text";
 
-const VARIANTS: ReadonlyArray<TomuiTextVariant> = [
+const VARIANTS: ReadonlyArray<MidoriTextVariant> = [
   "heading",
   "body",
   "secondary",
@@ -20,7 +20,7 @@ const VARIANTS: ReadonlyArray<TomuiTextVariant> = [
   "mono-secondary",
 ];
 
-const SIZES: ReadonlyArray<TomuiTextSize> = ["xs", "sm", "base", "lg"];
+const SIZES: ReadonlyArray<MidoriTextSize> = ["xs", "sm", "base", "lg"];
 
 afterEach(cleanup);
 
@@ -29,7 +29,7 @@ const classAttr = (element: Element): string => element.getAttribute("class") ??
 
 describe("Text variants", () => {
   it("defaults to the body variant at base size", () => {
-    expect(TOMUI_TEXT_DEFAULT_VARIANTS).toEqual({ variant: "body", size: "base" });
+    expect(MIDORI_TEXT_DEFAULT_VARIANTS).toEqual({ variant: "body", size: "base" });
   });
 
   it("renders every variant without throwing", () => {

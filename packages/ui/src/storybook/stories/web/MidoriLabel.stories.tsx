@@ -1,0 +1,47 @@
+import preview from "#.storybook/preview";
+import { Label } from "@tom/ui/label";
+
+const meta = preview.meta({
+  title: "web/Label",
+  component: Label,
+  parameters: {
+    layout: "centered",
+  },
+  tags: ["autodocs"],
+});
+
+export const Default = meta.story({
+  args: {
+    children: "Email",
+  },
+});
+
+export const Optional = meta.story({
+  args: {
+    children: "Nickname",
+    showOptional: true,
+  },
+});
+
+export const WithTooltip = meta.story({
+  args: {
+    children: "Username",
+    tooltip: "Lowercase letters and numbers only.",
+  },
+});
+
+export const ForInput = meta.story({
+  args: {
+    htmlFor: "email-input",
+    children: "Email",
+  },
+});
+
+export const AsContent = meta.story({
+  render: () => (
+    <label style={{ display: "inline-flex", "align-items": "center", gap: "0.5rem" }}>
+      <input type="checkbox" />
+      <Label asContent>Accept terms</Label>
+    </label>
+  ),
+});

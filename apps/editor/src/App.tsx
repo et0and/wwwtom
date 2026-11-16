@@ -1,5 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
-import { Match, Show, Switch, createEffect, createSignal, onCleanup, onSettled } from "solid-js";
+import { Match, Show, Switch, createEffect, createSignal, onSettled } from "solid-js";
 import { Effect } from "effect";
 import { Banner } from "@tom/ui/banner";
 import { Loader } from "@tom/ui/loader";
@@ -77,7 +77,7 @@ export const App = (props: { navigate?: (url: string) => void }) => {
       sync();
       const observer = new ResizeObserver(sync);
       observer.observe(nav);
-      onCleanup(() => observer.disconnect());
+      return () => observer.disconnect();
     },
   );
 

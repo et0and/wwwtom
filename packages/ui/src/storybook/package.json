@@ -35,6 +35,8 @@
     "@vitest/browser-playwright": "^4.0.18",
     "@vitest/coverage-v8": "^4.0.18",
     "playwright": "^1.65.0",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
     "solid-js": "catalog:",
     "storybook": "^10.6.6",
     "storybook-solidjs-vite": "^10.7.1",

@@ -6,7 +6,7 @@ const classList = (element: Element): string[] =>
   (element.getAttribute("class") ?? "").split(" ").filter(Boolean);
 
 const itemOf = (container: HTMLElement): HTMLInputElement =>
-  container.querySelector("[data-tomui-part=item]")!;
+  container.querySelector("[data-midori-part=item]")!;
 
 describe("Radio", () => {
   it("renders a radiogroup with the items inside", () => {
@@ -18,7 +18,7 @@ describe("Radio", () => {
     ));
 
     expect(container.querySelector("[role=radiogroup]")).not.toBeNull();
-    expect(container.querySelectorAll("[data-tomui-part=item]")).toHaveLength(2);
+    expect(container.querySelectorAll("[data-midori-part=item]")).toHaveLength(2);
   });
 
   it("puts every item in the same group by name", () => {
@@ -29,7 +29,7 @@ describe("Radio", () => {
       </Radio>
     ));
 
-    const names = Array.from(container.querySelectorAll("[data-tomui-part=item]")).map((input) =>
+    const names = Array.from(container.querySelectorAll("[data-midori-part=item]")).map((input) =>
       input.getAttribute("name"),
     );
     expect(names[0]).toBeTruthy();
@@ -55,7 +55,7 @@ describe("Radio", () => {
       </Radio>
     ));
 
-    const items = container.querySelectorAll<HTMLInputElement>("[data-tomui-part=item]");
+    const items = container.querySelectorAll<HTMLInputElement>("[data-midori-part=item]");
     fireEvent.click(items[1]!);
 
     await vi.waitFor(() => {
@@ -79,7 +79,7 @@ describe("Radio", () => {
         <Radio.Item value="a" label="A" />
       </Radio>
     ));
-    const indicator = container.querySelector("[data-tomui-part=indicator]")!;
+    const indicator = container.querySelector("[data-midori-part=indicator]")!;
     expect(indicator.getAttribute("aria-hidden")).toBe("true");
     expect(classList(indicator).length).toBeGreaterThan(0);
   });
@@ -92,7 +92,7 @@ describe("Radio", () => {
     ));
     expect(container.textContent).toContain("First option");
     expect(
-      container.querySelector("[data-tomui-part=item-label]")?.getAttribute("data-variant"),
+      container.querySelector("[data-midori-part=item-label]")?.getAttribute("data-variant"),
     ).toBe("default");
   });
 
@@ -103,7 +103,7 @@ describe("Radio", () => {
       </Radio>
     ));
     expect(
-      container.querySelector("[data-tomui-part=item-label]")?.getAttribute("data-variant"),
+      container.querySelector("[data-midori-part=item-label]")?.getAttribute("data-variant"),
     ).toBe("error");
   });
 
@@ -129,7 +129,7 @@ describe("Radio", () => {
       </Radio>
     ));
 
-    const items = container.querySelectorAll<HTMLInputElement>("[data-tomui-part=item]");
+    const items = container.querySelectorAll<HTMLInputElement>("[data-midori-part=item]");
     expect(items[0]?.getAttribute("data-checked")).toBeNull();
     expect(items[1]?.getAttribute("data-checked")).toBeNull();
 

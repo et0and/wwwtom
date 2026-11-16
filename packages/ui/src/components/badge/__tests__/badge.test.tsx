@@ -24,7 +24,7 @@ describe("badgeVariants", () => {
 describe("Badge", () => {
   it("renders its children", () => {
     const { container } = render(() => <Badge>New</Badge>);
-    expect(container.querySelector("[data-tomui-component=Badge]")?.textContent).toBe("New");
+    expect(container.querySelector("[data-midori-component=Badge]")?.textContent).toBe("New");
   });
 
   it("shows a dot only for the variants that map to one", () => {
@@ -33,7 +33,7 @@ describe("Badge", () => {
         Ok
       </Badge>
     ));
-    expect(success.querySelector("[data-tomui-component=Badge] > span")).not.toBeNull();
+    expect(success.querySelector("[data-midori-component=Badge] > span")).not.toBeNull();
 
     const { container: primary } = render(() => (
       <Badge appearance="dot" variant="primary">
@@ -62,8 +62,8 @@ describe("Badge", () => {
   it("keeps the size styles on the beta outline variant", () => {
     const { container: beta } = render(() => <Badge variant="beta">Beta</Badge>);
     const { container: primary } = render(() => <Badge variant="primary">New</Badge>);
-    expect(classList(beta.querySelector("[data-tomui-component=Badge]")!)).not.toEqual(
-      classList(primary.querySelector("[data-tomui-component=Badge]")!),
+    expect(classList(beta.querySelector("[data-midori-component=Badge]")!)).not.toEqual(
+      classList(primary.querySelector("[data-midori-component=Badge]")!),
     );
   });
 });

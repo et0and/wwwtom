@@ -38,10 +38,10 @@ describe("Tabs", () => {
     });
   });
 
-  it("keeps the tomui-tabs-list marker class alongside its generated styles", () => {
+  it("keeps the midori-tabs-list marker class alongside its generated styles", () => {
     const { container } = render(() => <Tabs tabs={tabs} value="overview" />);
     const list = container.querySelector("[role=tablist]")!;
-    expect(classList(list)).toContain("tomui-tabs-list");
+    expect(classList(list)).toContain("midori-tabs-list");
     expect(classList(list).length).toBeGreaterThan(1);
   });
 
@@ -89,7 +89,7 @@ describe("Tabs", () => {
     ));
     expect(container.textContent).toContain("Overview body");
     expect(container.textContent).not.toContain("Posts body");
-    expect(container.querySelectorAll("[data-tomui-part=panel]")).toHaveLength(1);
+    expect(container.querySelectorAll("[data-midori-part=panel]")).toHaveLength(1);
   });
 
   it("keeps a forceMount panel in the DOM but hidden when inactive", () => {
@@ -100,7 +100,7 @@ describe("Tabs", () => {
         </TabsObj.Content>
       </TabsObj>
     ));
-    const panel = container.querySelector("[data-tomui-part=panel]")!;
+    const panel = container.querySelector("[data-midori-part=panel]")!;
     expect(panel.hasAttribute("hidden")).toBe(true);
   });
 });

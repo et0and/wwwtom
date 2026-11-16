@@ -4,9 +4,8 @@ import * as stylex from "@stylexjs/stylex";
 import { Button } from "../button/button";
 import { customProperties } from "../../utils/stylex-vars";
 import { bannerAccentVars } from "./banner-vars.stylex";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import type { TomuiBannerVariant } from "./banner";
+import { colors, textColors } from "../../styles/colors.stylex";
+import type { MidoriBannerVariant } from "./banner";
 
 /**
  * Visual variant for a `Banner.Action`, aligned with `Button`'s `variant` naming.
@@ -26,7 +25,7 @@ export type BannerActionSize = "xs" | "sm";
 /** Value shared from the `Banner` root to its `Banner.Action` children. */
 export interface BannerActionContextValue {
   /** Banner variant, used to pick the matching accent color. */
-  variant: TomuiBannerVariant;
+  variant: MidoriBannerVariant;
   /** Action size derived from the banner's own size. */
   size: BannerActionSize;
 }
@@ -50,11 +49,11 @@ export const BannerActionContext = createContext<BannerActionContextValue>({
  * `--banner-accent` custom property instead, and this value is set inline.
  */
 const BANNER_ACTION_ACCENTS = {
-  default: colors["--color-tomui-info"],
-  alert: colors["--color-tomui-warning"],
-  error: colors["--color-tomui-danger"],
-  secondary: colors["--color-tomui-focus"],
-} satisfies Record<TomuiBannerVariant, string>;
+  default: colors["--color-midori-info"],
+  alert: colors["--color-midori-warning"],
+  error: colors["--color-midori-danger"],
+  secondary: colors["--color-midori-focus"],
+} satisfies Record<MidoriBannerVariant, string>;
 
 const styles = stylex.create({
   secondary: {
@@ -77,22 +76,22 @@ const styles = stylex.create({
   secondaryMuted: {
     color: "inherit",
     boxShadow:
-      "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
-    fill: textColors["--text-color-tomui-subtle"],
+      "0 0 0 1px color-mix(in srgb, " + colors["--color-midori-focus"] + " 20%, transparent)",
+    fill: textColors["--text-color-midori-subtle"],
     ":hover": {
       color: "inherit",
       boxShadow:
-        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 20%, transparent)",
+        "0 0 0 1px color-mix(in srgb, " + colors["--color-midori-focus"] + " 20%, transparent)",
       backgroundColor:
-        "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+        "color-mix(in srgb, " + colors["--color-midori-contrast"] + " 10%, transparent)",
     },
   },
   ghostMuted: {
     color: "inherit",
-    fill: textColors["--text-color-tomui-subtle"],
+    fill: textColors["--text-color-midori-subtle"],
     ":hover": {
       backgroundColor:
-        "color-mix(in srgb, " + colors["--color-tomui-contrast"] + " 10%, transparent)",
+        "color-mix(in srgb, " + colors["--color-midori-contrast"] + " 10%, transparent)",
     },
   },
 });

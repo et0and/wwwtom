@@ -1,23 +1,22 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, createUniqueId, For, merge, omit, Show, useContext } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { createControllableSignal } from "../../utils/state";
 
-export const TOMUI_TABS_VARIANTS = {
-  variant: ["segmented", "underline"],
+export const MIDORI_TABS_VARIANTS = {
+  variant: ["segmented", "underline", "line"],
   size: ["base", "sm"],
 } as const;
 
-export const TOMUI_TABS_DEFAULT_VARIANTS = {
+export const MIDORI_TABS_DEFAULT_VARIANTS = {
   variant: "segmented",
   size: "base",
 } as const;
 
-export interface TomuiTabsVariantsProps {
-  variant?: (typeof TOMUI_TABS_VARIANTS.variant)[number];
-  size?: (typeof TOMUI_TABS_VARIANTS.size)[number];
+export interface MidoriTabsVariantsProps {
+  variant?: (typeof MIDORI_TABS_VARIANTS.variant)[number];
+  size?: (typeof MIDORI_TABS_VARIANTS.size)[number];
 }
 
 export type TabsItem = {
@@ -40,17 +39,17 @@ const TabsContext = createContext<TabsContextValue>({
   baseId: "",
 });
 
-const hairline = colors["--color-tomui-hairline"];
+const hairline = colors["--color-midori-hairline"];
 const hairline70 = "color-mix(in srgb, " + hairline + " 70%, transparent)";
-const recessed = colors["--color-tomui-recessed"];
-const subtleText = textColors["--text-color-tomui-subtle"];
-const defaultTextColor = textColors["--text-color-tomui-default"];
-const tint = colors["--color-tomui-tint"];
-const base = colors["--color-tomui-base"];
-const line = colors["--color-tomui-line"];
-const focus = colors["--color-tomui-focus"];
+const recessed = colors["--color-midori-recessed"];
+const subtleText = textColors["--text-color-midori-subtle"];
+const defaultTextColor = textColors["--text-color-midori-default"];
+const tint = colors["--color-midori-tint"];
+const base = colors["--color-midori-base"];
+const line = colors["--color-midori-line"];
+const focus = colors["--color-midori-focus"];
 const focus50 = "color-mix(in srgb, " + focus + " 50%, transparent)";
-const brand = colors["--color-tomui-brand"];
+const brand = colors["--color-midori-brand"];
 
 const styles = stylex.create({
   root: { position: "relative", isolation: "isolate", minWidth: 0, fontWeight: 500 },
@@ -91,6 +90,18 @@ const styles = stylex.create({
   },
   listUnderlineSm: { height: "1.625rem" },
   listUnderlineBase: { height: "1.875rem" },
+  /** The line strip: a 36px bar with a hairline underneath. */
+  listLine: {
+    gap: "0.25rem",
+    height: "2.25rem",
+    paddingInline: 0,
+    borderBottomWidth: "0.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: line,
+    overflowX: "auto",
+  },
+  listLineSm: { height: "2rem" },
+  listLineBase: { height: "2.25rem" },
   tabBase: {
     position: "relative",
     zIndex: 2,
@@ -106,7 +117,7 @@ const styles = stylex.create({
     ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
   },
   tabSm: { fontSize: "0.75rem", lineHeight: "1.333" },
-  tabBaseSize: { fontSize: "0.875rem", lineHeight: "1.5" },
+  tabBaseSize: { fontSize: "13px", lineHeight: 1.5 },
   tabSegmented: {
     marginBlock: "0.125rem",
     color: subtleText,
@@ -126,6 +137,24 @@ const styles = stylex.create({
   tabUnderlineSm: { paddingInline: "0.375rem", paddingBlock: "0.625rem" },
   tabUnderlineBase: { paddingInline: "0.5rem", paddingBlock: "0.75rem" },
   tabUnderlineSelected: { color: defaultTextColor },
+  tabLine: {
+    height: "100%",
+    paddingInline: "0.5rem",
+    paddingBlock: "0.375rem",
+    borderBottomWidth: "1.5px",
+    borderBottomStyle: "solid",
+    borderBottomColor: "transparent",
+    color: subtleText,
+    fontSize: "13px",
+    lineHeight: "20px",
+    fontWeight: 440,
+    ":hover": { color: defaultTextColor },
+  },
+  tabLineSelected: {
+    color: defaultTextColor,
+    fontWeight: 530,
+    borderBottomColor: defaultTextColor,
+  },
 });
 
 /**
@@ -139,16 +168,22 @@ const rootSegmentedSizeStyles = { sm: styles.rootSegmentedSm, base: styles.rootS
 const pillSizeStyles = { sm: styles.pillSm, base: styles.pillBase };
 const listSegmentedSizeStyles = { sm: styles.listSegmentedSm, base: styles.listSegmentedBase };
 const listUnderlineSizeStyles = { sm: styles.listUnderlineSm, base: styles.listUnderlineBase };
+const listLineSizeStyles = { sm: styles.listLineSm, base: styles.listLineBase };
 const tabFontSizeStyles = { sm: styles.tabSm, base: styles.tabBaseSize };
-const tabVariantStyles = { segmented: styles.tabSegmented, underline: styles.tabUnderline };
+const tabVariantStyles = {
+  segmented: styles.tabSegmented,
+  underline: styles.tabUnderline,
+  line: styles.tabLine,
+};
 const tabSegmentedSizeStyles = { sm: styles.tabSegmentedSm, base: styles.tabSegmentedBase };
 const tabUnderlineSizeStyles = { sm: styles.tabUnderlineSm, base: styles.tabUnderlineBase };
 const tabSelectedStyles = {
   segmented: styles.tabSegmentedSelected,
   underline: styles.tabUnderlineSelected,
+  line: styles.tabLineSelected,
 };
 
-export type TabsProps = TomuiTabsVariantsProps & {
+export type TabsProps = MidoriTabsVariantsProps & {
   tabs?: Array<TabsItem>;
   value?: string;
   defaultValue?: string;
@@ -163,8 +198,8 @@ export type TabsProps = TomuiTabsVariantsProps & {
 export function Tabs(props: TabsProps): JSX.Element {
   const merged = merge(
     {
-      variant: TOMUI_TABS_DEFAULT_VARIANTS.variant,
-      size: TOMUI_TABS_DEFAULT_VARIANTS.size,
+      variant: MIDORI_TABS_DEFAULT_VARIANTS.variant,
+      size: MIDORI_TABS_DEFAULT_VARIANTS.size,
       activateOnFocus: false,
       orientation: "horizontal" as const,
     },
@@ -248,15 +283,17 @@ export function Tabs(props: TabsProps): JSX.Element {
       merged.variant === "segmented" ? listSegmentedSizeStyles[merged.size] : undefined,
       merged.variant === "underline" ? styles.listUnderline : undefined,
       merged.variant === "underline" ? listUnderlineSizeStyles[merged.size] : undefined,
+      merged.variant === "line" ? styles.listLine : undefined,
+      merged.variant === "line" ? listLineSizeStyles[merged.size] : undefined,
     );
-    return { ...generated, class: ["tomui-tabs-list", generated.class].filter(Boolean).join(" ") };
+    return { ...generated, class: ["midori-tabs-list", generated.class].filter(Boolean).join(" ") };
   };
 
   return (
     <TabsContext value={contextValue}>
       <Show when={items().length > 0}>
         <div
-          data-tomui-component="Tabs"
+          data-midori-component="Tabs"
           {...stylex.attrs(
             styles.root,
             merged.variant === "segmented" ? styles.rootSegmented : undefined,
@@ -279,8 +316,8 @@ export function Tabs(props: TabsProps): JSX.Element {
                 const selected = (): boolean => activeValue() === tab.value;
                 return (
                   <button
-                    data-tomui-component="Tabs"
-                    data-tomui-part="tab"
+                    data-midori-component="Tabs"
+                    data-midori-part="tab"
                     data-value={tab.value}
                     type="button"
                     role="tab"
@@ -292,10 +329,10 @@ export function Tabs(props: TabsProps): JSX.Element {
                     {...stylex.attrs(
                       styles.tabBase,
                       tabFontSizeStyles[merged.size],
-                      tabVariantStyles[merged.variant],
                       merged.variant === "segmented"
                         ? tabSegmentedSizeStyles[merged.size]
                         : tabUnderlineSizeStyles[merged.size],
+                      tabVariantStyles[merged.variant],
                       selected() ? tabSelectedStyles[merged.variant] : undefined,
                       tab.style,
                     )}
@@ -331,8 +368,8 @@ export function TabsContent(props: TabsContentProps): JSX.Element {
   return (
     <Show when={merged.forceMount || selected()}>
       <div
-        data-tomui-component="Tabs"
-        data-tomui-part="panel"
+        data-midori-component="Tabs"
+        data-midori-part="panel"
         id={`${ctx.baseId}-panel-${merged.value}`}
         role="tabpanel"
         aria-labelledby={`${ctx.baseId}-tab-${merged.value}`}

@@ -22,15 +22,15 @@ const STRIP_ITEMS = 12;
 
 const SM = "@media (min-width: 640px)";
 
-/** Inset hairline, matching TomUI's `ring ring-tomui-line ring-inset`. */
-const ringLine = `inset 0 0 0 1px ${colors["--color-tomui-line"]}`;
+/** Inset hairline, matching Midori's `ring ring-midori-line ring-inset`. */
+const ringLine = `inset 0 0 0 1px ${colors["--color-midori-line"]}`;
 
 const styles = stylex.create({
   placeholderCard: {
     height: "11rem",
     width: "14rem",
     overflow: "hidden",
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
     padding: "0.75rem",
     boxShadow: ringLine,
   },
@@ -44,7 +44,7 @@ const styles = stylex.create({
     width: "14rem",
     flexShrink: 0,
     overflow: "hidden",
-    backgroundColor: colors["--color-tomui-base"],
+    backgroundColor: colors["--color-midori-base"],
     padding: "0.75rem",
     boxShadow: ringLine,
   },

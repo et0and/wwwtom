@@ -24,7 +24,7 @@ describe("Autocomplete", () => {
         </Autocomplete.Content>
       </Autocomplete>
     ));
-    expect(container.querySelector("[data-tomui-part=content]")).toBeNull();
+    expect(container.querySelector("[data-midori-part=content]")).toBeNull();
   });
 
   it("opens the content and lists the items once the input is focused", async () => {
@@ -32,16 +32,14 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha", "beta"]}>
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha", "beta"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    fireEvent.focus(container.querySelector("[data-tomui-part=input]")!);
+    fireEvent.focus(container.querySelector("[data-midori-part=input]")!);
     await vi.waitFor(() =>
-      expect(container.querySelectorAll("[data-tomui-part=item]")).toHaveLength(2),
+      expect(container.querySelectorAll("[data-midori-part=item]")).toHaveLength(2),
     );
   });
 
@@ -50,20 +48,18 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha", "beta"]} defaultValue="beta">
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha", "beta"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    const input = container.querySelector("[data-tomui-part=input]") as HTMLInputElement;
+    const input = container.querySelector("[data-midori-part=input]") as HTMLInputElement;
     fireEvent.input(input, { target: { value: "beta" } });
 
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
-      expect(items[1]?.getAttribute("aria-selected")).toBe("true");
-      expect(items[0]?.getAttribute("aria-selected")).toBe("false");
+      const items = container.querySelectorAll("[data-midori-part=item]");
+      expect(items).toHaveLength(1);
+      expect(items[0]?.getAttribute("aria-selected")).toBe("true");
     });
   });
 
@@ -72,21 +68,18 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha", "beta"]} defaultValue="alpha">
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha", "beta"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    const input = container.querySelector("[data-tomui-part=input]") as HTMLInputElement;
+    const input = container.querySelector("[data-midori-part=input]") as HTMLInputElement;
     fireEvent.input(input, { target: { value: "alpha" } });
 
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
-      // Only the selected item renders its check column.
+      const items = container.querySelectorAll("[data-midori-part=item]");
+      expect(items).toHaveLength(1);
       expect(items[0]?.querySelectorAll("svg")).toHaveLength(1);
-      expect(items[1]?.querySelectorAll("svg")).toHaveLength(0);
     });
   });
 
@@ -95,20 +88,20 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha"]}>
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    fireEvent.focus(container.querySelector("[data-tomui-part=input]")!);
+    fireEvent.focus(container.querySelector("[data-midori-part=input]")!);
     await vi.waitFor(() =>
-      expect(container.querySelector("[data-tomui-part=content]")).not.toBeNull(),
+      expect(container.querySelector("[data-midori-part=content]")).not.toBeNull(),
     );
 
-    fireEvent.click(container.querySelector("[data-tomui-part=item]")!);
-    await vi.waitFor(() => expect(container.querySelector("[data-tomui-part=content]")).toBeNull());
+    fireEvent.click(container.querySelector("[data-midori-part=item]")!);
+    await vi.waitFor(() =>
+      expect(container.querySelector("[data-midori-part=content]")).toBeNull(),
+    );
   });
 
   it("shows the default empty message", async () => {
@@ -121,7 +114,7 @@ describe("Autocomplete", () => {
       </Autocomplete>
     ));
 
-    fireEvent.focus(container.querySelector("[data-tomui-part=input]")!);
+    fireEvent.focus(container.querySelector("[data-midori-part=input]")!);
     await vi.waitFor(() => expect(container.textContent).toContain("No results found."));
   });
 
@@ -130,26 +123,24 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha", "beta"]}>
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha", "beta"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    const input = container.querySelector("[data-tomui-part=input]")!;
+    const input = container.querySelector("[data-midori-part=input]")!;
     fireEvent.focus(input);
     fireEvent.keyDown(input, { key: "ArrowDown" });
 
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
+      const items = container.querySelectorAll("[data-midori-part=item]");
       expect(items[0]?.getAttribute("data-highlighted")).toBe("");
       expect(items[1]?.hasAttribute("data-highlighted")).toBe(false);
     });
 
     fireEvent.keyDown(input, { key: "ArrowDown" });
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
+      const items = container.querySelectorAll("[data-midori-part=item]");
       expect(items[0]?.hasAttribute("data-highlighted")).toBe(false);
       expect(items[1]?.getAttribute("data-highlighted")).toBe("");
     });
@@ -160,19 +151,17 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha", "beta"]}>
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha", "beta"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    const input = container.querySelector("[data-tomui-part=input]")!;
+    const input = container.querySelector("[data-midori-part=input]")!;
     fireEvent.focus(input);
     fireEvent.keyDown(input, { key: "ArrowUp" });
 
     await vi.waitFor(() => {
-      const items = container.querySelectorAll("[data-tomui-part=item]");
+      const items = container.querySelectorAll("[data-midori-part=item]");
       expect(items[1]?.getAttribute("data-highlighted")).toBe("");
     });
   });
@@ -182,18 +171,16 @@ describe("Autocomplete", () => {
       <Autocomplete items={["alpha", "beta"]}>
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha", "beta"]}>
-            {(item) => <Autocomplete.Item value={item} />}
-          </Autocomplete.List>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    fireEvent.focus(container.querySelector("[data-tomui-part=input]")!);
+    fireEvent.focus(container.querySelector("[data-midori-part=input]")!);
     await vi.waitFor(() =>
-      expect(container.querySelectorAll("[data-tomui-part=item]")).toHaveLength(2),
+      expect(container.querySelectorAll("[data-midori-part=item]")).toHaveLength(2),
     );
-    const items = container.querySelectorAll("[data-tomui-part=item]");
+    const items = container.querySelectorAll("[data-midori-part=item]");
     fireEvent.mouseEnter(items[1]!);
 
     await vi.waitFor(() => {
@@ -201,19 +188,89 @@ describe("Autocomplete", () => {
     });
   });
 
+  it("filters the list by the query", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["Apple", "Banana", "Cherry"]}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
+          <Autocomplete.Empty />
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const input = container.querySelector("[data-midori-part=input]") as HTMLInputElement;
+    fireEvent.input(input, { target: { value: "an" } });
+
+    await vi.waitFor(() => {
+      const items = container.querySelectorAll("[data-midori-part=item]");
+      expect(Array.from(items, (item) => item.textContent)).toEqual(["Banana"]);
+    });
+
+    fireEvent.input(input, { target: { value: "zzz" } });
+    await vi.waitFor(() => {
+      expect(container.querySelectorAll("[data-midori-part=item]")).toHaveLength(0);
+      expect(container.textContent).toContain("No results found.");
+    });
+  });
+
+  it("selects the active option with Enter", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["alpha", "beta"]}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const input = container.querySelector("[data-midori-part=input]") as HTMLInputElement;
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: "ArrowDown" });
+
+    await vi.waitFor(() => {
+      expect(
+        container.querySelector("[data-midori-part=item]")?.getAttribute("data-highlighted"),
+      ).toBe("");
+    });
+
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    await vi.waitFor(() => {
+      expect(input.value).toBe("alpha");
+      expect(container.querySelector("[data-midori-part=content]")).toBeNull();
+    });
+  });
+
+  it("opens by default and associates its label with the input", async () => {
+    const { container } = render(() => (
+      <Autocomplete items={["alpha"]} label="Fruit" defaultOpen>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <Autocomplete.List>{(item) => <Autocomplete.Item value={item} />}</Autocomplete.List>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const label = container.querySelector("label")!;
+    const input = container.querySelector("[data-midori-part=input]")!;
+    expect(label.getAttribute("for")).toBe(input.id);
+    expect(container.querySelector("[data-midori-part=content]")).not.toBeNull();
+  });
+
   it("links the input to the list it controls", async () => {
     const { container } = render(() => (
       <Autocomplete items={["alpha"]}>
         <Autocomplete.InputGroup />
         <Autocomplete.Content>
-          <Autocomplete.List items={["alpha"]}>{(item) => <div>{item}</div>}</Autocomplete.List>
+          <Autocomplete.List>{(item) => <div>{item}</div>}</Autocomplete.List>
         </Autocomplete.Content>
       </Autocomplete>
     ));
 
-    fireEvent.focus(container.querySelector("[data-tomui-part=input]")!);
+    fireEvent.focus(container.querySelector("[data-midori-part=input]")!);
     await vi.waitFor(() => {
-      const input = container.querySelector("[data-tomui-part=input]")!;
+      const input = container.querySelector("[data-midori-part=input]")!;
       const list = container.querySelector("[role=listbox]")!;
       expect(input.getAttribute("aria-controls")).toBe(list.id);
     });

@@ -16,17 +16,17 @@ describe("layerCardVariants", () => {
 
 describe("LayerCard", () => {
   it("renders its children", () => {
-    const { container } = render(() => <LayerCard>Get started with TomUI</LayerCard>);
-    expect(container.querySelector("[data-tomui-component=LayerCard]")?.textContent).toBe(
-      "Get started with TomUI",
+    const { container } = render(() => <LayerCard>Get started with Midori</LayerCard>);
+    expect(container.querySelector("[data-midori-component=LayerCard]")?.textContent).toBe(
+      "Get started with Midori",
     );
   });
 
   it("gives the layered treatment a different style than the plain surface", () => {
     const { container: plain } = render(() => <LayerCard>Plain</LayerCard>);
     const { container: layered } = render(() => <LayerCard layered>Layered</LayerCard>);
-    expect(classList(plain.querySelector("[data-tomui-component=LayerCard]")!)).not.toEqual(
-      classList(layered.querySelector("[data-tomui-component=LayerCard]")!),
+    expect(classList(plain.querySelector("[data-midori-component=LayerCard]")!)).not.toEqual(
+      classList(layered.querySelector("[data-midori-component=LayerCard]")!),
     );
   });
 
@@ -38,19 +38,19 @@ describe("LayerCard", () => {
       </LayerCard>
     ));
     expect(
-      container.querySelector("[data-tomui-component='LayerCard.Secondary']")?.textContent,
+      container.querySelector("[data-midori-component='LayerCard.Secondary']")?.textContent,
     ).toBe("Next steps");
-    expect(container.querySelector("[data-tomui-component='LayerCard.Primary']")?.textContent).toBe(
-      "Get started",
-    );
+    expect(
+      container.querySelector("[data-midori-component='LayerCard.Primary']")?.textContent,
+    ).toBe("Get started");
   });
 
   it("merges caller styles last", () => {
     const { container } = render(() => <LayerCard style={callerStyle}>Card</LayerCard>);
     const plain = render(() => <LayerCard>Card</LayerCard>).container.querySelector(
-      "[data-tomui-component=LayerCard]",
+      "[data-midori-component=LayerCard]",
     )!;
-    expect(classList(container.querySelector("[data-tomui-component=LayerCard]")!)).not.toEqual(
+    expect(classList(container.querySelector("[data-midori-component=LayerCard]")!)).not.toEqual(
       classList(plain),
     );
   });

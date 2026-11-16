@@ -2,11 +2,10 @@ import * as stylex from "@stylexjs/stylex";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
 import { isServer } from "@solidjs/web";
-import { colors } from "@tom/ui/colors.stylex";
+import { colors, textColors } from "@tom/ui/colors.stylex";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Loader } from "@tom/ui/loader";
 import { radius } from "@tom/ui/primitives.stylex";
-import { textColors } from "@tom/ui/tokens.stylex";
 import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
@@ -45,13 +44,13 @@ const styles = stylex.create({
     borderRadius: radius.lg,
     borderWidth: "1px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-line"],
-    backgroundColor: colors["--color-tomui-control"],
-    color: textColors["--text-color-tomui-default"],
+    borderColor: colors["--color-midori-line"],
+    backgroundColor: colors["--color-midori-control"],
+    color: textColors["--text-color-midori-default"],
     outlineStyle: "none",
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",
-    ":focus": { borderColor: colors["--color-tomui-focus"] },
+    ":focus": { borderColor: colors["--color-midori-focus"] },
   },
   messageFooter: { display: "flex", justifyContent: "space-between", alignItems: "center" },
 });
