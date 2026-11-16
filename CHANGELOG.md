@@ -1,3 +1,11 @@
+## [5.0.2](https://github.com/et0and/wwwtom/compare/v5.0.1...v5.0.2) (2026-11-16)
+
+
+### Bug Fixes
+
+* **adapter:** forward bearer sessions and honour the simulator everywhere ([e612f9e](https://github.com/et0and/wwwtom/commit/e612f9e029ba6ee6b33f0606a7b2d142b17ee9d5))
+* **adapter:** keep simulator routing and Effect errors in the arena proxy ([78fd1a6](https://github.com/et0and/wwwtom/commit/78fd1a6dabca4a49bb0e2ee4f41a16e671061d21))
+
 ## [5.0.1](https://github.com/et0and/wwwtom/compare/v5.0.0...v5.0.1) (2026-11-14)
 
 
