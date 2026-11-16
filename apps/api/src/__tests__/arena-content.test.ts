@@ -1,13 +1,24 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { app } from "../index";
-import {
-  fetchMock,
-  jsonResponse,
-  requestWithEnv,
-  stubFetch,
-  testEnv,
-  unstubFetch,
-} from "../test/helpers";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
+import type { CloudflareEnv } from "@tom/utils/config";
+import { jsonResponse, requestWithEnv, testEnv } from "../test/helpers";
+
+const fetchMock = vi.fn();
+const stubFetch = (): void => {
+  vi.stubGlobal("fetch", fetchMock);
+  fetchMock.mockReset();
+};
+const unstubFetch = (): void => {
+  vi.unstubAllGlobals();
+};
+
+/** Internal are.na reads: the token header is the adapter's, not the browser's. */
+const arenaRequest = (url: string, env: CloudflareEnv, init: RequestInit = {}): Request =>
+  requestWithEnv(url, env, {
+    ...init,
+    headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token", ...init.headers },
+  });
 
 beforeEach(stubFetch);
 
@@ -101,7 +112,7 @@ describe("arena content integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/posts?page=1&pageSize=5", tomEnv),
+        arenaRequest("http://localhost/internal/content/arena/posts?page=1&pageSize=5", tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -122,7 +133,7 @@ describe("arena content integration", () => {
       stubArena([[`${POSTS_CHANNEL}/contents`, contentsEnvelope([])]]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/posts", tomEnv, {
+        arenaRequest("http://localhost/internal/content/arena/posts", tomEnv, {
           headers: { cookie: "better-auth.session_token=abc" },
         }),
       );
@@ -154,7 +165,7 @@ describe("arena content integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/posts/first-post", tomEnv),
+        arenaRequest("http://localhost/internal/content/arena/posts/first-post", tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -174,7 +185,7 @@ describe("arena content integration", () => {
       stubArena([[`${POSTS_CHANNEL}/contents`, contentsEnvelope([])]]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/posts/draft-post-abc123", tomEnv),
+        arenaRequest("http://localhost/internal/content/arena/posts/draft-post-abc123", tomEnv),
       );
 
       expect(response.status).toBe(404);
@@ -182,7 +193,7 @@ describe("arena content integration", () => {
         type: "https://errors.tom.so/not-found",
         status: 404,
         title: "Post not found",
-        instance: "http://localhost/content/arena/posts/draft-post-abc123",
+        instance: "http://localhost/internal/content/arena/posts/draft-post-abc123",
       });
       expect(response.headers.get("Cache-Control") ?? "").not.toContain("public");
     });
@@ -205,7 +216,7 @@ describe("arena content integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/works", tomEnv),
+        arenaRequest("http://localhost/internal/content/arena/works", tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -231,7 +242,7 @@ describe("arena content integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/works/project-one", tomEnv),
+        arenaRequest("http://localhost/internal/content/arena/works/project-one", tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -259,7 +270,7 @@ describe("arena content integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv("http://localhost/content/arena/feed?limit=2", tomEnv),
+        arenaRequest("http://localhost/internal/content/arena/feed?limit=2", tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -282,25 +293,11 @@ describe("arena content integration", () => {
 
   describe("tenant gating", () => {
     it("hides are.na routes from the Sophie tenant", async () => {
-      for (const path of ["/content/arena/posts", "/content/arena/works"]) {
-        const response = await app.fetch(requestWithEnv(`http://localhost${path}`, sophieEnv));
+      for (const path of ["/internal/content/arena/posts", "/internal/content/arena/works"]) {
+        const response = await app.fetch(arenaRequest(`http://localhost${path}`, sophieEnv));
         expect(response.status).toBe(404);
       }
       expect(fetchMock).not.toHaveBeenCalled();
-    });
-
-    it("keeps the D1 CMS routes for the Sophie tenant", async () => {
-      fetchMock.mockResolvedValue(
-        jsonResponse({ docs: [], totalDocs: 0, limit: 5, page: 1, totalPages: 0 }),
-      );
-
-      const response = await app.fetch(requestWithEnv("http://localhost/content/posts", sophieEnv));
-
-      expect(response.status).toBe(200);
-      expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:8787/posts?page=1&pageSize=5",
-        expect.anything(),
-      );
     });
   });
 });

@@ -15,7 +15,6 @@
     "@elysiajs/cors": "catalog:",
     "@elysiajs/eden": "catalog:",
     "@tom/api": "workspace:*",
-    "@tom/arena": "workspace:*",
     "@tom/constants": "workspace:*",
     "@tom/db": "workspace:*",
     "@tom/schemas": "workspace:*",

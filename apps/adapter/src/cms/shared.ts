@@ -239,15 +239,6 @@ export type PostQuery = typeof CmsPagingSchema.Type;
  * same pair, so a bearer-authed admin never reads published-only data that
  * the edge then caches as public.
  */
-export const sessionHeaders = (request: Request) => {
-  const headers: Record<string, string> = {};
-  const cookie = request.headers.get("cookie");
-  if (cookie !== null) headers["cookie"] = cookie;
-  const authorization = request.headers.get("authorization");
-  if (authorization !== null) headers["authorization"] = authorization;
-  return headers;
-};
-
 type UpstreamQuery = {
   status?: CmsStatusFilter;
   category?: CmsSlug;

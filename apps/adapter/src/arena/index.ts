@@ -19,6 +19,10 @@ import { getUserFollowingRoute } from "./list-arena-user-following";
 import { listChannelsRoute } from "./list-arena-channels";
 import { searchRoute } from "./search-arena";
 
+/**
+ * Public are.na surface for Tom. Every route proxies the api's internal
+ * reads: the api owns are.na access, the adapter keeps the browser contract.
+ */
 export const arenaIntegration = new Elysia({ name: "arena" })
   .use(listChannelsRoute)
   .use(getChannelRoute)

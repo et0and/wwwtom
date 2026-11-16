@@ -1,15 +1,14 @@
 import { Elysia } from "elysia";
-import { logContextFromRequest } from "@tom/utils/worker";
-import { ChannelSlugParamsSchema, runArena } from "./shared";
+import { arenaApi, ChannelSlugParamsSchema, proxyArena } from "./shared";
 
 export const getChannelThumbRoute = new Elysia().get(
   "/arena/channels/:slug/thumb",
-  ({ params, request }) => {
-    return runArena(
-      request,
-      (client) => client.channel(params.slug).thumb,
-      logContextFromRequest(request, "tom-adapter"),
-      "public",
+  async ({ params, request, set }) => {
+    const api = await arenaApi(request);
+    return proxyArena(
+      api.internal.arena.channels({ slug: params.slug }).thumb.get(),
+      set,
+      "channel thumb",
     );
   },
   {

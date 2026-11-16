@@ -116,6 +116,9 @@ export type CloudflareEnv = {
   OPENCODE_GO_MODEL?: string;
   ADAPTER_URL?: string;
   API_URL?: string;
+  // Service binding to the api Worker. Present on deployed stages; absent
+  // under `alchemy dev` and in the e2e harness, which use API_URL instead.
+  API?: { fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> };
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
   EDITOR_URL?: string;
   // Public origin of the web app; trusted for OAuth callbacks from the frame UI.

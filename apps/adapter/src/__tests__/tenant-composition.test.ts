@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { ARENA_POSTS_CHANNEL_SLUG } from "@tom/constants/arena";
 import { app } from "../index";
 import { SIMULATOR_HEADER } from "../simulator";
 import {
@@ -16,7 +15,12 @@ beforeEach(stubFetch);
 afterEach(unstubFetch);
 
 const tomEnv = (overrides: Record<string, string> = {}) =>
-  testEnv({ TENANT: "tom", API_URL: "http://localhost:8787", ...overrides });
+  testEnv({
+    TENANT: "tom",
+    API_URL: "http://localhost:8787",
+    INTERNAL_API_TOKEN: "test-internal-token",
+    ...overrides,
+  });
 const sophieEnv = (overrides: Record<string, string> = {}) =>
   testEnv({ TENANT: "sophie", API_URL: "http://localhost:8787", ...overrides });
 
@@ -33,16 +37,15 @@ const listBody = {
 const stubArenaPosts = (): void => {
   fetchMock.mockImplementation(async (input: RequestInfo) => {
     const url = new URL(input instanceof Request ? input.url : String(input));
-    if (url.pathname === `/v3/channels/${ARENA_POSTS_CHANNEL_SLUG}/contents`) {
+    if (url.pathname === "/internal/content/arena/posts") {
       return jsonResponse({
-        meta: {
-          current_page: 1,
-          per_page: 5,
-          total_pages: 1,
-          total_count: 0,
-          has_more_pages: false,
-        },
-        data: [],
+        docs: [],
+        totalDocs: 0,
+        limit: 5,
+        page: 1,
+        totalPages: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
       });
     }
     return jsonResponse({ message: "Not found" }, 404);

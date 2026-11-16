@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
-import { proxyCachedCms, sessionHeaders, SlugParamsSchema } from "./shared";
+import { proxyCachedCms, SlugParamsSchema } from "./shared";
+import { sessionHeaders } from "../auth/forward";
 
 export const getWorkRoute = new Elysia().get(
   "/content/works/:slug",
