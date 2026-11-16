@@ -436,6 +436,9 @@ export function DialogClose(props: DialogCloseProps): JSX.Element {
           {...stylex.attrs(styles.close, merged.style)}
           onClick={handleClick}
           {...rest}
+          type={merged.type ?? "button"}
+          form={merged.form}
+          title={merged.title}
           aria-label={merged["aria-label"] ?? "Close"}
         >
           <Show when={merged.children} fallback={<XIcon size="sm" color="current" />}>

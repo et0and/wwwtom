@@ -247,6 +247,27 @@ describe("Dialog compound parts", () => {
     expect(save).not.toBeUndefined();
     expect(save!.getAttribute("data-midori-component")).toBe("Dialog");
   });
+
+  it("keeps the close control from submitting and forwards an explicit type", () => {
+    const { container } = render(() => (
+      <Dialog.Root defaultOpen>
+        <Dialog>
+          <Dialog.Header>
+            <Dialog.TitleGroup title="Title" />
+          </Dialog.Header>
+          <Dialog.Body>
+            <Dialog.Close type="submit">Submit</Dialog.Close>
+          </Dialog.Body>
+        </Dialog>
+      </Dialog.Root>
+    ));
+
+    const headerClose = container.querySelector('[data-midori-part=close][aria-label="Close"]');
+    expect(headerClose?.getAttribute("type")).toBe("button");
+
+    const submit = container.querySelector('[data-midori-part=close][type="submit"]');
+    expect(submit?.textContent).toBe("Submit");
+  });
 });
 
 const callerStyles = stylex.create({ wide: { minHeight: "50vh" } });

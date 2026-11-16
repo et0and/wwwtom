@@ -4,6 +4,7 @@ import type { JSX } from "@solidjs/web";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
 export const MIDORI_DATE_PICKER_DEFAULT_VARIANTS = {
   size: "base",
@@ -28,10 +29,10 @@ const styles = stylex.create({
     ":focus": { outlineColor: colors["--color-midori-focus"], boxShadow: "none" },
     ":disabled": { cursor: "not-allowed", opacity: 0.5 },
   },
-  sizeXs: { height: "1.5rem", paddingInline: "0.5rem", fontSize: "12px" },
-  sizeSm: { height: "1.5rem", paddingInline: "0.5625rem", fontSize: "13px" },
-  sizeBase: { height: "1.75rem", paddingInline: "0.6875rem", fontSize: "13px" },
-  sizeLg: { height: "2rem", paddingInline: "0.9375rem", fontSize: "13px" },
+  sizeXs: { height: "1.5rem", paddingInline: "0.5rem", fontSize: fontSizeXs.fontSize },
+  sizeSm: { height: "1.5rem", paddingInline: "0.5625rem", fontSize: fontSizeSm.fontSize },
+  sizeBase: { height: "1.75rem", paddingInline: "0.6875rem", fontSize: fontSizeSm.fontSize },
+  sizeLg: { height: "2rem", paddingInline: "0.9375rem", fontSize: fontSizeSm.fontSize },
 });
 
 const sizeStyles = {

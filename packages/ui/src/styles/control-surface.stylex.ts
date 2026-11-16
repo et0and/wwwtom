@@ -26,16 +26,18 @@ export const controlSurface = stylex.create({
     boxShadow: elevation["--elevation-midori-input"],
     flex: "none",
     alignSelf: "stretch",
-    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
+    ":hover:not(:is([data-disabled]))": {
+      backgroundColor: colors["--color-midori-layer-01"],
+    },
     ":focus-within": {
       outlineColor: colors["--color-midori-focus"],
       boxShadow: "none",
     },
-    ":disabled": { opacity: 0.5, cursor: "not-allowed" },
+    ":is([data-disabled])": { opacity: 0.5, cursor: "not-allowed" },
   },
   layer1: { backgroundColor: colors["--color-midori-layer-01"] },
   invalid: {
-    ":not(:disabled)": {
+    ":not(:is([data-disabled]))": {
       outlineColor: dangerColor,
       boxShadow: "none",
     },

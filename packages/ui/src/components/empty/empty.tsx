@@ -4,7 +4,7 @@ import type { JSX } from "@solidjs/web";
 import { Button } from "../button/button";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { monoFont, radius } from "../../styles/primitives.stylex";
-import { fontSizeMd } from "../../styles/typography.stylex";
+import { fontSizeBase, fontSizeMd, fontSizeSm } from "../../styles/typography.stylex";
 
 export const MIDORI_EMPTY_DEFAULT_VARIANTS = {
   size: "base",
@@ -38,7 +38,7 @@ const styles = stylex.create({
     maxWidth: "35rem",
     textAlign: "center",
     textWrap: "balance",
-    fontSize: "14px",
+    fontSize: fontSizeBase.fontSize,
     lineHeight: "20px",
     color: textColors["--text-color-midori-subtle"],
   },
@@ -62,7 +62,7 @@ const styles = stylex.create({
   /** The command scrolls rather than wraps, so its scrollbar is hidden. */
   commandText: {
     overflowX: "scroll",
-    fontSize: "13px",
+    fontSize: fontSizeSm.fontSize,
     whiteSpace: "nowrap",
     scrollbarWidth: "none",
     msOverflowStyle: "none",

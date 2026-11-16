@@ -11,6 +11,7 @@ import {
 } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createControllableSignal } from "../../utils/state";
 
 const hairline = colors["--color-midori-hairline"];
@@ -20,7 +21,7 @@ const danger = textColors["--text-color-midori-danger"];
 
 const styles = stylex.create({
   legend: {
-    fontSize: "0.8125rem",
+    fontSize: fontSizeSm.fontSize,
     fontWeight: 530,
     color: textColors["--text-color-midori-default"],
   },
@@ -38,7 +39,7 @@ const styles = stylex.create({
     gridTemplateColumns: "repeat(2, 1fr)",
     gap: "0.75rem",
   },
-  message: { fontSize: "0.75rem" },
+  message: { fontSize: fontSizeXs.fontSize },
   messageDanger: { color: danger },
   messageSubtle: { color: textColors["--text-color-midori-subtle"] },
   itemLabelDefault: {
@@ -122,7 +123,7 @@ const styles = stylex.create({
     borderRadius: radius.full,
     backgroundColor: colors["--color-midori-base"],
   },
-  labelText: { fontSize: "0.8125rem", color: textColors["--text-color-midori-default"] },
+  labelText: { fontSize: fontSizeSm.fontSize, color: textColors["--text-color-midori-default"] },
   cardTextWrap: {
     display: "flex",
     minWidth: 0,
@@ -131,11 +132,14 @@ const styles = stylex.create({
     gap: "0.125rem",
   },
   cardLabel: {
-    fontSize: "0.8125rem",
+    fontSize: fontSizeSm.fontSize,
     fontWeight: 530,
     color: textColors["--text-color-midori-default"],
   },
-  cardDescription: { fontSize: "0.75rem", color: textColors["--text-color-midori-subtle"] },
+  cardDescription: {
+    fontSize: fontSizeXs.fontSize,
+    color: textColors["--text-color-midori-subtle"],
+  },
 });
 
 export type MidoriRadioVariant = "default" | "error";

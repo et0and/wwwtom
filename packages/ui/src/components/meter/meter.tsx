@@ -3,7 +3,7 @@ import type { JSX } from "@solidjs/web";
 import { merge, omit, Show } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { fontSize2xs } from "../../styles/typography.stylex";
+import { fontSize2xs, fontSizeSm } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
   root: { display: "flex", width: "100%", flexDirection: "column", gap: "0.5rem" },
@@ -15,7 +15,7 @@ const styles = stylex.create({
   },
   label: { fontSize: fontSize2xs.fontSize, color: textColors["--text-color-midori-subtle"] },
   value: {
-    fontSize: "13px",
+    fontSize: fontSizeSm.fontSize,
     fontWeight: 530,
     color: textColors["--text-color-midori-default"],
     fontVariantNumeric: "tabular-nums",

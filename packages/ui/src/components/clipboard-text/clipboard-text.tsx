@@ -6,6 +6,7 @@ import { inputVariants } from "../input/input";
 import { Tooltip } from "../tooltip/tooltip";
 import { colors } from "../../styles/colors.stylex";
 import { monoFont } from "../../styles/primitives.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 
 const COPIED_FEEDBACK_MS = 1500;
 
@@ -30,9 +31,9 @@ const styles = stylex.create({
     backgroundColor: colors["--color-midori-base"],
     fontFamily: monoFont.fontFamily,
   },
-  sizeSm: { fontSize: "12px" },
-  sizeBase: { fontSize: "13px" },
-  sizeLg: { fontSize: "13px" },
+  sizeSm: { fontSize: fontSizeXs.fontSize },
+  sizeBase: { fontSize: fontSizeSm.fontSize },
+  sizeLg: { fontSize: fontSizeSm.fontSize },
   copyButton: {
     position: "relative",
     isolation: "isolate",

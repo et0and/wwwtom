@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, createUniqueId, For, merge, omit, Show, useContext } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createControllableSignal } from "../../utils/state";
 
 export const MIDORI_TABS_VARIANTS = {
@@ -116,8 +117,8 @@ const styles = stylex.create({
     ":focus": { boxShadow: "0 0 0 1px " + focus50 },
     ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
   },
-  tabSm: { fontSize: "0.75rem", lineHeight: "1.333" },
-  tabBaseSize: { fontSize: "13px", lineHeight: 1.5 },
+  tabSm: { fontSize: fontSizeXs.fontSize, lineHeight: "1.333" },
+  tabBaseSize: { fontSize: fontSizeSm.fontSize, lineHeight: 1.5 },
   tabSegmented: {
     marginBlock: "0.125rem",
     color: subtleText,
@@ -145,7 +146,7 @@ const styles = stylex.create({
     borderBottomStyle: "solid",
     borderBottomColor: "transparent",
     color: subtleText,
-    fontSize: "13px",
+    fontSize: fontSizeSm.fontSize,
     lineHeight: "20px",
     fontWeight: 440,
     ":hover": { color: defaultTextColor },

@@ -4,6 +4,7 @@ import type { JSX } from "@solidjs/web";
 import { ArrowRightIcon } from "@tom/icons/ArrowRight";
 import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
+import { fontSizeXs } from "../../styles/typography.stylex";
 import { datePickerVariants, type MidoriDatePickerSize } from "../date-picker/date-picker";
 
 export const MIDORI_DATE_RANGE_PICKER_DEFAULT_VARIANTS = {
@@ -28,7 +29,7 @@ const styles = stylex.create({
   sizeBase: { padding: "0.75rem", gap: "0.5rem" },
   sizeLg: { padding: "1rem", gap: "0.625rem" },
   row: { display: "flex", alignItems: "center", gap: "0.5rem" },
-  alert: { fontSize: "0.75rem", color: textColors["--text-color-midori-danger"] },
+  alert: { fontSize: fontSizeXs.fontSize, color: textColors["--text-color-midori-danger"] },
 });
 
 const sizeStyles = {

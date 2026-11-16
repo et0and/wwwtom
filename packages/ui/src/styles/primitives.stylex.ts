@@ -1,5 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
 import { colors, textColors } from "./colors.stylex";
+import { fontSize2xs, fontSizeSm, fontSizeXs } from "./typography.stylex";
 
 /**
  * Layout primitives shared across Midori components.
@@ -163,7 +164,7 @@ export const menuItem = stylex.create({
     gap: "0.5rem",
     cursor: "default",
     userSelect: "none",
-    fontSize: "13px",
+    fontSize: fontSizeSm.fontSize,
     fontWeight: 440,
     lineHeight: "16px",
     outlineWidth: 0,
@@ -201,7 +202,7 @@ export const menuItem = stylex.create({
     alignItems: "center",
     paddingInline: "0.75rem",
     paddingBlock: 0,
-    fontSize: "11px",
+    fontSize: fontSize2xs.fontSize,
     fontWeight: 530,
     lineHeight: 1,
   },
@@ -215,7 +216,7 @@ export const menuItem = stylex.create({
   },
   shortcut: {
     marginInlineStart: "auto",
-    fontSize: "0.75rem",
+    fontSize: fontSizeXs.fontSize,
     letterSpacing: "0.1em",
     opacity: 0.6,
   },

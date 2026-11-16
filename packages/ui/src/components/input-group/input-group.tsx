@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createContext, createUniqueId, merge, omit, Show, useContext } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { Field, normalizeFieldError, type FieldErrorMatch } from "../field/field";
 import { inputVariants, type MidoriInputSize } from "../input/input";
 
@@ -97,22 +98,22 @@ const styles = stylex.create({
  * top-level `create` members where a StyleX value is expected.
  */
 const sizeStyles = stylex.create({
-  inputXs: { paddingInline: "0.5rem", fontSize: "12px" },
-  inputSm: { paddingInline: "0.5625rem", fontSize: "13px" },
-  inputBase: { paddingInline: "0.6875rem", fontSize: "13px" },
-  inputLg: { paddingInline: "0.9375rem", fontSize: "13px" },
-  addonStartXs: { paddingInlineStart: "0.5rem", fontSize: "12px" },
-  addonStartSm: { paddingInlineStart: "0.5rem", fontSize: "13px" },
-  addonStartBase: { paddingInlineStart: "0.5rem", fontSize: "13px" },
-  addonStartLg: { paddingInlineStart: "0.75rem", fontSize: "13px" },
-  addonEndXs: { paddingInlineEnd: "0.5rem", fontSize: "12px" },
-  addonEndSm: { paddingInlineEnd: "0.5rem", fontSize: "13px" },
-  addonEndBase: { paddingInlineEnd: "0.5rem", fontSize: "13px" },
-  addonEndLg: { paddingInlineEnd: "0.75rem", fontSize: "13px" },
-  suffixXs: { paddingInlineEnd: "0.5rem", fontSize: "12px" },
-  suffixSm: { paddingInlineEnd: "0.5rem", fontSize: "13px" },
-  suffixBase: { paddingInlineEnd: "0.75rem", fontSize: "13px" },
-  suffixLg: { paddingInlineEnd: "0.9375rem", fontSize: "13px" },
+  inputXs: { paddingInline: "0.5rem", fontSize: fontSizeXs.fontSize },
+  inputSm: { paddingInline: "0.5625rem", fontSize: fontSizeSm.fontSize },
+  inputBase: { paddingInline: "0.6875rem", fontSize: fontSizeSm.fontSize },
+  inputLg: { paddingInline: "0.9375rem", fontSize: fontSizeSm.fontSize },
+  addonStartXs: { paddingInlineStart: "0.5rem", fontSize: fontSizeXs.fontSize },
+  addonStartSm: { paddingInlineStart: "0.5rem", fontSize: fontSizeSm.fontSize },
+  addonStartBase: { paddingInlineStart: "0.5rem", fontSize: fontSizeSm.fontSize },
+  addonStartLg: { paddingInlineStart: "0.75rem", fontSize: fontSizeSm.fontSize },
+  addonEndXs: { paddingInlineEnd: "0.5rem", fontSize: fontSizeXs.fontSize },
+  addonEndSm: { paddingInlineEnd: "0.5rem", fontSize: fontSizeSm.fontSize },
+  addonEndBase: { paddingInlineEnd: "0.5rem", fontSize: fontSizeSm.fontSize },
+  addonEndLg: { paddingInlineEnd: "0.75rem", fontSize: fontSizeSm.fontSize },
+  suffixXs: { paddingInlineEnd: "0.5rem", fontSize: fontSizeXs.fontSize },
+  suffixSm: { paddingInlineEnd: "0.5rem", fontSize: fontSizeSm.fontSize },
+  suffixBase: { paddingInlineEnd: "0.75rem", fontSize: fontSizeSm.fontSize },
+  suffixLg: { paddingInlineEnd: "0.9375rem", fontSize: fontSizeSm.fontSize },
 });
 
 const inputSize = (size: MidoriInputSize): stylex.StyleXStyles =>

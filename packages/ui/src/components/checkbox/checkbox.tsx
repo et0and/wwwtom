@@ -2,6 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
 import { colors, textColors } from "../../styles/colors.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createToggleState } from "../../utils/state";
 import { Label } from "../label/label";
 
@@ -65,7 +66,7 @@ const styles = stylex.create({
     minHeight: 0,
     alignItems: "flex-start",
     gap: "0.5rem",
-    fontSize: "0.8125rem",
+    fontSize: fontSizeSm.fontSize,
   },
   labelRow: { flexDirection: "row" },
   labelRowReversed: { flexDirection: "row-reverse", justifyContent: "flex-end" },
@@ -80,11 +81,11 @@ const styles = stylex.create({
   },
   itemLabelDisabled: { cursor: "not-allowed", opacity: 0.5 },
   itemLabelEnabled: { cursor: "pointer" },
-  itemText: { fontSize: "0.8125rem", color: defaultText },
-  legend: { fontSize: "0.8125rem", fontWeight: 530, color: defaultText },
+  itemText: { fontSize: fontSizeSm.fontSize, color: defaultText },
+  legend: { fontSize: fontSizeSm.fontSize, fontWeight: 530, color: defaultText },
   group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
   groupList: { display: "flex", flexDirection: "column", gap: "0.5rem" },
-  message: { fontSize: "0.75rem" },
+  message: { fontSize: fontSizeXs.fontSize },
   messageDanger: { color: danger },
   messageSubtle: { color: subtle },
 });

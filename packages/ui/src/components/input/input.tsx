@@ -75,14 +75,18 @@ const styles = stylex.create({
   /** At rest the error ring replaces the input elevation. */
   variantError: { outlineWidth: "1px", outlineColor: dangerColor, boxShadow: "none" },
   focus: {
-    outlineWidth: "1px",
-    outlineColor: focusColor,
-    boxShadow: "none",
+    ":focus": {
+      outlineWidth: "1px",
+      outlineColor: focusColor,
+      boxShadow: "none",
+    },
   },
   focusError: {
-    outlineWidth: "1px",
-    outlineColor: dangerColor,
-    boxShadow: "none",
+    ":focus": {
+      outlineWidth: "1px",
+      outlineColor: dangerColor,
+      boxShadow: "none",
+    },
   },
   parentFocus: {
     ":focus-within": {
