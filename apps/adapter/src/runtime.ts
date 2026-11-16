@@ -3,7 +3,6 @@ import { Effect, Layer, Schema } from "effect";
 import { type AppConfig, type CloudflareEnv, makeAppConfigLayer } from "@tom/utils/config";
 import { type LogContext, withLogging } from "@tom/utils/logging";
 import { DatabaseService } from "@tom/db/service";
-import { ArenaService } from "@tom/arena/service";
 
 /**
  * Build a layer for a single service, providing only the config it needs.
@@ -23,9 +22,6 @@ const createServiceLayer = <S, E, R>(
     never
   >;
 };
-
-export const createArenaLayer = (env: CloudflareEnv) =>
-  createServiceLayer(env, ArenaService.Default);
 
 export const createDbLayer = (env: CloudflareEnv) =>
   createServiceLayer(env, DatabaseService.Default);

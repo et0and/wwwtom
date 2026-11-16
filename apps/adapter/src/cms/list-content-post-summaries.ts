@@ -1,11 +1,6 @@
 import { Elysia } from "elysia";
-import {
-  POSTS_PAGE_SIZE,
-  postQuerySchema,
-  proxyCachedCms,
-  sessionHeaders,
-  toUpstreamQuery,
-} from "./shared";
+import { POSTS_PAGE_SIZE, postQuerySchema, proxyCachedCms, toUpstreamQuery } from "./shared";
+import { sessionHeaders } from "../auth/forward";
 
 export const listPostSummariesRoute = new Elysia().get(
   // Static before dynamic: "/content/posts/summary" must not read as a slug.

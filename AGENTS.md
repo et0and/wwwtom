@@ -6,11 +6,11 @@ Improve existing code; avoid new abstractions.
 
 ## Shape
 
-- `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`). Solid rules: `apps/web/AGENTS.md`.
+- `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`, proxied to the api). Solid rules: `apps/web/AGENTS.md`.
 - `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
 - `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
-- `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`.
-- `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split.
+- `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`, and owns are.na reads on its token-gated `/internal/arena/*` routes.
+- `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split; proxies are.na reads to the api over the `API` service binding.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
 - `infra` — Alchemy 2.0.0-beta.85 + Effect 4.1.2 stacks: shared, turbo, api, adapter, web, sophie, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.

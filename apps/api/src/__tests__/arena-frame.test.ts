@@ -1,19 +1,30 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { CloudflareEnv } from "@tom/utils/config";
+import { INTERNAL_TOKEN_HEADER } from "@tom/constants/headers";
 import { app } from "../index";
-import {
-  fetchMock,
-  jsonResponse,
-  requestWithEnv,
-  stubFetch,
-  testEnv,
-  unstubFetch,
-} from "../test/helpers";
+import { jsonResponse, requestWithEnv, testEnv } from "../test/helpers";
+
+const fetchMock = vi.fn();
+const stubFetch = (): void => {
+  vi.stubGlobal("fetch", fetchMock);
+  fetchMock.mockReset();
+};
+const unstubFetch = (): void => {
+  vi.unstubAllGlobals();
+};
+
+/** Internal are.na reads: the token header is the adapter's, not the browser's. */
+const arenaRequest = (url: string, env: CloudflareEnv, init: RequestInit = {}): Request =>
+  requestWithEnv(url, env, {
+    ...init,
+    headers: { [INTERNAL_TOKEN_HEADER]: "test-internal-token", ...init.headers },
+  });
 
 beforeEach(stubFetch);
 
 afterEach(unstubFetch);
 
-const tomEnv = testEnv({ TENANT: "tom" });
+const tomEnv = testEnv({ TENANT: "tom", ADAPTER_URL: "http://localhost" });
 const sophieEnv = testEnv({ TENANT: "sophie" });
 
 const CHANNEL = "tom-s-worktable";
@@ -88,7 +99,7 @@ describe("are.na frame integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}`, tomEnv),
+        arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}`, tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -113,7 +124,7 @@ describe("are.na frame integration", () => {
     it("asks are.na for one page in position order", async () => {
       stubArena([[`/v3/channels/${CHANNEL}/contents`, contentsEnvelope([])]]);
 
-      await app.fetch(requestWithEnv(`http://localhost/arena/frame/${CHANNEL}`, tomEnv));
+      await app.fetch(arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}`, tomEnv));
 
       const contentsUrl = new URL(requestedUrlFor(`${CHANNEL}/contents`));
       expect(contentsUrl.searchParams.get("sort")).toBe("position_desc");
@@ -126,7 +137,10 @@ describe("are.na frame integration", () => {
       stubArena([[`/v3/channels/${CHANNEL}/contents`, contentsEnvelope([])]]);
 
       await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}?page=1&t=1735607571`, tomEnv),
+        arenaRequest(
+          `http://localhost/internal/arena/frame/${CHANNEL}?page=1&t=1735607571`,
+          tomEnv,
+        ),
       );
 
       const contentsUrl = new URL(requestedUrlFor(`${CHANNEL}/contents`));
@@ -139,7 +153,7 @@ describe("are.na frame integration", () => {
       ]);
 
       const response = await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}?page=2`, tomEnv),
+        arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}?page=2`, tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -152,7 +166,7 @@ describe("are.na frame integration", () => {
 
     it("hides the frame from the Sophie tenant", async () => {
       const response = await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}`, sophieEnv),
+        arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}`, sophieEnv),
       );
 
       expect(response.status).toBe(404);
@@ -168,7 +182,7 @@ describe("are.na frame integration", () => {
       );
 
       const response = await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}/image/12`, tomEnv),
+        arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}/image/12`, tomEnv),
       );
 
       expect(response.status).toBe(200);
@@ -189,7 +203,7 @@ describe("are.na frame integration", () => {
       stubArena([["/v3/blocks/11", textBlock(11, "A note")]]);
 
       const response = await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}/image/11`, tomEnv),
+        arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}/image/11`, tomEnv),
       );
 
       expect(response.status).toBe(404);
@@ -200,7 +214,7 @@ describe("are.na frame integration", () => {
       stubArena([["/v3/blocks/12", imageBlock(12, "Second", "https://evil.example/medium.jpg")]]);
 
       const response = await app.fetch(
-        requestWithEnv(`http://localhost/arena/frame/${CHANNEL}/image/12`, tomEnv),
+        arenaRequest(`http://localhost/internal/arena/frame/${CHANNEL}/image/12`, tomEnv),
       );
 
       expect(response.status).toBe(422);

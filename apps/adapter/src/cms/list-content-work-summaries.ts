@@ -3,10 +3,10 @@ import {
   postQuerySchema,
   proxyCachedCms,
   rejectWorkCategory,
-  sessionHeaders,
   toUpstreamQuery,
   WORKS_PAGE_SIZE,
 } from "./shared";
+import { sessionHeaders } from "../auth/forward";
 
 export const listWorkSummariesRoute = new Elysia().get(
   // Static before dynamic: "/content/works/summary" must not read as a slug.

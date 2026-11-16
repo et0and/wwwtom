@@ -1,5 +1,6 @@
 import { Elysia } from "elysia";
-import { feedQuerySchema, proxyCachedCms, sessionHeaders } from "./shared";
+import { feedQuerySchema, proxyCachedCms } from "./shared";
+import { sessionHeaders } from "../auth/forward";
 
 export const getFeedRoute = new Elysia().get(
   "/content/feed",

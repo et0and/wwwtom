@@ -3,7 +3,8 @@
   "version": "1.1.0",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./arena": "./src/arena/index.ts"
   },
   "scripts": {
     "test": "vitest run",
@@ -11,8 +12,10 @@
     "lint": "oxlint"
   },
   "dependencies": {
+    "@cf-wasm/photon": "0.1.31",
     "@elysiajs/openapi": "catalog:",
     "@standard-schema/spec": "catalog:",
+    "@tom/arena": "workspace:*",
     "@tom/constants": "workspace:*",
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",

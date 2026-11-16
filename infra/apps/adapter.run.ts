@@ -99,6 +99,13 @@ export const adapter = Effect.gen(function* () {
       ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
       : undefined;
 
+  // Service binding to the api Worker: the adapter's are.na proxy reads it in
+  // the same colo instead of dialling the public api.tom.so hostname. Local
+  // workerd dev and the e2e harness have no binding and use API_URL.
+  const apiWorker = isAlchemyDev
+    ? undefined
+    : yield* Cloudflare.Worker.ref("wwwtom-api", { stack: "wwwtom-api" });
+
   const worker = yield* Cloudflare.Worker("wwwtom-adapter", {
     main: `${rootDir}/apps/adapter/src/index.ts`,
     compatibility: { date: "2025-12-10", flags: ["nodejs_compat"] },
@@ -123,6 +130,7 @@ export const adapter = Effect.gen(function* () {
       ...adapterDevSecrets,
       WORK_QUEUE: tomQueue.pipe(retain()),
       FRAME_KV: frameKv,
+      ...(apiWorker && { API: apiWorker }),
       ...(isAlchemyDev
         ? undefined
         : {
