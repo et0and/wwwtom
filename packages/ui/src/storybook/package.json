@@ -31,6 +31,7 @@
     "@stylexjs/unplugin": "catalog:",
     "@tom/icons": "workspace:*",
     "@tom/ui": "workspace:*",
+    "@types/react": "19.2.9",
     "@vitest/browser": "^4.0.18",
     "@vitest/browser-playwright": "^4.0.18",
     "@vitest/coverage-v8": "^4.0.18",

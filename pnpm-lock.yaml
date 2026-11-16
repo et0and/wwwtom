@@ -855,6 +855,9 @@ importers:
       '@tom/ui':
         specifier: workspace:*
         version: link:../..
+      '@types/react':
+        specifier: 19.2.9
+        version: 19.2.9
       '@vitest/browser':
         specifier: ^4.0.18
         version: 4.1.11(vite@8.1.6(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.20.3)(yaml@2.9.1))(vitest@4.1.10)
