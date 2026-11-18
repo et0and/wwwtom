@@ -1,4 +1,5 @@
 import * as stylex from "@stylexjs/stylex";
+import { Effect } from "effect";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
 import { isServer } from "@solidjs/web";
@@ -56,11 +57,27 @@ const styles = stylex.create({
   messageFooter: { display: "flex", justifyContent: "space-between", alignItems: "center" },
 });
 
-export const fetchEntries = () => runAdapterCall(() => callAdapter().guestbook.entries.get());
+export const fetchEntries = async () => {
+  try {
+    return await runAdapterCall(() => callAdapter().guestbook.entries.get());
+  } catch {
+    void Effect.runFork(Effect.logWarning("[guestbook] entries read failed"));
+    return [];
+  }
+};
 
 // The guestbook user lives in an adapter-domain cookie, so this must run in
 // the browser (client-only) — never preloaded server-side.
-const fetchCurrentUser = () => runAdapterCall(() => callAdapter().guestbook.me.get());
+const fetchCurrentUser = async () => {
+  try {
+    return await runAdapterCall(() => callAdapter().guestbook.me.get());
+  } catch {
+    // A failed session read degrades to the signed-out state, as it did
+    // before rejected query reads became render errors.
+    void Effect.runFork(Effect.logWarning("[guestbook] current user read failed"));
+    return null;
+  }
+};
 
 const initiateAuth = (handle: string) =>
   runAdapterCall(() => callAdapter().guestbook.auth.initiate.post({ handle }));

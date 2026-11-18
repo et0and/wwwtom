@@ -141,4 +141,12 @@ describe("ChannelEmbed", { timeout: 30_000 }, () => {
     expect(document.querySelector("audio")).toBeNull();
     expect(document.querySelector("video")).toBeNull();
   });
+
+  it("keeps the fallbacks when the channel reads fail", async () => {
+    fetchMock.mockRejectedValue(new Error("network down"));
+    renderStrip();
+
+    await waitFor(() => expect(screen.getByText("Could not load channel")).toBeTruthy());
+    expect(screen.getByRole("link", { name: "Philemon" })).toBeTruthy();
+  });
 });
