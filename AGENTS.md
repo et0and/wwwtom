@@ -160,7 +160,7 @@ Never guess at Effect patterns - check the guide first.
 - components = setup fns, run once, not render loops
 - signals as fns: `count()`; one signal per value
 - derivations in `createMemo`/derived fns — never `createEffect` that sets state
-- `createEffect(compute, effect)` is two-arg; side effects only; `onCleanup` inside effects
+- `createEffect(compute, effect)` is two-arg; side effects only; return cleanup from the effect callback (`onCleanup` there never runs)
 - `onSettled` for mount work (no `onMount`); return cleanup from the callback
 - props via `props.x` (no destructure); `merge` for defaults, `omit` for rest
 - `<For>`/`<Show>`/`<Switch>`, never `.map()` in JSX; `<Loading>` for async (no `Suspense`, no `createResource`)

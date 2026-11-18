@@ -1,5 +1,5 @@
 /// <reference types="@solidjs/vite-plugin/boundary-modules" />
-/// <reference types="@solidjs/vite-plugin/virtual-solid-manifest" />
+/// <reference types="@solidjs/vite-plugin/virtual-modules" />
 
 interface CloudflareEnv {
   ADAPTER_URL?: string;

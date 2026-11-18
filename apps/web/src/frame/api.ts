@@ -156,9 +156,3 @@ export const signOut = async (): Promise<void> => {
   });
   if (!response.ok) throw await problemFor(response);
 };
-
-export const errorMessage = (cause: unknown): string => {
-  if (cause instanceof Error) return cause.message;
-  if (Schema.is(HttpError)(cause)) return cause.message;
-  return "Something went wrong";
-};

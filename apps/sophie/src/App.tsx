@@ -1,6 +1,6 @@
 import * as stylex from "@stylexjs/stylex";
-import { Loading, Match, Show, Switch, createSignal } from "solid-js";
-import { createRouter, useParams } from "@solidjs/router";
+import { Errored, Loading, Match, Show, Switch, createSignal } from "solid-js";
+import { createRouter, intentPreload, useParams } from "@solidjs/router";
 import { QueryClientProvider, useQuery } from "@tanstack/solid-query";
 import { httpStatus, isServer } from "@solidjs/web";
 import { Effect } from "effect";
@@ -14,6 +14,7 @@ import { Loader } from "@tom/ui/loader";
 import { Pagination } from "@tom/ui/pagination";
 import { layout } from "@tom/ui/primitives.stylex";
 import { formatDate } from "@tom/utils/date";
+import { errorMessage } from "@tom/utils/http";
 import { getAdapterBaseUrl } from "./posts/api";
 import { getQueryClient } from "./data/query-client";
 import { PAGES_CATEGORY, fetchAbout, fetchCategories, fetchPost, fetchPosts } from "./posts/posts";
@@ -59,19 +60,22 @@ const About = () => {
           </p>
         }
       >
-        <Show when={aboutQuery.isError}>
-          <Banner variant="error" description={aboutQuery.error?.message ?? "Load failed"} />
-        </Show>
-        {/* keyed: a preloaded post replaces the data object without toggling
-            truthiness, which a non-keyed Show would not re-render. */}
-        <Show when={aboutQuery.data} fallback={<p>Nothing here yet.</p>} keyed>
-          {(post) => (
-            // post.html is rendered at write time from a validated Tiptap
-            // doc via renderTiptapHtml (escaped, unsafe schemes dropped),
-            // so innerHTML is safe here. Pinned by html.test.ts.
-            <div class="sophie-body" innerHTML={post.html} />
+        <Errored
+          fallback={(error) => (
+            <Banner variant="error" description={errorMessage(error(), "Load failed")} />
           )}
-        </Show>
+        >
+          {/* keyed: a preloaded post replaces the data object without toggling
+              truthiness, which a non-keyed Show would not re-render. */}
+          <Show when={aboutQuery.data} fallback={<p>Nothing here yet.</p>} keyed>
+            {(post) => (
+              // post.html is rendered at write time from a validated Tiptap
+              // doc via renderTiptapHtml (escaped, unsafe schemes dropped),
+              // so innerHTML is safe here. Pinned by html.test.ts.
+              <div class="sophie-body" innerHTML={post.html} />
+            )}
+          </Show>
+        </Errored>
       </Loading>
     </main>
   );
@@ -110,26 +114,31 @@ const Posts = () => {
           </p>
         }
       >
-        <Show when={postsQuery.isError}>
-          <Banner variant="error" description={postsQuery.error?.message ?? "Load failed"} />
-        </Show>
-        <CategoryFilter
-          categories={(catsQuery.data ?? []).filter((category) => category.slug !== PAGES_CATEGORY)}
-          active={activeCategory()}
-          onSelect={(slug) => {
-            setActiveCategory(slug);
-            setPage(1);
-          }}
-        />
-        <PostList posts={visible()} />
-        <Show when={totalPages() > 1}>
-          <Pagination
-            style={styles.paginationSpacing}
-            page={page()}
-            pageCount={totalPages()}
-            onChange={(next) => setPage(next)}
+        <Errored
+          fallback={(error) => (
+            <Banner variant="error" description={errorMessage(error(), "Load failed")} />
+          )}
+        >
+          <CategoryFilter
+            categories={(catsQuery.data ?? []).filter(
+              (category) => category.slug !== PAGES_CATEGORY,
+            )}
+            active={activeCategory()}
+            onSelect={(slug) => {
+              setActiveCategory(slug);
+              setPage(1);
+            }}
           />
-        </Show>
+          <PostList posts={visible()} />
+          <Show when={totalPages() > 1}>
+            <Pagination
+              style={styles.paginationSpacing}
+              page={page()}
+              pageCount={totalPages()}
+              onChange={(next) => setPage(next)}
+            />
+          </Show>
+        </Errored>
       </Loading>
     </main>
   );
@@ -158,51 +167,54 @@ const PostDetail = () => {
       {/* No Loading wrapper: the query promise suspends to the outer boundary
         so the SSR stream holds until data resolves and head takes the meta.
         Absent posts settle as null and fall to the missing state. */}
-      <Switch
-        fallback={
-          <article>
-            <h1 class="sophie-title">Missing</h1>
-            <p>No post lives here.</p>
-            <p>
-              <a href="/">Posts</a>
-            </p>
-          </article>
-        }
+      <Errored
+        fallback={(error) => (
+          <Banner variant="error" description={errorMessage(error(), "Load failed")} />
+        )}
       >
-        <Match when={postQuery.isPending}>
-          <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
-            <Loader size="sm" /> Loading…
-          </p>
-        </Match>
-        {/* keyed: a preloaded post swap replaces the data object without
-            toggling truthiness, which a non-keyed Match would not re-render. */}
-        <Match when={postQuery.data} keyed>
-          {(found) => (
+        <Switch
+          fallback={
             <article>
-              <Metadata
-                title={found.title}
-                metaType="description"
-                metaContent={found.summary ?? SOPHIE_DESCRIPTION}
-                brand={SOPHIE_BRAND}
-                date={formatDate(found.publishedAt)}
-              />
-              <div class="sophie-crumbs">
-                <Breadcrumbs
-                  size="sm"
-                  items={[{ label: "Posts", href: "/" }, { label: found.title }]}
+              <h1 class="sophie-title">Missing</h1>
+              <p>No post lives here.</p>
+              <p>
+                <a href="/">Posts</a>
+              </p>
+            </article>
+          }
+        >
+          <Match when={postQuery.isPending}>
+            <p {...stylex.attrs(layout.flexRowCentered, layout.gap2)}>
+              <Loader size="sm" /> Loading…
+            </p>
+          </Match>
+          {/* keyed: a preloaded post swap replaces the data object without
+            toggling truthiness, which a non-keyed Match would not re-render. */}
+          <Match when={postQuery.data} keyed>
+            {(found) => (
+              <article>
+                <Metadata
+                  title={found.title}
+                  metaType="description"
+                  metaContent={found.summary ?? SOPHIE_DESCRIPTION}
+                  brand={SOPHIE_BRAND}
+                  date={formatDate(found.publishedAt)}
                 />
-              </div>
-              {/* post.html is rendered at write time from a validated Tiptap
+                <div class="sophie-crumbs">
+                  <Breadcrumbs
+                    size="sm"
+                    items={[{ label: "Posts", href: "/" }, { label: found.title }]}
+                  />
+                </div>
+                {/* post.html is rendered at write time from a validated Tiptap
                 doc via renderTiptapHtml (escaped, unsafe schemes dropped),
                 so innerHTML is safe here. Pinned by html.test.ts. */}
-              <div class="sophie-body" innerHTML={found.html} />
-            </article>
-          )}
-        </Match>
-        <Match when={postQuery.isError}>
-          <Banner variant="error" description={postQuery.error?.message ?? "Load failed"} />
-        </Match>
-      </Switch>
+                <div class="sophie-body" innerHTML={found.html} />
+              </article>
+            )}
+          </Match>
+        </Switch>
+      </Errored>
     </main>
   );
 };
@@ -283,6 +295,9 @@ export const Router = createRouter({
     },
     { path: "*404", component: NotFound },
   ],
+  // Router 2 only preloads a link's route `preload` through a strategy;
+  // without one, `preload={true}` anchors do nothing.
+  preloadLinks: intentPreload(),
 });
 
 export const App = () => {

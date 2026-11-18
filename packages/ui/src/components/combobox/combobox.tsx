@@ -6,7 +6,7 @@ import {
   createSignal,
   For,
   merge,
-  onCleanup,
+  onSettled,
   Show,
   omit,
   useContext,
@@ -332,9 +332,12 @@ export type ComboboxContentProps = {
 function Content(props: ComboboxContentProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
-  const attach = (element: HTMLDivElement): void => {
+  const [element, setElement] = createSignal<HTMLDivElement>();
+  onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
-      if (!element.contains(event.target as Node)) ctx.setOpen(false);
+      if (!ctx.isOpen()) return;
+      const target = element();
+      if (target && !target.contains(event.target as Node)) ctx.setOpen(false);
     };
     const moveActive = (delta: number): void => {
       const items = ctx.registeredItems();
@@ -345,6 +348,7 @@ function Content(props: ComboboxContentProps): JSX.Element {
       ctx.setActiveValue(items[next]);
     };
     const onKey = (event: KeyboardEvent): void => {
+      if (!ctx.isOpen()) return;
       const items = ctx.registeredItems();
       if (event.key === "Escape") {
         ctx.setOpen(false);
@@ -362,15 +366,17 @@ function Content(props: ComboboxContentProps): JSX.Element {
     };
     document.addEventListener("mousedown", onOutside);
     document.addEventListener("keydown", onKey);
-    onCleanup(() => {
+    return () => {
       document.removeEventListener("mousedown", onOutside);
       document.removeEventListener("keydown", onKey);
-    });
-  };
+    };
+  });
   return (
     <Show when={ctx.isOpen()}>
       <div
-        ref={attach}
+        ref={(el) => {
+          setElement(el);
+        }}
         data-tomui-component="Combobox"
         data-tomui-part="content"
         {...stylex.attrs(styles.content, merged.style)}
@@ -622,12 +628,10 @@ export type ComboboxListProps = {
 function List(props: ComboboxListProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
-  createEffect(
-    () => merged.items ?? [],
-    (items) => {
-      ctx.registerItems(items);
-    },
-  );
+  const items = (): Array<string> => merged.items ?? [];
+  createEffect(items, (registered) => {
+    ctx.registerItems(registered);
+  });
   return (
     <div
       data-tomui-component="Combobox"

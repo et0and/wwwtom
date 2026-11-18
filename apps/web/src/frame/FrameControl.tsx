@@ -1,11 +1,11 @@
-import { Loading, Show, createSignal, onSettled } from "solid-js";
+import { Errored, Loading, Show, createSignal, onSettled } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { useQuery } from "@tanstack/solid-query";
 import { Loader } from "@tom/ui/loader";
+import { errorMessage } from "@tom/utils/http";
 import {
   FRAME_SESSION_QUERY_KEY,
   FRAME_STATE_QUERY_KEY,
-  errorMessage,
   loadFrameSession,
   loadFrameState,
 } from "./api";
@@ -35,55 +35,50 @@ function FrameControlContent() {
     retry: false,
   }));
 
-  const stateQuery = useQuery(() => ({
-    queryKey: FRAME_STATE_QUERY_KEY,
-    queryFn: loadFrameState,
-    enabled: sessionQuery.data !== null && sessionQuery.data !== undefined,
-    retry: false,
-  }));
-
   return (
     <div {...stylex.attrs(styles.stack)}>
       <Loading fallback={<Loader />}>
-        <Show
-          when={sessionQuery.error}
-          fallback={
-            <Show when={sessionQuery.data} fallback={<FrameSignIn />}>
-              {(session) => (
-                <>
-                  <FrameSessionBar email={session().user.email} />
-                  <Loading fallback={<Loader />}>
-                    <Show
-                      when={stateQuery.error}
-                      fallback={
-                        <Show when={stateQuery.data}>
-                          {(frame) => <FrameEditor frame={frame()} />}
-                        </Show>
-                      }
-                    >
-                      {(error) => (
-                        <FrameLoadError
-                          title="Could not load the frame"
-                          message={errorMessage(error())}
-                          onRetry={() => void stateQuery.refetch()}
-                        />
-                      )}
-                    </Show>
-                  </Loading>
-                </>
-              )}
-            </Show>
-          }
-        >
-          {(error) => (
+        <Errored
+          fallback={(error) => (
             <FrameLoadError
               title="Could not load your session"
               message={errorMessage(error())}
               onRetry={() => void sessionQuery.refetch()}
             />
           )}
-        </Show>
+        >
+          <Show when={sessionQuery.data} fallback={<FrameSignIn />}>
+            {(session) => <SignedInFrame email={session().user.email} />}
+          </Show>
+        </Errored>
       </Loading>
     </div>
+  );
+}
+
+function SignedInFrame(props: { email: string }) {
+  const stateQuery = useQuery(() => ({
+    queryKey: FRAME_STATE_QUERY_KEY,
+    queryFn: loadFrameState,
+    retry: false,
+  }));
+
+  return (
+    <>
+      <FrameSessionBar email={props.email} />
+      <Loading fallback={<Loader />}>
+        <Errored
+          fallback={(error) => (
+            <FrameLoadError
+              title="Could not load the frame"
+              message={errorMessage(error())}
+              onRetry={() => void stateQuery.refetch()}
+            />
+          )}
+        >
+          <Show when={stateQuery.data}>{(frame) => <FrameEditor frame={frame()} />}</Show>
+        </Errored>
+      </Loading>
+    </>
   );
 }

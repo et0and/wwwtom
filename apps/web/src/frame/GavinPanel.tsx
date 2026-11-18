@@ -8,7 +8,8 @@ import { Input } from "@tom/ui/input";
 import { Text } from "@tom/ui/text";
 import type { GavinFrameState } from "@tom/schemas/frame-state";
 import { settledGavinMood, type GavinMood } from "@tom/schemas/gavin";
-import { askGavin, errorMessage, setGavinMood } from "./api";
+import { errorMessage } from "@tom/utils/http";
+import { askGavin, setGavinMood } from "./api";
 import { styles } from "./frame.stylex";
 
 interface SpeechResult {

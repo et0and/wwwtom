@@ -1,4 +1,4 @@
-import { Match, Switch, createMemo } from "solid-js";
+import { Errored, Match, Switch, createMemo } from "solid-js";
 import { useParams } from "@solidjs/router";
 import { httpHeader } from "@solidjs/web";
 import { useQuery } from "@tanstack/solid-query";
@@ -6,6 +6,7 @@ import { fetchWorkBySlug } from "~/server/adapter";
 import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
+import { errorMessage } from "@tom/utils/http";
 import {
   ArenaSourceLink,
   DetailError,
@@ -39,48 +40,51 @@ export default function WorkPage() {
   return (
     // Absent works settle as null data (the fetcher maps 404s in the Effect
     // layer): pending renders loading, settled data renders content,
-    // settled error renders the banner, settled null falls to not-found.
-    <Switch fallback={<DetailNotFound kind="work" slug={slug()} />}>
-      <Match when={workQuery.isPending}>
-        <DetailLoading />
-      </Match>
-      {/* keyed: a preloaded work swap replaces the data object without
+    // a rejected read renders the banner, settled null falls to not-found.
+    <Errored
+      fallback={(error) => (
+        <DetailError kind="work" message={errorMessage(error(), "Load failed")} />
+      )}
+    >
+      <Switch fallback={<DetailNotFound kind="work" slug={slug()} />}>
+        <Match when={workQuery.isPending}>
+          <DetailLoading />
+        </Match>
+        {/* keyed: a preloaded work swap replaces the data object without
           toggling truthiness, which a non-keyed Match would not re-render. */}
-      <Match when={workQuery.data} keyed>
-        {(work) => (
-          <PageLayout
-            title={work.title}
-            description={work.summary ?? ""}
-            canonical={`https://tom.so/work/${slug()}`}
-            jsonLd={{
-              "@context": "https://schema.org",
-              "@type": "CreativeWork",
-              name: work.title,
-              description: work.summary ?? "",
-              url: `https://tom.so/work/${slug()}`,
-              author: { "@type": "Person", name: "Tom Hackshaw" },
-            }}
-          >
-            <article>
-              <Text variant="heading" size="lg" as="h1">
-                {work.title}
-              </Text>
-              <div>
-                <Text>{work.summary ?? ""}</Text>
-              </div>
-              <div>
-                <ArenaSourceLink arenaSlug={work.arenaSlug} />
-              </div>
-              <div>
-                <ContentBlocks blocks={work.blocks} />
-              </div>
-            </article>
-          </PageLayout>
-        )}
-      </Match>
-      <Match when={workQuery.isError}>
-        <DetailError kind="work" message={workQuery.error?.message ?? "Load failed"} />
-      </Match>
-    </Switch>
+        <Match when={workQuery.data} keyed>
+          {(work) => (
+            <PageLayout
+              title={work.title}
+              description={work.summary ?? ""}
+              canonical={`https://tom.so/work/${slug()}`}
+              jsonLd={{
+                "@context": "https://schema.org",
+                "@type": "CreativeWork",
+                name: work.title,
+                description: work.summary ?? "",
+                url: `https://tom.so/work/${slug()}`,
+                author: { "@type": "Person", name: "Tom Hackshaw" },
+              }}
+            >
+              <article>
+                <Text variant="heading" size="lg" as="h1">
+                  {work.title}
+                </Text>
+                <div>
+                  <Text>{work.summary ?? ""}</Text>
+                </div>
+                <div>
+                  <ArenaSourceLink arenaSlug={work.arenaSlug} />
+                </div>
+                <div>
+                  <ContentBlocks blocks={work.blocks} />
+                </div>
+              </article>
+            </PageLayout>
+          )}
+        </Match>
+      </Switch>
+    </Errored>
   );
 }
