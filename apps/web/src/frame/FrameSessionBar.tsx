@@ -4,8 +4,9 @@ import { useMutation } from "@tanstack/solid-query";
 import { Banner } from "@tom/ui/banner";
 import { Button } from "@tom/ui/button";
 import { Text } from "@tom/ui/text";
+import { errorMessage } from "@tom/utils/http";
 import { queryClient } from "~/data/query-client";
-import { FRAME_SESSION_QUERY_KEY, FRAME_STATE_QUERY_KEY, errorMessage, signOut } from "./api";
+import { FRAME_SESSION_QUERY_KEY, FRAME_STATE_QUERY_KEY, signOut } from "./api";
 import { styles } from "./frame.stylex";
 
 export interface FrameSessionBarProps {

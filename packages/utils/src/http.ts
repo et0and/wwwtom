@@ -31,6 +31,13 @@ export const adapterErrorMessage = (
   );
 
 /**
+ * A message for whatever a boundary caught. Effect's tagged errors extend
+ * `Error`, so `instanceof` covers both them and plain throws.
+ */
+export const errorMessage = (cause: unknown, fallback = "Something went wrong"): string =>
+  cause instanceof Error ? cause.message : fallback;
+
+/**
  * A real HTTP error status. A schema rather than `Number(x) || 500`, which
  * passed a truthy non-error status (a 302, say) straight through as the
  * response status.

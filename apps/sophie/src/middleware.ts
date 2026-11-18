@@ -1,4 +1,4 @@
-import { getRequestEvent } from "@solidjs/web";
+import type { RequestEvent } from "@solidjs/web";
 import type { CloudflareEnv } from "@tom/utils/config";
 import { logLevelFromEnv, otelConfigFromEnv } from "@tom/utils/logging";
 import type { LogContext } from "@tom/utils/logging";
@@ -10,8 +10,8 @@ import { createRequestQueryClient } from "./data/query-client";
  * It builds the request's LogContext (requestId plus method/path) so SSR
  * adapter calls export to observability with the same annotations as web.
  */
-export default async function middleware(request: Request, next: () => Promise<Response>) {
-  const event = getRequestEvent();
+export default async function middleware(event: RequestEvent, next: () => Promise<Response>) {
+  const request = event.request;
   const env: CloudflareEnv = {
     ...(process.env.LOG_LEVEL !== undefined && { LOG_LEVEL: process.env.LOG_LEVEL }),
     ...(process.env.AXIOM_TOKEN !== undefined && { AXIOM_TOKEN: process.env.AXIOM_TOKEN }),
@@ -34,11 +34,9 @@ export default async function middleware(request: Request, next: () => Promise<R
     logLevel: logLevelFromEnv(env),
     ...(otel && { otel }),
   };
-  if (event) {
-    event.locals.logContext = logContext;
-    // One fresh query cache per request so parallel SSR renders never share
-    // cache state (Solid 2 request scopes are async-local).
-    event.locals.queryClient = createRequestQueryClient();
-  }
+  event.locals.logContext = logContext;
+  // One fresh query cache per request so parallel SSR renders never share
+  // cache state (Solid 2 request scopes are async-local).
+  event.locals.queryClient = createRequestQueryClient();
   return next();
 }
