@@ -29,7 +29,8 @@ too — Effect 4 calls it `Effect.catch`.
 - MUST: `createEffect(compute, effect)` takes TWO functions in 2.0:
   `createEffect(() => count(), (count) => doWork(count))`. Single-arg
   `createEffect(() => ...)` throws. Side effects only — never set state there.
-- MUST: `onCleanup(() => ...)` inside effects for subscriptions/intervals/listeners.
+- MUST: return the cleanup from the effect callback for
+  subscriptions/intervals/listeners — `onCleanup` there never runs.
 - MUST: Store path updates: `setStore("users", 0, "name", "Jane")`.
 - SHOULD: `untrack(() => value())` to read without subscribing.
 - SHOULD: `createStore({ ... })` for nested objects with fine-grained reactivity.
