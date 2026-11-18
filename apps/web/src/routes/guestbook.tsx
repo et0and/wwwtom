@@ -1,5 +1,4 @@
 import * as stylex from "@stylexjs/stylex";
-import { Effect } from "effect";
 import { useQuery, useMutation } from "@tanstack/solid-query";
 import { For, Show, Loading, createSignal } from "solid-js";
 import { isServer } from "@solidjs/web";
@@ -12,7 +11,7 @@ import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
 import { Text } from "@tom/ui/text";
-import { callAdapter, runAdapterCall } from "~/data/adapter";
+import { callAdapter, runAdapterCall, runAdapterRequestOrElse } from "~/data/adapter";
 import { queryClient } from "~/data/query-client";
 import { formatDateTime } from "@tom/utils/date";
 import { bannerTitleStyles, layoutStyles } from "../chrome/layout.stylex";
@@ -57,27 +56,15 @@ const styles = stylex.create({
   messageFooter: { display: "flex", justifyContent: "space-between", alignItems: "center" },
 });
 
-export const fetchEntries = async () => {
-  try {
-    return await runAdapterCall(() => callAdapter().guestbook.entries.get());
-  } catch {
-    void Effect.runFork(Effect.logWarning("[guestbook] entries read failed"));
-    return [];
-  }
-};
+export const fetchEntries = () =>
+  runAdapterRequestOrElse(() => callAdapter().guestbook.entries.get(), []);
 
 // The guestbook user lives in an adapter-domain cookie, so this must run in
-// the browser (client-only) — never preloaded server-side.
-const fetchCurrentUser = async () => {
-  try {
-    return await runAdapterCall(() => callAdapter().guestbook.me.get());
-  } catch {
-    // A failed session read degrades to the signed-out state, as it did
-    // before rejected query reads became render errors.
-    void Effect.runFork(Effect.logWarning("[guestbook] current user read failed"));
-    return null;
-  }
-};
+// the browser (client-only) — never preloaded server-side. A failed read
+// degrades to the signed-out state, as it did before rejected query reads
+// became render errors.
+const fetchCurrentUser = () =>
+  runAdapterRequestOrElse(() => callAdapter().guestbook.me.get(), null);
 
 const initiateAuth = (handle: string) =>
   runAdapterCall(() => callAdapter().guestbook.auth.initiate.post({ handle }));

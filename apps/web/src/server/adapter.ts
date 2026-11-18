@@ -1,4 +1,9 @@
-import { callAdapter, runAdapterRequest, runAdapterRequestOrNull } from "~/data/adapter";
+import {
+  callAdapter,
+  runAdapterRequest,
+  runAdapterRequestOrElse,
+  runAdapterRequestOrNull,
+} from "~/data/adapter";
 import type { ArenaEntry, ArenaEntryList } from "@tom/schemas/arena-content";
 
 /** Posts index page size, shared by the route and its router preload. */
@@ -31,5 +36,18 @@ export function fetchChannel(slug: string) {
 export function fetchChannelContents(slug: string, per: number) {
   return runAdapterRequest(() =>
     callAdapter().arena.channels({ slug }).contents.get({ query: { per } }),
+  );
+}
+
+/** Channel metadata, or null when the adapter read fails (an embed degrades). */
+export function fetchChannelOrNull(slug: string) {
+  return runAdapterRequestOrElse(() => callAdapter().arena.channels({ slug }).get(), null);
+}
+
+/** Channel contents, or null when the adapter read fails (an embed degrades). */
+export function fetchChannelContentsOrNull(slug: string, per: number) {
+  return runAdapterRequestOrElse(
+    () => callAdapter().arena.channels({ slug }).contents.get({ query: { per } }),
+    null,
   );
 }

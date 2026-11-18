@@ -1,14 +1,14 @@
 import { For, Show, createMemo } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 import { useQuery } from "@tanstack/solid-query";
-import { Effect, Option, Schema } from "effect";
+import { Option, Schema } from "effect";
 import { ArenaContentBlockSchema } from "@tom/schemas/arena-content";
 import type { ArenaBlockImage, ArenaChannelContents } from "@tom/schemas/arena";
 import { colors } from "@tom/ui/colors.stylex";
 import { Loader } from "@tom/ui/loader";
 import { overflow } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
-import { fetchChannel, fetchChannelContents } from "~/server/adapter";
+import { fetchChannelContentsOrNull, fetchChannelOrNull } from "~/server/adapter";
 import {
   AudioAttachment,
   VideoAttachment,
@@ -187,30 +187,12 @@ interface ChannelEmbedProps {
 export function ChannelEmbed(props: ChannelEmbedProps) {
   const channelQuery = useQuery(() => ({
     queryKey: ["arena-channel", props.slug],
-    queryFn: async () => {
-      try {
-        return await fetchChannel(props.slug);
-      } catch {
-        void Effect.runFork(
-          Effect.logWarning(`[arena] getChannel failed for slug "${props.slug}"`),
-        );
-        return null;
-      }
-    },
+    queryFn: () => fetchChannelOrNull(props.slug),
   }));
 
   const contentsQuery = useQuery(() => ({
     queryKey: ["arena-contents", props.slug, STRIP_ITEMS],
-    queryFn: async () => {
-      try {
-        return await fetchChannelContents(props.slug, STRIP_ITEMS);
-      } catch {
-        void Effect.runFork(
-          Effect.logWarning(`[arena] getChannelContents failed for slug "${props.slug}"`),
-        );
-        return null;
-      }
-    },
+    queryFn: () => fetchChannelContentsOrNull(props.slug, STRIP_ITEMS),
   }));
 
   const heading = () => channelQuery.data?.title ?? props.title ?? props.slug;

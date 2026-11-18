@@ -106,6 +106,26 @@ export const runAdapterRequestOrNull = <T>(
     "web.adapterRequestOrNull",
   );
 
+/**
+ * Run an adapter read to completion, degrading to `fallback` on failure.
+ * The failure is logged inside the adapter pipeline (span plus request
+ * LogContext) instead of rejecting into the render graph.
+ */
+export const runAdapterRequestOrElse = <T, F>(
+  request: () => Promise<EdenResult<T>>,
+  fallback: F,
+): Promise<T | F> =>
+  runLoggedAdapterRequest(
+    adapterRequest(request).pipe(
+      Effect.catch((error) =>
+        Effect.logWarning(`[adapter] read failed, using fallback: ${error.message}`).pipe(
+          Effect.as(fallback),
+        ),
+      ),
+    ),
+    "web.adapterRequestOrElse",
+  );
+
 /** Logging context for the current SSR request, if any. */
 const getServerLogContext = (): LogContext => {
   if (!isServer) return { serviceName: "tom-web" };
