@@ -29,10 +29,6 @@ export function fetchWorkBySlug(slug: string): Promise<ArenaEntry | null> {
   return runAdapterRequestOrNull(() => callAdapter().content.arena.works({ slug }).get());
 }
 
-export function fetchChannel(slug: string) {
-  return runAdapterRequest(() => callAdapter().arena.channels({ slug }).get());
-}
-
 export function fetchChannelContents(slug: string, per: number) {
   return runAdapterRequest(() =>
     callAdapter().arena.channels({ slug }).contents.get({ query: { per } }),
