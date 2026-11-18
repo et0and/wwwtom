@@ -7,11 +7,12 @@ import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/c
 import { PageLayout } from "@tom/ui/PageLayout";
 import { layout } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
-import { Loading, Show, For } from "solid-js";
+import { Errored, Loading, Show, For } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
 import { formatDate } from "@tom/utils/date";
 import { parsePageNumber } from "@tom/utils/page";
+import { errorMessage } from "@tom/utils/http";
 import { bannerTitleStyles } from "../../chrome/layout.stylex";
 
 const styles = stylex.create({
@@ -60,62 +61,65 @@ export default function PostsHome() {
       </div>
       <div>
         <Loading fallback={<Loader />}>
-          <Show when={postsQuery.isError}>
-            <div class="banner" role="alert">
-              <Text style={bannerTitleStyles.bannerTitle}>Error loading posts</Text>
-              <Text>{postsQuery.error?.message}</Text>
-            </div>
-          </Show>
-          {/* keyed: a preloaded page swap replaces the data object without
-              toggling truthiness, which a non-keyed Show would not re-render. */}
-          <Show when={postsQuery.data} keyed>
-            {(postsPage) => (
-              <>
-                <Show
-                  when={postsPage.docs.length > 0}
-                  fallback={<Text variant="secondary">No posts found.</Text>}
-                >
-                  <For each={postsPage.docs}>
-                    {(post) => (
+          <Errored
+            fallback={(error) => (
+              <div class="banner" role="alert">
+                <Text style={bannerTitleStyles.bannerTitle}>Error loading posts</Text>
+                <Text>{errorMessage(error(), "Load failed")}</Text>
+              </div>
+            )}
+          >
+            {/* keyed: a preloaded page swap replaces the data object without
+                toggling truthiness, which a non-keyed Show would not re-render. */}
+            <Show when={postsQuery.data} keyed>
+              {(postsPage) => (
+                <>
+                  <Show
+                    when={postsPage.docs.length > 0}
+                    fallback={<Text variant="secondary">No posts found.</Text>}
+                  >
+                    <For each={postsPage.docs}>
+                      {(post) => (
+                        <Link
+                          variant="current"
+                          class="page"
+                          style={layout.block}
+                          preload={true}
+                          href={`/posts/${post.slug}`}
+                        >
+                          <div>
+                            <Text variant="heading" as="h2">
+                              {post.title}
+                            </Text>
+                            <Text variant="secondary" size="sm" as="time">
+                              {formatDate(post.publishedAt)}
+                            </Text>
+                            <Text>{post.summary ?? ""}</Text>
+                          </div>
+                        </Link>
+                      )}
+                    </For>
+                  </Show>
+                  <div {...stylex.attrs(styles.pagination)}>
+                    <Show when={postsPage.page > 1}>
                       <Link
                         variant="current"
-                        class="page"
-                        style={layout.block}
                         preload={true}
-                        href={`/posts/${post.slug}`}
+                        href={`/posts?page=${postsPage.page - 1}`}
                       >
-                        <div>
-                          <Text variant="heading" as="h2">
-                            {post.title}
-                          </Text>
-                          <Text variant="secondary" size="sm" as="time">
-                            {formatDate(post.publishedAt)}
-                          </Text>
-                          <Text>{post.summary ?? ""}</Text>
-                        </div>
+                        Previous
                       </Link>
-                    )}
-                  </For>
-                </Show>
-                <div {...stylex.attrs(styles.pagination)}>
-                  <Show when={postsPage.page > 1}>
-                    <Link
-                      variant="current"
-                      preload={true}
-                      href={`/posts?page=${postsPage.page - 1}`}
-                    >
-                      Previous
-                    </Link>
-                  </Show>
-                  <Show when={postsPage.page < postsPage.totalPages}>
-                    <Link variant="current" href={`/posts?page=${postsPage.page + 1}`}>
-                      Next
-                    </Link>
-                  </Show>
-                </div>
-              </>
-            )}
-          </Show>
+                    </Show>
+                    <Show when={postsPage.page < postsPage.totalPages}>
+                      <Link variant="current" href={`/posts?page=${postsPage.page + 1}`}>
+                        Next
+                      </Link>
+                    </Show>
+                  </div>
+                </>
+              )}
+            </Show>
+          </Errored>
         </Loading>
       </div>
     </PageLayout>

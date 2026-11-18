@@ -32,7 +32,7 @@
     "tone": "15.1.22"
   },
   "devDependencies": {
-    "@solidjs/testing-library": "1.0.0-beta.3",
+    "@solidjs/testing-library": "1.0.0-rc.2",
     "@solidjs/vite-plugin": "catalog:",
     "@stylexjs/unplugin": "catalog:",
     "@testing-library/jest-dom": "6.8.0",

@@ -1,6 +1,6 @@
 # Solid Rules (apps/web, apps/editor)
 
-Solid 2.0 (`solid-js@2.0.0-rc.6`) + Vite. No SolidStart package, no 1.x APIs:
+Solid 2.0 (`solid-js@2.0.0`) + Vite. No SolidStart package, no 1.x APIs:
 `onMount`, `createResource`, `batch`, `on`, `mergeProps`, `splitProps`,
 `Suspense`, `ErrorBoundary`, `Index`, `classList`, `produce`,
 `createComputed`, `startTransition` are all gone. `Effect.catchAll` is gone
