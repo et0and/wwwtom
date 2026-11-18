@@ -283,6 +283,7 @@ function Content(props: AutocompleteContentProps): JSX.Element {
   const [element, setElement] = createSignal<HTMLDivElement>();
   onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
+      if (!ctx.isOpen()) return;
       const target = element();
       if (target && !target.contains(event.target as Node)) ctx.setOpen(false);
     };
