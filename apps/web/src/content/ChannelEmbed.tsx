@@ -8,7 +8,7 @@ import { colors } from "@tom/ui/colors.stylex";
 import { Loader } from "@tom/ui/loader";
 import { overflow } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
-import { fetchChannel, fetchChannelContents } from "~/server/adapter";
+import { fetchChannelContentsOrNull, fetchChannelOrNull } from "~/server/adapter";
 import {
   AudioAttachment,
   VideoAttachment,
@@ -187,12 +187,12 @@ interface ChannelEmbedProps {
 export function ChannelEmbed(props: ChannelEmbedProps) {
   const channelQuery = useQuery(() => ({
     queryKey: ["arena-channel", props.slug],
-    queryFn: () => fetchChannel(props.slug),
+    queryFn: () => fetchChannelOrNull(props.slug),
   }));
 
   const contentsQuery = useQuery(() => ({
     queryKey: ["arena-contents", props.slug, STRIP_ITEMS],
-    queryFn: () => fetchChannelContents(props.slug, STRIP_ITEMS),
+    queryFn: () => fetchChannelContentsOrNull(props.slug, STRIP_ITEMS),
   }));
 
   const heading = () => channelQuery.data?.title ?? props.title ?? props.slug;

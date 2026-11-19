@@ -12,6 +12,10 @@ export default defineConfig({
     environment: "jsdom",
     setupFiles: ["./src/test/setup.ts"],
     globals: true,
+    // Inlined so its `solid-js` import resolves through Vite's browser
+    // conditions. Externalized, Node picks solid-js' server build and head
+    // tags throw NoOwnerError.
+    server: { deps: { inline: ["@solidjs/meta"] } },
   },
   resolve: {
     conditions: ["development", "browser"],

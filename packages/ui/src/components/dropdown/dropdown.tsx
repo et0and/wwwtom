@@ -125,9 +125,11 @@ function DropdownMenuContent(props: DropdownMenuContentProps): JSX.Element {
   let element: HTMLDivElement | undefined;
   onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
+      if (!ctx.isOpen()) return;
       if (element && !element.contains(event.target as Node)) ctx.close();
     };
     const onKey = (event: KeyboardEvent): void => {
+      if (!ctx.isOpen()) return;
       if (event.key === "Escape") ctx.close();
     };
     document.addEventListener("mousedown", onOutside);

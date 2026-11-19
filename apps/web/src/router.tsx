@@ -1,4 +1,4 @@
-import { createRouter } from "@solidjs/router";
+import { createRouter, intentPreload } from "@solidjs/router";
 import { getQueryClient } from "~/data/query-client";
 import { parsePageNumber } from "@tom/utils/page";
 import {
@@ -98,4 +98,7 @@ export const Router = createRouter({
     { path: "/worktable", component: Worktable },
     { path: "*404", component: NotFound },
   ],
+  // Router 2 only preloads a link's route `preload` through a strategy;
+  // without one, `preload={true}` anchors do nothing.
+  preloadLinks: intentPreload(),
 });

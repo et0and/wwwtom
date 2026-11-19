@@ -10,7 +10,7 @@ import { Button } from "@tom/ui/button";
 import { Input } from "@tom/ui/input";
 import { Banner } from "@tom/ui/banner";
 import { Text } from "@tom/ui/text";
-import { callAdapter, runAdapterCall } from "~/data/adapter";
+import { callAdapter, runAdapterCall, runAdapterRequestOrElse } from "~/data/adapter";
 import { queryClient } from "~/data/query-client";
 import { formatDateTime } from "@tom/utils/date";
 import { bannerTitleStyles, layoutStyles } from "../chrome/layout.stylex";
@@ -55,11 +55,15 @@ const styles = stylex.create({
   messageFooter: { display: "flex", justifyContent: "space-between", alignItems: "center" },
 });
 
-export const fetchEntries = () => runAdapterCall(() => callAdapter().guestbook.entries.get());
+export const fetchEntries = () =>
+  runAdapterRequestOrElse(() => callAdapter().guestbook.entries.get(), []);
 
 // The guestbook user lives in an adapter-domain cookie, so this must run in
-// the browser (client-only) — never preloaded server-side.
-const fetchCurrentUser = () => runAdapterCall(() => callAdapter().guestbook.me.get());
+// the browser (client-only) — never preloaded server-side. A failed read
+// degrades to the signed-out state, as it did before rejected query reads
+// became render errors.
+const fetchCurrentUser = () =>
+  runAdapterRequestOrElse(() => callAdapter().guestbook.me.get(), null);
 
 const initiateAuth = (handle: string) =>
   runAdapterCall(() => callAdapter().guestbook.auth.initiate.post({ handle }));

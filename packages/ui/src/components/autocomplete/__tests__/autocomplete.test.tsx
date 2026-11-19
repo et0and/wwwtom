@@ -43,6 +43,33 @@ describe("Autocomplete", () => {
     );
   });
 
+  it("does not report a close for clicks after the popup closed", async () => {
+    const onOpenChange = vi.fn();
+    const { container } = render(() => (
+      <Autocomplete items={["alpha"]} onOpenChange={onOpenChange}>
+        <Autocomplete.InputGroup />
+        <Autocomplete.Content>
+          <div>panel</div>
+        </Autocomplete.Content>
+      </Autocomplete>
+    ));
+
+    const input = container.querySelector("[data-midori-part=input]")!;
+    fireEvent.focus(input);
+    await vi.waitFor(() =>
+      expect(container.querySelector("[data-midori-part=content]")).toBeTruthy(),
+    );
+
+    fireEvent.keyDown(input, { key: "Escape" });
+    await vi.waitFor(() =>
+      expect(container.querySelector("[data-midori-part=content]")).toBeNull(),
+    );
+
+    onOpenChange.mockClear();
+    fireEvent.mouseDown(document.body);
+    expect(onOpenChange).not.toHaveBeenCalled();
+  });
+
   it("marks the item that matches the query as selected", async () => {
     const { container } = render(() => (
       <Autocomplete items={["alpha", "beta"]} defaultValue="beta">

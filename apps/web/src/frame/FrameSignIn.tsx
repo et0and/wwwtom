@@ -4,7 +4,8 @@ import { useMutation } from "@tanstack/solid-query";
 import { Banner } from "@tom/ui/banner";
 import { Button } from "@tom/ui/button";
 import { Text } from "@tom/ui/text";
-import { errorMessage, startSignIn } from "./api";
+import { errorMessage } from "@tom/utils/http";
+import { startSignIn } from "./api";
 import { styles } from "./frame.stylex";
 
 export function FrameSignIn() {

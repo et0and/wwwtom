@@ -6,7 +6,7 @@ import {
   createUniqueId,
   For,
   merge,
-  onCleanup,
+  onSettled,
   Show,
   omit,
   useContext,
@@ -299,17 +299,22 @@ export type AutocompleteContentProps = {
 function Content(props: AutocompleteContentProps): JSX.Element {
   const ctx = useContext(AutocompleteContext);
   const merged = merge({}, props);
-  const attach = (element: HTMLDivElement): void => {
+  const [element, setElement] = createSignal<HTMLDivElement>();
+  onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
-      if (!element.contains(event.target as Node)) ctx.setOpen(false);
+      if (!ctx.isOpen()) return;
+      const target = element();
+      if (target && !target.contains(event.target as Node)) ctx.setOpen(false);
     };
     document.addEventListener("mousedown", onOutside);
-    onCleanup(() => document.removeEventListener("mousedown", onOutside));
-  };
+    return () => document.removeEventListener("mousedown", onOutside);
+  });
   return (
     <Show when={ctx.isOpen()}>
       <div
-        ref={attach}
+        ref={(el) => {
+          setElement(el);
+        }}
         data-midori-component="Autocomplete"
         data-midori-part="content"
         {...stylex.attrs(styles.content, merged.style)}

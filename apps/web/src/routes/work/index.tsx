@@ -4,9 +4,10 @@ import { fetchWorks } from "~/server/adapter";
 import { PUBLIC_PAGE_CACHE_CONTROL, PUBLIC_PAGE_CDN_CACHE_CONTROL } from "@tom/constants/cache";
 import { PageLayout } from "@tom/ui/PageLayout";
 import { Text } from "@tom/ui/text";
-import { Loading, For, Show } from "solid-js";
+import { Errored, Loading, For, Show } from "solid-js";
 import { Link } from "@tom/ui/link";
 import { Loader } from "@tom/ui/loader";
+import { errorMessage } from "@tom/utils/http";
 import { bannerTitleStyles } from "../../chrome/layout.stylex";
 
 export default function WorkHome() {
@@ -42,31 +43,34 @@ export default function WorkHome() {
       </div>
       <div>
         <Loading fallback={<Loader />}>
-          <Show when={worksQuery.isError}>
-            <div class="banner" role="alert">
-              <Text style={bannerTitleStyles.bannerTitle}>Error loading works</Text>
-              <Text>{worksQuery.error?.message}</Text>
-            </div>
-          </Show>
-          <Show when={worksQuery.data}>
-            {(worksData) => (
-              <For each={worksData().docs}>
-                {(work) => (
-                  <Link
-                    variant="current"
-                    class="page block!"
-                    preload={true}
-                    href={`/work/${work.slug}`}
-                  >
-                    <Text variant="heading" as="h2">
-                      {work.title}
-                    </Text>
-                    <Text>{work.summary ?? ""}</Text>
-                  </Link>
-                )}
-              </For>
+          <Errored
+            fallback={(error) => (
+              <div class="banner" role="alert">
+                <Text style={bannerTitleStyles.bannerTitle}>Error loading works</Text>
+                <Text>{errorMessage(error(), "Load failed")}</Text>
+              </div>
             )}
-          </Show>
+          >
+            <Show when={worksQuery.data}>
+              {(worksData) => (
+                <For each={worksData().docs}>
+                  {(work) => (
+                    <Link
+                      variant="current"
+                      class="page block!"
+                      preload={true}
+                      href={`/work/${work.slug}`}
+                    >
+                      <Text variant="heading" as="h2">
+                        {work.title}
+                      </Text>
+                      <Text>{work.summary ?? ""}</Text>
+                    </Link>
+                  )}
+                </For>
+              )}
+            </Show>
+          </Errored>
         </Loading>
       </div>
     </PageLayout>

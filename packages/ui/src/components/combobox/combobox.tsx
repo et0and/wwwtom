@@ -7,7 +7,7 @@ import {
   createUniqueId,
   For,
   merge,
-  onCleanup,
+  onSettled,
   Show,
   omit,
   useContext,
@@ -349,9 +349,12 @@ export type ComboboxContentProps = {
 function Content(props: ComboboxContentProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
-  const attach = (element: HTMLDivElement): void => {
+  const [element, setElement] = createSignal<HTMLDivElement>();
+  onSettled(() => {
     const onOutside = (event: MouseEvent): void => {
-      if (!element.contains(event.target as Node)) ctx.setOpen(false);
+      if (!ctx.isOpen()) return;
+      const target = element();
+      if (target && !target.contains(event.target as Node)) ctx.setOpen(false);
     };
     const moveActive = (delta: number): void => {
       const items = ctx.filteredItems();
@@ -362,7 +365,8 @@ function Content(props: ComboboxContentProps): JSX.Element {
       ctx.setActiveValue(items[next]);
     };
     const onKey = (event: KeyboardEvent): void => {
-      const items = ctx.filteredItems();
+      if (!ctx.isOpen()) return;
+      const items = ctx.registeredItems();
       if (event.key === "Escape") {
         ctx.setOpen(false);
       } else if (event.key === "Enter") {
@@ -387,15 +391,17 @@ function Content(props: ComboboxContentProps): JSX.Element {
     };
     document.addEventListener("mousedown", onOutside);
     document.addEventListener("keydown", onKey);
-    onCleanup(() => {
+    return () => {
       document.removeEventListener("mousedown", onOutside);
       document.removeEventListener("keydown", onKey);
-    });
-  };
+    };
+  });
   return (
     <Show when={ctx.isOpen()}>
       <div
-        ref={attach}
+        ref={(el) => {
+          setElement(el);
+        }}
         data-midori-component="Combobox"
         data-midori-part="content"
         {...stylex.attrs(styles.content, merged.style)}
@@ -662,8 +668,8 @@ function List(props: ComboboxListProps): JSX.Element {
     if (term === "") return source;
     return source.filter((item) => item.toLowerCase().includes(term));
   };
-  createEffect(items, (next) => {
-    ctx.registerItems(next);
+  createEffect(items, (registered) => {
+    ctx.registerItems(registered);
   });
   return (
     <div
