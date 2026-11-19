@@ -2,7 +2,7 @@ import * as stylex from "@stylexjs/stylex";
 
 /**
  * Story-only styles. Stories are demos rather than app code, so they keep their
- * own small set here instead of pulling layout primitives into TomUI.
+ * own small set here instead of pulling layout primitives into Midori.
  */
 export const storyStyles = stylex.create({
   trigger: { width: "20rem" },

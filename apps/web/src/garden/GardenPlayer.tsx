@@ -32,7 +32,7 @@ const styles = stylex.create({
     paddingBottom: "1.25rem",
     borderBottomWidth: "1px",
     borderBottomStyle: "solid",
-    borderBottomColor: colors["--color-tomui-line"],
+    borderBottomColor: colors["--color-midori-line"],
   },
   seedInput: {
     fontFamily: monoFont.fontFamily,
@@ -47,11 +47,11 @@ const styles = stylex.create({
     padding: 0,
     borderWidth: "1px",
     borderStyle: "solid",
-    borderColor: colors["--color-tomui-contrast"],
-    backgroundColor: colors["--color-tomui-canvas"],
+    borderColor: colors["--color-midori-contrast"],
+    backgroundColor: colors["--color-midori-canvas"],
     overflow: "hidden",
     cursor: "pointer",
-    color: colors["--color-tomui-contrast"],
+    color: colors["--color-midori-contrast"],
     textAlign: "left",
     // The glyph inherits this colour, so the border and icon turn pink together.
     ":hover": { borderColor: gardenVars.accent, color: gardenVars.accent },

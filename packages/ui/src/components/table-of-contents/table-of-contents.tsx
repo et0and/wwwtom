@@ -1,16 +1,15 @@
 import * as stylex from "@stylexjs/stylex";
 import { createSignal, For, merge, omit, onCleanup, onSettled } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { overflow, textAlign } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
+import { fontSize2xs, fontSizeSm } from "../../styles/typography.stylex";
 
-export const TOMUI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS = {
+export const MIDORI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS = {
   state: "default",
 } as const;
 
-export type TomuiTableOfContentsState = "default" | "active";
+export type MidoriTableOfContentsState = "default" | "active";
 
 export interface TocHeading {
   id: string;
@@ -29,43 +28,42 @@ export type TableOfContentsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "style"
 
 const styles = stylex.create({
   title: {
-    marginBottom: "0.75rem",
-    fontSize: fontSizeXs.fontSize,
-    fontWeight: 600,
-    letterSpacing: "0.025em",
-    color: textColors["--text-color-tomui-subtle"],
+    marginBottom: "0.5rem",
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: 530,
+    color: textColors["--text-color-midori-subtle"],
     textTransform: "uppercase",
   },
   list: {
     display: "flex",
     flexDirection: "column",
-    gap: "0.5rem",
-    borderLeftWidth: 2,
-    borderLeftColor: colors["--color-tomui-hairline"],
+    gap: "0.25rem",
+    borderLeftWidth: "0.5px",
+    borderLeftColor: colors["--color-midori-hairline"],
   },
   listItem: { marginLeft: "-0.125rem" },
   itemBase: {
     display: "block",
     width: "100%",
     paddingBlock: "0.125rem",
-    paddingLeft: "1rem",
-    borderLeftWidth: 2,
+    paddingLeft: "0.75rem",
+    borderLeftWidth: "1px",
     borderLeftColor: "transparent",
     fontSize: fontSizeSm.fontSize,
     textDecorationLine: "none",
   },
   itemDefault: {
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     ":hover": {
-      borderLeftColor: colors["--color-tomui-line"],
-      color: textColors["--text-color-tomui-default"],
-      fontWeight: 500,
+      borderLeftColor: colors["--color-midori-line"],
+      color: textColors["--text-color-midori-default"],
+      fontWeight: 530,
     },
   },
   itemActive: {
-    borderLeftColor: colors["--color-tomui-brand"],
-    fontWeight: 500,
-    color: textColors["--text-color-tomui-default"],
+    borderLeftColor: colors["--color-midori-brand"],
+    fontWeight: 530,
+    color: textColors["--text-color-midori-default"],
   },
   itemLabel: { display: "block", minWidth: 0, lineHeight: "1.25rem" },
 });
@@ -73,10 +71,10 @@ const styles = stylex.create({
 const stateStyles = {
   default: styles.itemDefault,
   active: styles.itemActive,
-} as const satisfies Record<TomuiTableOfContentsState, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriTableOfContentsState, stylex.StyleXStyles>;
 
-export function tocItemVariants(props: { state?: TomuiTableOfContentsState } = {}) {
-  const merged = merge(TOMUI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS, props);
+export function tocItemVariants(props: { state?: MidoriTableOfContentsState } = {}) {
+  const merged = merge(MIDORI_TABLE_OF_CONTENTS_DEFAULT_VARIANTS, props);
   return [
     styles.itemBase,
     overflow.truncate,
@@ -128,7 +126,7 @@ export function TableOfContents(props: TableOfContentsProps) {
   onCleanup(() => setActiveId(null));
   return (
     <nav
-      data-tomui-component="TableOfContents"
+      data-midori-component="TableOfContents"
       aria-label="Table of contents"
       {...stylex.attrs(merged.style)}
       {...rest}
@@ -143,7 +141,7 @@ export function TableOfContents(props: TableOfContentsProps) {
                 <a
                   href={`#${heading.id}`}
                   aria-current={isActive() ? ("true" as const) : undefined}
-                  data-tomui-component="TableOfContentsItem"
+                  data-midori-component="TableOfContentsItem"
                   data-active={isActive() || undefined}
                   onClick={() => setActive(heading.id)}
                   {...stylex.attrs(

@@ -6,7 +6,7 @@ const classList = (element: Element): string[] =>
   (element.getAttribute("class") ?? "").split(" ").filter(Boolean);
 
 const inputOf = (container: HTMLElement): HTMLInputElement =>
-  container.querySelector("[data-tomui-component=Checkbox][type=checkbox]")!;
+  container.querySelector("[data-midori-component=Checkbox][type=checkbox]")!;
 
 describe("Checkbox", () => {
   it("renders an unchecked checkbox by default", () => {
@@ -58,7 +58,7 @@ describe("Checkbox", () => {
 
   it("reverses the layout when controlFirst is false", () => {
     const { container } = render(() => <Checkbox label="Label first" controlFirst={false} />);
-    const label = container.querySelector("label[data-tomui-component=Checkbox]")!;
+    const label = container.querySelector("label[data-midori-component=Checkbox]")!;
     expect(classList(label).length).toBeGreaterThan(0);
   });
 
@@ -86,7 +86,7 @@ describe("Checkbox", () => {
 
   it("renders the indicator next to the control as a hidden sibling", () => {
     const { container } = render(() => <Checkbox label="Accept terms" />);
-    const indicator = container.querySelector("[data-tomui-part=indicator]")!;
+    const indicator = container.querySelector("[data-midori-part=indicator]")!;
     expect(indicator.getAttribute("aria-hidden")).toBe("true");
     expect(indicator.previousElementSibling).toBe(inputOf(container));
   });

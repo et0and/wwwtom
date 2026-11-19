@@ -1,9 +1,9 @@
+import { textColors } from "../../styles/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { For, merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import { overflow } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
 const styles = stylex.create({
   nav: {
@@ -15,13 +15,23 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     marginInlineEnd: "1rem",
   },
-  sizeSm: { ...fontSizeSm, height: "2.5rem", gap: "0.125rem" },
-  sizeBase: { ...fontSizeBase, height: "3rem", gap: "0.25rem" },
+  sizeSm: {
+    fontSize: fontSizeXs.fontSize,
+    lineHeight: fontSizeXs.lineHeight,
+    height: "1.75rem",
+    gap: "0.125rem",
+  },
+  sizeBase: {
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: fontSizeSm.lineHeight,
+    height: "2rem",
+    gap: "0.25rem",
+  },
   separator: {
     display: "flex",
     flexShrink: 0,
     alignItems: "center",
-    color: textColors["--text-color-tomui-inactive"],
+    color: textColors["--text-color-midori-inactive"],
   },
   current: {
     display: "flex",
@@ -29,7 +39,7 @@ const styles = stylex.create({
     minWidth: 0,
     alignItems: "center",
     gap: "0.25rem",
-    fontWeight: 500,
+    fontWeight: fontWeightControl.fontWeight,
   },
   link: {
     display: "flex",
@@ -37,26 +47,26 @@ const styles = stylex.create({
     alignItems: "center",
     gap: "0.25rem",
     whiteSpace: "nowrap",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     textDecorationLine: "none",
   },
 });
 
-export type TomuiBreadcrumbsSize = "sm" | "base";
+export type MidoriBreadcrumbsSize = "sm" | "base";
 
-export const TOMUI_BREADCRUMBS_DEFAULT_VARIANTS = {
+export const MIDORI_BREADCRUMBS_DEFAULT_VARIANTS = {
   size: "base",
 } as const;
 
 const sizeStyles = {
   sm: styles.sizeSm,
   base: styles.sizeBase,
-} as const satisfies Record<TomuiBreadcrumbsSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBreadcrumbsSize, stylex.StyleXStyles>;
 
 export function breadcrumbsVariants(
-  props: { size?: TomuiBreadcrumbsSize } = {},
+  props: { size?: MidoriBreadcrumbsSize } = {},
 ): stylex.StyleXStyles[] {
-  const merged = merge(TOMUI_BREADCRUMBS_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BREADCRUMBS_DEFAULT_VARIANTS, props);
   return [styles.nav, sizeStyles[merged.size]];
 }
 
@@ -66,7 +76,7 @@ export type BreadcrumbItem = {
 };
 
 export type BreadcrumbsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "class" | "style"> & {
-  size?: TomuiBreadcrumbsSize;
+  size?: MidoriBreadcrumbsSize;
   items?: ReadonlyArray<BreadcrumbItem>;
   children?: JSX.Element;
   /** Caller styles, merged last so they win. */
@@ -75,14 +85,14 @@ export type BreadcrumbsProps = Omit<JSX.HTMLAttributes<HTMLElement>, "class" | "
 
 export function Breadcrumbs(props: BreadcrumbsProps) {
   const merged = merge(
-    { size: TOMUI_BREADCRUMBS_DEFAULT_VARIANTS.size, items: [] as ReadonlyArray<BreadcrumbItem> },
+    { size: MIDORI_BREADCRUMBS_DEFAULT_VARIANTS.size, items: [] as ReadonlyArray<BreadcrumbItem> },
     props,
   );
   const rest = omit(merged, "children", "size", "items", "style");
   const lastIndex = () => merged.items.length - 1;
   return (
     <nav
-      data-tomui-component="Breadcrumbs"
+      data-midori-component="Breadcrumbs"
       aria-label="breadcrumb"
       {...stylex.attrs(...breadcrumbsVariants({ size: merged.size }), merged.style)}
       {...rest}
@@ -93,7 +103,7 @@ export function Breadcrumbs(props: BreadcrumbsProps) {
             <>
               <Show when={index() > 0}>
                 <span aria-hidden="true" {...stylex.attrs(styles.separator)}>
-                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <svg width="16" height="16" fill="none" viewBox="0 0 24 24">
                     <path
                       stroke="currentColor"
                       stroke-linecap="round"
@@ -140,7 +150,11 @@ export function BreadcrumbLink(props: BreadcrumbLinkProps) {
   const merged = merge({}, props);
   const rest = omit(merged, "children", "style");
   return (
-    <a data-tomui-component="BreadcrumbLink" {...stylex.attrs(styles.link, merged.style)} {...rest}>
+    <a
+      data-midori-component="BreadcrumbLink"
+      {...stylex.attrs(styles.link, merged.style)}
+      {...rest}
+    >
       {merged.children}
     </a>
   );
@@ -160,7 +174,7 @@ export function BreadcrumbCurrent(props: BreadcrumbCurrentProps) {
   const rest = omit(merged, "children", "style");
   return (
     <span
-      data-tomui-component="BreadcrumbCurrent"
+      data-midori-component="BreadcrumbCurrent"
       aria-current="page"
       {...stylex.attrs(styles.current, merged.style)}
       {...rest}

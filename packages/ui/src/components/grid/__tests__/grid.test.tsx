@@ -37,34 +37,34 @@ describe("Grid", () => {
         <GridItem>First</GridItem>
       </Grid>
     ));
-    expect(container.querySelector("[data-tomui-component=Grid]")?.textContent).toBe("First");
+    expect(container.querySelector("[data-midori-component=Grid]")?.textContent).toBe("First");
   });
 
   it("sets data-variant from the variant prop", () => {
     const { container } = render(() => <Grid variant="3up" />);
     expect(
-      container.querySelector("[data-tomui-component=Grid]")?.getAttribute("data-variant"),
+      container.querySelector("[data-midori-component=Grid]")?.getAttribute("data-variant"),
     ).toBe("3up");
   });
 
   it("sets an inline grid-template-columns from the columns prop", () => {
     const { container } = render(() => <Grid columns={5} />);
-    const grid = container.querySelector("[data-tomui-component=Grid]") as HTMLElement;
+    const grid = container.querySelector("[data-midori-component=Grid]") as HTMLElement;
     expect(grid.style.gridTemplateColumns).toBe("repeat(5, minmax(0, 1fr))");
   });
 
   it("gives each variant a different class", () => {
     const { container: twoUp } = render(() => <Grid variant="2up" />);
     const { container: threeUp } = render(() => <Grid variant="3up" />);
-    expect(classList(twoUp.querySelector("[data-tomui-component=Grid]")!)).not.toEqual(
-      classList(threeUp.querySelector("[data-tomui-component=Grid]")!),
+    expect(classList(twoUp.querySelector("[data-midori-component=Grid]")!)).not.toEqual(
+      classList(threeUp.querySelector("[data-midori-component=Grid]")!),
     );
   });
 
   it("merges caller styles last", () => {
     const { container } = render(() => <Grid style={callerStyle} />);
-    const plain = render(() => <Grid />).container.querySelector("[data-tomui-component=Grid]")!;
-    expect(classList(container.querySelector("[data-tomui-component=Grid]")!)).not.toEqual(
+    const plain = render(() => <Grid />).container.querySelector("[data-midori-component=Grid]")!;
+    expect(classList(container.querySelector("[data-midori-component=Grid]")!)).not.toEqual(
       classList(plain),
     );
   });
@@ -82,8 +82,8 @@ describe("GridItem", () => {
         Item
       </GridItem>
     ));
-    expect(classList(fourUp.querySelector("[data-tomui-component=GridItem]")!)).not.toEqual(
-      classList(threeUp.querySelector("[data-tomui-component=GridItem]")!),
+    expect(classList(fourUp.querySelector("[data-midori-component=GridItem]")!)).not.toEqual(
+      classList(threeUp.querySelector("[data-midori-component=GridItem]")!),
     );
   });
 });

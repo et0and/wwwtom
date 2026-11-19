@@ -42,6 +42,18 @@ describe("Field", () => {
     expect(container.querySelector("label")).toBeNull();
   });
 
+  it("does not point aria-labelledby at a label that hideLabel keeps out of the DOM", () => {
+    const { container } = render(() => (
+      <Field label="Email" hideLabel>
+        <input aria-label="Email" />
+      </Field>
+    ));
+
+    const control = container.querySelector("input");
+    expect(control?.hasAttribute("aria-labelledby")).toBe(false);
+    expect(control?.getAttribute("aria-label")).toBe("Email");
+  });
+
   it("shows the description when there is no error", () => {
     const { container } = render(() => (
       <Field label="Email" description="We never share it.">
@@ -111,7 +123,7 @@ describe("Field", () => {
   it("applies distinct styling when controlFirst is set", () => {
     const normal = classList(
       render(() => <Field label="a">x</Field>).container.querySelector(
-        "[data-tomui-component=Field]",
+        "[data-midori-component=Field]",
       )!,
     );
     const reversed = classList(
@@ -119,7 +131,7 @@ describe("Field", () => {
         <Field label="a" controlFirst>
           x
         </Field>
-      )).container.querySelector("[data-tomui-component=Field]")!,
+      )).container.querySelector("[data-midori-component=Field]")!,
     );
 
     expect(reversed).not.toEqual(normal);
@@ -128,14 +140,14 @@ describe("Field", () => {
   it("applies base styling either way", () => {
     const { container } = render(() => <Field label="a">x</Field>);
     expect(
-      classList(container.querySelector("[data-tomui-component=Field]")!).length,
+      classList(container.querySelector("[data-midori-component=Field]")!).length,
     ).toBeGreaterThan(0);
   });
 
   it("merges caller styles", () => {
     const plain = classList(
       render(() => <Field label="a">x</Field>).container.querySelector(
-        "[data-tomui-component=Field]",
+        "[data-midori-component=Field]",
       )!,
     );
     const overridden = classList(
@@ -143,7 +155,7 @@ describe("Field", () => {
         <Field label="a" style={callerStyles.wide}>
           x
         </Field>
-      )).container.querySelector("[data-tomui-component=Field]")!,
+      )).container.querySelector("[data-midori-component=Field]")!,
     );
 
     expect(overridden.filter((token) => !plain.includes(token)).length).toBeGreaterThan(0);

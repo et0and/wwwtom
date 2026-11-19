@@ -1,0 +1,235 @@
+@import "./theme-fedramp.css";
+
+:root {
+  /* Easings & transitions */
+  --ease-bounce: cubic-bezier(0.2, 0, 0, 1.5);
+  --default-transition-duration: 100ms;
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-mode="light"] {
+  color-scheme: light;
+}
+
+:root[data-mode="dark"] {
+  color-scheme: dark;
+}
+
+/* Non-colour dark-mode values switch on `data-mode`; `light-dark()` only
+   accepts colours. The :root defaults cover the pre-hydration state. */
+:root {
+  --midori-link-external-stroke: 1.75;
+  --midori-popover-outline-offset: 0;
+}
+
+:root[data-mode="dark"] {
+  --midori-link-external-stroke: 2;
+  --midori-popover-outline-offset: -1px;
+}
+
+/* Explicit light/dark elevation. Colors use `light-dark()`, but shadows are not
+   colors, so the two ramps need a direct switch. Keep in sync with
+   elevation.stylex.ts. */
+:root[data-mode="light"] {
+  --elevation-midori-raised: 0 2px 4px 0 #0000000a, 0 1px 2px -1px #00000014, 0 0 0 0.5px #0000001f;
+  --elevation-midori-floating: 0 8px 16px 0 #0000000a, 0 4px 8px 0 #00000014, 0 0 0 0.5px #0000001f;
+  --elevation-midori-overlay:
+    0 16px 32px 0 #0000000a, 0 8px 16px 0 #00000014, 0 0 0 0.5px #0000001f;
+  --elevation-midori-input: 0 1px 1.5px 0 #0000001a, 0 0 0 0.5px #00000024;
+  --elevation-midori-button-neutral: 0 1px 1.5px 0 #0000001a, 0 0 0 0.5px #00000024;
+  --elevation-midori-button-contrast:
+    0 1px 1.5px 0 #00000033, 0 0 0 0.5px #3a3a3a, inset 0 1px 2px 0 #ffffff24,
+    inset 0 -1px 2px 0 #0000000f;
+  --elevation-midori-elements: 0 0.5px 0.5px 0 #00000066;
+  --elevation-midori-switch-off:
+    inset 0 1px 1px 0 #00000014, inset 0 0.5px 0.5px 0 #00000014, inset 0 0 0 0.5px #0000001a;
+  --elevation-midori-switch-on:
+    inset 0 2px 2px 0 #0000001a, inset 0 1px 1px 0 #0000001a, inset 0 0 0 0.5px #00000033;
+}
+
+:root[data-mode="dark"] {
+  --elevation-midori-raised:
+    0 2px 4px 0 #0000004d, 0 1px 2px 0 #0000004d, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-floating:
+    0 8px 16px 0 #0000004d, 0 4px 8px 0 #0000004d, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-overlay:
+    0 16px 32px 0 #0000004d, 0 8px 16px 0 #0000004d, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-input: 0 1px 2px 0 #00000000, 0 0 0 0.5px #ffffff29, 0 -0.5px 0 0 #ffffff0f;
+  --elevation-midori-button-neutral:
+    0 1px 2px 0 #00000066, 0 0 0 0.5px #ffffff33, 0 -0.5px 0 0 #ffffff1a;
+  --elevation-midori-button-contrast:
+    0 1px 2px 0 #00000066, 0 0 0 0.5px #ffffff66, 0 -0.5px 0 0 #ffffff4d;
+  --elevation-midori-elements: 0 0.5px 0.5px 0 #00000066;
+  --elevation-midori-switch-off:
+    inset 0 -0.5px 0 0 #ffffff1a, inset 0 0 0 0 #ffffff00, inset 0 0 0 0.5px #ffffff29;
+  --elevation-midori-switch-on:
+    inset 0 -0.5px 0 0 #ffffff1a, inset 0 0 0 0 #ffffff00, inset 0 0 0 0.5px #ffffff29;
+}
+
+/* Three-step bounce used by the Empty state check mark. StyleX generates only
+   from/to frames, so the midpoint frame has to live here. */
+@keyframes bounce-in {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Tab list scroll behavior. The scrollbar is hidden when scroll-driven
+   animations are supported; unsupported browsers keep the native scrollbar. */
+.midori-tabs-list {
+  overscroll-behavior-x: contain;
+}
+
+@supports (animation-timeline: scroll()) {
+  .midori-tabs-list {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  .midori-tabs-list::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* InputGroup styles its inner input from which child parts are present.
+   StyleX 0.19 supports no descendant selectors, so these rules stay here.
+   See the addon padding table in input-group.tsx for the per-size values. */
+[data-slot="input-group"]:has([data-slot="input-group-suffix"]) [data-slot="input-group-input"] {
+  field-sizing: content;
+  max-width: 100%;
+  flex-grow: 0;
+  padding-inline-end: 0;
+}
+
+[data-slot="input-group"][data-size="xs"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.25rem;
+}
+
+[data-slot="input-group"][data-size="sm"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.375rem;
+}
+
+[data-slot="input-group"][data-size="base"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.5rem;
+}
+
+[data-slot="input-group"][data-size="lg"]:has([data-slot="input-group-addon-start"])
+  [data-slot="input-group-input"] {
+  padding-inline-start: 0.625rem;
+}
+
+[data-slot="input-group"][data-size="xs"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.25rem;
+}
+
+[data-slot="input-group"][data-size="sm"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.375rem;
+}
+
+[data-slot="input-group"][data-size="base"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.5rem;
+}
+
+[data-slot="input-group"][data-size="lg"]:has([data-slot="input-group-addon-end"])
+  [data-slot="input-group-input"] {
+  padding-inline-end: 0.625rem;
+}
+
+/* The addon ignores pointer events so clicks fall through to the input; the
+   icons and buttons it hosts must take them back. */
+[data-slot="input-group-addon-start"] > *,
+[data-slot="input-group-addon-end"] > * {
+  pointer-events: auto;
+}
+
+/* A badge inside a link picks up a ring on hover, and its icon is pinned to
+   12px. StyleX 0.19 supports no ancestor or descendant selectors, so these two
+   rules stay here. See badge.tsx for the variant values. */
+a:hover [data-midori-component="Badge"] {
+  box-shadow: 0 0 0 1px currentColor;
+}
+
+[data-midori-component="Badge"] [data-slot="badge-icon"] > svg {
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+/* Radio indicator and hover ring. StyleX 0.19 supports no sibling selector, so
+   the checked indicator is toggled here. The hover ring only applies to a
+   non-error, enabled radio, which is what the old group-hover rule did. */
+[data-midori-part="item"]:checked + [data-midori-part="indicator"] {
+  display: flex;
+}
+
+[data-midori-part="item-label"][data-variant="default"]:not(:has(:disabled)):hover
+  [data-midori-part="item"] {
+  box-shadow: 0 0 0 1px var(--color-midori-hairline);
+}
+
+/* Toolbar rounds only its outer corners and dividers its children. StyleX 0.19
+   supports no child or sibling combinator, so these stay here. */
+[data-midori-component="Toolbar"] > *:first-child {
+  border-top-left-radius: 0.5rem;
+  border-bottom-left-radius: 0.5rem;
+}
+
+/* The last visible child gets the right corners, skipping trailing
+   aria-hidden and hidden inputs. */
+[data-midori-component="Toolbar"]
+  > *:not([aria-hidden="true"]):not([type="hidden"]):not(
+    :has(~ :not([aria-hidden="true"]):not([type="hidden"]))
+  ) {
+  border-top-right-radius: 0.5rem;
+  border-bottom-right-radius: 0.5rem;
+}
+
+[data-midori-component="Toolbar"] > *:not([aria-hidden="true"]):not(:first-child) {
+  border-left: 1px solid var(--color-midori-line);
+}
+
+/* A compact Banner inlines its action's Link so it flows with the title text
+   instead of breaking onto its own line. */
+[data-slot="banner-action-inline"] [data-midori-component="Link"] {
+  display: inline;
+}
+
+/* Checkbox indicator show/hide, plus the ring the old [&:hover>span] and
+   [&:focus-within>span] rules painted onto the indicator overlay. StyleX 0.19
+   supports no sibling or descendant selector, so these stay here. The overlay
+   only paints when checked, so the ring usually matches the input's own. */
+[data-midori-component="Checkbox"]:checked + [data-midori-part="indicator"],
+[data-midori-component="Checkbox"]:indeterminate + [data-midori-part="indicator"] {
+  display: flex;
+}
+
+[data-midori-part="control"][data-variant="default"]:hover [data-midori-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-midori-hairline);
+}
+
+[data-midori-part="control"][data-variant="default"]:focus-within [data-midori-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-midori-focus);
+}
+
+[data-midori-part="control"][data-variant="error"] [data-midori-part="indicator"] {
+  box-shadow: 0 0 0 1px var(--color-midori-danger);
+}

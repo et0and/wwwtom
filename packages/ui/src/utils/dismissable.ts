@@ -83,7 +83,7 @@ export function createDismissableLayer(
         if (!target) return false;
         if (containsComposed(el, target)) return true;
         if (target instanceof Element) {
-          if (target.closest("[data-tomui-top-layer]")) return true;
+          if (target.closest("[data-midori-top-layer]")) return true;
           const excluded = options.excludedElements ?? [];
           if (
             excluded.some((fn) => {

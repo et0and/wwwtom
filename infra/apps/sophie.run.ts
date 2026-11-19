@@ -21,7 +21,7 @@ export const sophieWeb = Effect.gen(function* () {
       ? yield* Cloudflare.SecretsStore.Secret.ref("AXIOM_TOKEN", { stack: "wwwtom" })
       : undefined;
 
-  // SSR Sophie blog frontend (posts plus categories, TomUI). No SPA
+  // SSR Sophie blog frontend (posts plus categories, Midori). No SPA
   // fallback: deep links like /posts/:slug server-render crawler meta.
   return yield* Cloudflare.Website.Vite("sophie-web", {
     rootDir: `${rootDir}/apps/sophie`,

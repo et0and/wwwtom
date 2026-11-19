@@ -1,55 +1,73 @@
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "../../styles/colors.stylex";
-import { cursor, layout, radius, select } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
-import { fontSizeBase, fontSizeXs } from "../../styles/typography.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
+import { layout, radius, select } from "../../styles/primitives.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 import { customProperties } from "../../utils/stylex-vars";
 import { buttonEmphasisVars } from "./button-vars.stylex";
 import { Loader } from "../loader/loader";
 
-export const TOMUI_BUTTON_DEFAULT_VARIANTS = {
+export const MIDORI_BUTTON_VARIANTS = {
+  form: ["base", "square", "circle"],
+  size: ["xs", "sm", "base", "lg"],
+  variant: [
+    "primary",
+    "secondary",
+    "ghost",
+    "destructive",
+    "secondary-destructive",
+    "outline",
+    "neutral",
+    "contrast",
+    "danger",
+    "warning",
+    "ghost-muted",
+    "ghost-faint",
+  ],
+} as const;
+
+export const MIDORI_BUTTON_DEFAULT_VARIANTS = {
   form: "base",
   size: "base",
   variant: "secondary",
 } as const;
 
-export type TomuiButtonForm = "base" | "square" | "circle";
-export type TomuiButtonSize = "xs" | "sm" | "base" | "lg";
-export type TomuiButtonVariant =
-  | "primary"
-  | "secondary"
-  | "ghost"
-  | "destructive"
-  | "secondary-destructive"
-  | "outline";
+export type MidoriButtonForm = (typeof MIDORI_BUTTON_VARIANTS.form)[number];
+export type MidoriButtonSize = (typeof MIDORI_BUTTON_VARIANTS.size)[number];
+export type MidoriButtonVariant = (typeof MIDORI_BUTTON_VARIANTS.variant)[number];
 
 const disabledBase = {
-  backgroundColor: "color-mix(in srgb, " + colors["--color-tomui-base"] + " 50%, transparent)",
-  color: "color-mix(in srgb, " + textColors["--text-color-tomui-default"] + " 70%, transparent)",
+  opacity: 0.5,
+  cursor: "not-allowed",
 };
 
-const disabledDanger = {
-  backgroundColor: "color-mix(in srgb, " + colors["--color-tomui-base"] + " 50%, transparent)",
-  color: "color-mix(in srgb, " + textColors["--text-color-tomui-danger"] + " 70%, transparent)",
+const disabledContrast = {
+  opacity: 0.4,
+  cursor: "not-allowed",
 };
 
 const styles = stylex.create({
   base: {
     position: "relative",
-    display: "flex",
+    display: "inline-flex",
     width: "max-content",
     flexShrink: 0,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     borderWidth: 0,
-    boxShadow: "0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    borderRadius: radius.md,
     fontFamily: "inherit",
-    fontWeight: 500,
-    userSelect: select.none.userSelect,
-    cursor: cursor.pointer.cursor,
-    outlineWidth: 0,
+    fontWeight: fontWeightControl.fontWeight,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: "20px",
+    fontVariantNumeric: "tabular-nums",
+    textShadow: "none",
+    textDecorationLine: "none",
+    userSelect: "none",
+    cursor: "pointer",
     // Colour changes are immediate, never transitioned.
     transitionProperty: "none",
   },
@@ -64,90 +82,133 @@ const styles = stylex.create({
     borderRadius: radius.full,
   },
 
-  // Sizes
+  // Sizes. Controls use 20/24/28/32px with 4px and 6px radii.
   sizeXs: {
     height: "1.25rem",
-    gap: layout.gap1.gap,
+    gap: "0.25rem",
     borderRadius: radius.sm,
     paddingInline: "0.375rem",
     fontSize: fontSizeXs.fontSize,
+    lineHeight: "16px",
   },
   sizeSm: {
-    height: "1.625rem",
-    gap: layout.gap1.gap,
-    borderRadius: radius.md,
-    paddingInline: "0.5rem",
-    fontSize: fontSizeXs.fontSize,
+    height: "1.5rem",
+    gap: "0.375rem",
+    borderRadius: radius.sm,
+    paddingInline: "0.5625rem",
+    fontSize: fontSizeSm.fontSize,
   },
   sizeBase: {
-    height: "2.25rem",
-    gap: layout.gap1_5.gap,
-    borderRadius: radius.lg,
-    paddingInline: "0.75rem",
-    fontSize: fontSizeBase.fontSize,
+    height: "1.75rem",
+    gap: "0.375rem",
+    borderRadius: radius.md,
+    paddingInline: "0.6875rem",
+    fontSize: fontSizeSm.fontSize,
   },
   sizeLg: {
-    height: "2.5rem",
-    gap: layout.gap2.gap,
-    borderRadius: radius.lg,
-    paddingInline: "1rem",
-    fontSize: fontSizeBase.fontSize,
+    height: "2rem",
+    gap: "0.375rem",
+    borderRadius: radius.md,
+    paddingInline: "0.9375rem",
+    fontSize: fontSizeSm.fontSize,
   },
 
   // Square extents used when the form is square or circle.
-  compactXs: { width: "0.875rem", height: "0.875rem" },
-  compactSm: { width: "1.625rem", height: "1.625rem" },
-  compactBase: { width: "2.25rem", height: "2.25rem" },
-  compactLg: { width: "2.5rem", height: "2.5rem" },
+  compactXs: { width: "1.25rem", height: "1.25rem", paddingInline: 0 },
+  compactSm: { width: "1.5rem", height: "1.5rem", paddingInline: 0 },
+  compactBase: { width: "1.75rem", height: "1.75rem", paddingInline: 0 },
+  compactLg: { width: "2rem", height: "2rem", paddingInline: 0 },
 
-  // Emphasis variants. primary and destructive differ only in the inline accent
-  // vars, so they deliberately share one rule.
+  // Emphasis variants. primary, contrast, and destructive share one rule; the
+  // inline accent vars set by `emphasisStyle` are what differ.
   emphasis: {
     position: "relative",
     overflow: "hidden",
     backgroundColor: buttonEmphasisVars.bg,
-    color: "#fff",
-    boxShadow: "0 0 0 1px " + buttonEmphasisVars.ring,
-    opacity: { default: 1, ":disabled": 0.5 },
+    color: textColors["--text-color-midori-inverse"],
+    textShadow: "0 0.5px 0.5px rgb(0 0 0 / 0.3)",
+    boxShadow: elevation["--elevation-midori-button-contrast"],
+    ":disabled": disabledContrast,
+  },
+  neutral: {
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
+    ":disabled": disabledBase,
   },
   secondary: {
-    backgroundColor: colors["--color-tomui-base"],
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
     ":disabled": disabledBase,
   },
   "secondary-destructive": {
-    backgroundColor: colors["--color-tomui-base"],
-    color: textColors["--text-color-tomui-danger"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":hover": { color: textColors["--text-color-tomui-danger"] },
-    ":disabled": disabledDanger,
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-danger"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
+    ":disabled": disabledBase,
+  },
+  danger: {
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-danger"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
+    ":disabled": disabledBase,
+  },
+  warning: {
+    backgroundColor: colors["--color-midori-button-neutral"],
+    color: textColors["--text-color-midori-warning"],
+    boxShadow: elevation["--elevation-midori-button-neutral"],
+    ":hover": { backgroundColor: colors["--color-midori-tint"] },
+    ":disabled": disabledBase,
   },
   ghost: {
-    color: textColors["--text-color-tomui-default"],
-    backgroundColor: "inherit",
-    boxShadow: "none",
-    ":hover": { backgroundColor: colors["--color-tomui-tint"] },
+    color: textColors["--text-color-midori-default"],
+    backgroundColor: "transparent",
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
+    ":disabled": disabledBase,
+  },
+  "ghost-muted": {
+    color: textColors["--text-color-midori-subtle"],
+    backgroundColor: "transparent",
+    ":hover": {
+      backgroundColor: colors["--color-midori-overlay-hover"],
+      color: textColors["--text-color-midori-default"],
+    },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
+    ":disabled": disabledBase,
+  },
+  "ghost-faint": {
+    color: textColors["--text-color-midori-inactive"],
+    backgroundColor: "transparent",
+    ":hover": {
+      backgroundColor: colors["--color-midori-overlay-hover"],
+      color: textColors["--text-color-midori-subtle"],
+    },
+    ":disabled": disabledBase,
   },
   outline: {
     backgroundColor: "transparent",
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-line"],
-    ":hover": {
-      color: textColors["--text-color-tomui-strong"],
-      boxShadow:
-        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 25%, transparent)",
-    },
+    color: textColors["--text-color-midori-default"],
+    boxShadow: "inset 0 0 0 1px " + colors["--color-midori-hairline"],
+    ":hover": { backgroundColor: colors["--color-midori-overlay-hover"] },
+    ":active": { backgroundColor: colors["--color-midori-overlay-pressed"] },
+    ":disabled": disabledBase,
   },
 
-  // Focus ring. Overrides the variant box shadow, so it is applied last.
+  // Focus ring. Outline outside the control rather than painting a
+  // second box shadow, so the neutral elevation survives focus.
   focusRing: {
-    boxShadow: {
-      default: "0 0 0 1px " + colors["--color-tomui-line"],
-      ":focus":
-        "0 0 0 1px color-mix(in srgb, " + colors["--color-tomui-focus"] + " 50%, transparent)",
-      ":focus-visible": "0 0 0 2px " + colors["--color-tomui-brand"],
+    outlineStyle: "solid",
+    outlineOffset: "2.5px",
+    outlineWidth: "2px",
+    outlineColor: {
+      default: "transparent",
+      ":focus-visible": colors["--color-midori-focus"],
     },
   },
 
@@ -162,10 +223,8 @@ const styles = stylex.create({
       ", " +
       buttonEmphasisVars.gradientEnd +
       ")",
-    boxShadow: "inset 0 1px 0 0 " + buttonEmphasisVars.bg,
   },
-  content: { position: "relative", display: "flex", alignItems: "center", gap: layout.gap1.gap },
-  dimmed: { opacity: 0.5 },
+  content: { position: "relative", display: "flex", alignItems: "center", gap: "0.375rem" },
   noUnderline: { textDecorationLine: "none" },
 });
 
@@ -177,47 +236,59 @@ const formStyles = {
   base: styles.formBase,
   square: styles.formSquare,
   circle: styles.formCircle,
-} as const satisfies Record<TomuiButtonForm, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonForm, stylex.StyleXStyles>;
 
 const sizeStyles = {
   xs: styles.sizeXs,
   sm: styles.sizeSm,
   base: styles.sizeBase,
   lg: styles.sizeLg,
-} as const satisfies Record<TomuiButtonSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonSize, stylex.StyleXStyles>;
 
 const compactStyles = {
   xs: styles.compactXs,
   sm: styles.compactSm,
   base: styles.compactBase,
   lg: styles.compactLg,
-} as const satisfies Record<TomuiButtonSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonSize, stylex.StyleXStyles>;
 
 const variantStyles = {
-  // primary and destructive share one rule; the accent vars set inline are what
-  // actually differ between them.
   primary: styles.emphasis,
-  secondary: styles.secondary,
-  ghost: styles.ghost,
+  contrast: styles.emphasis,
   destructive: styles.emphasis,
+  secondary: styles.secondary,
+  neutral: styles.neutral,
+  danger: styles.danger,
+  warning: styles.warning,
+  ghost: styles.ghost,
+  "ghost-muted": styles["ghost-muted"],
+  "ghost-faint": styles["ghost-faint"],
   "secondary-destructive": styles["secondary-destructive"],
   outline: styles.outline,
-} as const satisfies Record<TomuiButtonVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriButtonVariant, stylex.StyleXStyles>;
 
-const isCompactForm = (form: TomuiButtonForm): boolean => form === "square" || form === "circle";
+const isCompactForm = (form: MidoriButtonForm): boolean => form === "square" || form === "circle";
 
-const hasEmphasis = (variant: TomuiButtonVariant): boolean =>
-  variant === "primary" || variant === "destructive";
+const hasEmphasis = (variant: MidoriButtonVariant): boolean =>
+  variant === "primary" || variant === "contrast" || variant === "destructive";
 
 /** Colour-mix vars for emphasis variants. Undefined for the others. */
-function emphasisStyle(variant: TomuiButtonVariant): Record<string, string> | undefined {
-  const token =
-    variant === "primary"
-      ? colors["--color-tomui-brand"]
-      : variant === "destructive"
-        ? colors["--color-tomui-danger"]
-        : undefined;
+function emphasisStyle(variant: MidoriButtonVariant): Record<string, string> | undefined {
+  const isContrast = variant === "primary" || variant === "contrast";
+  const token = isContrast
+    ? colors["--color-midori-button-contrast"]
+    : variant === "destructive"
+      ? colors["--color-midori-danger"]
+      : undefined;
   if (token === undefined) return undefined;
+  if (isContrast) {
+    return customProperties({
+      [buttonEmphasisVars.ring]: "color-mix(in oklch, " + token + ", black 10%)",
+      [buttonEmphasisVars.bg]: token,
+      [buttonEmphasisVars.gradientStart]: "color-mix(in oklch, " + token + ", white 22%)",
+      [buttonEmphasisVars.gradientEnd]: token,
+    });
+  }
   return customProperties({
     [buttonEmphasisVars.ring]: "color-mix(in oklch, " + token + ", black 10%)",
     [buttonEmphasisVars.bg]: "color-mix(in oklch, " + token + ", white 30%)",
@@ -231,11 +302,11 @@ function emphasisStyle(variant: TomuiButtonVariant): Record<string, string> | un
  * can adopt button appearance without rendering a Button.
  */
 export function buttonVariants(props: {
-  variant?: TomuiButtonVariant;
-  size?: TomuiButtonSize;
-  form?: TomuiButtonForm;
+  variant?: MidoriButtonVariant;
+  size?: MidoriButtonSize;
+  form?: MidoriButtonForm;
 }): stylex.StyleXStyles[] {
-  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BUTTON_DEFAULT_VARIANTS, props);
   return [
     styles.base,
     // Size before form: the form rules set border-radius for `circle`, and
@@ -252,9 +323,9 @@ export type ButtonProps = Omit<
   "style" | "title" | "type"
 > & {
   children?: JSX.Element;
-  form?: TomuiButtonForm;
-  size?: TomuiButtonSize;
-  variant?: TomuiButtonVariant;
+  form?: MidoriButtonForm;
+  size?: MidoriButtonSize;
+  variant?: MidoriButtonVariant;
   icon?: JSX.Element;
   loading?: boolean;
   title?: string | undefined;
@@ -270,7 +341,7 @@ export type ButtonProps = Omit<
 };
 
 export function Button(props: ButtonProps) {
-  const merged = merge(TOMUI_BUTTON_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BUTTON_DEFAULT_VARIANTS, props);
   const rest = omit(
     merged,
     "children",
@@ -295,7 +366,6 @@ export function Button(props: ButtonProps) {
     stylex.attrs(
       ...buttonVariants(merged),
       isCompactForm(merged.form) ? compactStyles[merged.size] : undefined,
-      isDisabled() ? styles.dimmed : undefined,
       merged.style,
     );
   const iconNode = (): JSX.Element => {
@@ -304,7 +374,7 @@ export function Button(props: ButtonProps) {
   };
   return (
     <button
-      data-tomui-component="Button"
+      data-midori-component="Button"
       {...attrs()}
       style={inlineVars()}
       disabled={isDisabled()}
@@ -340,9 +410,9 @@ export type LinkButtonProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, 
   disabled?: boolean;
   icon?: JSX.Element;
   external?: boolean;
-  form?: TomuiButtonForm;
-  size?: TomuiButtonSize;
-  variant?: TomuiButtonVariant;
+  form?: MidoriButtonForm;
+  size?: MidoriButtonSize;
+  variant?: MidoriButtonVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
   /** Extra custom properties set on the element. */
@@ -352,9 +422,9 @@ export type LinkButtonProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, 
 export function LinkButton(props: LinkButtonProps) {
   const merged = merge(
     {
-      form: "base" as TomuiButtonForm,
-      size: "base" as TomuiButtonSize,
-      variant: "ghost" as TomuiButtonVariant,
+      form: "base" as MidoriButtonForm,
+      size: "base" as MidoriButtonSize,
+      variant: "ghost" as MidoriButtonVariant,
     },
     props,
   );
@@ -379,7 +449,7 @@ export function LinkButton(props: LinkButtonProps) {
       when={merged.disabled}
       fallback={
         <a
-          data-tomui-component="LinkButton"
+          data-midori-component="LinkButton"
           {...stylex.attrs(
             ...buttonVariants(merged),
             styles.noUnderline,
@@ -397,8 +467,8 @@ export function LinkButton(props: LinkButtonProps) {
       }
     >
       <button
-        data-tomui-component="LinkButton"
-        {...stylex.attrs(...buttonVariants(merged), styles.dimmed, select.text, merged.style)}
+        data-midori-component="LinkButton"
+        {...stylex.attrs(...buttonVariants(merged), select.text, merged.style)}
         disabled
       >
         {merged.icon}
