@@ -1,12 +1,40 @@
 {
-  "version": 1,
+  "version": 2,
   "skills": {
     "bulk-classify": {
       "source": "classifier.dev",
       "sourceUrl": "https://classifier.dev",
       "sourceType": "well-known",
-      "computedHash": "9b1d711d5755b475d3d4933140417df73e6a276ad247cefa436bafb6960d4c74",
+      "computedHash": "36f87529da9b6b5e3f21ca497a0bc449426bb115dad84f07d55b34b96b4abd40",
       "wellKnownDigest": "sha256:9529905f04435c1783efe3417d12aaf542cd300081e222b614fc49ef7664bc19"
+    },
+    "durability": {
+      "source": "joelhooks/rat-stack",
+      "commit": "dfe53684af2ff74479c6175f9416133006c9bde1",
+      "sourceType": "github",
+      "skillPath": "skills/durability/SKILL.md",
+      "computedHash": "d94e446d09e81d56225685fa6ac76228af092a986fdd01d9a200992fe26b34f5"
+    },
+    "gardener": {
+      "source": "joelhooks/rat-stack",
+      "commit": "dfe53684af2ff74479c6175f9416133006c9bde1",
+      "sourceType": "github",
+      "skillPath": "skills/gardener/SKILL.md",
+      "computedHash": "fb8c2bc2fbab6a37ba37cf645b6dcbe63a64f7b5c3ceba665b7bbe8fdb160e7e"
+    },
+    "query-design": {
+      "source": "joelhooks/rat-stack",
+      "commit": "dfe53684af2ff74479c6175f9416133006c9bde1",
+      "sourceType": "github",
+      "skillPath": "skills/query-design/SKILL.md",
+      "computedHash": "a4ffeec575b3c3fba427ed24e04fac729a670c96da3767313aedfec618322a4b"
+    },
+    "test-behaviour": {
+      "source": "joelhooks/rat-stack",
+      "commit": "dfe53684af2ff74479c6175f9416133006c9bde1",
+      "sourceType": "github",
+      "skillPath": "skills/test-behaviour/SKILL.md",
+      "computedHash": "994fc1a85c7629088edf7a22525250673d010fbe1b79bcf0b9155fb1aff8357b"
     }
   }
 }
