@@ -5,6 +5,10 @@
     {
       "name": "anti-slop",
       "specifier": "./.oxlint/anti-slop/index.ts"
+    },
+    {
+      "name": "landmines",
+      "specifier": "./.oxlint/landmines/index.ts"
     }
   ],
   "plugins": ["typescript", "unicorn", "oxc"],
@@ -28,6 +32,48 @@
     "anti-slop/no-unknown-type-aliases": "error",
     "anti-slop/no-unsafe-dictionary-type": "error",
     "anti-slop/no-widen-then-assert": "error",
+    "landmines/no-fixed-sleep": [
+      "error",
+      {
+        "allow": {
+          "packages/db/src/__tests__/service.int.test.ts": 2
+        }
+      }
+    ],
+    "landmines/no-flake-masking": [
+      "error",
+      {
+        "allow": {
+          "apps/adapter/src/__tests__/cors.test.ts": 1,
+          "apps/editor/src/editor/__tests__/dirty.test.tsx": 1,
+          "apps/editor/src/editor/__tests__/EditorView.test.tsx": 1,
+          "apps/editor/src/editor/__tests__/Toolbar.test.tsx": 1,
+          "apps/web/src/content/__tests__/Arena.test.tsx": 1,
+          "apps/web/src/content/__tests__/ChannelEmbed.test.tsx": 1,
+          "apps/web/src/routes/__tests__/posts.test.tsx": 1,
+          "packages/utils/__tests__/properties.test.ts": 3,
+          "packages/utils/__tests__/retry.test.ts": 2,
+          "packages/utils/__tests__/tiptap-html.test.ts": 2
+        }
+      }
+    ],
+    "landmines/no-unsignaled-poll": [
+      "error",
+      {
+        "allow": {
+          "apps/editor/src/__tests__/App.test.tsx": 2,
+          "apps/editor/src/editor/__tests__/EditorView.test.tsx": 3,
+          "apps/editor/src/posts/__tests__/CategoriesView.test.tsx": 1,
+          "apps/editor/src/posts/__tests__/HistoryPanel.test.tsx": 1,
+          "apps/editor/src/posts/__tests__/PostList.test.tsx": 5,
+          "packages/ui/src/components/chart/__tests__/chart.test.tsx": 1,
+          "packages/ui/src/components/collapsible/__tests__/collapsible.test.tsx": 1,
+          "packages/ui/src/components/dialog/__tests__/dialog.test.tsx": 1,
+          "packages/ui/src/components/tabs/__tests__/tabs.test.tsx": 1
+        }
+      }
+    ],
+    "landmines/strict-msw": "error",
     "typescript/no-restricted-types": [
       "error",
       {
@@ -49,10 +95,22 @@
   ],
   "overrides": [
     {
+      "files": ["apps/adapter/vitest.config.ts"],
+      "rules": {
+        "landmines/no-flake-masking": "off"
+      }
+    },
+    {
       "files": [".oxlint/**/*"],
       "rules": {
         "complexity": ["error", 30],
         "anti-slop/no-let": "off"
+      }
+    },
+    {
+      "files": [".oxlint/landmines/**/*"],
+      "rules": {
+        "complexity": "off"
       }
     },
     {

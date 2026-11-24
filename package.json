@@ -47,6 +47,8 @@
     "destroy:sophie": "pnpm --filter @tom/infra run destroy:sophie"
   },
   "devDependencies": {
+    "@babel/parser": "8.0.10",
+    "@babel/types": "8.0.10",
     "@changesets/cli": "2.30.0",
     "@effect/tsgo": "catalog:",
     "@oxlint/plugins": "1.78.0",
@@ -54,11 +56,13 @@
     "@semantic-release/git": "10.0.1",
     "@turbo/gen": "2.8.5",
     "husky": "^9.1.7",
+    "oxc-resolver": "11.21.2",
     "oxfmt": "0.50.0",
     "oxlint": "1.78.0",
     "semantic-release": "24.2.3",
     "turbo": "2.9.1",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "zod": "4.5.4"
   },
   "packageManager": "pnpm@11.3.0"
 }
