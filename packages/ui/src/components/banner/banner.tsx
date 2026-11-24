@@ -1,28 +1,27 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase, fontSizeSm } from "../../styles/typography.stylex";
 import { BannerAction, BannerActionContext, type BannerActionSize } from "./banner-action";
 
-const contrastColor = colors["--color-tomui-contrast"];
-const defaultTextColor = textColors["--text-color-tomui-default"];
+const contrastColor = colors["--color-midori-contrast"];
+const defaultTextColor = textColors["--text-color-midori-default"];
 
 const styles = stylex.create({
   base: { display: "flex", width: "100%" },
   variantDefault: {
-    backgroundColor: colors["--color-tomui-info-tint"],
-    color: textColors["--text-color-tomui-info"],
+    backgroundColor: colors["--color-midori-info-tint"],
+    color: textColors["--text-color-midori-info"],
   },
   variantAlert: {
-    backgroundColor: colors["--color-tomui-warning-tint"],
-    color: textColors["--text-color-tomui-warning"],
+    backgroundColor: colors["--color-midori-warning-tint"],
+    color: textColors["--text-color-midori-warning"],
   },
   variantError: {
-    backgroundColor: colors["--color-tomui-danger-tint"],
-    color: textColors["--text-color-tomui-danger"],
+    backgroundColor: colors["--color-midori-danger-tint"],
+    color: textColors["--text-color-midori-danger"],
   },
   variantSecondary: {
     backgroundColor: "color-mix(in srgb, " + contrastColor + " 5%, transparent)",
@@ -34,7 +33,8 @@ const styles = stylex.create({
     borderRadius: radius.lg,
     paddingInline: "1rem",
     paddingBlock: "0.75rem",
-    ...fontSizeBase,
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: fontSizeBase.lineHeight,
   },
   sizeSm: {
     alignItems: "center",
@@ -42,15 +42,16 @@ const styles = stylex.create({
     borderRadius: radius.md,
     paddingInline: "0.75rem",
     paddingBlock: "0.5rem",
-    ...fontSizeSm,
+    fontSize: fontSizeSm.fontSize,
+    lineHeight: fontSizeSm.lineHeight,
   },
   iconWrap: { display: "flex", flexShrink: 0, alignItems: "center" },
   iconBase: { height: "1.375em" },
   iconSm: { height: "1.25em" },
-  iconFillInfo: { fill: colors["--color-tomui-info"] },
-  iconFillWarning: { fill: colors["--color-tomui-warning"] },
-  iconFillDanger: { fill: colors["--color-tomui-danger"] },
-  iconFillInteract: { fill: colors["--color-tomui-interact"] },
+  iconFillInfo: { fill: colors["--color-midori-info"] },
+  iconFillWarning: { fill: colors["--color-midori-warning"] },
+  iconFillDanger: { fill: colors["--color-midori-danger"] },
+  iconFillInteract: { fill: colors["--color-midori-interact"] },
   body: {
     display: "flex",
     minWidth: 0,
@@ -63,7 +64,7 @@ const styles = stylex.create({
   noTitlePad: { paddingTop: "1px" },
   stack: { display: "flex", flexDirection: "column", gap: "0.125rem" },
   title: { lineHeight: "1.375", fontWeight: 500 },
-  description: { ...fontSizeSm, lineHeight: "1.375" },
+  description: { fontSize: fontSizeSm.fontSize, lineHeight: "1.375" },
   compactWrap: {
     display: "flex",
     minWidth: 0,
@@ -71,15 +72,15 @@ const styles = stylex.create({
     alignItems: "baseline",
     columnGap: "0.375rem",
   },
-  /** The display:inline override for a nested Link lives in tomui-binding.css; see the report. */
+  /** The display:inline override for a nested Link lives in midori-binding.css; see the report. */
   inlineActionGap: { marginInlineStart: "0.375rem" },
   trailingAction: { display: "flex", flexShrink: 0, alignItems: "center", gap: "0.5rem" },
 });
 
-export type TomuiBannerVariant = "default" | "alert" | "error" | "secondary";
-export type TomuiBannerSize = "base" | "sm";
+export type MidoriBannerVariant = "default" | "alert" | "error" | "secondary";
+export type MidoriBannerSize = "base" | "sm";
 
-export const TOMUI_BANNER_DEFAULT_VARIANTS = {
+export const MIDORI_BANNER_DEFAULT_VARIANTS = {
   variant: "default",
   size: "base",
 } as const;
@@ -89,40 +90,40 @@ const variantStyles = {
   alert: styles.variantAlert,
   error: styles.variantError,
   secondary: styles.variantSecondary,
-} as const satisfies Record<TomuiBannerVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBannerVariant, stylex.StyleXStyles>;
 
 const sizeStyles = {
   base: styles.sizeBase,
   sm: styles.sizeSm,
-} as const satisfies Record<TomuiBannerSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBannerSize, stylex.StyleXStyles>;
 
 const iconHeightStyles = {
   base: styles.iconBase,
   sm: styles.iconSm,
-} as const satisfies Record<TomuiBannerSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBannerSize, stylex.StyleXStyles>;
 
 const iconFillStyles = {
   default: styles.iconFillInfo,
   alert: styles.iconFillWarning,
   error: styles.iconFillDanger,
   secondary: styles.iconFillInteract,
-} as const satisfies Record<TomuiBannerVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBannerVariant, stylex.StyleXStyles>;
 
 const rowGapStyles = {
   base: styles.rowBase,
   sm: styles.rowSm,
-} as const satisfies Record<TomuiBannerSize, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBannerSize, stylex.StyleXStyles>;
 
 /** The action size a `Banner.Action` child inherits, one step down from the banner size. */
 const actionSizeBySize = {
   base: "sm",
   sm: "xs",
-} as const satisfies Record<TomuiBannerSize, BannerActionSize>;
+} as const satisfies Record<MidoriBannerSize, BannerActionSize>;
 
 // The `Banner.Action` CTA compound lives in ./banner-action
 // and is attached to `Banner` via Object.assign at the bottom of this file.
 
-export interface TomuiBannerVariantsProps {
+export interface MidoriBannerVariantsProps {
   /**
    * Visual style of the banner.
    * - `"default"` — Informational banner for general messages
@@ -131,18 +132,18 @@ export interface TomuiBannerVariantsProps {
    * - `"secondary"` — Neutral banner for secondary messages
    * @default "default"
    */
-  variant?: TomuiBannerVariant;
+  variant?: MidoriBannerVariant;
   /**
    * Size of the banner.
    * - `"base"` — Default full-size banner
    * - `"sm"` — Compact banner for dialogs and other tight spaces
    * @default "base"
    */
-  size?: TomuiBannerSize;
+  size?: MidoriBannerSize;
 }
 
-export function bannerVariants(props: TomuiBannerVariantsProps = {}): stylex.StyleXStyles[] {
-  const merged = merge(TOMUI_BANNER_DEFAULT_VARIANTS, props);
+export function bannerVariants(props: MidoriBannerVariantsProps = {}): stylex.StyleXStyles[] {
+  const merged = merge(MIDORI_BANNER_DEFAULT_VARIANTS, props);
   return [styles.base, variantStyles[merged.variant], sizeStyles[merged.size]];
 }
 
@@ -182,7 +183,7 @@ export interface BannerProps extends Omit<
    * - `"secondary"` — Neutral banner for secondary messages
    * @default "default"
    */
-  variant?: TomuiBannerVariant;
+  variant?: MidoriBannerVariant;
   /**
    * Size of the banner. A `"sm"` banner uses tighter spacing and `text-sm`,
    * renders the action inline with the description, and sets its
@@ -190,7 +191,7 @@ export interface BannerProps extends Omit<
    * tight spaces.
    * @default "base"
    */
-  size?: TomuiBannerSize;
+  size?: MidoriBannerSize;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
   ref?: HTMLDivElement | ((element: HTMLDivElement) => void) | undefined;
@@ -211,7 +212,7 @@ export interface BannerProps extends Omit<
  */
 function BannerRoot(props: BannerProps): JSX.Element {
   const merged = merge(
-    { variant: TOMUI_BANNER_DEFAULT_VARIANTS.variant, size: TOMUI_BANNER_DEFAULT_VARIANTS.size },
+    { variant: MIDORI_BANNER_DEFAULT_VARIANTS.variant, size: MIDORI_BANNER_DEFAULT_VARIANTS.size },
     props,
   );
   const rest = omit(
@@ -233,7 +234,7 @@ function BannerRoot(props: BannerProps): JSX.Element {
   return (
     <BannerActionContext value={{ variant: merged.variant, size: actionSizeBySize[merged.size] }}>
       <div
-        data-tomui-component="Banner"
+        data-midori-component="Banner"
         role={alertRole()}
         ref={merged.ref}
         {...stylex.attrs(

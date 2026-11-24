@@ -1,40 +1,45 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
 import { fontSizeBase } from "../../styles/typography.stylex";
 
-const lineColor = colors["--color-tomui-line"];
+const lineColor = colors["--color-midori-line"];
 
 const styles = stylex.create({
   surface: {
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-base"],
-    boxShadow: "0 0 0 1px " + lineColor + ", 0 1px 2px 0 rgb(0 0 0 / 0.05)",
+    borderRadius: radius.card,
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-midori-hairline"],
+    backgroundColor: colors["--color-midori-base"],
+    boxShadow: elevation["--elevation-midori-raised"],
   },
   layeredRoot: {
     display: "flex",
     width: "100%",
     flexDirection: "column",
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-elevated"],
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-hairline"],
-    ...fontSizeBase,
+    borderRadius: radius.card,
+    backgroundColor: colors["--color-midori-elevated"],
+    boxShadow: "0 0 0 1px " + colors["--color-midori-hairline"],
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: fontSizeBase.lineHeight,
   },
   secondary: {
     marginBlock: "-0.5rem",
     display: "flex",
     alignItems: "center",
     gap: "0.5rem",
-    backgroundColor: colors["--color-tomui-elevated"],
+    backgroundColor: colors["--color-midori-elevated"],
     padding: "1rem",
     fontWeight: 500,
-    color: textColors["--text-color-tomui-subtle"],
-    ...fontSizeBase,
+    color: textColors["--text-color-midori-subtle"],
+    fontSize: fontSizeBase.fontSize,
+    lineHeight: fontSizeBase.lineHeight,
   },
   primary: {
     position: "relative",
@@ -42,13 +47,13 @@ const styles = stylex.create({
     flexDirection: "column",
     gap: "0.5rem",
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-base"],
+    borderRadius: radius.card,
+    backgroundColor: colors["--color-midori-base"],
     padding: "1rem",
     paddingInlineEnd: "0.75rem",
     color: "inherit",
     textDecorationLine: "none",
-    boxShadow: "0 0 0 1px " + colors["--color-tomui-fill"],
+    boxShadow: "0 0 0 1px " + lineColor,
   },
 });
 
@@ -62,12 +67,12 @@ export function layerCardVariants(): stylex.StyleXStyles {
  * @example
  * ```tsx
  * <LayerCard>
- *   Get started with Tomui
+ *   Get started with Midori
  * </LayerCard>
  *
  * <LayerCard layered>
  *   <LayerCard.Secondary>Next Steps</LayerCard.Secondary>
- *   <LayerCard.Primary>Get started with Tomui</LayerCard.Primary>
+ *   <LayerCard.Primary>Get started with Midori</LayerCard.Primary>
  * </LayerCard>
  * ```
  */
@@ -76,7 +81,7 @@ export type LayerCardProps = Omit<JSX.HTMLAttributes<HTMLDivElement>, "ref" | "c
   /**
    * Render the layered card treatment (elevated container for
    * `LayerCard.Secondary` + `LayerCard.Primary` sections).
-   * Tomui auto-detects section children; Solid cannot inspect
+   * Midori auto-detects section children; Solid cannot inspect
    * children types, so this is explicit.
    * @default false
    */
@@ -119,7 +124,7 @@ function LayerCardRoot(props: LayerCardProps): JSX.Element {
   const rest = omit(merged, "children", "layered", "ref", "style");
   return (
     <div
-      data-tomui-component="LayerCard"
+      data-midori-component="LayerCard"
       {...stylex.attrs(merged.layered ? styles.layeredRoot : layerCardVariants(), merged.style)}
       ref={merged.ref}
       {...rest}
@@ -133,7 +138,7 @@ function LayerCardSecondary(props: LayerCardSectionProps): JSX.Element {
   const rest = omit(props, "children", "style");
   return (
     <div
-      data-tomui-component="LayerCard.Secondary"
+      data-midori-component="LayerCard.Secondary"
       {...stylex.attrs(styles.secondary, props.style)}
       {...rest}
     >
@@ -146,7 +151,7 @@ function LayerCardPrimary(props: LayerCardSectionProps): JSX.Element {
   const rest = omit(props, "children", "style");
   return (
     <div
-      data-tomui-component="LayerCard.Primary"
+      data-midori-component="LayerCard.Primary"
       {...stylex.attrs(styles.primary, props.style)}
       {...rest}
     >

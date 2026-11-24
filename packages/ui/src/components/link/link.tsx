@@ -1,18 +1,14 @@
+import { textColors } from "../../styles/colors.stylex";
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { textColors } from "../../styles/tokens.stylex";
 import { radius } from "../../styles/primitives.stylex";
 
-/**
- * OS dark-mode query. Matches initColorMode() in ../../utils/color-mode.ts,
- * which follows the OS setting and offers no user override. The old rules keyed
- * off the data-mode attribute, so this is equivalent and also applies before
- * hydration, when the attribute is not set yet.
- */
-const DARK = "@media (prefers-color-scheme: dark)";
+const linkColor = textColors["--text-color-midori-link"];
 
-const linkColor = textColors["--text-color-tomui-link"];
+/** Softer underline at rest; the stroked icon needs more weight on dark. */
+const underlineColor = (percent: number): string =>
+  `color-mix(in oklch, currentColor ${percent}%, transparent)`;
 
 const styles = stylex.create({
   root: {
@@ -20,7 +16,7 @@ const styles = stylex.create({
     alignItems: "center",
     gap: "0.1875em",
     // A link wrapping a badge rounds to the badge's pill shape.
-    ":has(> [data-tomui-component=Badge])": { borderRadius: radius.full },
+    ":has(> [data-midori-component=Badge])": { borderRadius: radius.full },
   },
   /** Defence against global `a` rules overriding the link colour. */
   inline: { color: linkColor },
@@ -34,25 +30,23 @@ const styles = stylex.create({
     textDecorationLine: "underline",
     textUnderlineOffset: "0.15em",
     textDecorationThickness: "0.0625em",
-    textDecorationColor: "color-mix(in oklch, currentColor 35%, transparent)",
+    textDecorationColor: `light-dark(${underlineColor(35)}, ${underlineColor(65)})`,
     transitionProperty: "color, text-decoration-color",
-    [DARK]: { textDecorationColor: "color-mix(in oklch, currentColor 65%, transparent)" },
     ":hover": { textDecorationColor: "currentColor" },
   },
   /** A thicker stroke keeps the external-link icon visible on dark backgrounds. */
   externalIcon: {
-    strokeWidth: 1.75,
-    [DARK]: { strokeWidth: 2 },
+    strokeWidth: "var(--midori-link-external-stroke)",
   },
 });
 
-export const TOMUI_LINK_DEFAULT_VARIANTS = {
+export const MIDORI_LINK_DEFAULT_VARIANTS = {
   variant: "inline",
 } as const;
 
-export type TomuiLinkVariant = "inline" | "current" | "plain";
+export type MidoriLinkVariant = "inline" | "current" | "plain";
 
-export interface TomuiLinkVariantsProps {
+export interface MidoriLinkVariantsProps {
   /**
    * Visual style of the link.
    * - `"inline"` — Inline text link that flows with content
@@ -60,17 +54,17 @@ export interface TomuiLinkVariantsProps {
    * - `"plain"` — Link without underline decoration
    * @default "inline"
    */
-  variant?: TomuiLinkVariant;
+  variant?: MidoriLinkVariant;
 }
 
 const variantStyles = {
   inline: styles.inline,
   current: styles.current,
   plain: styles.plain,
-} as const satisfies Record<TomuiLinkVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriLinkVariant, stylex.StyleXStyles>;
 
-export function linkVariants(props: TomuiLinkVariantsProps = {}) {
-  const merged = merge(TOMUI_LINK_DEFAULT_VARIANTS, props);
+export function linkVariants(props: MidoriLinkVariantsProps = {}) {
+  const merged = merge(MIDORI_LINK_DEFAULT_VARIANTS, props);
   const isPlain = merged.variant === "plain";
   return [variantStyles[merged.variant], isPlain ? undefined : styles.underlined].filter(
     (style) => style !== undefined,
@@ -133,7 +127,7 @@ function ExternalIconBase(
 export type LinkProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, "ref" | "style"> & {
   children?: JSX.Element;
   ref?: HTMLAnchorElement | ((element: HTMLAnchorElement) => void) | undefined;
-  variant?: TomuiLinkVariant;
+  variant?: MidoriLinkVariant;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
 };
@@ -146,7 +140,7 @@ export type LinkProps = Omit<JSX.AnchorHTMLAttributes<HTMLAnchorElement>, "ref" 
  * `href`, or wrap router links around it.
  */
 function LinkBase(props: LinkProps): JSX.Element {
-  const merged = merge({ variant: TOMUI_LINK_DEFAULT_VARIANTS.variant }, props);
+  const merged = merge({ variant: MIDORI_LINK_DEFAULT_VARIANTS.variant }, props);
   const rest = omit(merged, "children", "style", "ref", "rel", "target", "variant");
   const rel = (): LinkProps["rel"] => {
     if (merged.target !== "_blank" || merged.rel) return merged.rel;
@@ -154,7 +148,7 @@ function LinkBase(props: LinkProps): JSX.Element {
   };
   return (
     <a
-      data-tomui-component="Link"
+      data-midori-component="Link"
       {...stylex.attrs(styles.root, ...linkVariants({ variant: merged.variant }), merged.style)}
       ref={merged.ref}
       rel={rel()}

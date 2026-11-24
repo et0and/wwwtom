@@ -4,6 +4,7 @@ import {
   createContext,
   createEffect,
   createSignal,
+  createUniqueId,
   For,
   merge,
   onSettled,
@@ -14,34 +15,32 @@ import {
 import { CaretDownIcon } from "@tom/icons/CaretDown";
 import { CheckIcon } from "@tom/icons/Check";
 import { XIcon } from "@tom/icons/X";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { elevation } from "../../styles/elevation.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSizeSm, fontSizeXs, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_COMBOBOX_DEFAULT_VARIANTS = {
+export const MIDORI_COMBOBOX_DEFAULT_VARIANTS = {
   inputSide: "right",
 } as const;
 
-export type TomuiComboboxInputSide = "right" | "top";
+export type MidoriComboboxInputSide = "right" | "top";
 
-const lineColor = colors["--color-tomui-line"];
-const hairlineColor = colors["--color-tomui-hairline"];
-const focusColor = colors["--color-tomui-focus"];
-/** Matches Tailwind's `ring-<color>/50` alpha modifier. StyleX needs literals. */
-const focusRing = "0 0 0 1.5px color-mix(in srgb, " + focusColor + " 50%, transparent)";
-const controlRing = "0 0 0 1px " + lineColor;
+const hairlineColor = colors["--color-midori-hairline"];
+const focusColor = colors["--color-midori-focus"];
+const controlRing = elevation["--elevation-midori-input"];
 
 const styles = stylex.create({
   root: { position: "relative" },
   label: {
     display: "block",
     marginBottom: "0.25rem",
-    fontSize: "0.8125rem",
-    fontWeight: 500,
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
   },
-  message: { marginTop: "0.25rem", fontSize: "0.8125rem" },
-  messageSubtle: { color: textColors["--text-color-tomui-subtle"] },
-  messageDanger: { color: textColors["--text-color-tomui-danger"] },
+  message: { marginTop: "0.25rem", fontSize: fontSizeXs.fontSize },
+  messageSubtle: { color: textColors["--text-color-midori-subtle"] },
+  messageDanger: { color: textColors["--text-color-midori-danger"] },
   content: {
     position: "absolute",
     zIndex: 50,
@@ -51,11 +50,11 @@ const styles = stylex.create({
     minWidth: "100%",
     marginTop: "0.25rem",
     overflow: "hidden",
-    borderRadius: radius.lg,
-    backgroundColor: colors["--color-tomui-base"],
-    paddingBlock: "0.375rem",
-    color: textColors["--text-color-tomui-default"],
-    boxShadow: controlRing + ", 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)",
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-midori-layer-01"],
+    padding: "2px",
+    color: textColors["--text-color-midori-default"],
+    boxShadow: elevation["--elevation-midori-floating"],
   },
   triggerWrap: {
     position: "relative",
@@ -63,18 +62,26 @@ const styles = stylex.create({
     width: "100%",
     ":has(:disabled)": { cursor: "not-allowed", opacity: 0.5 },
   },
-  triggerInput: {
+  triggerSurface: {
     width: "100%",
+    height: "1.75rem",
     borderWidth: 0,
-    backgroundColor: colors["--color-tomui-control"],
-    paddingInlineEnd: "3rem",
-    color: textColors["--text-color-tomui-default"],
-    outlineWidth: 0,
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-midori-control"],
+    paddingInline: "0.6875rem",
+    fontSize: fontSizeSm.fontSize,
+    color: textColors["--text-color-midori-default"],
+    outlineWidth: "1px",
+    outlineStyle: "solid",
+    outlineColor: "transparent",
+    outlineOffset: "-1px",
     boxShadow: controlRing,
-    "::placeholder": { color: textColors["--text-color-tomui-placeholder"] },
+    "::placeholder": { color: textColors["--text-color-midori-placeholder"] },
+    ":hover": { backgroundColor: colors["--color-midori-layer-01"] },
     ":disabled": { cursor: "not-allowed" },
-    ":focus": { outlineWidth: 0, boxShadow: focusRing },
+    ":focus": { outlineColor: focusColor, boxShadow: "none" },
   },
+  triggerInput: { paddingInlineEnd: "3rem" },
   iconButton: {
     position: "absolute",
     top: "50%",
@@ -88,20 +95,13 @@ const styles = stylex.create({
     transform: "translateY(-50%)",
   },
   clearButton: { right: "2rem" },
-  triggerButton: { right: "0.5rem", color: textColors["--text-color-tomui-subtle"] },
+  triggerButton: { right: "0.5rem", color: textColors["--text-color-midori-subtle"] },
   triggerValue: {
     position: "relative",
     display: "flex",
-    width: "100%",
     alignItems: "center",
-    borderWidth: 0,
-    backgroundColor: colors["--color-tomui-control"],
     paddingInlineEnd: "2rem",
-    color: textColors["--text-color-tomui-default"],
-    outlineWidth: 0,
-    boxShadow: controlRing,
-    ":disabled": { cursor: "not-allowed", opacity: 0.5 },
-    ":focus": { outlineWidth: 0, boxShadow: focusRing },
+    ":disabled": { opacity: 0.5 },
   },
   caret: {
     position: "absolute",
@@ -109,18 +109,19 @@ const styles = stylex.create({
     right: "0.5rem",
     display: "flex",
     alignItems: "center",
-    color: textColors["--text-color-tomui-subtle"],
+    color: textColors["--text-color-midori-subtle"],
     transform: "translateY(-50%)",
   },
   multiple: {
     display: "flex",
     height: "auto",
-    minHeight: "2.25rem",
+    minHeight: "1.75rem",
     flexDirection: "column",
     gap: "0.25rem",
     borderWidth: 0,
-    backgroundColor: colors["--color-tomui-control"],
-    padding: "0.375rem 0.625rem",
+    borderRadius: radius.md,
+    backgroundColor: colors["--color-midori-control"],
+    padding: "0.25rem 0.625rem",
     boxShadow: controlRing,
   },
   multipleInput: {
@@ -147,23 +148,23 @@ const styles = stylex.create({
     display: "grid",
     gridTemplateColumns: "1fr 16px",
     gap: "0.5rem",
-    margin: "0.375rem",
+    height: "1.75rem",
+    alignItems: "center",
     borderRadius: radius.sm,
-    padding: "0.375rem 0.5rem",
-    fontSize: "0.875rem",
+    paddingInline: "0.5rem",
+    fontSize: fontSizeSm.fontSize,
     cursor: "pointer",
-    ":is([data-highlighted])": { backgroundColor: colors["--color-tomui-tint"] },
+    ":is([data-highlighted])": { backgroundColor: colors["--color-midori-overlay-hover"] },
   },
   itemLabel: { gridColumnStart: "1" },
   itemCheck: { gridColumnStart: "2", display: "flex", alignItems: "center" },
   empty: {
     flexShrink: 0,
-    margin: "0.375rem",
-    padding: "0.5rem 1rem",
-    fontSize: "0.925rem",
+    padding: "0.5rem 0.75rem",
+    fontSize: fontSizeXs.fontSize,
     lineHeight: "1rem",
-    color: textColors["--text-color-tomui-subtle"],
-    ":empty": { margin: 0, padding: 0 },
+    color: textColors["--text-color-midori-subtle"],
+    ":empty": { padding: 0 },
   },
   list: {
     minHeight: 0,
@@ -178,10 +179,10 @@ const styles = stylex.create({
     alignItems: "center",
     gap: "0.625rem",
     borderRadius: radius.sm,
-    backgroundColor: colors["--color-tomui-overlay"],
+    backgroundColor: colors["--color-midori-overlay"],
     paddingInlineStart: "0.5rem",
     paddingInlineEnd: "3px",
-    fontSize: "0.8125rem",
+    fontSize: fontSizeSm.fontSize,
     boxShadow: "0 0 0 1px " + hairlineColor,
   },
   chipRemove: {
@@ -192,11 +193,12 @@ const styles = stylex.create({
     borderRadius: radius.md,
     backgroundColor: "transparent",
     padding: "0.25rem",
-    ":hover": { backgroundColor: colors["--color-tomui-fill-hover"] },
+    ":hover": { backgroundColor: colors["--color-midori-fill-hover"] },
   },
 });
 
 interface ComboboxContextValue {
+  filteredItems: () => Array<string>;
   query: () => string;
   setQuery: (query: string) => void;
   isOpen: () => boolean;
@@ -206,6 +208,8 @@ interface ComboboxContextValue {
   remove: (value: string) => void;
   clear: () => void;
   listId: string;
+  labelId: string;
+  hasLabel: boolean;
   activeValue: () => string | undefined;
   setActiveValue: (value: string | undefined) => void;
   registeredItems: () => Array<string>;
@@ -213,6 +217,7 @@ interface ComboboxContextValue {
 }
 
 const ComboboxContext = createContext<ComboboxContextValue>({
+  filteredItems: () => [],
   query: () => "",
   setQuery: () => undefined,
   isOpen: () => false,
@@ -221,7 +226,9 @@ const ComboboxContext = createContext<ComboboxContextValue>({
   select: () => undefined,
   remove: () => undefined,
   clear: () => undefined,
-  listId: "tomui-combobox-list",
+  listId: "midori-combobox-list",
+  labelId: "midori-combobox-label",
+  hasLabel: false,
   activeValue: () => undefined,
   setActiveValue: () => undefined,
   registeredItems: () => [],
@@ -258,6 +265,13 @@ function Root(props: ComboboxRootProps): JSX.Element {
   const [uncontrolledOpen, setUncontrolledOpen] = createSignal(false);
   const [activeValue, setActiveValue] = createSignal<string | undefined>(undefined);
   const [registeredItems, setRegisteredItems] = createSignal<Array<string>>([]);
+  const listId = createUniqueId();
+  const labelId = createUniqueId();
+  const filteredItems = (): Array<string> => {
+    const term = query().trim().toLowerCase();
+    if (term === "") return registeredItems();
+    return registeredItems().filter((item) => item.toLowerCase().includes(term));
+  };
   const selected = (): Array<string> => {
     const value = merged.value ?? uncontrolledValue();
     if (value === undefined) return [];
@@ -286,6 +300,7 @@ function Root(props: ComboboxRootProps): JSX.Element {
     setQuery("");
   };
   const value: ComboboxContextValue = {
+    filteredItems,
     query,
     setQuery,
     isOpen: () => uncontrolledOpen(),
@@ -294,16 +309,18 @@ function Root(props: ComboboxRootProps): JSX.Element {
     select,
     remove,
     clear,
-    listId: "tomui-combobox-list",
+    listId,
+    labelId,
+    hasLabel: merged.label !== undefined,
     activeValue,
     setActiveValue,
     registeredItems,
     registerItems: setRegisteredItems,
   };
   return (
-    <div data-tomui-component="Combobox" {...stylex.attrs(styles.root, merged.style)}>
+    <div data-midori-component="Combobox" {...stylex.attrs(styles.root, merged.style)}>
       <Show when={merged.label !== undefined}>
-        <label {...stylex.attrs(styles.label)}>
+        <label id={labelId} {...stylex.attrs(styles.label)}>
           {merged.label}
           <Show when={merged.required}>
             <span aria-hidden="true">{" *"}</span>
@@ -340,7 +357,7 @@ function Content(props: ComboboxContentProps): JSX.Element {
       if (target && !target.contains(event.target as Node)) ctx.setOpen(false);
     };
     const moveActive = (delta: number): void => {
-      const items = ctx.registeredItems();
+      const items = ctx.filteredItems();
       if (items.length === 0) return;
       const current = items.indexOf(ctx.activeValue() ?? "");
       const base = current === -1 ? (delta > 0 ? -1 : 0) : current;
@@ -352,6 +369,12 @@ function Content(props: ComboboxContentProps): JSX.Element {
       const items = ctx.registeredItems();
       if (event.key === "Escape") {
         ctx.setOpen(false);
+      } else if (event.key === "Enter") {
+        const active = ctx.activeValue();
+        if (active !== undefined) {
+          event.preventDefault();
+          ctx.select(active);
+        }
       } else if (event.key === "ArrowDown") {
         event.preventDefault();
         moveActive(1);
@@ -359,8 +382,10 @@ function Content(props: ComboboxContentProps): JSX.Element {
         event.preventDefault();
         moveActive(-1);
       } else if (event.key === "Home") {
+        event.preventDefault();
         if (items.length > 0) ctx.setActiveValue(items[0]);
       } else if (event.key === "End") {
+        event.preventDefault();
         if (items.length > 0) ctx.setActiveValue(items[items.length - 1]);
       }
     };
@@ -377,8 +402,8 @@ function Content(props: ComboboxContentProps): JSX.Element {
         ref={(el) => {
           setElement(el);
         }}
-        data-tomui-component="Combobox"
-        data-tomui-part="content"
+        data-midori-component="Combobox"
+        data-midori-part="content"
         {...stylex.attrs(styles.content, merged.style)}
       >
         {merged.children}
@@ -418,15 +443,16 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
   return (
     <div {...stylex.attrs(styles.triggerWrap)}>
       <input
-        data-tomui-component="Combobox"
-        data-tomui-part="input"
+        data-midori-component="Combobox"
+        data-midori-part="input"
         role="combobox"
         aria-expanded={ctx.isOpen() ? "true" : "false"}
         aria-controls={ctx.listId}
         aria-autocomplete="list"
-        {...stylex.attrs(styles.triggerInput, merged.style)}
+        aria-labelledby={ctx.hasLabel ? ctx.labelId : undefined}
+        {...stylex.attrs(styles.triggerSurface, styles.triggerInput, merged.style)}
         placeholder={merged.placeholder}
-        value={ctx.query()}
+        value={ctx.query() === "" ? (ctx.selected()[0] ?? "") : ctx.query()}
         onInput={(event) => {
           ctx.setQuery(event.currentTarget.value);
           ctx.setOpen(true);
@@ -444,8 +470,8 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         {...rest}
       />
       <button
-        data-tomui-component="Combobox"
-        data-tomui-part="clear"
+        data-midori-component="Combobox"
+        data-midori-part="clear"
         type="button"
         aria-label={merged.clearLabel}
         {...stylex.attrs(styles.iconButton, styles.clearButton)}
@@ -454,8 +480,8 @@ function TriggerInput(props: ComboboxTriggerInputProps): JSX.Element {
         <XIcon size="sm" color="current" />
       </button>
       <button
-        data-tomui-component="Combobox"
-        data-tomui-part="trigger"
+        data-midori-component="Combobox"
+        data-midori-part="trigger"
         type="button"
         aria-label={merged.showOptionsLabel}
         aria-expanded={ctx.isOpen() ? "true" : "false"}
@@ -490,12 +516,13 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
   };
   return (
     <button
-      data-tomui-component="Combobox"
-      data-tomui-part="trigger"
+      data-midori-component="Combobox"
+      data-midori-part="trigger"
       type="button"
       aria-haspopup="listbox"
       aria-expanded={ctx.isOpen() ? "true" : "false"}
-      {...stylex.attrs(styles.triggerValue, merged.style)}
+      aria-labelledby={ctx.hasLabel ? ctx.labelId : undefined}
+      {...stylex.attrs(styles.triggerSurface, styles.triggerValue, merged.style)}
       onClick={(event) => {
         ctx.setOpen(!ctx.isOpen());
         merged.onClick?.(event);
@@ -512,7 +539,7 @@ function TriggerValue(props: ComboboxTriggerValueProps): JSX.Element {
 
 export type ComboboxTriggerMultipleWithInputProps = {
   placeholder?: string;
-  inputSide?: TomuiComboboxInputSide;
+  inputSide?: MidoriComboboxInputSide;
   renderItem?: (value: string) => JSX.Element;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
@@ -520,7 +547,7 @@ export type ComboboxTriggerMultipleWithInputProps = {
 
 function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
-  const merged = merge({ inputSide: TOMUI_COMBOBOX_DEFAULT_VARIANTS.inputSide }, props);
+  const merged = merge({ inputSide: MIDORI_COMBOBOX_DEFAULT_VARIANTS.inputSide }, props);
   return (
     <div {...stylex.attrs(styles.multiple, merged.style)}>
       <Show when={merged.inputSide === "top"}>
@@ -532,6 +559,7 @@ function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps):
           aria-controls={ctx.listId}
           role="combobox"
           aria-autocomplete="list"
+          aria-labelledby={ctx.hasLabel ? ctx.labelId : undefined}
           onInput={(event) => {
             ctx.setQuery(event.currentTarget.value);
             ctx.setOpen(true);
@@ -558,6 +586,7 @@ function TriggerMultipleWithInput(props: ComboboxTriggerMultipleWithInputProps):
             aria-controls={ctx.listId}
             role="combobox"
             aria-autocomplete="list"
+            aria-labelledby={ctx.hasLabel ? ctx.labelId : undefined}
             onInput={(event) => {
               ctx.setQuery(event.currentTarget.value);
               ctx.setOpen(true);
@@ -584,8 +613,8 @@ function Item(props: ComboboxItemProps): JSX.Element {
   const isHighlighted = (): boolean => ctx.activeValue() === merged.value;
   return (
     <button
-      data-tomui-component="Combobox"
-      data-tomui-part="item"
+      data-midori-component="Combobox"
+      data-midori-part="item"
       type="button"
       role="option"
       aria-selected={isSelected() ? "true" : "false"}
@@ -612,9 +641,14 @@ export type ComboboxEmptyProps = {
 };
 
 function Empty(props: ComboboxEmptyProps): JSX.Element {
+  const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
   return (
-    <div {...stylex.attrs(styles.empty, merged.style)}>{merged.children ?? "No labels found."}</div>
+    <Show when={ctx.filteredItems().length === 0}>
+      <div {...stylex.attrs(styles.empty, merged.style)}>
+        {merged.children ?? "No labels found."}
+      </div>
+    </Show>
   );
 }
 
@@ -628,20 +662,23 @@ export type ComboboxListProps = {
 function List(props: ComboboxListProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({}, props);
-  const items = (): Array<string> => merged.items ?? [];
+  const items = (): Array<string> => {
+    const source = merged.items ?? [];
+    const term = ctx.query().trim().toLowerCase();
+    if (term === "") return source;
+    return source.filter((item) => item.toLowerCase().includes(term));
+  };
   createEffect(items, (registered) => {
     ctx.registerItems(registered);
   });
   return (
     <div
-      data-tomui-component="Combobox"
+      data-midori-component="Combobox"
       id={ctx.listId}
       role="listbox"
       {...stylex.attrs(styles.list, merged.style)}
     >
-      <For each={merged.items ?? []}>
-        {(item, index) => <>{merged.children?.(item, index())}</>}
-      </For>
+      <For each={items()}>{(item, index) => <>{merged.children?.(item, index())}</>}</For>
     </div>
   );
 }
@@ -658,11 +695,11 @@ function Chip(props: ComboboxChipProps): JSX.Element {
   const ctx = useContext(ComboboxContext);
   const merged = merge({ removeLabel: "Remove" }, props);
   return (
-    <span data-tomui-component="Combobox" {...stylex.attrs(styles.chip, merged.style)}>
+    <span data-midori-component="Combobox" {...stylex.attrs(styles.chip, merged.style)}>
       {merged.children}
       <button
-        data-tomui-component="Combobox"
-        data-tomui-part="chip-remove"
+        data-midori-component="Combobox"
+        data-midori-part="chip-remove"
         type="button"
         aria-label={merged.removeLabel}
         {...stylex.attrs(styles.chipRemove)}

@@ -44,13 +44,13 @@ describe("Flow", () => {
         <FlowNode nodeId="one">First</FlowNode>
       </Flow>
     ));
-    expect(container.querySelector("[data-tomui-component=Flow] > svg")).not.toBeNull();
+    expect(container.querySelector("[data-midori-component=Flow] > svg")).not.toBeNull();
   });
 
   it("marks the orientation as a data attribute", () => {
     const { container } = render(() => <Flow orientation="horizontal" />);
     expect(
-      container.querySelector("[data-tomui-component=Flow]")?.getAttribute("data-orientation"),
+      container.querySelector("[data-midori-component=Flow]")?.getAttribute("data-orientation"),
     ).toBe("horizontal");
   });
 });
@@ -59,21 +59,21 @@ describe("FlowNode", () => {
   it("marks a disabled node", () => {
     const { container } = render(() => <FlowNode disabled>Step</FlowNode>);
     expect(
-      container.querySelector("[data-tomui-component=FlowNode]")?.hasAttribute("data-disabled"),
+      container.querySelector("[data-midori-component=FlowNode]")?.hasAttribute("data-disabled"),
     ).toBe(true);
   });
 
   it("leaves data-disabled unset by default", () => {
     const { container } = render(() => <FlowNode>Step</FlowNode>);
     expect(
-      container.querySelector("[data-tomui-component=FlowNode]")?.hasAttribute("data-disabled"),
+      container.querySelector("[data-midori-component=FlowNode]")?.hasAttribute("data-disabled"),
     ).toBe(false);
   });
 
   it("merges the caller style last", () => {
     const { container } = render(() => <FlowNode>Step</FlowNode>);
     expect(
-      classList(container.querySelector("[data-tomui-component=FlowNode]")!).length,
+      classList(container.querySelector("[data-midori-component=FlowNode]")!).length,
     ).toBeGreaterThan(0);
   });
 });
@@ -83,7 +83,7 @@ describe("FlowParallel", () => {
     const { container } = render(() => <FlowParallel align="end">Branch</FlowParallel>);
     expect(
       container
-        .querySelector("[data-tomui-component=FlowParallel]")
+        .querySelector("[data-midori-component=FlowParallel]")
         ?.getAttribute("data-flow-parallel"),
     ).toBe("end");
   });

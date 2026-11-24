@@ -1,27 +1,25 @@
 import * as stylex from "@stylexjs/stylex";
 import type { JSX } from "@solidjs/web";
 import { createEffect, createUniqueId, merge, omit, Show, untrack } from "solid-js";
-import { colors } from "../../styles/colors.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
+import { fontSizeSm, fontSizeXs } from "../../styles/typography.stylex";
 import { createToggleState } from "../../utils/state";
 import { Label } from "../label/label";
 
-const hairline = colors["--color-tomui-hairline"];
-const focus = colors["--color-tomui-focus"];
-const brand = colors["--color-tomui-brand"];
-const contrast = colors["--color-tomui-contrast"];
-const base = colors["--color-tomui-base"];
-const inverse = textColors["--text-color-tomui-inverse"];
-const danger = textColors["--text-color-tomui-danger"];
-const subtle = textColors["--text-color-tomui-subtle"];
-const defaultText = textColors["--text-color-tomui-default"];
+const hairline = colors["--color-midori-hairline"];
+const line = colors["--color-midori-line"];
+const strong = colors["--color-midori-border-strong"];
+const focus = colors["--color-midori-focus"];
+const base = colors["--color-midori-base"];
+const danger = textColors["--text-color-midori-danger"];
+const subtle = textColors["--text-color-midori-subtle"];
+const defaultText = textColors["--text-color-midori-default"];
 
-export const TOMUI_CHECKBOX_DEFAULT_VARIANTS = {
+export const MIDORI_CHECKBOX_DEFAULT_VARIANTS = {
   variant: "default",
 } as const;
 
-export type TomuiCheckboxVariant = "default" | "error";
-export type CheckboxVariant = TomuiCheckboxVariant;
+export type MidoriCheckboxVariant = "default" | "error";
 
 const styles = stylex.create({
   wrap: { position: "relative", display: "inline-flex" },
@@ -33,23 +31,26 @@ const styles = stylex.create({
     appearance: "none",
     cursor: "pointer",
     borderWidth: 0,
-    borderRadius: "0.125rem",
+    borderRadius: "0.25rem",
     backgroundColor: base,
     outlineWidth: 0,
   },
-  controlDefault: { boxShadow: "0 0 0 1px " + hairline },
+  controlDefault: { boxShadow: "0 0 0 1px " + line },
   controlError: { boxShadow: "0 0 0 1px " + danger },
   /** Unconditional: a disabled, checked box still shows contrast, just dimmed. */
   controlChecked: {
-    ":checked": { backgroundColor: contrast, boxShadow: "0 0 0 1px " + contrast },
+    ":checked": {
+      backgroundColor: colors["--color-midori-layer-03"],
+      boxShadow: "0 0 0 1px " + strong,
+    },
   },
   controlInteractive: {
     ":hover": { boxShadow: "0 0 0 1px " + hairline },
     ":focus": { boxShadow: "0 0 0 2px " + focus },
-    ":focus-visible": { boxShadow: "0 0 0 2px " + brand },
+    ":focus-visible": { boxShadow: "0 0 0 2px " + focus },
   },
   controlDisabled: { cursor: "not-allowed", opacity: 0.5 },
-  /** Display is toggled from tomui-binding.css, because StyleX has no sibling selector. */
+  /** Display is toggled from midori-binding.css, because StyleX has no sibling selector. */
   indicator: {
     position: "absolute",
     inset: 0,
@@ -57,7 +58,7 @@ const styles = stylex.create({
     pointerEvents: "none",
     alignItems: "center",
     justifyContent: "center",
-    color: inverse,
+    color: defaultText,
   },
   labelBase: {
     margin: 0,
@@ -65,7 +66,7 @@ const styles = stylex.create({
     minHeight: 0,
     alignItems: "flex-start",
     gap: "0.5rem",
-    fontSize: "0.875rem",
+    fontSize: fontSizeSm.fontSize,
   },
   labelRow: { flexDirection: "row" },
   labelRowReversed: { flexDirection: "row-reverse", justifyContent: "flex-end" },
@@ -80,11 +81,11 @@ const styles = stylex.create({
   },
   itemLabelDisabled: { cursor: "not-allowed", opacity: 0.5 },
   itemLabelEnabled: { cursor: "pointer" },
-  itemText: { fontSize: "0.875rem", color: defaultText },
-  legend: { fontSize: "0.875rem", fontWeight: 500, color: defaultText },
+  itemText: { fontSize: fontSizeSm.fontSize, color: defaultText },
+  legend: { fontSize: fontSizeSm.fontSize, fontWeight: 530, color: defaultText },
   group: { display: "flex", flexDirection: "column", gap: "1rem", padding: 0 },
   groupList: { display: "flex", flexDirection: "column", gap: "0.5rem" },
-  message: { fontSize: "0.8125rem" },
+  message: { fontSize: fontSizeXs.fontSize },
   messageDanger: { color: danger },
   messageSubtle: { color: subtle },
 });
@@ -93,7 +94,7 @@ export type CheckboxProps = Omit<
   JSX.InputHTMLAttributes<HTMLInputElement>,
   "type" | "onChange" | "ref" | "checked" | "defaultChecked" | "class" | "style"
 > & {
-  variant?: CheckboxVariant | undefined;
+  variant?: MidoriCheckboxVariant | undefined;
   label?: JSX.Element | undefined;
   labelTooltip?: JSX.Element | undefined;
   controlFirst?: boolean | undefined;
@@ -115,7 +116,7 @@ export type CheckboxProps = Omit<
 function CheckboxControl(props: CheckboxProps): JSX.Element {
   const merged = merge(
     {
-      variant: "default" as CheckboxVariant,
+      variant: "default" as MidoriCheckboxVariant,
       indeterminate: false,
       value: "on",
     },
@@ -176,7 +177,7 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
 
   return (
     <span
-      data-tomui-part="control"
+      data-midori-part="control"
       data-variant={merged.variant}
       {...stylex.attrs(styles.wrap)}
       onPointerDown={(e) => {
@@ -184,7 +185,7 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
       }}
     >
       <input
-        data-tomui-component="Checkbox"
+        data-midori-component="Checkbox"
         id={inputId}
         type="checkbox"
         name={merged.name}
@@ -223,7 +224,7 @@ function CheckboxControl(props: CheckboxProps): JSX.Element {
         )}
         {...rest}
       />
-      <span aria-hidden="true" data-tomui-part="indicator" {...stylex.attrs(styles.indicator)}>
+      <span aria-hidden="true" data-midori-part="indicator" {...stylex.attrs(styles.indicator)}>
         <Show
           when={merged.icon}
           fallback={
@@ -263,7 +264,7 @@ function CheckboxBase(props: CheckboxProps): JSX.Element {
   return (
     <Show when={merged.label} fallback={<CheckboxControl {...rest} disabled={merged.disabled} />}>
       <label
-        data-tomui-component="Checkbox"
+        data-midori-component="Checkbox"
         {...stylex.attrs(
           styles.labelBase,
           merged.controlFirst ? styles.labelRow : styles.labelRowReversed,
@@ -287,7 +288,7 @@ export interface CheckboxLegendProps {
 
 export function CheckboxLegend(props: CheckboxLegendProps): JSX.Element {
   return (
-    <legend data-tomui-component="Checkbox" {...stylex.attrs(styles.legend, props.style)}>
+    <legend data-midori-component="Checkbox" {...stylex.attrs(styles.legend, props.style)}>
       {props.children}
     </legend>
   );
@@ -308,7 +309,7 @@ export function CheckboxGroup(props: CheckboxGroupProps): JSX.Element {
   const merged = merge({ controlFirst: true }, props);
   return (
     <fieldset
-      data-tomui-component="Checkbox"
+      data-midori-component="Checkbox"
       disabled={merged.disabled}
       {...stylex.attrs(styles.group, merged.style)}
     >
@@ -337,8 +338,8 @@ export function CheckboxItem(props: CheckboxItemProps): JSX.Element {
   const rest = omit(merged, "label", "controlFirst", "disabled", "style");
   return (
     <label
-      data-tomui-component="Checkbox"
-      data-tomui-part="item-label"
+      data-midori-component="Checkbox"
+      data-midori-part="item-label"
       {...stylex.attrs(
         styles.itemLabel,
         !merged.controlFirst ? styles.labelRowReversed : undefined,

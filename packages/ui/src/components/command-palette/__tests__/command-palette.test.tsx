@@ -63,6 +63,15 @@ describe("CommandPalette", () => {
     await vi.waitFor(() => expect(options[1]?.getAttribute("data-active")).toBe("true"));
   });
 
+  it("opens by default and closes after choosing an item", async () => {
+    const { container } = render(() => <CommandPalette defaultOpen items={items} />);
+    expect(container.querySelector("[role=dialog]")).not.toBeNull();
+
+    fireEvent.click(container.querySelectorAll("[role=option]")[0]!);
+
+    await vi.waitFor(() => expect(container.querySelector("[role=dialog]")).toBeNull());
+  });
+
   it("reports the chosen item through onSelect", () => {
     const onSelect = vi.fn();
     const { container } = render(() => <CommandPalette open items={items} onSelect={onSelect} />);

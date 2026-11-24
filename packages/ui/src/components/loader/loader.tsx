@@ -1,19 +1,19 @@
 import { merge, omit } from "solid-js";
 import * as stylex from "@stylexjs/stylex";
 
-export const TOMUI_LOADER_DEFAULT_VARIANTS = { size: "base" } as const;
+export const MIDORI_LOADER_DEFAULT_VARIANTS = { size: "base" } as const;
 
-export type TomuiLoaderSize = "sm" | "base" | "lg";
+export type MidoriLoaderSize = "sm" | "base" | "lg";
 
 /** Pixel extents per size. Loader accepts a raw number for one-off sizing. */
 const SIZES = {
   sm: 16,
   base: 24,
   lg: 32,
-} as const satisfies Record<TomuiLoaderSize, number>;
+} as const satisfies Record<MidoriLoaderSize, number>;
 
 export function loaderVariants(
-  props: { size?: TomuiLoaderSize | number | undefined } = {},
+  props: { size?: MidoriLoaderSize | number | undefined } = {},
 ): number {
   const size = props.size;
   if (size === undefined) return SIZES.base;
@@ -27,7 +27,7 @@ const styles = stylex.create({
 });
 
 export type LoaderProps = {
-  size?: TomuiLoaderSize | number;
+  size?: MidoriLoaderSize | number;
   "aria-label"?: string;
   /** Caller styles, merged last so they win. */
   style?: stylex.StyleXStyles;
@@ -35,7 +35,7 @@ export type LoaderProps = {
 
 export function Loader(props: LoaderProps) {
   const merged = merge(
-    { size: TOMUI_LOADER_DEFAULT_VARIANTS.size, "aria-label": "Loading" } as LoaderProps,
+    { size: MIDORI_LOADER_DEFAULT_VARIANTS.size, "aria-label": "Loading" } as LoaderProps,
     props,
   );
   const rest = omit(merged, "size", "aria-label", "style");
@@ -48,7 +48,7 @@ export function Loader(props: LoaderProps) {
       stroke="currentColor"
       role="status"
       aria-label={merged["aria-label"]}
-      data-tomui-component="Loader"
+      data-midori-component="Loader"
       {...rest}
     >
       <circle cx="12" cy="12" r="9.5" fill="none" stroke-width="2" stroke-linecap="round">

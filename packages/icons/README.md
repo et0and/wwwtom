@@ -30,7 +30,7 @@ one file per import, which keeps tree-shaking exact. The package is
 | Prop     | Tokens                                                | Default   |
 | -------- | ----------------------------------------------------- | --------- |
 | `size`   | `xs` 12, `sm` 16, `md` 20, `lg` 24, `xl` 32, `2xl` 48 | `md`      |
-| `color`  | `current`, tomui text tokens, `white`, `black`        | `current` |
+| `color`  | `current`, midori text tokens, `white`, `black`       | `current` |
 | `weight` | `thin`, `light`, `regular`, `bold`, `fill`, `duotone` | `regular` |
 
 `mirrored` flips the icon for RTL layouts. `title` sets an accessible

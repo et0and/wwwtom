@@ -14,8 +14,10 @@ describe("DropdownMenu", () => {
       </DropdownMenu>
     ));
 
-    fireEvent.click(container.querySelector("[data-tomui-part=trigger]")!);
-    await vi.waitFor(() => expect(container.querySelector("[data-tomui-part=content]")).toBeNull());
+    fireEvent.click(container.querySelector("[data-midori-part=trigger]")!);
+    await vi.waitFor(() =>
+      expect(container.querySelector("[data-midori-part=content]")).toBeNull(),
+    );
 
     onOpenChange.mockClear();
     fireEvent.mouseDown(document.body);

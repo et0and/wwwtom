@@ -1,9 +1,9 @@
 import * as stylex from "@stylexjs/stylex";
-import { colors } from "./colors.stylex";
-import { textColors } from "./tokens.stylex";
+import { colors, textColors } from "./colors.stylex";
+import { fontSize2xs, fontSizeSm, fontSizeXs } from "./typography.stylex";
 
 /**
- * Layout primitives shared across TomUI components.
+ * Layout primitives shared across Midori components.
  *
  * StyleX cannot merge a runtime class string, so the recurring utility
  * combinations that Tailwind components used to repeat inline live here as
@@ -107,9 +107,11 @@ export const sizing = stylex.create({
  */
 export const radius = stylex.defineVars({
   none: "0",
+  xs: "0.125rem",
   sm: "0.25rem",
   md: "0.375rem",
   lg: "0.5rem",
+  card: "0.625rem",
   xl: "0.75rem",
   full: "9999px",
 });
@@ -137,10 +139,10 @@ export const select = stylex.create({
   text: { userSelect: "text" },
 });
 
-const brandColor = colors["--color-tomui-brand"];
-const tintColor = colors["--color-tomui-tint"];
-const hairlineColor = colors["--color-tomui-hairline"];
-const dangerText = textColors["--text-color-tomui-danger"];
+const brandColor = colors["--color-midori-brand"];
+const tintColor = colors["--color-midori-tint"];
+const hairlineColor = colors["--color-midori-hairline"];
+const dangerText = textColors["--text-color-midori-danger"];
 
 /** Monospace stack, matching the old Tailwind `font-mono`. */
 export const monoFont = stylex.defineConsts({
@@ -157,20 +159,24 @@ export const menuItem = stylex.create({
     position: "relative",
     display: "flex",
     width: "100%",
+    height: "1.75rem",
     alignItems: "center",
+    gap: "0.5rem",
     cursor: "default",
     userSelect: "none",
-    fontSize: "0.875rem",
+    fontSize: fontSizeSm.fontSize,
+    fontWeight: 440,
+    lineHeight: "16px",
     outlineWidth: 0,
+    borderRadius: "4px",
     ":focus-visible": { boxShadow: "0 0 0 2px " + brandColor },
     ":is([data-highlighted])": { backgroundColor: tintColor },
     ":is([data-disabled])": { pointerEvents: "none", opacity: 0.5 },
   },
   /** Indented to clear the check column. */
   checkable: { paddingLeft: "2rem" },
-  plain: { paddingInline: "0.5rem" },
-  vertical: { paddingBlock: "0.375rem" },
-  rounded: { borderRadius: "0.375rem" },
+  plain: { paddingInline: "0.75rem" },
+  vertical: { paddingBlock: 0 },
   danger: {
     color: dangerText,
     ":is([data-highlighted])": {
@@ -191,10 +197,14 @@ export const menuItem = stylex.create({
   },
   trailing: { marginInlineStart: "auto", display: "inline-flex" },
   label: {
-    paddingInline: "0.5rem",
-    paddingBlock: "0.375rem",
-    fontSize: "0.875rem",
-    fontWeight: 600,
+    display: "flex",
+    height: "1.75rem",
+    alignItems: "center",
+    paddingInline: "0.75rem",
+    paddingBlock: 0,
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: 530,
+    lineHeight: 1,
   },
   labelInset: { paddingInlineStart: "2rem" },
   separator: {
@@ -206,7 +216,7 @@ export const menuItem = stylex.create({
   },
   shortcut: {
     marginInlineStart: "auto",
-    fontSize: "0.75rem",
+    fontSize: fontSizeXs.fontSize,
     letterSpacing: "0.1em",
     opacity: 0.6,
   },

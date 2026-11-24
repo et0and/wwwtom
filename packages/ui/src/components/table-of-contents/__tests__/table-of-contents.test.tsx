@@ -46,10 +46,10 @@ describe("tocItemVariants", () => {
 describe("TableOfContents", () => {
   it("renders a nav with its default title and every heading link", () => {
     const { container } = render(() => <TableOfContents headings={headings} />);
-    const nav = container.querySelector("[data-tomui-component=TableOfContents]")!;
+    const nav = container.querySelector("[data-midori-component=TableOfContents]")!;
     expect(nav.tagName).toBe("NAV");
     expect(nav.querySelector("p")?.textContent).toBe("On this page");
-    expect(container.querySelectorAll("[data-tomui-component=TableOfContentsItem]")).toHaveLength(
+    expect(container.querySelectorAll("[data-midori-component=TableOfContentsItem]")).toHaveLength(
       3,
     );
   });
@@ -63,7 +63,7 @@ describe("TableOfContents", () => {
     const { container } = render(() => (
       <TableOfContents headings={headings} activeId="installation" />
     ));
-    const items = container.querySelectorAll("[data-tomui-component=TableOfContentsItem]");
+    const items = container.querySelectorAll("[data-midori-component=TableOfContentsItem]");
     expect(items[1]!.getAttribute("aria-current")).toBe("true");
     expect(items[1]!.hasAttribute("data-active")).toBe(true);
     expect(items[0]!.getAttribute("aria-current")).toBeNull();
@@ -74,20 +74,20 @@ describe("TableOfContents", () => {
     const { container } = render(() => (
       <TableOfContents headings={headings} activeId="installation" />
     ));
-    const items = container.querySelectorAll("[data-tomui-component=TableOfContentsItem]");
+    const items = container.querySelectorAll("[data-midori-component=TableOfContentsItem]");
     expect(classList(items[1]!)).not.toEqual(classList(items[0]!));
   });
 
   it("indents a heading past level 2 with an inline padding-left", () => {
     const { container } = render(() => <TableOfContents headings={headings} />);
-    const items = container.querySelectorAll("[data-tomui-component=TableOfContentsItem]");
+    const items = container.querySelectorAll("[data-midori-component=TableOfContentsItem]");
     expect(items[2]!.getAttribute("style")).toContain("padding-left");
     expect(items[0]!.getAttribute("style")).toBeFalsy();
   });
 
   it("updates the active item on click when uncontrolled", async () => {
     const { container } = render(() => <TableOfContents headings={headings} />);
-    const items = container.querySelectorAll("[data-tomui-component=TableOfContentsItem]");
+    const items = container.querySelectorAll("[data-midori-component=TableOfContentsItem]");
     fireEvent.click(items[1]!);
     await vi.waitFor(() => {
       expect(items[1]!.getAttribute("aria-current")).toBe("true");

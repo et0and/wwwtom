@@ -4,7 +4,6 @@ import { Effect, Option, Schema } from "effect";
 import { For, Show, createEffect, createMemo } from "solid-js";
 import { ArenaContentBlockSchema } from "@tom/schemas/arena-content";
 import type { ArenaChannelContents } from "@tom/schemas/arena";
-import { colors } from "@tom/ui/colors.stylex";
 import { Loader } from "@tom/ui/loader";
 import { overflow } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
@@ -18,7 +17,7 @@ const styles = stylex.create({
     whiteSpace: "nowrap",
     borderWidth: "1px",
     borderStyle: "solid",
-    borderColor: colors["--color-black"],
+    borderColor: "#000",
   },
   carouselInner: {
     display: "inline-flex",

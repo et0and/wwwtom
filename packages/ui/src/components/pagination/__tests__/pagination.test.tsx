@@ -44,6 +44,16 @@ describe("Pagination", () => {
     );
   });
 
+  it("updates its own page when uncontrolled", async () => {
+    const { container } = render(() => <Pagination defaultPage={5} pageCount={10} />);
+    fireEvent.click(container.querySelector('[aria-label="Next page"]')!);
+    await vi.waitFor(() => {
+      expect(container.querySelector('[aria-label="Page 6"]')?.getAttribute("aria-current")).toBe(
+        "page",
+      );
+    });
+  });
+
   it("reports the clicked page through onChange", () => {
     const onChange = vi.fn();
     const { container } = render(() => <Pagination page={5} pageCount={10} onChange={onChange} />);

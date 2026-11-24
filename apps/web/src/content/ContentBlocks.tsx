@@ -3,7 +3,6 @@ import * as stylex from "@stylexjs/stylex";
 import { isServer } from "@solidjs/web";
 import type { JSX } from "@solidjs/web";
 import type { ArenaContentBlock } from "@tom/schemas/arena-content";
-import { colors } from "@tom/ui/colors.stylex";
 import { layout, spacing } from "@tom/ui/primitives.stylex";
 import { Text } from "@tom/ui/text";
 import { attachmentMediaStyles } from "~/content/attachment-media.stylex";
@@ -35,7 +34,7 @@ const styles = stylex.create({
     position: "relative",
     width: "100%",
     overflow: "hidden",
-    backgroundColor: colors["--color-black"],
+    backgroundColor: "#000",
   },
 });
 

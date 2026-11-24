@@ -1,19 +1,21 @@
 import * as stylex from "@stylexjs/stylex";
 import { merge, omit, Show } from "solid-js";
 import type { JSX } from "@solidjs/web";
-import { colors } from "../../styles/colors.stylex";
+import { colors, textColors } from "../../styles/colors.stylex";
 import { radius } from "../../styles/primitives.stylex";
-import { textColors } from "../../styles/tokens.stylex";
+import { fontSize2xs, fontWeightControl } from "../../styles/typography.stylex";
 
-export const TOMUI_BADGE_DEFAULT_VARIANTS = {
+export const MIDORI_BADGE_DEFAULT_VARIANTS = {
   variant: "primary",
   appearance: "filled",
   dotColor: "none",
 } as const;
 
-export type TomuiBadgeVariant =
+export type MidoriBadgeVariant =
   | "primary"
   | "secondary"
+  | "subtle"
+  | "accent"
   | "error"
   | "warning"
   | "success"
@@ -28,11 +30,9 @@ export type TomuiBadgeVariant =
   | "teal"
   | "teal-subtle"
   | "blue";
-export type TomuiBadgeAppearance = "filled" | "dot";
+export type MidoriBadgeAppearance = "filled" | "dot";
 
-const hairlineColor = colors["--color-tomui-hairline"];
-const white = colors["--color-white"];
-const black = colors["--color-black"];
+const hairlineColor = colors["--color-midori-hairline"];
 
 const styles = stylex.create({
   base: {
@@ -41,67 +41,116 @@ const styles = stylex.create({
     flexShrink: 0,
     alignItems: "center",
     justifySelf: "start",
+    justifyContent: "center",
     gap: "0.25rem",
-    borderRadius: radius.full,
-    padding: "0.125rem 0.5rem",
-    fontSize: "0.75rem",
-    fontWeight: 500,
+    height: "1rem",
+    borderRadius: radius.xs,
+    borderWidth: "0.5px",
+    borderStyle: "solid",
+    borderColor: colors["--color-midori-hairline"],
+    backgroundColor: colors["--color-midori-layer-02"],
+    paddingInline: "0.25rem",
+    fontSize: fontSize2xs.fontSize,
+    fontWeight: fontWeightControl.fontWeight,
+    lineHeight: 1,
+    fontVariantNumeric: "tabular-nums",
     whiteSpace: "nowrap",
+    userSelect: "none",
   },
   /** An icon needs a little more room than a text-only badge. */
-  withIcon: { paddingInlineStart: "0.375rem" },
+  withIcon: { paddingInlineStart: "0.1875rem" },
   primary: {
-    backgroundColor: colors["--color-tomui-badge-inverted"],
-    color: textColors["--text-color-tomui-badge-inverted"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-brand"],
+    color: textColors["--text-color-midori-inverse"],
+  },
+  subtle: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-layer-03"],
+    color: textColors["--text-color-midori-subtle"],
   },
   secondary: {
-    backgroundColor: colors["--color-tomui-fill"],
-    color: textColors["--text-color-tomui-badge-neutral-subtle"],
+    borderColor: colors["--color-midori-hairline"],
+    backgroundColor: colors["--color-midori-layer-02"],
+    color: textColors["--text-color-midori-subtle"],
   },
   error: {
-    backgroundColor: colors["--color-tomui-danger-tint"],
-    color: textColors["--text-color-tomui-danger"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-danger-tint"],
+    color: textColors["--text-color-midori-danger"],
   },
   warning: {
-    backgroundColor: colors["--color-tomui-warning-tint"],
-    color: textColors["--text-color-tomui-warning"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-warning-tint"],
+    color: textColors["--text-color-midori-warning"],
   },
   success: {
-    backgroundColor: colors["--color-tomui-success-tint"],
-    color: textColors["--text-color-tomui-success"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-success-tint"],
+    color: textColors["--text-color-midori-success"],
   },
   info: {
-    backgroundColor: colors["--color-tomui-info-tint"],
-    color: textColors["--text-color-tomui-info"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-info-tint"],
+    color: textColors["--text-color-midori-info"],
   },
   beta: {
-    borderWidth: 1,
+    borderWidth: "0.5px",
     borderStyle: "dashed",
-    borderColor: colors["--color-tomui-brand"],
+    borderColor: colors["--color-midori-brand"],
     backgroundColor: "transparent",
-    color: textColors["--text-color-tomui-link"],
+    color: textColors["--text-color-midori-link"],
   },
   outline: {
-    borderWidth: 1,
-    borderColor: colors["--color-tomui-fill"],
-    backgroundColor: colors["--color-tomui-base"],
-    color: textColors["--text-color-tomui-default"],
+    borderColor: colors["--color-midori-border-strong"],
+    backgroundColor: "transparent",
+    color: textColors["--text-color-midori-default"],
   },
-  red: { backgroundColor: colors["--color-tomui-badge-red"], color: white },
-  green: { backgroundColor: colors["--color-tomui-badge-green"], color: white },
-  neutral: { backgroundColor: colors["--color-tomui-badge-neutral"], color: white },
-  orange: { backgroundColor: colors["--color-tomui-badge-orange"], color: black },
-  purple: { backgroundColor: colors["--color-tomui-badge-purple"], color: white },
-  teal: { backgroundColor: colors["--color-tomui-badge-teal"], color: white },
+  red: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-red"],
+    color: textColors["--text-color-midori-inverse"],
+  },
+  green: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-green"],
+    color: textColors["--text-color-midori-inverse"],
+  },
+  neutral: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-neutral"],
+    color: textColors["--text-color-midori-inverse"],
+  },
+  orange: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-orange"],
+    color: "#080808",
+  },
+  purple: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-purple"],
+    color: textColors["--text-color-midori-inverse"],
+  },
+  teal: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-teal"],
+    color: textColors["--text-color-midori-inverse"],
+  },
   tealSubtle: {
-    backgroundColor: colors["--color-tomui-fill"],
-    color: textColors["--text-color-tomui-badge-teal-subtle"],
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-fill"],
+    color: textColors["--text-color-midori-badge-teal-subtle"],
   },
-  blue: { backgroundColor: colors["--color-tomui-badge-blue"], color: white },
+  blue: {
+    borderWidth: 0,
+    backgroundColor: colors["--color-midori-badge-blue"],
+    color: textColors["--text-color-midori-inverse"],
+  },
   dot: {
+    height: "1.125rem",
     gap: "0.375rem",
     backgroundColor: "transparent",
-    color: textColors["--text-color-tomui-default"],
+    color: textColors["--text-color-midori-default"],
     boxShadow: "0 0 0 1px " + hairlineColor,
   },
   dotMark: {
@@ -110,10 +159,10 @@ const styles = stylex.create({
     flexShrink: 0,
     borderRadius: radius.full,
   },
-  dotSuccess: { backgroundColor: colors["--color-tomui-success"] },
-  dotWarning: { backgroundColor: colors["--color-tomui-badge-orange"] },
-  dotError: { backgroundColor: colors["--color-tomui-badge-red"] },
-  dotNeutral: { backgroundColor: colors["--color-tomui-badge-neutral"] },
+  dotSuccess: { backgroundColor: colors["--color-midori-success"] },
+  dotWarning: { backgroundColor: colors["--color-midori-badge-orange"] },
+  dotError: { backgroundColor: colors["--color-midori-badge-red"] },
+  dotNeutral: { backgroundColor: colors["--color-midori-badge-neutral"] },
   iconWrapper: {
     display: "flex",
     width: "0.75rem",
@@ -126,6 +175,8 @@ const styles = stylex.create({
 const variantStyles = {
   primary: styles.primary,
   secondary: styles.secondary,
+  subtle: styles.subtle,
+  accent: styles.primary,
   error: styles.error,
   warning: styles.warning,
   success: styles.success,
@@ -140,7 +191,7 @@ const variantStyles = {
   teal: styles.teal,
   "teal-subtle": styles.tealSubtle,
   blue: styles.blue,
-} as const satisfies Record<TomuiBadgeVariant, stylex.StyleXStyles>;
+} as const satisfies Record<MidoriBadgeVariant, stylex.StyleXStyles>;
 
 /**
  * The dot colour is keyed by variant, so only these variants show a dot. This
@@ -156,10 +207,10 @@ const dotStyles = {
 export type BadgeDotColor = keyof typeof dotStyles;
 
 export function badgeVariants(props: {
-  variant?: TomuiBadgeVariant;
-  appearance?: TomuiBadgeAppearance;
+  variant?: MidoriBadgeVariant;
+  appearance?: MidoriBadgeAppearance;
 }) {
-  const merged = merge(TOMUI_BADGE_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BADGE_DEFAULT_VARIANTS, props);
   const isDot = merged.appearance === "dot";
   return [
     styles.base,
@@ -170,8 +221,8 @@ export function badgeVariants(props: {
 }
 
 export type BadgeProps = {
-  variant?: TomuiBadgeVariant;
-  appearance?: TomuiBadgeAppearance;
+  variant?: MidoriBadgeVariant;
+  appearance?: MidoriBadgeAppearance;
   icon?: JSX.Element;
   children: JSX.Element;
   /** Caller styles, merged last so they win. */
@@ -179,14 +230,14 @@ export type BadgeProps = {
 };
 
 export function Badge(props: BadgeProps) {
-  const merged = merge(TOMUI_BADGE_DEFAULT_VARIANTS, props);
+  const merged = merge(MIDORI_BADGE_DEFAULT_VARIANTS, props);
   const rest = omit(merged, "variant", "appearance", "style", "icon", "children");
   const isDot = merged.appearance === "dot";
   const dotColor = (): stylex.StyleXStyles | undefined =>
     isDot ? dotStyles[merged.variant as BadgeDotColor] : undefined;
   return (
     <span
-      data-tomui-component="Badge"
+      data-midori-component="Badge"
       {...stylex.attrs(
         ...badgeVariants({ variant: merged.variant, appearance: merged.appearance }),
         merged.icon === undefined ? undefined : styles.withIcon,

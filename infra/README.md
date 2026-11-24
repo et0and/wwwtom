@@ -11,7 +11,7 @@ Effect V4.
 - `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated per stage: Tom D1 for Better Auth sessions, Sophie D1+R2 for CMS; CMS routes are Sophie-only)
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; arena + guestbook are Tom-only, cms is Sophie-only)
 - `turbo`: KV-backed Turborepo remote cache (`turbo.infra.tom.so`) for CI/CD
-- `storybook`: static TomUI component catalog, built from `packages/ui`
+- `storybook`: static Midori component catalog, built from `packages/ui`
 - `runner`: ephemeral GitHub Actions runners on Cloudflare Sandboxes (container-backed DO; source + image live in `infra/runner`)
 - `edge`: zone-level WAF and rate limiting rules for `tom.so` and `sophie.st` (`edge.run.ts`)
 
