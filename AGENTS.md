@@ -26,6 +26,9 @@ Improve existing code; avoid new abstractions.
 - no `any`; no `let` (oxlint `anti-slop/no-let`) — prefer `const`; descriptive names
 - no Node-only APIs — Workers runtime; prefer web-standard/Worker-safe
 - improve existing files, don't rewrite patterns
+- the Husky hooks run lint, format, tests and the fixture suite. An OpenCode
+  plugin blocks hook bypasses (`--no-verify`, `HUSKY=0`, `core.hooksPath`,
+  hook file edits). Fix the failure; ask before changing the hooks.
 
 ## Code layout
 
