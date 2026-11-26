@@ -582,6 +582,28 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.9.1)(jsdom@27.0.0)(vite@8.1.6(@types/node@24.9.1)(esbuild@0.28.2)(tsx@4.21.0)(yaml@2.9.1))
 
+  apps/web-effectui:
+    dependencies:
+      '@effect/ui':
+        specifier: https://pkg.pr.new/Effect-TS/ui/@effect/ui@77dcd92f378930583e43debe36be7a203100d351
+        version: https://pkg.pr.new/Effect-TS/ui/@effect/ui@77dcd92f378930583e43debe36be7a203100d351(effect@4.1.6)
+      effect:
+        specifier: 'catalog:'
+        version: 4.1.6
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 26.2.0
+      jsdom:
+        specifier: 27.0.0
+        version: 27.0.0
+      vite:
+        specifier: ^8.1.6
+        version: 8.1.6(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.21.0)(yaml@2.9.1)
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.10(@types/node@26.2.0)(jsdom@27.0.0)(vite@8.1.6(@types/node@26.2.0)(esbuild@0.28.2)(tsx@4.21.0)(yaml@2.9.1))
+
   infra:
     dependencies:
       '@alchemy.run/axiom':
@@ -1802,6 +1824,12 @@ packages:
   '@effect/tsgo@0.64.1':
     resolution: {integrity: sha512-MtBw+qO1IJdZklc80rBXIMgAZBmNTH1NeEHgJu5LiCFocDR0X56cFYUyKItYY7+D9ROzNIS3bD/sL1Tku6mMpQ==}
     hasBin: true
+
+  '@effect/ui@https://pkg.pr.new/Effect-TS/ui/@effect/ui@77dcd92f378930583e43debe36be7a203100d351':
+    resolution: {tarball: https://pkg.pr.new/Effect-TS/ui/@effect/ui@77dcd92f378930583e43debe36be7a203100d351}
+    version: 0.0.0
+    peerDependencies:
+      effect: ^4.1.4
 
   '@electric-sql/pglite@0.5.5':
     resolution: {integrity: sha512-QeZ+oB7QaU4EJj2awrB8hwFZ5TXxLRBQ9Gfq0dQauYDdWsRtuWRCERgtri35vRfL07KQHlVlc/4Qxvn7a5AXeA==}
@@ -9158,6 +9186,10 @@ snapshots:
       '@effect/tsgo-linux-x64': 0.64.1
       '@effect/tsgo-win32-arm64': 0.64.1
       '@effect/tsgo-win32-x64': 0.64.1
+
+  '@effect/ui@https://pkg.pr.new/Effect-TS/ui/@effect/ui@77dcd92f378930583e43debe36be7a203100d351(effect@4.1.6)':
+    dependencies:
+      effect: 4.1.6
 
   '@electric-sql/pglite@0.5.5': {}
 

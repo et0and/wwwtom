@@ -12,6 +12,7 @@ Improve existing code; avoid new abstractions.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`, and owns are.na reads on its token-gated `/internal/arena/*` routes.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split; proxies are.na reads to the api over the `API` service binding.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
+- `apps/web-effectui` — Effect UI spike for the future web rewrite: typed routes, Workers SSR and hydration. Not deployed.
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
 - `infra` — Alchemy 2.0.0-beta.87 + Effect 4.1.6 stacks: shared, turbo, api, adapter, web, sophie, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
