@@ -91,6 +91,7 @@ describe("deploy catalog", () => {
 
   it("keeps teardown in dependency-safe order", () => {
     expect(destroyStacks).toEqual([
+      "yufu",
       "storybook",
       "sophie",
       "web",
@@ -100,7 +101,15 @@ describe("deploy catalog", () => {
       "turbo",
       "shared",
     ]);
-    expect(previewDestroyStacks).toEqual(["web", "editor", "sophie", "adapter", "api", "shared"]);
+    expect(previewDestroyStacks).toEqual([
+      "yufu",
+      "web",
+      "editor",
+      "sophie",
+      "adapter",
+      "api",
+      "shared",
+    ]);
     expect(sweepDestroyStacks).toEqual(["storybook", ...previewDestroyStacks]);
   });
 

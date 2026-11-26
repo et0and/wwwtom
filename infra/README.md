@@ -7,6 +7,7 @@ Effect V4.
 
 - `apps/web`: SolidStart 2, built by `Cloudflare.Website.Vite`
 - `apps/sophie`: Sophie SSR blog, built by `Cloudflare.Website.Vite`
+- `apps/yufu`: Effect UI SPA, built by `Cloudflare.Website.Vite`
 - `apps/editor`: Camus CMS SPA for Sophie, built by `Cloudflare.Website.Vite` (Tom's instance is retired)
 - `apps/api`: Elysia Worker (Tom + Sophie tenants via `TENANT`; isolated per stage: Tom D1 for Better Auth sessions, Sophie D1+R2 for CMS; CMS routes are Sophie-only)
 - `apps/adapter`: Elysia BFF Worker (integrations: arena, auth, cms, guestbook, github, image, og; arena + guestbook are Tom-only, cms is Sophie-only)
@@ -43,6 +44,7 @@ pnpm deploy:api
 pnpm deploy:adapter
 pnpm deploy:web
 pnpm deploy:sophie
+pnpm deploy:yufu
 pnpm deploy:storybook
 
 # Auxiliary stacks, never part of the `deploy` chain
@@ -52,8 +54,9 @@ pnpm deploy:preview
 ```
 
 Deployment order is
-`shared -> turbo -> api -> adapter -> web -> sophie -> storybook`; `pnpm deploy`
-runs exactly that chain. The zone-level `edge` stack deploys separately, from
+`shared -> turbo -> api -> adapter -> web -> sophie -> yufu -> storybook`;
+`pnpm deploy` runs exactly that chain. `yufu` is a client-only Effect UI SPA:
+production is `yufu.tom.so`; other stages get `{stage}-yufu.tom.so`. The zone-level `edge` stack deploys separately, from
 a production dispatch only (see Edge protection). Storybook previews use the
 same `deploy:storybook` script from their own workflow.
 
@@ -72,7 +75,7 @@ registers with GitHub, accepts one job, then calls back to destroy its own
 sandbox.
 
 `pnpm destroy` tears down the current stage in reverse order
-(`storybook -> sophie -> web -> editor -> adapter -> api -> turbo -> shared`).
+(`yufu -> storybook -> sophie -> web -> editor -> adapter -> api -> turbo -> shared`).
 `editor` is destroy-only: Tom's editor stack is retired, but a stage may still
 own its old Worker, so teardown removes it after `web`.
 
@@ -262,7 +265,7 @@ web code prefers the `HYPERDRIVE` binding’s connection string.
 ## Previews
 
 When `PULL_REQUEST` is set, the `preview` stack posts or updates the single
-consolidated GitHub comment (Web, Sophie). It runs last in the preview chain,
+consolidated GitHub comment (Web, Sophie, Yufu). It runs last in the preview chain,
 so every link is live when it posts, and `ALCHEMY_STAGE=pr-<number>` names the
 stage.
 

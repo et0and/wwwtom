@@ -9,11 +9,12 @@ Improve existing code; avoid new abstractions.
 - `apps/web` — Solid 2.0 + Vite (Start mode, no SolidStart package), Workers. Posts and works come from are.na master channels (`@tom/arena/content`, adapter `/content/arena/*`, proxied to the api). Solid rules: `apps/web/AGENTS.md`.
 - `apps/sophie` — Solid 2.0 SSR blog for sophie.st (posts, categories, editable About). Same Solid rules.
 - `apps/editor` — Solid 2.0 Vite SPA (Tiptap CMS for Sophie Camus via `VITE_SOPHIE`/`VITE_AUTH_PROVIDER`), Cloudflare Website. Tom's editor is retired; the app serves Sophie. Same Solid rules.
+- `apps/yufu` — Effect UI SPA (Elm architecture on Effect). Reference: https://ui.effect.website.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`, and owns are.na reads on its token-gated `/internal/arena/*` routes.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split; proxies are.na reads to the api over the `API` service binding.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
-- `infra` — Alchemy 2.0.0-beta.85 + Effect 4.1.2 stacks: shared, turbo, api, adapter, web, sophie, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
+- `infra` — Alchemy 2.0.0-beta.85 + Effect 4.1.2 stacks: shared, turbo, api, adapter, web, sophie, yufu, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
@@ -44,7 +45,7 @@ Improve existing code; avoid new abstractions.
 
 ## Commands (root)
 
-- `pnpm dev` (all via Turbo) | `dev:web` | `dev:editor` | `dev:api` | `dev:adapter`
+- `pnpm dev` (all via Turbo) | `dev:web` | `dev:sophie` | `dev:editor` | `dev:yufu` | `dev:api` | `dev:adapter`
 - `pnpm build` | `lint` | `typecheck` | `test` (Turbo)
 - `pnpm test:mutation` — Stryker mutation run for `packages/utils` (config in
   `packages/utils/stryker.config.mjs`; HTML report in `coverage/mutation`)
@@ -56,8 +57,8 @@ Improve existing code; avoid new abstractions.
 - `pnpm test:all` = `test` then `test:e2e`. A pre-push hook runs `test` always and
   `test:e2e` when `apps/{e2e,simulator,adapter,web,api}` or
   `packages/{schemas,utils,arena,ui}` changed — the surfaces the fixture stack serves
-- `pnpm deploy` = shared → turbo → api → adapter → web → sophie → storybook (Alchemy; `ALCHEMY_STAGE` required)
-- `pnpm deploy:shared|deploy:turbo|deploy:api|deploy:adapter|deploy:web|deploy:sophie|deploy:storybook`
+- `pnpm deploy` = shared → turbo → api → adapter → web → sophie → yufu → storybook (Alchemy; `ALCHEMY_STAGE` required)
+- `pnpm deploy:shared|deploy:turbo|deploy:api|deploy:adapter|deploy:web|deploy:sophie|deploy:yufu|deploy:storybook`
 - `pnpm deploy:edge` — zone rules, production dispatch only; `pnpm deploy:runner` — on-demand runner; `pnpm deploy:preview` — PR comment stack
 - `pnpm destroy` — reverse deploy order plus the retired `editor` teardown
 
@@ -117,7 +118,8 @@ both move together — Alchemy imports `effect/process*` and `@effect/platform-*
 so a lone bump breaks at runtime, not at typecheck. In Alchemy 2.0, providers are
 their own packages: `@alchemy.run/cloudflare`, `@alchemy.run/github`,
 `@alchemy.run/axiom`. Core (`Stack`, `Stage`, `RemovalPolicy`, `AdoptPolicy`,
-`ALCHEMY_DEV`) stays in `alchemy`.
+`ALCHEMY_DEV`) stays in `alchemy`. `apps/yufu` is the exception: the pinned
+Effect UI snapshot needs `effect@4.1.4`, declared in that app only.
 
 `effect/crypto`, `effect/http` and `effect/observability` are still
 `@stability unstable` in Effect 4.1, so every use warns. Every `tsconfig.json` that loads the Effect
@@ -172,7 +174,7 @@ Never guess at Effect patterns - check the guide first.
 
 ## Infra
 
-- Alchemy deploy order shared → turbo → api → adapter → web → sophie → storybook (then `preview` on a PR); `ALCHEMY_STAGE` required
+- Alchemy deploy order shared → turbo → api → adapter → web → sophie → yufu → storybook (then `preview` on a PR); `ALCHEMY_STAGE` required
 - PR previews skip turbo and storybook; Tom's only remaining storage is the Better Auth D1 database, isolated per stage (`wwwtom-cms-d1-pr-<n>`) and destroyed with the stage; Tom R2 is dead and no media bucket is declared; `preview` owns the single success/failure comment and no Cloudflare resource
 - production adopts existing `wwwtom`/`apitom` Workers, custom domains, `guestbook-hyperdrive`, `TOM_FRAME_KV`
 - `TOM_SECRETS` = JSON bundle in account-level Cloudflare Secrets Store; Workers read binding at runtime; no prod secrets in Wrangler config
@@ -180,6 +182,7 @@ Never guess at Effect patterns - check the guide first.
 - `CMS_AUTH_PROVIDERS` enforces github-only (Tom) / google-only (Sophie) per API worker
 - Sophie binds no Hyperdrive (CMS is D1+R2; nothing reads `databaseUrl`)
 - web deploys via `Cloudflare.Website.Vite` (`nodejs_compat`); no web Wrangler config; don't reintroduce Vinxi
+- yufu deploys via `Cloudflare.Website.Vite` (client-only SPA)
 
 ## Rule files
 

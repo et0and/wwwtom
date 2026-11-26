@@ -2,7 +2,7 @@
 
 ![Screenshot my website](wwwtom.png)
 
-A monorepo for [tom.so](https://tom.so), [sophie.st](https://sophie.st), and the services behind them.
+A monorepo for [tom.so](https://tom.so), [sophie.st](https://sophie.st), [yufu.tom.so](https://yufu.tom.so), and the services behind them.
 
 This is still a work in progress and has some rough edges. I use it to explore different technologies and patterns, mostly for my own enjoyment.
 
@@ -11,12 +11,13 @@ This is still a work in progress and has some rough edges. I use it to explore d
 - `apps/web` — tom.so: Solid 2 + Vite on Workers. Posts and works read are.na master channels through the adapter.
 - `apps/sophie` — sophie.st: Solid 2 SSR blog on the Camus CMS.
 - `apps/editor` — Camus: the Tiptap editor SPA. It serves Sophie. Tom's instance is retired.
+- `apps/yufu` — yufu.tom.so: Effect UI SPA.
 - `apps/api` — Elysia + Effect Worker for both tenants (`TENANT=tom|sophie`).
 - `apps/adapter` — Elysia + Effect BFF Worker: are.na, auth, CMS, guestbook, GitHub, image, and OG.
 - `apps/simulator` — fixture upstreams for the e2e suite.
 - `apps/e2e` — Playwright suites.
 - `packages/*` — shared `ui`, `schemas`, `utils`, `arena`, `db`, `icons`, `constants`, `types`, and `workflows`.
-- `infra` — Alchemy stacks: shared, turbo, api, adapter, web, sophie, storybook, and preview.
+- `infra` — Alchemy stacks: shared, turbo, api, adapter, web, sophie, yufu, storybook, and preview.
 
 External packages and dependencies have been deliberately kept small in order to keep the project lean.
 
@@ -33,6 +34,7 @@ pnpm dev # Start every app via Turbo
 pnpm dev:web # tom.so
 pnpm dev:sophie # sophie.st
 pnpm dev:editor # Camus editor
+pnpm dev:yufu # yufu.tom.so
 pnpm dev:api # API worker
 pnpm dev:adapter # Adapter worker
 pnpm build # Production build
@@ -45,7 +47,7 @@ pnpm write # Format files with oxfmt
 
 ## Previews
 
-Every PR against `dev` gets preview deploys for tom.so and sophie.st. The `preview` stack runs last and keeps one comment per PR with both links. If a redeploy fails before it reaches that stack, the workflow updates the same comment as a failed deploy, so stale success text cannot survive. Preview stages use `ALCHEMY_STAGE=pr-<number>` and own their Tom D1 (the Better Auth session store), which is deleted when the PR closes. Tom R2 is dead, so no media bucket exists to isolate.
+Every PR against `dev` gets preview deploys for tom.so, sophie.st, and yufu.tom.so. The `preview` stack runs last and keeps one comment per PR with all three links. If a redeploy fails before it reaches that stack, the workflow updates the same comment as a failed deploy, so stale success text cannot survive. Preview stages use `ALCHEMY_STAGE=pr-<number>` and own their Tom D1 (the Better Auth session store), which is deleted when the PR closes. Tom R2 is dead, so no media bucket exists to isolate.
 
 Sophie's editor preview authenticates through the dev adapter. OAuth redirect URIs are exact-match, so per-PR hosts cannot be registered.
 
@@ -53,7 +55,7 @@ Sophie's editor preview authenticates through the dev adapter. OAuth redirect UR
 
 The main site is cheap and bare bones. It uses [Cloudflare Workers](https://workers.cloudflare.com) and [Alchemy](https://alchemy.run) to build and deploy. Static media assets such as images live on a separate CDN to keep the site light and fast.
 
-Alchemy deploys in dependency order: shared, turbo, api, adapter, web, sophie, then storybook. `pnpm deploy` runs exactly that chain, and `ALCHEMY_STAGE` is required. The zone edge rules are a separate production-only dispatch step, and the runner is on-demand, so neither is part of `pnpm deploy`. `pnpm destroy` reverses the deploy order and also tears down the retired Tom editor stage. Production deploys are manual. Every push to `dev` deploys the `staging` stage.
+Alchemy deploys in dependency order: shared, turbo, api, adapter, web, sophie, yufu, then storybook. `pnpm deploy` runs exactly that chain, and `ALCHEMY_STAGE` is required. The zone edge rules are a separate production-only dispatch step, and the runner is on-demand, so neither is part of `pnpm deploy`. `pnpm destroy` reverses the deploy order and also tears down the retired Tom editor stage. Production deploys are manual. Every push to `dev` deploys the `staging` stage.
 
 This project uses many Cloudflare services: Workers, Wrangler, KV, D1, R2, and Hyperdrive. That makes it less portable than it could be. Alchemy keeps the provider surface in `infra`, so a move to another provider such as AWS should stay contained.
 
