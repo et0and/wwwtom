@@ -12,8 +12,9 @@ Improve existing code; avoid new abstractions.
 - `apps/api` — Elysia (`CloudflareAdapter`) + Effect, Workers. Serves Tom + Sophie tenants via `TENANT`, and owns are.na reads on its token-gated `/internal/arena/*` routes.
 - `apps/adapter` — fediverse adapter, Elysia + Effect, Workers. Same tenant split; proxies are.na reads to the api over the `API` service binding.
 - `apps/simulator` — dev-only Elysia/Effect tooling (tsx).
+- `apps/web-effectui` — Effect UI spike for the future web rewrite: typed routes, Workers SSR and hydration. Not deployed.
 - `packages/*` — ui (TomUI components + OG templates; design rules: `packages/ui/src/AGENTS.md`), utils, types, db, arena, schemas, constants, workflows (GitHub Actions YAML generator; definitions: `packages/workflows/src/definitions`).
-- `infra` — Alchemy 2.0.0-beta.85 + Effect 4.1.2 stacks: shared, turbo, api, adapter, web, sophie, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
+- `infra` — Alchemy 2.0.0-beta.87 + Effect 4.1.6 stacks: shared, turbo, api, adapter, web, sophie, storybook. `preview` owns the consolidated PR comment and deploys last, after every host it links is live; a failed redeploy rewrites the same comment as failed. The retired Tom editor stack stays only so `destroy:editor` can tear it down.
 
 ## Working rules
 
@@ -112,9 +113,10 @@ for declarations. Read more source only when the returned lines need context.
 
 ## Effect
 
-Pinned to `4.1.2` via the `effect` catalog entry, with `alchemy@2.0.0-beta.85`;
+Pinned to `4.1.6` via the `effect` catalog entry, with `alchemy@2.0.0-beta.87`;
 both move together — Alchemy imports `effect/process*` and `@effect/platform-*`,
-so a lone bump breaks at runtime, not at typecheck. In Alchemy 2.0, providers are
+so a lone bump breaks at runtime, not at typecheck. This pair also satisfies
+the Effect UI snapshot's `effect@^4.1.4` peer. In Alchemy 2.0, providers are
 their own packages: `@alchemy.run/cloudflare`, `@alchemy.run/github`,
 `@alchemy.run/axiom`. Core (`Stack`, `Stage`, `RemovalPolicy`, `AdoptPolicy`,
 `ALCHEMY_DEV`) stays in `alchemy`.
