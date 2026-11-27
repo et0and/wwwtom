@@ -200,6 +200,9 @@ importers:
       '@tom/utils':
         specifier: workspace:*
         version: link:../../packages/utils
+      aws4fetch:
+        specifier: 1.0.20
+        version: 1.0.20
       effect:
         specifier: 'catalog:'
         version: 4.1.2
@@ -602,6 +605,12 @@ importers:
       effect:
         specifier: 4.1.4
         version: 4.1.4
+      fflate:
+        specifier: 0.8.3
+        version: 0.8.3
+      node-unrar-js:
+        specifier: 2.0.2
+        version: 2.0.2
     devDependencies:
       '@stylexjs/unplugin':
         specifier: 'catalog:'
@@ -6584,6 +6593,10 @@ packages:
   node-releases@2.0.63:
     resolution: {integrity: sha512-6li2QanLsAXpIH2R6j77MzRyvOyrvdTqlKtO4CgBdHGNvN99ZZfyxszHc5o5+IZBWD5u6Hzwg83JoGXmqZNG9Q==}
     engines: {node: '>=18'}
+
+  node-unrar-js@2.0.2:
+    resolution: {integrity: sha512-hLNmoJzqaKJnod8yiTVGe9hnlNRHotUi0CreSv/8HtfRi/3JnRC8DvsmKfeGGguRjTEulhZK6zXX5PXoVuDZ2w==}
+    engines: {node: '>=10.0.0'}
 
   normalize-package-data@6.0.2:
     resolution: {integrity: sha512-V6gygoYb/5EmNI+MEGrWkC+e6+Rr7mTmfHrxDbLzxQogBkgzo76rkok0Am6thgSF7Mv2nLOajAJj5vDJZEFn7g==}
@@ -13318,6 +13331,8 @@ snapshots:
   node-releases@2.0.56: {}
 
   node-releases@2.0.63: {}
+
+  node-unrar-js@2.0.2: {}
 
   normalize-package-data@6.0.2:
     dependencies:

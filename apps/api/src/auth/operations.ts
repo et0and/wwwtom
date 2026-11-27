@@ -133,7 +133,7 @@ const providerAllowed = (
 const previewEditorPatterns = (env: CloudflareEnv): ReadonlyArray<string> => {
   const tenant = tenantFromValue(env.TENANT);
   if (tenant === "sophie") return ["https://pr-*-cms.sophie.st"];
-  if (tenant === "tom") return ["https://pr-*-cms.tom.so"];
+  if (tenant === "tom") return ["https://pr-*-cms.tom.so", "https://pr-*-yufu.tom.so"];
   return [];
 };
 
@@ -159,6 +159,7 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
   }
   const adapterUrl = env.ADAPTER_URL ?? LOCAL_SERVICE_URLS.adapter;
   const editorUrl = env.EDITOR_URL ?? LOCAL_SERVICE_URLS.editor;
+  const yufuUrl = env.YUFU_URL;
   const webUrl =
     env.WEB_URL ?? (env.NODE_ENV === "production" ? undefined : LOCAL_SERVICE_URLS.web);
   return yield* Effect.try({
@@ -171,6 +172,7 @@ export const createAuthFromEnv = Effect.fn("Auth.fromEnv")(function* (env: Cloud
           adapterUrl,
           editorUrl,
           ...(webUrl !== undefined && webUrl !== "" ? [webUrl] : []),
+          ...(yufuUrl !== undefined && yufuUrl !== "" ? [yufuUrl] : []),
           ...previewEditorPatterns(env),
         ],
         ...(github && { github }),

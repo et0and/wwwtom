@@ -18,7 +18,9 @@
     "@effect/ui-kit": "https://pkg.pr.new/Effect-TS/ui/@effect/ui-kit@77dcd92f378930583e43debe36be7a203100d351",
     "@stylexjs/stylex": "catalog:",
     "@tom/ui": "workspace:*",
-    "effect": "4.1.4"
+    "effect": "4.1.4",
+    "fflate": "0.8.3",
+    "node-unrar-js": "2.0.2"
   },
   "devDependencies": {
     "@stylexjs/unplugin": "catalog:",

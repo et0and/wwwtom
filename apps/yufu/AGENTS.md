@@ -12,6 +12,13 @@ Client-rendered Effect UI SPA (Elm architecture on Effect). Reference:
 - Tests live in `src/__tests__` and drive `HtmlScene` with `it.effect`.
 - Styling is StyleX (`src/styles.stylex.ts`); both Vite and Vitest load
   `stylex.vite(stylexOptions)` from `@tom/ui/stylex.config`.
+- `src/routes.ts` owns the typed routes: home, manga index, manga reader and
+  a catch-all. `src/entry.ts` mounts with `BrowserRouter.layerHash` because the
+  site is static hosting.
+- The manga reader signs in with GitHub through the adapter `/auth` proxy.
+  `src/auth/session.ts` reads the session; `src/auth/sign-in.ts` starts OAuth.
+- Private CBR/CBZ archives come from the adapter's `/manga/*` routes. CBZ is
+  decoded with `fflate`; CBR uses `node-unrar-js` and a bundled WASM file.
 - `@effect/ui`, `@effect/ui-kit` and `@effect/ui-devtools` are pinned to one
   snapshot build of Effect UI, which is in public preview and not on npm yet.
   The snapshot requires Effect 4.1.4, so this app declares that version

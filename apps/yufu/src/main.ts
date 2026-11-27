@@ -8,8 +8,8 @@ import { styles } from "./styles.stylex";
 const sx = (...values: ReadonlyArray<stylex.StyleXStyles>): string =>
   stylex.attrs(...values).class ?? "";
 
-export const YufuPage = Html.component({
-  name: "YufuPage",
+export const Home = Html.component({
+  name: "Home",
   model: Schema.Null,
   message: Schema.Never,
 }).make({

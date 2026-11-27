@@ -21,6 +21,7 @@ export const yufu = Effect.gen(function* () {
       : { name: `yufu-${stage}`, domain: stageHost(stage, "yufu") }),
     env: {
       NODE_ENV: "production",
+      VITE_ADAPTER_URL: `https://${stageHost(stage, "adapter")}`,
     },
   });
 });

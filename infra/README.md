@@ -89,6 +89,22 @@ The adapter runs on `http://localhost:8788`; local secrets are split out of the
 `TOM_SECRETS` bundle because Secrets Store bindings are not supported in local
 mode.
 
+## Manga storage
+
+The yufu manga reader reads private CBR/CBZ archives through the Tom adapter.
+Put these keys in the `TOM_SECRETS` bundle:
+
+- `B2_ENDPOINT` — S3-compatible endpoint, e.g. `https://s3.us-west-004.backblazeb2.com`
+- `B2_BUCKET` — bucket name
+- `B2_KEY_ID` — B2 S3 API key ID
+- `B2_APP_KEY` — B2 S3 application key
+- `B2_MANIFEST_KEY` — optional JSON index key, default `manga/manifest.json`
+
+The manifest is `{ "titles": [{ "id", "title", "archiveKey", "coverKey"? }] }`.
+Only keys listed there can be read. Requests require a GitHub session; yufu is
+a trusted auth origin, and the adapter signs B2 requests server-side so keys
+never reach the browser.
+
 ## Turbo remote cache
 
 The `turbo` stack implements the Turborepo remote-cache protocol

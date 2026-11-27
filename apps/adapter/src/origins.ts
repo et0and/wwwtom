@@ -23,7 +23,7 @@ const LOCAL_ORIGINS: ReadonlySet<string> = new Set([
   "http://127.0.0.1:3001",
 ]);
 
-const TomServiceSchema = Schema.Literals(["cms", "adapter", "api", "web"]);
+const TomServiceSchema = Schema.Literals(["cms", "adapter", "api", "web", "yufu"]);
 
 const SophieServiceSchema = Schema.Literals(["cms", "adapter", "api", "web", "sophie"]);
 
@@ -65,6 +65,7 @@ const TOM_EXACT_HOSTS: ReadonlySet<string> = new Set([
   "adapter.tom.so",
   "api.tom.so",
   "web.tom.so",
+  "yufu.tom.so",
 ]);
 
 const SOPHIE_EXACT_HOSTS: ReadonlySet<string> = new Set([
