@@ -22,7 +22,7 @@ export const stageConcurrencyGroup = `deploy-${stageExpression}`;
  * after `shared`. `api` precedes `adapter` because the adapter binds the api
  * Worker as a service.
  */
-const pipelineStacks = ["shared", "turbo", "api", "adapter", "web", "sophie"] as const;
+const pipelineStacks = ["shared", "turbo", "api", "adapter", "web", "sophie", "yufu"] as const;
 
 /**
  * Static Storybook site. A full stage ships it; PR previews leave it to
@@ -109,6 +109,7 @@ export const deployChain = (
  * a queue before the API deletes it, so the order is not the reverse of deploy.
  */
 export const destroyStacks = [
+  "yufu",
   "storybook",
   "sophie",
   "web",
@@ -125,6 +126,7 @@ export const destroyStacks = [
  * them, and the nightly sweep drops its residual state row for closed PRs.
  */
 export const previewDestroyStacks = [
+  "yufu",
   "web",
   "editor",
   "sophie",

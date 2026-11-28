@@ -26,6 +26,7 @@ import { gavinIntegration } from "./gavin";
 import { guestbookIntegration } from "./guestbook";
 import { githubIntegration } from "./github";
 import { imageIntegration } from "./image";
+import { mangaIntegration } from "./manga";
 import { ogIntegration } from "./og";
 import { weatherIntegration } from "./weather";
 
@@ -158,7 +159,7 @@ export const app = new Elysia({
   // are.na content and the guestbook are Tom-only: Sophie's blog reads its
   // CMS and its adapter binds no database to hold guestbook entries.
   .guard({ beforeHandle: requireTenantBeforeHandle("tom") }, (app) =>
-    app.use(arenaIntegration).use(guestbookIntegration),
+    app.use(arenaIntegration).use(guestbookIntegration).use(mangaIntegration),
   )
   // The CMS is Sophie-only. Tom's editor is retired and its site reads
   // are.na, so no CMS read or write route exists on the Tom adapter.

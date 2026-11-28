@@ -20,6 +20,7 @@
     "@tom/schemas": "workspace:*",
     "@tom/types": "workspace:*",
     "@tom/utils": "workspace:*",
+    "aws4fetch": "1.0.20",
     "effect": "catalog:",
     "elysia": "catalog:",
     "megalodon": "10.2.0"

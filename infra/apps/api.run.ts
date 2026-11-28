@@ -103,6 +103,7 @@ export const api = Effect.gen(function* () {
         : `https://${stageHost(stage, "adapter")}`,
       EDITOR_URL: isAlchemyDev ? "http://localhost:5173" : `https://${stageHost(stage, "cms")}`,
       WEB_URL: stageWebUrl(stage, isAlchemyDev, "http://localhost:3000", stageWebHost),
+      YUFU_URL: isAlchemyDev ? "http://localhost:3002" : `https://${stageHost(stage, "yufu")}`,
     },
   });
 

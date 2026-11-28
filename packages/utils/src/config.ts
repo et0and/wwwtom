@@ -121,6 +121,13 @@ export type CloudflareEnv = {
   API?: { fetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> };
   // Public origin of the CMS editor SPA; trusted for OAuth callbacks.
   EDITOR_URL?: string;
+  YUFU_URL?: string;
+  // Private B2 bucket holding manga CBR/CBZ archives (adapter proxy only).
+  B2_ENDPOINT?: string;
+  B2_BUCKET?: string;
+  B2_MANIFEST_KEY?: string;
+  B2_KEY_ID?: string;
+  B2_APP_KEY?: string;
   // Public origin of the web app; trusted for OAuth callbacks from the frame UI.
   WEB_URL?: string;
   GUESTBOOK_RETURN_URL?: string;
@@ -201,6 +208,11 @@ const secretKeys = [
   "TELEGRAM_BOT_TOKEN",
   "TELEGRAM_CHAT_ID",
   "INTERNAL_API_TOKEN",
+  "B2_ENDPOINT",
+  "B2_BUCKET",
+  "B2_MANIFEST_KEY",
+  "B2_KEY_ID",
+  "B2_APP_KEY",
   "FRAME_DEVICE_TOKEN",
   "GITHUB_TOKEN",
   "CONTROL_TOKEN",
