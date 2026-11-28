@@ -4,6 +4,7 @@ import { Effect, Schema } from "effect";
 import { adapterUrl } from "./session";
 
 export const SignInMessage = UiSchema.TaggedEnum({
+  ClickedSignIn: {},
   Started: {},
   Failed: {},
 });

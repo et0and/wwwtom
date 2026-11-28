@@ -14,8 +14,6 @@ export const MangaManifestSchema = Schema.Struct({
   titles: Schema.Array(MangaTitleSchema),
 });
 
-export type ManifestData = typeof MangaManifestSchema.Type;
-
 export class MangaManifest extends Query.Service<MangaManifest>()("MangaManifest", {
   args: {},
   success: MangaManifestSchema,

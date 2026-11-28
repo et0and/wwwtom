@@ -1,23 +1,17 @@
-import { Head, UiSchema } from "@effect/ui";
+import { Head } from "@effect/ui";
 import { Html } from "@effect/ui/html";
 import { Schema } from "effect";
 import { AsyncResult } from "effect/reactivity";
 
 import { Session } from "../auth/session";
-import { SignIn } from "../auth/sign-in";
+import { SignIn, SignInMessage } from "../auth/sign-in";
 import { AppRoute } from "../routes";
 import { MangaManifest } from "./manifest";
-
-const MangaIndexMessage = UiSchema.TaggedEnum({
-  ClickedSignIn: {},
-  Started: {},
-  Failed: {},
-});
 
 export const MangaIndex = Html.component({
   name: "MangaIndex",
   model: Schema.Struct({ error: Schema.NullOr(Schema.String) }),
-  message: MangaIndexMessage,
+  message: SignInMessage,
   queries: {
     session: { query: Session, args: () => ({}) },
     manifest: { query: MangaManifest, args: () => ({}) },
@@ -40,9 +34,7 @@ export const MangaIndex = Html.component({
           session.value === null
             ? h.div.children(
                 h.p.children("Sign in with GitHub to read manga."),
-                h.button
-                  .on("click", MangaIndexMessage.ClickedSignIn())
-                  .children("Sign in with GitHub"),
+                h.button.on("click", SignInMessage.ClickedSignIn()).children("Sign in with GitHub"),
                 model.error !== null && h.p.children(model.error),
               )
             : AsyncResult.match(h.queries.manifest, {
